@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-06-19T21:50:40.722Z",
+  "status": "technical_ready_pending_human_approval",
+  "proof_suite_status": "failed_review_required",
+  "proof_suite_passed_count": 16,
+  "proof_suite_failed_count": 1,
+  "failed_commands": [
+    "v66:strict-proof"
+  ],
+  "signoff_valid": false,
+  "confidentiality_valid": false,
+  "gates": [
+    {
+      "gate": "typecheck/build static command",
+      "state": "expected via ci:static",
+      "evidence": "manual/latest command output"
+    },
+    {
+      "gate": "v7.3 module acceptance",
+      "state": "passed",
+      "evidence": "release/v73/module-acceptance-results.json"
+    },
+    {
+      "gate": "runtime security bridge",
+      "state": "passed",
+      "evidence": "release/v700/runtime-security-bridge-audit.json"
+    },
+    {
+      "gate": "authenticated persona proof",
+      "state": "passed",
+      "evidence": "release/v72/real-authenticated-persona-proof.json"
+    },
+    {
+      "gate": "proof suite overall",
+      "state": "failed_review_required",
+      "evidence": "release/v700/proof-suite-all.json"
+    },
+    {
+      "gate": "signoff validity",
+      "state": "pending",
+      "evidence": "release/v674/v674-signoff-check.json"
+    },
+    {
+      "gate": "confidentiality validity",
+      "state": "pending",
+      "evidence": "release/v674/v674-signoff-check.json"
+    },
+    {
+      "gate": "v7.5 dashboard exists",
+      "state": "present",
+      "evidence": "release/v75/controlled-pilot-readiness-dashboard.md"
+    },
+    {
+      "gate": "human approval checklist exists",
+      "state": "present",
+      "evidence": "release/v75/human-approval-checklist.md"
+    }
+  ]
+}

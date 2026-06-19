@@ -1,0 +1,38 @@
+name: Repo Health
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches:
+      - main
+      - 'v7.*'
+
+jobs:
+  repo-health:
+    name: Repo health and evidence operations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run repo health
+        run: npm run repo:health
+
+      - name: Upload v7.6 review artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v76-review-artifacts
+          path: release/v76/
+          if-no-files-found: ignore
