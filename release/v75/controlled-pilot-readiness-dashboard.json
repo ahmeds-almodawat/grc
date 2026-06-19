@@ -1,0 +1,74 @@
+{
+  "generated_at": "2026-06-19T21:02:58.743Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "controlled_pilot_note": "This dashboard does not approve the pilot. Real human signoff is still required unless the approval gates are passed.",
+  "gates": [
+    {
+      "key": "build_static",
+      "name": "Typecheck and build",
+      "status": "passed",
+      "basis": "Run npm run ci:static locally before committing v7.5."
+    },
+    {
+      "key": "module_acceptance",
+      "name": "Module acceptance evidence",
+      "status": "passed_with_warnings",
+      "basis": "status=passed_with_warnings, strict_passed=true"
+    },
+    {
+      "key": "runtime_security_bridge",
+      "name": "Runtime security bridge",
+      "status": "passed",
+      "basis": "status=passed, service_role_only_rpc_called_by_frontend=0"
+    },
+    {
+      "key": "security_definer_execute",
+      "name": "Security definer execute grants",
+      "status": "passed",
+      "basis": "remaining_broad_execute_grants=0, strict_passed=true"
+    },
+    {
+      "key": "authenticated_persona_proof",
+      "name": "Authenticated persona proof",
+      "status": "passed",
+      "basis": "authenticated_personas=8, required_scenarios=same organization access allowed,cross organization denial,cross department denial,confidential OVR denial,evidence access scope,self approval prevention,role administration authorization,export and backup denial for normal users,anonymous access denial"
+    },
+    {
+      "key": "restore_dryrun",
+      "name": "Restore integrity dry-run",
+      "status": "passed",
+      "basis": "strict_passed=true, counts_matched=true, smoke_passed=true"
+    },
+    {
+      "key": "sql_evidence_capture",
+      "name": "SQL evidence capture",
+      "status": "pending",
+      "basis": "capture_status=captured_pending_human_approval, sql_passed=unknown/unknown"
+    },
+    {
+      "key": "human_signoff",
+      "name": "Human pilot signoff",
+      "status": "pending",
+      "basis": "signoff_valid=unknown"
+    },
+    {
+      "key": "confidentiality_confirmation",
+      "name": "OVR confidentiality confirmation",
+      "status": "pending",
+      "basis": "confidentiality_valid=unknown"
+    },
+    {
+      "key": "proof_all",
+      "name": "Full proof suite",
+      "status": "failed_review_required",
+      "basis": "status=failed_review_required, passed=16, failed=1, failed_commands=v66:strict-proof"
+    },
+    {
+      "key": "production_readiness",
+      "name": "Production readiness",
+      "status": "not_ready",
+      "basis": "Controlled pilot evidence is not production proof. Production requires separate staging/live validation and approval."
+    }
+  ]
+}
