@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-06-19T21:50:39.085Z",
+  "status": "passed",
+  "critical_findings": 0,
+  "warning_findings": 0,
+  "findings": [
+    {
+      "severity": "info",
+      "issue": "tracked_env_template_files_allowed",
+      "count": 2,
+      "detail": ".env.example, .env.production.example"
+    },
+    {
+      "severity": "info",
+      "issue": "generated_release_changes_currently_visible",
+      "count": 1,
+      "detail": "?? release/v76/"
+    }
+  ],
+  "note": "This audit does not rewrite history and does not delete files."
+}

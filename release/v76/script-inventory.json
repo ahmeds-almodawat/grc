@@ -1,0 +1,760 @@
+{
+  "generated_at": "2026-06-19T21:50:37.825Z",
+  "total_scripts": 186,
+  "category_counts": {
+    "canonical": 6,
+    "evidence": 12,
+    "versioned": 136,
+    "test": 10,
+    "ci": 0,
+    "other": 22
+  },
+  "high_script_count_warning": true,
+  "policy": "Do not delete historical evidence scripts before controlled pilot evidence is closed.",
+  "scripts": [
+    {
+      "name": "audit:i18n",
+      "command": "node scripts/audit-i18n.mjs"
+    },
+    {
+      "name": "audit:routes",
+      "command": "node scripts/audit-routes.mjs"
+    },
+    {
+      "name": "build",
+      "command": "tsc && vite build"
+    },
+    {
+      "name": "bundle:production-proof",
+      "command": "node scripts/create-production-proof-bundle.mjs"
+    },
+    {
+      "name": "ci:static",
+      "command": "npm run typecheck && npm run build"
+    },
+    {
+      "name": "dev",
+      "command": "vite"
+    },
+    {
+      "name": "doctor:consolidation",
+      "command": "node scripts/v39-full-consolidation-audit.mjs"
+    },
+    {
+      "name": "doctor:local",
+      "command": "node scripts/v38-local-doctor.mjs"
+    },
+    {
+      "name": "doctor:schema",
+      "command": "node scripts/v38-schema-doctor.mjs"
+    },
+    {
+      "name": "final:all",
+      "command": "npm run typecheck && npm run build && npm run verify:migrations && npm run migrations:bundle && npm run audit:routes && npm run audit:i18n && npm run final:handover && npm run smoke:final && npm run proof:production"
+    },
+    {
+      "name": "final:handover",
+      "command": "node scripts/create-handover-bundle.mjs"
+    },
+    {
+      "name": "lint:types",
+      "command": "tsc --noEmit"
+    },
+    {
+      "name": "migrations:bundle",
+      "command": "node scripts/bundle-migrations.mjs"
+    },
+    {
+      "name": "no-mock:audit",
+      "command": "node scripts/v60-production-data-audit.mjs"
+    },
+    {
+      "name": "no-mock:fail",
+      "command": "node scripts/v60-production-data-audit.mjs --strict"
+    },
+    {
+      "name": "no-mock:plan",
+      "command": "node scripts/v59-clean-mock-suggestions.mjs"
+    },
+    {
+      "name": "pilot:readiness",
+      "command": "npm run ci:static && npm run v75:all"
+    },
+    {
+      "name": "preview",
+      "command": "vite preview"
+    },
+    {
+      "name": "proof:all",
+      "command": "node scripts/v700-proof-suite.mjs all"
+    },
+    {
+      "name": "proof:personas",
+      "command": "node scripts/v700-proof-suite.mjs personas"
+    },
+    {
+      "name": "proof:pilot",
+      "command": "node scripts/v700-proof-suite.mjs pilot"
+    },
+    {
+      "name": "proof:production",
+      "command": "node scripts/create-production-proof-bundle.mjs"
+    },
+    {
+      "name": "proof:restore",
+      "command": "node scripts/v700-proof-suite.mjs restore"
+    },
+    {
+      "name": "proof:runtime-security",
+      "command": "node scripts/v700-proof-suite.mjs runtime-security"
+    },
+    {
+      "name": "proof:technical",
+      "command": "node scripts/v700-proof-suite.mjs technical"
+    },
+    {
+      "name": "rc:audit",
+      "command": "node scripts/v40-release-candidate-audit.mjs"
+    },
+    {
+      "name": "release:bundle",
+      "command": "node scripts/create-final-release-bundle.mjs"
+    },
+    {
+      "name": "repo:health",
+      "command": "npm run ci:static && npm run v76:all"
+    },
+    {
+      "name": "report:final",
+      "command": "node scripts/v38-final-report.mjs"
+    },
+    {
+      "name": "rls:lab",
+      "command": "node scripts/v42-rls-persona-test-lab.mjs"
+    },
+    {
+      "name": "rls:sql",
+      "command": "node scripts/v42-generate-rls-persona-sql.mjs"
+    },
+    {
+      "name": "simulate:production",
+      "command": "node scripts/v38-production-simulator.mjs"
+    },
+    {
+      "name": "smoke:final",
+      "command": "node scripts/final-smoke-check.mjs"
+    },
+    {
+      "name": "supabase:local:reset",
+      "command": "supabase db reset"
+    },
+    {
+      "name": "supabase:local:start",
+      "command": "supabase start"
+    },
+    {
+      "name": "supabase:local:status",
+      "command": "supabase status"
+    },
+    {
+      "name": "supabase:local:stop",
+      "command": "supabase stop"
+    },
+    {
+      "name": "supabase:verify",
+      "command": "node scripts/v41-fresh-supabase-install-verifier.mjs"
+    },
+    {
+      "name": "test:e2e",
+      "command": "playwright test"
+    },
+    {
+      "name": "test:phase1",
+      "command": "node scripts/v59-phase-runner.mjs --phase=1"
+    },
+    {
+      "name": "test:phase2",
+      "command": "node scripts/v59-phase-runner.mjs --phase=2"
+    },
+    {
+      "name": "test:phase3",
+      "command": "node scripts/v59-phase-runner.mjs --phase=3"
+    },
+    {
+      "name": "test:phase4",
+      "command": "node scripts/v59-phase-runner.mjs --phase=4"
+    },
+    {
+      "name": "test:phase5",
+      "command": "node scripts/v59-phase-runner.mjs --phase=5"
+    },
+    {
+      "name": "test:phase6",
+      "command": "node scripts/v59-phase-runner.mjs --phase=6"
+    },
+    {
+      "name": "test:phases",
+      "command": "node scripts/v60-phase-runner.mjs --all"
+    },
+    {
+      "name": "test:real",
+      "command": "npm run test:unit && npm run test:e2e"
+    },
+    {
+      "name": "test:unit",
+      "command": "vitest run"
+    },
+    {
+      "name": "typecheck",
+      "command": "tsc --noEmit"
+    },
+    {
+      "name": "v38:all",
+      "command": "node scripts/v38-local-doctor.mjs && node scripts/v38-schema-doctor.mjs && node scripts/v38-production-simulator.mjs && node scripts/v38-final-report.mjs"
+    },
+    {
+      "name": "v42:all",
+      "command": "npm run doctor:consolidation && npm run rc:audit && npm run supabase:verify && npm run rls:lab && npm run rls:sql"
+    },
+    {
+      "name": "v43:ovr",
+      "command": "node scripts/v43-ovr-production-audit.mjs"
+    },
+    {
+      "name": "v44:ovr-risk",
+      "command": "node scripts/v44-ovr-risk-calibration-audit.mjs"
+    },
+    {
+      "name": "v45:i18n",
+      "command": "node scripts/v45-i18n-deep-audit.mjs"
+    },
+    {
+      "name": "v46:all",
+      "command": "npm run v43:ovr && npm run v44:ovr-risk && npm run v45:i18n && npm run v46:rtl"
+    },
+    {
+      "name": "v46:rtl",
+      "command": "node scripts/v46-rtl-visual-qa.mjs"
+    },
+    {
+      "name": "v50:all",
+      "command": "npm run typecheck && npm run build && npm run v50:scale && npm run v50:performance && npm run v50:backup && npm run v50:restore"
+    },
+    {
+      "name": "v50:backup",
+      "command": "node scripts/v50-backup-strategy-check.mjs"
+    },
+    {
+      "name": "v50:performance",
+      "command": "node scripts/v50-performance-audit.mjs"
+    },
+    {
+      "name": "v50:restore",
+      "command": "node scripts/v50-restore-dryrun-audit.mjs"
+    },
+    {
+      "name": "v50:scale",
+      "command": "node scripts/v50-generate-scale-seed.mjs --dry-run"
+    },
+    {
+      "name": "v54:all",
+      "command": "npm run typecheck && npm run build && npm run v54:reports && npm run v54:boardpack && npm run v54:ux && npm run v54:employee"
+    },
+    {
+      "name": "v54:boardpack",
+      "command": "node scripts/v54-boardpack-audit.mjs"
+    },
+    {
+      "name": "v54:employee",
+      "command": "node scripts/v54-employee-mode-audit.mjs"
+    },
+    {
+      "name": "v54:reports",
+      "command": "node scripts/v54-print-report-audit.mjs"
+    },
+    {
+      "name": "v54:ux",
+      "command": "node scripts/v54-forms-ux-audit.mjs"
+    },
+    {
+      "name": "v58:all",
+      "command": "npm run typecheck && npm run build && npm run v58:pilot && npm run v58:rollout && npm run v58:security && npm run v58:audit"
+    },
+    {
+      "name": "v58:audit",
+      "command": "node scripts/v58-audit-trail-check.mjs"
+    },
+    {
+      "name": "v58:pilot",
+      "command": "node scripts/v58-pilot-readiness.mjs"
+    },
+    {
+      "name": "v58:rollout",
+      "command": "node scripts/v58-rollout-readiness.mjs"
+    },
+    {
+      "name": "v58:security",
+      "command": "node scripts/v58-security-review.mjs"
+    },
+    {
+      "name": "v59:all",
+      "command": "npm run v59:plan && npm run test:phases && npm run no-mock:audit && npm run no-mock:plan"
+    },
+    {
+      "name": "v59:plan",
+      "command": "node scripts/v59-generate-test-plan.mjs"
+    },
+    {
+      "name": "v60:all",
+      "command": "npm run v60:remediate && npm run typecheck && npm run build && npm run v60:strict && npm run v60:phases"
+    },
+    {
+      "name": "v60:audit",
+      "command": "node scripts/v60-production-data-audit.mjs"
+    },
+    {
+      "name": "v60:phases",
+      "command": "node scripts/v60-phase-runner.mjs --all"
+    },
+    {
+      "name": "v60:remediate",
+      "command": "node scripts/v60-runtime-no-mock-remediation.mjs"
+    },
+    {
+      "name": "v60:strict",
+      "command": "node scripts/v60-production-data-audit.mjs --strict"
+    },
+    {
+      "name": "v611:all",
+      "command": "npm run typecheck && npm run build && npm run v61:pin-strict && npm run v611:registry && npm run v611:migration-plan && npm run v611:version-truth && npm run v611:report"
+    },
+    {
+      "name": "v611:migration-apply",
+      "command": "node scripts/v611-migration-prefix-cleanup-plan.mjs --apply --i-understand-rename-migrations"
+    },
+    {
+      "name": "v611:migration-plan",
+      "command": "node scripts/v611-migration-prefix-cleanup-plan.mjs"
+    },
+    {
+      "name": "v611:registry",
+      "command": "node scripts/v611-sanitize-npm-registry.mjs"
+    },
+    {
+      "name": "v611:report",
+      "command": "node scripts/v611-baseline-cleanup-report.mjs"
+    },
+    {
+      "name": "v611:version-truth",
+      "command": "node scripts/v611-version-truth-file.mjs"
+    },
+    {
+      "name": "v61:all",
+      "command": "npm run typecheck && npm run build && npm run v61:pin-check && npm run v61:migrations && npm run v61:version && npm run v61:capabilities && npm run v61:evidence"
+    },
+    {
+      "name": "v61:capabilities",
+      "command": "node scripts/v61-capability-register.mjs"
+    },
+    {
+      "name": "v61:evidence",
+      "command": "node scripts/v61-generated-evidence-audit.mjs"
+    },
+    {
+      "name": "v61:migrations",
+      "command": "node scripts/v61-regenerate-migration-manifest.mjs"
+    },
+    {
+      "name": "v61:pin-check",
+      "command": "node scripts/v61-package-pin-audit.mjs"
+    },
+    {
+      "name": "v61:pin-from-lock",
+      "command": "node scripts/v61-pin-package-versions-from-lock.mjs"
+    },
+    {
+      "name": "v61:pin-strict",
+      "command": "node scripts/v61-package-pin-audit.mjs --strict"
+    },
+    {
+      "name": "v61:version",
+      "command": "node scripts/v61-version-baseline-audit.mjs"
+    },
+    {
+      "name": "v62:all",
+      "command": "npm run typecheck && npm run build && npm run v60:strict && npm run v62:static-strict && npm run v62:demo-boundary && npm run v62:result-contract && npm run v62:plan"
+    },
+    {
+      "name": "v62:demo-boundary",
+      "command": "node scripts/v62-demo-boundary-audit.mjs --strict"
+    },
+    {
+      "name": "v62:plan",
+      "command": "node scripts/v62-real-data-transition-plan.mjs"
+    },
+    {
+      "name": "v62:result-contract",
+      "command": "node scripts/v62-live-result-contract-audit.mjs --strict"
+    },
+    {
+      "name": "v62:static",
+      "command": "node scripts/v62-real-data-static-audit.mjs"
+    },
+    {
+      "name": "v62:static-strict",
+      "command": "node scripts/v62-real-data-static-audit.mjs --strict"
+    },
+    {
+      "name": "v63:all",
+      "command": "npm run typecheck && npm run build && npm run v60:strict && npm run v63:auth"
+    },
+    {
+      "name": "v63:auth",
+      "command": "node scripts/v63-auth-route-audit.mjs"
+    },
+    {
+      "name": "v64:all",
+      "command": "npm run typecheck && npm run build && npm run v64:rls-audit && npm run v64:functions && npm run v64:views && npm run v64:persona-sql && npm run v64:proof"
+    },
+    {
+      "name": "v64:functions",
+      "command": "node scripts/v64-security-function-audit.mjs"
+    },
+    {
+      "name": "v64:functions-strict",
+      "command": "node scripts/v64-security-function-audit.mjs --strict"
+    },
+    {
+      "name": "v64:persona-sql",
+      "command": "node scripts/v64-generate-persona-test-sql.mjs"
+    },
+    {
+      "name": "v64:proof",
+      "command": "node scripts/v64-database-security-proof-report.mjs"
+    },
+    {
+      "name": "v64:rls-audit",
+      "command": "node scripts/v64-rls-static-audit.mjs"
+    },
+    {
+      "name": "v64:rls-strict",
+      "command": "node scripts/v64-rls-static-audit.mjs --strict"
+    },
+    {
+      "name": "v64:strict-all",
+      "command": "npm run typecheck && npm run build && npm run v64:rls-strict && npm run v64:functions-strict && npm run v64:views-strict && npm run v64:persona-sql && npm run v64:proof"
+    },
+    {
+      "name": "v64:views",
+      "command": "node scripts/v64-view-security-audit.mjs"
+    },
+    {
+      "name": "v64:views-strict",
+      "command": "node scripts/v64-view-security-audit.mjs --strict"
+    },
+    {
+      "name": "v65:all",
+      "command": "npm run typecheck && npm run build && npm run v60:strict && npm run v64:strict-all && npm run v65:phases"
+    },
+    {
+      "name": "v65:assets",
+      "command": "node scripts/v65-test-assets-audit.mjs"
+    },
+    {
+      "name": "v65:auth",
+      "command": "node scripts/v65-auth-security-smoke.mjs"
+    },
+    {
+      "name": "v65:install-test-deps",
+      "command": "npm install -D vitest jsdom @testing-library/react @testing-library/jest-dom @playwright/test --registry=https://registry.npmjs.org/"
+    },
+    {
+      "name": "v65:phases",
+      "command": "node scripts/v65-phase-runner.mjs --all"
+    },
+    {
+      "name": "v65:pilot",
+      "command": "node scripts/v65-pilot-readiness-gate.mjs"
+    },
+    {
+      "name": "v65:workflow",
+      "command": "node scripts/v65-workflow-contract-tests.mjs"
+    },
+    {
+      "name": "v661:all",
+      "command": "npm run typecheck && npm run build && npm run v661:run-order && npm run v661:sql-pack && npm run v661:evidence && npm run v661:go-no-go"
+    },
+    {
+      "name": "v661:evidence",
+      "command": "node scripts/v661-evidence-attachment-check.mjs"
+    },
+    {
+      "name": "v661:go-no-go",
+      "command": "node scripts/v661-go-no-go-proof-helper.mjs"
+    },
+    {
+      "name": "v661:run-order",
+      "command": "node scripts/v661-staging-run-order.mjs"
+    },
+    {
+      "name": "v661:sql-pack",
+      "command": "node scripts/v661-sql-execution-helper.mjs"
+    },
+    {
+      "name": "v661:strict-proof",
+      "command": "node scripts/v661-evidence-attachment-check.mjs --strict && node scripts/v661-go-no-go-proof-helper.mjs --strict"
+    },
+    {
+      "name": "v662:all",
+      "command": "npm run typecheck && npm run build && npm run test:real && npm run v662:commands && npm run v662:templates && npm run v662:quality"
+    },
+    {
+      "name": "v662:commands",
+      "command": "node scripts/v662-staging-command-pack.mjs"
+    },
+    {
+      "name": "v662:quality",
+      "command": "node scripts/v662-evidence-quality-gate.mjs"
+    },
+    {
+      "name": "v662:strict-proof",
+      "command": "node scripts/v662-evidence-quality-gate.mjs --strict"
+    },
+    {
+      "name": "v662:templates",
+      "command": "node scripts/v662-evidence-template-generator.mjs"
+    },
+    {
+      "name": "v663:all",
+      "command": "npm run typecheck && npm run build && npm run v663:pin-test-deps && npm run v61:pin-strict && npm run v661:sql-pack && npm run v663:sql-pack-fix && npm run v663:progress-audit"
+    },
+    {
+      "name": "v663:pin-test-deps",
+      "command": "node scripts/v663-pin-test-dependencies.mjs"
+    },
+    {
+      "name": "v663:progress-audit",
+      "command": "node scripts/v663-progress-consistency-audit.mjs"
+    },
+    {
+      "name": "v663:sql-pack-fix",
+      "command": "node scripts/v662-staging-command-pack.mjs"
+    },
+    {
+      "name": "v66:all",
+      "command": "node scripts/v66-phase-runner.mjs --all"
+    },
+    {
+      "name": "v66:evidence",
+      "command": "node scripts/v66-staging-evidence-register.mjs"
+    },
+    {
+      "name": "v66:go-no-go",
+      "command": "node scripts/v66-go-no-go-gate.mjs"
+    },
+    {
+      "name": "v66:phases",
+      "command": "node scripts/v66-phase-runner.mjs --all"
+    },
+    {
+      "name": "v66:pilot-package",
+      "command": "node scripts/v66-controlled-pilot-package.mjs"
+    },
+    {
+      "name": "v66:restore",
+      "command": "node scripts/v66-restore-dryrun-evidence.mjs"
+    },
+    {
+      "name": "v66:strict-proof",
+      "command": "node scripts/v66-go-no-go-gate.mjs --strict"
+    },
+    {
+      "name": "v671:all",
+      "command": "npm run v671:disable-invalid-migration && npm run v671:migration-audit && npm run typecheck && npm run build"
+    },
+    {
+      "name": "v671:disable-invalid-migration",
+      "command": "node scripts/v671-disable-invalid-012a-migration.mjs"
+    },
+    {
+      "name": "v671:local-reset-guide",
+      "command": "node scripts/v671-local-supabase-migration-audit.mjs"
+    },
+    {
+      "name": "v671:migration-audit",
+      "command": "node scripts/v671-local-supabase-migration-audit.mjs --strict"
+    },
+    {
+      "name": "v672:all",
+      "command": "node scripts/v672-local-evidence-capture.mjs --run-proofs"
+    },
+    {
+      "name": "v672:capture",
+      "command": "node scripts/v672-local-evidence-capture.mjs"
+    },
+    {
+      "name": "v672:install",
+      "command": "node scripts/v672-install-local-evidence-capture-scripts.mjs"
+    },
+    {
+      "name": "v672:proof",
+      "command": "node scripts/v672-local-evidence-proof.mjs"
+    },
+    {
+      "name": "v673:all",
+      "command": "npm run v673:apply && npm run v673:security-definer-audit && npm run v672:capture && npm run v662:strict-proof && npm run v661:strict-proof && npm run v663:progress-audit"
+    },
+    {
+      "name": "v673:apply",
+      "command": "node scripts/v673-apply-local-migration.mjs"
+    },
+    {
+      "name": "v673:security-definer-audit",
+      "command": "node scripts/v673-security-definer-execute-audit.mjs"
+    },
+    {
+      "name": "v674:all",
+      "command": "npm run v674:restore-dryrun && npm run v674:signoff-check && npm run v674:sync-manual-evidence && npm run v66:strict-proof"
+    },
+    {
+      "name": "v674:restore-dryrun",
+      "command": "node scripts/v674-restore-integrity-dryrun.mjs"
+    },
+    {
+      "name": "v674:signoff-check",
+      "command": "node scripts/v674-signoff-check.mjs"
+    },
+    {
+      "name": "v674:sync-manual-evidence",
+      "command": "node scripts/v674-sync-manual-evidence.mjs"
+    },
+    {
+      "name": "v67:all",
+      "command": "npm run v67:cleanup && npm run typecheck && npm run build && npm run test:real && npm run v62:static-strict && npm run v663:progress-audit"
+    },
+    {
+      "name": "v67:audit",
+      "command": "npm run v62:static-strict"
+    },
+    {
+      "name": "v67:cleanup",
+      "command": "node scripts/v67-real-data-static-blocker-cleanup.mjs"
+    },
+    {
+      "name": "v67:rollback-note",
+      "command": "node -e \"console.log('Backups are under release/v67/backups. Restore manually only if v67 cleanup causes a local issue.')\""
+    },
+    {
+      "name": "v700:all",
+      "command": "npm run v700:rpc-inventory && npm run v700:runtime-security && npm run v700:v65-audit && npm run v700:persona-gap && npm run v700:proof-suite"
+    },
+    {
+      "name": "v700:install",
+      "command": "node scripts/v700-install-stabilization-ab-scripts.mjs"
+    },
+    {
+      "name": "v700:persona-gap",
+      "command": "node scripts/v700-persona-test-gap-report.mjs"
+    },
+    {
+      "name": "v700:proof-suite",
+      "command": "node scripts/v700-proof-suite.mjs all"
+    },
+    {
+      "name": "v700:rpc-inventory",
+      "command": "node scripts/v700-rpc-inventory.mjs"
+    },
+    {
+      "name": "v700:runtime-security",
+      "command": "node scripts/v700-runtime-security-bridge-audit.mjs"
+    },
+    {
+      "name": "v700:v65-audit",
+      "command": "node scripts/v700-v65-strength-audit.mjs"
+    },
+    {
+      "name": "v700:v65-repair-copy",
+      "command": "node scripts/v700-v65-strength-audit.mjs --repair-copy"
+    },
+    {
+      "name": "v72:all",
+      "command": "npm run v72:reload-edge && npm run v72:apply && npm run typecheck && npm run build && npm run v72:persona-proof && npm run v72:runtime-audit && npm run v673:security-definer-audit && npm run v672:capture"
+    },
+    {
+      "name": "v72:apply",
+      "command": "node scripts/v72-apply-local-migration.mjs"
+    },
+    {
+      "name": "v72:persona-proof",
+      "command": "node scripts/v72-real-authenticated-persona-proof.mjs"
+    },
+    {
+      "name": "v72:reload-edge",
+      "command": "node scripts/v72-reload-local-edge-runtime.mjs"
+    },
+    {
+      "name": "v72:runtime-audit",
+      "command": "node scripts/v700-runtime-security-bridge-audit.mjs --strict"
+    },
+    {
+      "name": "v73:all",
+      "command": "npm run v73:module-acceptance && npm run v73:module-report"
+    },
+    {
+      "name": "v73:module-acceptance",
+      "command": "node scripts/v73-module-acceptance.mjs"
+    },
+    {
+      "name": "v73:module-report",
+      "command": "node scripts/v73-module-report.mjs"
+    },
+    {
+      "name": "v75:all",
+      "command": "npm run v75:pilot-dashboard && npm run v75:approval-checklist && npm run v75:executive-readout && npm run v75:review-pack"
+    },
+    {
+      "name": "v75:approval-checklist",
+      "command": "node scripts/v75-generate-approval-checklist.mjs"
+    },
+    {
+      "name": "v75:executive-readout",
+      "command": "node scripts/v75-generate-executive-readout.mjs"
+    },
+    {
+      "name": "v75:pilot-dashboard",
+      "command": "node scripts/v75-generate-pilot-dashboard.mjs"
+    },
+    {
+      "name": "v75:review-pack",
+      "command": "node scripts/v75-generate-review-pack.mjs"
+    },
+    {
+      "name": "v76:all",
+      "command": "npm run v76:script-inventory && npm run v76:repo-hygiene && npm run v76:ci-readiness && npm run v76:evidence-ops && npm run v76:review-pack"
+    },
+    {
+      "name": "v76:ci-readiness",
+      "command": "node scripts/v76-ci-readiness-audit.mjs"
+    },
+    {
+      "name": "v76:evidence-ops",
+      "command": "node scripts/v76-evidence-ops-dashboard.mjs"
+    },
+    {
+      "name": "v76:repo-hygiene",
+      "command": "node scripts/v76-repo-hygiene-audit.mjs"
+    },
+    {
+      "name": "v76:review-pack",
+      "command": "node scripts/v76-generate-review-pack.mjs"
+    },
+    {
+      "name": "v76:script-inventory",
+      "command": "node scripts/v76-script-inventory.mjs"
+    },
+    {
+      "name": "verify:migrations",
+      "command": "node scripts/verify-migrations.mjs"
+    }
+  ]
+}

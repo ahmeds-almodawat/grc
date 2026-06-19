@@ -4,3 +4,6 @@ dist
 .env.local
 .DS_Store
 *.log
+
+# Local patch/build archives
+*.zip

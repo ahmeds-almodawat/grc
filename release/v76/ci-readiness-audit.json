@@ -1,0 +1,45 @@
+{
+  "generated_at": "2026-06-19T21:50:39.907Z",
+  "status": "passed",
+  "passed": 9,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "README.md exists",
+      "passed": true
+    },
+    {
+      "name": "docs/ARCHITECTURE.md exists",
+      "passed": true
+    },
+    {
+      "name": "docs/RELEASE_POLICY.md exists",
+      "passed": true
+    },
+    {
+      "name": ".github/workflows/ci.yml exists",
+      "passed": true
+    },
+    {
+      "name": ".github/workflows/repo-health.yml exists",
+      "passed": true
+    },
+    {
+      "name": "ci:static script exists",
+      "passed": true
+    },
+    {
+      "name": "pilot:readiness script exists",
+      "passed": true
+    },
+    {
+      "name": "repo:health script exists",
+      "passed": true
+    },
+    {
+      "name": "v76:all script exists",
+      "passed": true
+    }
+  ],
+  "note": "CI readiness is not production readiness. proof:all is intentionally not required until human signoff is complete."
+}
