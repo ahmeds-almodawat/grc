@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-06-19T22:13:47.325Z",
+  "status": "technical_ready_pending_human_approval",
+  "sections": [
+    "staging-validation-audit.md",
+    "pr-quality-audit.md",
+    "uat-scenario-pack.md",
+    "pilot-risk-register.md",
+    "release-candidate-readiness.md",
+    "executive-board-pack.md"
+  ],
+  "report": "release/v77/v77-review-pack.md"
+}

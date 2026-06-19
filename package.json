@@ -189,7 +189,16 @@
     "v76:evidence-ops": "node scripts/v76-evidence-ops-dashboard.mjs",
     "v76:review-pack": "node scripts/v76-generate-review-pack.mjs",
     "v76:all": "npm run v76:script-inventory && npm run v76:repo-hygiene && npm run v76:ci-readiness && npm run v76:evidence-ops && npm run v76:review-pack",
-    "repo:health": "npm run ci:static && npm run v76:all"
+    "repo:health": "npm run ci:static && npm run v76:all",
+    "v77:staging-audit": "node scripts/v77-staging-validation-audit.mjs",
+    "v77:pr-quality": "node scripts/v77-pr-quality-audit.mjs",
+    "v77:uat-scenarios": "node scripts/v77-uat-scenario-pack.mjs",
+    "v77:risk-register": "node scripts/v77-risk-register-generator.mjs",
+    "v77:release-candidate": "node scripts/v77-release-candidate-readiness.mjs",
+    "v77:board-pack": "node scripts/v77-board-pack-generator.mjs",
+    "v77:review-pack": "node scripts/v77-generate-review-pack.mjs",
+    "v77:all": "npm run v77:staging-audit && npm run v77:pr-quality && npm run v77:uat-scenarios && npm run v77:risk-register && npm run v77:release-candidate && npm run v77:board-pack && npm run v77:review-pack",
+    "pilot:staging-readiness": "npm run ci:static && npm run v77:all"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

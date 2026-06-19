@@ -1,0 +1,21 @@
+name: Staging Readiness
+
+on:
+  push:
+    branches: [main, "v7.*"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  staging-readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install
+      - run: node scripts/v77-install-package-scripts.mjs
+      - run: npm run ci:static
+      - run: npm run v77:all
