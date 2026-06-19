@@ -176,7 +176,13 @@
     "v73:module-acceptance": "node scripts/v73-module-acceptance.mjs",
     "v73:module-report": "node scripts/v73-module-report.mjs",
     "v73:all": "npm run v73:module-acceptance && npm run v73:module-report",
-    "ci:static": "npm run typecheck && npm run build"
+    "ci:static": "npm run typecheck && npm run build",
+    "v75:pilot-dashboard": "node scripts/v75-generate-pilot-dashboard.mjs",
+    "v75:approval-checklist": "node scripts/v75-generate-approval-checklist.mjs",
+    "v75:executive-readout": "node scripts/v75-generate-executive-readout.mjs",
+    "v75:review-pack": "node scripts/v75-generate-review-pack.mjs",
+    "v75:all": "npm run v75:pilot-dashboard && npm run v75:approval-checklist && npm run v75:executive-readout && npm run v75:review-pack",
+    "pilot:readiness": "npm run ci:static && npm run v75:all"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

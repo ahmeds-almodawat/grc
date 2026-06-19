@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-06-19T21:02:59.306Z",
+  "signoff_valid": false,
+  "confidentiality_valid": false,
+  "strict_passed": false,
+  "recommended_scope": "Controlled internal pilot for GRC Control Center using synthetic/non-confidential data only. Pilot limited to 5–15 internal users. No real patient identifiers. No confidential OVR details. No production rollout.",
+  "allowed_pilot_decisions": [
+    "approved",
+    "approve",
+    "go",
+    "accepted"
+  ],
+  "allowed_confidentiality_decisions": [
+    "confirmed",
+    "approved",
+    "accepted"
+  ],
+  "pilot_required_fields": [
+    "management_admin.name",
+    "management_admin.role",
+    "management_admin.date",
+    "management_admin.decision",
+    "management_admin.scope",
+    "it.name",
+    "it.role",
+    "it.date",
+    "it.decision",
+    "it.scope",
+    "quality.name",
+    "quality.role",
+    "quality.date",
+    "quality.decision",
+    "quality.scope",
+    "pilot_scope",
+    "maximum_pilot_users",
+    "reviewed_evidence.local_staging_sql_proofs_reviewed",
+    "reviewed_evidence.restore_integrity_dryrun_reviewed",
+    "reviewed_evidence.security_definer_audit_reviewed"
+  ],
+  "confidentiality_required_fields": [
+    "it_reviewer.name",
+    "it_reviewer.role",
+    "it_reviewer.date",
+    "it_reviewer.decision",
+    "it_reviewer.scope",
+    "quality_reviewer.name",
+    "quality_reviewer.role",
+    "quality_reviewer.date",
+    "quality_reviewer.decision",
+    "quality_reviewer.scope",
+    "statements.no_real_patient_identifiers",
+    "statements.no_confidential_ovr_details",
+    "statements.controlled_pilot_users_only",
+    "statements.local_staging_proof_reviewed",
+    "scope"
+  ],
+  "signoff_issues_from_latest_check": [],
+  "confidentiality_issues_from_latest_check": []
+}
