@@ -1,0 +1,46 @@
+module,status,severity,issue,detail
+admin,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+admin-safety-console,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+analytics,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+automation-intelligence,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+backup-health-check,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+backup-scheduler,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+bilingual-dictionary,warning,warning,warning,Arabic/RTL acceptance is static/module-level in v7.3; visual browser screenshots should be added before production rollout.
+bilingual-dictionary,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+board-pack,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+committee-automation,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+dashboard,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+departments,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+department-scorecards,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+executive-command-center,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+executive-mobile-command,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+final-sprint,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+global-search,warning,warning,warning,Global search still needs manual UI sampling for relevance and navigation labels before broad rollout.
+load-seed-center,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+migration-runbook,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+migration-verifier,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+modern-executive-dashboard,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+my-work,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+no-mock-auto-test-center,not_applicable_for_pilot,warning,warning,Legacy/unmounted module deferred until retain-or-retire decision.
+performance,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+pilot-operations,not_applicable_for_pilot,warning,warning,Legacy/unmounted module deferred until retain-or-retire decision.
+pilot-rollout-security-audit,not_applicable_for_pilot,warning,warning,Legacy/unmounted module deferred until retain-or-retire decision.
+policy-documents,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+production-data-control,not_applicable_for_pilot,warning,warning,Legacy/unmounted module deferred until retain-or-retire decision.
+production-finish,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+production-proof,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+production-release,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+relationship-map,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+release-candidate,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+release-factory,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+rls-persona-lab,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+scale-backup-restore,not_applicable_for_pilot,warning,warning,Legacy/unmounted module deferred until retain-or-retire decision.
+scenario-planning,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+setup-center,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+smart-review-calendar,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+staging-validation,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+testing-center,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+translation-coverage,warning,warning,warning,Arabic/RTL acceptance is static/module-level in v7.3; visual browser screenshots should be added before production rollout.
+translation-coverage,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+user-guide,warning,warning,warning,Detailed workflow test deferred outside priority 1 controlled-pilot scope.
+v35-consolidation-fix-kit,not_applicable_for_pilot,warning,warning,Legacy/unmounted module deferred until retain-or-retire decision.

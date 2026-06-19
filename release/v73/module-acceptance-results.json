@@ -1,0 +1,2176 @@
+{
+  "version": "v7.3.1",
+  "generated_at": "2026-06-19T19:48:36.650Z",
+  "status": "passed_with_warnings",
+  "strict_passed": true,
+  "synthetic_data_only": true,
+  "no_real_patient_identifiers": true,
+  "no_confidential_ovr_data": true,
+  "human_approvals_filled": false,
+  "human_approval_note": "This evidence pack does not approve the controlled pilot. Management/Admin, IT and Quality signoff remains manual.",
+  "signals": {
+    "typecheck": true,
+    "build": true,
+    "runtime_bridge_passed": true,
+    "edge_bridge_actions": 7,
+    "persona_proof_passed": true,
+    "synthetic_only": true,
+    "restore_verified": true,
+    "v65_strength_usable": true,
+    "sql_evidence_files_passed": true,
+    "v672_capture_passed": true,
+    "v661_v662_evidence_quality_passed": true,
+    "sql_evidence_passed": true
+  },
+  "summary": {
+    "total_modules": 67,
+    "passed": 24,
+    "warnings": 37,
+    "failed": 0,
+    "blocking_failures": 0,
+    "not_applicable_for_pilot": 6,
+    "priority_1_modules": 11,
+    "priority_2_modules": 16,
+    "deferred_after_pilot": 34
+  },
+  "modules": [
+    {
+      "id": "application-shell-hubs",
+      "page": "App/Layout and six TabbedHub shells",
+      "status": "active",
+      "apis": [
+        "AuthProvider",
+        "authAccess"
+      ],
+      "test_objective": "Verify login gating, role-based navigation, hub tabs, fallback page selection and unauthorized rendering.",
+      "synthetic_data_needed": "One user for each major role group plus a user with no active role.",
+      "expected_pass_condition": "Each role sees only permitted navigation and every hub opens its child tabs without blank or duplicated content.",
+      "expected_fail_condition": "Restricted navigation appears, unauthorized pages render protected content, or role changes leave an invalid active page.",
+      "test_types": [
+        "browser",
+        "API"
+      ],
+      "risk_level": "critical",
+      "acceptance_scope": "priority_1_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "App/Layout and six TabbedHub shells"
+        },
+        {
+          "id": "auth_persona_and_build_proof",
+          "passed": true,
+          "evidence": "release/v72 and release/v700 proof artifacts"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "access-control",
+      "page": "AccessControl.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi",
+        "privileged-action Edge bridge"
+      ],
+      "test_objective": "Accept role inventory, scoped assignment, deactivation, cross-organization denial and privileged-role escalation protection.",
+      "synthetic_data_needed": "Super admin, governance admin, employee targets in two organizations and department scopes.",
+      "expected_pass_condition": "Authorized assignments/deactivations persist and appear in the matrix; unauthorized or cross-org actions are rejected.",
+      "expected_fail_condition": "Normal users manage roles, privileged roles are escalated improperly, or last-admin/self-deactivation protections fail.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "critical",
+      "acceptance_scope": "priority_1_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "AccessControl.tsx"
+        },
+        {
+          "id": "role_management_proof",
+          "passed": true,
+          "evidence": "runtime bridge and role administration scenario"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "admin",
+      "page": "Admin.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi"
+      ],
+      "test_objective": "Verify administrative profile and department lists are scoped, complete and safe for authorized administrators.",
+      "synthetic_data_needed": "Profiles across two departments and one inactive profile.",
+      "expected_pass_condition": "Authorized admins see expected scoped users/departments and inactive state is explicit.",
+      "expected_fail_condition": "Cross-organization profiles leak or non-admin roles open the module.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "Admin.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "admin-safety-console",
+      "page": "AdminSafetyConsole.tsx",
+      "status": "active",
+      "apis": [
+        "releaseOpsApi"
+      ],
+      "test_objective": "Verify administrative lock, safety and privileged-operation findings are accurately displayed.",
+      "synthetic_data_needed": "One passing safety control, one warning and one blocking finding.",
+      "expected_pass_condition": "Severity, ownership and remediation text match the source rows.",
+      "expected_fail_condition": "Blocking findings are hidden, downgraded or shown as ready.",
+      "test_types": [
+        "browser",
+        "API"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "AdminSafetyConsole.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "advanced-report-builder",
+      "page": "AdvancedReportBuilder.tsx",
+      "status": "active",
+      "apis": [
+        "enterpriseApi",
+        "exportUtils"
+      ],
+      "test_objective": "Verify template selection, report query execution, result rendering, print/export and run logging.",
+      "synthetic_data_needed": "Two report templates, one result set and one empty result set.",
+      "expected_pass_condition": "Selected template returns correct rows and a report-run audit entry; empty results remain explicit.",
+      "expected_fail_condition": "Template scope is bypassed, export content differs from displayed data or run logging fails silently.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "AdvancedReportBuilder.tsx"
+        },
+        {
+          "id": "export_denial_proof",
+          "passed": true,
+          "evidence": "export and backup denial for normal users scenario"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "analytics",
+      "page": "Analytics.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi"
+      ],
+      "test_objective": "Validate KPI scorecard, heatmap, trend and radar calculations against known source values.",
+      "synthetic_data_needed": "Departments with low/high risks, monthly status changes and control scores.",
+      "expected_pass_condition": "Charts and totals reconcile with source queries and handle no-data periods.",
+      "expected_fail_condition": "Aggregates double-count, cross-org data appears or chart labels mismatch values.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "Analytics.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "approvals",
+      "page": "Approvals.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi"
+      ],
+      "test_objective": "Verify approval queue visibility, approve/reject decisions, notes and self-approval prevention.",
+      "synthetic_data_needed": "Pending approvals for separate requester/approver plus one self-approval attempt.",
+      "expected_pass_condition": "Assigned approver can decide once; requester sees status; self-approval is rejected.",
+      "expected_fail_condition": "Unrelated users decide approvals, decisions lack audit data or self-approval succeeds.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "critical",
+      "acceptance_scope": "priority_1_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "Approvals.tsx"
+        },
+        {
+          "id": "approval_workflow_proof",
+          "passed": true,
+          "evidence": "self-approval prevention and v65 workflow proof"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "audit-findings",
+      "page": "Audit.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi"
+      ],
+      "test_objective": "Accept audit-finding list, filtering, creation and ownership/due-date rendering.",
+      "synthetic_data_needed": "Open, overdue, closed and evidence-required findings across departments.",
+      "expected_pass_condition": "Authorized users see scoped findings and valid creation persists with correct severity and owner.",
+      "expected_fail_condition": "Cross-scope findings leak, closure bypasses evidence controls or required fields are ignored.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "Audit.tsx"
+        },
+        {
+          "id": "scoped_access_persona_proof",
+          "passed": true,
+          "evidence": "same/cross organization and department scenarios"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "automation-intelligence",
+      "page": "AutomationIntelligenceCenter.tsx",
+      "status": "active",
+      "apis": [
+        "automationApi"
+      ],
+      "test_objective": "Verify automation summary, rule catalog, executive exceptions and the server-only refresh guard.",
+      "synthetic_data_needed": "Healthy and overdue rules, KRI breach and exception records.",
+      "expected_pass_condition": "Read models reconcile and browser refresh is clearly blocked or delegated to server automation.",
+      "expected_fail_condition": "Browser executes service-only refresh or exceptions are omitted from totals.",
+      "test_types": [
+        "browser",
+        "API"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "AutomationIntelligenceCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "backup-health-check",
+      "page": "BackupHealthCheck.tsx",
+      "status": "active",
+      "apis": [
+        "hardeningApi"
+      ],
+      "test_objective": "Verify backup health checks, workflow blockers, KPI derivation and protected snapshot behavior.",
+      "synthetic_data_needed": "Healthy, stale and failed backup checks plus workflow blockers.",
+      "expected_pass_condition": "KPIs match rows, blockers are visible and snapshot action reports its server-only state.",
+      "expected_fail_condition": "Failed backup controls show healthy or browser snapshot silently succeeds without authorization.",
+      "test_types": [
+        "browser",
+        "API"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "BackupHealthCheck.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "backup-scheduler",
+      "page": "BackupSchedulerCenter.tsx",
+      "status": "active",
+      "apis": [
+        "enterpriseApi"
+      ],
+      "test_objective": "Verify schedule readiness, due calculations and that browser users cannot record trusted backup runs.",
+      "synthetic_data_needed": "Daily, weekly and overdue plans with completed/failed run history.",
+      "expected_pass_condition": "Readiness status and next due date are correct; record-run action is blocked or server-routed.",
+      "expected_fail_condition": "Normal users see restricted schedules or can fabricate backup-run completion.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "critical",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "BackupSchedulerCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "bilingual-dictionary",
+      "page": "BilingualDictionaryCenter.tsx",
+      "status": "active",
+      "apis": [
+        "releaseOpsApi"
+      ],
+      "test_objective": "Verify English/Arabic dictionary coverage, missing translations and export consistency.",
+      "synthetic_data_needed": "Complete pair, missing Arabic value and inactive dictionary entry.",
+      "expected_pass_condition": "Coverage and missing counts are correct in both directions and export matches the grid.",
+      "expected_fail_condition": "Missing translations are treated as complete or RTL text is corrupted.",
+      "test_types": [
+        "browser",
+        "API"
+      ],
+      "risk_level": "medium",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "BilingualDictionaryCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Arabic/RTL acceptance is static/module-level in v7.3; visual browser screenshots should be added before production rollout.",
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "board-pack",
+      "page": "BoardPackCenter.tsx",
+      "status": "active",
+      "apis": [
+        "enterpriseApi",
+        "privileged-action Edge bridge"
+      ],
+      "test_objective": "Verify board summary, department scorecards, scenarios, export/print and authorized snapshot creation.",
+      "synthetic_data_needed": "Executive user, normal employee, multi-department scorecards and risk scenarios.",
+      "expected_pass_condition": "Executive snapshot succeeds through the bridge and stored summary matches displayed organization data.",
+      "expected_fail_condition": "Normal users create snapshots, cross-org data enters the pack or export differs from screen data.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "critical",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "BoardPackCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "committee-automation",
+      "page": "CommitteeActionAutomationCenter.tsx",
+      "status": "active",
+      "apis": [
+        "automationApi"
+      ],
+      "test_objective": "Verify committee actions, overdue automation signals and export output.",
+      "synthetic_data_needed": "Upcoming, overdue, completed and unowned committee actions.",
+      "expected_pass_condition": "Status signals and counts match due dates and exported rows.",
+      "expected_fail_condition": "Overdue actions are omitted or completed items remain escalated.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "medium",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "CommitteeActionAutomationCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "compliance",
+      "page": "Compliance.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi"
+      ],
+      "test_objective": "Accept compliance register display, filtering, creation, due dates and ownership scope.",
+      "synthetic_data_needed": "Due, overdue, expired and completed requirements in two departments.",
+      "expected_pass_condition": "Authorized creation persists and status/due calculations match source records.",
+      "expected_fail_condition": "Cross-department leakage, invalid due dates or silent creation failure.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "Compliance.tsx"
+        },
+        {
+          "id": "scoped_access_persona_proof",
+          "passed": true,
+          "evidence": "same/cross organization and department scenarios"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "custom-reports",
+      "page": "CustomReports.tsx",
+      "status": "active",
+      "apis": [
+        "hardeningApi",
+        "exportUtils"
+      ],
+      "test_objective": "Verify report index, selected report rows, printing, export and export logging.",
+      "synthetic_data_needed": "Two report definitions with scoped rows and one empty definition.",
+      "expected_pass_condition": "Report rows honor scope and export log records format and row count.",
+      "expected_fail_condition": "Restricted rows are exported, empty data is fabricated or logging is absent.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "CustomReports.tsx"
+        },
+        {
+          "id": "export_denial_proof",
+          "passed": true,
+          "evidence": "export and backup denial for normal users scenario"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "dashboard",
+      "page": "Dashboard.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi"
+      ],
+      "test_objective": "Verify executive summary, critical attention, management controls and OVR risk summary.",
+      "synthetic_data_needed": "Known blocker, warning, approval, evidence and OVR risk records.",
+      "expected_pass_condition": "All headline totals reconcile and critical items link to the correct source.",
+      "expected_fail_condition": "Critical records are hidden, stale counts persist or organization scope is mixed.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "Dashboard.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "departments",
+      "page": "Departments.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi"
+      ],
+      "test_objective": "Verify department execution summaries, progress, overdue counts and risk indicators.",
+      "synthetic_data_needed": "Two departments with different project/task completion and overdue states.",
+      "expected_pass_condition": "Department totals reconcile with underlying work items.",
+      "expected_fail_condition": "Cross-org departments appear or percentage calculations are incorrect.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "medium",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "Departments.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "department-scorecards",
+      "page": "DepartmentScorecards.tsx",
+      "status": "active",
+      "apis": [
+        "enterpriseApi"
+      ],
+      "test_objective": "Verify department scorecard metrics, ranking, status tones and export.",
+      "synthetic_data_needed": "At least three departments with varied control, risk and overdue scores.",
+      "expected_pass_condition": "Ranking and totals match source views and export ordering.",
+      "expected_fail_condition": "Scores are mis-ranked, missing departments are treated as zero without explanation or scope leaks.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "medium",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "DepartmentScorecards.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "escalations",
+      "page": "Escalations.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi",
+        "privileged-action Edge bridge"
+      ],
+      "test_objective": "Verify escalation visibility, delay queue, acknowledge/resolve transitions and server-only refresh behavior.",
+      "synthetic_data_needed": "Owned and unrelated open escalations plus overdue delay items.",
+      "expected_pass_condition": "Owner/authorized manager transitions work through the bridge and unrelated users are denied.",
+      "expected_fail_condition": "Unauthorized transition succeeds, status does not persist or browser triggers trusted refresh directly.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "critical",
+      "acceptance_scope": "priority_1_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "Escalations.tsx"
+        },
+        {
+          "id": "escalation_bridge_proof",
+          "passed": true,
+          "evidence": "acknowledge/resolve escalation bridge actions"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "evidence",
+      "page": "Evidence.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi"
+      ],
+      "test_objective": "Verify evidence queue scope, accept/reject/revision decisions and reviewer audit fields.",
+      "synthetic_data_needed": "Submitted evidence owned by two users, accepted evidence and rejected evidence.",
+      "expected_pass_condition": "Authorized reviewer decisions persist with reviewer/time/reason; unrelated users cannot view or review.",
+      "expected_fail_condition": "Evidence confidentiality leaks or rejection/acceptance bypasses required fields.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "critical",
+      "acceptance_scope": "priority_1_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "Evidence.tsx"
+        },
+        {
+          "id": "evidence_access_scope_proof",
+          "passed": true,
+          "evidence": "evidence scope persona scenario and SQL evidence"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "evidence-vault",
+      "page": "EvidenceVault.tsx",
+      "status": "active",
+      "apis": [
+        "enterpriseApi"
+      ],
+      "test_objective": "Verify evidence inventory, retention/review metadata, confidentiality scope and export.",
+      "synthetic_data_needed": "Versioned, expiring, rejected and OVR-linked evidence.",
+      "expected_pass_condition": "Inventory counts and retention flags match source records without exposing unrelated evidence.",
+      "expected_fail_condition": "Restricted evidence metadata leaks or retention due items are missed.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "EvidenceVault.tsx"
+        },
+        {
+          "id": "evidence_access_scope_proof",
+          "passed": true,
+          "evidence": "evidence scope persona scenario and SQL evidence"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "executive-command-center",
+      "page": "ExecutiveCommandCenter.tsx",
+      "status": "active",
+      "apis": [
+        "commandCenterApi"
+      ],
+      "test_objective": "Verify command summary and prioritized action stream for executive roles.",
+      "synthetic_data_needed": "Critical, high, overdue and resolved command-stream items.",
+      "expected_pass_condition": "Ordering, severity and links match source records and executive scope.",
+      "expected_fail_condition": "Resolved items remain critical, normal users access the page or totals disagree.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "ExecutiveCommandCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "executive-mobile-command",
+      "page": "ExecutiveMobileCommand.tsx",
+      "status": "active",
+      "apis": [
+        "commandCenterApi"
+      ],
+      "test_objective": "Verify mobile-responsive executive summary and action stream parity with desktop command center.",
+      "synthetic_data_needed": "Same command-center fixture with long bilingual labels.",
+      "expected_pass_condition": "Mobile layout remains usable and displays the same prioritized values as desktop.",
+      "expected_fail_condition": "Values diverge, controls overflow or RTL/mobile navigation becomes unusable.",
+      "test_types": [
+        "browser",
+        "API"
+      ],
+      "risk_level": "medium",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "ExecutiveMobileCommand.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "final-sprint",
+      "page": "FinalSprintCenter.tsx",
+      "status": "active",
+      "apis": [
+        "finalizationApi"
+      ],
+      "test_objective": "Verify final scorecard, blocking gates, owner clearance and protected seed action.",
+      "synthetic_data_needed": "Passing, warning and blocking finalization gates with owner assignments.",
+      "expected_pass_condition": "Score and readiness signal reconcile; browser seed is visibly blocked.",
+      "expected_fail_condition": "Blocked release appears ready or seed action silently changes production data.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "FinalSprintCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "global-search",
+      "page": "GlobalSearch.tsx",
+      "status": "active",
+      "apis": [
+        "commandCenterApi"
+      ],
+      "test_objective": "Verify global search relevance, type labels, navigation and RLS-safe results.",
+      "synthetic_data_needed": "Matching project, risk, document and OVR records including an inaccessible record.",
+      "expected_pass_condition": "Accessible matches appear with correct type/path and inaccessible records remain absent.",
+      "expected_fail_condition": "Restricted OVR or cross-org metadata appears in results.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "critical",
+      "acceptance_scope": "priority_1_controlled_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "GlobalSearch.tsx"
+        },
+        {
+          "id": "global_search_privilege_review",
+          "passed": true,
+          "evidence": "runtime audit shows no direct privileged browser RPC calls"
+        }
+      ],
+      "warnings": [
+        "Global search still needs manual UI sampling for relevance and navigation labels before broad rollout."
+      ]
+    },
+    {
+      "id": "governance",
+      "page": "Governance.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi"
+      ],
+      "test_objective": "Accept governance decision register, creation, ownership, status and due-date presentation.",
+      "synthetic_data_needed": "Draft, approved, overdue and completed decisions across departments.",
+      "expected_pass_condition": "Authorized creation persists and register fields reconcile.",
+      "expected_fail_condition": "Unauthorized creation, cross-scope visibility or missing decision audit fields.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "Governance.tsx"
+        },
+        {
+          "id": "scoped_access_persona_proof",
+          "passed": true,
+          "evidence": "same/cross organization and department scenarios"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "import-export",
+      "page": "ImportExport.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi",
+        "exportUtils"
+      ],
+      "test_objective": "Verify dataset export, custom report definitions, backup package generation and staged bulk imports.",
+      "synthetic_data_needed": "Small valid CSV batch, invalid rows, scoped datasets and export definitions.",
+      "expected_pass_condition": "Exports contain only authorized data; invalid imports are rejected; staged batch records counts/errors.",
+      "expected_fail_condition": "Confidential data exports, invalid rows persist or browser claims a backup without trusted proof.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "critical",
+      "acceptance_scope": "priority_1_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "ImportExport.tsx"
+        },
+        {
+          "id": "export_denial_proof",
+          "passed": true,
+          "evidence": "export and backup denial for normal users scenario"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "load-seed-center",
+      "page": "LoadSeedCenter.tsx",
+      "status": "active",
+      "apis": [
+        "stabilizationApi"
+      ],
+      "test_objective": "Verify load-test seed status without exposing seed execution to ordinary browser users.",
+      "synthetic_data_needed": "Completed, partial and missing load-seed status rows.",
+      "expected_pass_condition": "Status accurately reports readiness and no browser mutation is available.",
+      "expected_fail_condition": "Missing seed is shown ready or test data can be inserted from production UI.",
+      "test_types": [
+        "browser",
+        "API"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "LoadSeedCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "login",
+      "page": "LoginPage.tsx",
+      "status": "auth_support",
+      "apis": [
+        "AuthProvider",
+        "Supabase Auth"
+      ],
+      "test_objective": "Verify valid login, invalid credentials, inactive/profile-missing states, logout return and bilingual UI.",
+      "synthetic_data_needed": "Active user, inactive user, user without profile and invalid credentials.",
+      "expected_pass_condition": "Only valid active profiled users enter; each failure state is explicit and no session leaks.",
+      "expected_fail_condition": "Inactive/profile-less users enter, errors expose secrets or auth bypass activates unexpectedly.",
+      "test_types": [
+        "browser",
+        "API"
+      ],
+      "risk_level": "critical",
+      "acceptance_scope": "priority_1_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "LoginPage.tsx"
+        },
+        {
+          "id": "auth_persona_and_build_proof",
+          "passed": true,
+          "evidence": "release/v72 and release/v700 proof artifacts"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "migration-runbook",
+      "page": "MigrationRunbookCenter.tsx",
+      "status": "active",
+      "apis": [
+        "stabilizationApi"
+      ],
+      "test_objective": "Verify migration runbook ordering, commands, owners and rollback guidance.",
+      "synthetic_data_needed": "Ordered pending/completed migration steps with one blocked prerequisite.",
+      "expected_pass_condition": "Sequence and blockers match source runbook rows.",
+      "expected_fail_condition": "Unsafe order is presented as executable or rollback guidance is missing.",
+      "test_types": [
+        "browser",
+        "API"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "MigrationRunbookCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "migration-verifier",
+      "page": "MigrationVerifierCenter.tsx",
+      "status": "active",
+      "apis": [
+        "releaseOpsApi"
+      ],
+      "test_objective": "Verify expected/applied migration comparison and export.",
+      "synthetic_data_needed": "Applied, missing, duplicate-prefix and checksum-mismatch migration records.",
+      "expected_pass_condition": "All discrepancies are visible and clean state is reported only when exact.",
+      "expected_fail_condition": "Missing or duplicate migrations are shown verified.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "MigrationVerifierCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "modern-executive-dashboard",
+      "page": "ModernExecutiveDashboard.tsx",
+      "status": "standalone_route",
+      "apis": [
+        "hardeningApi",
+        "direct Supabase views"
+      ],
+      "test_objective": "Verify standalone executive control route, health/blocker KPIs, heatmap, radar and bilingual direction.",
+      "synthetic_data_needed": "Backup checks, blockers, department heatmap and radar values.",
+      "expected_pass_condition": "Standalone route values reconcile with source views in English and Arabic.",
+      "expected_fail_condition": "Route bypasses executive authorization, values diverge or RTL breaks.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "ModernExecutiveDashboard.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "my-work",
+      "page": "MyWork.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi"
+      ],
+      "test_objective": "Verify personal task/project queue, assignment scope, updates and related profile display.",
+      "synthetic_data_needed": "Owned, assigned, overdue and unrelated work items.",
+      "expected_pass_condition": "User sees only own/assigned work and valid status updates persist.",
+      "expected_fail_condition": "Unrelated work appears or users update items outside their scope.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "MyWork.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "no-mock-auto-test-center",
+      "page": "NoMockAutoTestCenter.tsx",
+      "status": "legacy_unmounted",
+      "apis": [],
+      "test_objective": "Decide retain/retire; if retained, verify static commands and readiness language match current scripts.",
+      "synthetic_data_needed": "None; static content review only.",
+      "expected_pass_condition": "Page is either removed from product scope or updated to current command names and no-mock policy.",
+      "expected_fail_condition": "Stale scores/commands are presented as live assurance.",
+      "test_types": [
+        "browser"
+      ],
+      "risk_level": "low",
+      "acceptance_scope": "not_applicable_for_pilot",
+      "acceptance_status": "not_applicable_for_pilot",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "NoMockAutoTestCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Legacy/unmounted module deferred until retain-or-retire decision."
+      ]
+    },
+    {
+      "id": "operations",
+      "page": "OperationsCenter.tsx",
+      "status": "active",
+      "apis": [
+        "operationsApi"
+      ],
+      "test_objective": "Verify operational summary, manager inbox, reminders, digest, timeline and server-only reminder generation.",
+      "synthetic_data_needed": "Unread notifications, overdue work, pending approvals and reminder rows.",
+      "expected_pass_condition": "Counts reconcile, filters work and browser reminder generation is blocked/server-owned.",
+      "expected_fail_condition": "Counts omit blockers or browser users generate trusted reminders directly.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "OperationsCenter.tsx"
+        },
+        {
+          "id": "scoped_access_persona_proof",
+          "passed": true,
+          "evidence": "same/cross organization and department scenarios"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "ovr",
+      "page": "OVR.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi",
+        "privileged-action Edge bridge"
+      ],
+      "test_objective": "Accept confidential OVR creation, scoped visibility, workflow transitions, corrective project bridge and closure prerequisites.",
+      "synthetic_data_needed": "Synthetic non-patient OVRs for reporter, supervisor, Quality and unrelated users.",
+      "expected_pass_condition": "Authorized actors complete valid transitions; confidentiality, evidence and Quality closure rules hold.",
+      "expected_fail_condition": "Unrelated users see OVR details, invalid transitions succeed or closure bypasses evidence/Quality.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "critical",
+      "acceptance_scope": "priority_1_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "OVR.tsx"
+        },
+        {
+          "id": "ovr_confidentiality_and_workflow_proof",
+          "passed": true,
+          "evidence": "persona proof, SQL evidence, runtime bridge"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "ovr-risk-indicators",
+      "page": "OvrRiskIndicators.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi"
+      ],
+      "test_objective": "Verify OVR risk summary, departmental indicators and repeated-category alerts.",
+      "synthetic_data_needed": "Synthetic OVR categories/severities across departments and dates.",
+      "expected_pass_condition": "Rates, repeated alerts and severity totals reconcile without exposing confidential descriptions.",
+      "expected_fail_condition": "Confidential fields leak or aggregates omit high-severity/repeated events.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "OvrRiskIndicators.tsx"
+        },
+        {
+          "id": "ovr_confidentiality_and_workflow_proof",
+          "passed": true,
+          "evidence": "persona proof, SQL evidence, runtime bridge"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "performance",
+      "page": "PerformanceCenter.tsx",
+      "status": "active",
+      "apis": [
+        "performanceApi"
+      ],
+      "test_objective": "Verify performance signals, responsive/usability findings and save behavior.",
+      "synthetic_data_needed": "Passing, warning and failing performance checks for multiple routes.",
+      "expected_pass_condition": "Thresholds, route labels and saved signal status match source data.",
+      "expected_fail_condition": "Critical latency/usability finding is hidden or unauthorized save succeeds.",
+      "test_types": [
+        "browser",
+        "API"
+      ],
+      "risk_level": "medium",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "PerformanceCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "pilot-operations",
+      "page": "PilotOperationsCenter.tsx",
+      "status": "legacy_unmounted",
+      "apis": [
+        "pilotOpsApi"
+      ],
+      "test_objective": "Decide retain/retire; if retained, accept pilot waves, issue board, import readiness and pilot-pack export.",
+      "synthetic_data_needed": "Controlled pilot waves, one blocker, one issue and import-readiness rows.",
+      "expected_pass_condition": "Pilot status and export reconcile and blockers prevent rollout-ready state.",
+      "expected_fail_condition": "Unapproved/full rollout appears ready or export omits open issues.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "not_applicable_for_pilot",
+      "acceptance_status": "not_applicable_for_pilot",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "PilotOperationsCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Legacy/unmounted module deferred until retain-or-retire decision."
+      ]
+    },
+    {
+      "id": "pilot-rollout-security-audit",
+      "page": "PilotRolloutSecurityAuditCenter.tsx",
+      "status": "legacy_unmounted",
+      "apis": [],
+      "test_objective": "Decide retain/retire; if retained, ensure static readiness scores are replaced by current evidence-backed values.",
+      "synthetic_data_needed": "None until connected to a real source.",
+      "expected_pass_condition": "Module is retired or displays current sourced pilot/security/audit status.",
+      "expected_fail_condition": "Hard-coded percentages are presented as operational readiness.",
+      "test_types": [
+        "browser"
+      ],
+      "risk_level": "medium",
+      "acceptance_scope": "not_applicable_for_pilot",
+      "acceptance_status": "not_applicable_for_pilot",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "PilotRolloutSecurityAuditCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Legacy/unmounted module deferred until retain-or-retire decision."
+      ]
+    },
+    {
+      "id": "policy-documents",
+      "page": "PolicyDocumentCenter.tsx",
+      "status": "active",
+      "apis": [
+        "commandCenterApi"
+      ],
+      "test_objective": "Verify document summary, list, version/status metadata and access scope.",
+      "synthetic_data_needed": "Draft, approved, expired and restricted documents.",
+      "expected_pass_condition": "Counts/status/version match source and restricted documents remain hidden.",
+      "expected_fail_condition": "Expired policy appears current or confidential documents leak.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "PolicyDocumentCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "production-backup-strategy",
+      "page": "ProductionBackupStrategyCenter.tsx",
+      "status": "active",
+      "apis": [
+        "stabilizationApi"
+      ],
+      "test_objective": "Verify backup strategies, restore verification history and readiness status.",
+      "synthetic_data_needed": "Current/stale strategies and passed/failed restore verifications.",
+      "expected_pass_condition": "Readiness becomes healthy only with current strategy and passed restore proof.",
+      "expected_fail_condition": "Missing or failed restore evidence is shown production-ready.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "critical",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "ProductionBackupStrategyCenter.tsx"
+        },
+        {
+          "id": "restore_evidence_proof",
+          "passed": true,
+          "evidence": "restore dry-run evidence"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "production-data-control",
+      "page": "ProductionDataControlCenter.tsx",
+      "status": "legacy_unmounted",
+      "apis": [
+        "productionDataPolicy"
+      ],
+      "test_objective": "Decide retain/retire; if retained, verify production/demo environment flags are accurate and clearly labelled.",
+      "synthetic_data_needed": "Production and development environment configurations.",
+      "expected_pass_condition": "Production always reports demo disabled and development state is explicit.",
+      "expected_fail_condition": "Demo mode can appear enabled in production or static guidance is stale.",
+      "test_types": [
+        "browser",
+        "API"
+      ],
+      "risk_level": "medium",
+      "acceptance_scope": "not_applicable_for_pilot",
+      "acceptance_status": "not_applicable_for_pilot",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "ProductionDataControlCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Legacy/unmounted module deferred until retain-or-retire decision."
+      ]
+    },
+    {
+      "id": "production-finish",
+      "page": "ProductionFinishCenter.tsx",
+      "status": "active",
+      "apis": [
+        "productionReadinessApi"
+      ],
+      "test_objective": "Verify final production readiness score, controls, modules, handover, pilot acceptance and protected seed.",
+      "synthetic_data_needed": "Passing, pending and blocking readiness controls.",
+      "expected_pass_condition": "Score and signal reconcile; blocked controls prevent go state; seed is server-only.",
+      "expected_fail_condition": "Go signal appears with blockers or browser seeding changes readiness data.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "ProductionFinishCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "production-proof",
+      "page": "ProductionProofCenter.tsx",
+      "status": "active",
+      "apis": [
+        "productionProofApi"
+      ],
+      "test_objective": "Verify hard gates, proof artifacts, pilot waves, stop rules and protected proof-data seed.",
+      "synthetic_data_needed": "Passed/missing proof artifacts and blocked/ready pilot waves.",
+      "expected_pass_condition": "Unsafe launch remains blocked until all hard gates pass.",
+      "expected_fail_condition": "Missing RLS/restore/OVR proof is shown launch-ready.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "ProductionProofCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "production-release",
+      "page": "ProductionReleaseCenter.tsx",
+      "status": "active",
+      "apis": [
+        "releaseOpsApi"
+      ],
+      "test_objective": "Verify release summary, checklist export and server-only preflight behavior.",
+      "synthetic_data_needed": "Checklist with pass, warning and blocker entries.",
+      "expected_pass_condition": "Release score reconciles, export matches checklist and browser preflight is blocked/server-owned.",
+      "expected_fail_condition": "Blockers are ignored or browser marks preflight successful.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "ProductionReleaseCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "projects",
+      "page": "Projects.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi"
+      ],
+      "test_objective": "Accept project list/detail, creation, milestones/tasks, progress/status guards and scope.",
+      "synthetic_data_needed": "Projects in two departments with milestones, tasks, owners and delayed states.",
+      "expected_pass_condition": "Authorized create/update succeeds, hierarchy loads and delay reasons/evidence rules are enforced.",
+      "expected_fail_condition": "Cross-scope project access, invalid progress or delayed status without reason.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "Projects.tsx"
+        },
+        {
+          "id": "corrective_action_project_bridge",
+          "passed": true,
+          "evidence": "corrective action project bridge proof"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "relationship-map",
+      "page": "RelationshipMap.tsx",
+      "status": "active",
+      "apis": [
+        "commandCenterApi"
+      ],
+      "test_objective": "Verify cross-object relationships and navigation without exposing inaccessible linked records.",
+      "synthetic_data_needed": "Project-risk-control-evidence links plus one restricted OVR link.",
+      "expected_pass_condition": "Accessible relationships are complete and restricted nodes are absent.",
+      "expected_fail_condition": "Broken links, duplicate edges or confidential relationship metadata leaks.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "RelationshipMap.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "release-candidate",
+      "page": "ReleaseCandidateCenter.tsx",
+      "status": "active",
+      "apis": [
+        "commandCenterApi"
+      ],
+      "test_objective": "Verify release gates, migration steps, blockers and export.",
+      "synthetic_data_needed": "Passing, warning and blocked gates with ordered migration steps.",
+      "expected_pass_condition": "Candidate is ready only when blocking gates pass and steps are complete.",
+      "expected_fail_condition": "Blocked gate is omitted or export differs from displayed release state.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "ReleaseCandidateCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "release-factory",
+      "page": "ReleaseFactoryCenter.tsx",
+      "status": "active",
+      "apis": [
+        "consolidationApi"
+      ],
+      "test_objective": "Verify release scorecard, checks, packages, signoffs and protected defaults seed.",
+      "synthetic_data_needed": "Blocked and passing checks, package artifacts and draft signoffs.",
+      "expected_pass_condition": "Readiness matches checks and seed remains operator-only.",
+      "expected_fail_condition": "Draft/missing signoff is counted approved or browser seeding succeeds.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "ReleaseFactoryCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "restore-dry-run",
+      "page": "RestoreDryRunCenter.tsx",
+      "status": "active",
+      "apis": [
+        "releaseOpsApi"
+      ],
+      "test_objective": "Verify restore drill history and that new drills start only through trusted tooling.",
+      "synthetic_data_needed": "Passed, failed, running and planned restore records.",
+      "expected_pass_condition": "Counts/history match evidence and browser start action is blocked/server-owned.",
+      "expected_fail_condition": "Failed drill appears passed or browser fabricates a restore result.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "critical",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "RestoreDryRunCenter.tsx"
+        },
+        {
+          "id": "restore_evidence_proof",
+          "passed": true,
+          "evidence": "restore dry-run evidence"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "risk-appetite-kri",
+      "page": "RiskAppetiteKriCenter.tsx",
+      "status": "active",
+      "apis": [
+        "automationApi"
+      ],
+      "test_objective": "Verify appetite dashboard, KRI thresholds, breach register and export.",
+      "synthetic_data_needed": "Within-appetite, warning and breached KRI observations.",
+      "expected_pass_condition": "Threshold status and breach counts reconcile with configured limits.",
+      "expected_fail_condition": "Breach shown healthy or inactive KRI affects readiness.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "RiskAppetiteKriCenter.tsx"
+        },
+        {
+          "id": "scoped_access_persona_proof",
+          "passed": true,
+          "evidence": "same/cross organization and department scenarios"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "risks",
+      "page": "Risks.tsx",
+      "status": "active",
+      "apis": [
+        "grcApi"
+      ],
+      "test_objective": "Accept risk register display, creation, inherent/residual values, review dates and scope.",
+      "synthetic_data_needed": "Critical/high/medium risks with mitigated and overdue review states.",
+      "expected_pass_condition": "Authorized creation persists and scores/status match inputs.",
+      "expected_fail_condition": "Cross-scope risk leakage, invalid score acceptance or overdue risk omission.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "Risks.tsx"
+        },
+        {
+          "id": "scoped_access_persona_proof",
+          "passed": true,
+          "evidence": "same/cross organization and department scenarios"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "rls-persona-lab",
+      "page": "RlsPersonaLab.tsx",
+      "status": "active",
+      "apis": [
+        "stabilizationApi"
+      ],
+      "test_objective": "Verify displayed persona matrix reflects the executable authenticated persona proof.",
+      "synthetic_data_needed": "Current v7.2 persona proof summary and one intentional failed scenario fixture.",
+      "expected_pass_condition": "Matrix distinguishes passed, failed and not-run scenarios without claiming SQL-only proof as browser proof.",
+      "expected_fail_condition": "Static planned cases are shown as executed or failed personas are hidden.",
+      "test_types": [
+        "browser",
+        "API"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "RlsPersonaLab.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "scale-backup-restore",
+      "page": "ScaleBackupRestoreCenter.tsx",
+      "status": "legacy_unmounted",
+      "apis": [
+        "v50ScaleBackupApi"
+      ],
+      "test_objective": "Decide retain/retire; if retained, verify scale, optimization, backup and restore queues.",
+      "synthetic_data_needed": "Scale controls, query optimization items and restore results.",
+      "expected_pass_condition": "All scores reconcile and failed restore/scale controls remain blocking.",
+      "expected_fail_condition": "Static or stale score implies 1,000-user readiness.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "medium",
+      "acceptance_scope": "not_applicable_for_pilot",
+      "acceptance_status": "not_applicable_for_pilot",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "ScaleBackupRestoreCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Legacy/unmounted module deferred until retain-or-retire decision."
+      ]
+    },
+    {
+      "id": "scenario-planning",
+      "page": "ScenarioPlanningCenter.tsx",
+      "status": "active",
+      "apis": [
+        "enterpriseApi"
+      ],
+      "test_objective": "Verify scenario exposure calculations, ranking and export.",
+      "synthetic_data_needed": "Low, medium, high and critical risk scenarios.",
+      "expected_pass_condition": "Exposure score/level and ordering match source calculations.",
+      "expected_fail_condition": "Critical scenario is downgraded or cross-org scenario appears.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "medium",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "ScenarioPlanningCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "security-audit",
+      "page": "SecurityAuditCenter.tsx",
+      "status": "active",
+      "apis": [
+        "securityApi"
+      ],
+      "test_objective": "Verify security findings, retention controls, access events, summaries and exports.",
+      "synthetic_data_needed": "Critical/high finding, expired retention item and denied access event.",
+      "expected_pass_condition": "Severity and counts reconcile; restricted security data is role-limited.",
+      "expected_fail_condition": "Critical finding hidden, normal user gains access or export omits events.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "critical",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "SecurityAuditCenter.tsx"
+        },
+        {
+          "id": "scoped_access_persona_proof",
+          "passed": true,
+          "evidence": "same/cross organization and department scenarios"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "setup-center",
+      "page": "SetupCenter.tsx",
+      "status": "active",
+      "apis": [
+        "onboardingApi"
+      ],
+      "test_objective": "Verify setup readiness and training checklist by role.",
+      "synthetic_data_needed": "Completed, pending and blocked setup/training rows.",
+      "expected_pass_condition": "Readiness derives from required items and export matches checklist.",
+      "expected_fail_condition": "Optional items block readiness or required incomplete items are ignored.",
+      "test_types": [
+        "browser",
+        "API"
+      ],
+      "risk_level": "medium",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "SetupCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "smart-review-calendar",
+      "page": "SmartReviewCalendar.tsx",
+      "status": "active",
+      "apis": [
+        "automationApi"
+      ],
+      "test_objective": "Verify recurring review queue, due/overdue logic, ownership and export.",
+      "synthetic_data_needed": "Future, due-today, overdue and completed recurring reviews.",
+      "expected_pass_condition": "Calendar state and owner filters match dates/source rows.",
+      "expected_fail_condition": "Overdue review is marked current or completed review remains due.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "medium",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "SmartReviewCalendar.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "staging-validation",
+      "page": "StagingValidationCenter.tsx",
+      "status": "active",
+      "apis": [
+        "stabilizationApi"
+      ],
+      "test_objective": "Verify staging summary, checks, defects, restore/migration state and protected defaults seed.",
+      "synthetic_data_needed": "Passing/warning/blocked checks and critical/noncritical defects.",
+      "expected_pass_condition": "Readiness reconciles and browser seed remains blocked.",
+      "expected_fail_condition": "Critical defect does not block or seed action alters staging data.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "StagingValidationCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "testing-center",
+      "page": "TestingCenter.tsx",
+      "status": "active",
+      "apis": [
+        "testingApi"
+      ],
+      "test_objective": "Verify QA readiness, cases, personas, deployment gates, runs, filters/export and protected seed.",
+      "synthetic_data_needed": "Passed/failed cases, blocked gate, persona warning and QA run history.",
+      "expected_pass_condition": "Readiness and gate counts reconcile; browser fixture seeding is blocked.",
+      "expected_fail_condition": "Blocked deployment gate is hidden or test data is fabricated as passed.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "TestingCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "translation-coverage",
+      "page": "TranslationCoverageCenter.tsx",
+      "status": "active",
+      "apis": [
+        "stabilizationApi"
+      ],
+      "test_objective": "Verify bilingual coverage totals and missing English/Arabic entries.",
+      "synthetic_data_needed": "Complete, English-only and Arabic-only labels.",
+      "expected_pass_condition": "Coverage percentage and missing lists reconcile.",
+      "expected_fail_condition": "Missing value counted translated or RTL text is malformed.",
+      "test_types": [
+        "browser",
+        "API"
+      ],
+      "risk_level": "medium",
+      "acceptance_scope": "priority_2_controlled_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "TranslationCoverageCenter.tsx"
+        }
+      ],
+      "warnings": [
+        "Arabic/RTL acceptance is static/module-level in v7.3; visual browser screenshots should be added before production rollout.",
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "unauthorized-page",
+      "page": "UnauthorizedPage.tsx",
+      "status": "auth_support",
+      "apis": [
+        "AuthProvider",
+        "authAccess"
+      ],
+      "test_objective": "Verify denied users receive a safe explanation and can return home without protected content leakage.",
+      "synthetic_data_needed": "Employee attempting admin/release/security modules.",
+      "expected_pass_condition": "Unauthorized state names only the required group/current role and home navigation works.",
+      "expected_fail_condition": "Protected child content renders behind the message or role data is excessive.",
+      "test_types": [
+        "browser"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "priority_1_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "UnauthorizedPage.tsx"
+        },
+        {
+          "id": "auth_persona_and_build_proof",
+          "passed": true,
+          "evidence": "release/v72 and release/v700 proof artifacts"
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "user-guide",
+      "page": "UserGuide.tsx",
+      "status": "active",
+      "apis": [],
+      "test_objective": "Verify role guidance, bilingual copy and navigation terminology match current workflows.",
+      "synthetic_data_needed": "None; content and localization review.",
+      "expected_pass_condition": "Instructions match current modules and render correctly in English/Arabic.",
+      "expected_fail_condition": "Guide references removed actions or recommends unsafe/manual bypasses.",
+      "test_types": [
+        "browser"
+      ],
+      "risk_level": "low",
+      "acceptance_scope": "deferred_after_pilot",
+      "acceptance_status": "warning",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "UserGuide.tsx"
+        }
+      ],
+      "warnings": [
+        "Detailed workflow test deferred outside priority 1 controlled-pilot scope."
+      ]
+    },
+    {
+      "id": "v35-consolidation-fix-kit",
+      "page": "V35ConsolidationPilotFixKit.tsx",
+      "status": "legacy_unmounted",
+      "apis": [
+        "v35ConsolidationApi"
+      ],
+      "test_objective": "Decide retain/retire; if retained, accept scorecard, blockers, patch manifest, defects, SOP and export.",
+      "synthetic_data_needed": "Verified/unverified patches, critical defect, data repair and SOP steps.",
+      "expected_pass_condition": "Readiness is blocked by critical defects and created defect persists.",
+      "expected_fail_condition": "Legacy patch status is treated as current production proof.",
+      "test_types": [
+        "browser",
+        "API",
+        "SQL"
+      ],
+      "risk_level": "medium",
+      "acceptance_scope": "not_applicable_for_pilot",
+      "acceptance_status": "not_applicable_for_pilot",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "V35ConsolidationPilotFixKit.tsx"
+        }
+      ],
+      "warnings": [
+        "Legacy/unmounted module deferred until retain-or-retire decision."
+      ]
+    },
+    {
+      "id": "workspace-home",
+      "page": "WorkspaceHome.tsx",
+      "status": "active",
+      "apis": [
+        "AuthProvider",
+        "authAccess"
+      ],
+      "test_objective": "Verify workspace cards, role-filtered destinations and bilingual labels.",
+      "synthetic_data_needed": "Executive, manager, employee and admin sessions.",
+      "expected_pass_condition": "Each user sees and can open only allowed workspaces.",
+      "expected_fail_condition": "Restricted workspace card appears or destination opens unauthorized content.",
+      "test_types": [
+        "browser"
+      ],
+      "risk_level": "high",
+      "acceptance_scope": "priority_1_controlled_pilot",
+      "acceptance_status": "passed",
+      "blocking": false,
+      "checks": [
+        {
+          "id": "module_source_present",
+          "passed": true,
+          "evidence": "WorkspaceHome.tsx"
+        },
+        {
+          "id": "auth_persona_and_build_proof",
+          "passed": true,
+          "evidence": "release/v72 and release/v700 proof artifacts"
+        }
+      ],
+      "warnings": []
+    }
+  ]
+}
