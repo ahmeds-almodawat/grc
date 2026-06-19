@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-06-19T22:30:07.196Z",
+  "status": "passed",
+  "failed": 0,
+  "checks": [
+    [
+      "env templates present",
+      "passed",
+      ".env.example, .env.production.example"
+    ],
+    [
+      "real env files not tracked",
+      "passed",
+      "None"
+    ],
+    [
+      "local env files visible",
+      "info",
+      ".env.local"
+    ]
+  ]
+}

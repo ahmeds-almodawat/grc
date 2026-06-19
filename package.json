@@ -198,7 +198,17 @@
     "v77:board-pack": "node scripts/v77-board-pack-generator.mjs",
     "v77:review-pack": "node scripts/v77-generate-review-pack.mjs",
     "v77:all": "npm run v77:staging-audit && npm run v77:pr-quality && npm run v77:uat-scenarios && npm run v77:risk-register && npm run v77:release-candidate && npm run v77:board-pack && npm run v77:review-pack",
-    "pilot:staging-readiness": "npm run ci:static && npm run v77:all"
+    "pilot:staging-readiness": "npm run ci:static && npm run v77:all",
+    "v78:env-audit": "node scripts/v78-env-template-audit.mjs",
+    "v78:staging-plan": "node scripts/v78-staging-execution-plan.mjs",
+    "v78:smoke-plan": "node scripts/v78-smoke-test-plan.mjs",
+    "v78:rollback-readiness": "node scripts/v78-rollback-readiness.mjs",
+    "v78:access-control": "node scripts/v78-access-control-plan.mjs",
+    "v78:observability": "node scripts/v78-observability-plan.mjs",
+    "v78:go-no-go": "node scripts/v78-go-no-go-pack.mjs",
+    "v78:review-pack": "node scripts/v78-generate-review-pack.mjs",
+    "v78:all": "npm run v78:env-audit && npm run v78:staging-plan && npm run v78:smoke-plan && npm run v78:rollback-readiness && npm run v78:access-control && npm run v78:observability && npm run v78:go-no-go && npm run v78:review-pack",
+    "pilot:live-staging-plan": "npm run ci:static && npm run v78:all"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",
