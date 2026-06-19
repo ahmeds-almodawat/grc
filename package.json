@@ -175,7 +175,8 @@
     "proof:all": "node scripts/v700-proof-suite.mjs all",
     "v73:module-acceptance": "node scripts/v73-module-acceptance.mjs",
     "v73:module-report": "node scripts/v73-module-report.mjs",
-    "v73:all": "npm run v73:module-acceptance && npm run v73:module-report"
+    "v73:all": "npm run v73:module-acceptance && npm run v73:module-report",
+    "ci:static": "npm run typecheck && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",
