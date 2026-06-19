@@ -1,0 +1,104 @@
+{
+  "generated_at": "2026-06-19T14:27:38.507Z",
+  "environment": "Local Supabase Docker staging",
+  "project_id": "grc-control-center",
+  "db_container": "supabase_db_grc-control-center",
+  "container_state": {
+    "status": "running",
+    "health": "healthy",
+    "started_at": "2026-06-19T14:20:50.590000465Z",
+    "inspect_exit_code": 0
+  },
+  "migration": {
+    "passed": true,
+    "has_latest_migration": true,
+    "exit_code": 0,
+    "output": "release/v66/evidence-attachments/staging-migration-log.txt"
+  },
+  "sql_results": [
+    {
+      "id": "v64",
+      "source": "supabase/tests/v64_persona_security_tests.sql",
+      "staged": "release/v662/staging-sql/v64_persona_security_tests.sql",
+      "compatibilityStaged": "release/v662/staging-sql/01-v64-persona-security-tests.sql",
+      "output": "release/v66/evidence-attachments/01-v64-persona-sql-output.txt",
+      "passed": true,
+      "exit_code": 0,
+      "bytes": 2409,
+      "has_completion_marker": true,
+      "has_sql_error": false,
+      "has_false_assertion": false,
+      "reason": ""
+    },
+    {
+      "id": "v65",
+      "source": "supabase/tests/v65_workflow_smoke_tests.sql",
+      "staged": "release/v662/staging-sql/v65_workflow_smoke_tests.sql",
+      "compatibilityStaged": "release/v662/staging-sql/02-v65-workflow-smoke-tests.sql",
+      "output": "release/v66/evidence-attachments/02-v65-workflow-sql-output.txt",
+      "passed": true,
+      "exit_code": 0,
+      "bytes": 2526,
+      "has_completion_marker": true,
+      "has_sql_error": false,
+      "has_false_assertion": false,
+      "reason": ""
+    },
+    {
+      "id": "v66",
+      "source": "supabase/tests/v66_controlled_pilot_evidence_tests.sql",
+      "staged": "release/v662/staging-sql/v66_controlled_pilot_evidence_tests.sql",
+      "compatibilityStaged": "release/v662/staging-sql/03-v66-pilot-evidence-tests.sql",
+      "output": "release/v66/evidence-attachments/03-v66-pilot-evidence-sql-output.txt",
+      "passed": true,
+      "exit_code": 0,
+      "bytes": 1888,
+      "has_completion_marker": true,
+      "has_sql_error": false,
+      "has_false_assertion": false,
+      "reason": ""
+    }
+  ],
+  "output_checks": [
+    {
+      "file": "release/v66/evidence-attachments/01-v64-persona-sql-output.txt",
+      "exists": true,
+      "bytes": 2409,
+      "has_pass_signal": true,
+      "passed": true
+    },
+    {
+      "file": "release/v66/evidence-attachments/02-v65-workflow-sql-output.txt",
+      "exists": true,
+      "bytes": 2526,
+      "has_pass_signal": true,
+      "passed": true
+    },
+    {
+      "file": "release/v66/evidence-attachments/03-v66-pilot-evidence-sql-output.txt",
+      "exists": true,
+      "bytes": 1888,
+      "has_pass_signal": true,
+      "passed": true
+    }
+  ],
+  "restore_start_proof": {
+    "passed": true,
+    "reachable": true,
+    "output": "release/v66/evidence-attachments/restore-dryrun-evidence.txt",
+    "preserved_v674_evidence": true
+  },
+  "draft_signoff": {
+    "local_evidence_ready": true,
+    "output": "release/v66/evidence-attachments/pilot-signoff.md"
+  },
+  "manual_evidence_register": {
+    "updated": true
+  },
+  "blocking_count": 2,
+  "blockers": [
+    "Management, IT, and Quality approvals remain pending because pilot-signoff.md is intentionally draft-only.",
+    "IT and Quality confidentiality confirmation remains pending."
+  ],
+  "capture_status": "captured_pending_human_approval"
+}

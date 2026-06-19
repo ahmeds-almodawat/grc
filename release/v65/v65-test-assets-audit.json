@@ -1,0 +1,47 @@
+{
+  "summary": {
+    "generated_at": "2026-06-18T19:38:10.640Z",
+    "checks_total": 6,
+    "missing_count": 0,
+    "strict_passed": true,
+    "note": "This verifies test assets and proof artifacts exist. It does not replace running Vitest, Playwright, or Supabase SQL tests."
+  },
+  "checks": [
+    {
+      "label": "unit test asset",
+      "path": "tests/unit/v65-live-result.test.ts",
+      "exists": true,
+      "size": 1366
+    },
+    {
+      "label": "browser auth smoke asset",
+      "path": "tests/e2e/v65-auth-navigation.spec.ts",
+      "exists": true,
+      "size": 980
+    },
+    {
+      "label": "browser workflow smoke asset",
+      "path": "tests/e2e/v65-core-workflows.spec.ts",
+      "exists": true,
+      "size": 878
+    },
+    {
+      "label": "SQL staging workflow asset",
+      "path": "tests/sql/v65_workflow_smoke_tests.sql",
+      "exists": true,
+      "size": 1524
+    },
+    {
+      "label": "Supabase persona asset",
+      "path": "supabase/tests/v64_persona_security_tests.sql",
+      "exists": true,
+      "size": 3132
+    },
+    {
+      "label": "v6.4 proof summary",
+      "path": "release/v64/v64-database-security-proof-summary.json",
+      "exists": true,
+      "size": 367
+    }
+  ]
+}

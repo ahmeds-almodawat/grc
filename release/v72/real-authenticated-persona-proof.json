@@ -1,0 +1,379 @@
+{
+  "generated_at": "2026-06-19T14:27:27.240Z",
+  "environment": "Local Supabase Docker staging",
+  "synthetic_data_only": true,
+  "no_real_patient_identifiers": true,
+  "no_confidential_ovr_data": true,
+  "required_personas": [
+    "Super Admin",
+    "Executive",
+    "Quality",
+    "Auditor",
+    "Department Manager A",
+    "Department Manager B",
+    "Employee A",
+    "Employee B"
+  ],
+  "required_scenarios": [
+    "same organization access allowed",
+    "cross organization denial",
+    "cross department denial",
+    "confidential OVR denial",
+    "evidence access scope",
+    "self approval prevention",
+    "role administration authorization",
+    "export and backup denial for normal users",
+    "anonymous access denial"
+  ],
+  "authenticated_personas_passed": 8,
+  "required_persona_count": 8,
+  "required_scenarios_passed": 9,
+  "required_scenario_count": 9,
+  "runtime_bridge_actions_verified": 7,
+  "failed_count": 0,
+  "cleanup_status": "passed",
+  "strict_passed": true,
+  "results": [
+    {
+      "scenario": "real authenticated session established",
+      "personas": [
+        "Super Admin"
+      ],
+      "passed": true,
+      "expected": "valid Supabase authenticated session",
+      "actual": "46560c6c-b36a-4e5b-8baf-7f6c2d00d086",
+      "details": null
+    },
+    {
+      "scenario": "authenticated profile self access",
+      "personas": [
+        "Super Admin"
+      ],
+      "passed": true,
+      "expected": "exactly one own profile row",
+      "actual": "1 rows",
+      "details": null
+    },
+    {
+      "scenario": "real authenticated session established",
+      "personas": [
+        "Executive"
+      ],
+      "passed": true,
+      "expected": "valid Supabase authenticated session",
+      "actual": "ec78118b-a4b3-46bd-86aa-fd2f2718ce45",
+      "details": null
+    },
+    {
+      "scenario": "authenticated profile self access",
+      "personas": [
+        "Executive"
+      ],
+      "passed": true,
+      "expected": "exactly one own profile row",
+      "actual": "1 rows",
+      "details": null
+    },
+    {
+      "scenario": "real authenticated session established",
+      "personas": [
+        "Quality"
+      ],
+      "passed": true,
+      "expected": "valid Supabase authenticated session",
+      "actual": "e0bd4528-a47b-4799-bae2-002120395211",
+      "details": null
+    },
+    {
+      "scenario": "authenticated profile self access",
+      "personas": [
+        "Quality"
+      ],
+      "passed": true,
+      "expected": "exactly one own profile row",
+      "actual": "1 rows",
+      "details": null
+    },
+    {
+      "scenario": "real authenticated session established",
+      "personas": [
+        "Auditor"
+      ],
+      "passed": true,
+      "expected": "valid Supabase authenticated session",
+      "actual": "3140c920-f0f8-4ed9-84ce-e3d764d2747d",
+      "details": null
+    },
+    {
+      "scenario": "authenticated profile self access",
+      "personas": [
+        "Auditor"
+      ],
+      "passed": true,
+      "expected": "exactly one own profile row",
+      "actual": "1 rows",
+      "details": null
+    },
+    {
+      "scenario": "real authenticated session established",
+      "personas": [
+        "Department Manager A"
+      ],
+      "passed": true,
+      "expected": "valid Supabase authenticated session",
+      "actual": "e991f45b-6d0c-471c-bd97-7c7795ccb0ad",
+      "details": null
+    },
+    {
+      "scenario": "authenticated profile self access",
+      "personas": [
+        "Department Manager A"
+      ],
+      "passed": true,
+      "expected": "exactly one own profile row",
+      "actual": "1 rows",
+      "details": null
+    },
+    {
+      "scenario": "real authenticated session established",
+      "personas": [
+        "Department Manager B"
+      ],
+      "passed": true,
+      "expected": "valid Supabase authenticated session",
+      "actual": "2f524708-cbbc-4a30-994e-069e8518767f",
+      "details": null
+    },
+    {
+      "scenario": "authenticated profile self access",
+      "personas": [
+        "Department Manager B"
+      ],
+      "passed": true,
+      "expected": "exactly one own profile row",
+      "actual": "1 rows",
+      "details": null
+    },
+    {
+      "scenario": "real authenticated session established",
+      "personas": [
+        "Employee A"
+      ],
+      "passed": true,
+      "expected": "valid Supabase authenticated session",
+      "actual": "1accc737-45c4-40ad-96bf-08b39d48a613",
+      "details": null
+    },
+    {
+      "scenario": "authenticated profile self access",
+      "personas": [
+        "Employee A"
+      ],
+      "passed": true,
+      "expected": "exactly one own profile row",
+      "actual": "1 rows",
+      "details": null
+    },
+    {
+      "scenario": "real authenticated session established",
+      "personas": [
+        "Employee B"
+      ],
+      "passed": true,
+      "expected": "valid Supabase authenticated session",
+      "actual": "d641b64c-39b9-4a0e-957f-2457b823f2f8",
+      "details": null
+    },
+    {
+      "scenario": "authenticated profile self access",
+      "personas": [
+        "Employee B"
+      ],
+      "passed": true,
+      "expected": "exactly one own profile row",
+      "actual": "1 rows",
+      "details": null
+    },
+    {
+      "scenario": "same organization access allowed",
+      "personas": [
+        "Department Manager A"
+      ],
+      "passed": true,
+      "expected": "one scoped project",
+      "actual": "1 rows",
+      "details": null
+    },
+    {
+      "scenario": "cross organization denial",
+      "personas": [
+        "Employee A",
+        "Employee B"
+      ],
+      "passed": true,
+      "expected": "zero cross-organization rows",
+      "actual": "0 rows",
+      "details": null
+    },
+    {
+      "scenario": "cross department denial",
+      "personas": [
+        "Department Manager A",
+        "Department Manager B"
+      ],
+      "passed": true,
+      "expected": "zero other-department rows",
+      "actual": "0 rows",
+      "details": null
+    },
+    {
+      "scenario": "confidential OVR denial",
+      "personas": [
+        "Department Manager B",
+        "Employee A"
+      ],
+      "passed": true,
+      "expected": "zero unrelated confidential OVR rows",
+      "actual": "0 rows",
+      "details": null
+    },
+    {
+      "scenario": "evidence access scope",
+      "personas": [
+        "Employee A",
+        "Employee B"
+      ],
+      "passed": true,
+      "expected": "uploader sees one row; unrelated employee sees zero",
+      "actual": {
+        "uploader": "1 rows",
+        "unrelated": "0 rows"
+      },
+      "details": null
+    },
+    {
+      "scenario": "self approval prevention",
+      "personas": [
+        "Employee A"
+      ],
+      "passed": true,
+      "expected": "database rejects self-approval",
+      "actual": "Self-approval is not allowed.",
+      "details": null
+    },
+    {
+      "scenario": "role administration authorization",
+      "personas": [
+        "Super Admin",
+        "Employee A"
+      ],
+      "passed": true,
+      "expected": "employee denied; super admin assign/deactivate succeeds",
+      "actual": {
+        "employee": "V72_ROLE_ADMIN_NOT_AUTHORIZED",
+        "admin_assign": {
+          "ok": true,
+          "action": "assign_user_role",
+          "result": {
+            "id": "e8fe8ad7-468a-4486-a47f-fd7e1cf437a6"
+          }
+        },
+        "admin_deactivate": {
+          "ok": true,
+          "action": "deactivate_user_role",
+          "result": {
+            "updated": true
+          }
+        }
+      },
+      "details": null
+    },
+    {
+      "scenario": "export and backup denial for normal users",
+      "personas": [
+        "Employee A"
+      ],
+      "passed": true,
+      "expected": "zero backup/export metadata rows",
+      "actual": {
+        "backup": "0 rows",
+        "export": "0 rows"
+      },
+      "details": null
+    },
+    {
+      "scenario": "anonymous access denial",
+      "personas": [
+        "Anonymous"
+      ],
+      "passed": true,
+      "expected": "permission error or zero rows",
+      "actual": "permission denied for table projects",
+      "details": null
+    },
+    {
+      "scenario": "all seven runtime bridge actions execute through authenticated Edge Function",
+      "personas": [
+        "Executive",
+        "Department Manager A",
+        "Super Admin",
+        "Employee A"
+      ],
+      "passed": true,
+      "expected": "seven authorized actions succeed and unauthorized role action is denied",
+      "actual": {
+        "create_board_pack_snapshot": {
+          "ok": true,
+          "action": "create_board_pack_snapshot",
+          "result": {
+            "id": "e589b277-58b5-4f2e-b90f-71359bc337e4"
+          }
+        },
+        "acknowledge_escalation_event": {
+          "ok": true,
+          "action": "acknowledge_escalation_event",
+          "result": {
+            "updated": true
+          }
+        },
+        "resolve_escalation_event": {
+          "ok": true,
+          "action": "resolve_escalation_event",
+          "result": {
+            "updated": true
+          }
+        },
+        "assign_user_role": {
+          "ok": true,
+          "action": "assign_user_role",
+          "result": {
+            "id": "e8fe8ad7-468a-4486-a47f-fd7e1cf437a6"
+          }
+        },
+        "deactivate_user_role": {
+          "ok": true,
+          "action": "deactivate_user_role",
+          "result": {
+            "updated": true
+          }
+        },
+        "update_ovr_workflow": {
+          "ok": true,
+          "action": "update_ovr_workflow",
+          "result": {
+            "updated": true
+          }
+        },
+        "create_ovr_corrective_action_project": {
+          "ok": true,
+          "action": "create_ovr_corrective_action_project",
+          "result": {
+            "id": "1b2bb381-2575-404a-ac25-e12c0e6e9a5f"
+          }
+        },
+        "unauthorized_assign_user_role": "V72_ROLE_ADMIN_NOT_AUTHORIZED"
+      },
+      "details": null
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "generated_at": "2026-06-18T14:22:15.693Z",
+  "changed_count": 9,
+  "changes": [
+    {
+      "section": "dependencies",
+      "name": "@supabase/supabase-js",
+      "from": "latest",
+      "to": "2.108.2"
+    },
+    {
+      "section": "dependencies",
+      "name": "lucide-react",
+      "from": "latest",
+      "to": "1.20.0"
+    },
+    {
+      "section": "dependencies",
+      "name": "react",
+      "from": "latest",
+      "to": "19.2.7"
+    },
+    {
+      "section": "dependencies",
+      "name": "react-dom",
+      "from": "latest",
+      "to": "19.2.7"
+    },
+    {
+      "section": "devDependencies",
+      "name": "@types/react",
+      "from": "latest",
+      "to": "19.2.17"
+    },
+    {
+      "section": "devDependencies",
+      "name": "@types/react-dom",
+      "from": "latest",
+      "to": "19.2.3"
+    },
+    {
+      "section": "devDependencies",
+      "name": "@vitejs/plugin-react",
+      "from": "latest",
+      "to": "6.0.2"
+    },
+    {
+      "section": "devDependencies",
+      "name": "typescript",
+      "from": "latest",
+      "to": "6.0.3"
+    },
+    {
+      "section": "devDependencies",
+      "name": "vite",
+      "from": "latest",
+      "to": "8.0.16"
+    }
+  ],
+  "next_steps": [
+    "Review package.json diff.",
+    "Run npm install to refresh package-lock.json if needed.",
+    "Run npm run typecheck && npm run build && npm run v61:pin-strict."
+  ]
+}

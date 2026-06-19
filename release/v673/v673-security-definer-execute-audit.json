@@ -1,0 +1,321 @@
+{
+  "generated_at": "2026-06-19T14:27:15.730Z",
+  "environment": "Local Supabase Docker staging",
+  "project_id": "grc-control-center",
+  "db_container": "supabase_db_grc-control-center",
+  "security_definer_functions": 35,
+  "remaining_broad_execute_grants": 0,
+  "strict_passed": true,
+  "findings": [],
+  "inventory": [
+    {
+      "function_signature": "acknowledge_escalation_event(uuid,text)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "assign_user_role(uuid,app_role,access_scope,uuid,uuid,uuid,uuid,text)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "audit_log_row_change()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "can_close_ovr(uuid)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "can_manage_roles()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "create_board_pack_snapshot(uuid,text,date,date,text[])",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "create_escalation_if_missing(uuid,text,uuid,text,uuid,uuid,date,risk_level,text,text)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "create_ovr_corrective_action_project(uuid)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "create_system_health_snapshot(uuid,uuid)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "deactivate_user_role(uuid,text)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "generate_due_reminders()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "has_accepted_evidence(text,uuid)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "has_active_role(app_role)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "mark_overdue_work_items()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "record_backup_schedule_run(uuid,backup_run_status,text,integer,integer,text,text)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "refresh_automation_intelligence(uuid)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "refresh_escalation_events()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "refresh_project_progress_trigger()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "refresh_project_progress(uuid)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "resolve_escalation_event(uuid,text)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "run_ultra_release_preflight()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "seed_default_qa_test_cases(uuid)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "seed_final_release_defaults()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "seed_release_factory_defaults()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "seed_staging_validation_defaults(uuid)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "seed_v31_finish_fast_defaults()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "seed_v33_production_proof_defaults()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "seed_v34_pilot_defaults()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "seed_v46_ovr_bilingual_rtl_defaults()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "seed_v62_real_no_mock_data_layer_defaults()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "seed_v63_auth_route_protection_defaults()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "seed_v64_database_security_proof_defaults()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "start_restore_dry_run(text)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "update_ovr_workflow(uuid,text,text,text,text,text,ovr_severity_level,date)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "v72_execute_privileged_action(uuid,text,jsonb)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "can_access_org(uuid)",
+      "security_mode": "invoker",
+      "authenticated_execute": true,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "can_access_scope(uuid,uuid,uuid,uuid)",
+      "security_mode": "invoker",
+      "authenticated_execute": true,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "can_manage_grc()",
+      "security_mode": "invoker",
+      "authenticated_execute": true,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "can_read_organization(uuid)",
+      "security_mode": "invoker",
+      "authenticated_execute": true,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "current_user_org_id()",
+      "security_mode": "invoker",
+      "authenticated_execute": true,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "has_any_role(app_role[])",
+      "security_mode": "invoker",
+      "authenticated_execute": true,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "has_global_role(app_role[])",
+      "security_mode": "invoker",
+      "authenticated_execute": true,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "has_role(app_role)",
+      "security_mode": "invoker",
+      "authenticated_execute": true,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "has_role(uuid,app_role)",
+      "security_mode": "invoker",
+      "authenticated_execute": true,
+      "anon_execute": false,
+      "service_role_execute": true
+    }
+  ],
+  "policy": "No public SECURITY DEFINER function may be executable by public, anon, or authenticated. Trusted owner-level execution is service_role-only."
+}

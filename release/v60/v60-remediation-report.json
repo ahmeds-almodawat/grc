@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-06-18T09:25:47.878Z",
+  "changed_files": [
+    "src\\lib\\commandCenterApi.ts",
+    "src\\lib\\grcApi.ts",
+    "src\\lib\\hardeningApi.ts",
+    "src\\lib\\onboardingApi.ts",
+    "src\\lib\\operationsApi.ts",
+    "src\\lib\\performanceApi.ts",
+    "src\\lib\\releaseOpsApi.ts",
+    "src\\lib\\securityApi.ts",
+    "src\\lib\\testingApi.ts",
+    "src\\lib\\v35ConsolidationApi.ts"
+  ],
+  "backups_written": [
+    "release\\v60\\backups\\src\\lib\\commandCenterApi.ts",
+    "release\\v60\\backups\\src\\lib\\grcApi.ts",
+    "release\\v60\\backups\\src\\lib\\hardeningApi.ts",
+    "release\\v60\\backups\\src\\lib\\onboardingApi.ts",
+    "release\\v60\\backups\\src\\lib\\operationsApi.ts",
+    "release\\v60\\backups\\src\\lib\\performanceApi.ts",
+    "release\\v60\\backups\\src\\lib\\releaseOpsApi.ts",
+    "release\\v60\\backups\\src\\lib\\securityApi.ts",
+    "release\\v60\\backups\\src\\lib\\testingApi.ts",
+    "release\\v60\\backups\\src\\lib\\v35ConsolidationApi.ts"
+  ],
+  "env_guard": "VITE_ALLOW_DEMO_DATA=false is the production default",
+  "note": "This remediation removes runtime use of fallback/mock/demo/sample variables in common API/state paths. It does not delete every historical variable name; v60 audit checks runtime blockers."
+}

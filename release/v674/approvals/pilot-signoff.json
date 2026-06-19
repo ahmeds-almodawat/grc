@@ -1,0 +1,30 @@
+{
+  "pilot_scope": "",
+  "maximum_pilot_users": 0,
+  "management_admin": {
+    "name": "",
+    "role": "",
+    "date": "",
+    "decision": "",
+    "scope": ""
+  },
+  "it": {
+    "name": "",
+    "role": "",
+    "date": "",
+    "decision": "",
+    "scope": ""
+  },
+  "quality": {
+    "name": "",
+    "role": "",
+    "date": "",
+    "decision": "",
+    "scope": ""
+  },
+  "reviewed_evidence": {
+    "local_staging_sql_proofs_reviewed": false,
+    "restore_integrity_dryrun_reviewed": false,
+    "security_definer_audit_reviewed": false
+  }
+}

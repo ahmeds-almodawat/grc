@@ -1,0 +1,46 @@
+{
+  "summary": {
+    "generated_at": "2026-06-18T19:38:11.855Z",
+    "checks_total": 7,
+    "failed_count": 0,
+    "strict_passed": true,
+    "note": "Static workflow contract proof. It does not replace browser/Supabase workflow execution."
+  },
+  "checks": [
+    {
+      "code": "PROJECT_TASK_CHAIN",
+      "passed": true,
+      "message": "Project/milestone/task structures are present in migrations."
+    },
+    {
+      "code": "EVIDENCE_BEFORE_CLOSURE",
+      "passed": true,
+      "message": "Evidence/closure workflow controls are present."
+    },
+    {
+      "code": "SELF_APPROVAL_PREVENTION",
+      "passed": true,
+      "message": "Self-approval prevention signal found in migrations."
+    },
+    {
+      "code": "OVR_QUALITY_CLOSURE",
+      "passed": true,
+      "message": "OVR Quality/severity/corrective-action controls are present."
+    },
+    {
+      "code": "NO_MOCK_RUNTIME_GUARD",
+      "passed": true,
+      "message": "Runtime API contains no-mock/live-data guard signals."
+    },
+    {
+      "code": "OVR_UI_PRESENT",
+      "passed": true,
+      "message": "OVR UI workflow signals are present."
+    },
+    {
+      "code": "APPROVAL_UI_PRESENT",
+      "passed": true,
+      "message": "Approval UI workflow signals are present."
+    }
+  ]
+}

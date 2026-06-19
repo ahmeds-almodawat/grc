@@ -1,0 +1,107 @@
+{
+  "generated_at": "2026-06-18T14:03:37.429Z",
+  "migration_count": 39,
+  "first_migration": "001_core_foundation.sql",
+  "latest_migration": "039_v60_no_mock_production_data_controls.sql",
+  "duplicate_file_names": [],
+  "expected_signals": [
+    {
+      "signal": "profiles",
+      "found": true
+    },
+    {
+      "signal": "projects",
+      "found": true
+    },
+    {
+      "signal": "milestones",
+      "found": true
+    },
+    {
+      "signal": "tasks",
+      "found": true
+    },
+    {
+      "signal": "evidence_files",
+      "found": true
+    },
+    {
+      "signal": "approvals",
+      "found": true
+    },
+    {
+      "signal": "risks",
+      "found": true
+    },
+    {
+      "signal": "compliance_items",
+      "found": true
+    },
+    {
+      "signal": "audit_findings",
+      "found": true
+    },
+    {
+      "signal": "ovr_reports",
+      "found": true
+    },
+    {
+      "signal": "export",
+      "found": true
+    },
+    {
+      "signal": "release",
+      "found": true
+    },
+    {
+      "signal": "pilot",
+      "found": true
+    },
+    {
+      "signal": "consolidation",
+      "found": true
+    }
+  ],
+  "missing_signals": [],
+  "files": [
+    "001_core_foundation.sql",
+    "002_grc_layer.sql",
+    "003_rls_permissions_and_controls.sql",
+    "004_seed_reference_data.sql",
+    "005_operational_views_and_storage.sql",
+    "006_workflow_queues_and_project_controls.sql",
+    "007_escalation_and_governance_controls.sql",
+    "008_import_export_rollout_tools.sql",
+    "009_access_control_and_role_governance.sql",
+    "010_bilingual_and_ovr_module.sql",
+    "011_ovr_risk_indicators.sql",
+    "012a_ovr_workflow_enum_values.sql",
+    "012b_ovr_workflow_controls.sql",
+    "013_kpi_analytics_heatmap_radar.sql",
+    "014_export_center_backups_custom_reports.sql",
+    "015_production_hardening_health_print_controls.sql",
+    "016_rollout_onboarding_user_guides.sql",
+    "017_notifications_activity_timelines.sql",
+    "018_qa_permission_deployment_readiness.sql",
+    "019_performance_responsive_usability.sql",
+    "020_security_audit_retention_controls.sql",
+    "021_command_search_documents_release.sql",
+    "022_ultra_release_restore_admin_dictionary.sql",
+    "023_enterprise_intelligence_reporting.sql",
+    "024_automation_intelligence_kri_reviews.sql",
+    "025_staging_validation_consolidation.sql",
+    "026_finish_fast_release_sprint.sql",
+    "027_final_production_leap.sql",
+    "028_final_release_factory.sql",
+    "029_production_proof_consolidation.sql",
+    "030_pilot_real_data_operations.sql",
+    "031_consolidation_pilot_fix_kit.sql",
+    "032_final_local_doctor_production_simulator.sql",
+    "033_v42_production_validation_and_rls_lab.sql",
+    "034_v46_ovr_bilingual_rtl_production_hardening.sql",
+    "035_v50_scale_backup_restore.sql",
+    "037_v58_pilot_rollout_security_audit.sql",
+    "038_v59_no_mock_phased_auto_tests.sql",
+    "039_v60_no_mock_production_data_controls.sql"
+  ]
+}

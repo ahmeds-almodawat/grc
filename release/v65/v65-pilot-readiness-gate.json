@@ -1,0 +1,67 @@
+{
+  "summary": {
+    "generated_at": "2026-06-18T19:38:12.430Z",
+    "gates_total": 9,
+    "automated_gates_passed": 6,
+    "manual_gates_required": 3,
+    "blocking_count": 3,
+    "controlled_pilot_status": "not_ready_manual_evidence_required",
+    "recommendation": "Use for controlled internal testing only until staging persona SQL, restore dry-run, and pilot signoff are attached."
+  },
+  "gates": [
+    {
+      "code": "TYPECHECK_BUILD",
+      "status": "passed_by_previous_phase",
+      "required": true,
+      "evidence": "v65 phase runner typecheck/build"
+    },
+    {
+      "code": "NO_MOCK_STATIC",
+      "status": "passed",
+      "required": true,
+      "evidence": "release/v60/v60-production-data-audit.json"
+    },
+    {
+      "code": "DB_SECURITY_STATIC",
+      "status": "passed",
+      "required": true,
+      "evidence": "release/v64/v64-database-security-proof-summary.json"
+    },
+    {
+      "code": "AUTH_SMOKE",
+      "status": "passed",
+      "required": true,
+      "evidence": "release/v65/v65-auth-security-smoke.json"
+    },
+    {
+      "code": "WORKFLOW_CONTRACTS",
+      "status": "passed",
+      "required": true,
+      "evidence": "release/v65/v65-workflow-contract-tests.json"
+    },
+    {
+      "code": "TEST_ASSETS",
+      "status": "passed",
+      "required": true,
+      "evidence": "release/v65/v65-test-assets-audit.json"
+    },
+    {
+      "code": "STAGING_PERSONA_SQL",
+      "status": "manual_required",
+      "required": true,
+      "evidence": "Run supabase/tests/v64_persona_security_tests.sql in staging and attach output."
+    },
+    {
+      "code": "RESTORE_DRY_RUN",
+      "status": "manual_required",
+      "required": true,
+      "evidence": "Restore staging backup and verify table/storage samples."
+    },
+    {
+      "code": "PILOT_SIGNOFF",
+      "status": "manual_required",
+      "required": true,
+      "evidence": "IT + Quality + Admin signoff before real pilot."
+    }
+  ]
+}

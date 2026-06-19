@@ -1,0 +1,9 @@
+TEMPLATE - replace with real v64 persona SQL output
+
+Required content:
+- output from v64_persona_security_tests.sql
+- Admin / Super User / Audit / Manager / Employee checks
+- negative access checks
+- final status: PASSED / VERIFIED / SUCCESS
+
+Do not move this template into evidence-attachments without replacing it with real output.

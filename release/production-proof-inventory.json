@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-06-17T21:40:22.578Z",
+  "missingCount": 0,
+  "inventory": [
+    {
+      "file": "supabase/_consolidated/ALL_MIGRATIONS_ORDERED.sql",
+      "exists": true
+    },
+    {
+      "file": "supabase/_consolidated/migration-manifest.json",
+      "exists": true
+    },
+    {
+      "file": "docs/FINAL_SECURITY_RLS_SCRIPT.md",
+      "exists": true
+    },
+    {
+      "file": "docs/FINAL_SUPABASE_EVIDENCE_CHECKLIST.md",
+      "exists": true
+    },
+    {
+      "file": "docs/OPERATOR_DAY_1_RUNBOOK.md",
+      "exists": true
+    },
+    {
+      "file": "docs/FINAL_PATCH_APPLICATION_ORDER.md",
+      "exists": true
+    }
+  ]
+}

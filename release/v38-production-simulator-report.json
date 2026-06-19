@@ -1,0 +1,41 @@
+{
+  "generated_at": "2026-06-17T23:46:04.809Z",
+  "score": 43,
+  "gates": [
+    {
+      "gate": "Local build artifacts",
+      "status": "pass",
+      "note": "Run npm run build before final review."
+    },
+    {
+      "gate": "Migration inventory",
+      "status": "pass",
+      "note": "Verify all migrations were copied."
+    },
+    {
+      "gate": "Core files",
+      "status": "pass",
+      "note": "Local doctor found missing structure."
+    },
+    {
+      "gate": "Supabase proof",
+      "status": "manual",
+      "note": "Must be proven in fresh Supabase project."
+    },
+    {
+      "gate": "RLS persona proof",
+      "status": "manual",
+      "note": "Must test CEO, manager, employee, quality, auditor personas."
+    },
+    {
+      "gate": "OVR workflow proof",
+      "status": "manual",
+      "note": "Submit, HOD review, Quality review, evidence, closure."
+    },
+    {
+      "gate": "Backup restore proof",
+      "status": "manual",
+      "note": "Export and restore dry-run must be documented."
+    }
+  ]
+}

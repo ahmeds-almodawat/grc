@@ -1,0 +1,89 @@
+{
+  "summary": {
+    "generated_at": "2026-06-18T20:24:33.087Z",
+    "automated_total": 4,
+    "automated_verified_or_present": 3,
+    "manual_total": 6,
+    "manual_verified": 0,
+    "manual_required_remaining": 6,
+    "pilot_evidence_status": "manual_evidence_required"
+  },
+  "items": [
+    {
+      "id": "typecheck_build_recent",
+      "title": "Local typecheck/build pipeline is runnable",
+      "category": "automated",
+      "status": "verified",
+      "evidence": "dist/index.html exists after build"
+    },
+    {
+      "id": "no_mock_strict_recent",
+      "title": "No-mock strict audit has zero production blockers",
+      "category": "automated",
+      "status": "evidence_file_present",
+      "evidence": "release/v60/v60-production-data-audit.json"
+    },
+    {
+      "id": "database_security_static_ready",
+      "title": "Database security static proof has no high-risk findings",
+      "category": "automated",
+      "status": "not_verified",
+      "evidence": "release/v64/v64-database-security-proof-report.json"
+    },
+    {
+      "id": "real_browser_tests_passed",
+      "title": "Vitest and Playwright real smoke tests passed locally",
+      "category": "automated",
+      "status": "evidence_file_present",
+      "evidence": "Console output / playwright-report / test-results. Attach latest npm run test:real result."
+    },
+    {
+      "id": "fresh_staging_migrations_001_044",
+      "title": "Fresh staging Supabase migrations applied through 044",
+      "category": "manual",
+      "required": true,
+      "status": "manual_required",
+      "evidence_needed": "Screenshot/log showing migrations 001 through 044 applied successfully in staging."
+    },
+    {
+      "id": "staging_persona_sql_v64",
+      "title": "v64 persona SQL tests passed in staging",
+      "category": "manual",
+      "required": true,
+      "status": "manual_required",
+      "evidence_needed": "Result/output from supabase/tests/v64_persona_security_tests.sql."
+    },
+    {
+      "id": "staging_workflow_sql_v65",
+      "title": "v65 workflow SQL smoke tests passed in staging",
+      "category": "manual",
+      "required": true,
+      "status": "manual_required",
+      "evidence_needed": "Result/output from supabase/tests/v65_workflow_smoke_tests.sql."
+    },
+    {
+      "id": "backup_restore_dryrun",
+      "title": "Backup and restore dry-run completed in staging",
+      "category": "manual",
+      "required": true,
+      "status": "manual_required",
+      "evidence_needed": "Restore source, restore target, table counts, evidence-storage sample, smoke-test result, issue/signoff."
+    },
+    {
+      "id": "ovr_confidentiality_no_real_patient_data",
+      "title": "OVR confidentiality rule confirmed for pilot",
+      "category": "manual",
+      "required": true,
+      "status": "manual_required",
+      "evidence_needed": "Quality/IT confirmation that pilot will not include real patient identifiers or confidential OVR details until persona proof passes."
+    },
+    {
+      "id": "pilot_signoff_it_quality_admin",
+      "title": "IT, Quality, and Admin pilot signoff completed",
+      "category": "manual",
+      "required": true,
+      "status": "manual_required",
+      "evidence_needed": "Signed v66 pilot signoff file with names/dates."
+    }
+  ]
+}

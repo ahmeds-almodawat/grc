@@ -1,0 +1,1429 @@
+{
+  "generated_at": "2026-06-18T14:22:10.911Z",
+  "package_name": "grc-control-center",
+  "package_version": "1.0.0",
+  "recommended_runtime_version_label": "v6.1-production-baseline",
+  "policy": "Runtime UI should show one release label. Historical patch labels may remain only in docs/release notes, not as current production truth.",
+  "unique_version_labels_found": 186,
+  "labels": [
+    {
+      "label": "v3.4",
+      "count": 6,
+      "files": [
+        "src\\lib\\pilotOpsApi.ts",
+        "src\\pages\\PilotOperationsCenter.tsx",
+        "docs\\V34_COMPANY_WIDE_ROLLOUT_PLAN.md",
+        "docs\\V34_PILOT_ACCEPTANCE_SCRIPT.md",
+        "docs\\V34_PILOT_ROLLOUT_RUNBOOK.md",
+        "docs\\V34_REAL_DATA_IMPORT_PLAYBOOK.md"
+      ]
+    },
+    {
+      "label": "v3.5",
+      "count": 6,
+      "files": [
+        "src\\lib\\v35ConsolidationApi.ts",
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css",
+        "docs\\V35_CONSOLIDATION_AND_PILOT_FIX_KIT.md",
+        "docs\\V35_DATA_REPAIR_PLAYBOOK.md",
+        "docs\\V35_FINAL_CUTOVER_FREEZE_SOP.md"
+      ]
+    },
+    {
+      "label": "v50",
+      "count": 6,
+      "files": [
+        "docs\\V47_SCALE_SIMULATION_GUIDE.md",
+        "docs\\V48_QUERY_OPTIMIZATION_GUIDE.md",
+        "docs\\V49_PRODUCTION_BACKUP_STRATEGY.md",
+        "docs\\V50_RESTORE_DRYRUN_EXECUTION.md",
+        "docs\\V59_PHASED_AUTO_TEST_RUNBOOK.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v2.4",
+      "count": 5,
+      "files": [
+        "src\\i18n\\I18nContext.tsx",
+        "src\\lib\\consolidationApi.ts",
+        "src\\lib\\stabilizationApi.ts",
+        "docs\\FINAL_PATCH_APPLICATION_ORDER.md",
+        "docs\\RELEASE_NOTES_v2.5.md"
+      ]
+    },
+    {
+      "label": "v2.6",
+      "count": 4,
+      "files": [
+        "src\\lib\\consolidationApi.ts",
+        "src\\styles.css",
+        "docs\\FINAL_PATCH_APPLICATION_ORDER.md",
+        "docs\\RELEASE_NOTES_v2.6.md"
+      ]
+    },
+    {
+      "label": "v5.9",
+      "count": 4,
+      "files": [
+        "src\\pages\\NoMockAutoTestCenter.tsx",
+        "docs\\V59_NO_MOCK_POLICY.md",
+        "docs\\V59_PHASED_AUTO_TEST_RUNBOOK.md",
+        "docs\\V59_PRODUCTION_DATA_SWITCHOVER.md"
+      ]
+    },
+    {
+      "label": "v3.3",
+      "count": 3,
+      "files": [
+        "src\\i18n\\I18nContext.tsx",
+        "src\\styles.css",
+        "docs\\V33_PRODUCTION_PROOF.md"
+      ]
+    },
+    {
+      "label": "v1.9",
+      "count": 3,
+      "files": [
+        "src\\lib\\releaseOpsApi.ts",
+        "src\\styles.css",
+        "docs\\RELEASE_NOTES_v1.9.md"
+      ]
+    },
+    {
+      "label": "v2.3",
+      "count": 3,
+      "files": [
+        "src\\lib\\stabilizationApi.ts",
+        "src\\styles.css",
+        "docs\\V2.3_STAGING_STABILIZATION_RUNBOOK.md"
+      ]
+    },
+    {
+      "label": "v2.1",
+      "count": 3,
+      "files": [
+        "src\\lib\\stabilizationApi.ts",
+        "src\\styles.css",
+        "docs\\RELEASE_NOTES_v2.1.md"
+      ]
+    },
+    {
+      "label": "v58",
+      "count": 3,
+      "files": [
+        "src\\pages\\PilotRolloutSecurityAuditCenter.tsx",
+        "docs\\V59_PHASED_AUTO_TEST_RUNBOOK.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v60",
+      "count": 3,
+      "files": [
+        "src\\pages\\ProductionDataControlCenter.tsx",
+        "docs\\V60_NO_MOCK_REMEDIATION_RUNBOOK.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v5.0",
+      "count": 3,
+      "files": [
+        "src\\pages\\ScaleBackupRestoreCenter.tsx",
+        "docs\\V50_RESTORE_DRYRUN_EXECUTION.md",
+        "docs\\V50_STATS_AND_READINESS.md"
+      ]
+    },
+    {
+      "label": "v2.5",
+      "count": 3,
+      "files": [
+        "src\\styles.css",
+        "docs\\FINAL_PATCH_APPLICATION_ORDER.md",
+        "docs\\RELEASE_NOTES_v2.5.md"
+      ]
+    },
+    {
+      "label": "v38",
+      "count": 3,
+      "files": [
+        "README.md",
+        "docs\\V38_LOCAL_QA_AND_PRODUCTION_SIMULATOR.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v46",
+      "count": 3,
+      "files": [
+        "docs\\V46_APPLY_AND_VALIDATE.md",
+        "docs\\V46_RTL_VISUAL_QA.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v34PilotDictionary",
+      "count": 2,
+      "files": [
+        "src\\data\\v34PilotDictionary.ts",
+        "src\\pages\\PilotOperationsCenter.tsx"
+      ]
+    },
+    {
+      "label": "v3.0-rc-final-sprint",
+      "count": 2,
+      "files": [
+        "src\\lib\\finalizationApi.ts",
+        "docs\\PATCH_CONSOLIDATION_PLAN.md"
+      ]
+    },
+    {
+      "label": "v1.2",
+      "count": 2,
+      "files": [
+        "src\\lib\\grcApi.ts",
+        "src\\styles.css"
+      ]
+    },
+    {
+      "label": "v2.2",
+      "count": 2,
+      "files": [
+        "src\\lib\\stabilizationApi.ts",
+        "src\\styles.css"
+      ]
+    },
+    {
+      "label": "V35Scorecard",
+      "count": 2,
+      "files": [
+        "src\\lib\\v35ConsolidationApi.ts",
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx"
+      ]
+    },
+    {
+      "label": "V35Blocker",
+      "count": 2,
+      "files": [
+        "src\\lib\\v35ConsolidationApi.ts",
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx"
+      ]
+    },
+    {
+      "label": "V35OperatorConsole",
+      "count": 2,
+      "files": [
+        "src\\lib\\v35ConsolidationApi.ts",
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx"
+      ]
+    },
+    {
+      "label": "V35DataQualityRadarRow",
+      "count": 2,
+      "files": [
+        "src\\lib\\v35ConsolidationApi.ts",
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx"
+      ]
+    },
+    {
+      "label": "V35PatchManifestRow",
+      "count": 2,
+      "files": [
+        "src\\lib\\v35ConsolidationApi.ts",
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx"
+      ]
+    },
+    {
+      "label": "V35SopStep",
+      "count": 2,
+      "files": [
+        "src\\lib\\v35ConsolidationApi.ts",
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx"
+      ]
+    },
+    {
+      "label": "V35Defect",
+      "count": 2,
+      "files": [
+        "src\\lib\\v35ConsolidationApi.ts",
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx"
+      ]
+    },
+    {
+      "label": "v35_consolidation_scorecard",
+      "count": 2,
+      "files": [
+        "src\\lib\\v35ConsolidationApi.ts",
+        "docs\\V35_CONSOLIDATION_AND_PILOT_FIX_KIT.md"
+      ]
+    },
+    {
+      "label": "v35_operator_console",
+      "count": 2,
+      "files": [
+        "src\\lib\\v35ConsolidationApi.ts",
+        "docs\\V35_CONSOLIDATION_AND_PILOT_FIX_KIT.md"
+      ]
+    },
+    {
+      "label": "v35_final_blocker_board",
+      "count": 2,
+      "files": [
+        "src\\lib\\v35ConsolidationApi.ts",
+        "docs\\V35_CONSOLIDATION_AND_PILOT_FIX_KIT.md"
+      ]
+    },
+    {
+      "label": "v35_data_quality_radar",
+      "count": 2,
+      "files": [
+        "src\\lib\\v35ConsolidationApi.ts",
+        "docs\\V35_CONSOLIDATION_AND_PILOT_FIX_KIT.md"
+      ]
+    },
+    {
+      "label": "V50ScaleScorecard",
+      "count": 2,
+      "files": [
+        "src\\lib\\v50ScaleBackupApi.ts",
+        "src\\pages\\ScaleBackupRestoreCenter.tsx"
+      ]
+    },
+    {
+      "label": "V50BackupScorecard",
+      "count": 2,
+      "files": [
+        "src\\lib\\v50ScaleBackupApi.ts",
+        "src\\pages\\ScaleBackupRestoreCenter.tsx"
+      ]
+    },
+    {
+      "label": "V50QueueItem",
+      "count": 2,
+      "files": [
+        "src\\lib\\v50ScaleBackupApi.ts",
+        "src\\pages\\ScaleBackupRestoreCenter.tsx"
+      ]
+    },
+    {
+      "label": "v59",
+      "count": 2,
+      "files": [
+        "src\\pages\\NoMockAutoTestCenter.tsx",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v5.8",
+      "count": 2,
+      "files": [
+        "src\\pages\\PilotRolloutSecurityAuditCenter.tsx",
+        "docs\\V58_AUDIT_TRAIL_HARDENING_GUIDE.md"
+      ]
+    },
+    {
+      "label": "v6.0",
+      "count": 2,
+      "files": [
+        "src\\pages\\ProductionDataControlCenter.tsx",
+        "docs\\V60_NO_MOCK_REMEDIATION_RUNBOOK.md"
+      ]
+    },
+    {
+      "label": "v35-gauge",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-gauge-inner",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-stat",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "V35ConsolidationPilotFixKit",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "docs\\V35_CONSOLIDATION_AND_PILOT_FIX_KIT.md"
+      ]
+    },
+    {
+      "label": "v35-page",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-hero",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-actions",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-warning",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-stats-grid",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-panel",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-panel-head",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-pill",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-tabs",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-table-card",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-sev",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-split",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-form-card",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-radar-grid",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-radar-card",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-progress",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-empty",
+      "count": 2,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v1.4",
+      "count": 2,
+      "files": [
+        "src\\styles.css",
+        "docs\\RELEASE_NOTES_v1.4.md"
+      ]
+    },
+    {
+      "label": "v1.5",
+      "count": 2,
+      "files": [
+        "src\\styles.css",
+        "docs\\RELEASE_NOTES_v1.5.md"
+      ]
+    },
+    {
+      "label": "v1.6",
+      "count": 2,
+      "files": [
+        "src\\styles.css",
+        "docs\\RELEASE_NOTES_v1.6.md"
+      ]
+    },
+    {
+      "label": "v1.7",
+      "count": 2,
+      "files": [
+        "src\\styles.css",
+        "docs\\RELEASE_NOTES_v1.7.md"
+      ]
+    },
+    {
+      "label": "v1.8",
+      "count": 2,
+      "files": [
+        "src\\styles.css",
+        "docs\\RELEASE_NOTES_v1.8.md"
+      ]
+    },
+    {
+      "label": "v2.0",
+      "count": 2,
+      "files": [
+        "src\\styles.css",
+        "docs\\RELEASE_NOTES_v2.0.md"
+      ]
+    },
+    {
+      "label": "v3.0",
+      "count": 2,
+      "files": [
+        "src\\styles.css",
+        "docs\\FINAL_PATCH_APPLICATION_ORDER.md"
+      ]
+    },
+    {
+      "label": "v3.1",
+      "count": 2,
+      "files": [
+        "src\\styles.css",
+        "docs\\FINAL_PATCH_APPLICATION_ORDER.md"
+      ]
+    },
+    {
+      "label": "v3.2",
+      "count": 2,
+      "files": [
+        "src\\styles.css",
+        "docs\\V32_FINAL_RELEASE_FACTORY.md"
+      ]
+    },
+    {
+      "label": "v3.8",
+      "count": 2,
+      "files": [
+        "README.md",
+        "docs\\V38_LOCAL_QA_AND_PRODUCTION_SIMULATOR.md"
+      ]
+    },
+    {
+      "label": "v3.7",
+      "count": 2,
+      "files": [
+        "README.md",
+        "docs\\V37_ROUTE_LAZY_LOADING_GUIDE.md"
+      ]
+    },
+    {
+      "label": "v38-install-package-scripts",
+      "count": 2,
+      "files": [
+        "README.md",
+        "docs\\V38_LOCAL_QA_AND_PRODUCTION_SIMULATOR.md"
+      ]
+    },
+    {
+      "label": "v0.2",
+      "count": 2,
+      "files": [
+        "docs\\IMPLEMENTATION_NOTES.md",
+        "docs\\RELEASE_NOTES.md"
+      ]
+    },
+    {
+      "label": "v3.6",
+      "count": 2,
+      "files": [
+        "docs\\V36_PERFORMANCE_BUNDLE_GUIDE.md",
+        "docs\\V37_ROUTE_LAZY_LOADING_GUIDE.md"
+      ]
+    },
+    {
+      "label": "v39-full-consolidation-audit",
+      "count": 2,
+      "files": [
+        "docs\\V39_CONSOLIDATION_AUDIT.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v40-release-candidate-audit",
+      "count": 2,
+      "files": [
+        "docs\\V40_RELEASE_CANDIDATE_PROTOCOL.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v41-fresh-supabase-install-verifier",
+      "count": 2,
+      "files": [
+        "docs\\V41_FRESH_SUPABASE_INSTALL_VERIFIER.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v4.2",
+      "count": 2,
+      "files": [
+        "docs\\V42_PERMISSION_MATRIX.md",
+        "docs\\V42_RLS_PERSONA_TEST_LAB.md"
+      ]
+    },
+    {
+      "label": "v42-rls-persona-test-lab",
+      "count": 2,
+      "files": [
+        "docs\\V42_RLS_PERSONA_TEST_LAB.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v42-generate-rls-persona-sql",
+      "count": 2,
+      "files": [
+        "docs\\V42_RLS_PERSONA_TEST_LAB.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v45",
+      "count": 2,
+      "files": [
+        "docs\\V45_FULL_BILINGUAL_COMPLETION.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v45-i18n-deep-audit",
+      "count": 2,
+      "files": [
+        "docs\\V45_FULL_BILINGUAL_COMPLETION.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v4.6",
+      "count": 2,
+      "files": [
+        "docs\\V46_APPLY_AND_VALIDATE.md",
+        "docs\\V46_RTL_VISUAL_QA.md"
+      ]
+    },
+    {
+      "label": "v50-performance-audit",
+      "count": 2,
+      "files": [
+        "docs\\V48_QUERY_OPTIMIZATION_GUIDE.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v6.1",
+      "count": 2,
+      "files": [
+        "docs\\V61_PRODUCTION_BASELINE_RESET_RUNBOOK.md",
+        "docs\\V61_REAL_VS_SIMULATED_POLICY.md"
+      ]
+    },
+    {
+      "label": "v61",
+      "count": 2,
+      "files": [
+        "docs\\V61_PRODUCTION_BASELINE_RESET_RUNBOOK.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v61-package-pin-audit",
+      "count": 2,
+      "files": [
+        "docs\\V61_PRODUCTION_BASELINE_RESET_RUNBOOK.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v61-version-baseline-audit",
+      "count": 2,
+      "files": [
+        "docs\\V61_PRODUCTION_BASELINE_RESET_RUNBOOK.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v61-capability-register",
+      "count": 2,
+      "files": [
+        "docs\\V61_PRODUCTION_BASELINE_RESET_RUNBOOK.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v61-generated-evidence-audit",
+      "count": 2,
+      "files": [
+        "docs\\V61_PRODUCTION_BASELINE_RESET_RUNBOOK.md",
+        "package.json"
+      ]
+    },
+    {
+      "label": "v35ConsolidationDictionary",
+      "count": 1,
+      "files": [
+        "src\\data\\v35ConsolidationDictionary.ts"
+      ]
+    },
+    {
+      "label": "v46StatusLabels",
+      "count": 1,
+      "files": [
+        "src\\i18n\\v46Dictionaries.ts"
+      ]
+    },
+    {
+      "label": "v46RoleLabels",
+      "count": 1,
+      "files": [
+        "src\\i18n\\v46Dictionaries.ts"
+      ]
+    },
+    {
+      "label": "v46OvrSeverityLabels",
+      "count": 1,
+      "files": [
+        "src\\i18n\\v46Dictionaries.ts"
+      ]
+    },
+    {
+      "label": "v46OvrCategoryLabels",
+      "count": 1,
+      "files": [
+        "src\\i18n\\v46Dictionaries.ts"
+      ]
+    },
+    {
+      "label": "v46Label",
+      "count": 1,
+      "files": [
+        "src\\i18n\\v46Dictionaries.ts"
+      ]
+    },
+    {
+      "label": "v3.2-final-release-factory",
+      "count": 1,
+      "files": [
+        "src\\lib\\consolidationApi.ts"
+      ]
+    },
+    {
+      "label": "v3.3-production-proof",
+      "count": 1,
+      "files": [
+        "src\\lib\\productionProofApi.ts"
+      ]
+    },
+    {
+      "label": "V23",
+      "count": 1,
+      "files": [
+        "src\\lib\\stabilizationApi.ts"
+      ]
+    },
+    {
+      "label": "V23-STAGING",
+      "count": 1,
+      "files": [
+        "src\\lib\\stabilizationApi.ts"
+      ]
+    },
+    {
+      "label": "V35Status",
+      "count": 1,
+      "files": [
+        "src\\lib\\v35ConsolidationApi.ts"
+      ]
+    },
+    {
+      "label": "V35Severity",
+      "count": 1,
+      "files": [
+        "src\\lib\\v35ConsolidationApi.ts"
+      ]
+    },
+    {
+      "label": "V50Status",
+      "count": 1,
+      "files": [
+        "src\\lib\\v50ScaleBackupApi.ts"
+      ]
+    },
+    {
+      "label": "v59-install-test-scripts",
+      "count": 1,
+      "files": [
+        "src\\pages\\NoMockAutoTestCenter.tsx"
+      ]
+    },
+    {
+      "label": "v34-pilot-pack",
+      "count": 1,
+      "files": [
+        "src\\pages\\PilotOperationsCenter.tsx"
+      ]
+    },
+    {
+      "label": "v50ScaleBackupApi",
+      "count": 1,
+      "files": [
+        "src\\pages\\ScaleBackupRestoreCenter.tsx"
+      ]
+    },
+    {
+      "label": "v35ConsolidationApi",
+      "count": 1,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx"
+      ]
+    },
+    {
+      "label": "v35-stat-",
+      "count": 1,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx"
+      ]
+    },
+    {
+      "label": "v35-consolidation-pack-",
+      "count": 1,
+      "files": [
+        "src\\pages\\V35ConsolidationPilotFixKit.tsx"
+      ]
+    },
+    {
+      "label": "V13Route",
+      "count": 1,
+      "files": [
+        "src\\routes\\v13Routes.tsx"
+      ]
+    },
+    {
+      "label": "v13Routes",
+      "count": 1,
+      "files": [
+        "src\\routes\\v13Routes.tsx"
+      ]
+    },
+    {
+      "label": "v0.8",
+      "count": 1,
+      "files": [
+        "src\\styles.css"
+      ]
+    },
+    {
+      "label": "v1.0",
+      "count": 1,
+      "files": [
+        "src\\styles.css"
+      ]
+    },
+    {
+      "label": "v1.1",
+      "count": 1,
+      "files": [
+        "src\\styles.css"
+      ]
+    },
+    {
+      "label": "v35-stat-good",
+      "count": 1,
+      "files": [
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-stat-warn",
+      "count": 1,
+      "files": [
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v35-stat-bad",
+      "count": 1,
+      "files": [
+        "src\\styles.v35.css"
+      ]
+    },
+    {
+      "label": "v3.5.2",
+      "count": 1,
+      "files": [
+        "README.md"
+      ]
+    },
+    {
+      "label": "v0.3.0",
+      "count": 1,
+      "files": [
+        "docs\\RELEASE_NOTES.md"
+      ]
+    },
+    {
+      "label": "v0.4.0",
+      "count": 1,
+      "files": [
+        "docs\\RELEASE_NOTES.md"
+      ]
+    },
+    {
+      "label": "v0.7",
+      "count": 1,
+      "files": [
+        "docs\\RELEASE_NOTES.md"
+      ]
+    },
+    {
+      "label": "v1.3",
+      "count": 1,
+      "files": [
+        "docs\\RELEASE_NOTES_v1.3.md"
+      ]
+    },
+    {
+      "label": "v35-consolidation",
+      "count": 1,
+      "files": [
+        "docs\\V35_CONSOLIDATION_AND_PILOT_FIX_KIT.md"
+      ]
+    },
+    {
+      "label": "v36-bundle-stats",
+      "count": 1,
+      "files": [
+        "docs\\V36_PERFORMANCE_BUNDLE_GUIDE.md"
+      ]
+    },
+    {
+      "label": "v37-convert-app-to-lazy",
+      "count": 1,
+      "files": [
+        "docs\\V37_ROUTE_LAZY_LOADING_GUIDE.md"
+      ]
+    },
+    {
+      "label": "v37-post-build-budget",
+      "count": 1,
+      "files": [
+        "docs\\V37_ROUTE_LAZY_LOADING_GUIDE.md"
+      ]
+    },
+    {
+      "label": "v37-lazy-backup",
+      "count": 1,
+      "files": [
+        "docs\\V37_ROUTE_LAZY_LOADING_GUIDE.md"
+      ]
+    },
+    {
+      "label": "V38_LOCAL_DOCTOR_REPORT",
+      "count": 1,
+      "files": [
+        "docs\\V38_LOCAL_QA_AND_PRODUCTION_SIMULATOR.md"
+      ]
+    },
+    {
+      "label": "V38_SCHEMA_DOCTOR_REPORT",
+      "count": 1,
+      "files": [
+        "docs\\V38_LOCAL_QA_AND_PRODUCTION_SIMULATOR.md"
+      ]
+    },
+    {
+      "label": "V38_PRODUCTION_SIMULATION",
+      "count": 1,
+      "files": [
+        "docs\\V38_LOCAL_QA_AND_PRODUCTION_SIMULATOR.md"
+      ]
+    },
+    {
+      "label": "V38_FINAL_MASTER_REPORT",
+      "count": 1,
+      "files": [
+        "docs\\V38_LOCAL_QA_AND_PRODUCTION_SIMULATOR.md"
+      ]
+    },
+    {
+      "label": "v3.9",
+      "count": 1,
+      "files": [
+        "docs\\V39_CONSOLIDATION_AUDIT.md"
+      ]
+    },
+    {
+      "label": "v39-consolidation-audit",
+      "count": 1,
+      "files": [
+        "docs\\V39_CONSOLIDATION_AUDIT.md"
+      ]
+    },
+    {
+      "label": "v4.0",
+      "count": 1,
+      "files": [
+        "docs\\V40_RELEASE_CANDIDATE_PROTOCOL.md"
+      ]
+    },
+    {
+      "label": "v4.1",
+      "count": 1,
+      "files": [
+        "docs\\V41_FRESH_SUPABASE_INSTALL_VERIFIER.md"
+      ]
+    },
+    {
+      "label": "v4.3",
+      "count": 1,
+      "files": [
+        "docs\\V43_OVR_PRODUCTION_WORKFLOW.md"
+      ]
+    },
+    {
+      "label": "v4.4",
+      "count": 1,
+      "files": [
+        "docs\\V44_OVR_RISK_INTELLIGENCE_CALIBRATION.md"
+      ]
+    },
+    {
+      "label": "v4.5",
+      "count": 1,
+      "files": [
+        "docs\\V45_FULL_BILINGUAL_COMPLETION.md"
+      ]
+    },
+    {
+      "label": "v46-install-validation-scripts",
+      "count": 1,
+      "files": [
+        "docs\\V46_APPLY_AND_VALIDATE.md"
+      ]
+    },
+    {
+      "label": "v4.7",
+      "count": 1,
+      "files": [
+        "docs\\V47_SCALE_SIMULATION_GUIDE.md"
+      ]
+    },
+    {
+      "label": "v50-scale-seed",
+      "count": 1,
+      "files": [
+        "docs\\V47_SCALE_SIMULATION_GUIDE.md"
+      ]
+    },
+    {
+      "label": "v4.8",
+      "count": 1,
+      "files": [
+        "docs\\V48_QUERY_OPTIMIZATION_GUIDE.md"
+      ]
+    },
+    {
+      "label": "v50-reports",
+      "count": 1,
+      "files": [
+        "docs\\V48_QUERY_OPTIMIZATION_GUIDE.md"
+      ]
+    },
+    {
+      "label": "v4.9",
+      "count": 1,
+      "files": [
+        "docs\\V49_PRODUCTION_BACKUP_STRATEGY.md"
+      ]
+    },
+    {
+      "label": "v5.5",
+      "count": 1,
+      "files": [
+        "docs\\V55_PILOT_EXECUTION_GUIDE.md"
+      ]
+    },
+    {
+      "label": "v5.6",
+      "count": 1,
+      "files": [
+        "docs\\V56_COMPANY_ROLLOUT_GUIDE.md"
+      ]
+    },
+    {
+      "label": "v5.7",
+      "count": 1,
+      "files": [
+        "docs\\V57_SECURITY_REVIEW_GUIDE.md"
+      ]
+    },
+    {
+      "label": "v59-no-mock-audit",
+      "count": 1,
+      "files": [
+        "docs\\V59_PHASED_AUTO_TEST_RUNBOOK.md"
+      ]
+    },
+    {
+      "label": "v59-mock-removal-plan",
+      "count": 1,
+      "files": [
+        "docs\\V59_PHASED_AUTO_TEST_RUNBOOK.md"
+      ]
+    },
+    {
+      "label": "v35",
+      "count": 1,
+      "files": [
+        "docs\\V59_PHASED_AUTO_TEST_RUNBOOK.md"
+      ]
+    },
+    {
+      "label": "v59-phase-test-results",
+      "count": 1,
+      "files": [
+        "docs\\V59_PHASED_AUTO_TEST_RUNBOOK.md"
+      ]
+    },
+    {
+      "label": "v59-phase-test-report",
+      "count": 1,
+      "files": [
+        "docs\\V59_PHASED_AUTO_TEST_RUNBOOK.md"
+      ]
+    },
+    {
+      "label": "v60-install-no-mock-scripts",
+      "count": 1,
+      "files": [
+        "docs\\V60_NO_MOCK_REMEDIATION_RUNBOOK.md"
+      ]
+    },
+    {
+      "label": "v61-install-baseline-scripts",
+      "count": 1,
+      "files": [
+        "docs\\V61_PRODUCTION_BASELINE_RESET_RUNBOOK.md"
+      ]
+    },
+    {
+      "label": "v6.2",
+      "count": 1,
+      "files": [
+        "docs\\V61_PRODUCTION_BASELINE_RESET_RUNBOOK.md"
+      ]
+    },
+    {
+      "label": "v6.5",
+      "count": 1,
+      "files": [
+        "docs\\V61_PRODUCTION_BASELINE_RESET_RUNBOOK.md"
+      ]
+    },
+    {
+      "label": "v6.3",
+      "count": 1,
+      "files": [
+        "docs\\V61_PRODUCTION_BASELINE_RESET_RUNBOOK.md"
+      ]
+    },
+    {
+      "label": "v6.4",
+      "count": 1,
+      "files": [
+        "docs\\V61_PRODUCTION_BASELINE_RESET_RUNBOOK.md"
+      ]
+    },
+    {
+      "label": "v38-local-doctor",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v38-schema-doctor",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v38-production-simulator",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v38-final-report",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v42",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v43",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v43-ovr-production-audit",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v44",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v44-ovr-risk-calibration-audit",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v46-rtl-visual-qa",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v50-generate-scale-seed",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v50-backup-strategy-check",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v50-restore-dryrun-audit",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v54",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v54-print-report-audit",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v54-boardpack-audit",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v54-forms-ux-audit",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v54-employee-mode-audit",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v58-pilot-readiness",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v58-rollout-readiness",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v58-security-review",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v58-audit-trail-check",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v59-generate-test-plan",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v60-production-data-audit",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v59-clean-mock-suggestions",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v59-phase-runner",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v60-phase-runner",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v60-runtime-no-mock-remediation",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v61-regenerate-migration-manifest",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    },
+    {
+      "label": "v61-pin-package-versions-from-lock",
+      "count": 1,
+      "files": [
+        "package.json"
+      ]
+    }
+  ]
+}

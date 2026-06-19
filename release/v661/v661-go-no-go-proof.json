@@ -1,0 +1,54 @@
+{
+  "generated_at": "2026-06-19T14:27:41.017Z",
+  "status": "ready_for_controlled_pilot_review",
+  "blocker_count": 0,
+  "blockers": [],
+  "evidence_summary": {
+    "required_total": 6,
+    "attached_count": 6,
+    "missing_count": 0
+  },
+  "previous_v66_gate": {
+    "generated_at": "2026-06-19T14:15:59.707Z",
+    "controlled_pilot_status": "not_ready_manual_evidence_required",
+    "strict_passed": false,
+    "gates": [
+      {
+        "id": "local_typecheck_build",
+        "status": "passed"
+      },
+      {
+        "id": "v60_no_mock_strict",
+        "status": "evidence_present"
+      },
+      {
+        "id": "v64_static_security",
+        "status": "evidence_present"
+      },
+      {
+        "id": "v65_real_tests",
+        "status": "evidence_present"
+      },
+      {
+        "id": "manual_staging_evidence",
+        "status": "manual_required"
+      }
+    ],
+    "missing_manual_evidence": [
+      {
+        "id": "ovr_confidentiality_no_real_patient_data",
+        "title": "OVR confidentiality rule confirmed for pilot",
+        "status": "manual_required",
+        "evidence_needed": "Quality/IT confirmation that pilot will not include real patient identifiers or confidential OVR details until persona proof passes."
+      },
+      {
+        "id": "pilot_signoff_it_quality_admin",
+        "title": "IT, Quality, and Admin pilot signoff completed",
+        "status": "manual_required",
+        "evidence_needed": "Signed v66 pilot signoff file with names/dates."
+      }
+    ],
+    "recommendation": "Use only for controlled internal testing until missing manual staging evidence is attached."
+  },
+  "controlled_pilot_rule": "Only 5-15 trusted users; no real patient identifiers or confidential OVR data until staging proof is complete and signed off."
+}

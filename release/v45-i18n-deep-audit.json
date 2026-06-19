@@ -1,0 +1,340 @@
+{
+  "generated_at": "2026-06-18T07:41:14.806Z",
+  "title": "v4.5 i18n Deep Audit",
+  "passed": 5,
+  "total": 5,
+  "score_percent": 100,
+  "suspicious_hardcoded_english": [
+    {
+      "file": "src\\components\\ActionPlanForm.tsx",
+      "samples": [
+        "Action plan title *",
+        "Description",
+        "Category",
+        "Source",
+        "Department",
+        "Company-wide",
+        "Unassigned",
+        "Sponsor"
+      ],
+      "count": 15
+    },
+    {
+      "file": "src\\components\\analytics\\AnalyticsCharts.tsx",
+      "samples": [
+        "Number(row[item.key] || 0)));\n  const max = Math.max(1, ...numericValues);\n  const xStep = data.length  1 ? (width - padding * 2) / (data.length - 1) : 0;\n  const toY = (value: number) = height - padding - (value / max) * (height - padding * 2);\n\n  return (",
+        "Department"
+      ],
+      "count": 2
+    },
+    {
+      "file": "src\\components\\DataState.tsx",
+      "samples": [
+        "Loading data…"
+      ],
+      "count": 1
+    },
+    {
+      "file": "src\\components\\EmptySupabaseNotice.tsx",
+      "samples": [
+        "Demo mode:",
+        "Supabase is not configured yet. Add",
+        "VITE_SUPABASE_URL",
+        "VITE_SUPABASE_ANON_KEY"
+      ],
+      "count": 4
+    },
+    {
+      "file": "src\\components\\EntityTable.tsx",
+      "samples": [
+        "ReactNode;\n}\n\ninterface EntityTableProps"
+      ],
+      "count": 1
+    },
+    {
+      "file": "src\\components\\GrcForms.tsx",
+      "samples": [
+        "Department",
+        "Company-wide",
+        "Unassigned",
+        "Risk code",
+        "Category",
+        "Risk title *",
+        "Description",
+        "Likelihood 1-5"
+      ],
+      "count": 55
+    },
+    {
+      "file": "src\\components\\ModernCharts.tsx",
+      "samples": [
+        "Number(row.risk_score ?? row.total_score ?? 0)), 1);\n\n  return ("
+      ],
+      "count": 1
+    },
+    {
+      "file": "src\\components\\PageLoading.tsx",
+      "samples": [
+        "Loading workspace",
+        "Preparing module",
+        "The requested page is loading on demand to keep the application faster."
+      ],
+      "count": 3
+    },
+    {
+      "file": "src\\components\\ProjectDetail.tsx",
+      "samples": [
+        "Controlled action plan",
+        "Source",
+        "Target end",
+        "Progress",
+        "Project controls",
+        "Update the project, upload proof, or request closure/decision approval.",
+        "Milestones",
+        "Major stages with owner, due date, evidence and approval."
+      ],
+      "count": 11
+    },
+    {
+      "file": "src\\components\\WorkItemControls.tsx",
+      "samples": [
+        "Status",
+        "Progress %",
+        "Cancel",
+        "Evidence file *",
+        "Description",
+        "Evidence is uploaded to the private",
+        "Cancel",
+        "Approver *"
+      ],
+      "count": 14
+    },
+    {
+      "file": "src\\hooks\\useAsyncData.ts",
+      "samples": [
+        "Promise"
+      ],
+      "count": 1
+    },
+    {
+      "file": "src\\pages\\AccessControl.tsx",
+      "samples": [
+        "No active role",
+        "Refresh matrix",
+        "Role assignment",
+        "Use RPC-controlled assignment instead of direct table edits. Scope validation protects global and department access.",
+        "User",
+        "Select user",
+        "Role",
+        "Scope"
+      ],
+      "count": 17
+    },
+    {
+      "file": "src\\pages\\Admin.tsx",
+      "samples": [
+        "Role model",
+        "Normal employees should only see assigned work. Executives and governance admins see the control dashboard.",
+        "Recommended Scope",
+        "Purpose",
+        "Super Admin",
+        "Global",
+        "System setup, users, roles, migrations, full control.",
+        "Executive"
+      ],
+      "count": 24
+    },
+    {
+      "file": "src\\pages\\Approvals.tsx",
+      "samples": [
+        "Approval queue",
+        "Approve",
+        "Reject"
+      ],
+      "count": 3
+    },
+    {
+      "file": "src\\pages\\Audit.tsx",
+      "samples": [
+        "New Finding",
+        "Audit closure rule",
+        "The department should not close its own finding. Closure requires evidence review and approval by Audit or Governance.",
+        "Workflow",
+        "Finding → Action Plan → Evidence → Audit Review → Close / Reject",
+        "Audit findings"
+      ],
+      "count": 6
+    },
+    {
+      "file": "src\\pages\\BilingualDictionaryCenter.tsx",
+      "samples": [
+        "English"
+      ],
+      "count": 1
+    },
+    {
+      "file": "src\\pages\\Compliance.tsx",
+      "samples": [
+        "New Obligation",
+        "Expiring soon",
+        "MOH, Civil Defense, CBAHI and contract renewals.",
+        "Evidence needed",
+        "Required files before marking compliant.",
+        "Escalation owners",
+        "Notify responsible leaders before expiry.",
+        "Compliance history"
+      ],
+      "count": 10
+    },
+    {
+      "file": "src\\pages\\Departments.tsx",
+      "samples": [
+        "Department execution summary",
+        "For full rollout, this view becomes the control room for 50 departments and all assigned action plans."
+      ],
+      "count": 2
+    },
+    {
+      "file": "src\\pages\\Escalations.tsx",
+      "samples": [
+        "Escalation rules",
+        "Due within 3 days becomes a reminder.",
+        "Overdue items escalate to manager level.",
+        "Critical or 7+ day overdue items escalate to executive level.",
+        "Resolved escalations remain in audit logs and stop showing in the active queue.",
+        "Before using this page in production, run migration",
+        "Active escalation queue",
+        "Open and acknowledged items needing management follow-up."
+      ],
+      "count": 16
+    },
+    {
+      "file": "src\\pages\\Evidence.tsx",
+      "samples": [
+        "Evidence rule",
+        "Major project, compliance, audit and governance items should close only after required evidence is accepted.",
+        "Storage bucket",
+        "Evidence review queue",
+        "Accept",
+        "Revise",
+        "Reject"
+      ],
+      "count": 7
+    },
+    {
+      "file": "src\\pages\\Governance.tsx",
+      "samples": [
+        "New Decision",
+        "Authority matrix",
+        "Approval levels, limits, roles, users and dual approval rules.",
+        "Committees",
+        "Meetings, minutes, decisions and assigned follow-up actions.",
+        "Policies",
+        "Policy register, review dates, versions and approvals.",
+        "CEO directives"
+      ],
+      "count": 10
+    },
+    {
+      "file": "src\\pages\\ImportExport.tsx",
+      "samples": [
+        "Parsed rows",
+        "Valid rows",
+        "Invalid rows",
+        "Use CSV from Excel or paste directly from Excel. The system validates required fields, duplicate codes and email format before staging.",
+        "Required Columns",
+        "This stages employee data only. Actual Supabase Auth user creation should later use a secure server/Edge Function with service-role access, not the browser.",
+        "Template",
+        "Report"
+      ],
+      "count": 21
+    },
+    {
+      "file": "src\\pages\\MyWork.tsx",
+      "samples": [
+        "Usage rule",
+        "Employees should not see all company projects. They should see only assigned work, comments, evidence requests and due dates.",
+        "Escalation",
+        "Due soon → Overdue → Manager → Sponsor",
+        "Open work"
+      ],
+      "count": 5
+    },
+    {
+      "file": "src\\pages\\Projects.tsx",
+      "samples": [
+        "New Action Plan",
+        "Project governance rules",
+        "Every major project must have an owner, sponsor, due date and department.",
+        "Closure requires evidence and approval when marked as controlled work.",
+        "Delay reason becomes mandatory once a due date is missed.",
+        "High-risk delays appear automatically in the executive dashboard.",
+        "Core chain",
+        "Source → Action Plan → Milestone → Task → Evidence → Approval → Closure"
+      ],
+      "count": 10
+    },
+    {
+      "file": "src\\pages\\Risks.tsx",
+      "samples": [
+        "New Risk",
+        "Critical risks",
+        "Financial, regulatory, clinical and operational risks.",
+        "Risk controls",
+        "Preventive, detective, corrective and directive controls.",
+        "Mitigation plans",
+        "Convert risk treatment into tracked action plans.",
+        "Review cycle"
+      ],
+      "count": 10
+    },
+    {
+      "file": "src\\pages\\SecurityAuditCenter.tsx",
+      "samples": [
+        "Secure"
+      ],
+      "count": 1
+    },
+    {
+      "file": "src\\pages\\V35ConsolidationPilotFixKit.tsx",
+      "samples": [
+        "GRC Control Center · v3.5",
+        "Reference",
+        "Status",
+        "Severity",
+        "Version",
+        "Migration",
+        "Required",
+        "Status"
+      ],
+      "count": 13
+    }
+  ],
+  "checks": [
+    {
+      "id": "I18N_CONTEXT_EXISTS",
+      "label": "I18n context exists",
+      "pass": true
+    },
+    {
+      "id": "AR_LABELS_PRESENT",
+      "label": "Arabic labels present in i18n context",
+      "pass": true
+    },
+    {
+      "id": "V46_DICTIONARY_EXISTS",
+      "label": "v4.6 dictionary helper exists",
+      "pass": true
+    },
+    {
+      "id": "TRANSLATION_REGISTRY_SQL",
+      "label": "Translation registry exists in SQL",
+      "pass": true
+    },
+    {
+      "id": "HARDCODED_ENGLISH_REVIEW",
+      "label": "Hardcoded English literal review generated",
+      "pass": true
+    }
+  ]
+}

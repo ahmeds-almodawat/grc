@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-06-18T14:55:28.720Z",
+  "migration_count": 39,
+  "prefix_gaps": [],
+  "duplicate_prefixes": [],
+  "proposed_renames": [],
+  "safe_default": "Plan only. No files are renamed unless --apply --i-understand-rename-migrations is passed.",
+  "warning": "Do not rename migrations that have already been applied to a live/staging Supabase database without a deliberate migration-history decision."
+}

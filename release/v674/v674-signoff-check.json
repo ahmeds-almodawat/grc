@@ -1,0 +1,115 @@
+{
+  "generated_at": "2026-06-19T14:27:37.859Z",
+  "signoff_file": "release/v674/approvals/pilot-signoff.json",
+  "confidentiality_file": "release/v674/approvals/ovr-confidentiality-confirmation.json",
+  "file_hashes": {
+    "pilot_signoff_sha256": "d0140ae2e6d8934b1ec40f0184e27784825c64a3694e4c9937cd1637d3d45283",
+    "confidentiality_confirmation_sha256": "abd9eb0ee67a427ad59fdf371680c674da2dcb73197b0c5a6f95ff1bad480a8f"
+  },
+  "signoff": {
+    "valid": false,
+    "errors": [
+      "management_admin.name is missing or a placeholder.",
+      "management_admin.role is missing or a placeholder.",
+      "management_admin.date must be a real YYYY-MM-DD date that is not in the future.",
+      "management_admin.decision must be one of: approved, approve, go, accepted.",
+      "management_admin.scope must explicitly identify the controlled pilot scope.",
+      "it.name is missing or a placeholder.",
+      "it.role is missing or a placeholder.",
+      "it.date must be a real YYYY-MM-DD date that is not in the future.",
+      "it.decision must be one of: approved, approve, go, accepted.",
+      "it.scope must explicitly identify the controlled pilot scope.",
+      "quality.name is missing or a placeholder.",
+      "quality.role is missing or a placeholder.",
+      "quality.date must be a real YYYY-MM-DD date that is not in the future.",
+      "quality.decision must be one of: approved, approve, go, accepted.",
+      "quality.scope must explicitly identify the controlled pilot scope.",
+      "pilot_scope must explicitly identify a controlled internal pilot.",
+      "maximum_pilot_users must be an integer from 1 to 15.",
+      "reviewed_evidence.local_staging_sql_proofs_reviewed must be explicitly true.",
+      "reviewed_evidence.restore_integrity_dryrun_reviewed must be explicitly true.",
+      "reviewed_evidence.security_definer_audit_reviewed must be explicitly true."
+    ],
+    "reviewers": [
+      {
+        "label": "management_admin",
+        "valid": false,
+        "errors": [
+          "management_admin.name is missing or a placeholder.",
+          "management_admin.role is missing or a placeholder.",
+          "management_admin.date must be a real YYYY-MM-DD date that is not in the future.",
+          "management_admin.decision must be one of: approved, approve, go, accepted.",
+          "management_admin.scope must explicitly identify the controlled pilot scope."
+        ]
+      },
+      {
+        "label": "it",
+        "valid": false,
+        "errors": [
+          "it.name is missing or a placeholder.",
+          "it.role is missing or a placeholder.",
+          "it.date must be a real YYYY-MM-DD date that is not in the future.",
+          "it.decision must be one of: approved, approve, go, accepted.",
+          "it.scope must explicitly identify the controlled pilot scope."
+        ]
+      },
+      {
+        "label": "quality",
+        "valid": false,
+        "errors": [
+          "quality.name is missing or a placeholder.",
+          "quality.role is missing or a placeholder.",
+          "quality.date must be a real YYYY-MM-DD date that is not in the future.",
+          "quality.decision must be one of: approved, approve, go, accepted.",
+          "quality.scope must explicitly identify the controlled pilot scope."
+        ]
+      }
+    ]
+  },
+  "confidentiality": {
+    "valid": false,
+    "errors": [
+      "it_reviewer.name is missing or a placeholder.",
+      "it_reviewer.role is missing or a placeholder.",
+      "it_reviewer.date must be a real YYYY-MM-DD date that is not in the future.",
+      "it_reviewer.decision must be one of: confirmed, approved, accepted.",
+      "it_reviewer.scope must explicitly identify the controlled pilot scope.",
+      "quality_reviewer.name is missing or a placeholder.",
+      "quality_reviewer.role is missing or a placeholder.",
+      "quality_reviewer.date must be a real YYYY-MM-DD date that is not in the future.",
+      "quality_reviewer.decision must be one of: confirmed, approved, accepted.",
+      "quality_reviewer.scope must explicitly identify the controlled pilot scope.",
+      "statements.no_real_patient_identifiers must be explicitly true.",
+      "statements.no_confidential_ovr_details must be explicitly true.",
+      "statements.controlled_pilot_users_only must be explicitly true.",
+      "statements.local_staging_proof_reviewed must be explicitly true.",
+      "scope must explicitly identify a controlled internal pilot."
+    ],
+    "reviewers": [
+      {
+        "label": "it_reviewer",
+        "valid": false,
+        "errors": [
+          "it_reviewer.name is missing or a placeholder.",
+          "it_reviewer.role is missing or a placeholder.",
+          "it_reviewer.date must be a real YYYY-MM-DD date that is not in the future.",
+          "it_reviewer.decision must be one of: confirmed, approved, accepted.",
+          "it_reviewer.scope must explicitly identify the controlled pilot scope."
+        ]
+      },
+      {
+        "label": "quality_reviewer",
+        "valid": false,
+        "errors": [
+          "quality_reviewer.name is missing or a placeholder.",
+          "quality_reviewer.role is missing or a placeholder.",
+          "quality_reviewer.date must be a real YYYY-MM-DD date that is not in the future.",
+          "quality_reviewer.decision must be one of: confirmed, approved, accepted.",
+          "quality_reviewer.scope must explicitly identify the controlled pilot scope."
+        ]
+      }
+    ]
+  },
+  "strict_passed": false,
+  "rule": "Human governance items are verified only from explicit, complete, non-placeholder approval records."
+}

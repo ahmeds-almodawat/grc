@@ -1,0 +1,1582 @@
+import { supabase } from './supabase';
+import {
+  fallbackAccessControlWarnings,
+  fallbackAccessControlUsers,
+  fallbackAccessControlSummary,
+  fallbackApprovals,
+  fallbackAuditFindings,
+  fallbackCompliance,
+  fallbackCriticalItems,
+  fallbackCustomReports,
+  fallbackDecisions,
+  fallbackDelayReasonQueue,
+  fallbackDepartments,
+  fallbackEvidence,
+  fallbackEscalations,
+  fallbackExecutiveSummary,
+  fallbackExportCenterSummary,
+  fallbackGrcKpiScorecard,
+  fallbackDepartmentRiskHeatmap,
+  fallbackMonthlyGrcTrend,
+  fallbackRadarControlProfile,
+  fallbackManagementControlSummary,
+  fallbackMilestones,
+  fallbackMyWork,
+  fallbackOrganization,
+  fallbackOvrReports,
+  fallbackOvrSummary,
+  fallbackOvrRiskDepartmentIndicators,
+  fallbackOvrRepeatedCategoryAlerts,
+  fallbackOvrRiskIndicatorSummary,
+  fallbackProfiles,
+  fallbackProjects,
+  fallbackRisks,
+  fallbackTasks
+} from '../data/mockData';
+import type {
+  AccessControlSummary,
+  AppRole,
+  AccessScope,
+  AccessControlWarningRow,
+  AccessControlUserRow,
+  ApprovalRow,
+  AuditFindingRow,
+  ComplianceRow,
+  DelayReasonQueueRow,
+  CriticalAttentionItem,
+  CustomReportDefinition,
+  DepartmentOption,
+  DepartmentExecutionSummary,
+  EvidenceRow,
+  EscalationRow,
+  ExecutiveSummary,
+  ExportCenterSummary,
+  ExportDatasetKey,
+  ExportDatasetPayload,
+  ExportFormat,
+  GovernanceDecisionRow,
+  GrcKpiScorecard,
+  DepartmentRiskHeatmapRow,
+  MonthlyGrcTrendRow,
+  RadarControlProfileRow,
+  ManagementControlSummary,
+  MilestoneRow,
+  MyWorkRow,
+  OrganizationOption,
+  OvrReportRow,
+  OvrSeverityLevel,
+  OvrSummary,
+  OvrRiskDepartmentIndicator,
+  OvrRepeatedCategoryAlert,
+  OvrRiskIndicatorSummary,
+  OvrWorkflowControlSummary,
+  OvrWorkflowQueueRow,
+  PriorityLevel,
+  ProfileOption,
+  ProjectRow,
+  ProjectStatus,
+  RiskLevel,
+  RiskRow,
+  SourceType,
+  TaskRow,
+  WorkStatus
+} from '../types/domain';
+
+function logFallback(label: string, error: unknown) {
+  // eslint-disable-next-line no-console
+  console.warn(`[GRC demo fallback] ${label}`, error);
+}
+
+function requireLiveSupabase() {
+  if (!supabase) {
+    throw new Error('Supabase is not configured. This starter runs in demo mode until you add .env credentials.');
+  }
+  return supabase;
+}
+
+async function currentUserId() {
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getUser();
+  return data.user?.id ?? null;
+}
+
+export async function getExecutiveSummary(): Promise<ExecutiveSummary> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase.from('v_executive_grc_summary').select('*').limit(1);
+    if (error) throw error;
+    const row = data?.[0] as any;
+    if (!row) return [];
+
+    return {
+      activeProjects: row.active_projects ?? 0,
+      overdueProjects: row.overdue_projects ?? 0,
+      overdueMilestones: row.overdue_milestones ?? 0,
+      overdueTasks: row.overdue_tasks ?? 0,
+      criticalOpenRisks: row.critical_open_risks ?? 0,
+      complianceExpiring30Days: row.compliance_expiring_30_days ?? 0,
+      overdueAuditFindings: row.overdue_audit_findings ?? 0,
+      pendingApprovals: row.pending_approvals ?? 0,
+      pendingEvidenceReviews: row.pending_evidence_reviews ?? 0
+    };
+  } catch (error) {
+    logFallback('executive summary', error);
+    return [];
+  }
+}
+
+export async function getCriticalAttentionItems(): Promise<CriticalAttentionItem[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('v_critical_attention_items')
+      .select('*')
+      .order('sort_rank', { ascending: true })
+      .limit(25);
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
+
+    return (data as any[]).map(row => ({
+      id: row.id,
+      itemType: row.item_type,
+      title: row.title,
+      department: row.department_name || 'Company-wide',
+      owner: row.owner_name || 'Unassigned',
+      dueDate: row.due_date,
+      status: row.status,
+      riskLevel: row.risk_level,
+      progress: row.progress_percent
+    }));
+  } catch (error) {
+    logFallback('critical attention items', error);
+    return [];
+  }
+}
+
+export async function getProjects(): Promise<ProjectRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*, departments(name_en,name_ar), owner:profiles!projects_owner_id_fkey(full_name_en,full_name_ar)')
+      .order('target_end_date', { ascending: true, nullsFirst: false })
+      .limit(100);
+    if (error) throw error;
+    return (data as unknown as ProjectRow[])?.length ? (data as unknown as ProjectRow[]) : fallbackProjects;
+  } catch (error) {
+    logFallback('projects', error);
+    return [];
+  }
+}
+
+export async function getProjectMilestones(projectId: string): Promise<MilestoneRow[]> {
+  if (!supabase) return fallbackMilestones.filter(item => item.project_id === projectId);
+
+  try {
+    const { data, error } = await supabase
+      .from('milestones')
+      .select('*, owner:profiles!milestones_owner_id_fkey(full_name_en,full_name_ar)')
+      .eq('project_id', projectId)
+      .order('sort_order', { ascending: true })
+      .order('due_date', { ascending: true, nullsFirst: false });
+    if (error) throw error;
+    return (data as unknown as MilestoneRow[]) || [];
+  } catch (error) {
+    logFallback('project milestones', error);
+    return fallbackMilestones.filter(item => item.project_id === projectId);
+  }
+}
+
+export async function getProjectTasks(projectId: string): Promise<TaskRow[]> {
+  if (!supabase) return fallbackTasks.filter(item => item.project_id === projectId);
+
+  try {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*, owner:profiles!tasks_owner_id_fkey(full_name_en,full_name_ar), assignee:profiles!tasks_assigned_to_fkey(full_name_en,full_name_ar)')
+      .eq('project_id', projectId)
+      .order('sort_order', { ascending: true })
+      .order('due_date', { ascending: true, nullsFirst: false });
+    if (error) throw error;
+    return (data as unknown as TaskRow[]) || [];
+  } catch (error) {
+    logFallback('project tasks', error);
+    return fallbackTasks.filter(item => item.project_id === projectId);
+  }
+}
+
+export async function getRisks(): Promise<RiskRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('risks')
+      .select('*, departments(name_en,name_ar), owner:profiles!risks_owner_id_fkey(full_name_en,full_name_ar)')
+      .order('risk_level', { ascending: true })
+      .limit(100);
+    if (error) throw error;
+    return (data as unknown as RiskRow[])?.length ? (data as unknown as RiskRow[]) : fallbackRisks;
+  } catch (error) {
+    logFallback('risks', error);
+    return [];
+  }
+}
+
+export async function getComplianceItems(): Promise<ComplianceRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('compliance_items')
+      .select('*, departments(name_en,name_ar), owner:profiles!compliance_items_owner_id_fkey(full_name_en,full_name_ar)')
+      .order('expiry_date', { ascending: true, nullsFirst: false })
+      .limit(100);
+    if (error) throw error;
+    return (data as unknown as ComplianceRow[])?.length ? (data as unknown as ComplianceRow[]) : fallbackCompliance;
+  } catch (error) {
+    logFallback('compliance items', error);
+    return [];
+  }
+}
+
+export async function getAuditFindings(): Promise<AuditFindingRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('audit_findings')
+      .select('*, departments(name_en,name_ar), owner:profiles!audit_findings_owner_id_fkey(full_name_en,full_name_ar)')
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .limit(100);
+    if (error) throw error;
+    return (data as unknown as AuditFindingRow[])?.length ? (data as unknown as AuditFindingRow[]) : fallbackAuditFindings;
+  } catch (error) {
+    logFallback('audit findings', error);
+    return [];
+  }
+}
+
+export async function getGovernanceDecisions(): Promise<GovernanceDecisionRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('committee_decisions')
+      .select('*, departments(name_en,name_ar), owner:profiles!committee_decisions_owner_id_fkey(full_name_en,full_name_ar)')
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .limit(100);
+    if (error) throw error;
+    return (data as unknown as GovernanceDecisionRow[])?.length ? (data as unknown as GovernanceDecisionRow[]) : fallbackDecisions;
+  } catch (error) {
+    logFallback('governance decisions', error);
+    return [];
+  }
+}
+
+export async function getMyWork(): Promise<MyWorkRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase.from('v_my_open_work_expanded').select('*').order('due_date', { ascending: true, nullsFirst: false }).limit(100);
+    if (error) throw error;
+    return (data as unknown as MyWorkRow[])?.length ? (data as unknown as MyWorkRow[]) : fallbackMyWork;
+  } catch (error) {
+    logFallback('my work', error);
+    return [];
+  }
+}
+
+export async function getApprovals(): Promise<ApprovalRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase.from('v_pending_approvals_expanded').select('*').order('requested_at', { ascending: true }).limit(100);
+    if (error) throw error;
+    return (data as unknown as ApprovalRow[])?.length ? (data as unknown as ApprovalRow[]) : fallbackApprovals;
+  } catch (error) {
+    logFallback('approvals', error);
+    return [];
+  }
+}
+
+export async function getEvidenceQueue(): Promise<EvidenceRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase.from('v_evidence_review_queue').select('*').order('created_at', { ascending: true }).limit(100);
+    if (error) throw error;
+    return (data as unknown as EvidenceRow[])?.length ? (data as unknown as EvidenceRow[]) : fallbackEvidence;
+  } catch (error) {
+    logFallback('evidence review queue', error);
+    return [];
+  }
+}
+
+
+export async function getEscalations(): Promise<EscalationRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('v_escalation_center')
+      .select('*')
+      .order('escalation_level', { ascending: true })
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .limit(100);
+    if (error) throw error;
+    return (data as unknown as EscalationRow[])?.length ? (data as unknown as EscalationRow[]) : fallbackEscalations;
+  } catch (error) {
+    logFallback('escalation center', error);
+    return [];
+  }
+}
+
+export async function getDelayReasonQueue(): Promise<DelayReasonQueueRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('v_delay_reason_queue')
+      .select('*')
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .limit(100);
+    if (error) throw error;
+    return (data as unknown as DelayReasonQueueRow[]) || [];
+  } catch (error) {
+    logFallback('delay reason queue', error);
+    return [];
+  }
+}
+
+export async function getManagementControlSummary(): Promise<ManagementControlSummary> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase.from('v_management_control_summary').select('*').limit(1);
+    if (error) throw error;
+    const row = data?.[0] as ManagementControlSummary | undefined;
+    return row || fallbackManagementControlSummary;
+  } catch (error) {
+    logFallback('management control summary', error);
+    return [];
+  }
+}
+
+export async function refreshEscalations() {
+  const client = requireLiveSupabase();
+  const { error } = await client.rpc('refresh_escalation_events');
+  if (error) throw error;
+}
+
+export async function acknowledgeEscalation(eventId: string, note?: string) {
+  const client = requireLiveSupabase();
+  const { error } = await client.rpc('acknowledge_escalation_event', { p_event_id: eventId, p_note: note || null });
+  if (error) throw error;
+}
+
+export async function resolveEscalation(eventId: string, note?: string) {
+  const client = requireLiveSupabase();
+  const { error } = await client.rpc('resolve_escalation_event', { p_event_id: eventId, p_note: note || 'Resolved from Escalation Center.' });
+  if (error) throw error;
+}
+
+export async function getOrganizations(): Promise<OrganizationOption[]> {
+  if (!supabase) return [fallbackOrganization];
+
+  try {
+    const { data, error } = await supabase.from('organizations').select('id,name_en,name_ar').eq('is_active', true).limit(20);
+    if (error) throw error;
+    return data?.length ? (data as OrganizationOption[]) : [fallbackOrganization];
+  } catch (error) {
+    logFallback('organizations', error);
+    return [fallbackOrganization];
+  }
+}
+
+export async function getDepartments(): Promise<DepartmentOption[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase.from('departments').select('id,name_en,name_ar').eq('is_active', true).order('name_en');
+    if (error) throw error;
+    return data?.length ? (data as DepartmentOption[]) : fallbackDepartments;
+  } catch (error) {
+    logFallback('departments', error);
+    return [];
+  }
+}
+
+export async function getProfiles(): Promise<ProfileOption[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase.from('profiles').select('id,full_name_en,full_name_ar,email').eq('is_active', true).order('full_name_en').limit(1000);
+    if (error) throw error;
+    return data?.length ? (data as ProfileOption[]) : fallbackProfiles;
+  } catch (error) {
+    logFallback('profiles', error);
+    return [];
+  }
+}
+
+export interface CreateProjectInput {
+  organization_id: string;
+  title: string;
+  description?: string;
+  category: string;
+  source_type: SourceType;
+  department_id?: string;
+  owner_id?: string;
+  sponsor_id?: string;
+  start_date?: string;
+  target_end_date?: string;
+  priority: PriorityLevel;
+  risk_level: RiskLevel;
+  evidence_required: boolean;
+  closure_approval_required: boolean;
+}
+
+export async function createProject(input: CreateProjectInput) {
+  const client = requireLiveSupabase();
+  const userId = await currentUserId();
+  const payload = {
+    ...input,
+    department_id: input.department_id || null,
+    owner_id: input.owner_id || null,
+    sponsor_id: input.sponsor_id || null,
+    start_date: input.start_date || null,
+    target_end_date: input.target_end_date || null,
+    status: 'draft',
+    progress_percent: 0,
+    created_by: userId,
+    updated_by: userId
+  };
+  const { data, error } = await client.from('projects').insert(payload).select('id,title').single();
+  if (error) throw error;
+  return data;
+}
+
+export interface CreateRiskInput {
+  organization_id: string;
+  risk_code?: string;
+  title: string;
+  description?: string;
+  category: string;
+  department_id?: string;
+  owner_id?: string;
+  likelihood: number;
+  impact: number;
+  residual_likelihood: number;
+  residual_impact: number;
+  risk_level: RiskLevel;
+  response_type: string;
+  next_review_date?: string;
+}
+
+export async function createRisk(input: CreateRiskInput) {
+  const client = requireLiveSupabase();
+  const userId = await currentUserId();
+  const { data, error } = await client
+    .from('risks')
+    .insert({
+      ...input,
+      risk_code: input.risk_code || null,
+      department_id: input.department_id || null,
+      owner_id: input.owner_id || null,
+      next_review_date: input.next_review_date || null,
+      status: 'open',
+      created_by: userId,
+      updated_by: userId
+    })
+    .select('id,title')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export interface CreateComplianceInput {
+  organization_id: string;
+  compliance_code?: string;
+  title: string;
+  description?: string;
+  regulatory_body?: string;
+  requirement_type?: string;
+  department_id?: string;
+  owner_id?: string;
+  due_date?: string;
+  expiry_date?: string;
+  risk_level: RiskLevel;
+  reminder_days_before: number;
+}
+
+export async function createComplianceItem(input: CreateComplianceInput) {
+  const client = requireLiveSupabase();
+  const userId = await currentUserId();
+  const { data, error } = await client
+    .from('compliance_items')
+    .insert({
+      ...input,
+      compliance_code: input.compliance_code || null,
+      description: input.description || null,
+      regulatory_body: input.regulatory_body || null,
+      requirement_type: input.requirement_type || null,
+      department_id: input.department_id || null,
+      owner_id: input.owner_id || null,
+      due_date: input.due_date || null,
+      expiry_date: input.expiry_date || null,
+      status: 'not_started',
+      evidence_required: true,
+      created_by: userId,
+      updated_by: userId
+    })
+    .select('id,title')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export interface CreateAuditFindingInput {
+  organization_id: string;
+  finding_code?: string;
+  audit_title?: string;
+  title: string;
+  description: string;
+  department_id?: string;
+  owner_id?: string;
+  auditor_id?: string;
+  risk_level: RiskLevel;
+  root_cause?: string;
+  recommendation?: string;
+  due_date?: string;
+}
+
+export async function createAuditFinding(input: CreateAuditFindingInput) {
+  const client = requireLiveSupabase();
+  const userId = await currentUserId();
+  const { data, error } = await client
+    .from('audit_findings')
+    .insert({
+      ...input,
+      finding_code: input.finding_code || null,
+      audit_title: input.audit_title || null,
+      department_id: input.department_id || null,
+      owner_id: input.owner_id || null,
+      auditor_id: input.auditor_id || userId,
+      root_cause: input.root_cause || null,
+      recommendation: input.recommendation || null,
+      due_date: input.due_date || null,
+      status: 'open',
+      evidence_required: true,
+      created_by: userId,
+      updated_by: userId
+    })
+    .select('id,title')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export interface CreateDecisionInput {
+  organization_id: string;
+  decision_code?: string;
+  title: string;
+  decision_text: string;
+  department_id?: string;
+  owner_id?: string;
+  sponsor_id?: string;
+  due_date?: string;
+  priority: PriorityLevel;
+  risk_level: RiskLevel;
+  source_type: SourceType;
+}
+
+export async function createGovernanceDecision(input: CreateDecisionInput) {
+  const client = requireLiveSupabase();
+  const userId = await currentUserId();
+  const { data, error } = await client
+    .from('committee_decisions')
+    .insert({
+      ...input,
+      decision_code: input.decision_code || null,
+      department_id: input.department_id || null,
+      owner_id: input.owner_id || null,
+      sponsor_id: input.sponsor_id || null,
+      due_date: input.due_date || null,
+      status: 'open',
+      evidence_required: true,
+      created_by: userId,
+      updated_by: userId
+    })
+    .select('id,title')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export interface CreateMilestoneInput {
+  organization_id: string;
+  project_id: string;
+  title: string;
+  description?: string;
+  owner_id?: string;
+  start_date?: string;
+  due_date?: string;
+  evidence_required: boolean;
+}
+
+export async function createMilestone(input: CreateMilestoneInput) {
+  const client = requireLiveSupabase();
+  const userId = await currentUserId();
+  const { data, error } = await client
+    .from('milestones')
+    .insert({
+      ...input,
+      description: input.description || null,
+      owner_id: input.owner_id || null,
+      start_date: input.start_date || null,
+      due_date: input.due_date || null,
+      status: 'not_started',
+      progress_percent: 0,
+      created_by: userId,
+      updated_by: userId
+    })
+    .select('id,title')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export interface CreateTaskInput {
+  organization_id: string;
+  project_id: string;
+  milestone_id?: string;
+  title: string;
+  description?: string;
+  owner_id?: string;
+  assigned_to?: string;
+  start_date?: string;
+  due_date?: string;
+  evidence_required: boolean;
+}
+
+export async function createTask(input: CreateTaskInput) {
+  const client = requireLiveSupabase();
+  const userId = await currentUserId();
+  const { data, error } = await client
+    .from('tasks')
+    .insert({
+      ...input,
+      milestone_id: input.milestone_id || null,
+      description: input.description || null,
+      owner_id: input.owner_id || null,
+      assigned_to: input.assigned_to || null,
+      start_date: input.start_date || null,
+      due_date: input.due_date || null,
+      status: 'not_started',
+      progress_percent: 0,
+      created_by: userId,
+      updated_by: userId
+    })
+    .select('id,title')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateTaskStatus(taskId: string, status: WorkStatus, progress_percent: number, delay_reason?: string) {
+  const client = requireLiveSupabase();
+  const userId = await currentUserId();
+  const { error } = await client
+    .from('tasks')
+    .update({ status, progress_percent, delay_reason: delay_reason || null, updated_by: userId })
+    .eq('id', taskId);
+  if (error) throw error;
+}
+
+export async function decideApproval(approvalId: string, status: 'approved' | 'rejected', decision_note?: string) {
+  const client = requireLiveSupabase();
+  const { error } = await client
+    .from('approvals')
+    .update({ status, decision_note: decision_note || null, decided_at: new Date().toISOString() })
+    .eq('id', approvalId);
+  if (error) throw error;
+}
+
+export async function reviewEvidence(evidenceId: string, status: 'accepted' | 'rejected' | 'needs_revision', rejection_reason?: string) {
+  const client = requireLiveSupabase();
+  const userId = await currentUserId();
+  const { error } = await client
+    .from('evidence_files')
+    .update({ status, reviewed_by: userId, reviewed_at: new Date().toISOString(), rejection_reason: rejection_reason || null })
+    .eq('id', evidenceId);
+  if (error) throw error;
+}
+
+export type ApprovalItemType = 'project' | 'milestone' | 'task' | 'risk' | 'compliance_item' | 'audit_finding' | 'policy' | 'committee_decision' | 'ovr_report';
+
+function itemLinkColumn(itemType: ApprovalItemType) {
+  const map: Record<ApprovalItemType, string> = {
+    project: 'project_id',
+    milestone: 'milestone_id',
+    task: 'task_id',
+    risk: 'risk_id',
+    compliance_item: 'compliance_item_id',
+    audit_finding: 'audit_finding_id',
+    policy: 'policy_id',
+    committee_decision: 'committee_decision_id',
+    ovr_report: 'ovr_report_id'
+  };
+  return map[itemType];
+}
+
+function safeFileName(name: string) {
+  return name
+    .trim()
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 140) || 'evidence-file';
+}
+
+export async function updateProjectStatus(projectId: string, status: ProjectStatus, progress_percent: number, delay_reason?: string) {
+  const client = requireLiveSupabase();
+  const userId = await currentUserId();
+  const { error } = await client
+    .from('projects')
+    .update({ status, progress_percent, delay_reason: delay_reason || null, updated_by: userId })
+    .eq('id', projectId);
+  if (error) throw error;
+}
+
+export async function updateMilestoneStatus(milestoneId: string, status: WorkStatus, progress_percent: number, delay_reason?: string) {
+  const client = requireLiveSupabase();
+  const userId = await currentUserId();
+  const { error } = await client
+    .from('milestones')
+    .update({ status, progress_percent, delay_reason: delay_reason || null, updated_by: userId })
+    .eq('id', milestoneId);
+  if (error) throw error;
+}
+
+export interface UploadEvidenceInput {
+  organization_id: string;
+  item_type: ApprovalItemType;
+  item_id: string;
+  file: File;
+  description?: string;
+}
+
+export async function uploadEvidenceForItem(input: UploadEvidenceInput) {
+  const client = requireLiveSupabase();
+  const userId = await currentUserId();
+  const cleanName = safeFileName(input.file.name);
+  const path = `${input.organization_id}/${input.item_type}/${input.item_id}/${Date.now()}-${cleanName}`;
+
+  const { error: uploadError } = await client.storage
+    .from('grc-evidence')
+    .upload(path, input.file, { upsert: false });
+  if (uploadError) throw uploadError;
+
+  const linkColumn = itemLinkColumn(input.item_type);
+  const payload = {
+    organization_id: input.organization_id,
+    [linkColumn]: input.item_id,
+    file_name: input.file.name,
+    file_path: path,
+    file_type: input.file.type || null,
+    file_size: input.file.size,
+    description: input.description || null,
+    status: 'submitted',
+    uploaded_by: userId
+  };
+
+  const { data, error } = await client.from('evidence_files').insert(payload).select('id,file_name').single();
+  if (error) throw error;
+  return data;
+}
+
+export interface RequestApprovalInput {
+  organization_id: string;
+  item_type: ApprovalItemType;
+  item_id: string;
+  approver_id: string;
+  request_note?: string;
+}
+
+export async function requestApproval(input: RequestApprovalInput) {
+  const client = requireLiveSupabase();
+  const userId = await currentUserId();
+  const linkColumn = itemLinkColumn(input.item_type);
+  const payload = {
+    organization_id: input.organization_id,
+    [linkColumn]: input.item_id,
+    requested_by: userId,
+    approver_id: input.approver_id,
+    status: 'pending',
+    request_note: input.request_note || null
+  };
+
+  const { data, error } = await client.from('approvals').insert(payload).select('id,status').single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getDepartmentExecutionSummary(): Promise<DepartmentExecutionSummary[]> {
+  if (!supabase) {
+    return fallbackDepartments.map((department, index) => ({
+      organization_id: fallbackOrganization.id,
+      department_id: department.id,
+      department_name: department.name_en,
+      active_projects: index === 0 ? 4 : index === 1 ? 3 : 2,
+      overdue_projects: index === 0 ? 1 : 0,
+      overdue_milestones: index === 1 ? 2 : 0,
+      overdue_tasks: index === 2 ? 3 : 1,
+      critical_risks: index === 0 ? 2 : 0,
+      overdue_audit_findings: index === 1 ? 1 : 0,
+      compliance_expiring_30_days: index === 2 ? 2 : 1
+    }));
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('v_department_execution_summary')
+      .select('*')
+      .order('overdue_projects', { ascending: false })
+      .order('overdue_tasks', { ascending: false });
+    if (error) throw error;
+    return (data as unknown as DepartmentExecutionSummary[]) || [];
+  } catch (error) {
+    logFallback('department execution summary', error);
+    return fallbackDepartments.map((department, index) => ({
+      organization_id: fallbackOrganization.id,
+      department_id: department.id,
+      department_name: department.name_en,
+      active_projects: index === 0 ? 4 : index === 1 ? 3 : 2,
+      overdue_projects: index === 0 ? 1 : 0,
+      overdue_milestones: index === 1 ? 2 : 0,
+      overdue_tasks: index === 2 ? 3 : 1,
+      critical_risks: index === 0 ? 2 : 0,
+      overdue_audit_findings: index === 1 ? 1 : 0,
+      compliance_expiring_30_days: index === 2 ? 2 : 1
+    }));
+  }
+}
+
+export interface BulkImportRowInput {
+  row_number: number;
+  raw_data: Record<string, string>;
+  validation_status: 'valid' | 'invalid';
+  validation_errors: string[];
+  validation_warnings: string[];
+}
+
+export interface SaveBulkImportBatchInput {
+  organization_id: string;
+  batch_type: string;
+  source_file_name?: string;
+  total_rows: number;
+  valid_rows: number;
+  invalid_rows: number;
+  rows: BulkImportRowInput[];
+}
+
+export async function saveBulkImportBatch(input: SaveBulkImportBatchInput) {
+  const client = requireLiveSupabase();
+  const userId = await currentUserId();
+  const { data: batch, error: batchError } = await client
+    .from('bulk_import_batches')
+    .insert({
+      organization_id: input.organization_id,
+      batch_type: input.batch_type,
+      source_file_name: input.source_file_name || null,
+      status: input.invalid_rows > 0 ? 'validated_with_errors' : 'validated',
+      total_rows: input.total_rows,
+      valid_rows: input.valid_rows,
+      invalid_rows: input.invalid_rows,
+      created_by: userId
+    })
+    .select('id')
+    .single();
+
+  if (batchError) throw batchError;
+
+  if (input.rows.length) {
+    const { error: rowsError } = await client.from('bulk_import_rows').insert(
+      input.rows.map(row => ({
+        batch_id: batch.id,
+        organization_id: input.organization_id,
+        row_number: row.row_number,
+        raw_data: row.raw_data,
+        validation_status: row.validation_status,
+        validation_errors: row.validation_errors,
+        validation_warnings: row.validation_warnings,
+        import_status: 'not_imported'
+      }))
+    );
+    if (rowsError) throw rowsError;
+  }
+
+  return batch;
+}
+
+
+export async function getAccessControlSummary(): Promise<AccessControlSummary> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase.from('v_access_control_summary').select('*').limit(1);
+    if (error) throw error;
+    const row = data?.[0] as AccessControlSummary | undefined;
+    return row || fallbackAccessControlSummary;
+  } catch (error) {
+    logFallback('access control summary', error);
+    return [];
+  }
+}
+
+export async function getAccessControlUsers(): Promise<AccessControlUserRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('v_access_control_matrix')
+      .select('*')
+      .order('full_name_en', { ascending: true })
+      .limit(1000);
+    if (error) throw error;
+    return (data as unknown as AccessControlUserRow[])?.length ? (data as unknown as AccessControlUserRow[]) : fallbackAccessControlUsers;
+  } catch (error) {
+    logFallback('access control users', error);
+    return [];
+  }
+}
+
+export async function getAccessControlWarnings(): Promise<AccessControlWarningRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('v_access_control_warnings')
+      .select('*')
+      .order('severity', { ascending: true })
+      .limit(200);
+    if (error) throw error;
+    return (data as unknown as AccessControlWarningRow[]) || [];
+  } catch (error) {
+    logFallback('access control warnings', error);
+    return [];
+  }
+}
+
+export interface AssignUserRoleInput {
+  user_id: string;
+  role: AppRole;
+  scope: AccessScope;
+  organization_id?: string | null;
+  division_id?: string | null;
+  department_id?: string | null;
+  unit_id?: string | null;
+  reason?: string;
+}
+
+export async function assignUserRole(input: AssignUserRoleInput) {
+  const client = requireLiveSupabase();
+  const { data, error } = await client.rpc('assign_user_role', {
+    p_user_id: input.user_id,
+    p_role: input.role,
+    p_scope: input.scope,
+    p_organization_id: input.organization_id || null,
+    p_division_id: input.division_id || null,
+    p_department_id: input.department_id || null,
+    p_unit_id: input.unit_id || null,
+    p_reason: input.reason || null
+  });
+  if (error) throw error;
+  return data as string;
+}
+
+export async function deactivateUserRole(userRoleId: string, reason?: string) {
+  const client = requireLiveSupabase();
+  const { error } = await client.rpc('deactivate_user_role', {
+    p_user_role_id: userRoleId,
+    p_reason: reason || null
+  });
+  if (error) throw error;
+}
+
+export async function getOvrSummary(): Promise<OvrSummary> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase.from('v_ovr_summary').select('*').limit(1);
+    if (error) throw error;
+    const row = data?.[0] as OvrSummary | undefined;
+    return row || fallbackOvrSummary;
+  } catch (error) {
+    logFallback('OVR summary', error);
+    return [];
+  }
+}
+
+export async function getOvrReports(): Promise<OvrReportRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('ovr_reports')
+      .select('*, departments(name_en,name_ar), reporter:profiles!ovr_reports_reported_by_fkey(full_name_en,full_name_ar), owner:profiles!ovr_reports_owner_id_fkey(full_name_en,full_name_ar)')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return (data as unknown as OvrReportRow[])?.length ? (data as unknown as OvrReportRow[]) : fallbackOvrReports;
+  } catch (error) {
+    logFallback('OVR reports', error);
+    return [];
+  }
+}
+
+export interface CreateOvrReportInput {
+  organization_id: string;
+  logging_number?: string;
+  occurrence_date?: string;
+  occurrence_time?: string;
+  occurrence_location?: string;
+  involved_person_type: string;
+  person_involved_name?: string;
+  mrn_or_id_no?: string;
+  age?: number;
+  sex?: string;
+  department_id?: string;
+  notification_at?: string;
+  physical_condition?: string;
+  mental_condition?: string;
+  pre_occurrence_condition_flags: string[];
+  brief_description: string;
+  occurrence_category: string;
+  severity_level?: OvrSeverityLevel;
+  injury_type?: string;
+  supervisor_investigation?: string;
+  corrective_action?: string;
+  quality_manager_comments?: string;
+  referred_to_person?: string;
+  referred_to_department?: string;
+  create_linked_action_plan: boolean;
+  status: 'draft' | 'submitted';
+}
+
+export async function createOvrReport(input: CreateOvrReportInput) {
+  const client = requireLiveSupabase();
+  const userId = await currentUserId();
+  const { data, error } = await client
+    .from('ovr_reports')
+    .insert({
+      ...input,
+      logging_number: input.logging_number || null,
+      occurrence_date: input.occurrence_date || null,
+      occurrence_time: input.occurrence_time || null,
+      occurrence_location: input.occurrence_location || null,
+      person_involved_name: input.person_involved_name || null,
+      mrn_or_id_no: input.mrn_or_id_no || null,
+      age: input.age || null,
+      sex: input.sex || null,
+      department_id: input.department_id || null,
+      notification_at: input.notification_at || null,
+      physical_condition: input.physical_condition || null,
+      mental_condition: input.mental_condition || null,
+      severity_level: input.severity_level || null,
+      injury_type: input.injury_type || null,
+      supervisor_investigation: input.supervisor_investigation || null,
+      corrective_action: input.corrective_action || null,
+      quality_manager_comments: input.quality_manager_comments || null,
+      referred_to_person: input.referred_to_person || null,
+      referred_to_department: input.referred_to_department || null,
+      corrective_action_required: input.status === 'submitted',
+      evidence_required: true,
+      reported_by: userId,
+      owner_id: userId,
+      created_by: userId,
+      updated_by: userId
+    })
+    .select('id,ovr_number,logging_number')
+    .single();
+  if (error) throw error;
+
+  if (input.create_linked_action_plan) {
+    const { data: project, error: projectError } = await client
+      .from('projects')
+      .insert({
+        organization_id: input.organization_id,
+        title: `OVR corrective action - ${data.ovr_number || data.logging_number || data.id}`,
+        description: input.corrective_action || input.brief_description,
+        category: 'OVR Corrective Action',
+        source_type: 'incident_ovr',
+        source_reference_id: data.id,
+        department_id: input.department_id || null,
+        owner_id: userId,
+        sponsor_id: userId,
+        start_date: new Date().toISOString().slice(0, 10),
+        target_end_date: null,
+        priority: input.severity_level === 'sentinel' || input.severity_level === 'level_4' ? 'critical' : 'high',
+        risk_level: input.severity_level === 'sentinel' || input.severity_level === 'level_4' ? 'critical' : 'high',
+        status: 'draft',
+        evidence_required: true,
+        closure_approval_required: true,
+        created_by: userId,
+        updated_by: userId
+      })
+      .select('id')
+      .single();
+    if (projectError) throw projectError;
+    await client.from('ovr_reports').update({ linked_project_id: project.id, updated_by: userId }).eq('id', data.id);
+  }
+
+  return data;
+}
+
+
+export async function getOvrWorkflowControlSummary(): Promise<OvrWorkflowControlSummary> {
+  if (!supabase) {
+    return {
+      organization_id: fallbackOrganization.id,
+      pending_supervisor_review: 2,
+      pending_quality_review: 3,
+      returned_for_clarification: 1,
+      pending_evidence_review: 2,
+      major_open_ovrs: 1,
+      overdue_ovr_workflow_items: 2
+    };
+  }
+
+  try {
+    const { data, error } = await supabase.from('v_ovr_workflow_control_summary').select('*').limit(1);
+    if (error) throw error;
+    const row = data?.[0] as OvrWorkflowControlSummary | undefined;
+    return row || {
+      organization_id: fallbackOrganization.id,
+      pending_supervisor_review: 0,
+      pending_quality_review: 0,
+      returned_for_clarification: 0,
+      pending_evidence_review: 0,
+      major_open_ovrs: 0,
+      overdue_ovr_workflow_items: 0
+    };
+  } catch (error) {
+    logFallback('OVR workflow control summary', error);
+    return {
+      organization_id: fallbackOrganization.id,
+      pending_supervisor_review: 2,
+      pending_quality_review: 3,
+      returned_for_clarification: 1,
+      pending_evidence_review: 2,
+      major_open_ovrs: 1,
+      overdue_ovr_workflow_items: 2
+    };
+  }
+}
+
+export async function getOvrWorkflowQueue(): Promise<OvrWorkflowQueueRow[]> {
+  if (!supabase) {
+    return fallbackOvrReports.slice(0, 4).map((row, index) => ({
+      id: row.id,
+      organization_id: row.organization_id,
+      ovr_number: row.ovr_number || row.logging_number,
+      title: row.brief_description,
+      department_name: row.departments?.name_en || 'Quality',
+      owner_name: row.owner?.full_name_en || 'Quality Manager',
+      occurrence_date: row.occurrence_date,
+      status: row.status,
+      severity_level: row.severity_level,
+      workflow_stage: index === 0 ? 'quality_review' : index === 1 ? 'supervisor_review' : 'corrective_action',
+      due_date: row.occurrence_date,
+      is_overdue: index < 2,
+      risk_level: row.severity_level === 'sentinel' || row.severity_level === 'level_4' ? 'critical' : index === 1 ? 'high' : 'medium'
+    }));
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('v_ovr_workflow_queue')
+      .select('*')
+      .order('is_overdue', { ascending: false })
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .limit(100);
+    if (error) throw error;
+    return (data as unknown as OvrWorkflowQueueRow[]) || [];
+  } catch (error) {
+    logFallback('OVR workflow queue', error);
+    return [];
+  }
+}
+
+export interface UpdateOvrWorkflowInput {
+  ovr_report_id: string;
+  next_status: string;
+  note?: string;
+  supervisor_investigation?: string;
+  corrective_action?: string;
+  quality_manager_comments?: string;
+  confirmed_severity_level?: OvrSeverityLevel;
+  corrective_action_due_date?: string;
+}
+
+export async function updateOvrWorkflow(input: UpdateOvrWorkflowInput) {
+  const client = requireLiveSupabase();
+  const { error } = await client.rpc('update_ovr_workflow', {
+    p_ovr_report_id: input.ovr_report_id,
+    p_next_status: input.next_status,
+    p_note: input.note || null,
+    p_supervisor_investigation: input.supervisor_investigation || null,
+    p_corrective_action: input.corrective_action || null,
+    p_quality_manager_comments: input.quality_manager_comments || null,
+    p_confirmed_severity_level: input.confirmed_severity_level || null,
+    p_corrective_action_due_date: input.corrective_action_due_date || null
+  });
+  if (error) throw error;
+}
+
+export async function createOvrCorrectiveActionProject(ovrReportId: string) {
+  const client = requireLiveSupabase();
+  const { data, error } = await client.rpc('create_ovr_corrective_action_project', {
+    p_ovr_report_id: ovrReportId
+  });
+  if (error) throw error;
+  return data as string;
+}
+
+export async function getOvrRiskIndicatorSummary(): Promise<OvrRiskIndicatorSummary> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase.from('v_ovr_risk_indicator_summary').select('*').limit(1);
+    if (error) throw error;
+    const row = data?.[0] as OvrRiskIndicatorSummary | undefined;
+    return row || fallbackOvrRiskIndicatorSummary;
+  } catch (error) {
+    logFallback('OVR risk indicator summary', error);
+    return [];
+  }
+}
+
+export async function getOvrRiskIndicatorsByDepartment(): Promise<OvrRiskDepartmentIndicator[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('v_ovr_risk_indicators_by_department')
+      .select('*')
+      .order('weighted_score_30d', { ascending: false })
+      .order('major_or_sentinel_ovrs_90d', { ascending: false });
+    if (error) throw error;
+    return (data as unknown as OvrRiskDepartmentIndicator[])?.length
+      ? (data as unknown as OvrRiskDepartmentIndicator[])
+      : fallbackOvrRiskDepartmentIndicators;
+  } catch (error) {
+    logFallback('OVR risk indicators by department', error);
+    return [];
+  }
+}
+
+export async function getOvrRepeatedCategoryAlerts(): Promise<OvrRepeatedCategoryAlert[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('v_ovr_repeated_category_alerts')
+      .select('*')
+      .order('category_count_30d', { ascending: false });
+    if (error) throw error;
+    return (data as unknown as OvrRepeatedCategoryAlert[])?.length
+      ? (data as unknown as OvrRepeatedCategoryAlert[])
+      : fallbackOvrRepeatedCategoryAlerts;
+  } catch (error) {
+    logFallback('OVR repeated category alerts', error);
+    return [];
+  }
+}
+
+export async function getGrcKpiScorecard(): Promise<GrcKpiScorecard> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase.from('v_grc_kpi_scorecard').select('*').limit(1);
+    if (error) throw error;
+    const row = data?.[0] as GrcKpiScorecard | undefined;
+    return row || fallbackGrcKpiScorecard;
+  } catch (error) {
+    logFallback('GRC KPI scorecard', error);
+    return [];
+  }
+}
+
+export async function getDepartmentRiskHeatmap(): Promise<DepartmentRiskHeatmapRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('v_department_risk_heatmap')
+      .select('*')
+      .order('overall_pressure_score', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return (data as unknown as DepartmentRiskHeatmapRow[])?.length
+      ? (data as unknown as DepartmentRiskHeatmapRow[])
+      : fallbackDepartmentRiskHeatmap;
+  } catch (error) {
+    logFallback('department risk heatmap', error);
+    return [];
+  }
+}
+
+export async function getMonthlyGrcTrend(): Promise<MonthlyGrcTrendRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('v_monthly_grc_trend')
+      .select('*')
+      .order('month_start', { ascending: true });
+    if (error) throw error;
+    return (data as unknown as MonthlyGrcTrendRow[])?.length
+      ? (data as unknown as MonthlyGrcTrendRow[])
+      : fallbackMonthlyGrcTrend;
+  } catch (error) {
+    logFallback('monthly GRC trend', error);
+    return [];
+  }
+}
+
+export async function getRadarControlProfile(): Promise<RadarControlProfileRow[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('v_radar_control_profile')
+      .select('*')
+      .order('dimension_key', { ascending: true });
+    if (error) throw error;
+    return (data as unknown as RadarControlProfileRow[])?.length
+      ? (data as unknown as RadarControlProfileRow[])
+      : fallbackRadarControlProfile;
+  } catch (error) {
+    logFallback('radar control profile', error);
+    return [];
+  }
+}
+
+
+export async function getExportCenterSummary(): Promise<ExportCenterSummary> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase.from('v_export_center_summary').select('*').limit(1);
+    if (error) throw error;
+    const row = data?.[0] as any;
+    if (!row) return [];
+    return {
+      organization_id: row.organization_id,
+      custom_reports: row.custom_reports ?? 0,
+      exports_30d: row.exports_30d ?? 0,
+      backups_30d: row.backups_30d ?? 0,
+      available_datasets: row.available_datasets ?? 0,
+      last_export_at: row.last_export_at ?? null,
+      last_backup_at: row.last_backup_at ?? null
+    };
+  } catch (error) {
+    logFallback('export center summary', error);
+    return [];
+  }
+}
+
+export async function getCustomReportDefinitions(): Promise<CustomReportDefinition[]> {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('custom_report_definitions')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return (data as unknown as CustomReportDefinition[])?.length ? (data as unknown as CustomReportDefinition[]) : fallbackCustomReports;
+  } catch (error) {
+    logFallback('custom report definitions', error);
+    return [];
+  }
+}
+
+export async function saveCustomReportDefinition(input: {
+  organization_id: string;
+  report_key: string;
+  name_en: string;
+  name_ar?: string | null;
+  description?: string | null;
+  datasets: ExportDatasetKey[];
+  filters?: Record<string, unknown> | null;
+  columns?: Record<string, unknown> | null;
+}) {
+  const client = requireLiveSupabase();
+  const actorId = await currentUserId();
+  const { data, error } = await client
+    .from('custom_report_definitions')
+    .insert({
+      organization_id: input.organization_id,
+      report_key: input.report_key,
+      name_en: input.name_en,
+      name_ar: input.name_ar ?? null,
+      description: input.description ?? null,
+      datasets: input.datasets,
+      filters: input.filters ?? {},
+      columns: input.columns ?? {},
+      created_by: actorId,
+      updated_by: actorId
+    })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function logDataExport(input: {
+  organization_id: string;
+  export_type: 'dataset' | 'report' | 'backup';
+  dataset_key?: string | null;
+  export_format: ExportFormat;
+  file_name: string;
+  row_count: number;
+  filters?: Record<string, unknown> | null;
+  report_definition_id?: string | null;
+}) {
+  if (!supabase) return null;
+
+  try {
+    const actorId = await currentUserId();
+    const { data, error } = await supabase
+      .from('data_export_jobs')
+      .insert({
+        organization_id: input.organization_id,
+        export_type: input.export_type,
+        dataset_key: input.dataset_key ?? null,
+        export_format: input.export_format,
+        file_name: input.file_name,
+        row_count: input.row_count,
+        filters: input.filters ?? {},
+        report_definition_id: input.report_definition_id ?? null,
+        generated_by: actorId,
+        status: 'completed',
+        completed_at: new Date().toISOString()
+      })
+      .select('id')
+      .single();
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    logFallback('log data export', error);
+    return null;
+  }
+}
+
+function rowsFromObject(value: unknown): Record<string, unknown>[] {
+  if (Array.isArray(value)) return value as Record<string, unknown>[];
+  if (value && typeof value === 'object') return [value as Record<string, unknown>];
+  return [];
+}
+
+export async function getExportDataset(datasetKey: ExportDatasetKey): Promise<ExportDatasetPayload> {
+  const generatedAt = new Date().toISOString();
+  let rows: Record<string, unknown>[] = [];
+  let label: string = datasetKey;
+
+  switch (datasetKey) {
+    case 'projects':
+      label = 'Projects and action plans';
+      rows = rowsFromObject(await getProjects());
+      break;
+    case 'milestones':
+      label = 'Milestones';
+      rows = rowsFromObject(supabase ? (await supabase.from('milestones').select('*').limit(5000)).data ?? fallbackMilestones : fallbackMilestones);
+      break;
+    case 'tasks':
+      label = 'Tasks';
+      rows = rowsFromObject(supabase ? (await supabase.from('tasks').select('*').limit(5000)).data ?? fallbackTasks : fallbackTasks);
+      break;
+    case 'risks':
+      label = 'Risk register';
+      rows = rowsFromObject(await getRisks());
+      break;
+    case 'compliance':
+      label = 'Compliance calendar';
+      rows = rowsFromObject(await getComplianceItems());
+      break;
+    case 'audit_findings':
+      label = 'Audit findings';
+      rows = rowsFromObject(await getAuditFindings());
+      break;
+    case 'ovr_reports':
+      label = 'OVR reports';
+      rows = rowsFromObject(await getOvrReports());
+      break;
+    case 'approvals':
+      label = 'Approvals';
+      rows = rowsFromObject(await getApprovals());
+      break;
+    case 'evidence':
+      label = 'Evidence review queue';
+      rows = rowsFromObject(await getEvidenceQueue());
+      break;
+    case 'escalations':
+      label = 'Escalations';
+      rows = rowsFromObject(await getEscalations());
+      break;
+    case 'departments':
+      label = 'Departments';
+      rows = rowsFromObject(await getDepartments());
+      break;
+    case 'users':
+      label = 'User access matrix';
+      rows = rowsFromObject(await getAccessControlUsers());
+      break;
+    case 'kpi_scorecard':
+      label = 'KPI scorecard';
+      rows = rowsFromObject(await getGrcKpiScorecard());
+      break;
+    case 'department_heatmap':
+      label = 'Department risk heatmap';
+      rows = rowsFromObject(await getDepartmentRiskHeatmap());
+      break;
+    case 'ovr_risk_indicators':
+      label = 'OVR risk indicators';
+      rows = rowsFromObject(await getOvrRiskIndicatorsByDepartment());
+      break;
+    default:
+      rows = [];
+  }
+
+  return { datasetKey, label, generatedAt, rowCount: rows.length, rows };
+}
+
+export async function buildBackupPackage(datasetKeys: ExportDatasetKey[]) {
+  const generatedAt = new Date().toISOString();
+  const datasets: Record<string, ExportDatasetPayload> = {};
+  let totalRows = 0;
+
+  for (const key of datasetKeys) {
+    const payload = await getExportDataset(key);
+    datasets[key] = payload;
+    totalRows += payload.rowCount;
+  }
+
+  return {
+    manifest: {
+      product: 'GRC Control Center',
+      version: 'v1.2 export-center patch',
+      generatedAt,
+      datasetCount: datasetKeys.length,
+      totalRows,
+      note: 'Client-side external backup package. It is not a Supabase full database dump and does not include storage file binary contents.'
+    },
+    datasets
+  };
+}

@@ -1,0 +1,63 @@
+{
+  "generated_at": "2026-06-18T14:03:37.771Z",
+  "phases_run": 7,
+  "phases_passed": 7,
+  "phases_warning": 0,
+  "phases_failed": 0,
+  "overall_passed": true,
+  "results": [
+    {
+      "id": 1,
+      "name": "TypeScript foundation",
+      "command": "npm run typecheck",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": 2,
+      "name": "Production build",
+      "command": "npm run build",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": 3,
+      "name": "Runtime no-mock strict audit",
+      "command": "npm run v60:strict",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": 4,
+      "name": "Migration artifacts present",
+      "command": "node scripts/v38-schema-doctor.mjs",
+      "optional": true,
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": 5,
+      "name": "Backup strategy artifacts",
+      "command": "node scripts/v50-backup-strategy-check.mjs",
+      "optional": true,
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": 6,
+      "name": "Restore dry-run artifacts",
+      "command": "node scripts/v50-restore-dryrun-audit.mjs",
+      "optional": true,
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": 7,
+      "name": "Pilot readiness artifacts",
+      "command": "node scripts/v58-pilot-readiness.mjs",
+      "optional": true,
+      "status": "passed",
+      "exit_code": 0
+    }
+  ]
+}

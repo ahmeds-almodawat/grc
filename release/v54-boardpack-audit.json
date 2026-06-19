@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-06-18T08:59:00.945Z",
+  "score": 0,
+  "checks": [
+    {
+      "code": "BOARDPACK_MIGRATION",
+      "title": "Board pack migration exists",
+      "status": "needs_review"
+    },
+    {
+      "code": "BOARDPACK_READINESS_VIEW",
+      "title": "Board pack readiness view must be queried in Supabase",
+      "status": "manual_required"
+    },
+    {
+      "code": "MONTHLY_BOARD_PACK_TEMPLATE",
+      "title": "Monthly GRC board pack template seeded",
+      "status": "manual_required"
+    },
+    {
+      "code": "BOARD_PACK_OWNER",
+      "title": "Board pack owner assigned for weekly/monthly governance meetings",
+      "status": "manual_required"
+    }
+  ]
+}

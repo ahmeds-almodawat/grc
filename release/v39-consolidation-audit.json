@@ -1,0 +1,245 @@
+{
+  "generated_at": "2026-06-18T07:26:34.131Z",
+  "status": "needs_attention",
+  "counts": {
+    "migrations": 34,
+    "scripts": 29,
+    "docs": 45,
+    "pages": 60,
+    "lib_files": 23
+  },
+  "missing_required_files": [],
+  "duplicate_migration_numbers": [
+    {
+      "prefix": "012",
+      "files": [
+        "supabase/migrations/012a_ovr_workflow_enum_values.sql",
+        "supabase/migrations/012b_ovr_workflow_controls.sql"
+      ]
+    }
+  ],
+  "route_audit": {
+    "routes": [
+      "access",
+      "accessControl",
+      "admin",
+      "adminHub",
+      "adminSafety",
+      "analytics",
+      "approvals",
+      "audit",
+      "automation",
+      "automationIntelligence",
+      "backupHealth",
+      "backupScheduler",
+      "backupStrategy",
+      "bilingualDictionary",
+      "board",
+      "boardPacks",
+      "command",
+      "commandCenter",
+      "committee",
+      "committeeAutomation",
+      "compliance",
+      "customReports",
+      "dashboard",
+      "departmentScorecards",
+      "departments",
+      "dictionary",
+      "documents",
+      "escalations",
+      "evidence",
+      "evidenceVault",
+      "executiveHub",
+      "finishFast",
+      "globalSearch",
+      "governance",
+      "grcHub",
+      "guide",
+      "home",
+      "importExport",
+      "kri",
+      "loadSeedCenter",
+      "migrationRunbook",
+      "migrationVerifier",
+      "mobile",
+      "mobileCommand",
+      "my",
+      "myWork",
+      "operations",
+      "ovr",
+      "ovrRisk",
+      "performance",
+      "productionBackupStrategy",
+      "productionFinish",
+      "productionProof",
+      "productionRelease",
+      "projects",
+      "qualityHub",
+      "relationships",
+      "releaseCandidate",
+      "releaseFactory",
+      "reportBuilder",
+      "reportsHub",
+      "restore",
+      "restoreDryRun",
+      "reviews",
+      "riskAppetiteKri",
+      "risks",
+      "rls",
+      "rlsPersonaLab",
+      "runbook",
+      "scenario",
+      "scenarioPlanning",
+      "security",
+      "seed",
+      "setup",
+      "setupCenter",
+      "smartReviews",
+      "staging",
+      "stagingValidation",
+      "testing",
+      "translation",
+      "translationCoverage",
+      "userGuide",
+      "workHub"
+    ],
+    "duplicateRoutes": [
+      {
+        "route": "dashboard",
+        "count": 2
+      },
+      {
+        "route": "analytics",
+        "count": 2
+      },
+      {
+        "route": "projects",
+        "count": 2
+      },
+      {
+        "route": "departments",
+        "count": 2
+      },
+      {
+        "route": "operations",
+        "count": 2
+      },
+      {
+        "route": "escalations",
+        "count": 2
+      },
+      {
+        "route": "approvals",
+        "count": 2
+      },
+      {
+        "route": "evidence",
+        "count": 2
+      },
+      {
+        "route": "risks",
+        "count": 2
+      },
+      {
+        "route": "compliance",
+        "count": 2
+      },
+      {
+        "route": "audit",
+        "count": 2
+      },
+      {
+        "route": "governance",
+        "count": 2
+      },
+      {
+        "route": "ovr",
+        "count": 2
+      },
+      {
+        "route": "ovrRisk",
+        "count": 2
+      },
+      {
+        "route": "evidenceVault",
+        "count": 2
+      },
+      {
+        "route": "relationships",
+        "count": 2
+      },
+      {
+        "route": "documents",
+        "count": 2
+      },
+      {
+        "route": "importExport",
+        "count": 2
+      },
+      {
+        "route": "reportBuilder",
+        "count": 2
+      },
+      {
+        "route": "backupScheduler",
+        "count": 2
+      },
+      {
+        "route": "releaseFactory",
+        "count": 2
+      },
+      {
+        "route": "productionProof",
+        "count": 2
+      },
+      {
+        "route": "productionFinish",
+        "count": 2
+      },
+      {
+        "route": "finishFast",
+        "count": 2
+      },
+      {
+        "route": "admin",
+        "count": 2
+      },
+      {
+        "route": "security",
+        "count": 2
+      },
+      {
+        "route": "performance",
+        "count": 2
+      },
+      {
+        "route": "testing",
+        "count": 2
+      },
+      {
+        "route": "releaseCandidate",
+        "count": 2
+      },
+      {
+        "route": "productionRelease",
+        "count": 2
+      },
+      {
+        "route": "migrationVerifier",
+        "count": 2
+      },
+      {
+        "route": "adminSafety",
+        "count": 2
+      }
+    ]
+  },
+  "dead_risk_signals": [],
+  "next_actions": [
+    "Fix missing required files before staging.",
+    "Resolve duplicate migration prefixes if any exist.",
+    "Keep old routes hidden rather than deleted until pilot is complete.",
+    "Run npm run typecheck and npm run build after applying each patch."
+  ]
+}

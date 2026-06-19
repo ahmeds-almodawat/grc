@@ -1,0 +1,63 @@
+{
+  "generated_at": "2026-06-17T23:46:04.654Z",
+  "project": "grc-control-center",
+  "version": "1.0.0",
+  "score": 100,
+  "counts": {
+    "source_files": 113,
+    "page_files": 60,
+    "migration_files": 33,
+    "js_assets": 13,
+    "css_assets": 1,
+    "total_js_kb": 1009,
+    "total_css_kb": 81
+  },
+  "checks": [
+    {
+      "id": "package_json",
+      "label": "package.json exists",
+      "ok": true
+    },
+    {
+      "id": "src_app",
+      "label": "src/App.tsx exists",
+      "ok": true
+    },
+    {
+      "id": "src_styles",
+      "label": "src/styles.css exists",
+      "ok": true
+    },
+    {
+      "id": "supabase_migrations",
+      "label": "Supabase migrations folder exists",
+      "ok": true
+    },
+    {
+      "id": "dist_exists",
+      "label": "dist folder exists after build",
+      "ok": true
+    },
+    {
+      "id": "typescript_sources",
+      "label": "TypeScript source files detected",
+      "ok": true
+    },
+    {
+      "id": "pages_detected",
+      "label": "Pages detected",
+      "ok": true
+    },
+    {
+      "id": "migrations_detected",
+      "label": "SQL migrations detected",
+      "ok": true
+    },
+    {
+      "id": "bundle_generated",
+      "label": "Production JS assets generated",
+      "ok": true
+    }
+  ],
+  "warnings": []
+}

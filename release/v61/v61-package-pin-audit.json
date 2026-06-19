@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-06-18T22:32:12.900Z",
+  "package_name": "grc-control-center",
+  "package_version": "1.0.0",
+  "unstable_dependency_count": 0,
+  "strict_passed": true,
+  "policy": "Production releases should pin dependency versions. Use npm run v61:pin-from-lock only after reviewing package-lock.json.",
+  "unstable": []
+}

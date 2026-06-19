@@ -1,0 +1,37 @@
+{
+  "generated_at": "2026-06-18T14:03:37.636Z",
+  "status": "manual_restore_required",
+  "steps": [
+    {
+      "step": 1,
+      "title": "Confirm backup source exists",
+      "status": "not_verified"
+    },
+    {
+      "step": 2,
+      "title": "Restore database to staging",
+      "status": "not_verified"
+    },
+    {
+      "step": 3,
+      "title": "Verify critical table counts",
+      "status": "not_verified"
+    },
+    {
+      "step": 4,
+      "title": "Verify evidence storage samples",
+      "status": "not_verified"
+    },
+    {
+      "step": 5,
+      "title": "Run application smoke test",
+      "status": "not_verified"
+    },
+    {
+      "step": 6,
+      "title": "Document issues and signoff",
+      "status": "not_verified"
+    }
+  ],
+  "warning": "A backup is not production-valid until a restore dry-run is completed and signed off."
+}

@@ -1,0 +1,410 @@
+# v5.9 No-Mock Audit
+
+Generated: 2026-06-18T09:18:51.201Z
+
+- Total findings: 811
+- Production-blocking findings: 542
+- Files with findings: 38
+
+## Production-blocking findings
+
+- **src/data/mockData.ts:36** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackOrganization: OrganizationOption = {
+- **src/data/mockData.ts:42** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackDepartments: DepartmentOption[] = [
+- **src/data/mockData.ts:52** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackProfiles: ProfileOption[] = [
+- **src/data/mockData.ts:61** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackExecutiveSummary: ExecutiveSummary = {
+- **src/data/mockData.ts:73** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackCriticalItems: CriticalAttentionItem[] = [
+- **src/data/mockData.ts:120** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackProjects: ProjectRow[] = fallbackCriticalItems.slice(0, 2).map(item => ({
+- **src/data/mockData.ts:142** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackMilestones: MilestoneRow[] = [
+- **src/data/mockData.ts:175** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackTasks: TaskRow[] = [
+- **src/data/mockData.ts:214** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackRisks: RiskRow[] = [
+- **src/data/mockData.ts:255** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackCompliance: ComplianceRow[] = [
+- **src/data/mockData.ts:273** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackAuditFindings: AuditFindingRow[] = [
+- **src/data/mockData.ts:289** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackDecisions: GovernanceDecisionRow[] = [
+- **src/data/mockData.ts:305** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackMyWork: MyWorkRow[] = [
+- **src/data/mockData.ts:334** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackApprovals: ApprovalRow[] = [
+- **src/data/mockData.ts:350** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackEvidence: EvidenceRow[] = [
+- **src/data/mockData.ts:367** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackEscalations: EscalationRow[] = [
+- **src/data/mockData.ts:410** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackDelayReasonQueue: DelayReasonQueueRow[] = [
+- **src/data/mockData.ts:425** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackManagementControlSummary: ManagementControlSummary = {
+- **src/data/mockData.ts:435** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackAccessControlSummary: AccessControlSummary = {
+- **src/data/mockData.ts:445** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackAccessControlUsers: AccessControlUserRow[] = [
+- **src/data/mockData.ts:509** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackAccessControlWarnings: AccessControlWarningRow[] = [
+- **src/data/mockData.ts:532** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackOvrSummary: OvrSummary = {
+- **src/data/mockData.ts:542** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackOvrReports: OvrReportRow[] = [
+- **src/data/mockData.ts:594** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackOvrRiskIndicatorSummary: OvrRiskIndicatorSummary = {
+- **src/data/mockData.ts:607** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackOvrRiskDepartmentIndicators: OvrRiskDepartmentIndicator[] = [
+- **src/data/mockData.ts:652** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackOvrRepeatedCategoryAlerts: OvrRepeatedCategoryAlert[] = [
+- **src/data/mockData.ts:685** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackGrcKpiScorecard: GrcKpiScorecard = {
+- **src/data/mockData.ts:695** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackDepartmentRiskHeatmap: DepartmentRiskHeatmapRow[] = [
+- **src/data/mockData.ts:793** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackMonthlyGrcTrend: MonthlyGrcTrendRow[] = [
+- **src/data/mockData.ts:802** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackRadarControlProfile: RadarControlProfileRow[] = [
+- **src/data/mockData.ts:812** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackExportCenterSummary: ExportCenterSummary = {
+- **src/data/mockData.ts:822** — `fallback` — Fallback data may silently hide failed production queries.
+  - export const fallbackCustomReports: CustomReportDefinition[] = [
+- **src/i18n/I18nContext.tsx:1226** — `fallback` — Fallback data may silently hide failed production queries.
+  - t: (key: string, fallback?: string) => string;
+- **src/i18n/I18nContext.tsx:1257** — `fallback` — Fallback data may silently hide failed production queries.
+  - t: (key: string, fallback?: string) => translations[key]?.[language] ?? fallback ?? key
+- **src/lib/automationApi.ts:151** — `fallback` — Fallback data may silently hide failed production queries.
+  - async function selectView<T>(viewName: string, fallback: T[], options?: { order?: string; ascending?: boolean; limit?: number }) {
+- **src/lib/automationApi.ts:152** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallback;
+- **src/lib/automationApi.ts:158** — `fallback` — Fallback data may silently hide failed production queries.
+  - console.warn(`[${viewName}] using fallback`, error.message);
+- **src/lib/automationApi.ts:159** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallback;
+- **src/lib/automationApi.ts:164** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackSummary: AutomationSummary = {
+- **src/lib/automationApi.ts:175** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackAppetite: RiskAppetiteRow[] = [
+- **src/lib/automationApi.ts:181** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackKriBreaches: KriBreachRow[] = [
+- **src/lib/automationApi.ts:187** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackReviews: RecurringReviewRow[] = [
+- **src/lib/automationApi.ts:193** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackRules: AutomationRuleRow[] = [
+- **src/lib/automationApi.ts:199** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackCommittee: CommitteeAutomationRow[] = [
+- **src/lib/automationApi.ts:204** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackExceptions: ExecutiveExceptionRow[] = [
+- **src/lib/automationApi.ts:210** — `fallback` — Fallback data may silently hide failed production queries.
+  - const rows = await selectView<AutomationSummary>('v_automation_command_summary', [fallbackSummary], { limit: 1 });
+- **src/lib/automationApi.ts:211** — `fallback` — Fallback data may silently hide failed production queries.
+  - return rows[0] ?? fallbackSummary;
+- **src/lib/automationApi.ts:215** — `fallback` — Fallback data may silently hide failed production queries.
+  - return selectView<RiskAppetiteRow>('v_risk_appetite_dashboard', fallbackAppetite, { order: 'appetite_status', ascending: true, limit: 100 });
+- **src/lib/automationApi.ts:219** — `fallback` — Fallback data may silently hide failed production queries.
+  - return selectView<KriBreachRow>('v_kri_breach_register', fallbackKriBreaches, { order: 'observed_at', ascending: false, limit: 100 });
+- **src/lib/automationApi.ts:223** — `fallback` — Fallback data may silently hide failed production queries.
+  - return selectView<RecurringReviewRow>('v_recurring_review_queue', fallbackReviews, { order: 'next_due_date', ascending: true, limit: 100 });
+- **src/lib/automationApi.ts:227** — `fallback` — Fallback data may silently hide failed production queries.
+  - return selectView<AutomationRuleRow>('v_automation_rule_catalog', fallbackRules, { order: 'priority', ascending: true, limit: 100 });
+- **src/lib/automationApi.ts:231** — `fallback` — Fallback data may silently hide failed production queries.
+  - return selectView<CommitteeAutomationRow>('v_committee_action_automation', fallbackCommittee, { order: 'due_date', ascending: true, limit: 100 });
+- **src/lib/automationApi.ts:235** — `fallback` — Fallback data may silently hide failed production queries.
+  - return selectView<ExecutiveExceptionRow>('v_executive_exception_dashboard', fallbackExceptions, { order: 'command_weight', ascending: false, limit: 100 });
+- **src/lib/automationApi.ts:242** — `fallback` — Fallback data may silently hide failed production queries.
+  - due_reviews: fallbackReviews.length,
+- **src/lib/automationApi.ts:243** — `fallback` — Fallback data may silently hide failed production queries.
+  - kri_breaches_30_days: fallbackKriBreaches.length,
+- **src/lib/automationApi.ts:244** — `fallback` — Fallback data may silently hide failed production queries.
+  - committee_overdue: fallbackCommittee.filter(row => row.automationSignal === 'overdue').length,
+- **src/lib/automationApi.ts:245** — `fallback` — Fallback data may silently hide failed production queries.
+  - rules_touched: fallbackRules.length,
+- **src/lib/commandCenterApi.ts:100** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackSummary: CommandSummary = {
+- **src/lib/commandCenterApi.ts:110** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackStream: CommandStreamItem[] = [
+- **src/lib/commandCenterApi.ts:152** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackSearch: GlobalSearchResult[] = [
+- **src/lib/commandCenterApi.ts:197** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackDocuments: DocumentItem[] = [
+- **src/lib/commandCenterApi.ts:245** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackDocSummary: DocumentSummary = {
+- **src/lib/commandCenterApi.ts:254** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackRelationships: RelationshipItem[] = [
+- **src/lib/commandCenterApi.ts:296** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackReleaseGates: ReleaseGate[] = [
+- **src/lib/commandCenterApi.ts:303** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackMigrations: MigrationStep[] = Array.from({ length: 21 }, (_, index) => {
+- **src/lib/commandCenterApi.ts:338** — `fallback` — Fallback data may silently hide failed production queries.
+  - function warnFallback(label: string, error: unknown) {
+- **src/lib/commandCenterApi.ts:340** — `fallback` — Fallback data may silently hide failed production queries.
+  - console.warn(`[GRC command fallback] ${label}`, error);
+- **src/lib/commandCenterApi.ts:344** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallbackSummary;
+- **src/lib/commandCenterApi.ts:349** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!row) return fallbackSummary;
+- **src/lib/commandCenterApi.ts:360** — `fallback` — Fallback data may silently hide failed production queries.
+  - warnFallback('command summary', error);
+- **src/lib/commandCenterApi.ts:361** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackSummary;
+- **src/lib/commandCenterApi.ts:366** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallbackStream;
+- **src/lib/commandCenterApi.ts:374** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!data?.length) return fallbackStream;
+- **src/lib/commandCenterApi.ts:389** — `fallback` — Fallback data may silently hide failed production queries.
+  - warnFallback('command stream', error);
+- **src/lib/commandCenterApi.ts:390** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackStream;
+- **src/lib/commandCenterApi.ts:398** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackSearch.filter(row => row.searchText.toLowerCase().includes(q) || row.title.toLowerCase().includes(q));
+- **src/lib/commandCenterApi.ts:418** — `fallback` — Fallback data may silently hide failed production queries.
+  - warnFallback('global search', error);
+- **src/lib/commandCenterApi.ts:419** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackSearch;
+- **src/lib/commandCenterApi.ts:424** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallbackDocSummary;
+- **src/lib/commandCenterApi.ts:429** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!row) return fallbackDocSummary;
+- **src/lib/commandCenterApi.ts:439** — `fallback` — Fallback data may silently hide failed production queries.
+  - warnFallback('document summary', error);
+- **src/lib/commandCenterApi.ts:440** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackDocSummary;
+- **src/lib/commandCenterApi.ts:445** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallbackDocuments;
+- **src/lib/commandCenterApi.ts:453** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!data?.length) return fallbackDocuments;
+- **src/lib/commandCenterApi.ts:470** — `fallback` — Fallback data may silently hide failed production queries.
+  - warnFallback('documents', error);
+- **src/lib/commandCenterApi.ts:471** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackDocuments;
+- **src/lib/commandCenterApi.ts:476** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallbackRelationships;
+- **src/lib/commandCenterApi.ts:480** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!data?.length) return fallbackRelationships;
+- **src/lib/commandCenterApi.ts:495** — `fallback` — Fallback data may silently hide failed production queries.
+  - warnFallback('relationship map', error);
+- **src/lib/commandCenterApi.ts:496** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackRelationships;
+- **src/lib/commandCenterApi.ts:501** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallbackReleaseGates;
+- **src/lib/commandCenterApi.ts:505** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!data?.length) return fallbackReleaseGates;
+- **src/lib/commandCenterApi.ts:517** — `fallback` — Fallback data may silently hide failed production queries.
+  - warnFallback('release gates', error);
+- **src/lib/commandCenterApi.ts:518** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackReleaseGates;
+- **src/lib/commandCenterApi.ts:523** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallbackMigrations;
+- **src/lib/commandCenterApi.ts:527** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!data?.length) return fallbackMigrations;
+- **src/lib/commandCenterApi.ts:536** — `fallback` — Fallback data may silently hide failed production queries.
+  - warnFallback('migration steps', error);
+- **src/lib/commandCenterApi.ts:537** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackMigrations;
+- **src/lib/consolidationApi.ts:79** — `fallback` — Fallback data may silently hide failed production queries.
+  - async function selectView<T>(viewName: string, fallback: T[], options?: { order?: string; ascending?: boolean; limit?: number }) {
+- **src/lib/consolidationApi.ts:80** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallback;
+- **src/lib/consolidationApi.ts:86** — `fallback` — Fallback data may silently hide failed production queries.
+  - console.warn(`[${viewName}] using fallback`, error.message);
+- **src/lib/consolidationApi.ts:87** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallback;
+- **src/lib/consolidationApi.ts:92** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackScorecard: ReleaseFactoryScorecard = {
+- **src/lib/consolidationApi.ts:110** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackChecks: ReleaseFactoryCheck[] = [
+- **src/lib/consolidationApi.ts:121** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackPackages: ConsolidatedPackage[] = [
+- **src/lib/consolidationApi.ts:128** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackSignoffs: HandoverSignoff[] = [
+- **src/lib/consolidationApi.ts:137** — `fallback` — Fallback data may silently hide failed production queries.
+  - selectView<ReleaseFactoryScorecard>('v_release_factory_scorecard', [fallbackScorecard], { limit: 1 }),
+- **src/lib/consolidationApi.ts:138** — `fallback` — Fallback data may silently hide failed production queries.
+  - selectView<ReleaseFactoryCheck>('v_release_factory_checks', fallbackChecks, { order: 'sequence_no', ascending: true }),
+- **src/lib/consolidationApi.ts:139** — `fallback` — Fallback data may silently hide failed production queries.
+  - selectView<ConsolidatedPackage>('v_consolidated_release_packages', fallbackPackages, { order: 'package_code', ascending: true }),
+- **src/lib/consolidationApi.ts:140** — `fallback` — Fallback data may silently hide failed production queries.
+  - selectView<HandoverSignoff>('v_final_handover_signoffs', fallbackSignoffs, { order: 'sequence_no', ascending: true })
+- **src/lib/consolidationApi.ts:144** — `fallback` — Fallback data may silently hide failed production queries.
+  - scorecard: scoreRows[0] ?? fallbackScorecard,
+- **src/lib/enterpriseApi.ts:117** — `fallback` — Fallback data may silently hide failed production queries.
+  - async function selectView<T>(viewName: string, fallback: T[], options?: { order?: string; ascending?: boolean; limit?: number }) {
+- **src/lib/enterpriseApi.ts:118** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallback;
+- **src/lib/enterpriseApi.ts:124** — `fallback` — Fallback data may silently hide failed production queries.
+  - console.warn(`[${viewName}] using fallback`, error.message);
+- **src/lib/enterpriseApi.ts:125** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallback;
+- **src/lib/enterpriseApi.ts:130** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackBoardSummary: BoardPackSummary = {
+- **src/lib/enterpriseApi.ts:153** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackReportTemplates: ReportTemplate[] = [
+- **src/lib/enterpriseApi.ts:170** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackScenarios: ScenarioItem[] = [
+- **src/lib/enterpriseApi.ts:177** — `fallback` — Fallback data may silently hide failed production queries.
+  - const rows = await selectView<BoardPackSummary>('v_board_pack_summary', [fallbackBoardSummary], { limit: 1 });
+- **src/lib/enterpriseApi.ts:178** — `fallback` — Fallback data may silently hide failed production queries.
+  - return rows[0] ?? fallbackBoardSummary;
+- **src/lib/enterpriseApi.ts:182** — `fallback` — Fallback data may silently hide failed production queries.
+  - return selectView<DepartmentScorecard>('v_department_scorecard_v2', fallbackDepartmentScorecards, { order: 'control_score', ascending: true, limit: 50 });
+- **src/lib/enterpriseApi.ts:186** — `fallback` — Fallback data may silently hide failed production queries.
+  - return selectView<ReportTemplate>('v_report_builder_catalog', fallbackReportTemplates, { order: 'template_code', ascending: true, limit: 100 });
+- **src/lib/enterpriseApi.ts:190** — `fallback` — Fallback data may silently hide failed production queries.
+  - return selectView<EvidenceVaultItem>('v_evidence_vault_inventory', fallbackEvidenceVault, { order: 'created_at', ascending: false, limit: 200 });
+- **src/lib/enterpriseApi.ts:194** — `fallback` — Fallback data may silently hide failed production queries.
+  - return selectView<BackupSchedulePlan>('v_backup_schedule_readiness', fallbackBackupPlans, { order: 'next_due_at', ascending: true, limit: 50 });
+- **src/lib/enterpriseApi.ts:198** — `fallback` — Fallback data may silently hide failed production queries.
+  - return selectView<ScenarioItem>('v_scenario_matrix', fallbackScenarios, { order: 'exposure_score', ascending: false, limit: 50 });
+- **src/lib/enterpriseApi.ts:250** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (template.sourceView === 'v_department_scorecard_v2') return fallbackDepartmentScorecards as unknown as Record<string, unknown>[];
+- **src/lib/enterpriseApi.ts:251** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (template.sourceView === 'v_evidence_vault_inventory') return fallbackEvidenceVault as unknown as Record<string, unknown>[];
+- **src/lib/enterpriseApi.ts:252** — `fallback` — Fallback data may silently hide failed production queries.
+  - return [fallbackBoardSummary] as unknown as Record<string, unknown>[];
+- **src/lib/finalizationApi.ts:107** — `fallback` — Fallback data may silently hide failed production queries.
+  - async function selectView<T>(viewName: string, fallback: T[], options?: { order?: string; ascending?: boolean; limit?: number }) {
+- **src/lib/finalizationApi.ts:108** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallback;
+- **src/lib/finalizationApi.ts:114** — `fallback` — Fallback data may silently hide failed production queries.
+  - console.warn(`[${viewName}] using fallback`, error.message);
+- **src/lib/finalizationApi.ts:115** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallback;
+- **src/lib/finalizationApi.ts:120** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackScorecard: FinalScorecard = {
+- **src/lib/finalizationApi.ts:161** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackOwnerClearance: FinalOwnerClearance[] = [
+- **src/lib/finalizationApi.ts:168** — `fallback` — Fallback data may silently hide failed production queries.
+  - const fallbackArtifacts: FinalConsolidationArtifact[] = [
+- **src/lib/finalizationApi.ts:186** — `fallback` — Fallback data may silently hide failed production queries.
+  - scorecard: scoreRows[0] ?? fallbackScorecard,
+- **src/lib/grcApi.ts:3** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackAccessControlWarnings,
+- **src/lib/grcApi.ts:4** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackAccessControlUsers,
+- **src/lib/grcApi.ts:5** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackAccessControlSummary,
+- **src/lib/grcApi.ts:6** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackApprovals,
+- **src/lib/grcApi.ts:7** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackAuditFindings,
+- **src/lib/grcApi.ts:8** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackCompliance,
+- **src/lib/grcApi.ts:9** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackCriticalItems,
+- **src/lib/grcApi.ts:10** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackCustomReports,
+- **src/lib/grcApi.ts:11** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackDecisions,
+- **src/lib/grcApi.ts:12** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackDelayReasonQueue,
+- **src/lib/grcApi.ts:13** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackDepartments,
+- **src/lib/grcApi.ts:14** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackEvidence,
+- **src/lib/grcApi.ts:15** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackEscalations,
+- **src/lib/grcApi.ts:16** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackExecutiveSummary,
+- **src/lib/grcApi.ts:17** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackExportCenterSummary,
+- **src/lib/grcApi.ts:18** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackGrcKpiScorecard,
+- **src/lib/grcApi.ts:19** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackDepartmentRiskHeatmap,
+- **src/lib/grcApi.ts:20** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackMonthlyGrcTrend,
+- **src/lib/grcApi.ts:21** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackRadarControlProfile,
+- **src/lib/grcApi.ts:22** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackManagementControlSummary,
+- **src/lib/grcApi.ts:23** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackMilestones,
+- **src/lib/grcApi.ts:24** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackMyWork,
+- **src/lib/grcApi.ts:25** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackOrganization,
+- **src/lib/grcApi.ts:26** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackOvrReports,
+- **src/lib/grcApi.ts:27** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackOvrSummary,
+- **src/lib/grcApi.ts:28** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackOvrRiskDepartmentIndicators,
+- **src/lib/grcApi.ts:29** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackOvrRepeatedCategoryAlerts,
+- **src/lib/grcApi.ts:30** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackOvrRiskIndicatorSummary,
+- **src/lib/grcApi.ts:31** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackProfiles,
+- **src/lib/grcApi.ts:32** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackProjects,
+- **src/lib/grcApi.ts:33** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackRisks,
+- **src/lib/grcApi.ts:34** — `fallback` — Fallback data may silently hide failed production queries.
+  - fallbackTasks
+- **src/lib/grcApi.ts:35** — `mock` — Mock data should not appear in production UI.
+  - } from '../data/mockData';
+- **src/lib/grcApi.ts:85** — `fallback` — Fallback data may silently hide failed production queries.
+  - function logFallback(label: string, error: unknown) {
+- **src/lib/grcApi.ts:87** — `fallback` — Fallback data may silently hide failed production queries.
+  - console.warn(`[GRC demo fallback] ${label}`, error);
+- **src/lib/grcApi.ts:104** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallbackExecutiveSummary;
+- **src/lib/grcApi.ts:110** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!row) return fallbackExecutiveSummary;
+- **src/lib/grcApi.ts:124** — `fallback` — Fallback data may silently hide failed production queries.
+  - logFallback('executive summary', error);
+- **src/lib/grcApi.ts:125** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackExecutiveSummary;
+- **src/lib/grcApi.ts:130** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallbackCriticalItems;
+- **src/lib/grcApi.ts:139** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!data || data.length === 0) return fallbackCriticalItems;
+- **src/lib/grcApi.ts:153** — `fallback` — Fallback data may silently hide failed production queries.
+  - logFallback('critical attention items', error);
+- **src/lib/grcApi.ts:154** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackCriticalItems;
+- **src/lib/grcApi.ts:159** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallbackProjects;
+- **src/lib/grcApi.ts:168** — `fallback` — Fallback data may silently hide failed production queries.
+  - return (data as unknown as ProjectRow[])?.length ? (data as unknown as ProjectRow[]) : fallbackProjects;
+- **src/lib/grcApi.ts:170** — `fallback` — Fallback data may silently hide failed production queries.
+  - logFallback('projects', error);
+- **src/lib/grcApi.ts:171** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackProjects;
+- **src/lib/grcApi.ts:176** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallbackMilestones.filter(item => item.project_id === projectId);
+- **src/lib/grcApi.ts:188** — `fallback` — Fallback data may silently hide failed production queries.
+  - logFallback('project milestones', error);
+- **src/lib/grcApi.ts:189** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackMilestones.filter(item => item.project_id === projectId);
+- **src/lib/grcApi.ts:194** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallbackTasks.filter(item => item.project_id === projectId);
+- **src/lib/grcApi.ts:206** — `fallback` — Fallback data may silently hide failed production queries.
+  - logFallback('project tasks', error);
+- **src/lib/grcApi.ts:207** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackTasks.filter(item => item.project_id === projectId);
+- **src/lib/grcApi.ts:212** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallbackRisks;
+- **src/lib/grcApi.ts:221** — `fallback` — Fallback data may silently hide failed production queries.
+  - return (data as unknown as RiskRow[])?.length ? (data as unknown as RiskRow[]) : fallbackRisks;
+- **src/lib/grcApi.ts:223** — `fallback` — Fallback data may silently hide failed production queries.
+  - logFallback('risks', error);
+- **src/lib/grcApi.ts:224** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackRisks;
+- **src/lib/grcApi.ts:229** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallbackCompliance;
+- **src/lib/grcApi.ts:238** — `fallback` — Fallback data may silently hide failed production queries.
+  - return (data as unknown as ComplianceRow[])?.length ? (data as unknown as ComplianceRow[]) : fallbackCompliance;
+- **src/lib/grcApi.ts:240** — `fallback` — Fallback data may silently hide failed production queries.
+  - logFallback('compliance items', error);
+- **src/lib/grcApi.ts:241** — `fallback` — Fallback data may silently hide failed production queries.
+  - return fallbackCompliance;
+- **src/lib/grcApi.ts:246** — `fallback` — Fallback data may silently hide failed production queries.
+  - if (!supabase) return fallbackAuditFindings;
+- **src/lib/grcApi.ts:255** — `fallback` — Fallback data may silently hide failed production queries.
+  - return (data as unknown as AuditFindingRow[])?.length ? (data as unknown as AuditFindingRow[]) : fallbackAuditFindings;
+- **src/lib/grcApi.ts:257** — `fallback` — Fallback data may silently hide failed production queries.
+  - logFallback('audit findings', error);

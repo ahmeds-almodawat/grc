@@ -1,0 +1,270 @@
+{
+  "summary": {
+    "generated_at": "2026-06-19T14:27:12.665Z",
+    "migration_files_scanned": 48,
+    "security_definer_functions_detected": 36,
+    "global_security_definer_lockdown_detected": true,
+    "findings_total": 0,
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "strict_passed": true,
+    "note": "Static scan strips SQL comments, honors later SECURITY INVOKER changes, and recognizes the v6.7.3 dynamic blanket revoke. The live v6.7.3 database audit remains authoritative for effective grants."
+  },
+  "functionBlocks": [
+    {
+      "file": "supabase/migrations/003_rls_permissions_and_controls.sql",
+      "function_name": "audit_log_row_change",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/006_workflow_queues_and_project_controls.sql",
+      "function_name": "mark_overdue_work_items",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/006_workflow_queues_and_project_controls.sql",
+      "function_name": "refresh_project_progress",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/006_workflow_queues_and_project_controls.sql",
+      "function_name": "refresh_project_progress_trigger",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/007_escalation_and_governance_controls.sql",
+      "function_name": "has_accepted_evidence",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/007_escalation_and_governance_controls.sql",
+      "function_name": "create_escalation_if_missing",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/007_escalation_and_governance_controls.sql",
+      "function_name": "refresh_escalation_events",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/007_escalation_and_governance_controls.sql",
+      "function_name": "acknowledge_escalation_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/007_escalation_and_governance_controls.sql",
+      "function_name": "resolve_escalation_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/009_access_control_and_role_governance.sql",
+      "function_name": "has_active_role",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/009_access_control_and_role_governance.sql",
+      "function_name": "can_manage_roles",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/009_access_control_and_role_governance.sql",
+      "function_name": "assign_user_role",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/009_access_control_and_role_governance.sql",
+      "function_name": "deactivate_user_role",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/015_production_hardening_health_print_controls.sql",
+      "function_name": "create_system_health_snapshot",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/017_notifications_activity_timelines.sql",
+      "function_name": "generate_due_reminders",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/018_qa_permission_deployment_readiness.sql",
+      "function_name": "seed_default_qa_test_cases",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+      "function_name": "start_restore_dry_run",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+      "function_name": "run_ultra_release_preflight",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/023_enterprise_intelligence_reporting.sql",
+      "function_name": "create_board_pack_snapshot",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/023_enterprise_intelligence_reporting.sql",
+      "function_name": "record_backup_schedule_run",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "function_name": "refresh_automation_intelligence",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "function_name": "seed_staging_validation_defaults",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/026_finish_fast_release_sprint.sql",
+      "function_name": "seed_final_release_defaults",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/027_final_production_leap.sql",
+      "function_name": "seed_v31_finish_fast_defaults",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/028_final_release_factory.sql",
+      "function_name": "seed_release_factory_defaults",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/029_production_proof_consolidation.sql",
+      "function_name": "seed_v33_production_proof_defaults",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "function_name": "seed_v34_pilot_defaults",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql",
+      "function_name": "seed_v46_ovr_bilingual_rtl_defaults",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/036_b_ovr_workflow_controls.sql",
+      "function_name": "can_close_ovr",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/036_b_ovr_workflow_controls.sql",
+      "function_name": "update_ovr_workflow",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/036_b_ovr_workflow_controls.sql",
+      "function_name": "create_ovr_corrective_action_project",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/040_v62_real_no_mock_data_layer.sql",
+      "function_name": "seed_v62_real_no_mock_data_layer_defaults",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/041_v63_auth_route_protection.sql",
+      "function_name": "seed_v63_auth_route_protection_defaults",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/042_v64_database_security_proof.sql",
+      "function_name": "seed_v64_database_security_proof_defaults",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/047_v72_runtime_bridge_and_persona_security.sql",
+      "function_name": "create_ovr_corrective_action_project",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/047_v72_runtime_bridge_and_persona_security.sql",
+      "function_name": "v72_execute_privileged_action",
+      "has_search_path": true,
+      "has_public_revoke": true
+    }
+  ],
+  "globalSearchPathFixes": [
+    "create_system_health_snapshot",
+    "seed_release_factory_defaults",
+    "seed_v31_finish_fast_defaults",
+    "seed_v33_production_proof_defaults",
+    "seed_v34_pilot_defaults",
+    "seed_v63_auth_route_protection_defaults"
+  ],
+  "globalRevokes": [
+    "seed_v64_database_security_proof_defaults",
+    "create_system_health_snapshot",
+    "seed_release_factory_defaults",
+    "seed_v31_finish_fast_defaults",
+    "seed_v33_production_proof_defaults",
+    "seed_v34_pilot_defaults",
+    "seed_v63_auth_route_protection_defaults",
+    "current_user_org_id",
+    "has_any_role",
+    "has_global_role",
+    "can_access_org",
+    "can_access_scope",
+    "can_manage_grc",
+    "has_role",
+    "can_read_organization",
+    "create_ovr_corrective_action_project",
+    "v72_execute_privileged_action"
+  ],
+  "finalSecurityInvokerFunctions": [
+    "current_user_org_id",
+    "has_any_role",
+    "has_global_role",
+    "can_access_org",
+    "can_access_scope",
+    "can_manage_grc",
+    "has_role",
+    "can_read_organization"
+  ],
+  "findings": []
+}

@@ -1,0 +1,47 @@
+{
+  "summary": {
+    "generated_at": "2026-06-19T00:47:42.554Z",
+    "scanned_dirs": [
+      "src/lib",
+      "src/pages",
+      "src/components"
+    ],
+    "total_findings": 4,
+    "production_blocking_findings": 0,
+    "critical": 0,
+    "high": 0,
+    "medium": 4,
+    "files_with_findings": 3,
+    "policy": "Production UI must not silently show mock/demo/fallback/sample data. Demo mode must be explicit and disabled in production."
+  },
+  "findings": [
+    {
+      "file": "src\\lib\\demoMode.ts",
+      "line": 8,
+      "severity": "medium",
+      "code": "FAKE_DATA_TEXT_REVIEW",
+      "text": "throw new Error(`Demo data is disabled for ${feature}. Set VITE_ALLOW_DEMO_DATA=true only in local development.`);"
+    },
+    {
+      "file": "src\\lib\\demoMode.ts",
+      "line": 16,
+      "severity": "medium",
+      "code": "FAKE_DATA_TEXT_REVIEW",
+      "text": "return 'Demo data mode is enabled for local development only. Do not use this data in production.';"
+    },
+    {
+      "file": "src\\lib\\supabaseClient.ts",
+      "line": 77,
+      "severity": "medium",
+      "code": "FAKE_DATA_TEXT_REVIEW",
+      "text": "// This bridge keeps TypeScript happy and allows emptyRows/demo data to render safely"
+    },
+    {
+      "file": "src\\components\\LiveDataState.tsx",
+      "line": 26,
+      "severity": "medium",
+      "code": "FAKE_DATA_TEXT_REVIEW",
+      "text": "<strong>{isArabic ? 'وضع البيانات التجريبية مفعّل لبيئة غير إنتاجية.' : 'Demo data mode is enabled for a non-production environment.'}</strong>"
+    }
+  ]
+}

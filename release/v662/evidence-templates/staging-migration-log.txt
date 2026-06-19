@@ -1,0 +1,10 @@
+TEMPLATE - replace with real staging migration log
+
+Required content:
+- staging project name or identifier
+- migration start/end date-time
+- migration files applied through 045_v66_controlled_pilot_evidence.sql
+- final status: PASSED / SUCCESS
+- errors, if any
+
+Do not move this template into evidence-attachments without replacing it with real output.

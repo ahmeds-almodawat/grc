@@ -1,0 +1,170 @@
+{
+  "summary": {
+    "generated_at": "2026-06-19T14:27:17.749Z",
+    "source": "src/**/*.{ts,tsx,js,jsx}",
+    "frontend_rpc_call_count": 1,
+    "authenticated_edge_bridge_call_count": 7,
+    "unique_frontend_rpc_count": 8,
+    "classification_counts": {
+      "unknown_requires_review": 2,
+      "workflow_runtime_review": 4,
+      "privileged_admin_review": 2
+    },
+    "unique_rpcs": [
+      {
+        "rpc": "search_grc_global",
+        "locations": [
+          {
+            "file": "src/lib/commandCenterApi.ts",
+            "line": 180,
+            "transport": "direct_browser_rpc",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "create_board_pack_snapshot",
+        "locations": [
+          {
+            "file": "src/lib/enterpriseApi.ts",
+            "line": 174,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "acknowledge_escalation_event",
+        "locations": [
+          {
+            "file": "src/lib/grcApi.ts",
+            "line": 376,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime_review"
+          }
+        ]
+      },
+      {
+        "rpc": "resolve_escalation_event",
+        "locations": [
+          {
+            "file": "src/lib/grcApi.ts",
+            "line": 384,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime_review"
+          }
+        ]
+      },
+      {
+        "rpc": "assign_user_role",
+        "locations": [
+          {
+            "file": "src/lib/grcApi.ts",
+            "line": 990,
+            "transport": "authenticated_edge_bridge",
+            "classification": "privileged_admin_review"
+          }
+        ]
+      },
+      {
+        "rpc": "deactivate_user_role",
+        "locations": [
+          {
+            "file": "src/lib/grcApi.ts",
+            "line": 1005,
+            "transport": "authenticated_edge_bridge",
+            "classification": "privileged_admin_review"
+          }
+        ]
+      },
+      {
+        "rpc": "update_ovr_workflow",
+        "locations": [
+          {
+            "file": "src/lib/grcApi.ts",
+            "line": 1228,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime_review"
+          }
+        ]
+      },
+      {
+        "rpc": "create_ovr_corrective_action_project",
+        "locations": [
+          {
+            "file": "src/lib/grcApi.ts",
+            "line": 1242,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime_review"
+          }
+        ]
+      }
+    ]
+  },
+  "calls": [
+    {
+      "file": "src/lib/commandCenterApi.ts",
+      "line": 180,
+      "rpc": "search_grc_global",
+      "transport": "direct_browser_rpc",
+      "classification": "unknown_requires_review",
+      "note": "Direct frontend RPC inventory; runtime authorization must be confirmed with DB grants and authenticated workflow tests."
+    },
+    {
+      "file": "src/lib/enterpriseApi.ts",
+      "line": 174,
+      "rpc": "create_board_pack_snapshot",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/grcApi.ts",
+      "line": 376,
+      "rpc": "acknowledge_escalation_event",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/grcApi.ts",
+      "line": 384,
+      "rpc": "resolve_escalation_event",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/grcApi.ts",
+      "line": 990,
+      "rpc": "assign_user_role",
+      "transport": "authenticated_edge_bridge",
+      "classification": "privileged_admin_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/grcApi.ts",
+      "line": 1005,
+      "rpc": "deactivate_user_role",
+      "transport": "authenticated_edge_bridge",
+      "classification": "privileged_admin_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/grcApi.ts",
+      "line": 1228,
+      "rpc": "update_ovr_workflow",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/grcApi.ts",
+      "line": 1242,
+      "rpc": "create_ovr_corrective_action_project",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    }
+  ]
+}

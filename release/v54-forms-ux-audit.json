@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-06-18T08:59:01.471Z",
+  "score": 25,
+  "checks": [
+    {
+      "code": "STYLE_FILE_EXISTS",
+      "title": "Global style file exists",
+      "status": "passed"
+    },
+    {
+      "code": "SAVE_CANCEL_VISIBILITY",
+      "title": "Save/cancel visibility requires screen-by-screen manual QA",
+      "status": "manual_required"
+    },
+    {
+      "code": "OVR_CONFIDENTIALITY_VISUAL",
+      "title": "OVR confidentiality banners require visual QA",
+      "status": "manual_required"
+    },
+    {
+      "code": "MOBILE_FORM_REVIEW",
+      "title": "Mobile/tablet form behavior requires manual QA",
+      "status": "manual_required"
+    }
+  ]
+}

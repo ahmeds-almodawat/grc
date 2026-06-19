@@ -1,0 +1,38 @@
+{
+  "generated_at": "2026-06-18T09:18:51.698Z",
+  "waves": [
+    {
+      "wave": 1,
+      "name": "Pilot wave",
+      "users": 75,
+      "departments": 5
+    },
+    {
+      "wave": 2,
+      "name": "Department manager wave",
+      "users": 200,
+      "departments": 15
+    },
+    {
+      "wave": 3,
+      "name": "Core departments wave",
+      "users": 400,
+      "departments": 25
+    },
+    {
+      "wave": 4,
+      "name": "Company-wide completion wave",
+      "users": 325,
+      "departments": 50
+    }
+  ],
+  "rule": "Do not onboard all 1,000 users in one day. Each wave requires support coverage, training status, and blocker review.",
+  "required_before_each_wave": [
+    "User import reviewed",
+    "Department manager trained",
+    "Employee quick guide shared",
+    "Support owner assigned",
+    "Known blockers resolved or formally accepted",
+    "Backup/export package created before wave"
+  ]
+}

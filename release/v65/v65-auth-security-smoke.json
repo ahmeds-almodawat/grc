@@ -1,0 +1,46 @@
+{
+  "summary": {
+    "generated_at": "2026-06-18T19:38:11.234Z",
+    "checks_total": 7,
+    "failed_count": 0,
+    "strict_passed": true,
+    "note": "Static auth smoke only. Full proof still requires browser tests with real session/personas."
+  },
+  "checks": [
+    {
+      "code": "AUTH_PROVIDER_FILE",
+      "passed": true,
+      "message": "AuthProvider.tsx exists."
+    },
+    {
+      "code": "AUTH_PROVIDER_USED",
+      "passed": true,
+      "message": "App uses AuthProvider or auth context."
+    },
+    {
+      "code": "LOGIN_PAGE_FILE",
+      "passed": true,
+      "message": "LoginPage.tsx exists."
+    },
+    {
+      "code": "UNAUTHORIZED_PAGE_FILE",
+      "passed": true,
+      "message": "UnauthorizedPage.tsx exists."
+    },
+    {
+      "code": "ROLE_ACCESS_HELPER",
+      "passed": true,
+      "message": "Role/route access helper exists."
+    },
+    {
+      "code": "LAYOUT_AUTH_AWARE",
+      "passed": true,
+      "message": "Layout appears auth-aware."
+    },
+    {
+      "code": "PROD_BYPASS_DISABLED",
+      "passed": true,
+      "message": "Production auth bypass is disabled in env example."
+    }
+  ]
+}

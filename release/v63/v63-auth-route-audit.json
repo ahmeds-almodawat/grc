@@ -1,0 +1,56 @@
+{
+  "generated_at": "2026-06-18T19:03:33.364Z",
+  "required_files": [
+    {
+      "file": "src/auth/AuthProvider.tsx",
+      "exists": true
+    },
+    {
+      "file": "src/auth/authAccess.ts",
+      "exists": true
+    },
+    {
+      "file": "src/auth/authTypes.ts",
+      "exists": true
+    },
+    {
+      "file": "src/pages/LoginPage.tsx",
+      "exists": true
+    },
+    {
+      "file": "src/pages/UnauthorizedPage.tsx",
+      "exists": true
+    },
+    {
+      "file": "supabase/migrations/041_v63_auth_route_protection.sql",
+      "exists": true
+    }
+  ],
+  "signals": [
+    {
+      "code": "AUTH_PROVIDER_WRAPPED",
+      "passed": true
+    },
+    {
+      "code": "LOGIN_PAGE_GATE",
+      "passed": true
+    },
+    {
+      "code": "PAGE_ACCESS_GUARD",
+      "passed": true
+    },
+    {
+      "code": "ROLE_NAV_FILTER",
+      "passed": true
+    },
+    {
+      "code": "SIGN_OUT_VISIBLE",
+      "passed": true
+    },
+    {
+      "code": "LOCAL_BYPASS_DEV_ONLY",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

@@ -1,0 +1,24 @@
+{
+  "generated_at": "2026-06-18T14:03:37.751Z",
+  "pilot_target": {
+    "users": 75,
+    "departments": 5,
+    "duration_days": 10
+  },
+  "required_personas": [
+    "Executive",
+    "Governance Admin",
+    "Quality Manager",
+    "Department Manager",
+    "Employee"
+  ],
+  "acceptance_checks": [
+    "Pilot users imported and activated",
+    "RLS persona tests passed for pilot users",
+    "OVR workflow tested end-to-end",
+    "Evidence upload and approval tested",
+    "Export/backup package generated before pilot",
+    "Pilot issue triage owner assigned"
+  ],
+  "decision_rule": "No critical permission, OVR, or backup blockers before pilot go-live."
+}

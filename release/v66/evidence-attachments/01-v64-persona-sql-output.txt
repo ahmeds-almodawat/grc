@@ -1,0 +1,47 @@
+GRC Control Center SQL staging evidence
+Environment: Local Supabase Docker staging
+Source SQL: supabase/tests/v64_persona_security_tests.sql
+Executed copy: release/v662/staging-sql/v64_persona_security_tests.sql
+Database container: supabase_db_grc-control-center
+Captured UTC: 2026-06-19T14:27:38.507Z
+Command: docker exec -i supabase_db_grc-control-center psql -U postgres -d postgres -v ON_ERROR_STOP=1
+Completion marker note: the helper sends a psql \echo marker after the unmodified staged SQL; ON_ERROR_STOP prevents it from running after a SQL error.
+
+----- psql output -----
+DO
+DO
+DO
+DO
+ seed_v64_database_security_proof_defaults 
+-------------------------------------------
+ 
+(1 row)
+
+ total_controls | required_controls | passed_controls | failed_controls | unverified_controls | required_pass_percent 
+----------------+-------------------+-----------------+-----------------+---------------------+-----------------------
+              8 |                 8 |               0 |               0 |                   8 |                   0.0
+(1 row)
+
+      persona       | tests | negative_tests | passed | failed | unverified 
+--------------------+-------+----------------+--------+--------+------------
+ admin              |     1 |              0 |      0 |      0 |          1
+ anonymous          |     1 |              1 |      0 |      0 |          1
+ audit              |     1 |              1 |      0 |      0 |          1
+ department_manager |     1 |              1 |      0 |      0 |          1
+ employee           |     2 |              2 |      0 |      0 |          2
+ quality            |     1 |              0 |      0 |      0 |          1
+ super_user         |     1 |              1 |      0 |      0 |          1
+(7 rows)
+
+         generated_at          | total_controls | required_pass_percent | passed_persona_tests | failed_persona_tests | unverified_persona_tests | readiness_status 
+-------------------------------+----------------+-----------------------+----------------------+----------------------+--------------------------+------------------
+ 2026-06-19 14:27:39.206531+00 |              8 |                   0.0 |                    0 |                    0 |                        8 | unverified
+(1 row)
+
+V672_SQL_EXECUTION_PASSED_V64
+----- end psql output -----
+
+Verification status: PASSED
+psql exit code: 0
+Completion marker observed: yes
+Failure reason: none

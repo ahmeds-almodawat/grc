@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-06-18T22:32:12.377Z",
+  "changed_count": 10,
+  "pinned": [
+    {
+      "name": "@playwright/test",
+      "version": "1.61.0"
+    },
+    {
+      "name": "@testing-library/jest-dom",
+      "version": "6.9.1"
+    },
+    {
+      "name": "@testing-library/react",
+      "version": "16.3.2"
+    },
+    {
+      "name": "jsdom",
+      "version": "29.1.1"
+    },
+    {
+      "name": "vitest",
+      "version": "4.1.9"
+    }
+  ]
+}

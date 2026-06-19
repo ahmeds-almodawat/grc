@@ -1,0 +1,63 @@
+GRC Control Center local staging migration evidence
+Environment: Local Supabase Docker staging
+Project: grc-control-center
+Database container: supabase_db_grc-control-center
+Captured UTC: 2026-06-19T14:27:38.507Z
+Source: supabase_migrations.schema_migrations in the running local database
+Expected latest migration: 046_v673_lockdown_security_definer_execute.sql
+
+version |                    name                    
+---------+--------------------------------------------
+ 001     | core_foundation
+ 002     | grc_layer
+ 003     | rls_permissions_and_controls
+ 004     | seed_reference_data
+ 005     | operational_views_and_storage
+ 006     | workflow_queues_and_project_controls
+ 007     | escalation_and_governance_controls
+ 008     | import_export_rollout_tools
+ 009     | access_control_and_role_governance
+ 010     | bilingual_and_ovr_module
+ 011     | ovr_risk_indicators
+ 012     | ovr_workflow_enum_values
+ 013     | kpi_analytics_heatmap_radar
+ 014     | export_center_backups_custom_reports
+ 015     | production_hardening_health_print_controls
+ 016     | rollout_onboarding_user_guides
+ 0165    | ovr_workflow_prerequisites
+ 017     | notifications_activity_timelines
+ 018     | qa_permission_deployment_readiness
+ 019     | performance_responsive_usability
+ 020     | security_audit_retention_controls
+ 021     | command_search_documents_release
+ 022     | ultra_release_restore_admin_dictionary
+ 023     | enterprise_intelligence_reporting
+ 024     | automation_intelligence_kri_reviews
+ 025     | staging_validation_consolidation
+ 026     | finish_fast_release_sprint
+ 027     | final_production_leap
+ 028     | final_release_factory
+ 029     | production_proof_consolidation
+ 030     | pilot_real_data_operations
+ 031     | consolidation_pilot_fix_kit
+ 032     | final_local_doctor_production_simulator
+ 033     | v42_production_validation_and_rls_lab
+ 034     | v46_ovr_bilingual_rtl_production_hardening
+ 035     | v50_scale_backup_restore
+ 036     | b_ovr_workflow_controls
+ 037     | v58_pilot_rollout_security_audit
+ 038     | v59_no_mock_phased_auto_tests
+ 039     | v60_no_mock_production_data_controls
+ 040     | v62_real_no_mock_data_layer
+ 041     | v63_auth_route_protection
+ 042     | v64_database_security_proof
+ 043     | v641_database_security_static_remediation
+ 044     | v642_auth_route_rls_static_fix
+ 045     | v66_controlled_pilot_evidence
+ 046     | v673_lockdown_security_definer_execute
+ 047     | v72_runtime_bridge_and_persona_security
+(48 rows)
+
+Verification status: PASSED
+psql exit code: 0
+Migration 046 verified: yes

@@ -1,0 +1,30 @@
+{
+  "generated_at": "2026-06-18T14:03:37.531Z",
+  "checks": [
+    {
+      "code": "DB_BACKUP",
+      "title": "Database backup owner and frequency defined",
+      "status": "manual_required"
+    },
+    {
+      "code": "STORAGE_BACKUP",
+      "title": "Supabase Storage evidence backup defined",
+      "status": "manual_required"
+    },
+    {
+      "code": "AUTH_RECOVERY",
+      "title": "Auth/user recovery process documented",
+      "status": "manual_required"
+    },
+    {
+      "code": "BROWSER_EXPORT",
+      "title": "Browser export package tested",
+      "status": "manual_required"
+    },
+    {
+      "code": "RESTORE_DRYRUN",
+      "title": "Restore dry-run scheduled and assigned",
+      "status": "manual_required"
+    }
+  ]
+}

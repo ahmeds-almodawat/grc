@@ -1,0 +1,8 @@
+TEMPLATE - replace with real v65 workflow SQL output
+
+Required content:
+- output from v65_workflow_smoke_tests.sql
+- project / evidence / approval / OVR workflow checks
+- final status: PASSED / VERIFIED / SUCCESS
+
+Do not move this template into evidence-attachments without replacing it with real output.

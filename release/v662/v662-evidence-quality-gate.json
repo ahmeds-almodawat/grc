@@ -1,0 +1,71 @@
+{
+  "generated_at": "2026-06-19T14:27:40.298Z",
+  "evidence_dir": "release/v66/evidence-attachments",
+  "required_total": 6,
+  "passed_count": 6,
+  "failed_count": 0,
+  "strict_passed": true,
+  "quality_status": "ready_for_controlled_pilot_evidence_review",
+  "results": [
+    {
+      "file": "staging-migration-log.txt",
+      "kind": "migration",
+      "exists": true,
+      "bytes": 2563,
+      "has_required_signal": true,
+      "has_template_or_placeholder_signal": false,
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "file": "01-v64-persona-sql-output.txt",
+      "kind": "persona_sql",
+      "exists": true,
+      "bytes": 2409,
+      "has_required_signal": true,
+      "has_template_or_placeholder_signal": false,
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "file": "02-v65-workflow-sql-output.txt",
+      "kind": "workflow_sql",
+      "exists": true,
+      "bytes": 2526,
+      "has_required_signal": true,
+      "has_template_or_placeholder_signal": false,
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "file": "03-v66-pilot-evidence-sql-output.txt",
+      "kind": "pilot_evidence_sql",
+      "exists": true,
+      "bytes": 1888,
+      "has_required_signal": true,
+      "has_template_or_placeholder_signal": false,
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "file": "restore-dryrun-evidence.txt",
+      "kind": "restore",
+      "exists": true,
+      "bytes": 2064,
+      "has_required_signal": true,
+      "has_template_or_placeholder_signal": false,
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "file": "pilot-signoff.md",
+      "kind": "signoff",
+      "exists": true,
+      "bytes": 1043,
+      "has_required_signal": true,
+      "has_template_or_placeholder_signal": false,
+      "passed": true,
+      "reason": ""
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "generated_at": "2026-06-19T14:27:40.943Z",
+  "evidence_dir": "release\\v66\\evidence-attachments",
+  "required_total": 6,
+  "attached_count": 6,
+  "missing_count": 0,
+  "strict_passed": true,
+  "checks": [
+    {
+      "id": "staging-migration-log",
+      "title": "Fresh staging migrations applied through 045",
+      "status": "attached",
+      "matched_files": [
+        "staging-migration-log.txt"
+      ],
+      "examples": [
+        "staging-migration-log.txt",
+        "staging-migration-screenshot.png"
+      ]
+    },
+    {
+      "id": "v64-persona-sql-output",
+      "title": "v64 persona SQL tests passed",
+      "status": "attached",
+      "matched_files": [
+        "01-v64-persona-sql-output.txt"
+      ],
+      "examples": [
+        "01-v64-persona-sql-output.txt"
+      ]
+    },
+    {
+      "id": "v65-workflow-sql-output",
+      "title": "v65 workflow SQL smoke tests passed",
+      "status": "attached",
+      "matched_files": [
+        "02-v65-workflow-sql-output.txt"
+      ],
+      "examples": [
+        "02-v65-workflow-sql-output.txt"
+      ]
+    },
+    {
+      "id": "v66-pilot-evidence-sql-output",
+      "title": "v66 controlled pilot evidence SQL tests passed",
+      "status": "attached",
+      "matched_files": [
+        "03-v66-pilot-evidence-sql-output.txt"
+      ],
+      "examples": [
+        "03-v66-pilot-evidence-sql-output.txt"
+      ]
+    },
+    {
+      "id": "restore-dryrun-evidence",
+      "title": "Restore dry-run evidence completed",
+      "status": "attached",
+      "matched_files": [
+        "restore-dryrun-evidence.txt"
+      ],
+      "examples": [
+        "restore-dryrun-evidence.txt",
+        "restore-dryrun-screenshot.png"
+      ]
+    },
+    {
+      "id": "pilot-signoff",
+      "title": "IT / Quality / Admin signoff attached",
+      "status": "attached",
+      "matched_files": [
+        "pilot-signoff.md"
+      ],
+      "examples": [
+        "pilot-signoff.md",
+        "quality-it-admin-signoff.pdf"
+      ]
+    }
+  ]
+}

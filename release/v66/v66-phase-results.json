@@ -1,0 +1,88 @@
+{
+  "summary": {
+    "generated_at": "2026-06-18T20:24:34.844Z",
+    "phases_run": 9,
+    "phases_passed": 9,
+    "phases_failed": 0,
+    "phases_skipped": 0,
+    "overall_passed": true,
+    "controlled_pilot_note": "v66:all passing does not mean full pilot approval. Manual staging evidence is still required unless v66:strict-proof passes."
+  },
+  "results": [
+    {
+      "id": 1,
+      "name": "TypeScript foundation",
+      "command": "npm run typecheck",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": 2,
+      "name": "Production build",
+      "command": "npm run build",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": 3,
+      "name": "No-mock strict audit",
+      "command": "npm run v60:strict",
+      "required": true,
+      "onlyIfScript": "v60:strict",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": 4,
+      "name": "Database security static proof",
+      "command": "npm run v64:strict-all",
+      "required": true,
+      "onlyIfScript": "v64:strict-all",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": 5,
+      "name": "Real unit/browser tests",
+      "command": "npm run test:real",
+      "required": true,
+      "onlyIfScript": "test:real",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": 6,
+      "name": "Staging evidence register",
+      "command": "npm run v66:evidence",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": 7,
+      "name": "Restore dry-run evidence checklist",
+      "command": "npm run v66:restore",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": 8,
+      "name": "Controlled pilot package",
+      "command": "npm run v66:pilot-package",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "id": 9,
+      "name": "Go/no-go gate",
+      "command": "npm run v66:go-no-go",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "generated_at": "2026-06-18T09:18:29.987Z",
+  "phases": [
+    {
+      "phase": 1,
+      "code": "LOCAL_BUILD",
+      "title": "Local build foundation",
+      "command": "npm run test:phase1",
+      "gate": "typecheck and build must pass"
+    },
+    {
+      "phase": 2,
+      "code": "NO_MOCK",
+      "title": "No-mock audit",
+      "command": "npm run test:phase2",
+      "gate": "mock audit and removal plan generated"
+    },
+    {
+      "phase": 3,
+      "code": "MIGRATIONS",
+      "title": "Migration/schema artifact check",
+      "command": "npm run test:phase3",
+      "gate": "migration files and v5.9 migration exist"
+    },
+    {
+      "phase": 4,
+      "code": "WORKFLOWS",
+      "title": "Workflow artifact check",
+      "command": "npm run test:phase4",
+      "gate": "main business module files exist"
+    },
+    {
+      "phase": 5,
+      "code": "BACKUP_RESTORE",
+      "title": "Backup/restore proof artifacts",
+      "command": "npm run test:phase5",
+      "gate": "backup and restore scripts run locally"
+    },
+    {
+      "phase": 6,
+      "code": "PILOT_READY",
+      "title": "Pilot readiness artifacts",
+      "command": "npm run test:phase6",
+      "gate": "pilot/rollout/security artifacts exist and run"
+    }
+  ]
+}

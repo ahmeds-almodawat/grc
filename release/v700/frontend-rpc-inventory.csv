@@ -1,0 +1,9 @@
+rpc,file,line,transport,classification
+"search_grc_global","src/lib/commandCenterApi.ts","180","direct_browser_rpc","unknown_requires_review"
+"create_board_pack_snapshot","src/lib/enterpriseApi.ts","174","authenticated_edge_bridge","unknown_requires_review"
+"acknowledge_escalation_event","src/lib/grcApi.ts","376","authenticated_edge_bridge","workflow_runtime_review"
+"resolve_escalation_event","src/lib/grcApi.ts","384","authenticated_edge_bridge","workflow_runtime_review"
+"assign_user_role","src/lib/grcApi.ts","990","authenticated_edge_bridge","privileged_admin_review"
+"deactivate_user_role","src/lib/grcApi.ts","1005","authenticated_edge_bridge","privileged_admin_review"
+"update_ovr_workflow","src/lib/grcApi.ts","1228","authenticated_edge_bridge","workflow_runtime_review"
+"create_ovr_corrective_action_project","src/lib/grcApi.ts","1242","authenticated_edge_bridge","workflow_runtime_review"

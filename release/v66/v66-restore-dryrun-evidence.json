@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-06-18T20:24:33.662Z",
+  "dryrun_status": "manual_evidence_required",
+  "steps": [
+    {
+      "step": 1,
+      "title": "Identify backup source",
+      "required_evidence": "Database backup/export package location and timestamp",
+      "status": "manual_required"
+    },
+    {
+      "step": 2,
+      "title": "Restore database to staging",
+      "required_evidence": "Restore command/log and target project reference",
+      "status": "manual_required"
+    },
+    {
+      "step": 3,
+      "title": "Verify critical table counts",
+      "required_evidence": "Before/after counts for users, projects, tasks, OVR, evidence, approvals, roles",
+      "status": "manual_required"
+    },
+    {
+      "step": 4,
+      "title": "Verify evidence storage samples",
+      "required_evidence": "At least 3 evidence files opened from restored storage",
+      "status": "manual_required"
+    },
+    {
+      "step": 5,
+      "title": "Run app smoke test after restore",
+      "required_evidence": "Login, dashboard, OVR, tasks, evidence, reports smoke result",
+      "status": "manual_required"
+    },
+    {
+      "step": 6,
+      "title": "Document issues and signoff",
+      "required_evidence": "Named IT owner signoff and issue list",
+      "status": "manual_required"
+    }
+  ]
+}

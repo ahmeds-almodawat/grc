@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-06-18T22:32:13.980Z",
+  "required_evidence": [
+    "staging-migration-log.txt",
+    "01-v64-persona-sql-output.txt",
+    "02-v65-workflow-sql-output.txt",
+    "03-v66-pilot-evidence-sql-output.txt",
+    "restore-dryrun-evidence.txt",
+    "pilot-signoff.md"
+  ],
+  "sql_files": [
+    {
+      "name": "01-v64-persona-security-tests.sql",
+      "exists": true,
+      "source": "release/v661/staging-sql/01_v64_persona_security_tests.sql",
+      "destination": "release/v662/staging-sql/01-v64-persona-security-tests.sql"
+    },
+    {
+      "name": "02-v65-workflow-smoke-tests.sql",
+      "exists": true,
+      "source": "release/v661/staging-sql/02_v65_workflow_smoke_tests.sql",
+      "destination": "release/v662/staging-sql/02-v65-workflow-smoke-tests.sql"
+    },
+    {
+      "name": "03-v66-pilot-evidence-tests.sql",
+      "exists": true,
+      "source": "release/v661/staging-sql/03_v66_controlled_pilot_evidence_tests.sql",
+      "destination": "release/v662/staging-sql/03-v66-pilot-evidence-tests.sql"
+    }
+  ],
+  "warning": "Generated command pack only. Real proof must come from staging outputs."
+}

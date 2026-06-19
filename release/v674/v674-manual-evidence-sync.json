@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-06-19T03:57:47.386Z",
+  "updates": [
+    {
+      "id": "backup_restore_dryrun",
+      "updated": true,
+      "status": "verified"
+    },
+    {
+      "id": "ovr_confidentiality_no_real_patient_data",
+      "updated": true,
+      "status": "manual_required"
+    },
+    {
+      "id": "pilot_signoff_it_quality_admin",
+      "updated": true,
+      "status": "manual_required"
+    }
+  ],
+  "approval_hashes_match": true,
+  "required_total": 6,
+  "verified_count": 4,
+  "missing_count": 2,
+  "missing": [
+    "ovr_confidentiality_no_real_patient_data",
+    "pilot_signoff_it_quality_admin"
+  ],
+  "strict_passed": false
+}

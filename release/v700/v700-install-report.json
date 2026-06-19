@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-06-19T13:16:23.903Z",
+  "changed": [],
+  "preserved": [
+    "v700:install",
+    "v700:rpc-inventory",
+    "v700:runtime-security",
+    "v700:v65-audit",
+    "v700:v65-repair-copy",
+    "v700:persona-gap",
+    "v700:proof-suite",
+    "v700:all",
+    "proof:technical",
+    "proof:runtime-security",
+    "proof:personas",
+    "proof:restore",
+    "proof:pilot",
+    "proof:all"
+  ]
+}

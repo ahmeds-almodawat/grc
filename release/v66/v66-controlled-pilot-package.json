@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-06-18T20:24:34.237Z",
+  "files_generated": [
+    "release/v66/v66-pilot-issue-log.csv",
+    "release/v66/v66-pilot-roster-template.csv",
+    "release/v66/V66_CONTROLLED_PILOT_SIGNOFF.md",
+    "release/v66/V66_DAY1_RUNBOOK.md"
+  ],
+  "pilot_scope": "5-15 trusted users only",
+  "confidential_data_rule": "Do not use real patient identifiers or confidential OVR data until staging proof is complete."
+}

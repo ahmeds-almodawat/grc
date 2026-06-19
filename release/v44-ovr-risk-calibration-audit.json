@@ -1,0 +1,44 @@
+{
+  "generated_at": "2026-06-18T07:41:14.218Z",
+  "title": "v4.4 OVR Risk Calibration Audit",
+  "passed": 7,
+  "total": 7,
+  "score_percent": 100,
+  "checks": [
+    {
+      "id": "RISK_RULE_TABLE",
+      "label": "OVR risk calibration table exists",
+      "pass": true
+    },
+    {
+      "id": "RISK_VIEW",
+      "label": "OVR calibrated risk view exists",
+      "pass": true
+    },
+    {
+      "id": "MAJOR_RULE",
+      "label": "Major OVR executive alert rule seeded",
+      "pass": true
+    },
+    {
+      "id": "SENTINEL_RULE",
+      "label": "Sentinel escalation rule seeded",
+      "pass": true
+    },
+    {
+      "id": "MEDICATION_RULE",
+      "label": "Medication recurrence rule seeded",
+      "pass": true
+    },
+    {
+      "id": "FALL_RULE",
+      "label": "Falls recurrence rule seeded",
+      "pass": true
+    },
+    {
+      "id": "DELAY_RULE",
+      "label": "Closure delay rule seeded",
+      "pass": true
+    }
+  ]
+}

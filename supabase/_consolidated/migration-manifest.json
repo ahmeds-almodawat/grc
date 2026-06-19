@@ -1,0 +1,241 @@
+{
+  "generatedAt": "2026-06-19T03:30:51.701Z",
+  "count": 47,
+  "files": [
+    {
+      "file": "001_core_foundation.sql",
+      "bytes": 14534,
+      "sha256": "d72300510b7069bb523aa32372c47c17b42b9709678bf860098ccc628d8adb67"
+    },
+    {
+      "file": "002_grc_layer.sql",
+      "bytes": 20680,
+      "sha256": "8e2fd6db91eda1d89a359c98824449aee76a34679d810eb27dbbc250468e54f9"
+    },
+    {
+      "file": "003_rls_permissions_and_controls.sql",
+      "bytes": 19039,
+      "sha256": "107566e145ccdd60674bdae440443925b449ec5fd9b6c1eb41391687e27ec444"
+    },
+    {
+      "file": "004_seed_reference_data.sql",
+      "bytes": 5985,
+      "sha256": "9b485799c05812421f049108742ec2094f221958fe52ed8d2109481724cbffcf"
+    },
+    {
+      "file": "005_operational_views_and_storage.sql",
+      "bytes": 6972,
+      "sha256": "275d5fc0744a0d40be389954ceedd7a806a7561524183ab11d6a18f832da8a57"
+    },
+    {
+      "file": "006_workflow_queues_and_project_controls.sql",
+      "bytes": 8638,
+      "sha256": "d31ca02071be4ac95a040bde0fa686e5fecc93c5e791729ddf4263204a4944e3"
+    },
+    {
+      "file": "007_escalation_and_governance_controls.sql",
+      "bytes": 19671,
+      "sha256": "32b53dd14e129291477ca3b6c052689a163514b3592ac5295750f2bbc68a91aa"
+    },
+    {
+      "file": "008_import_export_rollout_tools.sql",
+      "bytes": 13046,
+      "sha256": "7605a92ffa19f1526ef43be9d58b9388e230bbc32abcd10497d9a7d9b0cc03af"
+    },
+    {
+      "file": "009_access_control_and_role_governance.sql",
+      "bytes": 10480,
+      "sha256": "8b6e17fc3d4a086fe26ab38f9aa798f7515995beb6e44c22680f25e61f13482b"
+    },
+    {
+      "file": "010_bilingual_and_ovr_module.sql",
+      "bytes": 12091,
+      "sha256": "f238202ffebac0954c0e7139d05ecb1a75810b79d28539014b0c355055293d44"
+    },
+    {
+      "file": "011_ovr_risk_indicators.sql",
+      "bytes": 8681,
+      "sha256": "ec2140a8a6a3543d9e15cdfcf7f77a1afeede981c295792d55a194a87fe91f28"
+    },
+    {
+      "file": "012_ovr_workflow_enum_values.sql",
+      "bytes": 1028,
+      "sha256": "5a303257466f7d867fc012a41d8cd07a4eb555b80d2523c886af2896dcf56de1"
+    },
+    {
+      "file": "013_kpi_analytics_heatmap_radar.sql",
+      "bytes": 9750,
+      "sha256": "3f91fcc1bd1517b6c5a9382c02b99a67a737cc94ccc4c6e97eb08520fba4365b"
+    },
+    {
+      "file": "014_export_center_backups_custom_reports.sql",
+      "bytes": 10702,
+      "sha256": "c13a083cf3f72b940663087dfb47bd260d15551e67538a32add69132f0d4458b"
+    },
+    {
+      "file": "015_production_hardening_health_print_controls.sql",
+      "bytes": 28865,
+      "sha256": "394d191f2f980e4e9f82c1a25d567ff2a26699d904289f82a2ae568b75afb823"
+    },
+    {
+      "file": "016_rollout_onboarding_user_guides.sql",
+      "bytes": 14188,
+      "sha256": "6c32aa3cf79b32f515de75b8354efddc987c2aba0e6d78e273f4f598f4b739fe"
+    },
+    {
+      "file": "017_notifications_activity_timelines.sql",
+      "bytes": 15152,
+      "sha256": "4ace2d56c0f9fe465c7bae1ecd90b38f49db8c5109be1aa4da777cf77a1561c2"
+    },
+    {
+      "file": "018_qa_permission_deployment_readiness.sql",
+      "bytes": 25079,
+      "sha256": "3e526bff087b94acd8917091406cc17476f1368efc1d76f3797944a0cbcf3122"
+    },
+    {
+      "file": "019_performance_responsive_usability.sql",
+      "bytes": 9106,
+      "sha256": "4cd40338a93a07c64a7a33335f99d4188966aba4d6fbb89e00e24b8c1b3bcfe0"
+    },
+    {
+      "file": "020_security_audit_retention_controls.sql",
+      "bytes": 20175,
+      "sha256": "8bc8c590bbf4033c09e1da3a52e79b44cc63370f0c3e8e702e08b36a8111be45"
+    },
+    {
+      "file": "021_command_search_documents_release.sql",
+      "bytes": 23640,
+      "sha256": "781e2fd6ff8d891a3f6ae7b11da2ebc9a6ee9c47608622fce8d81080c1745ed6"
+    },
+    {
+      "file": "022_ultra_release_restore_admin_dictionary.sql",
+      "bytes": 23932,
+      "sha256": "db850ae90e3304931d6ccc511b59610b6ab33987218eabdb667df2a0219d17b2"
+    },
+    {
+      "file": "023_enterprise_intelligence_reporting.sql",
+      "bytes": 30347,
+      "sha256": "d2ae6f283db90e1d3145fa73794159031972001c9bff5aaaa9c2f8c24525de41"
+    },
+    {
+      "file": "024_automation_intelligence_kri_reviews.sql",
+      "bytes": 24696,
+      "sha256": "589009b09ec8f984339d3fe0534d900d0e2201367518043b5939fcbe36b08f1f"
+    },
+    {
+      "file": "025_staging_validation_consolidation.sql",
+      "bytes": 25415,
+      "sha256": "767bc278a7f16b6458de5c834920a6699c985f7a018e7fd9d6cc5444e03c6908"
+    },
+    {
+      "file": "026_finish_fast_release_sprint.sql",
+      "bytes": 21499,
+      "sha256": "7456e076a84ec0f3aae0bd665fd1955f93e8d694acb2c75ec5ae5e60e32c2b2f"
+    },
+    {
+      "file": "027_final_production_leap.sql",
+      "bytes": 11804,
+      "sha256": "75be3128b9303747466683915e37b818fb5851815c9229e6667549c79f2da3f8"
+    },
+    {
+      "file": "028_final_release_factory.sql",
+      "bytes": 11208,
+      "sha256": "71702a19095df70f3336242deecc07f2bd6f7e11779c82d94597c2c2189466c9"
+    },
+    {
+      "file": "029_production_proof_consolidation.sql",
+      "bytes": 10140,
+      "sha256": "7d9f2d2f3e384cc0902a9fcffb7add36d883332a65b332f519abf6ca610286b5"
+    },
+    {
+      "file": "030_pilot_real_data_operations.sql",
+      "bytes": 18263,
+      "sha256": "dd36aecdd83b5beaa42fac5dbaaaa211e6c02444ec5f3d202d0a5dc711bc7cd1"
+    },
+    {
+      "file": "031_consolidation_pilot_fix_kit.sql",
+      "bytes": 16350,
+      "sha256": "dd953cb4ce5d32b43d6d6f9a40d33bb1284c504756f7b034db99101eacbcc3dc"
+    },
+    {
+      "file": "032_final_local_doctor_production_simulator.sql",
+      "bytes": 11136,
+      "sha256": "13f6548aa9d03b88195d7fe3c01974a6c694fd2d5b8a7fd366e6386d2f6f0ec9"
+    },
+    {
+      "file": "033_v42_production_validation_and_rls_lab.sql",
+      "bytes": 19260,
+      "sha256": "aa1ad365aecc768fd11211783b512cf902fc178e5c9ab21a04720637ea7c4fef"
+    },
+    {
+      "file": "034_v46_ovr_bilingual_rtl_production_hardening.sql",
+      "bytes": 26385,
+      "sha256": "9681929f02595b7ace1d51937249d7faf3859226f92edd42abe36d3212835823"
+    },
+    {
+      "file": "035_v50_scale_backup_restore.sql",
+      "bytes": 14127,
+      "sha256": "f8b0c414d38cce0c7ce16d24418e25981d615cffb41ae3e9a9721e7a1a924e57"
+    },
+    {
+      "file": "036_b_ovr_workflow_controls.sql",
+      "bytes": 15689,
+      "sha256": "4cecab6b5b728001ef1b18037ba19c69bdb4efabb1c233988919f3b8b71d5b29"
+    },
+    {
+      "file": "037_v58_pilot_rollout_security_audit.sql",
+      "bytes": 16430,
+      "sha256": "88972a4a9e2c7619590db56848cf6ce87bb233a8fd7cd4ed310474536843e1db"
+    },
+    {
+      "file": "038_v59_no_mock_phased_auto_tests.sql",
+      "bytes": 11307,
+      "sha256": "ee32812209afcfd6c16adff2040be4cbf333466c09fa21b05f22a9c5cdbc49d8"
+    },
+    {
+      "file": "039_v60_no_mock_production_data_controls.sql",
+      "bytes": 6263,
+      "sha256": "e451d57a6e25c58a30bac5c4e2092ecd38456bc25787fda10161bddfaebd20f4"
+    },
+    {
+      "file": "040_v62_real_no_mock_data_layer.sql",
+      "bytes": 7331,
+      "sha256": "76b6ecd288f73ed4dfe1950fa154b2e5e71a234f14580d2a037a83b7b5a17965"
+    },
+    {
+      "file": "041_v63_auth_route_protection.sql",
+      "bytes": 2362,
+      "sha256": "bf3f7bd3e893262dd55f20474de90d830d724d092dc001f2b69445f1e57ad27e"
+    },
+    {
+      "file": "042_v64_database_security_proof.sql",
+      "bytes": 10261,
+      "sha256": "ca2e05f1a860a00b3894c7cd250aa45a5607fc28bc7d5298c486fa745c58856c"
+    },
+    {
+      "file": "043_v641_database_security_static_remediation.sql",
+      "bytes": 17472,
+      "sha256": "c5348dd5fa5c34b7b26ad0deb19e875f680c5837dfa593df16a3d77dff5f47b1"
+    },
+    {
+      "file": "044_v642_auth_route_rls_static_fix.sql",
+      "bytes": 1039,
+      "sha256": "32e8ae235c17ca789075e415373d32da289ee27c0b7af003b6126205e8f19643"
+    },
+    {
+      "file": "045_v66_controlled_pilot_evidence.sql",
+      "bytes": 4746,
+      "sha256": "f24e0b61cc7f1635c152ffa8e2b5130d3130786415a94fd2538a73fc0fd05f2c"
+    },
+    {
+      "file": "046_v673_lockdown_security_definer_execute.sql",
+      "bytes": 4428,
+      "sha256": "e0ac126584586bad54e61e7de5025bd06ff5c75bb57c1e565b763cf1a9bb1e07"
+    },
+    {
+      "file": "0165_ovr_workflow_prerequisites.sql",
+      "bytes": 2543,
+      "sha256": "4d4cbb7b47bda615053ed15380a320081e4842ac99076111bba6e5af1bb381ca"
+    }
+  ]
+}

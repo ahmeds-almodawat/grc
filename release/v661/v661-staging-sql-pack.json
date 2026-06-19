@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-06-18T22:32:13.450Z",
+  "files": [
+    {
+      "order": "01",
+      "source": "supabase/tests/v64_persona_security_tests.sql",
+      "target": "01_v64_persona_security_tests.sql",
+      "purpose": "Persona/RLS isolation proof",
+      "exists": true,
+      "copied_to": "release\\v661\\staging-sql\\01_v64_persona_security_tests.sql"
+    },
+    {
+      "order": "02",
+      "source": "supabase/tests/v65_workflow_smoke_tests.sql",
+      "target": "02_v65_workflow_smoke_tests.sql",
+      "purpose": "Workflow smoke proof",
+      "exists": true,
+      "copied_to": "release\\v661\\staging-sql\\02_v65_workflow_smoke_tests.sql"
+    },
+    {
+      "order": "03",
+      "source": "supabase/tests/v66_controlled_pilot_evidence_tests.sql",
+      "target": "03_v66_controlled_pilot_evidence_tests.sql",
+      "purpose": "Controlled pilot evidence proof",
+      "exists": true,
+      "copied_to": "release\\v661\\staging-sql\\03_v66_controlled_pilot_evidence_tests.sql"
+    }
+  ]
+}

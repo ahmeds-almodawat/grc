@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-06-18T07:41:13.615Z",
+  "title": "v4.3 OVR Production Workflow Audit",
+  "passed": 6,
+  "total": 6,
+  "score_percent": 100,
+  "checks": [
+    {
+      "id": "OVR_PAGE_EXISTS",
+      "label": "OVR page exists",
+      "pass": true
+    },
+    {
+      "id": "OVR_TABLE_EXISTS_IN_MIGRATIONS",
+      "label": "OVR table migration exists",
+      "pass": true
+    },
+    {
+      "id": "V46_MIGRATION_EXISTS",
+      "label": "v4.6 hardening migration exists",
+      "pass": true
+    },
+    {
+      "id": "OVR_CHECKLIST_TABLE",
+      "label": "OVR production checklist registry exists",
+      "pass": true
+    },
+    {
+      "id": "OVR_QUALITY_CLOSURE_FIELDS",
+      "label": "Quality closure fields added",
+      "pass": true
+    },
+    {
+      "id": "OVR_CONFIDENTIAL_TEXT",
+      "label": "OVR confidentiality text appears in source/docs",
+      "pass": true
+    }
+  ]
+}

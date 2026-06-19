@@ -1,0 +1,25 @@
+{
+  "generated_at": "2026-06-19T14:08:54.003Z",
+  "mode": "personas",
+  "status": "passed",
+  "passed_count": 2,
+  "failed_count": 0,
+  "skipped_count": 0,
+  "failed_commands": [],
+  "skipped_commands": [],
+  "note": "This consolidated suite archives version-specific proof commands behind proof:* entry points. Skipped commands mean the current branch does not contain that legacy script.",
+  "results": [
+    {
+      "group": "personas",
+      "script": "v72:persona-proof",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "group": "personas",
+      "script": "v700:persona-gap",
+      "status": "passed",
+      "exit_code": 0
+    }
+  ]
+}

@@ -1,0 +1,494 @@
+{
+  "generated_at": "2026-06-18T14:22:12.025Z",
+  "policy": "Generated reports are not production proof until tied to real staging evidence, screenshots/logs, named owner, date and signoff.",
+  "files_scanned": 60,
+  "generated_or_unverified_files": 53,
+  "findings": [
+    {
+      "file": "release\\audits\\i18n-audit.json",
+      "bytes": 1516,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\audits\\route-audit.json",
+      "bytes": 196,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\PRODUCTION_OPERATOR_HANDOVER_BUNDLE.md",
+      "bytes": 2577,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "checklist",
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\PRODUCTION_PROOF_BUNDLE.md",
+      "bytes": 538,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "checklist",
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\production-proof-inventory.json",
+      "bytes": 637,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "checklist",
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\release-inventory.json",
+      "bytes": 2182,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "checklist",
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\V34_CURRENT_STATS_AND_READINESS.md",
+      "bytes": 524,
+      "status": "no_unverified_signal_detected",
+      "indicators": []
+    },
+    {
+      "file": "release\\V35_STATS_AND_READINESS.md",
+      "bytes": 1163,
+      "status": "no_unverified_signal_detected",
+      "indicators": []
+    },
+    {
+      "file": "release\\V38_FINAL_LOCAL_READINESS_REPORT.md",
+      "bytes": 774,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\V38_OPERATOR_COMMAND_CHECKLIST.md",
+      "bytes": 482,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "checklist"
+      ]
+    },
+    {
+      "file": "release\\v38-local-doctor-report.json",
+      "bytes": 1271,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v38-production-simulator-report.json",
+      "bytes": 1021,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v38-schema-doctor-report.json",
+      "bytes": 2935,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v39-consolidation-audit.json",
+      "bytes": 4706,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v39-consolidation-audit.md",
+      "bytes": 643,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\V42_STATS_AND_NEXT_STEPS.md",
+      "bytes": 605,
+      "status": "no_unverified_signal_detected",
+      "indicators": []
+    },
+    {
+      "file": "release\\v43-ovr-production-audit.json",
+      "bytes": 888,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "checklist",
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v44-ovr-risk-calibration-audit.json",
+      "bytes": 933,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v45-i18n-deep-audit.json",
+      "bytes": 9457,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\V46_STATS_AND_NEXT_STEPS.md",
+      "bytes": 532,
+      "status": "no_unverified_signal_detected",
+      "indicators": []
+    },
+    {
+      "file": "release\\v46-rtl-visual-qa.json",
+      "bytes": 827,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v50-reports\\v50-backup-strategy-check.json",
+      "bytes": 737,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "manual_required",
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v50-reports\\v50-performance-audit.json",
+      "bytes": 575,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v50-reports\\v50-restore-dryrun-audit.json",
+      "bytes": 853,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "not_verified",
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v50-scale-seed\\departments.seed.json",
+      "bytes": 6084,
+      "status": "no_unverified_signal_detected",
+      "indicators": []
+    },
+    {
+      "file": "release\\v50-scale-seed\\manifest.json",
+      "bytes": 363,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v50-scale-seed\\projects.seed.json",
+      "bytes": 17980,
+      "status": "no_unverified_signal_detected",
+      "indicators": []
+    },
+    {
+      "file": "release\\v50-scale-seed\\users.seed.json",
+      "bytes": 252933,
+      "status": "no_unverified_signal_detected",
+      "indicators": []
+    },
+    {
+      "file": "release\\V54_BOARDPACK_AUDIT.md",
+      "bytes": 443,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "manual_required"
+      ]
+    },
+    {
+      "file": "release\\V54_EMPLOYEE_MODE_AUDIT.md",
+      "bytes": 425,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "manual_required"
+      ]
+    },
+    {
+      "file": "release\\V54_FORMS_UX_AUDIT.md",
+      "bytes": 421,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "manual_required"
+      ]
+    },
+    {
+      "file": "release\\V54_PRINT_REPORT_AUDIT.md",
+      "bytes": 437,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "manual_required"
+      ]
+    },
+    {
+      "file": "release\\v54-boardpack-audit.json",
+      "bytes": 682,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "manual_required",
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v54-employee-mode-audit.json",
+      "bytes": 654,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "manual_required",
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v54-forms-ux-audit.json",
+      "bytes": 665,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "manual_required",
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v54-print-report-audit.json",
+      "bytes": 672,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "manual_required",
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v58\\v58-audit-trail-check.json",
+      "bytes": 877,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v58\\v58-pilot-readiness.json",
+      "bytes": 656,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v58\\v58-rollout-readiness.json",
+      "bytes": 908,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v58\\v58-security-review.json",
+      "bytes": 1008,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v59-mock-removal-plan.md",
+      "bytes": 8406,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v59-no-mock-audit.json",
+      "bytes": 295694,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "checklist",
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v59-no-mock-audit.md",
+      "bytes": 34222,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v59-phase-test-report.md",
+      "bytes": 1546,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v59-phase-test-results.json",
+      "bytes": 5373,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v59-test-plan.json",
+      "bytes": 1244,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v59-test-plan.md",
+      "bytes": 927,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v60\\v60-1-singleton-return-hotfix-report.json",
+      "bytes": 913,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v60\\v60-phase-results.json",
+      "bytes": 1441,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v60\\v60-production-data-audit.json",
+      "bytes": 20626,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "checklist",
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v60\\v60-production-data-audit.md",
+      "bytes": 12472,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "checklist",
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v60\\v60-remediation-report.json",
+      "bytes": 1277,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v60\\v60-remediation-report.md",
+      "bytes": 468,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v61\\v61-capability-register.json",
+      "bytes": 3809,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "unverified",
+        "checklist",
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v61\\v61-capability-register.md",
+      "bytes": 2474,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "unverified",
+        "checklist",
+        "generated",
+        "simulated"
+      ]
+    },
+    {
+      "file": "release\\v61\\v61-migration-manifest-summary.json",
+      "bytes": 533,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v61\\v61-package-pin-audit.json",
+      "bytes": 1270,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v61\\v61-package-pin-audit.md",
+      "bytes": 698,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    },
+    {
+      "file": "release\\v61\\v61-version-baseline-audit.json",
+      "bytes": 29074,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated",
+        "simulated"
+      ]
+    },
+    {
+      "file": "release\\v61\\v61-version-baseline-audit.md",
+      "bytes": 8733,
+      "status": "generated_or_unverified_signal",
+      "indicators": [
+        "generated"
+      ]
+    }
+  ]
+}

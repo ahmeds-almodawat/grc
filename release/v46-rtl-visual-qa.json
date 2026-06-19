@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-06-18T07:41:15.363Z",
+  "title": "v4.6 RTL Visual QA Audit",
+  "passed": 6,
+  "total": 6,
+  "score_percent": 100,
+  "checks": [
+    {
+      "id": "DIR_RTL_USAGE",
+      "label": "App/layout sets dir or RTL state",
+      "pass": true
+    },
+    {
+      "id": "RTL_CSS_SELECTOR",
+      "label": "RTL CSS selectors exist",
+      "pass": true
+    },
+    {
+      "id": "LOGICAL_SPACING",
+      "label": "Some logical CSS properties are used",
+      "pass": true
+    },
+    {
+      "id": "RESPONSIVE_MEDIA",
+      "label": "Responsive media queries exist",
+      "pass": true
+    },
+    {
+      "id": "RTL_QA_SQL",
+      "label": "RTL QA registry exists in migration",
+      "pass": true
+    },
+    {
+      "id": "OVR_PRINT_QA_ITEM",
+      "label": "OVR print QA item seeded",
+      "pass": true
+    }
+  ]
+}

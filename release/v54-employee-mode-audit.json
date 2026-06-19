@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-06-18T08:59:01.979Z",
+  "score": 0,
+  "checks": [
+    {
+      "code": "EMPLOYEE_MODE_MIGRATION",
+      "title": "Employee simple mode migration exists",
+      "status": "needs_review"
+    },
+    {
+      "code": "MY_TASKS_TILE",
+      "title": "My Tasks tile configured after seed",
+      "status": "manual_required"
+    },
+    {
+      "code": "MY_OVR_TILE",
+      "title": "My OVR Submissions tile configured after seed",
+      "status": "manual_required"
+    },
+    {
+      "code": "EMPLOYEE_RLS_TEST",
+      "title": "Employee mode must be tested with assigned-only RLS persona",
+      "status": "manual_required"
+    }
+  ]
+}

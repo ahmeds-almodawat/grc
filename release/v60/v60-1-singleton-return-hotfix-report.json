@@ -1,0 +1,45 @@
+{
+  "generated_at": "2026-06-18T09:31:04.397Z",
+  "results": [
+    {
+      "filePath": "src/lib/commandCenterApi.ts",
+      "changed": true,
+      "replacements": 2
+    },
+    {
+      "filePath": "src/lib/grcApi.ts",
+      "changed": true,
+      "replacements": 7
+    },
+    {
+      "filePath": "src/lib/operationsApi.ts",
+      "changed": true,
+      "replacements": 1
+    },
+    {
+      "filePath": "src/lib/performanceApi.ts",
+      "changed": true,
+      "replacements": 1
+    },
+    {
+      "filePath": "src/lib/releaseOpsApi.ts",
+      "changed": true,
+      "replacements": 1
+    },
+    {
+      "filePath": "src/lib/securityApi.ts",
+      "changed": true,
+      "replacements": 1
+    },
+    {
+      "filePath": "src/lib/testingApi.ts",
+      "changed": true,
+      "replacements": 1
+    },
+    {
+      "filePath": "src/lib/v35ConsolidationApi.ts",
+      "changed": true,
+      "replacements": 2
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-06-18T08:59:00.423Z",
+  "score": 0,
+  "checks": [
+    {
+      "code": "PRINT_CENTER_PAGE",
+      "title": "Reports UX Employee Center page exists",
+      "status": "needs_review"
+    },
+    {
+      "code": "V54_MIGRATION_EXISTS",
+      "title": "v5.4 reports migration exists",
+      "status": "needs_review"
+    },
+    {
+      "code": "EXEC_REPORT_CATALOG",
+      "title": "Print report catalog can be verified in Supabase after migration",
+      "status": "manual_required"
+    },
+    {
+      "code": "BILINGUAL_PRINT_REVIEW",
+      "title": "Arabic and English print labels need final visual QA",
+      "status": "manual_required"
+    }
+  ]
+}

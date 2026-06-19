@@ -1,0 +1,83 @@
+{
+  "generated_at": "2026-06-18T14:22:11.450Z",
+  "policy": "Capabilities must be separated into implemented artifacts versus production-verified evidence.",
+  "summary": {
+    "total": 9,
+    "unverified": 8,
+    "partially_verified": 1
+  },
+  "capabilities": [
+    {
+      "area": "Governance / GRC workflow",
+      "capability": "Project, milestone, task, evidence, approval and closure chain",
+      "artifact_detected": true,
+      "current_claim_level": "prototype_or_staging_artifact",
+      "production_status": "unverified",
+      "production_evidence_required": "Executable workflow test against staging Supabase with real roles and audit trail review."
+    },
+    {
+      "area": "OVR / Quality",
+      "capability": "OVR submission, supervisor/HOD review, Quality review, corrective action and closure path",
+      "artifact_detected": true,
+      "current_claim_level": "prototype_or_staging_artifact",
+      "production_status": "unverified",
+      "production_evidence_required": "End-to-end OVR test with patient-sensitive-field access restrictions and Quality-only closure proof."
+    },
+    {
+      "area": "Production data integrity",
+      "capability": "No silent mock/demo/fallback rows in production runtime",
+      "artifact_detected": true,
+      "current_claim_level": "static_audit_pass_possible",
+      "production_status": "partially_verified",
+      "production_evidence_required": "Empty database browser test and failed-query browser test proving empty/error states, not fictional records."
+    },
+    {
+      "area": "Authentication",
+      "capability": "Login/session shell and protected route access",
+      "artifact_detected": false,
+      "current_claim_level": "unknown_or_unverified",
+      "production_status": "unverified",
+      "production_evidence_required": "Anonymous access denied, current user profile loaded, inactive user blocked, role-based navigation confirmed."
+    },
+    {
+      "area": "RLS / authorization",
+      "capability": "Organization/department/persona isolation in Supabase",
+      "artifact_detected": true,
+      "current_claim_level": "schema_artifact",
+      "production_status": "unverified",
+      "production_evidence_required": "Executable SQL persona tests for employee, manager, quality, audit, super admin and negative access cases."
+    },
+    {
+      "area": "Automated testing",
+      "capability": "Unit, integration and browser workflow tests",
+      "artifact_detected": false,
+      "current_claim_level": "unknown_or_unverified",
+      "production_status": "unverified",
+      "production_evidence_required": "CI run with Vitest/RTL/Playwright and disposable Supabase test database."
+    },
+    {
+      "area": "Backup / restore",
+      "capability": "Database, Storage and Auth recovery procedures",
+      "artifact_detected": true,
+      "current_claim_level": "manual_checklist_artifact",
+      "production_status": "unverified",
+      "production_evidence_required": "Signed restore dry-run to staging with table counts, Storage sample verification and smoke test."
+    },
+    {
+      "area": "Arabic / RTL",
+      "capability": "Bilingual Arabic/English UI with RTL layout",
+      "artifact_detected": true,
+      "current_claim_level": "prototype_or_staging_artifact",
+      "production_status": "unverified",
+      "production_evidence_required": "Screen-by-screen Arabic QA, untranslated string audit and accessibility review."
+    },
+    {
+      "area": "Performance / scale",
+      "capability": "1,000 users / 50 departments readiness",
+      "artifact_detected": true,
+      "current_claim_level": "static_or_seed_artifact",
+      "production_status": "unverified",
+      "production_evidence_required": "Real staging load test, query pagination proof and route lazy-loading browser measurements."
+    }
+  ]
+}

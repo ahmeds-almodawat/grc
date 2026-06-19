@@ -1,0 +1,11 @@
+TEMPLATE - replace with real restore dry-run evidence
+
+Required content:
+- backup source identified
+- database restored to staging
+- critical table counts verified
+- evidence storage samples verified
+- application smoke test after restore
+- final status: RESTORE VERIFIED / PASSED
+
+Do not move this template into evidence-attachments without replacing it with real output.

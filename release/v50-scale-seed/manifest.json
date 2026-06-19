@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-06-18T07:54:49.233Z",
+  "dry_run": true,
+  "counts": {
+    "departments": 50,
+    "users": 1000,
+    "projects": 120,
+    "estimated_tasks": 1500,
+    "estimated_ovrs": 500,
+    "estimated_risks": 300
+  },
+  "files": {
+    "departments": "departments.seed.json",
+    "users": "users.seed.json",
+    "projects": "projects.seed.json"
+  }
+}

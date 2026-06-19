@@ -1,0 +1,8 @@
+{
+  "generated_at": "2026-06-19T00:57:46.459Z",
+  "moved_invalid_012a_out_of_migrations": false,
+  "valid_012_migration_present": true,
+  "invalid_012a_still_present": false,
+  "backup_location": "release\\v671\\disabled-invalid-migrations\\012a_ovr_workflow_enum_values.sql.disabled",
+  "strict_passed": true
+}

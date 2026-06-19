@@ -1,0 +1,8 @@
+{
+  "generated_at": "2026-06-18T14:55:29.309Z",
+  "migration_count": 39,
+  "latest_migration": "039_v60_no_mock_production_data_controls.sql",
+  "prefix_gaps": [],
+  "duplicate_prefixes": [],
+  "note": "This manifest is generated from the current supabase/migrations directory. It is a file inventory, not proof that migrations run successfully in a fresh Supabase project."
+}

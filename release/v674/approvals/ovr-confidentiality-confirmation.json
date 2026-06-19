@@ -1,0 +1,23 @@
+{
+  "scope": "",
+  "statements": {
+    "no_real_patient_identifiers": false,
+    "no_confidential_ovr_details": false,
+    "controlled_pilot_users_only": false,
+    "local_staging_proof_reviewed": false
+  },
+  "it_reviewer": {
+    "name": "",
+    "role": "",
+    "date": "",
+    "decision": "",
+    "scope": ""
+  },
+  "quality_reviewer": {
+    "name": "",
+    "role": "",
+    "date": "",
+    "decision": "",
+    "scope": ""
+  }
+}

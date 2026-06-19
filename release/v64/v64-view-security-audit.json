@@ -1,0 +1,3351 @@
+{
+  "summary": {
+    "generated_at": "2026-06-19T14:27:13.274Z",
+    "migration_files_scanned": 48,
+    "views_detected": 150,
+    "findings_total": 102,
+    "critical": 0,
+    "high": 0,
+    "medium": 102,
+    "strict_passed": true,
+    "note": "Static scan deduplicates views and recognizes later ALTER VIEW ... SET (security_invoker=true). Final proof still requires staging verification."
+  },
+  "views": [
+    {
+      "view": "v_access_control_matrix",
+      "files": [
+        "supabase/migrations/009_access_control_and_role_governance.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_access_control_summary",
+      "files": [
+        "supabase/migrations/009_access_control_and_role_governance.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_access_control_warnings",
+      "files": [
+        "supabase/migrations/009_access_control_and_role_governance.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_activity_timeline",
+      "files": [
+        "supabase/migrations/017_notifications_activity_timelines.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_admin_safety_console",
+      "files": [
+        "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_automation_command_summary",
+      "files": [
+        "supabase/migrations/024_automation_intelligence_kri_reviews.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_automation_rule_catalog",
+      "files": [
+        "supabase/migrations/024_automation_intelligence_kri_reviews.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_backup_health_check",
+      "files": [
+        "supabase/migrations/015_production_hardening_health_print_controls.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_backup_restore_drillboard",
+      "files": [
+        "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_backup_schedule_readiness",
+      "files": [
+        "supabase/migrations/023_enterprise_intelligence_reporting.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_bilingual_dictionary_status",
+      "files": [
+        "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_board_pack_summary",
+      "files": [
+        "supabase/migrations/023_enterprise_intelligence_reporting.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_bulk_import_batch_summary",
+      "files": [
+        "supabase/migrations/008_import_export_rollout_tools.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_committee_action_automation",
+      "files": [
+        "supabase/migrations/024_automation_intelligence_kri_reviews.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_consolidated_release_packages",
+      "files": [
+        "supabase/migrations/028_final_release_factory.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_consolidation_defect_dashboard",
+      "files": [
+        "supabase/migrations/025_staging_validation_consolidation.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_critical_attention_items",
+      "files": [
+        "supabase/migrations/005_operational_views_and_storage.sql",
+        "supabase/migrations/036_b_ovr_workflow_controls.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_cross_module_relationship_map",
+      "files": [
+        "supabase/migrations/021_command_search_documents_release.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_data_retention_readiness",
+      "files": [
+        "supabase/migrations/020_security_audit_retention_controls.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_delay_reason_queue",
+      "files": [
+        "supabase/migrations/007_escalation_and_governance_controls.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_department_execution_summary",
+      "files": [
+        "supabase/migrations/006_workflow_queues_and_project_controls.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_department_risk_heatmap",
+      "files": [
+        "supabase/migrations/013_kpi_analytics_heatmap_radar.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_department_scorecard_v2",
+      "files": [
+        "supabase/migrations/023_enterprise_intelligence_reporting.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_deployment_readiness_gates",
+      "files": [
+        "supabase/migrations/018_qa_permission_deployment_readiness.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_document_center_items",
+      "files": [
+        "supabase/migrations/021_command_search_documents_release.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_document_center_summary",
+      "files": [
+        "supabase/migrations/021_command_search_documents_release.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_due_reminder_queue",
+      "files": [
+        "supabase/migrations/017_notifications_activity_timelines.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_duplicate_active_department_codes",
+      "files": [
+        "supabase/migrations/008_import_export_rollout_tools.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_duplicate_active_unit_codes",
+      "files": [
+        "supabase/migrations/008_import_export_rollout_tools.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_duplicate_profile_emails",
+      "files": [
+        "supabase/migrations/008_import_export_rollout_tools.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_escalation_center",
+      "files": [
+        "supabase/migrations/007_escalation_and_governance_controls.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_evidence_review_queue",
+      "files": [
+        "supabase/migrations/006_workflow_queues_and_project_controls.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_evidence_vault_inventory",
+      "files": [
+        "supabase/migrations/023_enterprise_intelligence_reporting.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_executive_command_stream",
+      "files": [
+        "supabase/migrations/021_command_search_documents_release.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_executive_command_summary",
+      "files": [
+        "supabase/migrations/021_command_search_documents_release.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_executive_exception_dashboard",
+      "files": [
+        "supabase/migrations/024_automation_intelligence_kri_reviews.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_executive_grc_summary",
+      "files": [
+        "supabase/migrations/002_grc_layer.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_export_center_summary",
+      "files": [
+        "supabase/migrations/014_export_center_backups_custom_reports.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_export_dataset_catalog",
+      "files": [
+        "supabase/migrations/014_export_center_backups_custom_reports.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_final_acceptance_tests",
+      "files": [
+        "supabase/migrations/026_finish_fast_release_sprint.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_final_consolidation_artifacts",
+      "files": [
+        "supabase/migrations/026_finish_fast_release_sprint.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_final_cutover_plan",
+      "files": [
+        "supabase/migrations/026_finish_fast_release_sprint.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_final_finish_fast_scorecard",
+      "files": [
+        "supabase/migrations/026_finish_fast_release_sprint.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_final_go_live_gateboard",
+      "files": [
+        "supabase/migrations/026_finish_fast_release_sprint.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_final_handover_signoffs",
+      "files": [
+        "supabase/migrations/028_final_release_factory.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_final_owner_clearance",
+      "files": [
+        "supabase/migrations/026_finish_fast_release_sprint.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_global_search_index",
+      "files": [
+        "supabase/migrations/021_command_search_documents_release.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_grc_kpi_scorecard",
+      "files": [
+        "supabase/migrations/013_kpi_analytics_heatmap_radar.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_i18n_translation_coverage",
+      "files": [
+        "supabase/migrations/025_staging_validation_consolidation.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_kri_breach_register",
+      "files": [
+        "supabase/migrations/024_automation_intelligence_kri_reviews.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_load_test_seed_status",
+      "files": [
+        "supabase/migrations/025_staging_validation_consolidation.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_management_control_summary",
+      "files": [
+        "supabase/migrations/007_escalation_and_governance_controls.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_manager_inbox",
+      "files": [
+        "supabase/migrations/017_notifications_activity_timelines.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_migration_runbook_status",
+      "files": [
+        "supabase/migrations/025_staging_validation_consolidation.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_migration_verification_matrix",
+      "files": [
+        "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_mobile_readiness_gates",
+      "files": [
+        "supabase/migrations/019_performance_responsive_usability.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_module_payload_pressure",
+      "files": [
+        "supabase/migrations/019_performance_responsive_usability.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_monthly_grc_trend",
+      "files": [
+        "supabase/migrations/013_kpi_analytics_heatmap_radar.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_my_open_work",
+      "files": [
+        "supabase/migrations/005_operational_views_and_storage.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_my_open_work_expanded",
+      "files": [
+        "supabase/migrations/006_workflow_queues_and_project_controls.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_notification_digest",
+      "files": [
+        "supabase/migrations/017_notifications_activity_timelines.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_operational_followup_summary",
+      "files": [
+        "supabase/migrations/017_notifications_activity_timelines.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_ovr_quality_queue",
+      "files": [
+        "supabase/migrations/010_bilingual_and_ovr_module.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_repeated_category_alerts",
+      "files": [
+        "supabase/migrations/011_ovr_risk_indicators.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_attention_items",
+      "files": [
+        "supabase/migrations/011_ovr_risk_indicators.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_indicator_feed",
+      "files": [
+        "supabase/migrations/011_ovr_risk_indicators.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_indicator_summary",
+      "files": [
+        "supabase/migrations/011_ovr_risk_indicators.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_indicators_by_department",
+      "files": [
+        "supabase/migrations/011_ovr_risk_indicators.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_summary",
+      "files": [
+        "supabase/migrations/010_bilingual_and_ovr_module.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_workflow_control_summary",
+      "files": [
+        "supabase/migrations/036_b_ovr_workflow_controls.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_workflow_queue",
+      "files": [
+        "supabase/migrations/036_b_ovr_workflow_controls.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_pending_approvals_expanded",
+      "files": [
+        "supabase/migrations/006_workflow_queues_and_project_controls.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_permission_test_personas",
+      "files": [
+        "supabase/migrations/018_qa_permission_deployment_readiness.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_print_report_index",
+      "files": [
+        "supabase/migrations/015_production_hardening_health_print_controls.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_production_backup_strategy_status",
+      "files": [
+        "supabase/migrations/025_staging_validation_consolidation.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_production_cutover_checklist",
+      "files": [
+        "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_qa_readiness_summary",
+      "files": [
+        "supabase/migrations/018_qa_permission_deployment_readiness.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_qa_test_case_library",
+      "files": [
+        "supabase/migrations/018_qa_permission_deployment_readiness.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_qa_test_runs_summary",
+      "files": [
+        "supabase/migrations/018_qa_permission_deployment_readiness.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_radar_control_profile",
+      "files": [
+        "supabase/migrations/013_kpi_analytics_heatmap_radar.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_recurring_review_queue",
+      "files": [
+        "supabase/migrations/024_automation_intelligence_kri_reviews.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_release_candidate_gates",
+      "files": [
+        "supabase/migrations/021_command_search_documents_release.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_release_factory_checks",
+      "files": [
+        "supabase/migrations/028_final_release_factory.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_release_factory_scorecard",
+      "files": [
+        "supabase/migrations/028_final_release_factory.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_release_migration_order",
+      "files": [
+        "supabase/migrations/021_command_search_documents_release.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_report_builder_catalog",
+      "files": [
+        "supabase/migrations/023_enterprise_intelligence_reporting.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_restore_verification_status",
+      "files": [
+        "supabase/migrations/025_staging_validation_consolidation.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_risk_appetite_dashboard",
+      "files": [
+        "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_rls_persona_lab",
+      "files": [
+        "supabase/migrations/025_staging_validation_consolidation.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_rollout_data_health_summary",
+      "files": [
+        "supabase/migrations/008_import_export_rollout_tools.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_scenario_matrix",
+      "files": [
+        "supabase/migrations/023_enterprise_intelligence_reporting.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_security_access_findings",
+      "files": [
+        "supabase/migrations/020_security_audit_retention_controls.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_security_governance_summary",
+      "files": [
+        "supabase/migrations/020_security_audit_retention_controls.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_sensitive_activity_timeline",
+      "files": [
+        "supabase/migrations/020_security_audit_retention_controls.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_setup_readiness_checklist",
+      "files": [
+        "supabase/migrations/016_rollout_onboarding_user_guides.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_staging_validation_checks",
+      "files": [
+        "supabase/migrations/025_staging_validation_consolidation.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_staging_validation_summary",
+      "files": [
+        "supabase/migrations/025_staging_validation_consolidation.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_ui_performance_summary",
+      "files": [
+        "supabase/migrations/019_performance_responsive_usability.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_ultra_release_summary",
+      "files": [
+        "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v31_final_controls",
+      "files": [
+        "supabase/migrations/027_final_production_leap.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v31_go_live_scorecard",
+      "files": [
+        "supabase/migrations/027_final_production_leap.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v31_module_readiness",
+      "files": [
+        "supabase/migrations/027_final_production_leap.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v31_pilot_acceptance",
+      "files": [
+        "supabase/migrations/027_final_production_leap.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v31_support_handover",
+      "files": [
+        "supabase/migrations/027_final_production_leap.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v33_pilot_waves",
+      "files": [
+        "supabase/migrations/029_production_proof_consolidation.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v33_production_artifacts",
+      "files": [
+        "supabase/migrations/029_production_proof_consolidation.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v33_production_proof_gates",
+      "files": [
+        "supabase/migrations/029_production_proof_consolidation.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v33_production_proof_scorecard",
+      "files": [
+        "supabase/migrations/029_production_proof_consolidation.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v34_company_rollout_readiness",
+      "files": [
+        "supabase/migrations/030_pilot_real_data_operations.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v34_go_live_rehearsal_readiness",
+      "files": [
+        "supabase/migrations/030_pilot_real_data_operations.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v34_pilot_issue_board",
+      "files": [
+        "supabase/migrations/030_pilot_real_data_operations.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v34_pilot_wave_summary",
+      "files": [
+        "supabase/migrations/030_pilot_real_data_operations.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v34_real_data_import_readiness",
+      "files": [
+        "supabase/migrations/030_pilot_real_data_operations.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v38_final_readiness_scorecard",
+      "files": [
+        "supabase/migrations/032_final_local_doctor_production_simulator.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v42_release_candidate_scorecard",
+      "files": [
+        "supabase/migrations/033_v42_production_validation_and_rls_lab.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v42_rls_persona_matrix",
+      "files": [
+        "supabase/migrations/033_v42_production_validation_and_rls_lab.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v42_rls_readiness_summary",
+      "files": [
+        "supabase/migrations/033_v42_production_validation_and_rls_lab.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v42_rls_test_case_queue",
+      "files": [
+        "supabase/migrations/033_v42_production_validation_and_rls_lab.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v42_supabase_install_status",
+      "files": [
+        "supabase/migrations/033_v42_production_validation_and_rls_lab.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v46_language_rtl_readiness",
+      "files": [
+        "supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v46_ovr_production_queue",
+      "files": [
+        "supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v46_ovr_risk_calibration",
+      "files": [
+        "supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v46_production_hardening_scorecard",
+      "files": [
+        "supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v50_backup_restore_scorecard",
+      "files": [
+        "supabase/migrations/035_v50_scale_backup_restore.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v50_query_optimization_queue",
+      "files": [
+        "supabase/migrations/035_v50_scale_backup_restore.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v50_restore_dryrun_queue",
+      "files": [
+        "supabase/migrations/035_v50_scale_backup_restore.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v50_scale_readiness_scorecard",
+      "files": [
+        "supabase/migrations/035_v50_scale_backup_restore.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v58_audit_trail_scorecard",
+      "files": [
+        "supabase/migrations/037_v58_pilot_rollout_security_audit.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v58_overall_production_readiness",
+      "files": [
+        "supabase/migrations/037_v58_pilot_rollout_security_audit.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v58_pilot_readiness_scorecard",
+      "files": [
+        "supabase/migrations/037_v58_pilot_rollout_security_audit.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v58_rollout_readiness_scorecard",
+      "files": [
+        "supabase/migrations/037_v58_pilot_rollout_security_audit.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v58_security_review_scorecard",
+      "files": [
+        "supabase/migrations/037_v58_pilot_rollout_security_audit.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v59_latest_phase_results",
+      "files": [
+        "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v59_mock_data_findings_summary",
+      "files": [
+        "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v59_phase_test_scorecard",
+      "files": [
+        "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v59_production_data_readiness",
+      "files": [
+        "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v60_empty_state_readiness",
+      "files": [
+        "supabase/migrations/039_v60_no_mock_production_data_controls.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v60_latest_no_mock_audit",
+      "files": [
+        "supabase/migrations/039_v60_no_mock_production_data_controls.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v60_no_mock_control_scorecard",
+      "files": [
+        "supabase/migrations/039_v60_no_mock_production_data_controls.sql",
+        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v62_demo_boundary_scorecard",
+      "files": [
+        "supabase/migrations/040_v62_real_no_mock_data_layer.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v62_real_data_layer_scorecard",
+      "files": [
+        "supabase/migrations/040_v62_real_no_mock_data_layer.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v63_auth_route_protection_scorecard",
+      "files": [
+        "supabase/migrations/041_v63_auth_route_protection.sql",
+        "supabase/migrations/044_v642_auth_route_rls_static_fix.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_v64_database_security_readiness",
+      "files": [
+        "supabase/migrations/042_v64_database_security_proof.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v64_persona_test_matrix",
+      "files": [
+        "supabase/migrations/042_v64_database_security_proof.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_v64_security_control_scorecard",
+      "files": [
+        "supabase/migrations/042_v64_database_security_proof.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_workflow_blockers",
+      "files": [
+        "supabase/migrations/015_production_hardening_health_print_controls.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v35_consolidation_scorecard",
+      "files": [
+        "supabase/migrations/031_consolidation_pilot_fix_kit.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v35_data_quality_radar",
+      "files": [
+        "supabase/migrations/031_consolidation_pilot_fix_kit.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v35_final_blocker_board",
+      "files": [
+        "supabase/migrations/031_consolidation_pilot_fix_kit.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v35_operator_console",
+      "files": [
+        "supabase/migrations/031_consolidation_pilot_fix_kit.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    }
+  ],
+  "allOccurrences": [
+    {
+      "view": "v_executive_grc_summary",
+      "file": "supabase/migrations/002_grc_layer.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_critical_attention_items",
+      "file": "supabase/migrations/005_operational_views_and_storage.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_my_open_work",
+      "file": "supabase/migrations/005_operational_views_and_storage.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_my_open_work_expanded",
+      "file": "supabase/migrations/006_workflow_queues_and_project_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_pending_approvals_expanded",
+      "file": "supabase/migrations/006_workflow_queues_and_project_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_evidence_review_queue",
+      "file": "supabase/migrations/006_workflow_queues_and_project_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_department_execution_summary",
+      "file": "supabase/migrations/006_workflow_queues_and_project_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_escalation_center",
+      "file": "supabase/migrations/007_escalation_and_governance_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_delay_reason_queue",
+      "file": "supabase/migrations/007_escalation_and_governance_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_management_control_summary",
+      "file": "supabase/migrations/007_escalation_and_governance_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_bulk_import_batch_summary",
+      "file": "supabase/migrations/008_import_export_rollout_tools.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_duplicate_active_department_codes",
+      "file": "supabase/migrations/008_import_export_rollout_tools.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_duplicate_active_unit_codes",
+      "file": "supabase/migrations/008_import_export_rollout_tools.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_duplicate_profile_emails",
+      "file": "supabase/migrations/008_import_export_rollout_tools.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_rollout_data_health_summary",
+      "file": "supabase/migrations/008_import_export_rollout_tools.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_access_control_matrix",
+      "file": "supabase/migrations/009_access_control_and_role_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_access_control_warnings",
+      "file": "supabase/migrations/009_access_control_and_role_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_access_control_summary",
+      "file": "supabase/migrations/009_access_control_and_role_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_summary",
+      "file": "supabase/migrations/010_bilingual_and_ovr_module.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_quality_queue",
+      "file": "supabase/migrations/010_bilingual_and_ovr_module.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_indicator_feed",
+      "file": "supabase/migrations/011_ovr_risk_indicators.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_repeated_category_alerts",
+      "file": "supabase/migrations/011_ovr_risk_indicators.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_indicators_by_department",
+      "file": "supabase/migrations/011_ovr_risk_indicators.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_indicator_summary",
+      "file": "supabase/migrations/011_ovr_risk_indicators.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_attention_items",
+      "file": "supabase/migrations/011_ovr_risk_indicators.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_grc_kpi_scorecard",
+      "file": "supabase/migrations/013_kpi_analytics_heatmap_radar.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_department_risk_heatmap",
+      "file": "supabase/migrations/013_kpi_analytics_heatmap_radar.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_monthly_grc_trend",
+      "file": "supabase/migrations/013_kpi_analytics_heatmap_radar.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_radar_control_profile",
+      "file": "supabase/migrations/013_kpi_analytics_heatmap_radar.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_export_dataset_catalog",
+      "file": "supabase/migrations/014_export_center_backups_custom_reports.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_export_center_summary",
+      "file": "supabase/migrations/014_export_center_backups_custom_reports.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_backup_health_check",
+      "file": "supabase/migrations/015_production_hardening_health_print_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_workflow_blockers",
+      "file": "supabase/migrations/015_production_hardening_health_print_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_print_report_index",
+      "file": "supabase/migrations/015_production_hardening_health_print_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_setup_readiness_checklist",
+      "file": "supabase/migrations/016_rollout_onboarding_user_guides.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_operational_followup_summary",
+      "file": "supabase/migrations/017_notifications_activity_timelines.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_due_reminder_queue",
+      "file": "supabase/migrations/017_notifications_activity_timelines.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_notification_digest",
+      "file": "supabase/migrations/017_notifications_activity_timelines.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_activity_timeline",
+      "file": "supabase/migrations/017_notifications_activity_timelines.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_manager_inbox",
+      "file": "supabase/migrations/017_notifications_activity_timelines.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_deployment_readiness_gates",
+      "file": "supabase/migrations/018_qa_permission_deployment_readiness.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_qa_test_case_library",
+      "file": "supabase/migrations/018_qa_permission_deployment_readiness.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_permission_test_personas",
+      "file": "supabase/migrations/018_qa_permission_deployment_readiness.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_qa_test_runs_summary",
+      "file": "supabase/migrations/018_qa_permission_deployment_readiness.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_qa_readiness_summary",
+      "file": "supabase/migrations/018_qa_permission_deployment_readiness.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_ui_performance_summary",
+      "file": "supabase/migrations/019_performance_responsive_usability.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_module_payload_pressure",
+      "file": "supabase/migrations/019_performance_responsive_usability.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_mobile_readiness_gates",
+      "file": "supabase/migrations/019_performance_responsive_usability.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_security_access_findings",
+      "file": "supabase/migrations/020_security_audit_retention_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_data_retention_readiness",
+      "file": "supabase/migrations/020_security_audit_retention_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_sensitive_activity_timeline",
+      "file": "supabase/migrations/020_security_audit_retention_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_security_governance_summary",
+      "file": "supabase/migrations/020_security_audit_retention_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_document_center_items",
+      "file": "supabase/migrations/021_command_search_documents_release.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_document_center_summary",
+      "file": "supabase/migrations/021_command_search_documents_release.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_global_search_index",
+      "file": "supabase/migrations/021_command_search_documents_release.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_executive_command_stream",
+      "file": "supabase/migrations/021_command_search_documents_release.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_executive_command_summary",
+      "file": "supabase/migrations/021_command_search_documents_release.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_cross_module_relationship_map",
+      "file": "supabase/migrations/021_command_search_documents_release.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_release_candidate_gates",
+      "file": "supabase/migrations/021_command_search_documents_release.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_release_migration_order",
+      "file": "supabase/migrations/021_command_search_documents_release.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_production_cutover_checklist",
+      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_migration_verification_matrix",
+      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_backup_restore_drillboard",
+      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_admin_safety_console",
+      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_bilingual_dictionary_status",
+      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_ultra_release_summary",
+      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_report_builder_catalog",
+      "file": "supabase/migrations/023_enterprise_intelligence_reporting.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_backup_schedule_readiness",
+      "file": "supabase/migrations/023_enterprise_intelligence_reporting.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_evidence_vault_inventory",
+      "file": "supabase/migrations/023_enterprise_intelligence_reporting.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_department_scorecard_v2",
+      "file": "supabase/migrations/023_enterprise_intelligence_reporting.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_board_pack_summary",
+      "file": "supabase/migrations/023_enterprise_intelligence_reporting.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_scenario_matrix",
+      "file": "supabase/migrations/023_enterprise_intelligence_reporting.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_automation_command_summary",
+      "file": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_risk_appetite_dashboard",
+      "file": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_kri_breach_register",
+      "file": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_recurring_review_queue",
+      "file": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_automation_rule_catalog",
+      "file": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_committee_action_automation",
+      "file": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_executive_exception_dashboard",
+      "file": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_staging_validation_summary",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_staging_validation_checks",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_rls_persona_lab",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_i18n_translation_coverage",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_load_test_seed_status",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_production_backup_strategy_status",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_restore_verification_status",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_migration_runbook_status",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_consolidation_defect_dashboard",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_final_go_live_gateboard",
+      "file": "supabase/migrations/026_finish_fast_release_sprint.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_final_acceptance_tests",
+      "file": "supabase/migrations/026_finish_fast_release_sprint.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_final_cutover_plan",
+      "file": "supabase/migrations/026_finish_fast_release_sprint.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_final_consolidation_artifacts",
+      "file": "supabase/migrations/026_finish_fast_release_sprint.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_final_owner_clearance",
+      "file": "supabase/migrations/026_finish_fast_release_sprint.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_final_finish_fast_scorecard",
+      "file": "supabase/migrations/026_finish_fast_release_sprint.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v31_final_controls",
+      "file": "supabase/migrations/027_final_production_leap.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_v31_module_readiness",
+      "file": "supabase/migrations/027_final_production_leap.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v31_support_handover",
+      "file": "supabase/migrations/027_final_production_leap.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v31_pilot_acceptance",
+      "file": "supabase/migrations/027_final_production_leap.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v31_go_live_scorecard",
+      "file": "supabase/migrations/027_final_production_leap.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_release_factory_checks",
+      "file": "supabase/migrations/028_final_release_factory.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_consolidated_release_packages",
+      "file": "supabase/migrations/028_final_release_factory.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_final_handover_signoffs",
+      "file": "supabase/migrations/028_final_release_factory.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_release_factory_scorecard",
+      "file": "supabase/migrations/028_final_release_factory.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_v33_production_proof_gates",
+      "file": "supabase/migrations/029_production_proof_consolidation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v33_production_artifacts",
+      "file": "supabase/migrations/029_production_proof_consolidation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v33_pilot_waves",
+      "file": "supabase/migrations/029_production_proof_consolidation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v33_production_proof_scorecard",
+      "file": "supabase/migrations/029_production_proof_consolidation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v34_pilot_wave_summary",
+      "file": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v34_real_data_import_readiness",
+      "file": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v34_pilot_issue_board",
+      "file": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v34_go_live_rehearsal_readiness",
+      "file": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v34_company_rollout_readiness",
+      "file": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v35_consolidation_scorecard",
+      "file": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v35_final_blocker_board",
+      "file": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v35_data_quality_radar",
+      "file": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v35_operator_console",
+      "file": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v38_final_readiness_scorecard",
+      "file": "supabase/migrations/032_final_local_doctor_production_simulator.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v42_release_candidate_scorecard",
+      "file": "supabase/migrations/033_v42_production_validation_and_rls_lab.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_v42_supabase_install_status",
+      "file": "supabase/migrations/033_v42_production_validation_and_rls_lab.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v42_rls_persona_matrix",
+      "file": "supabase/migrations/033_v42_production_validation_and_rls_lab.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v42_rls_test_case_queue",
+      "file": "supabase/migrations/033_v42_production_validation_and_rls_lab.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v42_rls_readiness_summary",
+      "file": "supabase/migrations/033_v42_production_validation_and_rls_lab.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v46_ovr_production_queue",
+      "file": "supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_v46_ovr_risk_calibration",
+      "file": "supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_v46_language_rtl_readiness",
+      "file": "supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v46_production_hardening_scorecard",
+      "file": "supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v50_scale_readiness_scorecard",
+      "file": "supabase/migrations/035_v50_scale_backup_restore.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v50_query_optimization_queue",
+      "file": "supabase/migrations/035_v50_scale_backup_restore.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v50_backup_restore_scorecard",
+      "file": "supabase/migrations/035_v50_scale_backup_restore.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_v50_restore_dryrun_queue",
+      "file": "supabase/migrations/035_v50_scale_backup_restore.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_ovr_workflow_queue",
+      "file": "supabase/migrations/036_b_ovr_workflow_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_workflow_control_summary",
+      "file": "supabase/migrations/036_b_ovr_workflow_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_critical_attention_items",
+      "file": "supabase/migrations/036_b_ovr_workflow_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v58_pilot_readiness_scorecard",
+      "file": "supabase/migrations/037_v58_pilot_rollout_security_audit.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v58_rollout_readiness_scorecard",
+      "file": "supabase/migrations/037_v58_pilot_rollout_security_audit.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v58_security_review_scorecard",
+      "file": "supabase/migrations/037_v58_pilot_rollout_security_audit.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_v58_audit_trail_scorecard",
+      "file": "supabase/migrations/037_v58_pilot_rollout_security_audit.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_v58_overall_production_readiness",
+      "file": "supabase/migrations/037_v58_pilot_rollout_security_audit.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v59_mock_data_findings_summary",
+      "file": "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_v59_phase_test_scorecard",
+      "file": "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v59_latest_phase_results",
+      "file": "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v59_production_data_readiness",
+      "file": "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v60_no_mock_control_scorecard",
+      "file": "supabase/migrations/039_v60_no_mock_production_data_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_v60_latest_no_mock_audit",
+      "file": "supabase/migrations/039_v60_no_mock_production_data_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_v60_empty_state_readiness",
+      "file": "supabase/migrations/039_v60_no_mock_production_data_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v62_real_data_layer_scorecard",
+      "file": "supabase/migrations/040_v62_real_no_mock_data_layer.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v62_demo_boundary_scorecard",
+      "file": "supabase/migrations/040_v62_real_no_mock_data_layer.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v63_auth_route_protection_scorecard",
+      "file": "supabase/migrations/041_v63_auth_route_protection.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_v64_security_control_scorecard",
+      "file": "supabase/migrations/042_v64_database_security_proof.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v64_persona_test_matrix",
+      "file": "supabase/migrations/042_v64_database_security_proof.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_v64_database_security_readiness",
+      "file": "supabase/migrations/042_v64_database_security_proof.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_access_control_matrix",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_access_control_summary",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_access_control_warnings",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_backup_health_check",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_backup_restore_drillboard",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_backup_schedule_readiness",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_consolidated_release_packages",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_department_risk_heatmap",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_duplicate_profile_emails",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_evidence_review_queue",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_evidence_vault_inventory",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_export_center_summary",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_export_dataset_catalog",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_management_control_summary",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_quality_queue",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_repeated_category_alerts",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_attention_items",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_indicator_feed",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_indicator_summary",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_indicators_by_department",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_summary",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_workflow_control_summary",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_workflow_queue",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_pending_approvals_expanded",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_production_backup_strategy_status",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_radar_control_profile",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_release_candidate_gates",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_release_factory_checks",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_release_factory_scorecard",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_release_migration_order",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_risk_appetite_dashboard",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_security_access_findings",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_security_governance_summary",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ultra_release_summary",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v31_final_controls",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v42_release_candidate_scorecard",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v46_ovr_production_queue",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v46_ovr_risk_calibration",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v50_backup_restore_scorecard",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v58_audit_trail_scorecard",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v58_security_review_scorecard",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v59_mock_data_findings_summary",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v60_latest_no_mock_audit",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v60_no_mock_control_scorecard",
+      "file": "supabase/migrations/043_v641_database_security_static_remediation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v63_auth_route_protection_scorecard",
+      "file": "supabase/migrations/044_v642_auth_route_rls_static_fix.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    }
+  ],
+  "findings": [
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_activity_timeline",
+      "file": "supabase/migrations/017_notifications_activity_timelines.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_admin_safety_console",
+      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_automation_command_summary",
+      "file": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_automation_rule_catalog",
+      "file": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_bilingual_dictionary_status",
+      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_board_pack_summary",
+      "file": "supabase/migrations/023_enterprise_intelligence_reporting.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_bulk_import_batch_summary",
+      "file": "supabase/migrations/008_import_export_rollout_tools.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_committee_action_automation",
+      "file": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_consolidation_defect_dashboard",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_critical_attention_items",
+      "file": "supabase/migrations/005_operational_views_and_storage.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_cross_module_relationship_map",
+      "file": "supabase/migrations/021_command_search_documents_release.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_data_retention_readiness",
+      "file": "supabase/migrations/020_security_audit_retention_controls.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_delay_reason_queue",
+      "file": "supabase/migrations/007_escalation_and_governance_controls.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_department_execution_summary",
+      "file": "supabase/migrations/006_workflow_queues_and_project_controls.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_department_scorecard_v2",
+      "file": "supabase/migrations/023_enterprise_intelligence_reporting.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_deployment_readiness_gates",
+      "file": "supabase/migrations/018_qa_permission_deployment_readiness.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_document_center_items",
+      "file": "supabase/migrations/021_command_search_documents_release.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_document_center_summary",
+      "file": "supabase/migrations/021_command_search_documents_release.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_due_reminder_queue",
+      "file": "supabase/migrations/017_notifications_activity_timelines.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_duplicate_active_department_codes",
+      "file": "supabase/migrations/008_import_export_rollout_tools.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_duplicate_active_unit_codes",
+      "file": "supabase/migrations/008_import_export_rollout_tools.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_escalation_center",
+      "file": "supabase/migrations/007_escalation_and_governance_controls.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_executive_command_stream",
+      "file": "supabase/migrations/021_command_search_documents_release.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_executive_command_summary",
+      "file": "supabase/migrations/021_command_search_documents_release.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_executive_exception_dashboard",
+      "file": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_executive_grc_summary",
+      "file": "supabase/migrations/002_grc_layer.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_final_acceptance_tests",
+      "file": "supabase/migrations/026_finish_fast_release_sprint.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_final_consolidation_artifacts",
+      "file": "supabase/migrations/026_finish_fast_release_sprint.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_final_cutover_plan",
+      "file": "supabase/migrations/026_finish_fast_release_sprint.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_final_finish_fast_scorecard",
+      "file": "supabase/migrations/026_finish_fast_release_sprint.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_final_go_live_gateboard",
+      "file": "supabase/migrations/026_finish_fast_release_sprint.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_final_handover_signoffs",
+      "file": "supabase/migrations/028_final_release_factory.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_final_owner_clearance",
+      "file": "supabase/migrations/026_finish_fast_release_sprint.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_global_search_index",
+      "file": "supabase/migrations/021_command_search_documents_release.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_grc_kpi_scorecard",
+      "file": "supabase/migrations/013_kpi_analytics_heatmap_radar.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_i18n_translation_coverage",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_kri_breach_register",
+      "file": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_load_test_seed_status",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_manager_inbox",
+      "file": "supabase/migrations/017_notifications_activity_timelines.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_migration_runbook_status",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_migration_verification_matrix",
+      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_mobile_readiness_gates",
+      "file": "supabase/migrations/019_performance_responsive_usability.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_module_payload_pressure",
+      "file": "supabase/migrations/019_performance_responsive_usability.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_monthly_grc_trend",
+      "file": "supabase/migrations/013_kpi_analytics_heatmap_radar.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_my_open_work",
+      "file": "supabase/migrations/005_operational_views_and_storage.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_my_open_work_expanded",
+      "file": "supabase/migrations/006_workflow_queues_and_project_controls.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_notification_digest",
+      "file": "supabase/migrations/017_notifications_activity_timelines.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_operational_followup_summary",
+      "file": "supabase/migrations/017_notifications_activity_timelines.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_permission_test_personas",
+      "file": "supabase/migrations/018_qa_permission_deployment_readiness.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_print_report_index",
+      "file": "supabase/migrations/015_production_hardening_health_print_controls.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_production_cutover_checklist",
+      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_qa_readiness_summary",
+      "file": "supabase/migrations/018_qa_permission_deployment_readiness.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_qa_test_case_library",
+      "file": "supabase/migrations/018_qa_permission_deployment_readiness.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_qa_test_runs_summary",
+      "file": "supabase/migrations/018_qa_permission_deployment_readiness.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_recurring_review_queue",
+      "file": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_report_builder_catalog",
+      "file": "supabase/migrations/023_enterprise_intelligence_reporting.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_restore_verification_status",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_rls_persona_lab",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_rollout_data_health_summary",
+      "file": "supabase/migrations/008_import_export_rollout_tools.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_scenario_matrix",
+      "file": "supabase/migrations/023_enterprise_intelligence_reporting.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_sensitive_activity_timeline",
+      "file": "supabase/migrations/020_security_audit_retention_controls.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_setup_readiness_checklist",
+      "file": "supabase/migrations/016_rollout_onboarding_user_guides.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_staging_validation_checks",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_staging_validation_summary",
+      "file": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_ui_performance_summary",
+      "file": "supabase/migrations/019_performance_responsive_usability.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v31_go_live_scorecard",
+      "file": "supabase/migrations/027_final_production_leap.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v31_module_readiness",
+      "file": "supabase/migrations/027_final_production_leap.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v31_pilot_acceptance",
+      "file": "supabase/migrations/027_final_production_leap.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v31_support_handover",
+      "file": "supabase/migrations/027_final_production_leap.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v33_pilot_waves",
+      "file": "supabase/migrations/029_production_proof_consolidation.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v33_production_artifacts",
+      "file": "supabase/migrations/029_production_proof_consolidation.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v33_production_proof_gates",
+      "file": "supabase/migrations/029_production_proof_consolidation.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v33_production_proof_scorecard",
+      "file": "supabase/migrations/029_production_proof_consolidation.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v34_company_rollout_readiness",
+      "file": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v34_go_live_rehearsal_readiness",
+      "file": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v34_pilot_issue_board",
+      "file": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v34_pilot_wave_summary",
+      "file": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v34_real_data_import_readiness",
+      "file": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v38_final_readiness_scorecard",
+      "file": "supabase/migrations/032_final_local_doctor_production_simulator.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v42_rls_persona_matrix",
+      "file": "supabase/migrations/033_v42_production_validation_and_rls_lab.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v42_rls_readiness_summary",
+      "file": "supabase/migrations/033_v42_production_validation_and_rls_lab.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v42_rls_test_case_queue",
+      "file": "supabase/migrations/033_v42_production_validation_and_rls_lab.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v42_supabase_install_status",
+      "file": "supabase/migrations/033_v42_production_validation_and_rls_lab.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v46_language_rtl_readiness",
+      "file": "supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v46_production_hardening_scorecard",
+      "file": "supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v50_query_optimization_queue",
+      "file": "supabase/migrations/035_v50_scale_backup_restore.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v50_restore_dryrun_queue",
+      "file": "supabase/migrations/035_v50_scale_backup_restore.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v50_scale_readiness_scorecard",
+      "file": "supabase/migrations/035_v50_scale_backup_restore.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v58_overall_production_readiness",
+      "file": "supabase/migrations/037_v58_pilot_rollout_security_audit.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v58_pilot_readiness_scorecard",
+      "file": "supabase/migrations/037_v58_pilot_rollout_security_audit.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v58_rollout_readiness_scorecard",
+      "file": "supabase/migrations/037_v58_pilot_rollout_security_audit.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v59_latest_phase_results",
+      "file": "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v59_phase_test_scorecard",
+      "file": "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v59_production_data_readiness",
+      "file": "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v60_empty_state_readiness",
+      "file": "supabase/migrations/039_v60_no_mock_production_data_controls.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v62_demo_boundary_scorecard",
+      "file": "supabase/migrations/040_v62_real_no_mock_data_layer.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_v62_real_data_layer_scorecard",
+      "file": "supabase/migrations/040_v62_real_no_mock_data_layer.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_workflow_blockers",
+      "file": "supabase/migrations/015_production_hardening_health_print_controls.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v35_consolidation_scorecard",
+      "file": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v35_data_quality_radar",
+      "file": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v35_final_blocker_board",
+      "file": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v35_operator_console",
+      "file": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    }
+  ]
+}

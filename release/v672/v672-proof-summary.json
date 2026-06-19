@@ -1,0 +1,36 @@
+{
+  "generated_at": "2026-06-19T03:40:28.612Z",
+  "commands": [
+    {
+      "script": "v662:strict-proof",
+      "exit_code": 0,
+      "passed": true,
+      "error": null
+    },
+    {
+      "script": "v661:strict-proof",
+      "exit_code": 0,
+      "passed": true,
+      "error": null
+    },
+    {
+      "script": "v66:strict-proof",
+      "exit_code": 1,
+      "passed": false,
+      "error": null
+    },
+    {
+      "script": "v663:progress-audit",
+      "exit_code": 0,
+      "passed": true,
+      "error": null
+    }
+  ],
+  "manual_evidence_missing": 0,
+  "blocking_count": 1,
+  "quality_status": "ready_for_controlled_pilot_evidence_review",
+  "v661_status": "ready_for_controlled_pilot_review",
+  "v66_status": "not_ready_manual_evidence_required",
+  "progress_status": "needs_cleanup_or_manual_evidence",
+  "human_approval_note": "pilot-signoff.md is draft-only; management, IT, and Quality approval remains external to this automation."
+}

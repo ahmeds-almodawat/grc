@@ -1,0 +1,302 @@
+[
+  {
+    "code": "D001",
+    "name_en": "Department 1",
+    "name_ar": "القسم 1",
+    "division_code": "DIV01"
+  },
+  {
+    "code": "D002",
+    "name_en": "Department 2",
+    "name_ar": "القسم 2",
+    "division_code": "DIV02"
+  },
+  {
+    "code": "D003",
+    "name_en": "Department 3",
+    "name_ar": "القسم 3",
+    "division_code": "DIV03"
+  },
+  {
+    "code": "D004",
+    "name_en": "Department 4",
+    "name_ar": "القسم 4",
+    "division_code": "DIV04"
+  },
+  {
+    "code": "D005",
+    "name_en": "Department 5",
+    "name_ar": "القسم 5",
+    "division_code": "DIV05"
+  },
+  {
+    "code": "D006",
+    "name_en": "Department 6",
+    "name_ar": "القسم 6",
+    "division_code": "DIV01"
+  },
+  {
+    "code": "D007",
+    "name_en": "Department 7",
+    "name_ar": "القسم 7",
+    "division_code": "DIV02"
+  },
+  {
+    "code": "D008",
+    "name_en": "Department 8",
+    "name_ar": "القسم 8",
+    "division_code": "DIV03"
+  },
+  {
+    "code": "D009",
+    "name_en": "Department 9",
+    "name_ar": "القسم 9",
+    "division_code": "DIV04"
+  },
+  {
+    "code": "D010",
+    "name_en": "Department 10",
+    "name_ar": "القسم 10",
+    "division_code": "DIV05"
+  },
+  {
+    "code": "D011",
+    "name_en": "Department 11",
+    "name_ar": "القسم 11",
+    "division_code": "DIV01"
+  },
+  {
+    "code": "D012",
+    "name_en": "Department 12",
+    "name_ar": "القسم 12",
+    "division_code": "DIV02"
+  },
+  {
+    "code": "D013",
+    "name_en": "Department 13",
+    "name_ar": "القسم 13",
+    "division_code": "DIV03"
+  },
+  {
+    "code": "D014",
+    "name_en": "Department 14",
+    "name_ar": "القسم 14",
+    "division_code": "DIV04"
+  },
+  {
+    "code": "D015",
+    "name_en": "Department 15",
+    "name_ar": "القسم 15",
+    "division_code": "DIV05"
+  },
+  {
+    "code": "D016",
+    "name_en": "Department 16",
+    "name_ar": "القسم 16",
+    "division_code": "DIV01"
+  },
+  {
+    "code": "D017",
+    "name_en": "Department 17",
+    "name_ar": "القسم 17",
+    "division_code": "DIV02"
+  },
+  {
+    "code": "D018",
+    "name_en": "Department 18",
+    "name_ar": "القسم 18",
+    "division_code": "DIV03"
+  },
+  {
+    "code": "D019",
+    "name_en": "Department 19",
+    "name_ar": "القسم 19",
+    "division_code": "DIV04"
+  },
+  {
+    "code": "D020",
+    "name_en": "Department 20",
+    "name_ar": "القسم 20",
+    "division_code": "DIV05"
+  },
+  {
+    "code": "D021",
+    "name_en": "Department 21",
+    "name_ar": "القسم 21",
+    "division_code": "DIV01"
+  },
+  {
+    "code": "D022",
+    "name_en": "Department 22",
+    "name_ar": "القسم 22",
+    "division_code": "DIV02"
+  },
+  {
+    "code": "D023",
+    "name_en": "Department 23",
+    "name_ar": "القسم 23",
+    "division_code": "DIV03"
+  },
+  {
+    "code": "D024",
+    "name_en": "Department 24",
+    "name_ar": "القسم 24",
+    "division_code": "DIV04"
+  },
+  {
+    "code": "D025",
+    "name_en": "Department 25",
+    "name_ar": "القسم 25",
+    "division_code": "DIV05"
+  },
+  {
+    "code": "D026",
+    "name_en": "Department 26",
+    "name_ar": "القسم 26",
+    "division_code": "DIV01"
+  },
+  {
+    "code": "D027",
+    "name_en": "Department 27",
+    "name_ar": "القسم 27",
+    "division_code": "DIV02"
+  },
+  {
+    "code": "D028",
+    "name_en": "Department 28",
+    "name_ar": "القسم 28",
+    "division_code": "DIV03"
+  },
+  {
+    "code": "D029",
+    "name_en": "Department 29",
+    "name_ar": "القسم 29",
+    "division_code": "DIV04"
+  },
+  {
+    "code": "D030",
+    "name_en": "Department 30",
+    "name_ar": "القسم 30",
+    "division_code": "DIV05"
+  },
+  {
+    "code": "D031",
+    "name_en": "Department 31",
+    "name_ar": "القسم 31",
+    "division_code": "DIV01"
+  },
+  {
+    "code": "D032",
+    "name_en": "Department 32",
+    "name_ar": "القسم 32",
+    "division_code": "DIV02"
+  },
+  {
+    "code": "D033",
+    "name_en": "Department 33",
+    "name_ar": "القسم 33",
+    "division_code": "DIV03"
+  },
+  {
+    "code": "D034",
+    "name_en": "Department 34",
+    "name_ar": "القسم 34",
+    "division_code": "DIV04"
+  },
+  {
+    "code": "D035",
+    "name_en": "Department 35",
+    "name_ar": "القسم 35",
+    "division_code": "DIV05"
+  },
+  {
+    "code": "D036",
+    "name_en": "Department 36",
+    "name_ar": "القسم 36",
+    "division_code": "DIV01"
+  },
+  {
+    "code": "D037",
+    "name_en": "Department 37",
+    "name_ar": "القسم 37",
+    "division_code": "DIV02"
+  },
+  {
+    "code": "D038",
+    "name_en": "Department 38",
+    "name_ar": "القسم 38",
+    "division_code": "DIV03"
+  },
+  {
+    "code": "D039",
+    "name_en": "Department 39",
+    "name_ar": "القسم 39",
+    "division_code": "DIV04"
+  },
+  {
+    "code": "D040",
+    "name_en": "Department 40",
+    "name_ar": "القسم 40",
+    "division_code": "DIV05"
+  },
+  {
+    "code": "D041",
+    "name_en": "Department 41",
+    "name_ar": "القسم 41",
+    "division_code": "DIV01"
+  },
+  {
+    "code": "D042",
+    "name_en": "Department 42",
+    "name_ar": "القسم 42",
+    "division_code": "DIV02"
+  },
+  {
+    "code": "D043",
+    "name_en": "Department 43",
+    "name_ar": "القسم 43",
+    "division_code": "DIV03"
+  },
+  {
+    "code": "D044",
+    "name_en": "Department 44",
+    "name_ar": "القسم 44",
+    "division_code": "DIV04"
+  },
+  {
+    "code": "D045",
+    "name_en": "Department 45",
+    "name_ar": "القسم 45",
+    "division_code": "DIV05"
+  },
+  {
+    "code": "D046",
+    "name_en": "Department 46",
+    "name_ar": "القسم 46",
+    "division_code": "DIV01"
+  },
+  {
+    "code": "D047",
+    "name_en": "Department 47",
+    "name_ar": "القسم 47",
+    "division_code": "DIV02"
+  },
+  {
+    "code": "D048",
+    "name_en": "Department 48",
+    "name_ar": "القسم 48",
+    "division_code": "DIV03"
+  },
+  {
+    "code": "D049",
+    "name_en": "Department 49",
+    "name_ar": "القسم 49",
+    "division_code": "DIV04"
+  },
+  {
+    "code": "D050",
+    "name_en": "Department 50",
+    "name_ar": "القسم 50",
+    "division_code": "DIV05"
+  }
+]

@@ -1,0 +1,108 @@
+{
+  "generated_at": "2026-06-18T23:47:00.571Z",
+  "changed_files": 25,
+  "changed_files_detail": [
+    {
+      "file": "src/lib/automationApi.ts",
+      "replacements": 7
+    },
+    {
+      "file": "src/lib/commandCenterApi.ts",
+      "replacements": 8
+    },
+    {
+      "file": "src/lib/consolidationApi.ts",
+      "replacements": 4
+    },
+    {
+      "file": "src/lib/enterpriseApi.ts",
+      "replacements": 6
+    },
+    {
+      "file": "src/lib/finalizationApi.ts",
+      "replacements": 6
+    },
+    {
+      "file": "src/lib/grcApi.ts",
+      "replacements": 32
+    },
+    {
+      "file": "src/lib/hardeningApi.ts",
+      "replacements": 3
+    },
+    {
+      "file": "src/lib/liveResult.ts",
+      "replacements": 0
+    },
+    {
+      "file": "src/lib/onboardingApi.ts",
+      "replacements": 2
+    },
+    {
+      "file": "src/lib/operationsApi.ts",
+      "replacements": 5
+    },
+    {
+      "file": "src/lib/performanceApi.ts",
+      "replacements": 3
+    },
+    {
+      "file": "src/lib/pilotOpsApi.ts",
+      "replacements": 4
+    },
+    {
+      "file": "src/lib/productionDataPolicy.ts",
+      "replacements": 0
+    },
+    {
+      "file": "src/lib/productionProofApi.ts",
+      "replacements": 4
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "replacements": 4
+    },
+    {
+      "file": "src/lib/releaseOpsApi.ts",
+      "replacements": 6
+    },
+    {
+      "file": "src/lib/securityApi.ts",
+      "replacements": 4
+    },
+    {
+      "file": "src/lib/stabilizationApi.ts",
+      "replacements": 9
+    },
+    {
+      "file": "src/lib/supabaseClient.ts",
+      "replacements": 0
+    },
+    {
+      "file": "src/lib/testingApi.ts",
+      "replacements": 5
+    },
+    {
+      "file": "src/lib/v35ConsolidationApi.ts",
+      "replacements": 3
+    },
+    {
+      "file": "src/lib/v50ScaleBackupApi.ts",
+      "replacements": 2
+    },
+    {
+      "file": "src/pages/BackupHealthCheck.tsx",
+      "replacements": 0
+    },
+    {
+      "file": "src/pages/NoMockAutoTestCenter.tsx",
+      "replacements": 0
+    },
+    {
+      "file": "src/pages/ProductionDataControlCenter.tsx",
+      "replacements": 0
+    }
+  ],
+  "backup_dir": "release\\v67\\backups",
+  "note": "Fallback/demo/mock runtime symbols were converted to production-safe empty live-data placeholders. This does not attach manual staging evidence."
+}

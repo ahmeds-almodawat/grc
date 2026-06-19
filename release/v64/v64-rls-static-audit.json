@@ -1,0 +1,396 @@
+{
+  "summary": {
+    "generated_at": "2026-06-19T14:27:12.021Z",
+    "migration_files_scanned": 48,
+    "created_tables_detected": 169,
+    "tables_with_explicit_rls": 122,
+    "tables_with_detected_policies": 120,
+    "findings_total": 47,
+    "critical": 0,
+    "high": 0,
+    "medium": 47,
+    "strict_passed": true,
+    "note": "Static audit only. Final proof requires applying migrations to staging and running supabase/tests/v64_persona_security_tests.sql."
+  },
+  "findings": [
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "automation_rules",
+      "created_in": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "automation_run_log",
+      "created_in": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "company_rollout_waves",
+      "created_in": "supabase/migrations/037_v58_pilot_rollout_security_audit.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "consolidation_defect_log",
+      "created_in": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "consolidation_defects",
+      "created_in": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "consolidation_patch_manifest",
+      "created_in": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "cutover_freeze_windows",
+      "created_in": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "executive_exception_rules",
+      "created_in": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "final_go_live_stop_rules",
+      "created_in": "supabase/migrations/032_final_local_doctor_production_simulator.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "final_handover_signoffs",
+      "created_in": "supabase/migrations/028_final_release_factory.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "final_pilot_signoff_matrix",
+      "created_in": "supabase/migrations/032_final_local_doctor_production_simulator.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "final_validation_runs",
+      "created_in": "supabase/migrations/032_final_local_doctor_production_simulator.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "go_live_rehearsals",
+      "created_in": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "go_live_sop_steps",
+      "created_in": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "i18n_translation_coverage_items",
+      "created_in": "supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "kri_observations",
+      "created_in": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "load_test_seed_batches",
+      "created_in": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "migration_runbook_entries",
+      "created_in": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "mock_data_allowlist",
+      "created_in": "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "phased_auto_test_cases",
+      "created_in": "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "phased_auto_test_phases",
+      "created_in": "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "phased_auto_test_results",
+      "created_in": "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "phased_auto_test_runs",
+      "created_in": "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "pilot_execution_runs",
+      "created_in": "supabase/migrations/037_v58_pilot_rollout_security_audit.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "pilot_feedback_items",
+      "created_in": "supabase/migrations/037_v58_pilot_rollout_security_audit.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "pilot_fix_sprint_items",
+      "created_in": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "pilot_fix_sprints",
+      "created_in": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "pilot_issues",
+      "created_in": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "pilot_participants",
+      "created_in": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "pilot_rollout_acceptance",
+      "created_in": "supabase/migrations/027_final_production_leap.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "pilot_signoffs",
+      "created_in": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "pilot_waves",
+      "created_in": "supabase/migrations/030_pilot_real_data_operations.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "production_data_switchovers",
+      "created_in": "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "production_empty_state_checks",
+      "created_in": "supabase/migrations/039_v60_no_mock_production_data_controls.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "production_exception_register_v58",
+      "created_in": "supabase/migrations/037_v58_pilot_rollout_security_audit.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "production_operator_daily_log",
+      "created_in": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "production_pilot_waves",
+      "created_in": "supabase/migrations/029_production_proof_consolidation.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "production_proof_gates",
+      "created_in": "supabase/migrations/029_production_proof_consolidation.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "production_support_handover",
+      "created_in": "supabase/migrations/027_final_production_leap.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "real_data_repair_queue",
+      "created_in": "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "recurring_reviews",
+      "created_in": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "rtl_visual_qa_items",
+      "created_in": "supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "staging_validation_check_results",
+      "created_in": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "staging_validation_cycles",
+      "created_in": "supabase/migrations/025_staging_validation_consolidation.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "v50_query_optimization_items",
+      "created_in": "supabase/migrations/035_v50_scale_backup_restore.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "v50_scale_test_plans",
+      "created_in": "supabase/migrations/035_v50_scale_backup_restore.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "v50_scale_test_results",
+      "created_in": "supabase/migrations/035_v50_scale_backup_restore.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    }
+  ],
+  "sources": [
+    "supabase/migrations/001_core_foundation.sql",
+    "supabase/migrations/002_grc_layer.sql",
+    "supabase/migrations/003_rls_permissions_and_controls.sql",
+    "supabase/migrations/004_seed_reference_data.sql",
+    "supabase/migrations/005_operational_views_and_storage.sql",
+    "supabase/migrations/006_workflow_queues_and_project_controls.sql",
+    "supabase/migrations/007_escalation_and_governance_controls.sql",
+    "supabase/migrations/008_import_export_rollout_tools.sql",
+    "supabase/migrations/009_access_control_and_role_governance.sql",
+    "supabase/migrations/010_bilingual_and_ovr_module.sql",
+    "supabase/migrations/011_ovr_risk_indicators.sql",
+    "supabase/migrations/012_ovr_workflow_enum_values.sql",
+    "supabase/migrations/013_kpi_analytics_heatmap_radar.sql",
+    "supabase/migrations/014_export_center_backups_custom_reports.sql",
+    "supabase/migrations/015_production_hardening_health_print_controls.sql",
+    "supabase/migrations/0165_ovr_workflow_prerequisites.sql",
+    "supabase/migrations/016_rollout_onboarding_user_guides.sql",
+    "supabase/migrations/017_notifications_activity_timelines.sql",
+    "supabase/migrations/018_qa_permission_deployment_readiness.sql",
+    "supabase/migrations/019_performance_responsive_usability.sql",
+    "supabase/migrations/020_security_audit_retention_controls.sql",
+    "supabase/migrations/021_command_search_documents_release.sql",
+    "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+    "supabase/migrations/023_enterprise_intelligence_reporting.sql",
+    "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
+    "supabase/migrations/025_staging_validation_consolidation.sql",
+    "supabase/migrations/026_finish_fast_release_sprint.sql",
+    "supabase/migrations/027_final_production_leap.sql",
+    "supabase/migrations/028_final_release_factory.sql",
+    "supabase/migrations/029_production_proof_consolidation.sql",
+    "supabase/migrations/030_pilot_real_data_operations.sql",
+    "supabase/migrations/031_consolidation_pilot_fix_kit.sql",
+    "supabase/migrations/032_final_local_doctor_production_simulator.sql",
+    "supabase/migrations/033_v42_production_validation_and_rls_lab.sql",
+    "supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql",
+    "supabase/migrations/035_v50_scale_backup_restore.sql",
+    "supabase/migrations/036_b_ovr_workflow_controls.sql",
+    "supabase/migrations/037_v58_pilot_rollout_security_audit.sql",
+    "supabase/migrations/038_v59_no_mock_phased_auto_tests.sql",
+    "supabase/migrations/039_v60_no_mock_production_data_controls.sql",
+    "supabase/migrations/040_v62_real_no_mock_data_layer.sql",
+    "supabase/migrations/041_v63_auth_route_protection.sql",
+    "supabase/migrations/042_v64_database_security_proof.sql",
+    "supabase/migrations/043_v641_database_security_static_remediation.sql",
+    "supabase/migrations/044_v642_auth_route_rls_static_fix.sql",
+    "supabase/migrations/045_v66_controlled_pilot_evidence.sql",
+    "supabase/migrations/046_v673_lockdown_security_definer_execute.sql",
+    "supabase/migrations/047_v72_runtime_bridge_and_persona_security.sql"
+  ]
+}

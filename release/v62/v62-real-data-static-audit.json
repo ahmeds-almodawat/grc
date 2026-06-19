@@ -1,0 +1,118 @@
+{
+  "generated_at": "2026-06-19T14:26:43.637Z",
+  "scanned_files": 118,
+  "total_findings": 15,
+  "production_blocking_findings": 0,
+  "critical": 0,
+  "high": 0,
+  "medium": 15,
+  "files_with_findings": 14,
+  "policy": "No direct demo imports, no hardcoded runtime demo/fallback records, no runtime fallback returns. Empty/error states must be explicit.",
+  "findings": [
+    {
+      "severity": "medium",
+      "code": "HARDCODED_DEMO_ORG_SIGNAL",
+      "file": "src/lib/automationApi.ts",
+      "line": 212,
+      "text": "organization_id: 'demo-org',"
+    },
+    {
+      "severity": "medium",
+      "code": "QUERY_ERROR_SWALLOWED_AS_EMPTY",
+      "file": "src/lib/commandCenterApi.ts",
+      "line": null,
+      "text": "Catch block may convert query errors into empty/null values."
+    },
+    {
+      "severity": "medium",
+      "code": "QUERY_ERROR_SWALLOWED_AS_EMPTY",
+      "file": "src/lib/grcApi.ts",
+      "line": null,
+      "text": "Catch block may convert query errors into empty/null values."
+    },
+    {
+      "severity": "medium",
+      "code": "HARDCODED_DEMO_ORG_SIGNAL",
+      "file": "src/lib/hardeningApi.ts",
+      "line": 149,
+      "text": "if (!supabase || organizationId === 'demo') return null;"
+    },
+    {
+      "severity": "medium",
+      "code": "HARDCODED_DEMO_ORG_SIGNAL",
+      "file": "src/lib/hardeningApi.ts",
+      "line": 167,
+      "text": "if (!supabase || !params.organizationId || params.organizationId === 'demo') return;"
+    },
+    {
+      "severity": "medium",
+      "code": "QUERY_ERROR_SWALLOWED_AS_EMPTY",
+      "file": "src/lib/onboardingApi.ts",
+      "line": null,
+      "text": "Catch block may convert query errors into empty/null values."
+    },
+    {
+      "severity": "medium",
+      "code": "QUERY_ERROR_SWALLOWED_AS_EMPTY",
+      "file": "src/lib/operationsApi.ts",
+      "line": null,
+      "text": "Catch block may convert query errors into empty/null values."
+    },
+    {
+      "severity": "medium",
+      "code": "QUERY_ERROR_SWALLOWED_AS_EMPTY",
+      "file": "src/lib/performanceApi.ts",
+      "line": null,
+      "text": "Catch block may convert query errors into empty/null values."
+    },
+    {
+      "severity": "medium",
+      "code": "QUERY_ERROR_SWALLOWED_AS_EMPTY",
+      "file": "src/lib/releaseOpsApi.ts",
+      "line": null,
+      "text": "Catch block may convert query errors into empty/null values."
+    },
+    {
+      "severity": "medium",
+      "code": "QUERY_ERROR_SWALLOWED_AS_EMPTY",
+      "file": "src/lib/securityApi.ts",
+      "line": null,
+      "text": "Catch block may convert query errors into empty/null values."
+    },
+    {
+      "severity": "medium",
+      "code": "QUERY_ERROR_SWALLOWED_AS_EMPTY",
+      "file": "src/lib/testingApi.ts",
+      "line": null,
+      "text": "Catch block may convert query errors into empty/null values."
+    },
+    {
+      "severity": "medium",
+      "code": "HARDCODED_DEMO_ORG_SIGNAL",
+      "file": "src/pages/AccessControl.tsx",
+      "line": 77,
+      "text": "const organizationId = organizations.data?.[0]?.id || 'demo-org';"
+    },
+    {
+      "severity": "medium",
+      "code": "HARDCODED_DEMO_ORG_SIGNAL",
+      "file": "src/pages/BackupHealthCheck.tsx",
+      "line": 52,
+      "text": "const organizationId = health[0]?.organization_id ?? 'demo';"
+    },
+    {
+      "severity": "medium",
+      "code": "HARDCODED_DEMO_ORG_SIGNAL",
+      "file": "src/pages/OVR.tsx",
+      "line": 163,
+      "text": "const organizationId = organizations.data?.[0]?.id || 'demo-org';"
+    },
+    {
+      "severity": "medium",
+      "code": "HARDCODED_DEMO_ORG_SIGNAL",
+      "file": "src/components/ProjectDetail.tsx",
+      "line": 31,
+      "text": "const organizationId = project.organization_id || 'demo-org';"
+    }
+  ]
+}

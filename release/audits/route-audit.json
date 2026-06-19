@@ -1,0 +1,10 @@
+{
+  "generatedAt": "2026-06-17T21:40:21.570Z",
+  "routeCount": 61,
+  "navCount": 61,
+  "switchCount": 61,
+  "missingSwitch": [],
+  "navWithoutRoute": [],
+  "unusedSwitch": [],
+  "status": "pass"
+}

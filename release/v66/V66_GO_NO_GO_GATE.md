@@ -1,0 +1,46 @@
+# v6.6 Go / No-Go Gate
+
+```json
+{
+  "generated_at": "2026-06-19T14:27:41.727Z",
+  "controlled_pilot_status": "not_ready_manual_evidence_required",
+  "strict_passed": false,
+  "gates": [
+    {
+      "id": "local_typecheck_build",
+      "status": "passed"
+    },
+    {
+      "id": "v60_no_mock_strict",
+      "status": "evidence_present"
+    },
+    {
+      "id": "v64_static_security",
+      "status": "evidence_present"
+    },
+    {
+      "id": "v65_real_tests",
+      "status": "evidence_present"
+    },
+    {
+      "id": "manual_staging_evidence",
+      "status": "manual_required"
+    }
+  ],
+  "missing_manual_evidence": [
+    {
+      "id": "ovr_confidentiality_no_real_patient_data",
+      "title": "OVR confidentiality rule confirmed for pilot",
+      "status": "manual_required",
+      "evidence_needed": "Quality/IT confirmation that pilot will not include real patient identifiers or confidential OVR details until persona proof passes."
+    },
+    {
+      "id": "pilot_signoff_it_quality_admin",
+      "title": "IT, Quality, and Admin pilot signoff completed",
+      "status": "manual_required",
+      "evidence_needed": "Signed v66 pilot signoff file with names/dates."
+    }
+  ],
+  "recommendation": "Use only for controlled internal testing until missing manual staging evidence is attached."
+}
+```

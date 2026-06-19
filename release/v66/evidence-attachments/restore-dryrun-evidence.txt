@@ -1,0 +1,50 @@
+v6.7.4 Restore Integrity Dry-Run Evidence
+Environment: Local Supabase Docker staging
+Generated UTC: 2026-06-19T14:27:28.570Z
+Source database: postgres in supabase_db_grc-control-center
+Temporary verification database: grc_v674_restore_verify
+Dump scope: auth, public, storage, supabase_migrations
+Managed service scope limitation: realtime and other Supabase service internals are not claimed by this application-data restore proof.
+Dump size bytes: 1672768
+
+Key table count comparison:
+- public.organizations: source=1, restored=1, MATCHED
+- public.profiles: source=0, restored=0, MATCHED
+- public.user_roles: source=0, restored=0, MATCHED
+- public.projects: source=2, restored=2, MATCHED
+- public.milestones: source=0, restored=0, MATCHED
+- public.tasks: source=0, restored=0, MATCHED
+- public.ovr_reports: source=0, restored=0, MATCHED
+- public.evidence_files: source=0, restored=0, MATCHED
+- public.approvals: source=0, restored=0, MATCHED
+- public.controlled_pilot_runs: source=1, restored=1, MATCHED
+- public.controlled_pilot_evidence_items: source=0, restored=0, MATCHED
+- public.controlled_pilot_issues: source=0, restored=0, MATCHED
+- public.controlled_pilot_signoffs: source=0, restored=0, MATCHED
+- storage.buckets: source=1, restored=1, MATCHED
+- storage.objects: source=0, restored=0, MATCHED
+- supabase_migrations.schema_migrations: source=48, restored=48, MATCHED
+
+Evidence-related table verification:
+- public.evidence_files: VERIFIED
+- public.v64_security_evidence: VERIFIED
+- public.controlled_pilot_evidence_items: VERIFIED
+- storage.buckets: VERIFIED
+- storage.objects: VERIFIED
+
+Post-restore smoke query: PASSED
+{
+  "database": "grc_v674_restore_verify",
+  "latest_migration": "047_v72_runtime_bridge_and_persona_security",
+  "organization_count": 1,
+  "evidence_file_count": 0,
+  "pilot_evidence_count": 0,
+  "storage_object_count": 0
+}
+
+Temporary database cleanup: PASSED
+Final status: RESTORE VERIFIED / PASSED
+V674_RESTORE_INTEGRITY_VERIFIED
+Failure: none
+
+Detailed machine-readable report: release/v674/v674-restore-integrity-dryrun.json

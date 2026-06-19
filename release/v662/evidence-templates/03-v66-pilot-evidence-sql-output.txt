@@ -1,0 +1,9 @@
+TEMPLATE - replace with real v66 pilot evidence SQL output
+
+Required content:
+- output from v66_controlled_pilot_evidence_tests.sql
+- evidence register checks
+- go/no-go evidence checks
+- final status: PASSED / VERIFIED / SUCCESS
+
+Do not move this template into evidence-attachments without replacing it with real output.

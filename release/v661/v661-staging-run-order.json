@@ -1,0 +1,78 @@
+{
+  "generated_at": "2026-06-18T21:32:28.382Z",
+  "migration_count": 45,
+  "latest_migration": "045_v66_controlled_pilot_evidence.sql",
+  "required_latest_migration": "045_v66_controlled_pilot_evidence.sql",
+  "has_required_latest_migration": true,
+  "migrations": [
+    "001_core_foundation.sql",
+    "002_grc_layer.sql",
+    "003_rls_permissions_and_controls.sql",
+    "004_seed_reference_data.sql",
+    "005_operational_views_and_storage.sql",
+    "006_workflow_queues_and_project_controls.sql",
+    "007_escalation_and_governance_controls.sql",
+    "008_import_export_rollout_tools.sql",
+    "009_access_control_and_role_governance.sql",
+    "010_bilingual_and_ovr_module.sql",
+    "011_ovr_risk_indicators.sql",
+    "012a_ovr_workflow_enum_values.sql",
+    "013_kpi_analytics_heatmap_radar.sql",
+    "014_export_center_backups_custom_reports.sql",
+    "015_production_hardening_health_print_controls.sql",
+    "016_rollout_onboarding_user_guides.sql",
+    "017_notifications_activity_timelines.sql",
+    "018_qa_permission_deployment_readiness.sql",
+    "019_performance_responsive_usability.sql",
+    "020_security_audit_retention_controls.sql",
+    "021_command_search_documents_release.sql",
+    "022_ultra_release_restore_admin_dictionary.sql",
+    "023_enterprise_intelligence_reporting.sql",
+    "024_automation_intelligence_kri_reviews.sql",
+    "025_staging_validation_consolidation.sql",
+    "026_finish_fast_release_sprint.sql",
+    "027_final_production_leap.sql",
+    "028_final_release_factory.sql",
+    "029_production_proof_consolidation.sql",
+    "030_pilot_real_data_operations.sql",
+    "031_consolidation_pilot_fix_kit.sql",
+    "032_final_local_doctor_production_simulator.sql",
+    "033_v42_production_validation_and_rls_lab.sql",
+    "034_v46_ovr_bilingual_rtl_production_hardening.sql",
+    "035_v50_scale_backup_restore.sql",
+    "036_b_ovr_workflow_controls.sql",
+    "037_v58_pilot_rollout_security_audit.sql",
+    "038_v59_no_mock_phased_auto_tests.sql",
+    "039_v60_no_mock_production_data_controls.sql",
+    "040_v62_real_no_mock_data_layer.sql",
+    "041_v63_auth_route_protection.sql",
+    "042_v64_database_security_proof.sql",
+    "043_v641_database_security_static_remediation.sql",
+    "044_v642_auth_route_rls_static_fix.sql",
+    "045_v66_controlled_pilot_evidence.sql"
+  ],
+  "staging_sql_tests": [
+    {
+      "file": "supabase/tests/v64_persona_security_tests.sql",
+      "exists": true
+    },
+    {
+      "file": "supabase/tests/v65_workflow_smoke_tests.sql",
+      "exists": true
+    },
+    {
+      "file": "supabase/tests/v66_controlled_pilot_evidence_tests.sql",
+      "exists": true
+    }
+  ],
+  "recommended_order": [
+    "Create or reset a staging Supabase project.",
+    "Apply all migrations in supabase/migrations in filename order.",
+    "Run seed functions only if the migration/runbook explicitly requires them for non-production staging setup.",
+    "Run v64 persona SQL tests.",
+    "Run v65 workflow smoke SQL tests.",
+    "Run v66 controlled pilot evidence SQL tests.",
+    "Attach screenshots/log exports under release/v66/evidence-attachments/.",
+    "Run npm run v661:strict-proof."
+  ]
+}
