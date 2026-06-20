@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-06-20T18:00:42.601Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "checks": [
+    {
+      "area": "Working tree",
+      "action": "Run git status before and after approval",
+      "state": "Manual check required"
+    },
+    {
+      "area": "Proof baseline",
+      "action": "Latest proof summary available",
+      "state": "failed_review_required"
+    },
+    {
+      "area": "Approval freeze",
+      "action": "Do not alter unrelated release artifacts after signoff",
+      "state": "Required"
+    },
+    {
+      "area": "Post-approval proof",
+      "action": "Run v674 signoff check, sync, v66 strict proof, proof all",
+      "state": "Required"
+    },
+    {
+      "area": "Production boundary",
+      "action": "Do not mark production ready after controlled pilot approval",
+      "state": "Required"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-06-20T18:00:38.633Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "proof": {
+    "status": "failed_review_required",
+    "passed_count": 16,
+    "failed_count": 1,
+    "failed_commands": [
+      "v66:strict-proof"
+    ]
+  },
+  "approval_files": {
+    "pilot_signoff_exists": true,
+    "confidentiality_exists": true,
+    "pilot_signoff_path": "release/v674/approvals/pilot-signoff.json",
+    "confidentiality_path": "release/v674/approvals/ovr-confidentiality-confirmation.json"
+  },
+  "final_blocker": "real Management/Admin, IT, Quality approval and OVR confidentiality confirmation"
+}

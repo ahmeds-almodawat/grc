@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-06-20T18:00:39.612Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "total_items": 8,
+  "missing_count": 1,
+  "items": [
+    {
+      "name": "Proof suite summary",
+      "file": "release/v700/proof-suite-all.json",
+      "availability": "Available"
+    },
+    {
+      "name": "Runtime security bridge audit",
+      "file": "release/v700/runtime-security-bridge-audit.json",
+      "availability": "Available"
+    },
+    {
+      "name": "Authenticated persona proof",
+      "file": "release/v72/real-authenticated-persona-proof.json",
+      "availability": "Available"
+    },
+    {
+      "name": "Restore integrity dry-run",
+      "file": "release/v674/restore-integrity-dryrun.json",
+      "availability": "Missing or generated under another filename"
+    },
+    {
+      "name": "Approval readiness lint",
+      "file": "release/v91/approval-readiness-lint.md",
+      "availability": "Available"
+    },
+    {
+      "name": "Approval field map",
+      "file": "release/v92/approval-field-map.md",
+      "availability": "Available"
+    },
+    {
+      "name": "Pilot signoff JSON",
+      "file": "release/v674/approvals/pilot-signoff.json",
+      "availability": "Available"
+    },
+    {
+      "name": "OVR confidentiality JSON",
+      "file": "release/v674/approvals/ovr-confidentiality-confirmation.json",
+      "availability": "Available"
+    }
+  ]
+}

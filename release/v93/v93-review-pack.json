@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-06-20T18:00:45.743Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "reports": [
+    {
+      "name": "Gate snapshot",
+      "file": "release/v93/gate-snapshot.md",
+      "availability": "Available"
+    },
+    {
+      "name": "Approval packet index",
+      "file": "release/v93/approval-packet-index.md",
+      "availability": "Available"
+    },
+    {
+      "name": "Approver task board",
+      "file": "release/v93/approver-task-board.md",
+      "availability": "Available"
+    },
+    {
+      "name": "Signoff JSON guide",
+      "file": "release/v93/signoff-json-guide.md",
+      "availability": "Available"
+    },
+    {
+      "name": "Release freeze check",
+      "file": "release/v93/release-freeze-check.md",
+      "availability": "Available"
+    },
+    {
+      "name": "Post-approval proof protocol",
+      "file": "release/v93/post-approval-proof-protocol.md",
+      "availability": "Available"
+    },
+    {
+      "name": "Final approval command center",
+      "file": "release/v93/final-approval-command-center.md",
+      "availability": "Available"
+    }
+  ],
+  "missing_reports": 0
+}

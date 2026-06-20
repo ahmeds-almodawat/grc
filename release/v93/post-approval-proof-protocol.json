@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-06-20T18:00:43.568Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "commands": [
+    {
+      "step": "1",
+      "command": "npm run v674:signoff-check",
+      "purpose": "Validates real approval and confidentiality files"
+    },
+    {
+      "step": "2",
+      "command": "npm run v674:sync-manual-evidence",
+      "purpose": "Syncs manual evidence status"
+    },
+    {
+      "step": "3",
+      "command": "npm run v66:strict-proof",
+      "purpose": "Runs strict go/no-go gate"
+    },
+    {
+      "step": "4",
+      "command": "npm run proof:all",
+      "purpose": "Confirms final proof suite status"
+    }
+  ]
+}

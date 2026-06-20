@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-06-20T18:00:44.537Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "proof": {
+    "status": "failed_review_required",
+    "passed_count": 16,
+    "failed_count": 1,
+    "failed_commands": [
+      "v66:strict-proof"
+    ]
+  },
+  "approval_files": {
+    "pilotSignoff": "release/v674/approvals/pilot-signoff.json",
+    "confidentiality": "release/v674/approvals/ovr-confidentiality-confirmation.json"
+  },
+  "blockers": [
+    {
+      "area": "Human approval",
+      "requirement": "Management/Admin, IT, and Quality approval must be real and valid",
+      "state": "Pending"
+    },
+    {
+      "area": "OVR confidentiality",
+      "requirement": "IT and Quality must confirm no real patient identifiers or confidential OVR details",
+      "state": "Pending"
+    },
+    {
+      "area": "Strict gate",
+      "requirement": "v66:strict-proof must pass after real approvals",
+      "state": "Pending"
+    },
+    {
+      "area": "Production boundary",
+      "requirement": "Production remains out of scope",
+      "state": "Enforced"
+    }
+  ]
+}
