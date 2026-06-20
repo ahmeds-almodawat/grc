@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-06-20T00:04:54.932Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "human_approval_required": true,
+  "no_fake_approval": true,
+  "items": 5,
+  "report": "release/v79/pilot-operator-console.md"
+}
