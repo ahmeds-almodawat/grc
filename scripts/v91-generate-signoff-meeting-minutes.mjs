@@ -1,0 +1,42 @@
+import { writeMarkdown, STATUS_PENDING, PRODUCTION_READY, SCOPE_TEXT } from './v91-common.mjs';
+
+writeMarkdown('release/v91/signoff-meeting-minutes-template.md', [
+  '# v9.1 Signoff Meeting Minutes Template',
+  '',
+  'Generated: ' + new Date().toISOString(),
+  '',
+  '## Meeting details',
+  '',
+  '- Date:',
+  '- Attendees:',
+  '- Chair:',
+  '- Recorder:',
+  '',
+  '## Scope reviewed',
+  '',
+  SCOPE_TEXT,
+  '',
+  '## Evidence reviewed',
+  '',
+  '- Local staging SQL proofs:',
+  '- Restore integrity dry-run:',
+  '- Security definer audit:',
+  '- Runtime bridge audit:',
+  '- Authenticated persona proof:',
+  '- OVR confidentiality confirmation:',
+  '',
+  '## Decisions',
+  '',
+  '- Management/Admin:',
+  '- IT:',
+  '- Quality:',
+  '- OVR confidentiality IT reviewer:',
+  '- OVR confidentiality Quality reviewer:',
+  '',
+  '## Status',
+  '',
+  '- Status: ' + STATUS_PENDING,
+  '- Production ready: ' + PRODUCTION_READY
+]);
+console.log('v9.1 signoff meeting minutes template generated.');
+console.log(JSON.stringify({ status: STATUS_PENDING, production_ready: PRODUCTION_READY, report: 'release/v91/signoff-meeting-minutes-template.md' }, null, 2));
