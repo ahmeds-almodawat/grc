@@ -269,7 +269,15 @@
     "v94:proof-readiness": "node scripts/v94-proof-readiness-scorecard.mjs",
     "v94:review-pack": "node scripts/v94-generate-review-pack.mjs",
     "v94:all": "npm run v94:approval-shape-audit && npm run v94:gate-simulator && npm run v94:control-room && npm run v94:go-live-rehearsal && npm run v94:risk-acceptance && npm run v94:proof-readiness && npm run v94:review-pack",
-    "pilot:final-gate-simulator": "npm run ci:static && npm run v94:all"
+    "pilot:final-gate-simulator": "npm run ci:static && npm run v94:all",
+    "v95:workspace": "node scripts/v95-approval-execution-workspace.mjs",
+    "v95:qa-summary": "node scripts/v95-approval-qa-summary.mjs",
+    "v95:evidence-binder": "node scripts/v95-evidence-binder-index.mjs",
+    "v95:approver-drafts": "node scripts/v95-approver-action-drafts.mjs",
+    "v95:proof-plan": "node scripts/v95-final-proof-dryrun-plan.mjs",
+    "v95:review-pack": "node scripts/v95-generate-review-pack.mjs",
+    "v95:all": "npm run v95:workspace && npm run v95:qa-summary && npm run v95:evidence-binder && npm run v95:approver-drafts && npm run v95:proof-plan && npm run v95:review-pack",
+    "pilot:approval-execution-workspace": "npm run ci:static && npm run v95:all"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

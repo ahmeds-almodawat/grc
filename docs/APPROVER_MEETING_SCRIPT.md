@@ -2,25 +2,22 @@
 
 ## Opening
 
-The system is not being submitted for production release. The decision requested is only for a controlled internal pilot using synthetic/non-confidential data.
+This meeting is to approve or defer a controlled internal pilot only. This is not a production rollout decision.
 
-## Review sequence
+## Confirm scope
 
-1. Confirm pilot scope.
-2. Confirm maximum pilot users.
-3. Review restore dry-run evidence.
-4. Review security definer audit evidence.
-5. Review local staging SQL/persona evidence.
-6. Confirm OVR confidentiality boundary.
-7. Confirm no real patient identifiers.
-8. Confirm no confidential OVR details.
-9. Complete approval files with real approver details.
-10. Run post-signoff proof commands.
+Controlled internal pilot for GRC Control Center using synthetic/non-confidential data only, limited to 5–15 internal users, with no real patient identifiers and no confidential OVR details.
+
+## Evidence summary
+
+Technical proof has passed except the manual signoff gate. Approvers should review the evidence binder and confirm responsibility before approval.
 
 ## Decision options
 
-- Approve controlled pilot.
-- Defer pending conditions.
-- Reject controlled pilot.
+- Approved
+- Deferred pending conditions
+- Rejected
 
-Production approval is outside this meeting boundary.
+## Closing
+
+If approved, the approval JSON files will be completed with real approver data and proof will be rerun.
