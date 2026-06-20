@@ -277,7 +277,16 @@
     "v95:proof-plan": "node scripts/v95-final-proof-dryrun-plan.mjs",
     "v95:review-pack": "node scripts/v95-generate-review-pack.mjs",
     "v95:all": "npm run v95:workspace && npm run v95:qa-summary && npm run v95:evidence-binder && npm run v95:approver-drafts && npm run v95:proof-plan && npm run v95:review-pack",
-    "pilot:approval-execution-workspace": "npm run ci:static && npm run v95:all"
+    "pilot:approval-execution-workspace": "npm run ci:static && npm run v95:all",
+    "v96:completion-checklist": "node scripts/v96-approval-completion-checklist.mjs",
+    "v96:signoff-entry-qa": "node scripts/v96-signoff-entry-qa.mjs",
+    "v96:evidence-lock": "node scripts/v96-evidence-lock-plan.mjs",
+    "v96:approval-rehearsal": "node scripts/v96-final-approval-rehearsal.mjs",
+    "v96:proof-capture": "node scripts/v96-post-signoff-proof-capture.mjs",
+    "v96:release-note": "node scripts/v96-controlled-pilot-release-note.mjs",
+    "v96:review-pack": "node scripts/v96-generate-review-pack.mjs",
+    "v96:all": "npm run v96:completion-checklist && npm run v96:signoff-entry-qa && npm run v96:evidence-lock && npm run v96:approval-rehearsal && npm run v96:proof-capture && npm run v96:release-note && npm run v96:review-pack",
+    "pilot:approval-closure-control": "npm run ci:static && npm run v96:all"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",
