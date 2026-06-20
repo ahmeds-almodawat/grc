@@ -1,0 +1,17 @@
+name: Pilot Ops Readiness
+on:
+  push:
+    branches: [ main, v7.9-runtime-pilot-console ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  pilot-ops-readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: node scripts/v79-install-package-scripts.mjs
+      - run: npm run pilot:ops-readiness
