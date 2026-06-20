@@ -227,7 +227,15 @@
     "v85:executive-decision": "node scripts/v85-executive-decision-pack.mjs",
     "v80-v85:review-pack": "node scripts/v80-v85-generate-review-pack.mjs",
     "v80-v85:all": "npm run v80:launch-governance && npm run v81:staging-evidence && npm run v82:kpi-pack && npm run v83:security-privacy && npm run v84:training-change && npm run v85:executive-decision && npm run v80-v85:review-pack",
-    "pilot:governed-launch-suite": "npm run ci:static && npm run v80-v85:all"
+    "pilot:governed-launch-suite": "npm run ci:static && npm run v80-v85:all",
+    "v86:execution-evidence": "node scripts/v86-pilot-execution-evidence.mjs",
+    "v87:control-testing": "node scripts/v87-control-testing-effectiveness.mjs",
+    "v88:resilience-third-party": "node scripts/v88-resilience-third-party-readiness.mjs",
+    "v89:remediation-scale": "node scripts/v89-remediation-scale-readiness.mjs",
+    "v90:final-dossier": "node scripts/v90-final-decision-dossier.mjs",
+    "v86-v90:review-pack": "node scripts/v86-v90-generate-review-pack.mjs",
+    "v86-v90:all": "npm run v86:execution-evidence && npm run v87:control-testing && npm run v88:resilience-third-party && npm run v89:remediation-scale && npm run v90:final-dossier && npm run v86-v90:review-pack",
+    "pilot:execution-evidence": "npm run ci:static && npm run v86-v90:all"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

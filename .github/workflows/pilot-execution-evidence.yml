@@ -1,0 +1,25 @@
+name: Pilot Execution Evidence
+
+on:
+  push:
+    branches: [ main, "v8.6-to-v9.0-pilot-execution-evidence" ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  pilot-execution-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm install
+      - name: Install v8.6-v9.0 scripts
+        run: node scripts/v86-v90-install-package-scripts.mjs
+      - name: Run pilot execution evidence suite
+        run: npm run pilot:execution-evidence
