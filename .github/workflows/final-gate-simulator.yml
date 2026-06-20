@@ -1,0 +1,24 @@
+name: Final Gate Simulator
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/**'
+      - 'docs/**'
+      - 'release/v94/**'
+      - 'package.json'
+      - '.github/workflows/final-gate-simulator.yml'
+  workflow_dispatch:
+
+jobs:
+  final-gate-simulator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: node scripts/v94-install-package-scripts.mjs
+      - run: npm run pilot:final-gate-simulator

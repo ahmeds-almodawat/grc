@@ -1,0 +1,15 @@
+{
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "approval_missing_or_invalid": 35,
+  "proof": {
+    "exists": true,
+    "failed_count": 1,
+    "passed_count": 16,
+    "failed_commands": [
+      "v66:strict-proof"
+    ],
+    "status": "failed_review_required"
+  },
+  "gate_blocked": true
+}
