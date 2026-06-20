@@ -1,0 +1,41 @@
+{
+  "version": "v80",
+  "title": "v8.0 Pilot Launch Governance",
+  "generated_at": "2026-06-20T06:53:04.334Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "items": 5,
+  "files": [],
+  "rows": [
+    {
+      "area": "Pilot charter",
+      "output": "Controlled pilot scope and non-goals",
+      "owner": "Management/Admin",
+      "decision": "Review before signoff meeting"
+    },
+    {
+      "area": "Launch agenda",
+      "output": "Approval meeting agenda",
+      "owner": "Pilot owner",
+      "decision": "Use for Management/Admin, IT, Quality review"
+    },
+    {
+      "area": "Day-0 / Day-1 runbook",
+      "output": "Launch execution checklist",
+      "owner": "Pilot operator",
+      "decision": "Use only after real approval"
+    },
+    {
+      "area": "KPI dictionary",
+      "output": "Daily KPI definitions",
+      "owner": "Quality / Operations",
+      "decision": "Track pilot only"
+    },
+    {
+      "area": "Exception register",
+      "output": "Exception control template",
+      "owner": "Pilot owner",
+      "decision": "No exception may allow real patient data"
+    }
+  ]
+}

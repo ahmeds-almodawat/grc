@@ -1,0 +1,35 @@
+{
+  "version": "v81",
+  "title": "v8.1 Live Staging Evidence",
+  "generated_at": "2026-06-20T06:53:04.897Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "items": 4,
+  "files": [],
+  "rows": [
+    {
+      "area": "Smoke evidence",
+      "output": "Structured smoke execution sheet",
+      "owner": "IT / Quality",
+      "decision": "Use in staging validation session"
+    },
+    {
+      "area": "Access log",
+      "output": "Controlled staging access log",
+      "owner": "IT",
+      "decision": "Confirm pilot users only"
+    },
+    {
+      "area": "Rollback evidence",
+      "output": "Rollback proof sheet",
+      "owner": "IT",
+      "decision": "Capture rollback drill evidence"
+    },
+    {
+      "area": "Evidence rules",
+      "output": "No real patient or confidential OVR data",
+      "owner": "Quality",
+      "decision": "Mandatory during staging"
+    }
+  ]
+}

@@ -218,7 +218,16 @@
     "v79:closeout-dashboard": "node scripts/v79-closeout-dashboard.mjs",
     "v79:review-pack": "node scripts/v79-generate-review-pack.mjs",
     "v79:all": "npm run v79:operator-console && npm run v79:user-roster && npm run v79:daily-monitoring && npm run v79:issue-log && npm run v79:access-review && npm run v79:feedback-pack && npm run v79:closeout-dashboard && npm run v79:review-pack",
-    "pilot:ops-readiness": "npm run ci:static && npm run v79:all"
+    "pilot:ops-readiness": "npm run ci:static && npm run v79:all",
+    "v80:launch-governance": "node scripts/v80-pilot-launch-governance.mjs",
+    "v81:staging-evidence": "node scripts/v81-live-staging-evidence.mjs",
+    "v82:kpi-pack": "node scripts/v82-pilot-operations-kpi.mjs",
+    "v83:security-privacy": "node scripts/v83-security-privacy-assurance.mjs",
+    "v84:training-change": "node scripts/v84-training-change-management.mjs",
+    "v85:executive-decision": "node scripts/v85-executive-decision-pack.mjs",
+    "v80-v85:review-pack": "node scripts/v80-v85-generate-review-pack.mjs",
+    "v80-v85:all": "npm run v80:launch-governance && npm run v81:staging-evidence && npm run v82:kpi-pack && npm run v83:security-privacy && npm run v84:training-change && npm run v85:executive-decision && npm run v80-v85:review-pack",
+    "pilot:governed-launch-suite": "npm run ci:static && npm run v80-v85:all"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

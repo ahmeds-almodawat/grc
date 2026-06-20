@@ -1,0 +1,35 @@
+{
+  "version": "v83",
+  "title": "v8.3 Security Privacy Assurance",
+  "generated_at": "2026-06-20T06:53:06.030Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "items": 4,
+  "files": [],
+  "rows": [
+    {
+      "area": "Privacy boundary",
+      "output": "No real patient/confidential OVR review",
+      "owner": "Quality",
+      "decision": "Required before pilot and daily"
+    },
+    {
+      "area": "Role access review",
+      "output": "Persona access checklist",
+      "owner": "IT",
+      "decision": "Review before and during pilot"
+    },
+    {
+      "area": "OVR minimization",
+      "output": "Synthetic OVR checklist",
+      "owner": "Quality",
+      "decision": "Required for all OVR testing"
+    },
+    {
+      "area": "Audit log review",
+      "output": "Daily audit review SOP",
+      "owner": "IT / Audit",
+      "decision": "Check unexpected activity"
+    }
+  ]
+}
