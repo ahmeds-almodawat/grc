@@ -1,0 +1,35 @@
+{
+  "version": "v85",
+  "title": "v8.5 Executive Decision Pack",
+  "generated_at": "2026-06-20T06:53:07.177Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "items": 4,
+  "files": [],
+  "rows": [
+    {
+      "area": "Go/no-go memo",
+      "output": "Executive decision memo",
+      "owner": "Management/Admin",
+      "decision": "Use for approval meeting"
+    },
+    {
+      "area": "Scale-up decision tree",
+      "output": "Post-pilot decision logic",
+      "owner": "Management/Admin",
+      "decision": "Use after pilot closeout"
+    },
+    {
+      "area": "Production gap register",
+      "output": "Known production readiness gaps",
+      "owner": "IT / Quality",
+      "decision": "Track before production"
+    },
+    {
+      "area": "Decision boundary",
+      "output": "Controlled pilot only",
+      "owner": "Management/Admin",
+      "decision": "Production ready remains false"
+    }
+  ]
+}

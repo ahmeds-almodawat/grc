@@ -1,0 +1,27 @@
+name: Governed Pilot Suite
+
+on:
+  push:
+    branches: [ main, 'v8.0-to-v8.5-governed-pilot-suite' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  governed-pilot-suite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm install
+      - name: Install v8.0-v8.5 scripts
+        run: node scripts/v80-v85-install-package-scripts.mjs
+      - name: Static validation
+        run: npm run ci:static
+      - name: Governed pilot suite
+        run: npm run v80-v85:all

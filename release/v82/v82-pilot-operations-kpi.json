@@ -1,0 +1,35 @@
+{
+  "version": "v82",
+  "title": "v8.2 Pilot Operations KPI",
+  "generated_at": "2026-06-20T06:53:05.455Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "items": 4,
+  "files": [],
+  "rows": [
+    {
+      "area": "Daily dashboard",
+      "output": "Daily KPI checklist",
+      "owner": "Pilot operator",
+      "decision": "Use every pilot day"
+    },
+    {
+      "area": "Weekly review",
+      "output": "Weekly management template",
+      "owner": "Management/Admin",
+      "decision": "Use for continue/hold decision"
+    },
+    {
+      "area": "Defect triage",
+      "output": "Severity and routing SOP",
+      "owner": "Pilot operator",
+      "decision": "Critical issues trigger hold review"
+    },
+    {
+      "area": "Evidence completeness",
+      "output": "Evidence capture KPI",
+      "owner": "Quality",
+      "decision": "Track missing evidence"
+    }
+  ]
+}

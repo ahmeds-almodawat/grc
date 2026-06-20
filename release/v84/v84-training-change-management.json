@@ -1,0 +1,35 @@
+{
+  "version": "v84",
+  "title": "v8.4 Training Change Management",
+  "generated_at": "2026-06-20T06:53:06.611Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "items": 4,
+  "files": [],
+  "rows": [
+    {
+      "area": "Training plan",
+      "output": "Role-based pilot training plan",
+      "owner": "Pilot owner",
+      "decision": "Complete before launch"
+    },
+    {
+      "area": "Communication pack",
+      "output": "User announcement language",
+      "owner": "Management/Admin",
+      "decision": "Send to pilot users"
+    },
+    {
+      "area": "Support escalation",
+      "output": "Support routing tree",
+      "owner": "Pilot operator",
+      "decision": "Use for issues"
+    },
+    {
+      "area": "Change controls",
+      "output": "Pilot change boundary",
+      "owner": "IT / Quality",
+      "decision": "No uncontrolled scope expansion"
+    }
+  ]
+}
