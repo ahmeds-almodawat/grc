@@ -1,0 +1,4 @@
+import fs from 'node:fs'; import path from 'node:path'; import {OUT,status,writeJson,writeMd} from './v77-common.mjs';
+const sections=['staging-validation-audit.md','pr-quality-audit.md','uat-scenario-pack.md','pilot-risk-register.md','release-candidate-readiness.md','executive-board-pack.md']; let body=`# v7.7 Staging Validation and PR Quality Review Pack\n\nGenerated: ${new Date().toISOString()}\n\nStatus: **${status()}**\n\nControlled-pilot/staging review only. No production approval.\n`;
+for(const file of sections){const p=path.join(OUT,file);body+='\n---\n\n'+(fs.existsSync(p)?fs.readFileSync(p,'utf8').trim():`## Missing section: ${file}`)+'\n'}
+writeMd('v77-review-pack.md',body); writeJson('v77-review-pack.json',{generated_at:new Date().toISOString(),status:status(),sections,report:'release/v77/v77-review-pack.md'}); console.log('v7.7 review pack generated.'); console.log(JSON.stringify({status:status(),report:'release/v77/v77-review-pack.md'},null,2));

@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-06-19T22:30:12.223Z",
+  "status": "technical_ready_pending_human_approval",
+  "proof": {
+    "status": "failed_review_required",
+    "passed_count": 16,
+    "failed_count": 1,
+    "failed_commands": [
+      "v66:strict-proof"
+    ]
+  },
+  "signoff": {
+    "signoff_valid": false,
+    "confidentiality_valid": false,
+    "strict_passed": false
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-06-19T22:13:44.255Z",
+  "status": "passed",
+  "critical_findings": 0,
+  "findings": [
+    {
+      "severity": "info",
+      "issue": "visible_working_tree_changes",
+      "count": 24,
+      "detail": "M package.json\n?? .github/workflows/staging-readiness.yml\n?? README_APPLY_V77_PATCH.md\n?? apply-v7.7.ps1\n?? docs/BOARD_PACK_PREP_GUIDE.md\n?? docs/DEPLOYMENT_BOUNDARY_POLICY.md\n?? docs/PILOT_RISK_REGISTER.md\n?? docs/PR_QUALITY_GATE.md\n?? docs/RELEASE_CANDIDATE_READINESS_MATRIX.md\n?? docs/STAGING_EVIDENCE_CAPTURE_SOP.md\n?? docs/STAGING_VALIDATION_RUNBOOK.md\n?? docs/UAT_SCENARIO_LIBRARY.md\n?? docs/V77_NEXT_STEP_PLAN.md\n?? docs/V77_STAGING_VALIDATION_PR_QUALITY_PACK.md\n?? release/v77/\n?? scripts/v77-board-pack-generator.mjs\n?? scripts/v77-common.mjs\n?? scripts/v77-generate-review-pack.mjs\n?? scripts/v77-install-package-scripts.mjs\n?? scripts/v77-pr-quality-audit.mjs\n?? scripts/v77-release-candidate-readiness.mjs\n?? scripts/v77-risk-register-generator.mjs\n?? scripts/v77-staging-validation-audit.mjs\n?? scripts/v77-uat-scenario-pack.mjs"
+    }
+  ]
+}

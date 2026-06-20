@@ -1,0 +1,51 @@
+{
+  "generated_at": "2026-06-19T22:13:44.796Z",
+  "status": "technical_ready_pending_human_approval",
+  "scenarios": [
+    {
+      "id": "UAT-01",
+      "title": "Login and role navigation",
+      "acceptance": "Each persona sees appropriate areas"
+    },
+    {
+      "id": "UAT-02",
+      "title": "Governance dashboard",
+      "acceptance": "Synthetic KPIs reviewed"
+    },
+    {
+      "id": "UAT-03",
+      "title": "Risk workflow",
+      "acceptance": "Synthetic risk created and closed"
+    },
+    {
+      "id": "UAT-04",
+      "title": "Compliance workflow",
+      "acceptance": "Obligation and evidence reviewed"
+    },
+    {
+      "id": "UAT-05",
+      "title": "Audit finding lifecycle",
+      "acceptance": "Finding assigned and closed"
+    },
+    {
+      "id": "UAT-06",
+      "title": "OVR safe workflow",
+      "acceptance": "Non-confidential OVR routed"
+    },
+    {
+      "id": "UAT-07",
+      "title": "Evidence access",
+      "acceptance": "Non-sensitive evidence visible to allowed roles"
+    },
+    {
+      "id": "UAT-08",
+      "title": "Approval visibility",
+      "acceptance": "Gate visible without bypass"
+    },
+    {
+      "id": "UAT-09",
+      "title": "Reporting export",
+      "acceptance": "No sensitive data exposed"
+    }
+  ]
+}

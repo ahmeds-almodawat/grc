@@ -1,0 +1,48 @@
+{
+  "generated_at": "2026-06-19T22:13:45.363Z",
+  "status": "technical_ready_pending_human_approval",
+  "risks": [
+    [
+      "R-001",
+      "Human signoff delayed",
+      "Pilot blocked",
+      "Medium",
+      "Use approval checklist"
+    ],
+    [
+      "R-002",
+      "Real patient data entered",
+      "Confidentiality breach",
+      "High",
+      "Training and restricted scope"
+    ],
+    [
+      "R-003",
+      "Staging differs from local",
+      "Technical surprise",
+      "Medium",
+      "Run staging SOP"
+    ],
+    [
+      "R-004",
+      "Role misconfiguration",
+      "Unauthorized visibility",
+      "High",
+      "Persona proof and IT review"
+    ],
+    [
+      "R-005",
+      "Evidence treated as production proof",
+      "Governance misstatement",
+      "Medium",
+      "Clear labels"
+    ],
+    [
+      "R-006",
+      "Support ambiguity",
+      "Slow response",
+      "Medium",
+      "Support model approval"
+    ]
+  ]
+}
