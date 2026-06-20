@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-06-20T18:00:40.622Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "tasks": [
+    {
+      "owner": "Management/Admin",
+      "task": "Confirm controlled internal pilot scope",
+      "target": "pilot-signoff.json",
+      "state": "Pending real approval"
+    },
+    {
+      "owner": "Management/Admin",
+      "task": "Confirm maximum pilot users from 1 to 15",
+      "target": "pilot-signoff.json",
+      "state": "Pending real approval"
+    },
+    {
+      "owner": "IT",
+      "task": "Confirm technical evidence reviewed",
+      "target": "pilot-signoff.json",
+      "state": "Pending real approval"
+    },
+    {
+      "owner": "IT",
+      "task": "Confirm OVR confidentiality technical boundary",
+      "target": "ovr-confidentiality-confirmation.json",
+      "state": "Pending real approval"
+    },
+    {
+      "owner": "Quality",
+      "task": "Confirm quality/OVR pilot boundary",
+      "target": "pilot-signoff.json",
+      "state": "Pending real approval"
+    },
+    {
+      "owner": "Quality",
+      "task": "Confirm no real patient identifiers / confidential OVR details",
+      "target": "ovr-confidentiality-confirmation.json",
+      "state": "Pending real approval"
+    },
+    {
+      "owner": "Project Lead",
+      "task": "Run post-signoff proof commands after approval",
+      "target": "terminal evidence",
+      "state": "Waiting for approval"
+    },
+    {
+      "owner": "Audit",
+      "task": "Review final proof result and retain packet",
+      "target": "proof:all output",
+      "state": "Waiting for approval"
+    }
+  ]
+}

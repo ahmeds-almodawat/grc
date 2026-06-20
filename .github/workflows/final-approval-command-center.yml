@@ -1,0 +1,28 @@
+name: Final Approval Command Center
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  final-approval-command-center:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install v9.3 scripts
+        run: node scripts/v93-install-package-scripts.mjs
+
+      - name: Final approval command center
+        run: npm run pilot:final-approval-command-center

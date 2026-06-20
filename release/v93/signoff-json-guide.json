@@ -1,0 +1,77 @@
+{
+  "generated_at": "2026-06-20T18:00:41.562Z",
+  "status": "technical_ready_pending_human_approval",
+  "production_ready": false,
+  "fields": [
+    {
+      "file": "pilot-signoff.json",
+      "field": "management_admin.name",
+      "expected": "Real approver name"
+    },
+    {
+      "file": "pilot-signoff.json",
+      "field": "management_admin.role",
+      "expected": "Real role/title"
+    },
+    {
+      "file": "pilot-signoff.json",
+      "field": "management_admin.date",
+      "expected": "YYYY-MM-DD, not future"
+    },
+    {
+      "file": "pilot-signoff.json",
+      "field": "management_admin.decision",
+      "expected": "approved / approve / go / accepted"
+    },
+    {
+      "file": "pilot-signoff.json",
+      "field": "management_admin.scope",
+      "expected": "Explicit controlled internal pilot scope"
+    },
+    {
+      "file": "pilot-signoff.json",
+      "field": "it.name / role / date / decision / scope",
+      "expected": "Same validation rules"
+    },
+    {
+      "file": "pilot-signoff.json",
+      "field": "quality.name / role / date / decision / scope",
+      "expected": "Same validation rules"
+    },
+    {
+      "file": "pilot-signoff.json",
+      "field": "pilot_scope",
+      "expected": "Explicit controlled internal pilot"
+    },
+    {
+      "file": "pilot-signoff.json",
+      "field": "maximum_pilot_users",
+      "expected": "Integer from 1 to 15"
+    },
+    {
+      "file": "pilot-signoff.json",
+      "field": "reviewed_evidence.*",
+      "expected": "Required values true"
+    },
+    {
+      "file": "ovr-confidentiality-confirmation.json",
+      "field": "it_reviewer.*",
+      "expected": "Real IT reviewer and confirmed/approved/accepted decision"
+    },
+    {
+      "file": "ovr-confidentiality-confirmation.json",
+      "field": "quality_reviewer.*",
+      "expected": "Real Quality reviewer and confirmed/approved/accepted decision"
+    },
+    {
+      "file": "ovr-confidentiality-confirmation.json",
+      "field": "statements.*",
+      "expected": "Required confidentiality values true"
+    },
+    {
+      "file": "ovr-confidentiality-confirmation.json",
+      "field": "scope",
+      "expected": "Explicit controlled internal pilot scope"
+    }
+  ]
+}
