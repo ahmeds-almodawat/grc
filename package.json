@@ -286,7 +286,16 @@
     "v96:release-note": "node scripts/v96-controlled-pilot-release-note.mjs",
     "v96:review-pack": "node scripts/v96-generate-review-pack.mjs",
     "v96:all": "npm run v96:completion-checklist && npm run v96:signoff-entry-qa && npm run v96:evidence-lock && npm run v96:approval-rehearsal && npm run v96:proof-capture && npm run v96:release-note && npm run v96:review-pack",
-    "pilot:approval-closure-control": "npm run ci:static && npm run v96:all"
+    "pilot:approval-closure-control": "npm run ci:static && npm run v96:all",
+    "v97:approval-integrity": "node scripts/v97-approval-record-integrity.mjs",
+    "v97:evidence-lock": "node scripts/v97-evidence-lock-manifest.mjs",
+    "v97:change-log-template": "node scripts/v97-signoff-change-log-template.mjs",
+    "v97:approver-packet": "node scripts/v97-final-approver-packet.mjs",
+    "v97:proof-capture-index": "node scripts/v97-proof-capture-index.mjs",
+    "v97:freeze-attestation": "node scripts/v97-release-freeze-attestation-template.mjs",
+    "v97:review-pack": "node scripts/v97-generate-review-pack.mjs",
+    "v97:all": "npm run v97:approval-integrity && npm run v97:evidence-lock && npm run v97:change-log-template && npm run v97:approver-packet && npm run v97:proof-capture-index && npm run v97:freeze-attestation && npm run v97:review-pack",
+    "pilot:approval-record-integrity": "npm run ci:static && npm run v97:all"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

@@ -1,0 +1,22 @@
+name: Approval Record Integrity
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "scripts/v97-*"
+      - "release/v97/**"
+      - "docs/V97_APPROVAL_RECORD_INTEGRITY_EVIDENCE_LOCK.md"
+      - "package.json"
+
+jobs:
+  approval-record-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: node scripts/v97-install-package-scripts.mjs
+      - run: npm run pilot:approval-record-integrity
