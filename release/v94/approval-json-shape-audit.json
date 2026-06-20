@@ -1,0 +1,254 @@
+{
+  "status": "manual_approval_pending",
+  "production_ready": false,
+  "required": 35,
+  "passed": 0,
+  "failed": 35,
+  "rows": [
+    {
+      "file": "pilot-signoff",
+      "field": "management_admin.name",
+      "description": "Real Management/Admin name",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "management_admin.role",
+      "description": "Real Management/Admin role",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "management_admin.date",
+      "description": "Management/Admin approval date, YYYY-MM-DD, not future",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "management_admin.decision",
+      "description": "Management/Admin decision: approved/approve/go/accepted",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "management_admin.scope",
+      "description": "Management/Admin controlled internal pilot scope",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "it.name",
+      "description": "Real IT approver name",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "it.role",
+      "description": "Real IT approver role",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "it.date",
+      "description": "IT approval date, YYYY-MM-DD, not future",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "it.decision",
+      "description": "IT decision: approved/approve/go/accepted",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "it.scope",
+      "description": "IT controlled internal pilot scope",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "quality.name",
+      "description": "Real Quality approver name",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "quality.role",
+      "description": "Real Quality approver role",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "quality.date",
+      "description": "Quality approval date, YYYY-MM-DD, not future",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "quality.decision",
+      "description": "Quality decision: approved/approve/go/accepted",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "quality.scope",
+      "description": "Quality controlled internal pilot scope",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "pilot_scope",
+      "description": "Overall controlled internal pilot scope",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "maximum_pilot_users",
+      "description": "Maximum pilot users from 1 to 15",
+      "status": "missing_or_invalid",
+      "value": 0
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "reviewed_evidence.local_staging_sql_proofs_reviewed",
+      "description": "Local staging SQL proofs reviewed",
+      "status": "missing_or_invalid",
+      "value": false
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "reviewed_evidence.restore_integrity_dryrun_reviewed",
+      "description": "Restore integrity dry-run reviewed",
+      "status": "missing_or_invalid",
+      "value": false
+    },
+    {
+      "file": "pilot-signoff",
+      "field": "reviewed_evidence.security_definer_audit_reviewed",
+      "description": "Security definer audit reviewed",
+      "status": "missing_or_invalid",
+      "value": false
+    },
+    {
+      "file": "confidentiality",
+      "field": "it_reviewer.name",
+      "description": "Real IT confidentiality reviewer name",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "confidentiality",
+      "field": "it_reviewer.role",
+      "description": "Real IT confidentiality reviewer role",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "confidentiality",
+      "field": "it_reviewer.date",
+      "description": "IT confidentiality review date, YYYY-MM-DD, not future",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "confidentiality",
+      "field": "it_reviewer.decision",
+      "description": "IT confidentiality decision: confirmed/approved/accepted",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "confidentiality",
+      "field": "it_reviewer.scope",
+      "description": "IT confidentiality controlled internal pilot scope",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "confidentiality",
+      "field": "quality_reviewer.name",
+      "description": "Real Quality confidentiality reviewer name",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "confidentiality",
+      "field": "quality_reviewer.role",
+      "description": "Real Quality confidentiality reviewer role",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "confidentiality",
+      "field": "quality_reviewer.date",
+      "description": "Quality confidentiality review date, YYYY-MM-DD, not future",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "confidentiality",
+      "field": "quality_reviewer.decision",
+      "description": "Quality confidentiality decision: confirmed/approved/accepted",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "confidentiality",
+      "field": "quality_reviewer.scope",
+      "description": "Quality confidentiality controlled internal pilot scope",
+      "status": "missing_or_invalid",
+      "value": ""
+    },
+    {
+      "file": "confidentiality",
+      "field": "statements.no_real_patient_identifiers",
+      "description": "No real patient identifiers statement",
+      "status": "missing_or_invalid",
+      "value": false
+    },
+    {
+      "file": "confidentiality",
+      "field": "statements.no_confidential_ovr_details",
+      "description": "No confidential OVR details statement",
+      "status": "missing_or_invalid",
+      "value": false
+    },
+    {
+      "file": "confidentiality",
+      "field": "statements.controlled_pilot_users_only",
+      "description": "Controlled pilot users only statement",
+      "status": "missing_or_invalid",
+      "value": false
+    },
+    {
+      "file": "confidentiality",
+      "field": "statements.local_staging_proof_reviewed",
+      "description": "Local staging proof reviewed statement",
+      "status": "missing_or_invalid",
+      "value": false
+    },
+    {
+      "file": "confidentiality",
+      "field": "scope",
+      "description": "Overall confidentiality controlled internal pilot scope",
+      "status": "missing_or_invalid",
+      "value": ""
+    }
+  ]
+}

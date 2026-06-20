@@ -260,7 +260,16 @@
     "v93:command-center": "node scripts/v93-final-approval-command-center.mjs",
     "v93:review-pack": "node scripts/v93-generate-review-pack.mjs",
     "v93:all": "npm run v93:gate-snapshot && npm run v93:packet-index && npm run v93:approver-tasks && npm run v93:signoff-guide && npm run v93:freeze-check && npm run v93:post-approval-protocol && npm run v93:command-center && npm run v93:review-pack",
-    "pilot:final-approval-command-center": "npm run ci:static && npm run v93:all"
+    "pilot:final-approval-command-center": "npm run ci:static && npm run v93:all",
+    "v94:approval-shape-audit": "node scripts/v94-approval-json-shape-audit.mjs",
+    "v94:gate-simulator": "node scripts/v94-final-gate-simulator.mjs",
+    "v94:control-room": "node scripts/v94-approver-control-room.mjs",
+    "v94:go-live-rehearsal": "node scripts/v94-go-live-rehearsal.mjs",
+    "v94:risk-acceptance": "node scripts/v94-risk-acceptance-register.mjs",
+    "v94:proof-readiness": "node scripts/v94-proof-readiness-scorecard.mjs",
+    "v94:review-pack": "node scripts/v94-generate-review-pack.mjs",
+    "v94:all": "npm run v94:approval-shape-audit && npm run v94:gate-simulator && npm run v94:control-room && npm run v94:go-live-rehearsal && npm run v94:risk-acceptance && npm run v94:proof-readiness && npm run v94:review-pack",
+    "pilot:final-gate-simulator": "npm run ci:static && npm run v94:all"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",
