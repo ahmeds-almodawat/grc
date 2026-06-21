@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-06-19T19:49:22.914Z",
+  "generated_at": "2026-06-21T08:20:37.448Z",
   "environment": "Local Supabase Docker staging",
   "project_id": "grc-control-center",
   "db_container": "supabase_db_grc-control-center",
-  "security_definer_functions": 35,
+  "security_definer_functions": 39,
   "remaining_broad_execute_grants": 0,
   "strict_passed": true,
   "findings": [],
@@ -248,6 +248,34 @@
     },
     {
       "function_signature": "v72_execute_privileged_action(uuid,text,jsonb)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "v98_create_department(uuid,text,text,text)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "v98_finalize_created_user(uuid,uuid,text,text,text,uuid,app_role,access_scope)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "v98_notify_ovr_submission()",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "v98_update_ovr_workflow(uuid,uuid,text,jsonb)",
       "security_mode": "definer",
       "authenticated_execute": false,
       "anon_execute": false,

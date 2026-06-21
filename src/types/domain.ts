@@ -357,6 +357,7 @@ export interface ProfileOption {
   full_name_en: string;
   full_name_ar: string | null;
   email: string;
+  department_id?: string | null;
 }
 
 
@@ -376,6 +377,13 @@ export interface DepartmentExecutionSummary {
 export type OvrStatus =
   | 'draft'
   | 'submitted'
+  | 'manager_review'
+  | 'quality_validation'
+  | 'referred_party_response'
+  | 'quality_final_review'
+  | 'disputed'
+  | 'reopened'
+  | 'escalated'
   | 'under_supervisor_review'
   | 'under_quality_review'
   | 'returned_for_clarification'
@@ -385,7 +393,9 @@ export type OvrStatus =
   | 'quality_closure_review'
   | 'closed'
   | 'rejected'
-  | 'cancelled';
+  | 'cancelled'
+  | 'major_escalation'
+  | 'rca_required';
 
 export type OvrSeverityLevel = 'level_1' | 'level_2' | 'level_3' | 'level_4' | 'sentinel';
 export type OvrInvolvedPersonType = 'patient' | 'visitor' | 'employee' | 'company_representative' | 'other';
@@ -421,6 +431,18 @@ export interface OvrReportRow {
   quality_manager_comments?: string | null;
   referred_to_person?: string | null;
   referred_to_department?: string | null;
+  referred_department_id?: string | null;
+  referred_user_id?: string | null;
+  referred_response?: string | null;
+  reported_by?: string | null;
+  supervisor_id?: string | null;
+  quality_reviewer_id?: string | null;
+  quality_validated_at?: string | null;
+  cross_department_notified_at?: string | null;
+  final_verdict?: string | null;
+  final_verdict_at?: string | null;
+  reporter_response?: string | null;
+  dispute_reason?: string | null;
   evidence_required?: boolean;
   status: OvrStatus;
   corrective_action_required: boolean;

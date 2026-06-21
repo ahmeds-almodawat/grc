@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AlertTriangle, FilePlus2, GitBranch, ShieldCheck, Workflow } from 'lucide-react';
+import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { EmptySupabaseNotice } from '../components/EmptySupabaseNotice';
 import { EntityTable } from '../components/EntityTable';
@@ -18,6 +19,7 @@ import {
   getOvrSummary,
   getOvrWorkflowControlSummary,
   getOvrWorkflowQueue,
+  getProfiles,
   updateOvrWorkflow
 } from '../lib/grcApi';
 import { useI18n } from '../i18n/I18nContext';
@@ -46,17 +48,23 @@ function cleanLabel(value: string) {
 }
 
 function nextStageHint(status: OvrStatus) {
-  const order: Record<OvrStatus, number> = {
+  const order: Partial<Record<OvrStatus, number>> = {
     draft: 0,
     submitted: 1,
+    manager_review: 2,
     under_supervisor_review: 2,
+    quality_validation: 3,
     under_quality_review: 3,
-    returned_for_clarification: 3,
+    referred_party_response: 4,
     action_plan_required: 4,
-    corrective_action_in_progress: 5,
-    evidence_submitted: 6,
-    quality_closure_review: 7,
-    rejected: 7,
+    corrective_action_in_progress: 4,
+    quality_final_review: 5,
+    evidence_submitted: 5,
+    quality_closure_review: 5,
+    disputed: 5,
+    reopened: 3,
+    escalated: 3,
+    rejected: 5,
     closed: 8,
     cancelled: 8
   };
@@ -68,10 +76,10 @@ function WorkflowSteps({ status }: { status: OvrStatus }) {
   const current = nextStageHint(status);
   const steps = [
     ['submitted', t('ovr.stepSubmitted')],
-    ['under_supervisor_review', t('ovr.stepSupervisor')],
-    ['under_quality_review', t('ovr.stepQuality')],
-    ['action_plan_required', t('ovr.stepActionPlan')],
-    ['evidence_submitted', t('ovr.stepEvidence')],
+    ['manager_review', t('ovr.stepSupervisor')],
+    ['quality_validation', t('ovr.stepQuality')],
+    ['referred_party_response', t('ovr.stepReferral')],
+    ['quality_final_review', t('ovr.stepFinalVerdict')],
     ['closed', t('ovr.stepClosure')]
   ] as const;
 
@@ -113,12 +121,14 @@ function WorkflowQueue({ rows }: { rows: OvrWorkflowQueueRow[] }) {
 
 export function OVR() {
   const { t, language } = useI18n();
+  const auth = useAuth();
   const summary = useAsyncData(getOvrSummary, []);
   const workflowSummary = useAsyncData(getOvrWorkflowControlSummary, []);
   const workflowQueue = useAsyncData(getOvrWorkflowQueue, []);
   const reports = useAsyncData(getOvrReports, []);
   const organizations = useAsyncData(getOrganizations, []);
   const departments = useAsyncData(getDepartments, []);
+  const profiles = useAsyncData(getProfiles, []);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -129,6 +139,10 @@ export function OVR() {
     supervisor_investigation: '',
     corrective_action: '',
     quality_manager_comments: '',
+    referred_department_id: '',
+    referred_user_id: '',
+    referred_response: '',
+    final_verdict: '',
     note: '',
     confirmed_severity_level: 'level_1' as OvrSeverityLevel,
     corrective_action_due_date: ''
@@ -152,16 +166,14 @@ export function OVR() {
     occurrence_category: 'medications',
     severity_level: 'level_1' as OvrSeverityLevel,
     injury_type: '',
-    supervisor_investigation: '',
-    corrective_action: '',
-    quality_manager_comments: '',
-    referred_to_person: '',
-    referred_to_department: '',
     create_linked_action_plan: true
   });
 
   const organizationId = organizations.data?.[0]?.id || 'demo-org';
   const filteredReports = useMemo(() => reports.data || [], [reports.data]);
+  const isQuality = auth.roles.some(role => ['super_admin', 'governance_admin', 'compliance_officer'].includes(role.role));
+  const isAuditorOnly = auth.roles.some(role => role.role === 'auditor') && !isQuality;
+  const currentUserId = auth.profile?.id || '';
 
   const update = (key: keyof typeof form, value: string | boolean | string[]) => setForm(current => ({ ...current, [key]: value }));
   const updateWorkflowForm = (key: keyof typeof workflowForm, value: string) => setWorkflowForm(current => ({ ...current, [key]: value }));
@@ -173,6 +185,10 @@ export function OVR() {
       supervisor_investigation: row.supervisor_investigation || '',
       corrective_action: row.corrective_action || '',
       quality_manager_comments: row.quality_manager_comments || '',
+      referred_department_id: row.referred_department_id || '',
+      referred_user_id: row.referred_user_id || '',
+      referred_response: row.referred_response || '',
+      final_verdict: row.final_verdict || '',
       note: '',
       confirmed_severity_level: row.severity_level || 'level_1',
       corrective_action_due_date: ''
@@ -216,11 +232,6 @@ export function OVR() {
         occurrence_category: form.occurrence_category,
         severity_level: form.severity_level,
         injury_type: form.injury_type,
-        supervisor_investigation: form.supervisor_investigation,
-        corrective_action: form.corrective_action,
-        quality_manager_comments: form.quality_manager_comments,
-        referred_to_person: form.referred_to_person,
-        referred_to_department: form.referred_to_department,
         create_linked_action_plan: form.create_linked_action_plan,
         status
       });
@@ -241,20 +252,31 @@ export function OVR() {
     if (!selectedReport) return;
     setWorkflowMessage(null);
 
-    if (nextStatus === 'under_quality_review' && !workflowForm.supervisor_investigation.trim()) {
+    if (nextStatus === 'manager_review' && !workflowForm.supervisor_investigation.trim()) {
       setWorkflowMessage(t('ovr.validationInvestigationRequired'));
       return;
     }
-    if ((nextStatus === 'action_plan_required' || nextStatus === 'corrective_action_in_progress') && !workflowForm.corrective_action.trim()) {
-      setWorkflowMessage(t('ovr.validationCorrectiveRequired'));
+    if (nextStatus === 'quality_validation' && !workflowForm.quality_manager_comments.trim()) {
+      setWorkflowMessage(t('ovr.validationQualityRequired'));
       return;
     }
-    if (nextStatus === 'returned_for_clarification' && !workflowForm.note.trim()) {
-      setWorkflowMessage(t('ovr.validationReturnNoteRequired'));
+    if (nextStatus === 'referred_party_response' && !workflowForm.referred_department_id && !workflowForm.referred_user_id) {
+      setWorkflowMessage(t('ovr.validationReferralRequired'));
       return;
     }
-    if (nextStatus === 'closed' && !workflowForm.quality_manager_comments.trim()) {
-      setWorkflowMessage(t('ovr.validationQualityClosureRequired'));
+    if (nextStatus === 'quality_final_review') {
+      const referredResponseSubmission = selectedReport.status === 'referred_party_response' && !isQuality;
+      if (referredResponseSubmission && !workflowForm.referred_response.trim() && !workflowForm.corrective_action.trim()) {
+        setWorkflowMessage(t('ovr.validationReferredResponseRequired'));
+        return;
+      }
+      if (!referredResponseSubmission && !workflowForm.final_verdict.trim()) {
+        setWorkflowMessage(t('ovr.validationFinalVerdictRequired'));
+        return;
+      }
+    }
+    if (['disputed', 'escalated', 'rejected'].includes(nextStatus) && !workflowForm.note.trim()) {
+      setWorkflowMessage(t('ovr.validationWorkflowNoteRequired'));
       return;
     }
 
@@ -267,6 +289,10 @@ export function OVR() {
         supervisor_investigation: workflowForm.supervisor_investigation,
         corrective_action: workflowForm.corrective_action,
         quality_manager_comments: workflowForm.quality_manager_comments,
+        referred_department_id: workflowForm.referred_department_id,
+        referred_user_id: workflowForm.referred_user_id,
+        referred_response: workflowForm.referred_response,
+        final_verdict: workflowForm.final_verdict,
         confirmed_severity_level: workflowForm.confirmed_severity_level,
         corrective_action_due_date: workflowForm.corrective_action_due_date || undefined
       });
@@ -297,6 +323,31 @@ export function OVR() {
     }
   };
 
+  const isManagerFor = (report: OvrReportRow) => auth.roles.some(role =>
+    role.role === 'department_manager'
+    && (
+      role.scope === 'global'
+      || role.departmentId === report.department_id
+    )
+  );
+
+  const isReferredPartyFor = (report: OvrReportRow) => (
+    report.referred_user_id === currentUserId
+    || auth.roles.some(role =>
+      role.role === 'department_manager'
+      && (
+        role.scope === 'global'
+        || role.departmentId === report.referred_department_id
+      )
+    )
+  );
+
+  const isReporterFor = (report: OvrReportRow) => report.reported_by === currentUserId;
+  const referredProfiles = (profiles.data || []).filter(profile =>
+    !workflowForm.referred_department_id
+    || profile.department_id === workflowForm.referred_department_id
+  );
+
   return (
     <section className="page-section">
       <EmptySupabaseNotice />
@@ -304,7 +355,7 @@ export function OVR() {
         eyebrow={t('ovr.eyebrow')}
         title={t('ovr.title')}
         subtitle={t('ovr.subtitle')}
-        action={<button className="primary-button" onClick={() => setShowForm(value => !value)}><FilePlus2 size={17} />{t('ovr.newReport')}</button>}
+        action={!isAuditorOnly ? <button className="primary-button" onClick={() => setShowForm(value => !value)}><FilePlus2 size={17} />{t('ovr.newReport')}</button> : null}
       />
 
       <div className="notice-banner ovr-confidential">
@@ -407,11 +458,6 @@ export function OVR() {
 
           <div className="form-grid two">
             <label>{t('ovr.summaryFacts')}<textarea rows={5} value={form.brief_description} onChange={event => update('brief_description', event.target.value)} /></label>
-            <label>{t('ovr.supervisorInvestigation')}<textarea rows={5} value={form.supervisor_investigation} onChange={event => update('supervisor_investigation', event.target.value)} /></label>
-            <label>{t('ovr.correctiveAction')}<textarea rows={4} value={form.corrective_action} onChange={event => update('corrective_action', event.target.value)} /></label>
-            <label>{t('ovr.qualityComments')}<textarea rows={4} value={form.quality_manager_comments} onChange={event => update('quality_manager_comments', event.target.value)} /></label>
-            <label>{t('ovr.referredTo')}<input value={form.referred_to_person} onChange={event => update('referred_to_person', event.target.value)} /></label>
-            <label>{t('ovr.department')}<input value={form.referred_to_department} onChange={event => update('referred_to_department', event.target.value)} /></label>
           </div>
 
           <label className="check-line">
@@ -469,27 +515,90 @@ export function OVR() {
             </div>
 
             <div className="form-grid two">
-              <label>{t('ovr.supervisorInvestigation')}<textarea rows={4} value={workflowForm.supervisor_investigation} onChange={event => updateWorkflowForm('supervisor_investigation', event.target.value)} /></label>
-              <label>{t('ovr.correctiveAction')}<textarea rows={4} value={workflowForm.corrective_action} onChange={event => updateWorkflowForm('corrective_action', event.target.value)} /></label>
-              <label>{t('ovr.qualityComments')}<textarea rows={4} value={workflowForm.quality_manager_comments} onChange={event => updateWorkflowForm('quality_manager_comments', event.target.value)} /></label>
+              {(isManagerFor(selectedReport) || isQuality) ? (
+                <label>{t('ovr.supervisorInvestigation')}<textarea rows={4} value={workflowForm.supervisor_investigation} onChange={event => updateWorkflowForm('supervisor_investigation', event.target.value)} /></label>
+              ) : null}
+              {(isReferredPartyFor(selectedReport) || isQuality) ? (
+                <label>{t('ovr.correctiveAction')}<textarea rows={4} value={workflowForm.corrective_action} onChange={event => updateWorkflowForm('corrective_action', event.target.value)} /></label>
+              ) : null}
+              {isQuality ? (
+                <label>{t('ovr.qualityComments')}<textarea rows={4} value={workflowForm.quality_manager_comments} onChange={event => updateWorkflowForm('quality_manager_comments', event.target.value)} /></label>
+              ) : null}
+              {selectedReport.status === 'referred_party_response' && isReferredPartyFor(selectedReport) ? (
+                <label>{t('ovr.referredResponse')}<textarea rows={4} value={workflowForm.referred_response} onChange={event => updateWorkflowForm('referred_response', event.target.value)} /></label>
+              ) : null}
               <label>{t('ovr.workflowNote')}<textarea rows={4} value={workflowForm.note} onChange={event => updateWorkflowForm('note', event.target.value)} /></label>
-              <label>{t('ovr.confirmedSeverity')}
+              {isQuality ? <label>{t('ovr.confirmedSeverity')}
                 <select value={workflowForm.confirmed_severity_level} onChange={event => updateWorkflowForm('confirmed_severity_level', event.target.value)}>
                   {(['level_1', 'level_2', 'level_3', 'level_4', 'sentinel'] as OvrSeverityLevel[]).map(level => <option key={level} value={level}>{t(`ovr.severity.${level}`)}</option>)}
                 </select>
-              </label>
-              <label>{t('ovr.correctiveDueDate')}<input type="date" value={workflowForm.corrective_action_due_date} onChange={event => updateWorkflowForm('corrective_action_due_date', event.target.value)} /></label>
+              </label> : null}
+              {(isQuality || isReferredPartyFor(selectedReport)) ? (
+                <label>{t('ovr.correctiveDueDate')}<input type="date" value={workflowForm.corrective_action_due_date} onChange={event => updateWorkflowForm('corrective_action_due_date', event.target.value)} /></label>
+              ) : null}
+              {isQuality ? (
+                <>
+                  <label>{t('ovr.referredDepartment')}
+                    <select value={workflowForm.referred_department_id} onChange={event => {
+                      updateWorkflowForm('referred_department_id', event.target.value);
+                      updateWorkflowForm('referred_user_id', '');
+                    }}>
+                      <option value="">—</option>
+                      {(departments.data || []).map(department => (
+                        <option key={department.id} value={department.id}>{language === 'ar' && department.name_ar ? department.name_ar : department.name_en}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>{t('ovr.referredPerson')}
+                    <select value={workflowForm.referred_user_id} onChange={event => updateWorkflowForm('referred_user_id', event.target.value)}>
+                      <option value="">—</option>
+                      {referredProfiles.map(profile => (
+                        <option key={profile.id} value={profile.id}>{language === 'ar' && profile.full_name_ar ? profile.full_name_ar : profile.full_name_en}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="full-width">{t('ovr.finalVerdict')}<textarea rows={4} value={workflowForm.final_verdict} onChange={event => updateWorkflowForm('final_verdict', event.target.value)} /></label>
+                </>
+              ) : null}
             </div>
 
             <div className="workflow-actions">
-              <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('under_supervisor_review')}><Workflow size={16} />{t('ovr.toSupervisor')}</button>
-              <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('under_quality_review')}>{t('ovr.toQuality')}</button>
-              <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('returned_for_clarification')}>{t('ovr.returnClarification')}</button>
-              <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('action_plan_required')}>{t('ovr.requireActionPlan')}</button>
-              <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('corrective_action_in_progress')}>{t('ovr.startCorrective')}</button>
-              <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('evidence_submitted')}>{t('ovr.submitEvidenceReview')}</button>
-              <button className="ghost-button" disabled={workflowSaving || Boolean(selectedReport.linked_project_id)} onClick={createLinkedProject}><GitBranch size={16} />{selectedReport.linked_project_id ? t('ovr.projectAlreadyLinked') : t('ovr.createLinkedProject')}</button>
-              <button className="primary-button" disabled={workflowSaving} onClick={() => runWorkflowAction('closed')}>{t('ovr.closeByQuality')}</button>
+              {selectedReport.status === 'submitted' && (isManagerFor(selectedReport) || isQuality) ? (
+                <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('manager_review')}><Workflow size={16} />{t('ovr.completeManagerReview')}</button>
+              ) : null}
+              {selectedReport.status === 'manager_review' && isQuality ? (
+                <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('quality_validation')}>{t('ovr.validateByQuality')}</button>
+              ) : null}
+              {selectedReport.status === 'quality_validation' && isQuality ? (
+                <>
+                  <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('referred_party_response')}>{t('ovr.notifyReferral')}</button>
+                  <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('quality_final_review')}>{t('ovr.issueFinalVerdict')}</button>
+                </>
+              ) : null}
+              {selectedReport.status === 'referred_party_response' && isReferredPartyFor(selectedReport) ? (
+                <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('quality_final_review')}>{t('ovr.submitReferredResponse')}</button>
+              ) : null}
+              {['quality_final_review', 'reopened', 'escalated'].includes(selectedReport.status) && isQuality ? (
+                <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('quality_final_review')}>{t('ovr.issueFinalVerdict')}</button>
+              ) : null}
+              {selectedReport.status === 'quality_final_review' && isReporterFor(selectedReport) ? (
+                <>
+                  <button className="primary-button" disabled={workflowSaving} onClick={() => runWorkflowAction('closed')}>{t('ovr.acceptVerdict')}</button>
+                  <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('disputed')}>{t('ovr.disputeVerdict')}</button>
+                </>
+              ) : null}
+              {selectedReport.status === 'disputed' && isQuality ? (
+                <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('reopened')}>{t('ovr.reopenOvr')}</button>
+              ) : null}
+              {!['closed', 'cancelled', 'rejected'].includes(selectedReport.status) && (isQuality || isManagerFor(selectedReport)) ? (
+                <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('escalated')}>{t('ovr.escalateOvr')}</button>
+              ) : null}
+              {!['closed', 'cancelled', 'rejected'].includes(selectedReport.status) && isQuality ? (
+                <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('rejected')}>{t('ovr.rejectOvr')}</button>
+              ) : null}
+              {(isManagerFor(selectedReport) || isQuality) ? (
+                <button className="ghost-button" disabled={workflowSaving || Boolean(selectedReport.linked_project_id)} onClick={createLinkedProject}><GitBranch size={16} />{selectedReport.linked_project_id ? t('ovr.projectAlreadyLinked') : t('ovr.createLinkedProject')}</button>
+              ) : null}
             </div>
           </div>
         ) : null}

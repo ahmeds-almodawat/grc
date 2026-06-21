@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react';
-import { ShieldCheck, UserPlus, UserX, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, UserPlus, UserX, AlertTriangle, Plus } from 'lucide-react';
+import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { EntityTable } from '../components/EntityTable';
+import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatCard } from '../components/StatCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAsyncData } from '../hooks/useAsyncData';
 import {
   assignUserRole,
+  createAdminUser,
   deactivateUserRole,
   getAccessControlSummary,
   getAccessControlUsers,
@@ -58,6 +61,7 @@ function RoleBadges({ row }: { row: AccessControlUserRow }) {
 }
 
 export function AccessControl() {
+  const auth = useAuth();
   const [search, setSearch] = useState('');
   const [selectedUserId, setSelectedUserId] = useState('');
   const [role, setRole] = useState<AppRole>('employee');
@@ -67,6 +71,15 @@ export function AccessControl() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [createUserOpen, setCreateUserOpen] = useState(false);
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserNameEn, setNewUserNameEn] = useState('');
+  const [newUserNameAr, setNewUserNameAr] = useState('');
+  const [newUserDepartmentId, setNewUserDepartmentId] = useState('');
+  const [newUserRole, setNewUserRole] = useState<AppRole>('employee');
+  const [newUserScope, setNewUserScope] = useState<AccessScope>('assigned_only');
+  const [createUserError, setCreateUserError] = useState<string | null>(null);
 
   const summary = useAsyncData(getAccessControlSummary, []);
   const users = useAsyncData(getAccessControlUsers, []);
@@ -90,6 +103,60 @@ export function AccessControl() {
   }, [search, userRows]);
 
   const selectedUser = userRows.find(row => row.user_id === selectedUserId);
+  const isSuperAdmin = !auth.isLocalBypass && auth.roles.some(assignment => assignment.role === 'super_admin');
+
+  const resetCreateUser = () => {
+    setNewUserEmail('');
+    setNewUserPassword('');
+    setNewUserNameEn('');
+    setNewUserNameAr('');
+    setNewUserDepartmentId('');
+    setNewUserRole('employee');
+    setNewUserScope('assigned_only');
+    setCreateUserError(null);
+  };
+
+  const submitNewUser = async () => {
+    setCreateUserError(null);
+    setMessage(null);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newUserEmail.trim())) {
+      setCreateUserError('Enter a valid email address.');
+      return;
+    }
+    if (!newUserNameEn.trim()) {
+      setCreateUserError('English full name is required.');
+      return;
+    }
+    if (newUserPassword.length < 10) {
+      setCreateUserError('Temporary password must contain at least 10 characters.');
+      return;
+    }
+    if (newUserScope === 'department' && !newUserDepartmentId) {
+      setCreateUserError('Department scope requires a department.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await createAdminUser({
+        email: newUserEmail,
+        password: newUserPassword,
+        full_name_en: newUserNameEn,
+        full_name_ar: newUserNameAr,
+        department_id: newUserDepartmentId || null,
+        role: newUserRole,
+        scope: newUserScope
+      });
+      setCreateUserOpen(false);
+      resetCreateUser();
+      setMessage(`User ${newUserEmail.trim().toLowerCase()} created with ${humanize(newUserRole)} access.`);
+      await Promise.all([users.refresh(), summary.refresh(), warnings.refresh()]);
+    } catch (error) {
+      setCreateUserError(error instanceof Error ? error.message : 'Could not create user.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const submitRole = async () => {
     setActionError(null);
@@ -140,8 +207,24 @@ export function AccessControl() {
         eyebrow="Admin Governance"
         title="Access Control Center"
         subtitle="Manage role assignments safely for a 1,000-employee rollout. This page shows broad access, missing roles, scope issues, and operational workload per user."
-        action={<button className="primary-button" onClick={() => users.refresh()}><ShieldCheck size={16} /> Refresh matrix</button>}
+        action={
+          <div className="inline-actions">
+            {isSuperAdmin ? (
+              <button className="primary-button" onClick={() => {
+                setCreateUserError(null);
+                setCreateUserOpen(true);
+              }}><Plus size={16} /> Create user</button>
+            ) : null}
+            <button className="ghost-button" onClick={() => users.refresh()}><ShieldCheck size={16} /> Refresh matrix</button>
+          </div>
+        }
       />
+
+      {auth.isLocalBypass ? (
+        <div className="notice-banner">
+          User creation and role changes require a real authenticated Supabase session. Set <code>VITE_AUTH_BYPASS_LOCAL=false</code> and sign in.
+        </div>
+      ) : null}
 
       <DataState loading={summary.loading} error={summary.error} empty={!summary.data}>
         {summary.data ? (
@@ -290,6 +373,68 @@ export function AccessControl() {
           />
         </DataState>
       </div>
+
+      <Modal open={createUserOpen} title="Create controlled pilot user" onClose={() => {
+        if (!saving) {
+          setCreateUserOpen(false);
+          resetCreateUser();
+        }
+      }}>
+        <div className="form-grid">
+          {createUserError ? <div className="form-error full-width">{createUserError}</div> : null}
+          <div className="notice-banner full-width">
+            This creates a Supabase Auth user through the authenticated server bridge. The service-role key is never exposed to the browser.
+          </div>
+          <label className="field">
+            English full name
+            <input value={newUserNameEn} onChange={event => setNewUserNameEn(event.target.value)} />
+          </label>
+          <label className="field">
+            Arabic full name
+            <input value={newUserNameAr} onChange={event => setNewUserNameAr(event.target.value)} dir="rtl" />
+          </label>
+          <label className="field">
+            Email
+            <input type="email" value={newUserEmail} onChange={event => setNewUserEmail(event.target.value)} autoComplete="off" />
+          </label>
+          <label className="field">
+            Temporary password
+            <input type="password" value={newUserPassword} onChange={event => setNewUserPassword(event.target.value)} autoComplete="new-password" />
+          </label>
+          <label className="field">
+            Department
+            <select value={newUserDepartmentId} onChange={event => setNewUserDepartmentId(event.target.value)}>
+              <option value="">No department</option>
+              {(departments.data || []).map(department => (
+                <option key={department.id} value={department.id}>{department.name_en}</option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            Role
+            <select value={newUserRole} onChange={event => setNewUserRole(event.target.value as AppRole)}>
+              {roleOptions.map(option => <option key={option} value={option}>{humanize(option)}</option>)}
+            </select>
+          </label>
+          <label className="field full-width">
+            Scope
+            <select value={newUserScope} onChange={event => setNewUserScope(event.target.value as AccessScope)}>
+              <option value="assigned_only">Assigned only</option>
+              <option value="department">Department</option>
+              <option value="global">Global</option>
+            </select>
+          </label>
+          <div className="form-actions full-width">
+            <button className="ghost-button" type="button" disabled={saving} onClick={() => {
+              setCreateUserOpen(false);
+              resetCreateUser();
+            }}>Cancel</button>
+            <button className="primary-button" type="button" disabled={saving} onClick={submitNewUser}>
+              <UserPlus size={16} /> {saving ? 'Creating…' : 'Create user'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </section>
   );
 }

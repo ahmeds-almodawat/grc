@@ -12,6 +12,8 @@ const allowedActions = new Set([
   'resolve_escalation_event',
   'assign_user_role',
   'deactivate_user_role',
+  'create_department',
+  'create_user',
   'update_ovr_workflow',
   'create_ovr_corrective_action_project',
 ]);
@@ -67,6 +69,179 @@ Deno.serve(async (request) => {
   const serviceClient = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  if (action === 'create_department') {
+    const { data, error } = await serviceClient.rpc('v98_create_department', {
+      p_actor_id: userData.user.id,
+      p_name_en: requestBody.payload?.name_en,
+      p_name_ar: requestBody.payload?.name_ar ?? null,
+      p_code: requestBody.payload?.code,
+    });
+
+    if (error) {
+      const authorizationFailure = /NOT_AUTHORIZED|REQUIRES_SUPER_ADMIN|SERVICE_ROLE_REQUIRED|ACTIVE_ACTOR_REQUIRED/i
+        .test(error.message);
+      return jsonResponse({
+        ok: false,
+        error: error.message,
+        code: error.code,
+        action,
+      }, authorizationFailure ? 403 : 409);
+    }
+
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'create_user') {
+    const email = String(requestBody.payload?.email ?? '').trim().toLowerCase();
+    const password = String(requestBody.payload?.password ?? '');
+    const fullNameEn = String(requestBody.payload?.full_name_en ?? '').trim();
+    const fullNameAr = requestBody.payload?.full_name_ar
+      ? String(requestBody.payload.full_name_ar).trim()
+      : null;
+    const departmentId = requestBody.payload?.department_id
+      ? String(requestBody.payload.department_id)
+      : null;
+    const role = String(requestBody.payload?.role ?? 'employee');
+    const scope = String(requestBody.payload?.scope ?? 'assigned_only');
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return jsonResponse({ ok: false, error: 'A valid user email is required.', action }, 400);
+    }
+    if (password.length < 10) {
+      return jsonResponse({ ok: false, error: 'Temporary password must contain at least 10 characters.', action }, 400);
+    }
+    if (!fullNameEn || fullNameEn.length > 180) {
+      return jsonResponse({ ok: false, error: 'A valid English full name is required.', action }, 400);
+    }
+
+    const { data: actorProfile, error: actorProfileError } = await serviceClient
+      .from('profiles')
+      .select('organization_id,is_active')
+      .eq('id', userData.user.id)
+      .maybeSingle();
+    if (actorProfileError || !actorProfile?.is_active || !actorProfile.organization_id) {
+      return jsonResponse({ ok: false, error: 'An active administrator profile and organization are required.', action }, 403);
+    }
+
+    const { data: actorRoles, error: actorRolesError } = await serviceClient
+      .from('user_roles')
+      .select('organization_id')
+      .eq('user_id', userData.user.id)
+      .eq('role', 'super_admin')
+      .eq('is_active', true);
+    const authorizedActor = !actorRolesError && (actorRoles ?? []).some(
+      (assignment) => assignment.organization_id === null
+        || assignment.organization_id === actorProfile.organization_id,
+    );
+    if (!authorizedActor) {
+      return jsonResponse({ ok: false, error: 'User creation requires an active super-admin role.', action }, 403);
+    }
+
+    const { data: createdUser, error: createError } = await serviceClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        full_name_en: fullNameEn,
+        full_name_ar: fullNameAr,
+        controlled_pilot: true,
+      },
+    });
+
+    if (createError || !createdUser.user) {
+      return jsonResponse({
+        ok: false,
+        error: createError?.message || 'Supabase Auth did not return a created user.',
+        action,
+      }, 409);
+    }
+
+    const { data, error } = await serviceClient.rpc('v98_finalize_created_user', {
+      p_actor_id: userData.user.id,
+      p_user_id: createdUser.user.id,
+      p_email: email,
+      p_full_name_en: fullNameEn,
+      p_full_name_ar: fullNameAr,
+      p_department_id: departmentId,
+      p_role: role,
+      p_scope: scope,
+    });
+
+    if (error) {
+      const rollback = await serviceClient.auth.admin.deleteUser(createdUser.user.id);
+      return jsonResponse({
+        ok: false,
+        error: rollback.error
+          ? `${error.message}. Auth rollback also failed: ${rollback.error.message}`
+          : error.message,
+        code: error.code,
+        action,
+      }, /NOT_AUTHORIZED|REQUIRES_SUPER_ADMIN|SERVICE_ROLE_REQUIRED|ACTIVE_ACTOR_REQUIRED/i.test(error.message) ? 403 : 409);
+    }
+
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'update_ovr_workflow') {
+    const { data, error } = await serviceClient.rpc('v98_update_ovr_workflow', {
+      p_actor_id: userData.user.id,
+      p_ovr_report_id: requestBody.payload?.ovr_report_id,
+      p_next_status: requestBody.payload?.next_status,
+      p_payload: requestBody.payload ?? {},
+    });
+
+    if (error) {
+      const authorizationFailure =
+        /NOT_AUTHORIZED|DENIED|READ_ONLY|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|CROSS_ORGANIZATION/i
+          .test(error.message);
+      return jsonResponse({
+        ok: false,
+        error: error.message,
+        code: error.code,
+        action,
+      }, authorizationFailure ? 403 : 409);
+    }
+
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'create_ovr_corrective_action_project') {
+    const reportId = String(requestBody.payload?.ovr_report_id ?? '');
+    const { data: report, error: reportError } = await serviceClient
+      .from('ovr_reports')
+      .select('organization_id,department_id,referred_user_id,referred_department_id')
+      .eq('id', reportId)
+      .maybeSingle();
+    const { data: actorRoles, error: actorRolesError } = await serviceClient
+      .from('user_roles')
+      .select('role,scope,organization_id,department_id')
+      .eq('user_id', userData.user.id)
+      .eq('is_active', true);
+
+    const authorized = !reportError && report && !actorRolesError && (actorRoles ?? []).some((assignment) => {
+      if (
+        ['super_admin', 'governance_admin', 'compliance_officer'].includes(assignment.role)
+        && (assignment.organization_id === null || assignment.organization_id === report.organization_id)
+      ) return true;
+      return assignment.role === 'department_manager'
+        && assignment.organization_id === report.organization_id
+        && (
+          assignment.scope === 'global'
+          || assignment.department_id === report.department_id
+          || assignment.department_id === report.referred_department_id
+        );
+    });
+
+    if (!authorized) {
+      return jsonResponse({
+        ok: false,
+        error: 'OVR corrective-action project creation requires Quality/Admin or a relevant department manager.',
+        action,
+      }, 403);
+    }
+  }
+
   const { data, error } = await serviceClient.rpc('v72_execute_privileged_action', {
     p_actor_id: userData.user.id,
     p_action: action,
