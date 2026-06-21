@@ -295,7 +295,14 @@
     "v97:freeze-attestation": "node scripts/v97-release-freeze-attestation-template.mjs",
     "v97:review-pack": "node scripts/v97-generate-review-pack.mjs",
     "v97:all": "npm run v97:approval-integrity && npm run v97:evidence-lock && npm run v97:change-log-template && npm run v97:approver-packet && npm run v97:proof-capture-index && npm run v97:freeze-attestation && npm run v97:review-pack",
-    "pilot:approval-record-integrity": "npm run ci:static && npm run v97:all"
+    "pilot:approval-record-integrity": "npm run ci:static && npm run v97:all",
+    "v98:bootstrap-admin": "node scripts/v98-bootstrap-pilot-admin.mjs --allow-local-bootstrap --email pilot.admin@almodawat.test",
+    "v98:verify-bootstrap": "node scripts/v98-verify-first-run-bootstrap.mjs --allow-local-bootstrap --email pilot.admin@almodawat.test",
+    "pilot:first-run-bootstrap": "npm run v98:bootstrap-admin && npm run v98:verify-bootstrap",
+    "v98:verify-ovr": "node scripts/v98-verify-ovr-workflow.mjs",
+    "v98:ovr-gap-report": "node scripts/v98-ovr-gap-report.mjs",
+    "v98:ovr-e2e": "node scripts/v98-ovr-synthetic-e2e-test.mjs",
+    "pilot:ovr-workflow-verification": "npm run v98:verify-ovr && npm run v98:ovr-gap-report && npm run v98:ovr-e2e"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

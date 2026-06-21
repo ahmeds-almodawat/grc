@@ -66,6 +66,7 @@ import type {
   OrganizationOption,
   OvrReportRow,
   OvrSeverityLevel,
+  OvrStatus,
   OvrSummary,
   OvrRiskDepartmentIndicator,
   OvrRepeatedCategoryAlert,
@@ -417,7 +418,7 @@ export async function getProfiles(): Promise<ProfileOption[]> {
   if (!supabase) return [];
 
   try {
-    const { data, error } = await supabase.from('profiles').select('id,full_name_en,full_name_ar,email').eq('is_active', true).order('full_name_en').limit(1000);
+    const { data, error } = await supabase.from('profiles').select('id,full_name_en,full_name_ar,email,department_id').eq('is_active', true).order('full_name_en').limit(1000);
     if (error) throw error;
     return data?.length ? (data as ProfileOption[]) : liveEmptyProfiles;
   } catch (error) {
@@ -1008,6 +1009,58 @@ export async function deactivateUserRole(userRoleId: string, reason?: string) {
   });
 }
 
+export interface CreateDepartmentInput {
+  name_en: string;
+  name_ar?: string | null;
+  code: string;
+}
+
+export async function createDepartment(input: CreateDepartmentInput) {
+  requireLiveSupabase();
+  return invokePrivilegedAction<{
+    id: string;
+    organization_id: string;
+    name_en: string;
+    name_ar: string | null;
+    code: string;
+  }>('create_department', {
+    name_en: input.name_en.trim(),
+    name_ar: input.name_ar?.trim() || null,
+    code: input.code.trim().toUpperCase()
+  });
+}
+
+export interface CreateAdminUserInput {
+  email: string;
+  password: string;
+  full_name_en: string;
+  full_name_ar?: string | null;
+  department_id?: string | null;
+  role: AppRole;
+  scope: AccessScope;
+}
+
+export async function createAdminUser(input: CreateAdminUserInput) {
+  requireLiveSupabase();
+  return invokePrivilegedAction<{
+    id: string;
+    profile_id: string;
+    role_id: string;
+    organization_id: string;
+    department_id: string | null;
+    role: AppRole;
+    scope: AccessScope;
+  }>('create_user', {
+    email: input.email.trim().toLowerCase(),
+    password: input.password,
+    full_name_en: input.full_name_en.trim(),
+    full_name_ar: input.full_name_ar?.trim() || null,
+    department_id: input.department_id || null,
+    role: input.role,
+    scope: input.scope
+  });
+}
+
 export async function getOvrSummary(): Promise<OvrSummary> {
   if (!supabase) return emptyLiveObject<OvrSummary>('getOvrSummary');
 
@@ -1028,7 +1081,7 @@ export async function getOvrReports(): Promise<OvrReportRow[]> {
   try {
     const { data, error } = await supabase
       .from('ovr_reports')
-      .select('*, departments(name_en,name_ar), reporter:profiles!ovr_reports_reported_by_fkey(full_name_en,full_name_ar), owner:profiles!ovr_reports_owner_id_fkey(full_name_en,full_name_ar)')
+      .select('*, departments!ovr_reports_department_id_fkey(name_en,name_ar), reporter:profiles!ovr_reports_reported_by_fkey(full_name_en,full_name_ar), owner:profiles!ovr_reports_owner_id_fkey(full_name_en,full_name_ar)')
       .order('created_at', { ascending: false })
       .limit(100);
     if (error) throw error;
@@ -1059,11 +1112,6 @@ export interface CreateOvrReportInput {
   occurrence_category: string;
   severity_level?: OvrSeverityLevel;
   injury_type?: string;
-  supervisor_investigation?: string;
-  corrective_action?: string;
-  quality_manager_comments?: string;
-  referred_to_person?: string;
-  referred_to_department?: string;
   create_linked_action_plan: boolean;
   status: 'draft' | 'submitted';
 }
@@ -1074,11 +1122,12 @@ export async function createOvrReport(input: CreateOvrReportInput) {
   const { data, error } = await client
     .from('ovr_reports')
     .insert({
-      ...input,
+      organization_id: input.organization_id,
       logging_number: input.logging_number || null,
       occurrence_date: input.occurrence_date || null,
       occurrence_time: input.occurrence_time || null,
       occurrence_location: input.occurrence_location || null,
+      involved_person_type: input.involved_person_type,
       person_involved_name: input.person_involved_name || null,
       mrn_or_id_no: input.mrn_or_id_no || null,
       age: input.age || null,
@@ -1087,14 +1136,17 @@ export async function createOvrReport(input: CreateOvrReportInput) {
       notification_at: input.notification_at || null,
       physical_condition: input.physical_condition || null,
       mental_condition: input.mental_condition || null,
+      pre_occurrence_condition_flags: input.pre_occurrence_condition_flags,
+      brief_description: input.brief_description,
+      occurrence_category: input.occurrence_category,
       severity_level: input.severity_level || null,
       injury_type: input.injury_type || null,
-      supervisor_investigation: input.supervisor_investigation || null,
-      corrective_action: input.corrective_action || null,
-      quality_manager_comments: input.quality_manager_comments || null,
-      referred_to_person: input.referred_to_person || null,
-      referred_to_department: input.referred_to_department || null,
-      corrective_action_required: input.status === 'submitted',
+      occurrence_details: {
+        linked_action_plan_requested: input.create_linked_action_plan,
+        synthetic_or_deidentified_expected_for_pilot: true
+      },
+      status: input.status,
+      corrective_action_required: false,
       evidence_required: true,
       reported_by: userId,
       owner_id: userId,
@@ -1104,35 +1156,6 @@ export async function createOvrReport(input: CreateOvrReportInput) {
     .select('id,ovr_number,logging_number')
     .single();
   if (error) throw error;
-
-  if (input.create_linked_action_plan) {
-    const { data: project, error: projectError } = await client
-      .from('projects')
-      .insert({
-        organization_id: input.organization_id,
-        title: `OVR corrective action - ${data.ovr_number || data.logging_number || data.id}`,
-        description: input.corrective_action || input.brief_description,
-        category: 'OVR Corrective Action',
-        source_type: 'incident_ovr',
-        source_reference_id: data.id,
-        department_id: input.department_id || null,
-        owner_id: userId,
-        sponsor_id: userId,
-        start_date: new Date().toISOString().slice(0, 10),
-        target_end_date: null,
-        priority: input.severity_level === 'sentinel' || input.severity_level === 'level_4' ? 'critical' : 'high',
-        risk_level: input.severity_level === 'sentinel' || input.severity_level === 'level_4' ? 'critical' : 'high',
-        status: 'draft',
-        evidence_required: true,
-        closure_approval_required: true,
-        created_by: userId,
-        updated_by: userId
-      })
-      .select('id')
-      .single();
-    if (projectError) throw projectError;
-    await client.from('ovr_reports').update({ linked_project_id: project.id, updated_by: userId }).eq('id', data.id);
-  }
 
   return data;
 }
@@ -1219,19 +1242,36 @@ export interface UpdateOvrWorkflowInput {
   supervisor_investigation?: string;
   corrective_action?: string;
   quality_manager_comments?: string;
+  referred_department_id?: string;
+  referred_user_id?: string;
+  referred_response?: string;
+  final_verdict?: string;
   confirmed_severity_level?: OvrSeverityLevel;
   corrective_action_due_date?: string;
 }
 
 export async function updateOvrWorkflow(input: UpdateOvrWorkflowInput) {
   requireLiveSupabase();
-  await invokePrivilegedAction('update_ovr_workflow', {
+  return invokePrivilegedAction<{
+    id: string;
+    status: OvrStatus;
+    supervisor_due_date: string | null;
+    quality_validated_at: string | null;
+    cross_department_notified_at: string | null;
+    final_verdict: string | null;
+    reporter_response: string | null;
+    closed_at: string | null;
+  }>('update_ovr_workflow', {
     ovr_report_id: input.ovr_report_id,
     next_status: input.next_status,
     note: input.note || null,
     supervisor_investigation: input.supervisor_investigation || null,
     corrective_action: input.corrective_action || null,
     quality_manager_comments: input.quality_manager_comments || null,
+    referred_department_id: input.referred_department_id || null,
+    referred_user_id: input.referred_user_id || null,
+    referred_response: input.referred_response || null,
+    final_verdict: input.final_verdict || null,
     confirmed_severity_level: input.confirmed_severity_level || null,
     corrective_action_due_date: input.corrective_action_due_date || null
   });

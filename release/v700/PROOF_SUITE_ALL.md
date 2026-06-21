@@ -2,7 +2,7 @@
 
 ```json
 {
-  "generated_at": "2026-06-19T19:49:49.671Z",
+  "generated_at": "2026-06-20T22:31:14.045Z",
   "mode": "all",
   "status": "failed_review_required",
   "passed_count": 16,

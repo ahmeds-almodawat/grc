@@ -1,6 +1,6 @@
 {
   "summary": {
-    "generated_at": "2026-06-19T19:49:24.820Z",
+    "generated_at": "2026-06-20T22:30:37.988Z",
     "source": "src/**/*.{ts,tsx,js,jsx}",
     "frontend_rpc_call_count": 1,
     "authenticated_edge_bridge_call_count": 7,
