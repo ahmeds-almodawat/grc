@@ -7,6 +7,7 @@ import { useAsyncData } from '../hooks/useAsyncData';
 import { useI18n } from '../i18n/I18nContext';
 import { getDepartmentRiskHeatmap, getGrcKpiScorecard, getMonthlyGrcTrend, getRadarControlProfile } from '../lib/grcApi';
 import type { DepartmentRiskHeatmapRow } from '../types/domain';
+import { isEmptyLiveObject } from '../lib/liveData';
 
 function signalTone(score: number) {
   if (score >= 75) return 'danger' as const;
@@ -20,6 +21,7 @@ export function Analytics() {
   const heatmap = useAsyncData(getDepartmentRiskHeatmap, []);
   const trend = useAsyncData(getMonthlyGrcTrend, []);
   const radar = useAsyncData(getRadarControlProfile, []);
+  const scorecardData = isEmptyLiveObject(scorecard.data) ? null : scorecard.data;
 
   const topDepartments = (heatmap.data || []).slice(0, 5).map(row => ({
     label: row.department_name,
@@ -36,22 +38,28 @@ export function Analytics() {
         subtitle={t('analytics.subtitle')}
       />
 
-      <DataState loading={scorecard.loading} error={scorecard.error} empty={!scorecard.data}>
-        {scorecard.data ? (
+      <DataState
+        loading={scorecard.loading}
+        error={scorecard.error}
+        empty={!scorecardData}
+        emptyTitle="GRC scorecard is not available"
+        emptyMessage="Live score values will appear after the analytics views are applied and records exist in your authorized scope."
+      >
+        {scorecardData ? (
           <>
             <div className="stats-grid analytics-score-grid">
-              <StatCard label={t('analytics.executionHealth')} value={Math.round(scorecard.data.execution_health_score)} tone={scorecard.data.execution_health_score < 60 ? 'danger' : scorecard.data.execution_health_score < 80 ? 'warning' : undefined} />
-              <StatCard label={t('analytics.riskExposure')} value={Math.round(scorecard.data.risk_exposure_score)} tone={signalTone(scorecard.data.risk_exposure_score)} />
-              <StatCard label={t('analytics.compliancePressure')} value={Math.round(scorecard.data.compliance_pressure_score)} tone={signalTone(scorecard.data.compliance_pressure_score)} />
-              <StatCard label={t('analytics.ovrSafetySignal')} value={Math.round(scorecard.data.ovr_safety_signal_score)} tone={signalTone(scorecard.data.ovr_safety_signal_score)} />
-              <StatCard label={t('analytics.evidenceDiscipline')} value={Math.round(scorecard.data.evidence_discipline_score)} tone={scorecard.data.evidence_discipline_score < 60 ? 'warning' : undefined} />
-              <StatCard label={t('analytics.approvalBottleneck')} value={Math.round(scorecard.data.approval_bottleneck_score)} tone={signalTone(scorecard.data.approval_bottleneck_score)} />
+              <StatCard label={t('analytics.executionHealth')} value={Math.round(scorecardData.execution_health_score)} tone={scorecardData.execution_health_score < 60 ? 'danger' : scorecardData.execution_health_score < 80 ? 'warning' : undefined} />
+              <StatCard label={t('analytics.riskExposure')} value={Math.round(scorecardData.risk_exposure_score)} tone={signalTone(scorecardData.risk_exposure_score)} />
+              <StatCard label={t('analytics.compliancePressure')} value={Math.round(scorecardData.compliance_pressure_score)} tone={signalTone(scorecardData.compliance_pressure_score)} />
+              <StatCard label={t('analytics.ovrSafetySignal')} value={Math.round(scorecardData.ovr_safety_signal_score)} tone={signalTone(scorecardData.ovr_safety_signal_score)} />
+              <StatCard label={t('analytics.evidenceDiscipline')} value={Math.round(scorecardData.evidence_discipline_score)} tone={scorecardData.evidence_discipline_score < 60 ? 'warning' : undefined} />
+              <StatCard label={t('analytics.approvalBottleneck')} value={Math.round(scorecardData.approval_bottleneck_score)} tone={signalTone(scorecardData.approval_bottleneck_score)} />
             </div>
 
             <div className="analytics-gauge-grid">
-              <KpiGauge label={t('analytics.executionHealth')} value={scorecard.data.execution_health_score} hint={t('analytics.executionHint')} />
-              <KpiGauge label={t('analytics.riskExposure')} value={scorecard.data.risk_exposure_score} inverse hint={t('analytics.riskHint')} />
-              <KpiGauge label={t('analytics.ovrSafetySignal')} value={scorecard.data.ovr_safety_signal_score} inverse hint={t('analytics.ovrHint')} />
+              <KpiGauge label={t('analytics.executionHealth')} value={scorecardData.execution_health_score} hint={t('analytics.executionHint')} />
+              <KpiGauge label={t('analytics.riskExposure')} value={scorecardData.risk_exposure_score} inverse hint={t('analytics.riskHint')} />
+              <KpiGauge label={t('analytics.ovrSafetySignal')} value={scorecardData.ovr_safety_signal_score} inverse hint={t('analytics.ovrHint')} />
             </div>
           </>
         ) : null}

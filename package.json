@@ -302,7 +302,22 @@
     "v98:verify-ovr": "node scripts/v98-verify-ovr-workflow.mjs",
     "v98:ovr-gap-report": "node scripts/v98-ovr-gap-report.mjs",
     "v98:ovr-e2e": "node scripts/v98-ovr-synthetic-e2e-test.mjs",
-    "pilot:ovr-workflow-verification": "npm run v98:verify-ovr && npm run v98:ovr-gap-report && npm run v98:ovr-e2e"
+    "pilot:ovr-workflow-verification": "npm run v98:verify-ovr && npm run v98:ovr-gap-report && npm run v98:ovr-e2e",
+    "v99:scenario-lab-verify": "node scripts/v99-scenario-lab-verify.mjs",
+    "v99:create-scenarios": "node scripts/v99-create-synthetic-scenario-dataset.mjs",
+    "v99:cleanup-scenarios": "node scripts/v99-cleanup-synthetic-scenario-dataset.mjs",
+    "v99:testing-report": "node scripts/v99-final-testing-report.mjs",
+    "pilot:final-testing-console": "npm run v99:scenario-lab-verify && npm run v99:create-scenarios && npm run v99:testing-report",
+    "v99:create-bulk-users": "node scripts/v99-create-bulk-synthetic-users.mjs",
+    "v99:cleanup-bulk-users": "node scripts/v99-cleanup-bulk-synthetic-users.mjs",
+    "v99:verify-bulk-users": "node scripts/v99-verify-bulk-synthetic-users.mjs",
+    "v99:uat-user-matrix": "node scripts/v99-generate-uat-user-matrix.mjs",
+    "pilot:bulk-uat-users": "npm run v99:create-bulk-users && npm run v99:verify-bulk-users && npm run v99:uat-user-matrix",
+    "v99:ui-polish-check": "node scripts/v99-ui-polish-check.mjs",
+    "v910:ui-polish-check": "node scripts/v910-ui-polish-check.mjs",
+    "v910:uat-readiness-report": "node scripts/v910-uat-readiness-report.mjs",
+    "v910:final-smoke": "node scripts/v910-final-smoke.mjs",
+    "pilot:uat-readiness": "npm run v910:ui-polish-check && npm run v910:uat-readiness-report && npm run v910:final-smoke"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

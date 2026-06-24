@@ -8,6 +8,7 @@ import { ModuleHeader } from '../components/ModuleHeader';
 import { StatCard } from '../components/StatCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAsyncData } from '../hooks/useAsyncData';
+import { isEmptyLiveObject } from '../lib/liveData';
 import {
   assignUserRole,
   createAdminUser,
@@ -86,8 +87,9 @@ export function AccessControl() {
   const warnings = useAsyncData(getAccessControlWarnings, []);
   const organizations = useAsyncData(getOrganizations, []);
   const departments = useAsyncData(getDepartments, []);
+  const summaryData = isEmptyLiveObject(summary.data) ? null : summary.data;
 
-  const organizationId = organizations.data?.[0]?.id || 'demo-org';
+  const organizationId = organizations.data?.[0]?.id || '';
   const userRows = users.data || [];
 
   const filteredUsers = useMemo(() => {
@@ -169,6 +171,10 @@ export function AccessControl() {
       setActionError('Department scope requires a department.');
       return;
     }
+    if (!organizationId) {
+      setActionError('No active organization is available for this administrator.');
+      return;
+    }
     setSaving(true);
     try {
       await assignUserRole({
@@ -206,7 +212,7 @@ export function AccessControl() {
       <ModuleHeader
         eyebrow="Admin Governance"
         title="Access Control Center"
-        subtitle="Manage role assignments safely for a 1,000-employee rollout. This page shows broad access, missing roles, scope issues, and operational workload per user."
+        subtitle="Manage role assignments safely. This page shows broad access, missing roles, scope issues, and operational workload per user."
         action={
           <div className="inline-actions">
             {isSuperAdmin ? (
@@ -226,15 +232,21 @@ export function AccessControl() {
         </div>
       ) : null}
 
-      <DataState loading={summary.loading} error={summary.error} empty={!summary.data}>
-        {summary.data ? (
+      <DataState
+        loading={summary.loading}
+        error={summary.error}
+        empty={!summaryData}
+        emptyTitle="Access summary is not available"
+        emptyMessage="Apply the access-control views and sign in as an authorized administrator to load live counts."
+      >
+        {summaryData ? (
           <div className="stats-grid">
-            <StatCard label="Active users" value={summary.data.active_users} tone="success" />
-            <StatCard label="Active role assignments" value={summary.data.active_role_assignments} />
-            <StatCard label="Global roles" value={summary.data.global_role_assignments} tone="warning" />
-            <StatCard label="Access warnings" value={summary.data.access_warnings} tone={summary.data.access_warnings ? 'danger' : 'success'} />
-            <StatCard label="Users without roles" value={summary.data.active_users_without_roles} tone={summary.data.active_users_without_roles ? 'warning' : 'success'} />
-            <StatCard label="Inactive users" value={summary.data.inactive_users} />
+            <StatCard label="Active users" value={summaryData.active_users} tone="success" />
+            <StatCard label="Active role assignments" value={summaryData.active_role_assignments} />
+            <StatCard label="Global roles" value={summaryData.global_role_assignments} tone="warning" />
+            <StatCard label="Access warnings" value={summaryData.access_warnings} tone={summaryData.access_warnings ? 'danger' : 'success'} />
+            <StatCard label="Users without roles" value={summaryData.active_users_without_roles} tone={summaryData.active_users_without_roles ? 'warning' : 'success'} />
+            <StatCard label="Inactive users" value={summaryData.inactive_users} />
           </div>
         ) : null}
       </DataState>

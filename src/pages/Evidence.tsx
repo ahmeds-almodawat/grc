@@ -1,17 +1,45 @@
 import { useState } from 'react';
+import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { EntityTable } from '../components/EntityTable';
+import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
+import { ScenarioFillButton } from '../components/ScenarioFillButton';
 import { StatusBadge } from '../components/StatusBadge';
 import { formatDate, humanize } from '../lib/format';
 import { getEvidenceQueue, reviewEvidence } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
 import type { EvidenceRow } from '../types/domain';
+import {
+  createScenarioLabScenario,
+  V99_SCENARIO_TAG,
+} from '../lib/scenarioLab';
 
 export function Evidence() {
+  const auth = useAuth();
   const evidence = useAsyncData(getEvidenceQueue, []);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [testFillOpen, setTestFillOpen] = useState(false);
+  const [testFillBusy, setTestFillBusy] = useState(false);
+  const [testFillMessage, setTestFillMessage] = useState<string | null>(null);
+  const canReviewEvidence = auth.roles.some(
+    role => ['super_admin', 'governance_admin', 'compliance_officer', 'department_manager'].includes(role.role)
+  );
+
+  async function createSyntheticEvidence() {
+    setTestFillBusy(true);
+    setTestFillMessage(null);
+    try {
+      const result = await createScenarioLabScenario('evidence');
+      setTestFillMessage(`Synthetic evidence metadata created: ${result.id}`);
+      await evidence.refresh();
+    } catch (err) {
+      setTestFillMessage(err instanceof Error ? err.message : 'Failed to create synthetic evidence.');
+    } finally {
+      setTestFillBusy(false);
+    }
+  }
 
   async function handleReview(row: EvidenceRow, status: 'accepted' | 'rejected' | 'needs_revision') {
     const defaultNote = status === 'accepted' ? '' : 'Needs correction or additional evidence.';
@@ -35,9 +63,16 @@ export function Evidence() {
         eyebrow="Evidence center"
         title="Submitted evidence, review status and closure proof"
         subtitle="No evidence means the work should not be considered fully closed. Review results are recorded in the audit trail."
+        action={(
+          <ScenarioFillButton
+            label="Test-fill Evidence"
+            onClick={() => setTestFillOpen(true)}
+          />
+        )}
       />
 
       {error ? <div className="panel error-panel">{error}</div> : null}
+      {testFillMessage ? <div className="notice-banner">{testFillMessage}</div> : null}
 
       <div className="panel two-column">
         <div>
@@ -49,7 +84,17 @@ export function Evidence() {
 
       <div className="panel">
         <div className="panel-header"><h4>Evidence review queue</h4></div>
-        <DataState loading={evidence.loading} error={evidence.error} empty={!evidence.data?.length}>
+        <DataState
+          loading={evidence.loading}
+          error={evidence.error}
+          empty={!evidence.data?.length}
+          emptyTitle="No evidence items in your scope"
+          emptyMessage={
+            canReviewEvidence
+              ? 'Evidence will appear after controlled work submits files for review. Authorized administrators may use Scenario Lab for synthetic UAT metadata.'
+              : 'No evidence records are currently assigned or visible to this read-only account.'
+          }
+        >
           <EntityTable<EvidenceRow>
             rows={evidence.data || []}
             getRowKey={row => row.id}
@@ -63,7 +108,7 @@ export function Evidence() {
               {
                 key: 'review',
                 header: 'Review',
-                render: row => row.status === 'submitted' || row.status === 'needs_revision' ? (
+                render: row => canReviewEvidence && (row.status === 'submitted' || row.status === 'needs_revision') ? (
                   <div className="inline-actions">
                     <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => void handleReview(row, 'accepted')}>Accept</button>
                     <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => void handleReview(row, 'needs_revision')}>Revise</button>
@@ -75,6 +120,43 @@ export function Evidence() {
           />
         </DataState>
       </div>
+
+      <Modal
+        open={testFillOpen}
+        title="Synthetic evidence test fill"
+        onClose={() => setTestFillOpen(false)}
+      >
+        <div className="form-grid">
+          <div className="notice-banner full-width">
+            This creates metadata-only synthetic evidence and a linked synthetic project.
+            It does not upload confidential content.
+          </div>
+          <label className="field full-width">
+            <span>File name</span>
+            <input readOnly value={`${V99_SCENARIO_TAG}-synthetic-evidence.txt`} />
+          </label>
+          <label className="field full-width">
+            <span>Description</span>
+            <textarea
+              readOnly
+              value={`[${V99_SCENARIO_TAG}] Synthetic evidence metadata. No confidential content.`}
+            />
+          </label>
+          <div className="form-actions full-width">
+            <button className="ghost-button" type="button" onClick={() => setTestFillOpen(false)}>
+              Cancel
+            </button>
+            <button
+              className="primary-button"
+              type="button"
+              disabled={testFillBusy}
+              onClick={() => void createSyntheticEvidence()}
+            >
+              {testFillBusy ? 'Creating…' : 'Create synthetic record'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </section>
   );
 }

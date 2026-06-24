@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-06-21T08:20:37.448Z",
+  "generated_at": "2026-06-23T23:33:41.626Z",
   "environment": "Local Supabase Docker staging",
   "project_id": "grc-control-center",
   "db_container": "supabase_db_grc-control-center",
-  "security_definer_functions": 39,
+  "security_definer_functions": 44,
   "remaining_broad_execute_grants": 0,
   "strict_passed": true,
   "findings": [],
@@ -276,6 +276,41 @@
     },
     {
       "function_signature": "v98_update_ovr_workflow(uuid,uuid,text,jsonb)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "v99_assert_scenario_lab_actor(uuid,text)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "v99_cleanup_scenarios(uuid,text)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "v99_create_ovr_scenario(uuid,uuid,text,text)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "v99_create_scenario(uuid,text,text)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "v99_scenario_status(uuid,text)",
       "security_mode": "definer",
       "authenticated_execute": false,
       "anon_execute": false,

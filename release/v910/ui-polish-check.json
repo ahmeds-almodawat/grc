@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-06-23T23:40:39.754Z",
+  "status": "passed",
+  "scanned_root": "src",
+  "ignored_intentional_test_or_diagnostic_paths": [
+    "src/demo/",
+    "src/pages/ProductionDataControlCenter.tsx",
+    "src/pages/NoMockAutoTestCenter.tsx",
+    "src/lib/demoMode.ts",
+    "src/lib/liveData.ts",
+    "src/lib/supabaseClient.ts"
+  ],
+  "findings_count": 0,
+  "findings": []
+}

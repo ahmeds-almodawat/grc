@@ -4,15 +4,15 @@
 
 ```json
 {
-  "generated_at": "2026-06-20T22:30:38.443Z",
+  "generated_at": "2026-06-23T23:33:48.040Z",
   "db_container": "supabase_db_grc-control-center",
   "db_query_status": "passed",
   "db_query_error": null,
   "frontend_rpc_total": 1,
-  "authenticated_edge_bridge_call_total": 7,
+  "authenticated_edge_bridge_call_total": 12,
   "unique_frontend_rpc_total": 1,
-  "database_function_total": 187,
-  "database_security_definer_functions": 41,
+  "database_function_total": 197,
+  "database_security_definer_functions": 50,
   "remaining_broad_security_definer_execute_grants": 0,
   "managed_schema_broad_security_definer_observations": 3,
   "service_role_only_rpc_called_by_frontend": 0,
@@ -211,7 +211,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 376
+          "line": 477
         }
       ],
       "current_security_mode": "security_definer",
@@ -235,7 +235,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 384
+          "line": 485
         }
       ],
       "current_security_mode": "security_definer",
@@ -259,7 +259,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 990
+          "line": 1067
         }
       ],
       "current_security_mode": "security_definer",
@@ -283,7 +283,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1005
+          "line": 1082
         }
       ],
       "current_security_mode": "security_definer",
@@ -307,7 +307,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1228
+          "line": 1289
         }
       ],
       "current_security_mode": "security_definer",
@@ -331,7 +331,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1242
+          "line": 1316
         }
       ],
       "current_security_mode": "security_definer",

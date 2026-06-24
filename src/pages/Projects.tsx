@@ -49,9 +49,15 @@ export function Projects() {
       <div className="panel">
         <div className="panel-header">
           <h4>Action plans</h4>
-          <p>Live from Supabase when configured; otherwise demo records are displayed.</p>
+          <p>Live action plans visible to the signed-in user through Supabase RLS.</p>
         </div>
-        <DataState loading={projects.loading} error={projects.error} empty={!projects.data?.length}>
+        <DataState
+          loading={projects.loading}
+          error={projects.error}
+          empty={!projects.data?.length}
+          emptyTitle="No corrective actions or projects"
+          emptyMessage="Create a controlled action plan when authorized, or return after work is assigned to your scope."
+        >
           <EntityTable<ProjectRow>
             rows={projects.data || []}
             getRowKey={row => row.id}

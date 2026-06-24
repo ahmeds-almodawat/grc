@@ -4,12 +4,13 @@ import { StatusBadge } from '../components/StatusBadge';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { getCommandStream, getCommandSummary } from '../lib/commandCenterApi';
 import { useI18n } from '../i18n/I18nContext';
+import { isEmptyLiveObject } from '../lib/liveData';
 
 export function ExecutiveCommandCenter() {
   const { t } = useI18n();
   const summary = useAsyncData(getCommandSummary, []);
   const stream = useAsyncData(getCommandStream, []);
-  const data = summary.data;
+  const data = isEmptyLiveObject(summary.data) ? null : summary.data;
 
   return (
     <section className="page-section command-page">
@@ -20,12 +21,19 @@ export function ExecutiveCommandCenter() {
           <p className="section-subtitle">{t('command.subtitle')}</p>
         </div>
         <div className="command-hero-actions">
-          <span className={`backup-pill ${data?.backupHealth ?? 'warning'}`}><DatabaseBackup size={16} /> {t(`command.backup.${data?.backupHealth ?? 'warning'}`)}</span>
-          <button className="primary-button"><FileSearch size={16} /> {t('command.openSearch')}</button>
+          {data?.backupHealth ? (
+            <span className={`backup-pill ${data.backupHealth}`}><DatabaseBackup size={16} /> {t(`command.backup.${data.backupHealth}`)}</span>
+          ) : null}
         </div>
       </div>
 
-      <DataState loading={summary.loading} error={summary.error} empty={!data}>
+      <DataState
+        loading={summary.loading}
+        error={summary.error}
+        empty={!data}
+        emptyTitle="Executive command summary is not available"
+        emptyMessage="No live command-center summary is configured or visible for this account."
+      >
         {data && (
           <div className="stats-grid command-stats">
             <div className="stat-card danger"><AlertTriangle size={20} /><div className="stat-value">{data.criticalNow}</div><div className="stat-label">{t('command.criticalNow')}</div></div>
@@ -33,7 +41,7 @@ export function ExecutiveCommandCenter() {
             <div className="stat-card warning"><ShieldAlert size={20} /><div className="stat-value">{data.departmentPressure}</div><div className="stat-label">{t('command.pressureDepartments')}</div></div>
             <div className="stat-card"><FileSearch size={20} /><div className="stat-value">{data.searchIndexedRecords}</div><div className="stat-label">{t('command.indexedRecords')}</div></div>
             <div className="stat-card warning"><FileSearch size={20} /><div className="stat-value">{data.policyReviewDue}</div><div className="stat-label">{t('command.policyDue')}</div></div>
-            <div className="stat-card success"><Landmark size={20} /><div className="stat-value">{data.releaseReadinessScore}%</div><div className="stat-label">{t('command.releaseScore')}</div></div>
+            <div className="stat-card success"><Landmark size={20} /><div className="stat-value">{data.releaseReadinessScore === null ? t('common.notConfigured') : `${data.releaseReadinessScore}%`}</div><div className="stat-label">{t('command.releaseScore')}</div></div>
           </div>
         )}
       </DataState>
@@ -44,7 +52,13 @@ export function ExecutiveCommandCenter() {
             <h4>{t('command.criticalStream')}</h4>
             <p>{t('command.criticalStreamHint')}</p>
           </div>
-          <DataState loading={stream.loading} error={stream.error} empty={!stream.data?.length}>
+          <DataState
+            loading={stream.loading}
+            error={stream.error}
+            empty={!stream.data?.length}
+            emptyTitle="No critical command items"
+            emptyMessage="No live item in your current scope requires executive or governance attention."
+          >
             <div className="command-stream">
               {(stream.data ?? []).map(item => (
                 <article className={`command-item ${item.riskLevel}`} key={item.id}>

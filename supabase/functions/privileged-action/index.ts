@@ -16,6 +16,9 @@ const allowedActions = new Set([
   'create_user',
   'update_ovr_workflow',
   'create_ovr_corrective_action_project',
+  'v99_create_scenario',
+  'v99_cleanup_scenarios',
+  'v99_scenario_status',
 ]);
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
@@ -69,6 +72,59 @@ Deno.serve(async (request) => {
   const serviceClient = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  if (action.startsWith('v99_')) {
+    const localRuntime = /(^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$)|(^https?:\/\/kong(:\d+)?$)/i
+      .test(supabaseUrl);
+    const controlledPilotEnabled = Deno.env.get('V99_SCENARIO_LAB_ENABLED') === 'true';
+    if (!localRuntime && !controlledPilotEnabled) {
+      return jsonResponse({
+        ok: false,
+        error: 'Scenario Lab is disabled outside local development or an explicitly enabled controlled pilot.',
+        action,
+      }, 403);
+    }
+
+    const confirmation = String(requestBody.payload?.test_dataset_tag ?? '');
+    if (confirmation !== 'V99_SCENARIO_LAB') {
+      return jsonResponse({
+        ok: false,
+        error: 'Exact V99_SCENARIO_LAB dataset confirmation is required.',
+        action,
+      }, 400);
+    }
+
+    const rpcName = action === 'v99_create_scenario'
+      ? 'v99_create_scenario'
+      : action === 'v99_cleanup_scenarios'
+        ? 'v99_cleanup_scenarios'
+        : 'v99_scenario_status';
+    const rpcArgs = action === 'v99_create_scenario'
+      ? {
+          p_actor_id: userData.user.id,
+          p_scenario: requestBody.payload?.scenario,
+          p_confirmation: confirmation,
+        }
+      : {
+          p_actor_id: userData.user.id,
+          p_confirmation: confirmation,
+        };
+    const { data, error } = await serviceClient.rpc(rpcName, rpcArgs);
+
+    if (error) {
+      const authorizationFailure =
+        /SERVICE_ROLE|ADMIN_REQUIRED|ACTIVE_ACTOR|ORGANIZATION_MISMATCH|CONFIRMATION_REQUIRED/i
+          .test(error.message);
+      return jsonResponse({
+        ok: false,
+        error: error.message,
+        code: error.code,
+        action,
+      }, authorizationFailure ? 403 : 409);
+    }
+
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
 
   if (action === 'create_department') {
     const { data, error } = await serviceClient.rpc('v98_create_department', {

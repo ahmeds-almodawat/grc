@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { EntityTable } from '../components/EntityTable';
 import { AuditFindingForm } from '../components/GrcForms';
@@ -11,12 +12,16 @@ import { useAsyncData } from '../hooks/useAsyncData';
 import type { AuditFindingRow } from '../types/domain';
 
 export function Audit() {
+  const auth = useAuth();
   const [formOpen, setFormOpen] = useState(false);
   const findings = useAsyncData(getAuditFindings, []);
   const departments = useAsyncData(getDepartments, []);
   const profiles = useAsyncData(getProfiles, []);
   const organizations = useAsyncData(getOrganizations, []);
   const organizationId = organizations.data?.[0]?.id || '';
+  const canManageFindings = auth.roles.some(
+    role => role.role === 'super_admin' || role.role === 'governance_admin'
+  );
 
   return (
     <section className="page-section">
@@ -24,7 +29,7 @@ export function Audit() {
         eyebrow="Internal audit follow-up"
         title="Findings, corrective actions, evidence review and closure approval"
         subtitle="Departments submit evidence; audit or governance approves final closure."
-        action={<button className="primary-button" onClick={() => setFormOpen(true)}>New Finding</button>}
+        action={canManageFindings ? <button className="primary-button" onClick={() => setFormOpen(true)}>New Finding</button> : null}
       />
 
       <div className="panel two-column">
@@ -37,7 +42,17 @@ export function Audit() {
 
       <div className="panel">
         <div className="panel-header"><h4>Audit findings</h4></div>
-        <DataState loading={findings.loading} error={findings.error} empty={!findings.data?.length}>
+        <DataState
+          loading={findings.loading}
+          error={findings.error}
+          empty={!findings.data?.length}
+          emptyTitle="No audit findings in your scope"
+          emptyMessage={
+            canManageFindings
+              ? 'Create a controlled finding when an audit issue requires tracked remediation.'
+              : 'No audit findings are currently available for this read-only account.'
+          }
+        >
           <EntityTable<AuditFindingRow>
             rows={findings.data || []}
             getRowKey={row => row.id}

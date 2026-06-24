@@ -1,204 +1,248 @@
 import type { ReactNode } from 'react';
 import {
-  AlertTriangle,
   ArrowRight,
-  BellRing,
-  BookOpenCheck,
-  Building2,
-  ClipboardCheck,
-  Command,
-  DatabaseBackup,
-  FileText,
+  Bug,
+  ClipboardList,
+  FileCheck2,
   FolderKanban,
-  Gauge,
   Hospital,
-  LockKeyhole,
-  Network,
-  Rocket,
+  KeyRound,
   Search,
   ShieldAlert,
-  Sparkles,
-  Users,
+  SlidersHorizontal,
+  UserCheck,
+  WandSparkles,
 } from 'lucide-react';
 import type { PageKey } from '../components/Layout';
+import { ControlledPilotBanner } from '../components/ControlledPilotBanner';
 import { useI18n } from '../i18n/I18nContext';
 import { useAuth } from '../auth/AuthProvider';
-import { canAccessPage } from '../auth/authAccess';
+import {
+  canAccessPageForUser,
+  isExternalPilotOrganization,
+} from '../auth/authAccess';
+import { useAsyncData } from '../hooks/useAsyncData';
+import { getPilotUiCounts } from '../lib/grcApi';
+import { isScenarioLabEnabled } from '../lib/scenarioLab';
 
 interface WorkspaceHomeProps {
   setPage: (page: PageKey) => void;
 }
 
-interface WorkspaceCard {
+interface ModuleCard {
+  key: string;
   page: PageKey;
   icon: ReactNode;
-  titleKey: string;
-  descKey: string;
-  badgeKey: string;
+  title: string;
+  description: string;
+  metric?: number | null;
+  metricLabel?: string;
   tone: 'navy' | 'red' | 'blue' | 'green' | 'amber' | 'purple';
 }
-
-const workspaces: WorkspaceCard[] = [
-  {
-    page: 'executiveHub',
-    icon: <Command size={22} />,
-    titleKey: 'home.card.executive.title',
-    descKey: 'home.card.executive.desc',
-    badgeKey: 'home.badge.daily',
-    tone: 'navy',
-  },
-  {
-    page: 'workHub',
-    icon: <FolderKanban size={22} />,
-    titleKey: 'home.card.work.title',
-    descKey: 'home.card.work.desc',
-    badgeKey: 'home.badge.execution',
-    tone: 'blue',
-  },
-  {
-    page: 'grcHub',
-    icon: <ShieldAlert size={22} />,
-    titleKey: 'home.card.grc.title',
-    descKey: 'home.card.grc.desc',
-    badgeKey: 'home.badge.assurance',
-    tone: 'purple',
-  },
-  {
-    page: 'qualityHub',
-    icon: <Hospital size={22} />,
-    titleKey: 'home.card.quality.title',
-    descKey: 'home.card.quality.desc',
-    badgeKey: 'home.badge.safety',
-    tone: 'red',
-  },
-  {
-    page: 'reportsHub',
-    icon: <FileText size={22} />,
-    titleKey: 'home.card.reports.title',
-    descKey: 'home.card.reports.desc',
-    badgeKey: 'home.badge.reporting',
-    tone: 'green',
-  },
-  {
-    page: 'adminHub',
-    icon: <LockKeyhole size={22} />,
-    titleKey: 'home.card.admin.title',
-    descKey: 'home.card.admin.desc',
-    badgeKey: 'home.badge.control',
-    tone: 'amber',
-  },
-];
-
-const dailyControls = [
-  { icon: <Rocket size={18} />, titleKey: 'home.control.production.title', descKey: 'home.control.production.desc', page: 'productionFinish' as PageKey },
-  { icon: <AlertTriangle size={18} />, titleKey: 'home.control.critical.title', descKey: 'home.control.critical.desc', page: 'executiveHub' as PageKey },
-  { icon: <ClipboardCheck size={18} />, titleKey: 'home.control.approvals.title', descKey: 'home.control.approvals.desc', page: 'approvals' as PageKey },
-  { icon: <Hospital size={18} />, titleKey: 'home.control.ovr.title', descKey: 'home.control.ovr.desc', page: 'ovr' as PageKey },
-  { icon: <DatabaseBackup size={18} />, titleKey: 'home.control.backup.title', descKey: 'home.control.backup.desc', page: 'reportsHub' as PageKey },
-];
-
-const quickActions = [
-  { icon: <Rocket size={16} />, labelKey: 'home.quick.production', page: 'productionFinish' as PageKey },
-  { icon: <Search size={16} />, labelKey: 'home.quick.search', page: 'globalSearch' as PageKey },
-  { icon: <BellRing size={16} />, labelKey: 'home.quick.followup', page: 'operations' as PageKey },
-  { icon: <Gauge size={16} />, labelKey: 'home.quick.analytics', page: 'analytics' as PageKey },
-  { icon: <Rocket size={16} />, labelKey: 'home.quick.release', page: 'adminHub' as PageKey },
-];
 
 export function WorkspaceHome({ setPage }: WorkspaceHomeProps) {
   const { t } = useI18n();
   const auth = useAuth();
-  const visibleWorkspaces = workspaces.filter(card => canAccessPage(card.page, auth.roles));
-  const visibleDailyControls = dailyControls.filter(item => canAccessPage(item.page, auth.roles));
-  const visibleQuickActions = quickActions.filter(action => canAccessPage(action.page, auth.roles));
+  const counts = useAsyncData(getPilotUiCounts, []);
+  const organizationName = auth.profile?.organizationName;
+  const isExternalPilot = isExternalPilotOrganization(organizationName);
+  const canOpen = (page: PageKey) => canAccessPageForUser(page, auth.roles, organizationName);
+  const hasRole = (...roles: string[]) => auth.roles.some(assignment => roles.includes(assignment.role));
+  const countLabel = (value: number | null | undefined) => (
+    typeof value === 'number' ? String(value) : t('common.notConfigured')
+  );
+
+  const cards: ModuleCard[] = [
+    {
+      key: 'ovr',
+      page: 'ovr',
+      icon: <Hospital size={22} />,
+      title: t('home.module.ovr'),
+      description: t('home.module.ovr.desc'),
+      metric: counts.data?.ovrReports,
+      metricLabel: typeof counts.data?.openOvrReports === 'number'
+        ? `${counts.data.openOvrReports} ${t('home.metric.open')}`
+        : t('common.notConfigured'),
+      tone: 'red',
+    },
+    ...(hasRole('employee', 'task_owner', 'milestone_owner', 'project_owner', 'department_manager', 'division_head') || isExternalPilot
+      ? [{
+          key: 'my-work',
+          page: 'myWork' as PageKey,
+          icon: <UserCheck size={22} />,
+          title: t('home.module.myWork'),
+          description: t('home.module.myWork.desc'),
+          tone: 'blue' as const,
+        }]
+      : []),
+    {
+      key: 'risks',
+      page: 'risks',
+      icon: <ShieldAlert size={22} />,
+      title: t('home.module.risks'),
+      description: t('home.module.risks.desc'),
+      metric: counts.data?.risks,
+      metricLabel: t('home.metric.records'),
+      tone: 'purple',
+    },
+    {
+      key: 'controls',
+      page: 'risks',
+      icon: <SlidersHorizontal size={22} />,
+      title: t('home.module.controls'),
+      description: t('home.module.controls.desc'),
+      metric: counts.data?.activeControls,
+      metricLabel: t('home.metric.active'),
+      tone: 'navy',
+    },
+    {
+      key: 'evidence',
+      page: 'evidence',
+      icon: <FileCheck2 size={22} />,
+      title: t('home.module.evidence'),
+      description: t('home.module.evidence.desc'),
+      metric: counts.data?.evidenceItems,
+      metricLabel: t('home.metric.items'),
+      tone: 'green',
+    },
+    {
+      key: 'projects',
+      page: 'projects',
+      icon: <FolderKanban size={22} />,
+      title: t('home.module.projects'),
+      description: t('home.module.projects.desc'),
+      metric: counts.data?.projects,
+      metricLabel: t('home.metric.records'),
+      tone: 'blue',
+    },
+    {
+      key: 'reports',
+      page: 'reportsHub',
+      icon: <ClipboardList size={22} />,
+      title: t('home.module.reports'),
+      description: t('home.module.reports.desc'),
+      tone: 'green',
+    },
+    ...(hasRole('auditor')
+      ? [{
+          key: 'audit',
+          page: 'audit' as PageKey,
+          icon: <ClipboardList size={22} />,
+          title: t('home.module.audit'),
+          description: t('home.module.audit.desc'),
+          tone: 'amber' as const,
+        }]
+      : []),
+    {
+      key: 'access',
+      page: 'accessControl',
+      icon: <KeyRound size={22} />,
+      title: t('home.module.access'),
+      description: t('home.module.access.desc'),
+      metric: counts.data?.activeProfiles,
+      metricLabel: t('home.metric.activeProfiles'),
+      tone: 'amber',
+    },
+  ];
+
+  const visibleCards = cards.filter(card => canOpen(card.page));
+  const showScenarioLab = isScenarioLabEnabled
+    && hasRole('super_admin', 'governance_admin')
+    && canOpen('scenarioTestConsole');
+  const showUatTools = isScenarioLabEnabled && canOpen('uatIssueCapture');
+  const primaryPage: PageKey = canOpen('executiveHub') ? 'executiveHub' : canOpen('myWork') ? 'myWork' : 'ovr';
 
   return (
     <section className="workspace-home">
+      <ControlledPilotBanner />
+
       <div className="workspace-hero panel">
         <div className="workspace-hero__content">
-          <div className="workspace-kicker"><Sparkles size={16} /> {t('home.kicker')}</div>
+          <div className="workspace-kicker"><ShieldAlert size={16} /> {t('home.kicker')}</div>
           <h3>{t('home.title')}</h3>
-          <p>{t('home.subtitle')}</p>
+          <p>{isExternalPilot ? t('home.external.subtitle') : t('home.subtitle')}</p>
           <div className="workspace-hero__actions">
-            <button className="primary-action" type="button" onClick={() => setPage(canAccessPage('executiveHub', auth.roles) ? 'executiveHub' : 'myWork')}>
-              <Command size={17} /> {t('home.openCommand')}
+            <button className="primary-action" type="button" onClick={() => setPage(primaryPage)}>
+              <ArrowRight size={17} /> {t('home.openRelevant')}
             </button>
-            <button className="secondary-action" type="button" onClick={() => setPage('globalSearch')}>
-              <Search size={17} /> {t('home.openSearch')}
-            </button>
+            {canOpen('globalSearch') ? (
+              <button className="secondary-action" type="button" onClick={() => setPage('globalSearch')}>
+                <Search size={17} /> {t('home.openSearch')}
+              </button>
+            ) : null}
           </div>
         </div>
-        <div className="workspace-hero__metrics" aria-label={t('home.controlStrip')}>
-          <div><strong>6</strong><span>{t('home.metric.workspaces')}</span></div>
-          <div><strong>50</strong><span>{t('home.metric.departments')}</span></div>
-          <div><strong>1K</strong><span>{t('home.metric.employees')}</span></div>
+        <div className="workspace-hero__metrics" aria-label={t('home.liveScope')}>
+          <div>
+            <strong>{countLabel(counts.data?.activeProfiles)}</strong>
+            <span>{t('home.metric.activeProfiles')}</span>
+          </div>
+          <div>
+            <strong>{countLabel(counts.data?.activeDepartments)}</strong>
+            <span>{t('home.metric.activeDepartments')}</span>
+          </div>
+          <div>
+            <strong>{countLabel(counts.data?.openOvrReports)}</strong>
+            <span>{t('home.metric.openOvr')}</span>
+          </div>
         </div>
       </div>
+
+      {isExternalPilot ? (
+        <div className="notice-banner">
+          <strong>{t('home.external.title')}</strong> {t('home.external.notice')}
+        </div>
+      ) : null}
 
       <div className="home-section-heading">
         <div>
-          <p className="eyebrow">{t('home.workspaces.eyebrow')}</p>
-          <h3>{t('home.workspaces.title')}</h3>
+          <p className="eyebrow">{t('home.modules.eyebrow')}</p>
+          <h3>{t('home.modules.title')}</h3>
         </div>
-        <span>{t('home.workspaces.hint')}</span>
+        <span>{t('home.modules.hint')}</span>
       </div>
 
       <div className="workspace-grid">
-        {visibleWorkspaces.map(card => (
-          <button key={card.page} type="button" className={`workspace-card workspace-card--${card.tone}`} onClick={() => setPage(card.page)}>
-            <span className="workspace-card__badge">{t(card.badgeKey)}</span>
+        {visibleCards.map(card => (
+          <button
+            key={card.key}
+            type="button"
+            className={`workspace-card workspace-card--${card.tone}`}
+            onClick={() => setPage(card.page)}
+          >
+            {card.metric !== undefined ? (
+              <span className="workspace-card__metric">
+                <strong>{countLabel(card.metric)}</strong>
+                <small>{card.metricLabel}</small>
+              </span>
+            ) : null}
             <span className="workspace-card__icon">{card.icon}</span>
-            <strong>{t(card.titleKey)}</strong>
-            <small>{t(card.descKey)}</small>
-            <span className="workspace-card__footer">{t('home.openWorkspace')} <ArrowRight size={15} /></span>
+            <strong>{card.title}</strong>
+            <small>{card.description}</small>
+            <span className="workspace-card__footer">{t('home.openModule')} <ArrowRight size={15} /></span>
           </button>
         ))}
       </div>
 
-      <div className="control-grid">
-        <div className="panel control-panel-wide">
-          <div className="home-section-heading home-section-heading--compact">
-            <div>
-              <p className="eyebrow">{t('home.daily.eyebrow')}</p>
-              <h3>{t('home.daily.title')}</h3>
-            </div>
+      {showUatTools ? (
+        <div className="panel uat-tools-panel">
+          <div>
+            <p className="eyebrow">{t('nav.uatTools')}</p>
+            <h3>{t('home.uat.title')}</h3>
+            <p>{t('home.uat.desc')}</p>
           </div>
-          <div className="daily-control-list">
-            {visibleDailyControls.map(item => (
-              <button key={item.titleKey} type="button" onClick={() => setPage(item.page)} className="daily-control-row">
-                <span>{item.icon}</span>
-                <span><strong>{t(item.titleKey)}</strong><small>{t(item.descKey)}</small></span>
-                <ArrowRight size={16} />
+          <div className="uat-tools-panel__actions">
+            <button className="secondary-action" type="button" onClick={() => setPage('uatIssueCapture')}>
+              <Bug size={17} /> {t('nav.uatIssueCapture')}
+            </button>
+            {showScenarioLab ? (
+              <button className="secondary-action" type="button" onClick={() => setPage('scenarioTestConsole')}>
+                <WandSparkles size={17} /> {t('nav.scenarioLab')}
               </button>
-            ))}
+            ) : null}
           </div>
         </div>
-
-        <div className="panel quick-action-panel">
-          <p className="eyebrow">{t('home.quick.eyebrow')}</p>
-          <h3>{t('home.quick.title')}</h3>
-          <div className="quick-action-stack">
-            {visibleQuickActions.map(action => (
-              <button key={action.labelKey} type="button" onClick={() => setPage(action.page)}>
-                {action.icon}<span>{t(action.labelKey)}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="panel home-principles">
-        <div>
-          <p className="eyebrow">{t('home.rules.eyebrow')}</p>
-          <h3>{t('home.rules.title')}</h3>
-        </div>
-        <div className="principle-grid">
-          <span><BookOpenCheck size={16} /> {t('home.rule.evidence')}</span>
-          <span><Network size={16} /> {t('home.rule.traceability')}</span>
-          <span><Users size={16} /> {t('home.rule.ownership')}</span>
-          <span><Building2 size={16} /> {t('home.rule.scope')}</span>
-        </div>
-      </div>
+      ) : null}
     </section>
   );
 }

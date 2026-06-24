@@ -2972,6 +2972,35 @@ body {
   border: 1px solid rgba(226, 232, 240, 0.9);
 }
 
+.workspace-card__metric {
+  align-self: flex-end;
+  min-width: 96px;
+  margin-bottom: -8px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  text-align: end;
+}
+
+.workspace-card__metric strong,
+.workspace-card__metric small {
+  display: block;
+}
+
+.workspace-card__metric strong {
+  font-size: 19px;
+  line-height: 1.1;
+}
+
+.workspace-card__metric small {
+  margin-top: 3px;
+  font-size: 10px;
+  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .workspace-card__icon {
   width: 48px;
   height: 48px;
@@ -3148,6 +3177,207 @@ body {
   line-height: 1.55;
 }
 
+.controlled-pilot-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 11px 14px;
+  border-radius: 16px;
+  color: #1e3a8a;
+  background: rgba(239, 246, 255, 0.92);
+  border: 1px solid #bfdbfe;
+  font-size: 12px;
+}
+
+.controlled-pilot-banner strong {
+  color: #172554;
+}
+
+.controlled-pilot-banner span {
+  padding-inline-start: 8px;
+  border-inline-start: 1px solid #bfdbfe;
+}
+
+.controlled-pilot-banner--compact {
+  min-height: 36px;
+  padding: 7px 10px;
+  border-radius: 13px;
+  white-space: nowrap;
+}
+
+.controlled-pilot-banner--compact span {
+  display: none;
+}
+
+.professional-empty-state {
+  display: grid;
+  gap: 7px;
+  padding: 24px;
+}
+
+.professional-empty-state strong {
+  color: #0f172a;
+  font-size: 16px;
+}
+
+.professional-empty-state p {
+  margin: 0;
+  max-width: 720px;
+  line-height: 1.55;
+}
+
+.professional-empty-state__action {
+  margin-top: 6px;
+}
+
+.uat-tools-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 22px;
+  border-style: dashed;
+}
+
+.uat-tools-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.uat-tools-panel h3 {
+  margin: 4px 0 6px;
+}
+
+.uat-tools-panel p:last-child {
+  margin: 0;
+  color: #64748b;
+}
+
+.uat-command-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.uat-action-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.uat-action-card {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.88);
+  padding: 14px;
+}
+
+.uat-action-card strong {
+  color: #0f172a;
+}
+
+.uat-action-card p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.uat-action-card code {
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  border-radius: 12px;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.uat-checklist-preview ul {
+  margin: 0;
+  padding-inline-start: 20px;
+  color: #334155;
+}
+
+.uat-issue-layout {
+  align-items: start;
+}
+
+.uat-issue-form {
+  display: grid;
+  gap: 16px;
+}
+
+.uat-issue-list {
+  display: grid;
+  gap: 10px;
+}
+
+.uat-issue-list__item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 12px;
+}
+
+.uat-issue-list__item div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.uat-issue-list__item span,
+.uat-issue-list__item small {
+  color: #64748b;
+}
+
+.uat-issue-list__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.uat-issue-list__badges .status-pill {
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 800;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.uat-issue-list__badges .status-pill.blocker,
+.uat-issue-list__badges .status-pill.critical {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.uat-issue-list__badges .status-pill.high {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.uat-issue-list__badges .status-pill.medium,
+.uat-issue-list__badges .status-pill.reviewing {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.uat-issue-list__badges .status-pill.low,
+.uat-issue-list__badges .status-pill.fixed {
+  background: #dcfce7;
+  color: #166534;
+}
+
 /* more polished tab density on large hubs */
 .hub-tab-rail {
   align-content: start;
@@ -3166,7 +3396,8 @@ body {
 
 @media (max-width: 1180px) {
   .workspace-grid,
-  .principle-grid {
+  .principle-grid,
+  .uat-action-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -3188,7 +3419,8 @@ body {
 
   .workspace-grid,
   .principle-grid,
-  .workspace-hero__metrics {
+  .workspace-hero__metrics,
+  .uat-action-grid {
     grid-template-columns: 1fr;
   }
 
@@ -3197,6 +3429,11 @@ body {
   }
 
   .home-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .uat-tools-panel {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -4113,4 +4350,93 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+.scenario-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.scenario-warning div {
+  display: grid;
+  gap: 4px;
+}
+
+.scenario-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.scenario-card {
+  display: flex;
+  min-height: 250px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid #dbe3ef;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.scenario-card--warning {
+  border-left: 5px solid #f59e0b;
+}
+
+.scenario-card--danger {
+  border-left: 5px solid #ef4444;
+}
+
+.scenario-card__heading,
+.scenario-card__actions,
+.scenario-status-list {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.scenario-card__heading {
+  justify-content: space-between;
+}
+
+.scenario-card__letter {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #075985;
+  font-weight: 800;
+}
+
+.scenario-card h4,
+.scenario-card p {
+  margin: 0;
+}
+
+.scenario-card p {
+  flex: 1;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.scenario-status-list span {
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: #f1f5f9;
+}
+
+@media (max-width: 1100px) {
+  .scenario-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .scenario-card-grid {
+    grid-template-columns: 1fr;
+  }
 }

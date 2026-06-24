@@ -1,16 +1,16 @@
 # v7.0 Frontend RPC Inventory
 
-Generated: 2026-06-20T22:30:37.988Z
+Generated: 2026-06-23T23:33:46.830Z
 
 - Direct frontend RPC calls: 1
-- Authenticated Edge bridge calls: 7
-- Unique RPC names: 8
+- Authenticated Edge bridge calls: 12
+- Unique RPC names: 13
 
 ## Classification counts
 
 ```json
 {
-  "unknown_requires_review": 2,
+  "unknown_requires_review": 7,
   "workflow_runtime_review": 4,
   "privileged_admin_review": 2
 }
@@ -24,5 +24,10 @@ Generated: 2026-06-20T22:30:37.988Z
 - `resolve_escalation_event` (1 call site)
 - `assign_user_role` (1 call site)
 - `deactivate_user_role` (1 call site)
+- `create_department` (1 call site)
+- `create_user` (1 call site)
 - `update_ovr_workflow` (1 call site)
 - `create_ovr_corrective_action_project` (1 call site)
+- `v99_create_scenario` (1 call site)
+- `v99_cleanup_scenarios` (1 call site)
+- `v99_scenario_status` (1 call site)

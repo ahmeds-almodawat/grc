@@ -1,6 +1,11 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import type { DepartmentOption, PriorityLevel, ProfileOption, RiskLevel, SourceType } from '../types/domain';
 import { createProject } from '../lib/grcApi';
+import { ScenarioFillButton } from './ScenarioFillButton';
+import {
+  createScenarioLabScenario,
+  V99_SCENARIO_TAG,
+} from '../lib/scenarioLab';
 
 interface ActionPlanFormProps {
   organizationId: string;
@@ -56,6 +61,14 @@ export function ActionPlanForm({ organizationId, departments, profiles, onCreate
 
     setSaving(true);
     try {
+      if (
+        title.includes(V99_SCENARIO_TAG)
+        || description.includes(V99_SCENARIO_TAG)
+      ) {
+        await createScenarioLabScenario('project');
+        onCreated();
+        return;
+      }
       await createProject({
         organization_id: organizationId,
         title: title.trim(),
@@ -80,9 +93,31 @@ export function ActionPlanForm({ organizationId, departments, profiles, onCreate
     }
   }
 
+  function fillSyntheticProject() {
+    setTitle(`[${V99_SCENARIO_TAG}] Synthetic corrective action`);
+    setDescription(
+      `[${V99_SCENARIO_TAG}] Synthetic controlled-pilot project. `
+      + 'No confidential or patient-related content.',
+    );
+    setCategory('Controlled Pilot Test');
+    setSourceType('manual');
+    setDepartmentId(departments[0]?.id || '');
+    setOwnerId(profiles[0]?.id || '');
+    setSponsorId(profiles[0]?.id || '');
+    setStartDate(new Date().toISOString().slice(0, 10));
+    setTargetEndDate(new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10));
+    setPriority('high');
+    setRiskLevel('medium');
+    setEvidenceRequired(true);
+    setClosureApprovalRequired(true);
+  }
+
   return (
     <form className="form-grid" onSubmit={handleSubmit}>
       {error ? <div className="form-error">{error}</div> : null}
+      <div className="full-width">
+        <ScenarioFillButton onClick={fillSyntheticProject} />
+      </div>
 
       <label className="field full-width">
         <span>Action plan title *</span>

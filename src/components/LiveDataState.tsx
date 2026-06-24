@@ -23,7 +23,7 @@ export default function LiveDataState({ title, message, arTitle, arMessage, lang
         <h3>{resolvedTitle}</h3>
         <p>{resolvedMessage}</p>
         {isDemoDataEnabled && (
-          <strong>{isArabic ? 'وضع البيانات التجريبية مفعّل لبيئة غير إنتاجية.' : 'Demo data mode is enabled for a non-production environment.'}</strong>
+          <strong>{isArabic ? 'وضع بيانات الاختبار الاصطناعية مفعّل لبيئة غير إنتاجية.' : 'Synthetic test-data mode is enabled for a non-production environment.'}</strong>
         )}
       </div>
     </div>

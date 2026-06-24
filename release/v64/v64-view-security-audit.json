@@ -1,7 +1,7 @@
 {
   "summary": {
-    "generated_at": "2026-06-20T22:30:32.493Z",
-    "migration_files_scanned": 48,
+    "generated_at": "2026-06-23T23:33:35.733Z",
+    "migration_files_scanned": 52,
     "views_detected": 150,
     "findings_total": 102,
     "critical": 0,
@@ -526,7 +526,8 @@
       "view": "v_ovr_quality_queue",
       "files": [
         "supabase/migrations/010_bilingual_and_ovr_module.sql",
-        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+        "supabase/migrations/043_v641_database_security_static_remediation.sql",
+        "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -580,7 +581,8 @@
       "view": "v_ovr_summary",
       "files": [
         "supabase/migrations/010_bilingual_and_ovr_module.sql",
-        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+        "supabase/migrations/043_v641_database_security_static_remediation.sql",
+        "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -589,7 +591,9 @@
       "view": "v_ovr_workflow_control_summary",
       "files": [
         "supabase/migrations/036_b_ovr_workflow_controls.sql",
-        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+        "supabase/migrations/043_v641_database_security_static_remediation.sql",
+        "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
+        "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -598,7 +602,9 @@
       "view": "v_ovr_workflow_queue",
       "files": [
         "supabase/migrations/036_b_ovr_workflow_controls.sql",
-        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+        "supabase/migrations/043_v641_database_security_static_remediation.sql",
+        "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
+        "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -2630,6 +2636,48 @@
       "occurrence": "alter_view_security_invoker",
       "has_security_invoker": true,
       "sensitive": false
+    },
+    {
+      "view": "v_ovr_workflow_queue",
+      "file": "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_workflow_control_summary",
+      "file": "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_summary",
+      "file": "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_quality_queue",
+      "file": "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_workflow_queue",
+      "file": "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_workflow_control_summary",
+      "file": "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
     }
   ],
   "findings": [

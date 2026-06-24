@@ -560,7 +560,7 @@ try {
     'update_ovr_workflow',
     {
       ovr_report_id: ovr.id,
-      next_status: 'under_quality_review',
+      next_status: 'manager_review',
       supervisor_investigation: 'Synthetic supervisor investigation for local proof.',
       note: 'Synthetic workflow bridge proof.',
     },

@@ -6,7 +6,6 @@ const liveEmptyExecutiveSummary: any = emptyLiveObject<any>('src/lib/grcApi.ts.l
 const liveEmptyExportCenterSummary: any = emptyLiveObject<any>('src/lib/grcApi.ts.liveEmptyExportCenterSummary');
 const liveEmptyGrcKpiScorecard: any = emptyLiveObject<any>('src/lib/grcApi.ts.liveEmptyGrcKpiScorecard');
 const liveEmptyManagementControlSummary: any = emptyLiveObject<any>('src/lib/grcApi.ts.liveEmptyManagementControlSummary');
-const liveEmptyOrganization: any = emptyLiveObject<any>('src/lib/grcApi.ts.liveEmptyOrganization');
 const liveEmptyOvrSummary: any = emptyLiveObject<any>('src/lib/grcApi.ts.liveEmptyOvrSummary');
 const liveEmptyOvrRiskIndicatorSummary: any = emptyLiveObject<any>('src/lib/grcApi.ts.liveEmptyOvrRiskIndicatorSummary');
 const liveEmptyAccessControlWarnings: any[] = emptyLiveArray<any>();
@@ -86,12 +85,12 @@ import type {
 
 function logFallback(label: string, error: unknown) {
   // eslint-disable-next-line no-console
-  console.warn(`[GRC demo emptyRows] ${label}`, error);
+  console.warn(`[GRC live-data unavailable] ${label}`, error);
 }
 
 function requireLiveSupabase() {
   if (!supabase) {
-    throw new Error('Supabase is not configured. This starter runs in demo mode until you add .env credentials.');
+    throw new Error('Supabase is not configured. Add the local or staging credentials to .env before using this action.');
   }
   return supabase;
 }
@@ -100,6 +99,107 @@ async function currentUserId() {
   if (!supabase) return null;
   const { data } = await supabase.auth.getUser();
   return data.user?.id ?? null;
+}
+
+export interface PilotUiCounts {
+  activeProfiles: number | null;
+  activeDepartments: number | null;
+  ovrReports: number | null;
+  openOvrReports: number | null;
+  risks: number | null;
+  activeControls: number | null;
+  evidenceItems: number | null;
+  projects: number | null;
+}
+
+async function readExactCount(query: any, label: string): Promise<number | null> {
+  try {
+    const { count, error } = await query;
+    if (error) throw error;
+    return typeof count === 'number' ? count : 0;
+  } catch (error) {
+    logFallback(`${label} count`, error);
+    return null;
+  }
+}
+
+async function readVisibleRowCount(query: any, label: string): Promise<number | null> {
+  try {
+    const { data, error } = await query;
+    if (error) throw error;
+    return Array.isArray(data) ? data.length : null;
+  } catch (error) {
+    logFallback(`${label} visible row count`, error);
+    return null;
+  }
+}
+
+async function readCountWithVisibleFallback(exactQuery: any, rowQuery: any, label: string) {
+  const exact = await readExactCount(exactQuery, label);
+  if (exact !== null) return exact;
+  return readVisibleRowCount(rowQuery, label);
+}
+
+export async function getPilotUiCounts(): Promise<PilotUiCounts> {
+  if (!supabase) {
+    return {
+      activeProfiles: null,
+      activeDepartments: null,
+      ovrReports: null,
+      openOvrReports: null,
+      risks: null,
+      activeControls: null,
+      evidenceItems: null,
+      projects: null,
+    };
+  }
+
+  const [
+    activeProfiles,
+    activeDepartments,
+    ovrReports,
+    openOvrReports,
+    risks,
+    activeControls,
+    evidenceItems,
+    projects,
+  ] = await Promise.all([
+    readExactCount(supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('is_active', true), 'active profiles'),
+    readExactCount(supabase.from('departments').select('id', { count: 'exact', head: true }).eq('is_active', true), 'active departments'),
+    readExactCount(supabase.from('ovr_reports').select('id', { count: 'exact', head: true }), 'OVR reports'),
+    readExactCount(
+      supabase
+        .from('ovr_reports')
+        .select('id', { count: 'exact', head: true })
+        .neq('status', 'closed')
+        .neq('status', 'rejected')
+        .neq('status', 'cancelled'),
+      'open OVR reports'
+    ),
+    readCountWithVisibleFallback(
+      supabase.from('risks').select('id', { count: 'exact', head: true }),
+      supabase.from('risks').select('id').limit(5000),
+      'risks'
+    ),
+    readCountWithVisibleFallback(
+      supabase.from('risk_controls').select('id', { count: 'exact', head: true }).eq('is_active', true),
+      supabase.from('risk_controls').select('id').eq('is_active', true).limit(5000),
+      'active controls'
+    ),
+    readExactCount(supabase.from('evidence_files').select('id', { count: 'exact', head: true }), 'evidence items'),
+    readExactCount(supabase.from('projects').select('id', { count: 'exact', head: true }), 'projects'),
+  ]);
+
+  return {
+    activeProfiles,
+    activeDepartments,
+    ovrReports,
+    openOvrReports,
+    risks,
+    activeControls,
+    evidenceItems,
+    projects,
+  };
 }
 
 export async function getExecutiveSummary(): Promise<ExecutiveSummary> {
@@ -389,15 +489,15 @@ export async function resolveEscalation(eventId: string, note?: string) {
 }
 
 export async function getOrganizations(): Promise<OrganizationOption[]> {
-  if (!supabase) return [liveEmptyOrganization];
+  if (!supabase) return [];
 
   try {
     const { data, error } = await supabase.from('organizations').select('id,name_en,name_ar').eq('is_active', true).limit(20);
     if (error) throw error;
-    return data?.length ? (data as OrganizationOption[]) : [liveEmptyOrganization];
+    return data?.length ? (data as OrganizationOption[]) : [];
   } catch (error) {
     logFallback('organizations', error);
-    return [liveEmptyOrganization];
+    return [];
   }
 }
 
@@ -829,20 +929,7 @@ export async function requestApproval(input: RequestApprovalInput) {
 }
 
 export async function getDepartmentExecutionSummary(): Promise<DepartmentExecutionSummary[]> {
-  if (!supabase) {
-    return liveEmptyDepartments.map((department, index) => ({
-      organization_id: liveEmptyOrganization.id,
-      department_id: department.id,
-      department_name: department.name_en,
-      active_projects: index === 0 ? 4 : index === 1 ? 3 : 2,
-      overdue_projects: index === 0 ? 1 : 0,
-      overdue_milestones: index === 1 ? 2 : 0,
-      overdue_tasks: index === 2 ? 3 : 1,
-      critical_risks: index === 0 ? 2 : 0,
-      overdue_audit_findings: index === 1 ? 1 : 0,
-      compliance_expiring_30_days: index === 2 ? 2 : 1
-    }));
-  }
+  if (!supabase) return [];
 
   try {
     const { data, error } = await supabase
@@ -854,18 +941,7 @@ export async function getDepartmentExecutionSummary(): Promise<DepartmentExecuti
     return (data as unknown as DepartmentExecutionSummary[]) || [];
   } catch (error) {
     logFallback('department execution summary', error);
-    return liveEmptyDepartments.map((department, index) => ({
-      organization_id: liveEmptyOrganization.id,
-      department_id: department.id,
-      department_name: department.name_en,
-      active_projects: index === 0 ? 4 : index === 1 ? 3 : 2,
-      overdue_projects: index === 0 ? 1 : 0,
-      overdue_milestones: index === 1 ? 2 : 0,
-      overdue_tasks: index === 2 ? 3 : 1,
-      critical_risks: index === 0 ? 2 : 0,
-      overdue_audit_findings: index === 1 ? 1 : 0,
-      compliance_expiring_30_days: index === 2 ? 2 : 1
-    }));
+    return [];
   }
 }
 
@@ -1162,63 +1238,21 @@ export async function createOvrReport(input: CreateOvrReportInput) {
 
 
 export async function getOvrWorkflowControlSummary(): Promise<OvrWorkflowControlSummary> {
-  if (!supabase) {
-    return {
-      organization_id: liveEmptyOrganization.id,
-      pending_supervisor_review: 2,
-      pending_quality_review: 3,
-      returned_for_clarification: 1,
-      pending_evidence_review: 2,
-      major_open_ovrs: 1,
-      overdue_ovr_workflow_items: 2
-    };
-  }
+  if (!supabase) return emptyLiveObject<OvrWorkflowControlSummary>('getOvrWorkflowControlSummary');
 
   try {
     const { data, error } = await supabase.from('v_ovr_workflow_control_summary').select('*').limit(1);
     if (error) throw error;
     const row = data?.[0] as OvrWorkflowControlSummary | undefined;
-    return row || {
-      organization_id: liveEmptyOrganization.id,
-      pending_supervisor_review: 0,
-      pending_quality_review: 0,
-      returned_for_clarification: 0,
-      pending_evidence_review: 0,
-      major_open_ovrs: 0,
-      overdue_ovr_workflow_items: 0
-    };
+    return row || emptyLiveObject<OvrWorkflowControlSummary>('getOvrWorkflowControlSummary');
   } catch (error) {
     logFallback('OVR workflow control summary', error);
-    return {
-      organization_id: liveEmptyOrganization.id,
-      pending_supervisor_review: 2,
-      pending_quality_review: 3,
-      returned_for_clarification: 1,
-      pending_evidence_review: 2,
-      major_open_ovrs: 1,
-      overdue_ovr_workflow_items: 2
-    };
+    return emptyLiveObject<OvrWorkflowControlSummary>('getOvrWorkflowControlSummary');
   }
 }
 
 export async function getOvrWorkflowQueue(): Promise<OvrWorkflowQueueRow[]> {
-  if (!supabase) {
-    return liveEmptyOvrReports.slice(0, 4).map((row, index) => ({
-      id: row.id,
-      organization_id: row.organization_id,
-      ovr_number: row.ovr_number || row.logging_number,
-      title: row.brief_description,
-      department_name: row.departments?.name_en || 'Quality',
-      owner_name: row.owner?.full_name_en || 'Quality Manager',
-      occurrence_date: row.occurrence_date,
-      status: row.status,
-      severity_level: row.severity_level,
-      workflow_stage: index === 0 ? 'quality_review' : index === 1 ? 'supervisor_review' : 'corrective_action',
-      due_date: row.occurrence_date,
-      is_overdue: index < 2,
-      risk_level: row.severity_level === 'sentinel' || row.severity_level === 'level_4' ? 'critical' : index === 1 ? 'high' : 'medium'
-    }));
-  }
+  if (!supabase) return [];
 
   try {
     const { data, error } = await supabase

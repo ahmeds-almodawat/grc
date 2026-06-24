@@ -8,8 +8,10 @@ import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatCard } from '../components/StatCard';
 import { StatusBadge } from '../components/StatusBadge';
+import { ScenarioFillButton } from '../components/ScenarioFillButton';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { formatDate, humanize } from '../lib/format';
+import { isEmptyLiveObject } from '../lib/liveData';
 import {
   createOvrCorrectiveActionProject,
   createOvrReport,
@@ -24,6 +26,10 @@ import {
 } from '../lib/grcApi';
 import { useI18n } from '../i18n/I18nContext';
 import type { OvrReportRow, OvrSeverityLevel, OvrStatus, OvrWorkflowQueueRow } from '../types/domain';
+import {
+  createScenarioLabScenario,
+  V99_SCENARIO_TAG,
+} from '../lib/scenarioLab';
 
 const occurrenceCategories = [
   'medications',
@@ -169,11 +175,16 @@ export function OVR() {
     create_linked_action_plan: true
   });
 
-  const organizationId = organizations.data?.[0]?.id || 'demo-org';
+  const organizationId = organizations.data?.[0]?.id || '';
   const filteredReports = useMemo(() => reports.data || [], [reports.data]);
   const isQuality = auth.roles.some(role => ['super_admin', 'governance_admin', 'compliance_officer'].includes(role.role));
   const isAuditorOnly = auth.roles.some(role => role.role === 'auditor') && !isQuality;
+  const isViewerOnly = auth.roles.some(role => role.role === 'viewer')
+    && !auth.roles.some(role => ['super_admin', 'governance_admin', 'compliance_officer'].includes(role.role));
+  const isReadOnly = isAuditorOnly || isViewerOnly;
   const currentUserId = auth.profile?.id || '';
+  const summaryData = isEmptyLiveObject(summary.data) ? null : summary.data;
+  const workflowSummaryData = isEmptyLiveObject(workflowSummary.data) ? null : workflowSummary.data;
 
   const update = (key: keyof typeof form, value: string | boolean | string[]) => setForm(current => ({ ...current, [key]: value }));
   const updateWorkflowForm = (key: keyof typeof workflowForm, value: string) => setWorkflowForm(current => ({ ...current, [key]: value }));
@@ -204,14 +215,61 @@ export function OVR() {
     }));
   };
 
+  const fillSyntheticOvr = () => {
+    const now = new Date();
+    setShowForm(true);
+    setForm({
+      logging_number: `V99-${Date.now().toString().slice(-8)}`,
+      occurrence_date: now.toISOString().slice(0, 10),
+      occurrence_time: now.toTimeString().slice(0, 5),
+      occurrence_location: 'Synthetic controlled-pilot test location',
+      involved_person_type: 'employee',
+      person_involved_name: 'Synthetic Pilot User - not a patient',
+      mrn_or_id_no: '',
+      age: '',
+      sex: '',
+      department_id: departments.data?.[0]?.id || '',
+      notification_at: '',
+      physical_condition: 'Synthetic/de-identified test condition only',
+      mental_condition: 'Synthetic/de-identified test condition only',
+      pre_occurrence_condition_flags: ['alert'],
+      brief_description:
+        `[${V99_SCENARIO_TAG}] Synthetic same-department operational observation. `
+        + 'No patient identifiers or confidential OVR narrative.',
+      occurrence_category: 'other',
+      severity_level: 'level_2',
+      injury_type: 'None - synthetic test',
+      create_linked_action_plan: false,
+    });
+    setMessage('Synthetic fields filled only. Review them before creating the tagged test record.');
+  };
+
   const saveReport = async (status: 'draft' | 'submitted') => {
     setMessage(null);
     if (!form.brief_description.trim()) {
       setMessage(t('ovr.validationBriefRequired'));
       return;
     }
+    if (!organizationId) {
+      setMessage('No active organization is available for this signed-in user.');
+      return;
+    }
     setSaving(true);
     try {
+      if (form.brief_description.includes(V99_SCENARIO_TAG)) {
+        await createScenarioLabScenario(
+          form.severity_level === 'sentinel'
+            ? 'ovr_high_severity'
+            : 'ovr_same_department',
+        );
+        setMessage(t('ovr.submittedMessage'));
+        setShowForm(false);
+        reports.refresh();
+        summary.refresh();
+        workflowSummary.refresh();
+        workflowQueue.refresh();
+        return;
+      }
       await createOvrReport({
         organization_id: organizationId,
         logging_number: form.logging_number,
@@ -355,7 +413,15 @@ export function OVR() {
         eyebrow={t('ovr.eyebrow')}
         title={t('ovr.title')}
         subtitle={t('ovr.subtitle')}
-        action={!isAuditorOnly ? <button className="primary-button" onClick={() => setShowForm(value => !value)}><FilePlus2 size={17} />{t('ovr.newReport')}</button> : null}
+        action={!isReadOnly ? (
+          <div className="inline-actions">
+            <ScenarioFillButton onClick={fillSyntheticOvr} />
+            <button className="primary-button" onClick={() => setShowForm(value => !value)}>
+              <FilePlus2 size={17} />
+              {t('ovr.newReport')}
+            </button>
+          </div>
+        ) : null}
       />
 
       <div className="notice-banner ovr-confidential">
@@ -363,33 +429,45 @@ export function OVR() {
         <span>{t('ovr.formNotice')}</span>
       </div>
 
-      <DataState loading={summary.loading} error={summary.error} empty={!summary.data}>
-        {summary.data ? (
+      <DataState
+        loading={summary.loading}
+        error={summary.error}
+        empty={!summaryData}
+        emptyTitle="OVR summary is not available"
+        emptyMessage="Connect Supabase and apply the OVR summary view to display live, role-scoped counts."
+      >
+        {summaryData ? (
           <div className="stats-grid">
-            <StatCard label={t('ovr.totalReports')} value={summary.data.total_reports} />
-            <StatCard label={t('ovr.openReports')} value={summary.data.open_reports} tone="warning" />
-            <StatCard label={t('ovr.qualityReview')} value={summary.data.under_quality_review} />
-            <StatCard label={t('ovr.correctiveActions')} value={summary.data.corrective_actions_required} tone="warning" />
-            <StatCard label={t('ovr.sentinelEvents')} value={summary.data.sentinel_events} tone="danger" />
-            <StatCard label={t('ovr.nearMiss')} value={summary.data.near_miss_level_1} tone="success" />
+            <StatCard label={t('ovr.totalReports')} value={summaryData.total_reports} />
+            <StatCard label={t('ovr.openReports')} value={summaryData.open_reports} tone="warning" />
+            <StatCard label={t('ovr.qualityReview')} value={summaryData.under_quality_review} />
+            <StatCard label={t('ovr.correctiveActions')} value={summaryData.corrective_actions_required} tone="warning" />
+            <StatCard label={t('ovr.sentinelEvents')} value={summaryData.sentinel_events} tone="danger" />
+            <StatCard label={t('ovr.nearMiss')} value={summaryData.near_miss_level_1} tone="success" />
           </div>
         ) : null}
       </DataState>
 
-      <DataState loading={workflowSummary.loading} error={workflowSummary.error} empty={!workflowSummary.data}>
-        {workflowSummary.data ? (
+      <DataState
+        loading={workflowSummary.loading}
+        error={workflowSummary.error}
+        empty={!workflowSummaryData}
+        emptyTitle="OVR workflow controls are not available"
+        emptyMessage="Workflow counts will appear after the control views are applied and permitted records exist."
+      >
+        {workflowSummaryData ? (
           <div className="panel">
             <div className="panel-header">
               <h4>{t('ovr.controlSummary')}</h4>
               <p>{t('ovr.controlSummaryHint')}</p>
             </div>
             <div className="card-grid">
-              <div className="mini-card"><span>{t('ovr.pendingSupervisor')}</span><strong>{workflowSummary.data.pending_supervisor_review}</strong></div>
-              <div className="mini-card"><span>{t('ovr.pendingQuality')}</span><strong>{workflowSummary.data.pending_quality_review}</strong></div>
-              <div className="mini-card"><span>{t('ovr.returned')}</span><strong>{workflowSummary.data.returned_for_clarification}</strong></div>
-              <div className="mini-card"><span>{t('ovr.pendingEvidence')}</span><strong>{workflowSummary.data.pending_evidence_review}</strong></div>
-              <div className="mini-card"><span>{t('ovr.majorOpen')}</span><strong>{workflowSummary.data.major_open_ovrs}</strong></div>
-              <div className="mini-card"><span>{t('ovr.overdueWorkflow')}</span><strong>{workflowSummary.data.overdue_ovr_workflow_items}</strong></div>
+              <div className="mini-card"><span>{t('ovr.pendingSupervisor')}</span><strong>{workflowSummaryData.pending_supervisor_review}</strong></div>
+              <div className="mini-card"><span>{t('ovr.pendingQuality')}</span><strong>{workflowSummaryData.pending_quality_review}</strong></div>
+              <div className="mini-card"><span>{t('ovr.returned')}</span><strong>{workflowSummaryData.returned_for_clarification}</strong></div>
+              <div className="mini-card"><span>{t('ovr.pendingEvidence')}</span><strong>{workflowSummaryData.pending_evidence_review}</strong></div>
+              <div className="mini-card"><span>{t('ovr.majorOpen')}</span><strong>{workflowSummaryData.major_open_ovrs}</strong></div>
+              <div className="mini-card"><span>{t('ovr.overdueWorkflow')}</span><strong>{workflowSummaryData.overdue_ovr_workflow_items}</strong></div>
             </div>
           </div>
         ) : null}
@@ -472,7 +550,13 @@ export function OVR() {
         </div>
       ) : null}
 
-      <DataState loading={workflowQueue.loading} error={workflowQueue.error} empty={!workflowQueue.data?.length}>
+      <DataState
+        loading={workflowQueue.loading}
+        error={workflowQueue.error}
+        empty={!workflowQueue.data?.length}
+        emptyTitle="No OVR workflow items"
+        emptyMessage="No incident in your current scope is waiting for manager, Quality, referral or closure action."
+      >
         <WorkflowQueue rows={workflowQueue.data || []} />
       </DataState>
 
@@ -481,7 +565,17 @@ export function OVR() {
           <h4>{t('ovr.reportList')}</h4>
           <p>{t('ovr.reportListHint')}</p>
         </div>
-        <DataState loading={reports.loading} error={reports.error} empty={!filteredReports.length}>
+        <DataState
+          loading={reports.loading}
+          error={reports.error}
+          empty={!filteredReports.length}
+          emptyTitle="No OVR reports in your scope"
+          emptyMessage={
+            isReadOnly
+              ? 'No readable OVR records are available for this account.'
+              : 'Create a controlled-pilot OVR when authorized. Administrators can also use Scenario Lab for synthetic UAT records.'
+          }
+        >
           <EntityTable<OvrReportRow>
             rows={filteredReports}
             getRowKey={row => row.id}
@@ -527,7 +621,9 @@ export function OVR() {
               {selectedReport.status === 'referred_party_response' && isReferredPartyFor(selectedReport) ? (
                 <label>{t('ovr.referredResponse')}<textarea rows={4} value={workflowForm.referred_response} onChange={event => updateWorkflowForm('referred_response', event.target.value)} /></label>
               ) : null}
-              <label>{t('ovr.workflowNote')}<textarea rows={4} value={workflowForm.note} onChange={event => updateWorkflowForm('note', event.target.value)} /></label>
+              {!isReadOnly ? (
+                <label>{t('ovr.workflowNote')}<textarea rows={4} value={workflowForm.note} onChange={event => updateWorkflowForm('note', event.target.value)} /></label>
+              ) : null}
               {isQuality ? <label>{t('ovr.confirmedSeverity')}
                 <select value={workflowForm.confirmed_severity_level} onChange={event => updateWorkflowForm('confirmed_severity_level', event.target.value)}>
                   {(['level_1', 'level_2', 'level_3', 'level_4', 'sentinel'] as OvrSeverityLevel[]).map(level => <option key={level} value={level}>{t(`ovr.severity.${level}`)}</option>)}

@@ -7,6 +7,7 @@ import {
   BookCopy,
   BrainCircuit,
   Building2,
+  Bug,
   CalendarClock,
   ClipboardCheck,
   ClipboardList,
@@ -35,10 +36,11 @@ import {
   UploadCloud,
   UserCheck,
   Users,
+  WandSparkles,
 } from 'lucide-react';
 import { Layout, type PageKey } from './components/Layout';
 import { useAuth } from './auth/AuthProvider';
-import { canAccessPage, firstAllowedPage } from './auth/authAccess';
+import { canAccessPageForUser, firstAllowedPage } from './auth/authAccess';
 import { LoginPage } from './pages/LoginPage';
 import { UnauthorizedPage } from './pages/UnauthorizedPage';
 import { TabbedHub } from './components/TabbedHub';
@@ -100,6 +102,9 @@ import { ProductionBackupStrategyCenter } from './pages/ProductionBackupStrategy
 import { MigrationRunbookCenter } from './pages/MigrationRunbookCenter';
 import BackupHealthCheck from './pages/BackupHealthCheck';
 import CustomReports from './pages/CustomReports';
+import { ScenarioTestConsole } from './pages/ScenarioTestConsole';
+import { UatIssueCapture } from './pages/UatIssueCapture';
+import { isScenarioLabEnabled } from './lib/scenarioLab';
 
 function ExecutiveHub() {
   const { t } = useI18n();
@@ -142,21 +147,25 @@ function WorkExecutionHub() {
 
 function GrcHub() {
   const { t } = useI18n();
+  const auth = useAuth();
+  const auditorReadOnly = auth.roles.some(role => role.role === 'auditor')
+    && !auth.roles.some(role => role.role === 'super_admin' || role.role === 'governance_admin');
+  const tabs = [
+    { id: 'risks', label: t('hub.tab.risks'), description: t('hub.tab.risks.desc'), icon: <ShieldAlert size={17} />, content: <Risks /> },
+    { id: 'kri', label: t('hub.tab.kri'), description: t('hub.tab.kri.desc'), icon: <Gauge size={17} />, content: <RiskAppetiteKriCenter /> },
+    { id: 'compliance', label: t('hub.tab.compliance'), description: t('hub.tab.compliance.desc'), icon: <ClipboardCheck size={17} />, content: <Compliance /> },
+    { id: 'audit', label: t('hub.tab.audit'), description: t('hub.tab.audit.desc'), icon: <FileSearch size={17} />, content: <Audit /> },
+    { id: 'governance', label: t('hub.tab.governance'), description: t('hub.tab.governance.desc'), icon: <Landmark size={17} />, content: <Governance /> },
+    { id: 'committee', label: t('hub.tab.committee'), description: t('hub.tab.committee.desc'), icon: <Users size={17} />, content: <CommitteeActionAutomationCenter /> },
+    { id: 'automation', label: t('hub.tab.automation'), description: t('hub.tab.automation.desc'), icon: <BrainCircuit size={17} />, content: <AutomationIntelligenceCenter /> },
+    { id: 'reviews', label: t('hub.tab.reviews'), description: t('hub.tab.reviews.desc'), icon: <CalendarClock size={17} />, content: <SmartReviewCalendar /> },
+  ];
   return (
     <TabbedHub
       eyebrow={t('hub.grc.eyebrow')}
       title={t('hub.grc.title')}
       subtitle={t('hub.grc.subtitle')}
-      tabs={[
-        { id: 'risks', label: t('hub.tab.risks'), description: t('hub.tab.risks.desc'), icon: <ShieldAlert size={17} />, content: <Risks /> },
-        { id: 'kri', label: t('hub.tab.kri'), description: t('hub.tab.kri.desc'), icon: <Gauge size={17} />, content: <RiskAppetiteKriCenter /> },
-        { id: 'compliance', label: t('hub.tab.compliance'), description: t('hub.tab.compliance.desc'), icon: <ClipboardCheck size={17} />, content: <Compliance /> },
-        { id: 'audit', label: t('hub.tab.audit'), description: t('hub.tab.audit.desc'), icon: <FileSearch size={17} />, content: <Audit /> },
-        { id: 'governance', label: t('hub.tab.governance'), description: t('hub.tab.governance.desc'), icon: <Landmark size={17} />, content: <Governance /> },
-        { id: 'committee', label: t('hub.tab.committee'), description: t('hub.tab.committee.desc'), icon: <Users size={17} />, content: <CommitteeActionAutomationCenter /> },
-        { id: 'automation', label: t('hub.tab.automation'), description: t('hub.tab.automation.desc'), icon: <BrainCircuit size={17} />, content: <AutomationIntelligenceCenter /> },
-        { id: 'reviews', label: t('hub.tab.reviews'), description: t('hub.tab.reviews.desc'), icon: <CalendarClock size={17} />, content: <SmartReviewCalendar /> },
-      ]}
+      tabs={auditorReadOnly ? tabs.filter(tab => ['risks', 'audit'].includes(tab.id)) : tabs}
     />
   );
 }
@@ -180,24 +189,28 @@ function QualitySafetyHub() {
 
 function ReportsDocumentsHub() {
   const { t } = useI18n();
+  const auth = useAuth();
+  const readOnlyReporting = auth.roles.some(role => role.role === 'viewer' || role.role === 'auditor')
+    && !auth.roles.some(role => ['super_admin', 'executive', 'governance_admin', 'division_head', 'department_manager', 'compliance_officer'].includes(role.role));
+  const tabs = [
+    { id: 'documents', label: t('hub.tab.documents'), description: t('hub.tab.documents.desc'), icon: <FolderKanban size={17} />, content: <PolicyDocumentCenter /> },
+    { id: 'importExport', label: t('hub.tab.importExport'), description: t('hub.tab.importExport.desc'), icon: <UploadCloud size={17} />, content: <ImportExport /> },
+    { id: 'reportBuilder', label: t('hub.tab.reportBuilder'), description: t('hub.tab.reportBuilder.desc'), icon: <BookCopy size={17} />, content: <AdvancedReportBuilder /> },
+    { id: 'customReports', label: t('hub.tab.customReports'), description: t('hub.tab.customReports.desc'), icon: <ClipboardList size={17} />, content: <CustomReports /> },
+    { id: 'backupScheduler', label: t('hub.tab.backupScheduler'), description: t('hub.tab.backupScheduler.desc'), icon: <DatabaseBackup size={17} />, content: <BackupSchedulerCenter /> },
+    { id: 'backupHealth', label: t('hub.tab.backupHealth'), description: t('hub.tab.backupHealth.desc'), icon: <ArchiveRestore size={17} />, content: <BackupHealthCheck /> },
+  ];
   return (
     <TabbedHub
       eyebrow={t('hub.reports.eyebrow')}
       title={t('hub.reports.title')}
       subtitle={t('hub.reports.subtitle')}
-      tabs={[
-        { id: 'documents', label: t('hub.tab.documents'), description: t('hub.tab.documents.desc'), icon: <FolderKanban size={17} />, content: <PolicyDocumentCenter /> },
-        { id: 'importExport', label: t('hub.tab.importExport'), description: t('hub.tab.importExport.desc'), icon: <UploadCloud size={17} />, content: <ImportExport /> },
-        { id: 'reportBuilder', label: t('hub.tab.reportBuilder'), description: t('hub.tab.reportBuilder.desc'), icon: <BookCopy size={17} />, content: <AdvancedReportBuilder /> },
-        { id: 'customReports', label: t('hub.tab.customReports'), description: t('hub.tab.customReports.desc'), icon: <ClipboardList size={17} />, content: <CustomReports /> },
-        { id: 'backupScheduler', label: t('hub.tab.backupScheduler'), description: t('hub.tab.backupScheduler.desc'), icon: <DatabaseBackup size={17} />, content: <BackupSchedulerCenter /> },
-        { id: 'backupHealth', label: t('hub.tab.backupHealth'), description: t('hub.tab.backupHealth.desc'), icon: <ArchiveRestore size={17} />, content: <BackupHealthCheck /> },
-      ]}
+      tabs={readOnlyReporting ? tabs.filter(tab => ['documents', 'customReports', 'backupHealth'].includes(tab.id)) : tabs}
     />
   );
 }
 
-function AdminReleaseHub() {
+function AdminReleaseHub({ setPage }: { setPage: (page: PageKey) => void }) {
   const { t } = useI18n();
   return (
     <TabbedHub
@@ -205,6 +218,20 @@ function AdminReleaseHub() {
       title={t('hub.admin.title')}
       subtitle={t('hub.admin.subtitle')}
       tabs={[
+        ...(isScenarioLabEnabled ? [{
+          id: 'scenarioLab',
+          label: t('hub.tab.scenarioLab'),
+          description: t('hub.tab.scenarioLab.desc'),
+          icon: <WandSparkles size={17} />,
+          content: <ScenarioTestConsole setPage={setPage} />,
+        }] : []),
+        ...(isScenarioLabEnabled ? [{
+          id: 'uatIssues',
+          label: t('hub.tab.uatIssues'),
+          description: t('hub.tab.uatIssues.desc'),
+          icon: <Bug size={17} />,
+          content: <UatIssueCapture />,
+        }] : []),
         { id: 'releaseFactory', label: t('hub.tab.releaseFactory'), description: t('hub.tab.releaseFactory.desc'), icon: <PackageCheck size={17} />, content: <ReleaseFactoryCenter /> },
         { id: 'productionProof', label: t('hub.tab.productionProof', 'Production Proof'), description: t('hub.tab.productionProof.desc', 'Final evidence-based go-live proof gates.'), icon: <PackageCheck size={17} />, content: <ProductionProofCenter /> },
         { id: 'productionFinish', label: t('hub.tab.productionFinish'), description: t('hub.tab.productionFinish.desc'), icon: <Rocket size={17} />, content: <ProductionFinishCenter /> },
@@ -238,10 +265,13 @@ export default function App() {
   const auth = useAuth();
 
   useEffect(() => {
-    if (auth.status === 'authenticated' && !canAccessPage(page, auth.roles)) {
-      setPage(firstAllowedPage(auth.roles));
+    if (
+      auth.status === 'authenticated'
+      && !canAccessPageForUser(page, auth.roles, auth.profile?.organizationName)
+    ) {
+      setPage(firstAllowedPage(auth.roles, auth.profile?.organizationName));
     }
-  }, [auth.status, auth.roles, page]);
+  }, [auth.status, auth.roles, auth.profile?.organizationName, page]);
 
   if (auth.status === 'loading') {
     return (
@@ -274,7 +304,7 @@ export default function App() {
       case 'reportsHub':
         return <ReportsDocumentsHub />;
       case 'adminHub':
-        return <AdminReleaseHub />;
+        return <AdminReleaseHub setPage={setPage} />;
       case 'finishFast':
         return <FinalSprintCenter />;
       case 'productionFinish':
@@ -381,6 +411,10 @@ export default function App() {
         return <ProductionBackupStrategyCenter />;
       case 'migrationRunbook':
         return <MigrationRunbookCenter />;
+      case 'scenarioTestConsole':
+        return <ScenarioTestConsole setPage={setPage} />;
+      case 'uatIssueCapture':
+        return <UatIssueCapture />;
       case 'admin':
         return <Admin />;
       default:
@@ -388,10 +422,9 @@ export default function App() {
     }
   };
 
-  const content = canAccessPage(page, auth.roles)
+  const content = canAccessPageForUser(page, auth.roles, auth.profile?.organizationName)
     ? renderPage()
     : <UnauthorizedPage page={page} setPage={setPage} />;
 
   return <Layout page={page} setPage={setPage}>{content}</Layout>;
 }
-

@@ -1,6 +1,6 @@
 # Draft Signoff — Controlled Internal Pilot Only
 
-Generated UTC: 2026-06-20T22:31:09.161Z
+Generated UTC: 2026-06-23T23:35:25.824Z
 
 Local environment: **Local Supabase Docker staging**
 Database container: `supabase_db_grc-control-center`

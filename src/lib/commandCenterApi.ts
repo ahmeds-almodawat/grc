@@ -7,8 +7,8 @@ export type CommandSummary = {
   departmentPressure: number;
   policyReviewDue: number;
   searchIndexedRecords: number;
-  releaseReadinessScore: number;
-  backupHealth: 'healthy' | 'warning' | 'critical';
+  releaseReadinessScore: number | null;
+  backupHealth: 'healthy' | 'warning' | 'critical' | null;
 };
 
 export type CommandStreamItem = {
@@ -132,8 +132,8 @@ export async function getCommandSummary(): Promise<CommandSummary> {
       departmentPressure: row.department_pressure_count ?? 0,
       policyReviewDue: row.policy_review_due_30_days ?? 0,
       searchIndexedRecords: row.search_indexed_records ?? 0,
-      releaseReadinessScore: row.release_readiness_score ?? 0,
-      backupHealth: row.backup_health ?? 'warning'
+      releaseReadinessScore: typeof row.release_readiness_score === 'number' ? row.release_readiness_score : null,
+      backupHealth: row.backup_health ?? null
     };
   } catch (error) {
     warnFallback('command summary', error);

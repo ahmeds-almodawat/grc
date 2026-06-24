@@ -24,6 +24,7 @@ import {
 import { useAsyncData } from '../hooks/useAsyncData';
 import { useI18n } from '../i18n/I18nContext';
 import type { CustomReportDefinition, ExportDatasetKey } from '../types/domain';
+import { isEmptyLiveObject } from '../lib/liveData';
 
 type TemplateKey = 'divisions' | 'departments' | 'units' | 'employees' | 'projects';
 type CenterTab = 'import' | 'export' | 'reports' | 'backup';
@@ -73,7 +74,7 @@ const templates: Record<TemplateKey, { title: string; purpose: string; headers: 
   },
   departments: {
     title: 'Departments template',
-    purpose: 'Prepare the 50-department master list with normalized duplicate-code checks.',
+    purpose: 'Prepare an authorized department master list with normalized duplicate-code checks.',
     headers: ['division_code', 'department_code', 'department_name_en', 'department_name_ar', 'manager_email', 'is_active'],
     required: ['department_code', 'department_name_en'],
     sample: ['MED', 'NUR', 'Nursing', 'التمريض', 'nursing.manager@almodawat.sa', 'true']
@@ -87,7 +88,7 @@ const templates: Record<TemplateKey, { title: string; purpose: string; headers: 
   },
   employees: {
     title: 'Employee staging template',
-    purpose: 'Prepare 1,000 employees for staged review before creating auth users and role assignments.',
+    purpose: 'Prepare authorized employee records for staged review before creating auth users and role assignments.',
     headers: ['employee_no', 'full_name_en', 'full_name_ar', 'email', 'job_title', 'division_code', 'department_code', 'unit_code', 'primary_role', 'role_scope', 'is_active'],
     required: ['employee_no', 'full_name_en', 'email', 'department_code', 'primary_role', 'role_scope'],
     sample: ['10001', 'Finance Manager', 'مدير المالية', 'finance.manager@almodawat.sa', 'Finance Manager', 'ADM', 'FIN', '', 'department_manager', 'department', 'true']
@@ -358,6 +359,10 @@ export function ImportExport() {
   const hasRows = validation.rows.length > 0;
   const canSave = hasRows && validation.invalidRows === 0 && !validation.errorsByRow[0];
   const organizationId = organizations.data?.[0]?.id;
+  const hasLiveSummary = Boolean(exportSummary.data && !isEmptyLiveObject(exportSummary.data));
+  const summaryValue = (value: number | null | undefined) => hasLiveSummary
+    ? (typeof value === 'number' ? value : 0)
+    : 'Not configured';
 
   const downloadTemplate = () => downloadFile(`grc_${templateKey}_template.csv`, rowsToCsv(config.headers, [config.sample]));
   const downloadReport = () => downloadFile(`grc_${templateKey}_validation_report.csv`, buildValidationReport(validation));
@@ -479,10 +484,10 @@ export function ImportExport() {
 
   const renderSummary = () => (
     <div className="stats-grid export-score-grid">
-      <div className="stat-card"><div className="stat-value">{exportSummary.data?.available_datasets ?? exportDatasets.length}</div><div className="stat-label">{t('export.datasets')}</div></div>
-      <div className="stat-card success"><div className="stat-value">{exportSummary.data?.exports_30d ?? 0}</div><div className="stat-label">{t('export.exports30')}</div></div>
-      <div className="stat-card warning"><div className="stat-value">{exportSummary.data?.backups_30d ?? 0}</div><div className="stat-label">{t('export.backups30')}</div></div>
-      <div className="stat-card"><div className="stat-value">{exportSummary.data?.custom_reports ?? customReports.data?.length ?? 0}</div><div className="stat-label">{t('export.customReports')}</div></div>
+      <div className="stat-card"><div className="stat-value">{summaryValue(exportSummary.data?.available_datasets)}</div><div className="stat-label">{t('export.datasets')}</div></div>
+      <div className="stat-card success"><div className="stat-value">{summaryValue(exportSummary.data?.exports_30d)}</div><div className="stat-label">{t('export.exports30')}</div></div>
+      <div className="stat-card warning"><div className="stat-value">{summaryValue(exportSummary.data?.backups_30d)}</div><div className="stat-label">{t('export.backups30')}</div></div>
+      <div className="stat-card"><div className="stat-value">{summaryValue(exportSummary.data?.custom_reports)}</div><div className="stat-label">{t('export.customReports')}</div></div>
     </div>
   );
 
@@ -522,7 +527,7 @@ export function ImportExport() {
         <div className="panel-header split-header">
           <div><h4>2) Paste CSV / Excel rows</h4><p>Download the template, fill it in Excel, then paste the full sheet here including the header row.</p></div>
           <div className="toolbar">
-            <button className="ghost-button" onClick={() => setPasteText(rowsToCsv(config.headers, [config.sample]))}>Load Sample</button>
+            <button className="ghost-button" onClick={() => setPasteText(rowsToCsv(config.headers, [config.sample]))}>Load Example</button>
             <button className="ghost-button" onClick={() => setPasteText('')}>Clear</button>
             <button className="primary-button" onClick={saveToStaging} disabled={!canSave || organizations.loading}><Save size={16} /> Save Staging Batch</button>
           </div>
@@ -551,7 +556,7 @@ export function ImportExport() {
                   </tr>
                 );
               })}
-              {!hasRows ? <tr><td colSpan={11} className="muted">Paste data or load the sample to preview validation.</td></tr> : null}
+              {!hasRows ? <tr><td colSpan={11} className="muted">Paste data or load the example to preview validation.</td></tr> : null}
             </tbody>
           </table>
         </div>

@@ -1,21 +1,31 @@
 import { DataState } from '../components/DataState';
+import { ControlledPilotBanner } from '../components/ControlledPilotBanner';
 import { EntityTable } from '../components/EntityTable';
 import { ModuleHeader } from '../components/ModuleHeader';
-import { getDepartments, getProfiles } from '../lib/grcApi';
+import { StatCard } from '../components/StatCard';
+import { getDepartments, getPilotUiCounts, getProfiles } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
 import type { DepartmentOption, ProfileOption } from '../types/domain';
 
 export function Admin() {
   const departments = useAsyncData(getDepartments, []);
   const profiles = useAsyncData(getProfiles, []);
+  const counts = useAsyncData(getPilotUiCounts, []);
+  const countValue = (value: number | null | undefined) => typeof value === 'number' ? value : 'Not configured';
 
   return (
     <section className="page-section">
+      <ControlledPilotBanner />
       <ModuleHeader
         eyebrow="Admin and organization"
         title="Company hierarchy, users, roles and access scopes"
-        subtitle="For 1,000 employees, access must be scoped: global, division, department, unit, or assigned only."
+        subtitle="Access is controlled by role and scope: global, division, department, unit, or assigned only."
       />
+
+      <div className="stats-grid">
+        <StatCard label="Active profiles in scope" value={countValue(counts.data?.activeProfiles)} />
+        <StatCard label="Active departments" value={countValue(counts.data?.activeDepartments)} />
+      </div>
 
       <div className="panel">
         <div className="panel-header">
@@ -40,7 +50,13 @@ export function Admin() {
       <div className="panel two-column align-start">
         <div>
           <div className="panel-header"><h4>Departments</h4></div>
-          <DataState loading={departments.loading} error={departments.error} empty={!departments.data?.length}>
+          <DataState
+            loading={departments.loading}
+            error={departments.error}
+            empty={!departments.data?.length}
+            emptyTitle="No active departments"
+            emptyMessage="Create the organization structure from Admin Hub when authorized, then refresh this view."
+          >
             <EntityTable<DepartmentOption>
               rows={departments.data || []}
               getRowKey={row => row.id}
@@ -53,7 +69,13 @@ export function Admin() {
         </div>
         <div>
           <div className="panel-header"><h4>People</h4></div>
-          <DataState loading={profiles.loading} error={profiles.error} empty={!profiles.data?.length}>
+          <DataState
+            loading={profiles.loading}
+            error={profiles.error}
+            empty={!profiles.data?.length}
+            emptyTitle="No active profiles"
+            emptyMessage="Bootstrap or create an authorized pilot user before assigning roles and department access."
+          >
             <EntityTable<ProfileOption>
               rows={profiles.data || []}
               getRowKey={row => row.id}

@@ -45,7 +45,7 @@ const copy = {
     artifactBoard: 'Release artifact board',
     artifactHint: 'Evidence and release files that must exist before pilot acceptance.',
     pilotBoard: 'Pilot rollout waves',
-    pilotHint: 'A controlled rollout avoids overwhelming 1,000 employees at once.',
+    pilotHint: 'A controlled rollout limits change risk by expanding only after each pilot wave is accepted.',
     commands: 'Finish commands',
     commandsHint: 'Run these after applying all patches in your local project.',
     ruleTitle: 'Stop rules',

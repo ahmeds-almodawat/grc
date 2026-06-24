@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-20T22:30:31.771Z",
-    "migration_files_scanned": 48,
-    "security_definer_functions_detected": 36,
+    "generated_at": "2026-06-23T23:33:33.998Z",
+    "migration_files_scanned": 52,
+    "security_definer_functions_detected": 45,
     "global_security_definer_lockdown_detected": true,
     "findings_total": 0,
     "critical": 0,
@@ -227,6 +227,60 @@
       "function_name": "v72_execute_privileged_action",
       "has_search_path": true,
       "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/048_v98_admin_setup_actions.sql",
+      "function_name": "v98_create_department",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/048_v98_admin_setup_actions.sql",
+      "function_name": "v98_finalize_created_user",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
+      "function_name": "v98_notify_ovr_submission",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
+      "function_name": "v98_update_ovr_workflow",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/050_v99_scenario_lab.sql",
+      "function_name": "v99_assert_scenario_lab_actor",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/050_v99_scenario_lab.sql",
+      "function_name": "v99_create_ovr_scenario",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/050_v99_scenario_lab.sql",
+      "function_name": "v99_create_scenario",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/050_v99_scenario_lab.sql",
+      "function_name": "v99_cleanup_scenarios",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/050_v99_scenario_lab.sql",
+      "function_name": "v99_scenario_status",
+      "has_search_path": true,
+      "has_public_revoke": true
     }
   ],
   "globalSearchPathFixes": [
@@ -254,7 +308,16 @@
     "has_role",
     "can_read_organization",
     "create_ovr_corrective_action_project",
-    "v72_execute_privileged_action"
+    "v72_execute_privileged_action",
+    "v98_create_department",
+    "v98_finalize_created_user",
+    "v98_notify_ovr_submission",
+    "v98_update_ovr_workflow",
+    "v99_assert_scenario_lab_actor",
+    "v99_create_ovr_scenario",
+    "v99_create_scenario",
+    "v99_cleanup_scenarios",
+    "v99_scenario_status"
   ],
   "finalSecurityInvokerFunctions": [
     "current_user_org_id",

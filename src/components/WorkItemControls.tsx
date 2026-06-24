@@ -1,6 +1,11 @@
 import { type FormEvent, useState } from 'react';
 import type { PriorityLevel, ProfileOption, ProjectStatus, WorkStatus } from '../types/domain';
 import { requestApproval, updateMilestoneStatus, updateProjectStatus, updateTaskStatus, uploadEvidenceForItem } from '../lib/grcApi';
+import { ScenarioFillButton } from './ScenarioFillButton';
+import {
+  createScenarioLabScenario,
+  V99_SCENARIO_TAG,
+} from '../lib/scenarioLab';
 
 export type ControllableItemType = 'project' | 'milestone' | 'task';
 
@@ -123,6 +128,11 @@ export function EvidenceUploadForm({ organizationId, itemType, itemId, onCancel,
     }
     setSaving(true);
     try {
+      if (description.includes(V99_SCENARIO_TAG)) {
+        await createScenarioLabScenario('evidence');
+        onUploaded();
+        return;
+      }
       await uploadEvidenceForItem({ organization_id: organizationId, item_type: itemType, item_id: itemId, file, description: description.trim() || undefined });
       onUploaded();
     } catch (err) {
@@ -132,9 +142,31 @@ export function EvidenceUploadForm({ organizationId, itemType, itemId, onCancel,
     }
   }
 
+  function fillSyntheticEvidence() {
+    setFile(new File(
+      [
+        `${V99_SCENARIO_TAG}\n`,
+        'Synthetic controlled-pilot evidence only.\n',
+        'No patient identifiers or confidential content.\n',
+      ],
+      `${V99_SCENARIO_TAG}-synthetic-evidence.txt`,
+      { type: 'text/plain' },
+    ));
+    setDescription(
+      `[${V99_SCENARIO_TAG}] Synthetic evidence metadata. `
+      + 'Submitting this test fill creates a cleanup-registered Scenario Lab record.',
+    );
+  }
+
   return (
     <form className="form-grid" onSubmit={handleSubmit}>
       {error ? <div className="form-error">{error}</div> : null}
+      <div className="full-width">
+        <ScenarioFillButton onClick={fillSyntheticEvidence} />
+        {file?.name.includes(V99_SCENARIO_TAG)
+          ? <p className="muted">Prepared file: {file.name}</p>
+          : null}
+      </div>
       <label className="field full-width">
         <span>Evidence file *</span>
         <input type="file" onChange={event => setFile(event.target.files?.[0] ?? null)} />

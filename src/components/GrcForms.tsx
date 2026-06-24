@@ -8,6 +8,11 @@ import {
   createRisk,
   createTask
 } from '../lib/grcApi';
+import { ScenarioFillButton } from './ScenarioFillButton';
+import {
+  createScenarioLabScenario,
+  V99_SCENARIO_TAG,
+} from '../lib/scenarioLab';
 
 const riskLevels: RiskLevel[] = ['critical', 'high', 'medium', 'low'];
 const priorities: PriorityLevel[] = ['critical', 'high', 'medium', 'low'];
@@ -76,6 +81,14 @@ export function RiskForm({ organizationId, departments, profiles, onCreated, onC
     if (!canSubmit) return setError('Risk title and organization are required.');
     setSaving(true);
     try {
+      if (
+        title.includes(V99_SCENARIO_TAG)
+        || description.includes(V99_SCENARIO_TAG)
+      ) {
+        await createScenarioLabScenario('risk');
+        onCreated();
+        return;
+      }
       await createRisk({
         organization_id: organizationId,
         risk_code: riskCode.trim() || undefined,
@@ -100,9 +113,32 @@ export function RiskForm({ organizationId, departments, profiles, onCreated, onC
     }
   }
 
+  function fillSyntheticRisk() {
+    const sequence = Date.now().toString().slice(-6);
+    setRiskCode(`V99-${sequence}`);
+    setTitle(`[${V99_SCENARIO_TAG}] Synthetic pilot risk`);
+    setDescription(
+      `[${V99_SCENARIO_TAG}] Synthetic non-confidential operational risk. `
+      + 'No patient identifiers or confidential narrative.',
+    );
+    setCategory('operational');
+    setDepartmentId(departments[0]?.id || '');
+    setOwnerId(profiles[0]?.id || '');
+    setLikelihood(4);
+    setImpact(4);
+    setResidualLikelihood(2);
+    setResidualImpact(2);
+    setRiskLevel('high');
+    setResponseType('reduce');
+    setNextReviewDate(new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10));
+  }
+
   return (
     <form className="form-grid" onSubmit={handleSubmit}>
       <ErrorBlock error={error} />
+      <div className="full-width">
+        <ScenarioFillButton onClick={fillSyntheticRisk} />
+      </div>
       <label className="field"><span>Risk code</span><input value={riskCode} onChange={event => setRiskCode(event.target.value)} placeholder="FIN-001" /></label>
       <label className="field"><span>Category</span><select value={category} onChange={event => setCategory(event.target.value)}>{riskCategories.map(item => <option key={item} value={item}>{item.replaceAll('_', ' ')}</option>)}</select></label>
       <label className="field full-width"><span>Risk title *</span><input value={title} onChange={event => setTitle(event.target.value)} placeholder="Example: Government collection delay affecting cash flow" /></label>

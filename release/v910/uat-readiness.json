@@ -1,0 +1,84 @@
+{
+  "generated_at": "2026-06-23T23:40:31.564Z",
+  "environment": "Local Supabase Docker / controlled pilot readiness",
+  "production_ready": false,
+  "synthetic_data_only": true,
+  "no_real_patient_identifiers": true,
+  "no_confidential_ovr_data": true,
+  "required_files": [
+    {
+      "file": "src/components/ControlledPilotBanner.tsx",
+      "exists": true
+    },
+    {
+      "file": "src/pages/WorkspaceHome.tsx",
+      "exists": true
+    },
+    {
+      "file": "src/pages/ScenarioTestConsole.tsx",
+      "exists": true
+    },
+    {
+      "file": "src/pages/UatIssueCapture.tsx",
+      "exists": true
+    },
+    {
+      "file": "src/lib/uatIssueApi.ts",
+      "exists": true
+    },
+    {
+      "file": "supabase/migrations/051_v910_controlled_pilot_uat_issues.sql",
+      "exists": true
+    },
+    {
+      "file": "release/v99/uat-user-matrix.md",
+      "exists": true
+    },
+    {
+      "file": "release/v99/scenario-coverage-map.md",
+      "exists": true
+    }
+  ],
+  "required_scripts": [
+    {
+      "script": "v910:ui-polish-check",
+      "exists": true
+    },
+    {
+      "script": "v910:uat-readiness-report",
+      "exists": true
+    },
+    {
+      "script": "v910:final-smoke",
+      "exists": true
+    },
+    {
+      "script": "pilot:uat-readiness",
+      "exists": true
+    },
+    {
+      "script": "pilot:bulk-uat-users",
+      "exists": true
+    },
+    {
+      "script": "pilot:ovr-workflow-verification",
+      "exists": true
+    },
+    {
+      "script": "pilot:first-run-bootstrap",
+      "exists": true
+    }
+  ],
+  "v72_persona_proof": {
+    "strict_passed": true,
+    "authenticated_personas": "8/8",
+    "required_scenarios": "9/9",
+    "failed_count": 0,
+    "cleanup_status": "passed",
+    "v700_gap_status": "real_authenticated_persona_proof_passed"
+  },
+  "expected_manual_approval_blockers": [
+    "ovr_confidentiality_no_real_patient_data",
+    "pilot_signoff_it_quality_admin"
+  ]
+}

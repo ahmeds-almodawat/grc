@@ -95,20 +95,32 @@ export function Departments() {
       ) : null}
       {message ? <div className="notice-banner">{message}</div> : null}
 
-      <div className="stats-grid">
-        <StatCard label="Departments tracked" value={rows.length} />
-        <StatCard label="Active projects" value={totals.activeProjects} />
-        <StatCard label="Overdue projects" value={totals.overdueProjects} tone="danger" />
-        <StatCard label="Overdue tasks" value={totals.overdueTasks} tone="warning" />
-        <StatCard label="Critical risks" value={totals.criticalRisks} tone="danger" />
-      </div>
+      {rows.length ? (
+        <div className="stats-grid">
+          <StatCard label="Departments tracked" value={rows.length} />
+          <StatCard label="Active projects" value={totals.activeProjects} />
+          <StatCard label="Overdue projects" value={totals.overdueProjects} tone="danger" />
+          <StatCard label="Overdue tasks" value={totals.overdueTasks} tone="warning" />
+          <StatCard label="Critical risks" value={totals.criticalRisks} tone="danger" />
+        </div>
+      ) : null}
 
       <div className="panel">
         <div className="panel-header">
           <h4><Building2 size={18} /> Department execution summary</h4>
-          <p>For full rollout, this view becomes the control room for 50 departments and all assigned action plans.</p>
+          <p>Live department execution and risk indicators for the organization and role currently in scope.</p>
         </div>
-        <DataState loading={departments.loading} error={departments.error} empty={!rows.length}>
+        <DataState
+          loading={departments.loading}
+          error={departments.error}
+          empty={!rows.length}
+          emptyTitle="No department execution data"
+          emptyMessage={
+            canManageDepartments
+              ? 'Create or activate departments, then add controlled work to populate this summary.'
+              : 'No department summary is available for your current role and scope.'
+          }
+        >
           <EntityTable<DepartmentExecutionSummary>
             rows={rows}
             getRowKey={row => row.department_id}

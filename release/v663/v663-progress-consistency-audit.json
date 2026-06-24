@@ -1,18 +1,14 @@
 {
-  "generated_at": "2026-06-20T22:31:14.005Z",
+  "generated_at": "2026-06-23T23:35:35.467Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 48,
-    "latest_migration": "047_v72_runtime_bridge_and_persona_security.sql",
+    "migration_count": 52,
+    "latest_migration": "051_v910_controlled_pilot_uat_issues.sql",
     "prefix_gaps": [
-      48,
-      49,
-      50,
-      51,
       52,
       53,
       54,

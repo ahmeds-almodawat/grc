@@ -72,7 +72,7 @@ async function loadAuthState(session: Session | null): Promise<AuthUserState> {
   const user = session.user;
   const { data: profileRow, error: profileError } = await supabase
     .from('profiles')
-    .select('id,email,full_name_en,full_name_ar,organization_id,division_id,department_id,unit_id,is_active')
+    .select('id,email,full_name_en,full_name_ar,organization_id,division_id,department_id,unit_id,is_active,organizations(name_en)')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -102,6 +102,7 @@ async function loadAuthState(session: Session | null): Promise<AuthUserState> {
     fullNameEn: String(profileRow.full_name_en ?? user.email ?? 'User'),
     fullNameAr: profileRow.full_name_ar as string | null | undefined,
     organizationId: profileRow.organization_id as string | null | undefined,
+    organizationName: (profileRow.organizations as { name_en?: string } | null | undefined)?.name_en ?? null,
     divisionId: profileRow.division_id as string | null | undefined,
     departmentId: profileRow.department_id as string | null | undefined,
     unitId: profileRow.unit_id as string | null | undefined,

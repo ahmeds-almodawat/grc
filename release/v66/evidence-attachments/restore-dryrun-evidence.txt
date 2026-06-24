@@ -1,20 +1,20 @@
 v6.7.4 Restore Integrity Dry-Run Evidence
 Environment: Local Supabase Docker staging
-Generated UTC: 2026-06-20T22:30:55.901Z
+Generated UTC: 2026-06-23T23:34:31.040Z
 Source database: postgres in supabase_db_grc-control-center
 Temporary verification database: grc_v674_restore_verify
 Dump scope: auth, public, storage, supabase_migrations
 Managed service scope limitation: realtime and other Supabase service internals are not claimed by this application-data restore proof.
-Dump size bytes: 1679409
+Dump size bytes: 1882956
 
 Key table count comparison:
-- public.organizations: source=1, restored=1, MATCHED
-- public.profiles: source=0, restored=0, MATCHED
-- public.user_roles: source=0, restored=0, MATCHED
+- public.organizations: source=2, restored=2, MATCHED
+- public.profiles: source=32, restored=32, MATCHED
+- public.user_roles: source=32, restored=32, MATCHED
 - public.projects: source=2, restored=2, MATCHED
 - public.milestones: source=0, restored=0, MATCHED
 - public.tasks: source=0, restored=0, MATCHED
-- public.ovr_reports: source=0, restored=0, MATCHED
+- public.ovr_reports: source=1, restored=1, MATCHED
 - public.evidence_files: source=0, restored=0, MATCHED
 - public.approvals: source=0, restored=0, MATCHED
 - public.controlled_pilot_runs: source=1, restored=1, MATCHED
@@ -23,7 +23,7 @@ Key table count comparison:
 - public.controlled_pilot_signoffs: source=0, restored=0, MATCHED
 - storage.buckets: source=1, restored=1, MATCHED
 - storage.objects: source=0, restored=0, MATCHED
-- supabase_migrations.schema_migrations: source=48, restored=48, MATCHED
+- supabase_migrations.schema_migrations: source=51, restored=51, MATCHED
 
 Evidence-related table verification:
 - public.evidence_files: VERIFIED
@@ -35,8 +35,8 @@ Evidence-related table verification:
 Post-restore smoke query: PASSED
 {
   "database": "grc_v674_restore_verify",
-  "latest_migration": "047_v72_runtime_bridge_and_persona_security",
-  "organization_count": 1,
+  "latest_migration": "050_v99_scenario_lab",
+  "organization_count": 2,
   "evidence_file_count": 0,
   "pilot_evidence_count": 0,
   "storage_object_count": 0

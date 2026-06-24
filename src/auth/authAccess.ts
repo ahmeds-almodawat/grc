@@ -69,6 +69,10 @@ const REPORT_ROLES: AuthRole[] = [
   'viewer',
 ];
 
+const EXTERNAL_PILOT_ORGANIZATION = 'V99 Synthetic External Organization';
+const EXTERNAL_PILOT_PAGES: PageKey[] = ['home', 'myWork', 'ovr', 'approvals', 'userGuide', 'uatIssueCapture'];
+const READ_ONLY_BLOCKED_PAGES: PageKey[] = ['importExport', 'reportBuilder', 'backupScheduler'];
+
 export const pageGroups: Record<PageKey, PageGroup> = {
   home: 'home',
   executiveHub: 'executive',
@@ -130,6 +134,8 @@ export const pageGroups: Record<PageKey, PageGroup> = {
   loadSeedCenter: 'release',
   productionBackupStrategy: 'release',
   migrationRunbook: 'release',
+  scenarioTestConsole: 'admin',
+  uatIssueCapture: 'personal',
   admin: 'admin',
 };
 
@@ -156,11 +162,38 @@ export function canAccessPage(page: PageKey, roles: AuthRoleAssignment[]): boole
   return hasRole(roles, groupRoles[group]);
 }
 
-export function firstAllowedPage(roles: AuthRoleAssignment[]): PageKey {
-  if (canAccessPage('executiveHub', roles)) return 'executiveHub';
-  if (canAccessPage('workHub', roles)) return 'workHub';
-  if (canAccessPage('grcHub', roles)) return 'grcHub';
-  if (canAccessPage('qualityHub', roles)) return 'qualityHub';
+export function isExternalPilotOrganization(organizationName?: string | null): boolean {
+  return organizationName === EXTERNAL_PILOT_ORGANIZATION;
+}
+
+export function canAccessPageForUser(
+  page: PageKey,
+  roles: AuthRoleAssignment[],
+  organizationName?: string | null
+): boolean {
+  if (isExternalPilotOrganization(organizationName) && !EXTERNAL_PILOT_PAGES.includes(page)) {
+    return false;
+  }
+  const isReadOnlyRole = roles.some(role => role.role === 'viewer' || role.role === 'auditor');
+  const hasElevatedRole = roles.some(role => [
+    'super_admin',
+    'executive',
+    'governance_admin',
+    'division_head',
+    'department_manager',
+    'compliance_officer',
+  ].includes(role.role));
+  if (isReadOnlyRole && !hasElevatedRole && READ_ONLY_BLOCKED_PAGES.includes(page)) {
+    return false;
+  }
+  return canAccessPage(page, roles);
+}
+
+export function firstAllowedPage(roles: AuthRoleAssignment[], organizationName?: string | null): PageKey {
+  if (canAccessPageForUser('executiveHub', roles, organizationName)) return 'executiveHub';
+  if (canAccessPageForUser('workHub', roles, organizationName)) return 'workHub';
+  if (canAccessPageForUser('grcHub', roles, organizationName)) return 'grcHub';
+  if (canAccessPageForUser('qualityHub', roles, organizationName)) return 'qualityHub';
   return 'home';
 }
 

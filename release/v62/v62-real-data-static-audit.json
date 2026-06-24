@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-20T22:30:05.468Z",
-  "scanned_files": 118,
-  "total_findings": 15,
+  "generated_at": "2026-06-23T23:32:12.529Z",
+  "scanned_files": 124,
+  "total_findings": 13,
   "production_blocking_findings": 0,
   "critical": 0,
   "high": 0,
-  "medium": 15,
-  "files_with_findings": 14,
+  "medium": 13,
+  "files_with_findings": 12,
   "policy": "No direct demo imports, no hardcoded runtime demo/fallback records, no runtime fallback returns. Empty/error states must be explicit.",
   "findings": [
     {
@@ -89,23 +89,9 @@
     {
       "severity": "medium",
       "code": "HARDCODED_DEMO_ORG_SIGNAL",
-      "file": "src/pages/AccessControl.tsx",
-      "line": 77,
-      "text": "const organizationId = organizations.data?.[0]?.id || 'demo-org';"
-    },
-    {
-      "severity": "medium",
-      "code": "HARDCODED_DEMO_ORG_SIGNAL",
       "file": "src/pages/BackupHealthCheck.tsx",
       "line": 52,
       "text": "const organizationId = health[0]?.organization_id ?? 'demo';"
-    },
-    {
-      "severity": "medium",
-      "code": "HARDCODED_DEMO_ORG_SIGNAL",
-      "file": "src/pages/OVR.tsx",
-      "line": 163,
-      "text": "const organizationId = organizations.data?.[0]?.id || 'demo-org';"
     },
     {
       "severity": "medium",

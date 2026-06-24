@@ -5,6 +5,7 @@ import {
   BellRing,
   BookCopy,
   Building2,
+  Bug,
   ClipboardCheck,
   ClipboardList,
   Command,
@@ -33,10 +34,13 @@ import {
   UploadCloud,
   UserCheck,
   Users,
+  WandSparkles,
 } from 'lucide-react';
 import { useI18n } from '../i18n/I18nContext';
 import { useAuth } from '../auth/AuthProvider';
-import { canAccessPage } from '../auth/authAccess';
+import { canAccessPageForUser, isExternalPilotOrganization } from '../auth/authAccess';
+import { isScenarioLabEnabled } from '../lib/scenarioLab';
+import { ControlledPilotBanner } from './ControlledPilotBanner';
 
 export type PageKey =
   | 'home'
@@ -99,6 +103,8 @@ export type PageKey =
   | 'loadSeedCenter'
   | 'productionBackupStrategy'
   | 'migrationRunbook'
+  | 'scenarioTestConsole'
+  | 'uatIssueCapture'
   | 'admin';
 
 interface LayoutProps {
@@ -125,17 +131,26 @@ const primaryNav: NavItem[] = [
 ];
 
 const quickLinks: NavItem[] = [
-  { key: 'releaseFactory', labelKey: 'nav.releaseFactory', icon: <PackageCheck size={18} /> },
-  { key: 'productionProof', labelKey: 'nav.productionProof', icon: <PackageCheck size={18} /> },
-  { key: 'productionFinish', labelKey: 'nav.productionFinish', icon: <Rocket size={18} /> },
-  { key: 'finishFast', labelKey: 'nav.finishFast', icon: <Rocket size={18} /> },
-  { key: 'globalSearch', labelKey: 'nav.globalSearch', icon: <Search size={18} /> },
   { key: 'myWork', labelKey: 'nav.myWork', icon: <UserCheck size={18} /> },
   { key: 'ovr', labelKey: 'nav.ovr', icon: <Hospital size={18} /> },
   { key: 'approvals', labelKey: 'nav.approvals', icon: <ClipboardCheck size={18} /> },
+  { key: 'globalSearch', labelKey: 'nav.globalSearch', icon: <Search size={18} /> },
 ];
 
+const uatLinks: NavItem[] = isScenarioLabEnabled
+  ? [
+      { key: 'uatIssueCapture', labelKey: 'nav.uatIssueCapture', icon: <Bug size={18} /> },
+      { key: 'scenarioTestConsole', labelKey: 'nav.scenarioLab', icon: <WandSparkles size={18} /> },
+    ]
+  : [];
+
 export const legacyNavItems: NavItem[] = [
+  ...(isScenarioLabEnabled
+    ? [
+        { key: 'uatIssueCapture' as const, labelKey: 'nav.uatIssueCapture', icon: <Bug size={18} /> },
+        { key: 'scenarioTestConsole' as const, labelKey: 'nav.scenarioLab', icon: <WandSparkles size={18} /> },
+      ]
+    : []),
   { key: 'productionFinish', labelKey: 'nav.productionFinish', icon: <Rocket size={18} /> },
   { key: 'finishFast', labelKey: 'nav.finishFast', icon: <Rocket size={18} /> },
   { key: 'dashboard', labelKey: 'nav.dashboard', icon: <Activity size={18} /> },
@@ -207,10 +222,16 @@ function NavButton({ item, page, setPage, showHint = false }: { item: NavItem; p
 export function Layout({ page, setPage, children }: LayoutProps) {
   const { language, direction, toggleLanguage, t } = useI18n();
   const auth = useAuth();
-  const allowedPrimaryNav = primaryNav.filter(item => canAccessPage(item.key, auth.roles));
-  const allowedQuickLinks = quickLinks.filter(item => canAccessPage(item.key, auth.roles));
-  const isLegacyPage = !allowedPrimaryNav.some(item => item.key === page) && !allowedQuickLinks.some(item => item.key === page);
+  const organizationName = auth.profile?.organizationName;
+  const canOpen = (targetPage: PageKey) => canAccessPageForUser(targetPage, auth.roles, organizationName);
+  const allowedPrimaryNav = primaryNav.filter(item => canOpen(item.key));
+  const allowedQuickLinks = quickLinks.filter(item => canOpen(item.key));
+  const allowedUatLinks = uatLinks.filter(item => canOpen(item.key));
+  const isLegacyPage = !allowedPrimaryNav.some(item => item.key === page)
+    && !allowedQuickLinks.some(item => item.key === page)
+    && !allowedUatLinks.some(item => item.key === page);
   const displayName = language === 'ar' && auth.profile?.fullNameAr ? auth.profile.fullNameAr : auth.profile?.fullNameEn;
+  const externalPilot = isExternalPilotOrganization(organizationName);
 
   return (
     <div className={`app-shell modern-app-shell ${direction === 'rtl' ? 'rtl-shell' : ''}`} dir={direction}>
@@ -235,6 +256,14 @@ export function Layout({ page, setPage, children }: LayoutProps) {
           <div className="nav-section-label">{t('nav.quickLinks')}</div>
           {allowedQuickLinks.map(item => <NavButton key={item.key} item={item} page={page} setPage={setPage} />)}
 
+          {allowedUatLinks.length ? (
+            <>
+              <div className="nav-section-label">{t('nav.uatTools')}</div>
+              {allowedUatLinks.map(item => <NavButton key={item.key} item={item} page={page} setPage={setPage} />)}
+            </>
+          ) : null}
+
+          {externalPilot ? <div className="sidebar-footnote">{t('nav.externalPilotScope')}</div> : null}
           <div className="sidebar-footnote">{t('nav.sidebarHint')}</div>
 
           {isLegacyPage ? (
@@ -253,7 +282,8 @@ export function Layout({ page, setPage, children }: LayoutProps) {
             <h2>{t('app.title')}</h2>
           </div>
           <div className="topbar-actions">
-            {canAccessPage('globalSearch', auth.roles) ? (
+            <ControlledPilotBanner compact />
+            {canOpen('globalSearch') ? (
               <button className="ghost-button" onClick={() => setPage('globalSearch')} type="button">
                 <Search size={16} />
                 {t('nav.globalSearch')}

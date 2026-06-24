@@ -29,6 +29,7 @@ export interface AuthProfile {
   fullNameEn: string;
   fullNameAr?: string | null;
   organizationId?: string | null;
+  organizationName?: string | null;
   divisionId?: string | null;
   departmentId?: string | null;
   unitId?: string | null;
