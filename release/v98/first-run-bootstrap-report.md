@@ -1,6 +1,6 @@
 # v9.8 First-Run Pilot Bootstrap Report
 
-- Generated: 2026-06-23T23:16:09.257Z
+- Generated: 2026-06-24T07:22:29.228Z
 - Status: **PASSED**
 - Environment: Local Supabase Docker staging/pilot only
 - Supabase project: grc-control-center

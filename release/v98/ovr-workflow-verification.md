@@ -1,6 +1,6 @@
 # v9.8 OVR Workflow Verification
 
-- Generated: 2026-06-23T23:16:20.493Z
+- Generated: 2026-06-24T07:22:32.609Z
 - Environment: Local Supabase Docker staging
 - Database container: supabase_db_grc-control-center
 - Status: **PASSED**

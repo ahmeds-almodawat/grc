@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-23T23:35:32.855Z",
+  "generated_at": "2026-06-24T07:24:25.439Z",
   "status": "ready_for_controlled_pilot_review",
   "blocker_count": 0,
   "blockers": [],
@@ -9,7 +9,7 @@
     "missing_count": 0
   },
   "previous_v66_gate": {
-    "generated_at": "2026-06-21T17:43:42.886Z",
+    "generated_at": "2026-06-23T23:35:34.122Z",
     "controlled_pilot_status": "not_ready_manual_evidence_required",
     "strict_passed": false,
     "gates": [

@@ -1,6 +1,6 @@
 # v9.9A Scenario Coverage Map
 
-- Generated: 2026-06-23T23:17:31.136Z
+- Generated: 2026-06-24T07:23:00.953Z
 - Primary organization: Al Modawat Specialized Medical Company
 - External denial organization: V99 Synthetic External Organization
 - Active departments covered: **9/9**
