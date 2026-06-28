@@ -1,6 +1,6 @@
 # v14.0 Professional GRC Static Audit
 
-- Generated: 2026-06-28T17:53:41.033Z
+- Generated: 2026-06-28T18:12:16.209Z
 - Status: **passed**
 - Critical: 0
 - High: 0
