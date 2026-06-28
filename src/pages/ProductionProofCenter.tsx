@@ -20,6 +20,8 @@ import { useAsyncData } from '../hooks/useAsyncData';
 import { useI18n } from '../i18n/I18nContext';
 import { getProductionProofData, seedProductionProofDefaults } from '../lib/productionProofApi';
 import { actionErrorMessage } from '../lib/privilegedAction';
+import { ProductionReadinessGatePanel } from '../components/v200/ProductionReadinessGatePanel';
+import { SecurityBackupHardeningPanel } from '../components/v200/SecurityBackupHardeningPanel';
 
 type Tone = 'good' | 'warning' | 'danger' | 'neutral';
 
@@ -144,6 +146,8 @@ export function ProductionProofCenter() {
   return (
     <div className="page-stack production-proof-page">
       <section className="production-proof-hero">
+      <ProductionReadinessGatePanel context="proof" />
+      <SecurityBackupHardeningPanel context="proof" />
         <div>
           <p className="eyebrow"><Rocket size={15} /> {c.eyebrow}</p>
           <h1>{c.title}</h1>

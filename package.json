@@ -355,7 +355,19 @@
     "v170:enterprise-risk-audit": "node scripts/v170-enterprise-risk-static-audit.mjs",
     "v170:enterprise-risk-report": "node scripts/v170-enterprise-risk-report.mjs",
     "v170:final-proof": "node scripts/v170-final-proof.mjs",
-    "pilot:v170-enterprise-risk": "npm run v170:enterprise-risk-audit && npm run v170:enterprise-risk-report && npm run v170:final-proof"
+    "pilot:v170-enterprise-risk": "npm run v170:enterprise-risk-audit && npm run v170:enterprise-risk-report && npm run v170:final-proof",
+    "v180:traceability-audit": "node scripts/v180-grc-traceability-static-audit.mjs",
+    "v180:traceability-report": "node scripts/v180-grc-traceability-report.mjs",
+    "v180:final-proof": "node scripts/v180-final-proof.mjs",
+    "pilot:v180-traceability": "npm run v180:traceability-audit && npm run v180:traceability-report && npm run v180:final-proof",
+    "v190:executive-reporting-audit": "node scripts/v190-executive-reporting-static-audit.mjs",
+    "v190:executive-reporting-report": "node scripts/v190-executive-reporting-report.mjs",
+    "v190:final-proof": "node scripts/v190-final-proof.mjs",
+    "pilot:v190-executive-reporting": "npm run v190:executive-reporting-audit && npm run v190:executive-reporting-report && npm run v190:final-proof",
+    "v200:production-readiness-audit": "node scripts/v200-production-readiness-static-audit.mjs",
+    "v200:production-readiness-report": "node scripts/v200-production-readiness-report.mjs",
+    "v200:final-proof": "node scripts/v200-final-proof.mjs",
+    "pilot:v200-production-readiness": "npm run v200:production-readiness-audit && npm run v200:production-readiness-report && npm run v200:final-proof"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

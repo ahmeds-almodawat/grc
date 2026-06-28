@@ -1,0 +1,16 @@
+{
+  "version": "v18.0",
+  "name": "GRC Traceability + Assurance Map Pack",
+  "status": "passed",
+  "generated_at": "2026-06-28T21:16:20.476Z",
+  "evidence": {
+    "static_audit": "passed",
+    "report": "present",
+    "professional_chain": "Risk → Control → Test → Evidence → Issue → CAPA → Audit → Compliance → Board Reporting"
+  },
+  "limitations": [
+    "Does not create fake UAT results.",
+    "Does not alter manual approval evidence.",
+    "Does not change Supabase migrations or proof:all logic."
+  ]
+}

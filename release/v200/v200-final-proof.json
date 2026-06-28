@@ -1,0 +1,10 @@
+{
+  "generated_at": "2026-06-28T21:44:16.970Z",
+  "status": "passed",
+  "audit_status": "passed",
+  "report_exists": true,
+  "recommendation": "controlled_production_start_review_required_until_real_uat_closure_and_final_go_no_go",
+  "no_fake_uat_results": true,
+  "no_approval_json_changes_required": true,
+  "output": "release/v200/v200-final-proof.json"
+}

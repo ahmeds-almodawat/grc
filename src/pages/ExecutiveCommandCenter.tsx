@@ -5,6 +5,10 @@ import { useAsyncData } from '../hooks/useAsyncData';
 import { getCommandStream, getCommandSummary } from '../lib/commandCenterApi';
 import { useI18n } from '../i18n/I18nContext';
 import { isEmptyLiveObject } from '../lib/liveData';
+import { AssuranceMapPanel } from '../components/v180/AssuranceMapPanel';
+import { TraceabilityGapPanel } from '../components/v180/TraceabilityGapPanel';
+import { ExecutiveGrcScorecard } from '../components/v190/ExecutiveGrcScorecard';
+import { AutomationAlertPanel } from '../components/v190/AutomationAlertPanel';
 
 export function ExecutiveCommandCenter() {
   const { t } = useI18n();
@@ -27,6 +31,10 @@ export function ExecutiveCommandCenter() {
         </div>
       </div>
 
+      <ExecutiveGrcScorecard context="command-center" />
+      <AutomationAlertPanel context="command-center" />
+
+
       <DataState
         loading={summary.loading}
         error={summary.error}
@@ -45,6 +53,9 @@ export function ExecutiveCommandCenter() {
           </div>
         )}
       </DataState>
+
+      <AssuranceMapPanel />
+      <TraceabilityGapPanel />
 
       <div className="two-column align-start command-layout">
         <div className="panel command-stream-panel">

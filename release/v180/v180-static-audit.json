@@ -1,0 +1,122 @@
+{
+  "version": "v18.0",
+  "name": "GRC Traceability + Assurance Map Pack",
+  "status": "passed",
+  "generated_at": "2026-06-28T21:16:18.933Z",
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "total_checks": 18
+  },
+  "checks": [
+    {
+      "id": "file:src/lib/v180GrcTraceabilityModel.ts",
+      "severity": "critical",
+      "passed": true,
+      "detail": "src/lib/v180GrcTraceabilityModel.ts must exist"
+    },
+    {
+      "id": "file:src/components/v180/GrcTraceabilityMap.tsx",
+      "severity": "critical",
+      "passed": true,
+      "detail": "src/components/v180/GrcTraceabilityMap.tsx must exist"
+    },
+    {
+      "id": "file:src/components/v180/AssuranceMapPanel.tsx",
+      "severity": "critical",
+      "passed": true,
+      "detail": "src/components/v180/AssuranceMapPanel.tsx must exist"
+    },
+    {
+      "id": "file:src/components/v180/TraceabilityGapPanel.tsx",
+      "severity": "critical",
+      "passed": true,
+      "detail": "src/components/v180/TraceabilityGapPanel.tsx must exist"
+    },
+    {
+      "id": "file:src/styles/v180-grc-traceability.css",
+      "severity": "critical",
+      "passed": true,
+      "detail": "src/styles/v180-grc-traceability.css must exist"
+    },
+    {
+      "id": "file:scripts/v180-grc-traceability-static-audit.mjs",
+      "severity": "critical",
+      "passed": true,
+      "detail": "scripts/v180-grc-traceability-static-audit.mjs must exist"
+    },
+    {
+      "id": "file:scripts/v180-grc-traceability-report.mjs",
+      "severity": "critical",
+      "passed": true,
+      "detail": "scripts/v180-grc-traceability-report.mjs must exist"
+    },
+    {
+      "id": "file:scripts/v180-final-proof.mjs",
+      "severity": "critical",
+      "passed": true,
+      "detail": "scripts/v180-final-proof.mjs must exist"
+    },
+    {
+      "id": "chain:exact-professional-traceability",
+      "severity": "critical",
+      "passed": true,
+      "detail": "Professional traceability chain must be explicit."
+    },
+    {
+      "id": "model:assurance-map",
+      "severity": "high",
+      "passed": true,
+      "detail": "Assurance map model must exist."
+    },
+    {
+      "id": "model:traceability-gaps",
+      "severity": "high",
+      "passed": true,
+      "detail": "Traceability gap model must exist."
+    },
+    {
+      "id": "model:three-lines",
+      "severity": "medium",
+      "passed": true,
+      "detail": "Three-line assurance fields must exist."
+    },
+    {
+      "id": "component:src/components/v180/GrcTraceabilityMap.tsx:css",
+      "severity": "medium",
+      "passed": true,
+      "detail": "src/components/v180/GrcTraceabilityMap.tsx should import v180 CSS."
+    },
+    {
+      "id": "component:src/components/v180/AssuranceMapPanel.tsx:css",
+      "severity": "medium",
+      "passed": true,
+      "detail": "src/components/v180/AssuranceMapPanel.tsx should import v180 CSS."
+    },
+    {
+      "id": "component:src/components/v180/TraceabilityGapPanel.tsx:css",
+      "severity": "medium",
+      "passed": true,
+      "detail": "src/components/v180/TraceabilityGapPanel.tsx should import v180 CSS."
+    },
+    {
+      "id": "integration:governance",
+      "severity": "high",
+      "passed": true,
+      "detail": "Governance page should show traceability and assurance map panels."
+    },
+    {
+      "id": "integration:evidence",
+      "severity": "medium",
+      "passed": true,
+      "detail": "Evidence page should show evidence closure traceability context."
+    },
+    {
+      "id": "integration:executive",
+      "severity": "medium",
+      "passed": true,
+      "detail": "Executive command center should include assurance/gap context."
+    }
+  ]
+}

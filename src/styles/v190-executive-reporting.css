@@ -1,0 +1,153 @@
+.v190-panel {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 22px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.04), rgba(148, 163, 184, 0.06));
+  margin: 18px 0;
+}
+
+.v190-panel-header {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.v190-panel-header h4 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.v190-panel-header p {
+  margin: 0;
+  color: var(--muted-text, #64748b);
+}
+
+.v190-chain {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 18px;
+}
+
+.v190-chain span {
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: rgba(37, 99, 235, 0.08);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.v190-scorecard-grid,
+.v190-board-grid,
+.v190-alert-grid,
+.v190-management-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.v190-card,
+.v190-alert,
+.v190-management-view {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 18px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+}
+
+.v190-card p,
+.v190-alert p,
+.v190-management-view p {
+  margin: 8px 0;
+  color: var(--muted-text, #64748b);
+}
+
+.v190-card small {
+  display: block;
+  color: var(--muted-text, #64748b);
+  line-height: 1.5;
+}
+
+.v190-card-head,
+.v190-management-view > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.v190-card-head span,
+.v190-management-view span {
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: rgba(148, 163, 184, 0.16);
+}
+
+.v190-rule {
+  border-radius: 14px;
+  padding: 10px;
+  margin-top: 10px;
+  background: rgba(15, 23, 42, 0.05);
+  color: var(--text-color, #0f172a);
+  font-size: 0.84rem;
+}
+
+.v190-card ul,
+.v190-management-view ul {
+  margin: 10px 0 0;
+  padding-inline-start: 18px;
+  color: var(--muted-text, #64748b);
+}
+
+.v190-signal-good {
+  border-color: rgba(22, 163, 74, 0.26);
+}
+
+.v190-signal-watch,
+.v190-status-watch {
+  border-color: rgba(202, 138, 4, 0.28);
+}
+
+.v190-signal-warning {
+  border-color: rgba(245, 158, 11, 0.32);
+}
+
+.v190-signal-critical,
+.v190-status-not-ready {
+  border-color: rgba(220, 38, 38, 0.28);
+}
+
+.v190-status-ready {
+  border-color: rgba(22, 163, 74, 0.26);
+}
+
+.v190-maturity-board-ready {
+  border-color: rgba(37, 99, 235, 0.25);
+}
+
+.v190-maturity-management-ready {
+  border-color: rgba(14, 165, 233, 0.25);
+}
+
+.v190-maturity-needs-live-data {
+  border-color: rgba(245, 158, 11, 0.32);
+}
+
+@media (max-width: 760px) {
+  .v190-panel {
+    padding: 16px;
+  }
+
+  .v190-scorecard-grid,
+  .v190-board-grid,
+  .v190-alert-grid,
+  .v190-management-grid {
+    grid-template-columns: 1fr;
+  }
+}
