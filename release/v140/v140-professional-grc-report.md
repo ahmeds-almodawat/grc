@@ -1,6 +1,6 @@
 # v14.0 Professional GRC Workflow Maturity Pack
 
-- Generated: 2026-06-28T17:38:49.704Z
+- Generated: 2026-06-28T17:53:42.047Z
 - Production readiness: **not asserted**
 - Controlled pilot status: **professional workflow maturity layer added**
 - Database migration: **none**
