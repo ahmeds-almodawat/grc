@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-28T14:02:33.653Z",
+  "generated_at": "2026-06-28T14:06:31.189Z",
   "environment": "Local Supabase Docker staging",
   "project_id": "grc-control-center",
   "db_container": "supabase_db_grc-control-center",

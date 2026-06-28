@@ -2,7 +2,7 @@
 
 ```json
 {
-  "generated_at": "2026-06-28T14:02:30.771Z",
+  "generated_at": "2026-06-28T14:06:28.403Z",
   "migration_files_scanned": 56,
   "views_detected": 161,
   "findings_total": 102,
