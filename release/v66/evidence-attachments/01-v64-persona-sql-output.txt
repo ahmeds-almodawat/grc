@@ -3,7 +3,7 @@ Environment: Local Supabase Docker staging
 Source SQL: supabase/tests/v64_persona_security_tests.sql
 Executed copy: release/v662/staging-sql/v64_persona_security_tests.sql
 Database container: supabase_db_grc-control-center
-Captured UTC: 2026-06-28T18:45:33.575Z
+Captured UTC: 2026-06-28T20:49:42.593Z
 Command: docker exec -i supabase_db_grc-control-center psql -U postgres -d postgres -v ON_ERROR_STOP=1
 Completion marker note: the helper sends a psql \echo marker after the unmodified staged SQL; ON_ERROR_STOP prevents it from running after a SQL error.
 
@@ -35,7 +35,7 @@ DO
 
          generated_at          | total_controls | required_pass_percent | passed_persona_tests | failed_persona_tests | unverified_persona_tests | readiness_status 
 -------------------------------+----------------+-----------------------+----------------------+----------------------+--------------------------+------------------
- 2026-06-28 18:45:34.371846+00 |              8 |                   0.0 |                    0 |                    0 |                        8 | unverified
+ 2026-06-28 20:49:43.465641+00 |              8 |                   0.0 |                    0 |                    0 |                        8 | unverified
 (1 row)
 
 V672_SQL_EXECUTION_PASSED_V64

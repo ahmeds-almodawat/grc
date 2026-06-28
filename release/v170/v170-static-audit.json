@@ -1,0 +1,97 @@
+{
+  "version": "v17.0",
+  "pack": "Enterprise Risk Management Execution Pack",
+  "status": "passed",
+  "generated_at": "2026-06-28T20:47:40.151Z",
+  "critical": 0,
+  "high": 0,
+  "medium": 0,
+  "checks": [
+    {
+      "id": "v170-model-present",
+      "severity": "critical",
+      "file": "src/lib/v170EnterpriseRiskModel.ts",
+      "tokens": [
+        "v170RiskExecutionChain",
+        "Risk Identification → Assessment → Appetite / KRI → Treatment → Control Linkage → Monitoring → Escalation → Executive Risk Reporting",
+        "Risk Identification",
+        "Risk Assessment and Scoring",
+        "Risk Appetite and KRI Monitoring",
+        "Risk Treatment Plan",
+        "Control Linkage and Testing",
+        "Executive Risk Reporting"
+      ],
+      "exists": true,
+      "missing_tokens": [],
+      "passed": true
+    },
+    {
+      "id": "v170-workflow-map-present",
+      "severity": "critical",
+      "file": "src/components/v170/RiskExecutionWorkflowMap.tsx",
+      "tokens": [
+        "RiskExecutionWorkflowMap",
+        "v170RiskExecutionChain",
+        "v170RiskLifecycleSteps"
+      ],
+      "exists": true,
+      "missing_tokens": [],
+      "passed": true
+    },
+    {
+      "id": "v170-appetite-treatment-panel-present",
+      "severity": "critical",
+      "file": "src/components/v170/RiskAppetiteTreatmentPanel.tsx",
+      "tokens": [
+        "RiskAppetiteTreatmentPanel",
+        "v170RiskAppetiteMetrics",
+        "v170RiskTreatmentItems"
+      ],
+      "exists": true,
+      "missing_tokens": [],
+      "passed": true
+    },
+    {
+      "id": "v170-traceability-panel-present",
+      "severity": "critical",
+      "file": "src/components/v170/RiskControlTraceabilityPanel.tsx",
+      "tokens": [
+        "RiskControlTraceabilityPanel",
+        "v170RiskTraceabilityItems",
+        "Risk-control-test-evidence traceability"
+      ],
+      "exists": true,
+      "missing_tokens": [],
+      "passed": true
+    },
+    {
+      "id": "v170-risks-page-integrated",
+      "severity": "high",
+      "file": "src/pages/Risks.tsx",
+      "tokens": [
+        "Enterprise risk execution cockpit",
+        "RiskExecutionWorkflowMap",
+        "RiskAppetiteTreatmentPanel",
+        "RiskControlTraceabilityPanel",
+        "Risk closure rule",
+        "Professional ERM workflow"
+      ],
+      "exists": true,
+      "missing_tokens": [],
+      "passed": true
+    },
+    {
+      "id": "v170-css-present",
+      "severity": "medium",
+      "file": "src/styles/v170-enterprise-risk.css",
+      "tokens": [
+        "v170-risk-workflow-grid",
+        "v170-risk-capability-grid",
+        "v170-traceability-row"
+      ],
+      "exists": true,
+      "missing_tokens": [],
+      "passed": true
+    }
+  ]
+}

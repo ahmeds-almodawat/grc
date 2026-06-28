@@ -9,10 +9,14 @@ import { ScenarioFillButton } from '../components/ScenarioFillButton';
 import { StatusBadge } from '../components/StatusBadge';
 import { ProfessionalGrcMaturityPanel } from '../components/v140/ProfessionalGrcMaturityPanel';
 import { ProfessionalGrcWorkflowMap } from '../components/v140/ProfessionalGrcWorkflowMap';
+import { RiskAppetiteTreatmentPanel } from '../components/v170/RiskAppetiteTreatmentPanel';
+import { RiskControlTraceabilityPanel } from '../components/v170/RiskControlTraceabilityPanel';
+import { RiskExecutionWorkflowMap } from '../components/v170/RiskExecutionWorkflowMap';
 import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
 import { getDepartments, getOrganizations, getProfiles, getRisks } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
 import type { RiskRow } from '../types/domain';
+import '../styles/v170-enterprise-risk.css';
 import {
   createScenarioLabScenario,
   V99_SCENARIO_TAG,
@@ -53,9 +57,9 @@ export function Risks() {
   return (
     <section className="page-section">
       <ModuleHeader
-        eyebrow="Risk register"
-        title="Track risks, controls, residual scores and mitigation actions"
-        subtitle="Risk is the source; mitigation actions should become controlled projects or tasks."
+        eyebrow="Enterprise risk execution cockpit"
+        title="Risk identification, appetite, treatment, control linkage and executive reporting"
+        subtitle="v17 turns the risk register into an ERM execution flow from assessment through KRIs, treatment, control evidence, escalation and reporting."
         action={(
           <div className="inline-actions">
             {canUseScenarioControls ? (
@@ -80,9 +84,20 @@ export function Risks() {
 
       <ProfessionalGrcWorkflowMap highlight="risk" />
       <ProfessionalGrcMaturityPanel domain="risk" />
+      <RiskExecutionWorkflowMap highlight="risk-assessment" />
+      <RiskAppetiteTreatmentPanel />
+      <RiskControlTraceabilityPanel />
+
+      <div className="panel two-column">
+        <div>
+          <h4>Risk closure rule</h4>
+          <p className="muted">A high or out-of-appetite risk should not be closed only because the owner changed status. Closure should require treatment evidence, control linkage, residual reassessment and governance acceptance where exposure remains material.</p>
+        </div>
+        <div className="mini-card"><span>Professional ERM workflow</span><strong>Risk → Appetite / KRI → Treatment → Control Test → Evidence → Issue / CAPA → Executive Reporting</strong></div>
+      </div>
 
       <div className="panel">
-        <div className="panel-header"><h4>Risk register</h4></div>
+        <div className="panel-header"><div><h4>Enterprise risk register</h4><p className="muted">Operational risk records with owner, scoring, review date and residual exposure visibility.</p></div><span className="status-chip neutral">ERM record source</span></div>
         <DataState
           loading={risks.loading}
           error={risks.error}
