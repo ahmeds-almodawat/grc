@@ -1,12 +1,15 @@
-name: CI
+name: GRC Control Center CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
+  workflow_dispatch:
 
 jobs:
-  static:
-    name: Typecheck and build
+  static-validation:
+    name: Static validation
     runs-on: ubuntu-latest
 
     steps:
@@ -20,10 +23,25 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Typecheck
         run: npm run typecheck
 
       - name: Build
         run: npm run build
+
+      - name: v10 foundation proof
+        run: npm run pilot:v100-foundation
+
+      - name: v11 enterprise proof
+        run: npm run pilot:v110-enterprise
+
+      - name: v12 polish proof
+        run: npm run pilot:v120-polish
+
+      - name: v13 UX polish proof
+        run: npm run pilot:v130-polish
+
+      - name: UAT readiness static proof
+        run: npm run pilot:uat-readiness
