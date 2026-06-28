@@ -2,7 +2,7 @@
 
 ```json
 {
-  "generated_at": "2026-06-28T14:07:00.575Z",
+  "generated_at": "2026-06-28T16:33:36.686Z",
   "controlled_pilot_status": "ready_for_controlled_pilot_go_no_go_review",
   "strict_passed": true,
   "gates": [
