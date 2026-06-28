@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-28T18:45:34.931Z",
+  "generated_at": "2026-06-28T20:49:44.020Z",
   "items": [
     {
       "id": "fresh_staging_migrations_001_044",
@@ -9,7 +9,7 @@
       "status": "verified",
       "evidence_needed": "Screenshot/log showing migrations 001 through 044 applied successfully in staging.",
       "automation_note": "Verified from the live Local Supabase Docker staging migration ledger through migration 046.",
-      "last_checked_at": "2026-06-28T18:45:34.931Z"
+      "last_checked_at": "2026-06-28T20:49:44.020Z"
     },
     {
       "id": "staging_persona_sql_v64",
@@ -19,7 +19,7 @@
       "status": "verified",
       "evidence_needed": "Result/output from supabase/tests/v64_persona_security_tests.sql.",
       "automation_note": "Captured in release/v66/evidence-attachments/01-v64-persona-sql-output.txt.",
-      "last_checked_at": "2026-06-28T18:45:34.931Z"
+      "last_checked_at": "2026-06-28T20:49:44.020Z"
     },
     {
       "id": "staging_workflow_sql_v65",
@@ -29,7 +29,7 @@
       "status": "verified",
       "evidence_needed": "Result/output from supabase/tests/v65_workflow_smoke_tests.sql.",
       "automation_note": "Captured in release/v66/evidence-attachments/02-v65-workflow-sql-output.txt.",
-      "last_checked_at": "2026-06-28T18:45:34.931Z"
+      "last_checked_at": "2026-06-28T20:49:44.020Z"
     },
     {
       "id": "backup_restore_dryrun",
@@ -39,7 +39,7 @@
       "status": "verified",
       "evidence_needed": "Restore source, restore target, table counts, evidence-storage sample, smoke-test result, issue/signoff.",
       "automation_note": "Verified by the v6.7.4 isolated local database dump/restore integrity dry-run. Report: release/v674/v674-restore-integrity-dryrun.json",
-      "last_checked_at": "2026-06-28T18:45:31.825Z"
+      "last_checked_at": "2026-06-28T20:49:40.695Z"
     },
     {
       "id": "ovr_confidentiality_no_real_patient_data",

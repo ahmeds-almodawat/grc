@@ -351,7 +351,11 @@
     "v160:compliance-management-audit": "node scripts/v160-compliance-management-static-audit.mjs",
     "v160:compliance-management-report": "node scripts/v160-compliance-management-report.mjs",
     "v160:final-proof": "node scripts/v160-final-proof.mjs",
-    "pilot:v160-compliance-management": "npm run v160:compliance-management-audit && npm run v160:compliance-management-report && npm run v160:final-proof"
+    "pilot:v160-compliance-management": "npm run v160:compliance-management-audit && npm run v160:compliance-management-report && npm run v160:final-proof",
+    "v170:enterprise-risk-audit": "node scripts/v170-enterprise-risk-static-audit.mjs",
+    "v170:enterprise-risk-report": "node scripts/v170-enterprise-risk-report.mjs",
+    "v170:final-proof": "node scripts/v170-final-proof.mjs",
+    "pilot:v170-enterprise-risk": "npm run v170:enterprise-risk-audit && npm run v170:enterprise-risk-report && npm run v170:final-proof"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

@@ -53,6 +53,8 @@ jobs:
         run: npm run pilot:v150-audit-program
       - name: v16 compliance management proof
         run: npm run pilot:v160-compliance-management
+      - name: v17 enterprise risk proof
+        run: npm run pilot:v170-enterprise-risk
 
       - name: UAT readiness static proof
         run: npm run pilot:uat-readiness
