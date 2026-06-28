@@ -1,12 +1,12 @@
 # v6.4 Database Security Proof Report
 
-Generated: 2026-06-28T12:48:10.550Z
+Generated: 2026-06-28T14:02:32.204Z
 
 ## Overall
 
 ```json
 {
-  "generated_at": "2026-06-28T12:48:10.550Z",
+  "generated_at": "2026-06-28T14:02:32.204Z",
   "rls_static_strict_passed": true,
   "function_static_strict_passed": true,
   "view_static_strict_passed": true,
@@ -22,15 +22,15 @@ Generated: 2026-06-28T12:48:10.550Z
 
 ```json
 {
-  "generated_at": "2026-06-28T12:48:07.082Z",
-  "migration_files_scanned": 54,
-  "created_tables_detected": 198,
-  "tables_with_explicit_rls": 151,
-  "tables_with_detected_policies": 148,
-  "findings_total": 47,
+  "generated_at": "2026-06-28T14:02:29.312Z",
+  "migration_files_scanned": 56,
+  "created_tables_detected": 214,
+  "tables_with_explicit_rls": 154,
+  "tables_with_detected_policies": 151,
+  "findings_total": 60,
   "critical": 0,
   "high": 0,
-  "medium": 47,
+  "medium": 60,
   "strict_passed": true,
   "note": "Static audit only. Final proof requires applying migrations to staging and running supabase/tests/v64_persona_security_tests.sql."
 }
@@ -40,8 +40,8 @@ Generated: 2026-06-28T12:48:10.550Z
 
 ```json
 {
-  "generated_at": "2026-06-28T12:48:07.922Z",
-  "migration_files_scanned": 54,
+  "generated_at": "2026-06-28T14:02:30.048Z",
+  "migration_files_scanned": 56,
   "security_definer_functions_detected": 45,
   "global_security_definer_lockdown_detected": true,
   "findings_total": 0,
@@ -57,9 +57,9 @@ Generated: 2026-06-28T12:48:10.550Z
 
 ```json
 {
-  "generated_at": "2026-06-28T12:48:09.026Z",
-  "migration_files_scanned": 54,
-  "views_detected": 156,
+  "generated_at": "2026-06-28T14:02:30.771Z",
+  "migration_files_scanned": 56,
+  "views_detected": 161,
   "findings_total": 102,
   "critical": 0,
   "high": 0,

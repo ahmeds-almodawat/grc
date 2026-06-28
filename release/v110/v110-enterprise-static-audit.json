@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-28T12:46:56.211Z",
+  "generated_at": "2026-06-28T13:21:44.457Z",
   "status": "passed",
   "migration": "supabase/migrations/053_v110_enterprise_grc_program_suite.sql",
   "required_tables": 17,

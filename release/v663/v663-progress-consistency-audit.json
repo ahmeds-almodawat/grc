@@ -1,17 +1,15 @@
 {
-  "generated_at": "2026-06-28T12:48:48.246Z",
+  "generated_at": "2026-06-28T14:03:03.974Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 54,
-    "latest_migration": "053_v110_enterprise_grc_program_suite.sql",
+    "migration_count": 56,
+    "latest_migration": "056_v131_security_persona_proof_hotfix.sql",
     "prefix_gaps": [
-      54,
-      55,
-      56,
+      16,
       57,
       58,
       59,

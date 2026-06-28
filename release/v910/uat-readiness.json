@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-28T12:47:04.557Z",
+  "generated_at": "2026-06-28T13:21:52.284Z",
   "environment": "Local Supabase Docker / controlled pilot readiness",
   "production_ready": false,
   "synthetic_data_only": true,
@@ -70,12 +70,12 @@
     }
   ],
   "v72_persona_proof": {
-    "strict_passed": true,
+    "strict_passed": false,
     "authenticated_personas": "8/8",
-    "required_scenarios": "9/9",
-    "failed_count": 0,
+    "required_scenarios": "8/9",
+    "failed_count": 2,
     "cleanup_status": "passed",
-    "v700_gap_status": "real_authenticated_persona_proof_passed"
+    "v700_gap_status": "real_authenticated_persona_tests_required"
   },
   "expected_manual_approval_blockers": [
     "ovr_confidentiality_no_real_patient_data",

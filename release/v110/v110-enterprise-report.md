@@ -1,6 +1,6 @@
 # v11.0 Enterprise GRC Program Suite Report
 
-- Generated: 2026-06-28T12:46:56.960Z
+- Generated: 2026-06-28T13:21:45.169Z
 - Status: **controlled enterprise foundation ready for UAT after migration apply**
 - Production readiness: **not asserted**
 - Patient/confidential data requirement: **none**

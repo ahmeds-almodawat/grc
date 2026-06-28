@@ -1,6 +1,6 @@
 # v6.6.1 Evidence Attachment Check
 
-Generated: 2026-06-28T12:48:46.145Z
+Generated: 2026-06-28T14:03:02.132Z
 
 Evidence folder: `release\v66\evidence-attachments`
 
@@ -49,6 +49,6 @@ Evidence folder: `release\v66\evidence-attachments`
 
 - ID: `pilot-signoff`
 - Status: **attached**
-- Matched files: `pilot-signoff.md`
+- Matched files: `ovr-confidentiality-confirmation.md`, `pilot-signoff.md`
 - Example filenames: `pilot-signoff.md`, `quality-it-admin-signoff.pdf`
 

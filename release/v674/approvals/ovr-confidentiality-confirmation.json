@@ -1,23 +1,23 @@
 {
-  "scope": "",
-  "statements": {
-    "no_real_patient_identifiers": false,
-    "no_confidential_ovr_details": false,
-    "controlled_pilot_users_only": false,
-    "local_staging_proof_reviewed": false
-  },
+  "scope": "Controlled internal pilot for GRC Control Center using synthetic and non-confidential operational data only. Pilot limited to approved internal users. No real patient identifiers. No confidential OVR details. No production-wide rollout.",
   "it_reviewer": {
-    "name": "",
-    "role": "",
-    "date": "",
-    "decision": "",
-    "scope": ""
+    "name": "MOHAMED MOHARAM",
+    "role": "IT MANAGER",
+    "date": "2026-06-28",
+    "decision": "confirmed",
+    "scope": "Controlled internal pilot for GRC Control Center using synthetic and non-confidential operational data only. Pilot limited to approved internal users. No real patient identifiers. No confidential OVR details. No production-wide rollout."
   },
   "quality_reviewer": {
-    "name": "",
-    "role": "",
-    "date": "",
-    "decision": "",
-    "scope": ""
+    "name": "MOHAMED TAHER",
+    "role": "QUALITY ASSURANCE MANAGER",
+    "date": "2026-06-28",
+    "decision": "confirmed",
+    "scope": "Controlled internal pilot for GRC Control Center using synthetic and non-confidential operational data only. Pilot limited to approved internal users. No real patient identifiers. No confidential OVR details. No production-wide rollout."
+  },
+  "statements": {
+    "no_real_patient_identifiers": true,
+    "no_confidential_ovr_details": true,
+    "controlled_pilot_users_only": true,
+    "local_staging_proof_reviewed": true
   }
 }

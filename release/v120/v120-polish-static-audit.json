@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-06-28T13:21:40.880Z",
+  "status": "passed",
+  "migration": "supabase\\migrations\\054_v120_operational_polish_data_quality_suite.sql",
+  "tables_expected": 16,
+  "views_expected": 5,
+  "enums_expected": 4,
+  "security_invoker_views_detected": 5,
+  "css_polish_file": true,
+  "config_file": true,
+  "findings_count": 0,
+  "blocking_findings": 0,
+  "findings": []
+}

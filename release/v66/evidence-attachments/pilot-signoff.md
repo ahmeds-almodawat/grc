@@ -1,29 +1,17 @@
-# Draft Signoff — Controlled Internal Pilot Only
+# Controlled Internal Pilot — Human Signoff
 
-Generated UTC: 2026-06-28T12:48:42.533Z
+V674_HUMAN_SIGNOFF_VERIFIED
 
-Local environment: **Local Supabase Docker staging**
-Database container: `supabase_db_grc-control-center`
-Evidence capture result: **ACCEPTED FOR INTERNAL REVIEW**
-Approval status: **DRAFT ONLY — management, IT, and Quality approval has not been granted by this file.**
+Pilot scope: Controlled internal pilot for GRC Control Center using synthetic and non-confidential operational data only. Pilot limited to approved internal users. No real patient identifiers. No confidential OVR details. No production-wide rollout.
+Maximum pilot users: 15
 
-## Captured checks
+| Approval area | Name | Role | Date | Decision | Scope |
+|---|---|---|---|---|---|
+| Management/Admin | AHMED HELAL | Operations / Finance Lead | 2026-06-28 | approved | Controlled internal pilot for GRC Control Center using synthetic and non-confidential operational data only. Pilot limited to approved internal users. No real patient identifiers. No confidential OVR details. No production-wide rollout. |
+| IT | MOHAMED MOHARAM | IT MANAGER | 2026-06-28 | approved | Controlled internal pilot for GRC Control Center using synthetic and non-confidential operational data only. Pilot limited to approved internal users. No real patient identifiers. No confidential OVR details. No production-wide rollout. |
+| Quality | MOHAMED TAHER | QUALITY ASSURANCE MANAGER | 2026-06-28 | approved | Controlled internal pilot for GRC Control Center using synthetic and non-confidential operational data only. Pilot limited to approved internal users. No real patient identifiers. No confidential OVR details. No production-wide rollout. |
 
-- Migration ledger through 046: PASSED
-- V64 SQL execution: PASSED
-- V65 SQL execution: PASSED
-- V66 SQL execution: PASSED
-- Local Docker restore-start proof: VERIFIED
-
-## Pilot restriction
-
-This package is for a controlled internal pilot only.
-Do not use real patient identifiers, confidential OVR data, production credentials, or production exports until management, IT, and Quality have reviewed the evidence and explicitly approved the pilot.
-
-## Human approvals still required
-
-- Management approval: pending
-- IT approval: pending
-- Quality approval: pending
-
-This draft is evidence of local technical capture, not a production go-live authorization.
+Reviewed evidence:
+- Local/staging SQL proofs: confirmed
+- Restore integrity dry-run: confirmed
+- Security Definer audit: confirmed

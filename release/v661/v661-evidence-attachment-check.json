@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-28T12:48:46.145Z",
+  "generated_at": "2026-06-28T14:03:02.132Z",
   "evidence_dir": "release\\v66\\evidence-attachments",
   "required_total": 6,
   "attached_count": 6,
@@ -68,6 +68,7 @@
       "title": "IT / Quality / Admin signoff attached",
       "status": "attached",
       "matched_files": [
+        "ovr-confidentiality-confirmation.md",
         "pilot-signoff.md"
       ],
       "examples": [

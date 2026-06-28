@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-28T12:48:42.533Z",
+  "generated_at": "2026-06-28T14:02:59.304Z",
   "environment": "Local Supabase Docker staging",
   "project_id": "grc-control-center",
   "db_container": "supabase_db_grc-control-center",
   "container_state": {
     "status": "running",
     "health": "healthy",
-    "started_at": "2026-06-28T08:59:08.656678886Z",
+    "started_at": "2026-06-28T12:49:44.681791482Z",
     "inspect_exit_code": 0
   },
   "migration": {
@@ -24,7 +24,7 @@
       "output": "release/v66/evidence-attachments/01-v64-persona-sql-output.txt",
       "passed": true,
       "exit_code": 0,
-      "bytes": 2406,
+      "bytes": 2409,
       "has_completion_marker": true,
       "has_sql_error": false,
       "has_false_assertion": false,
@@ -63,7 +63,7 @@
     {
       "file": "release/v66/evidence-attachments/01-v64-persona-sql-output.txt",
       "exists": true,
-      "bytes": 2406,
+      "bytes": 2409,
       "has_pass_signal": true,
       "passed": true
     },
@@ -90,15 +90,13 @@
   },
   "draft_signoff": {
     "local_evidence_ready": true,
-    "output": "release/v66/evidence-attachments/pilot-signoff.md"
+    "output": "release/v66/evidence-attachments/pilot-signoff.md",
+    "preserved_v674_evidence": true
   },
   "manual_evidence_register": {
     "updated": true
   },
-  "blocking_count": 2,
-  "blockers": [
-    "Management, IT, and Quality approvals remain pending because pilot-signoff.md is intentionally draft-only.",
-    "IT and Quality confidentiality confirmation remains pending."
-  ],
+  "blocking_count": 0,
+  "blockers": [],
   "capture_status": "captured_pending_human_approval"
 }

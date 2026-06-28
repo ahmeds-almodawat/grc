@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-28T12:48:09.026Z",
-    "migration_files_scanned": 54,
-    "views_detected": 156,
+    "generated_at": "2026-06-28T14:02:30.771Z",
+    "migration_files_scanned": 56,
+    "views_detected": 161,
     "findings_total": 102,
     "critical": 0,
     "high": 0,
@@ -806,7 +806,7 @@
     {
       "view": "v_setup_readiness_checklist",
       "files": [
-        "supabase/migrations/016_rollout_onboarding_user_guides.sql"
+        "supabase/migrations/055_rollout_onboarding_user_guides_compat.sql"
       ],
       "has_security_invoker": false,
       "sensitive": false
@@ -1280,6 +1280,46 @@
       "sensitive": false
     },
     {
+      "view": "v120_data_quality_board",
+      "files": [
+        "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v120_due_diligence_calendar",
+      "files": [
+        "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v120_executive_readiness_overview",
+      "files": [
+        "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v120_polish_backlog_board",
+      "files": [
+        "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v120_workspace_health_summary",
+      "files": [
+        "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
       "view": "v35_consolidation_scorecard",
       "files": [
         "supabase/migrations/031_consolidation_pilot_fix_kit.sql"
@@ -1547,13 +1587,6 @@
     {
       "view": "v_print_report_index",
       "file": "supabase/migrations/015_production_hardening_health_print_controls.sql",
-      "occurrence": "create_view",
-      "has_security_invoker": false,
-      "sensitive": false
-    },
-    {
-      "view": "v_setup_readiness_checklist",
-      "file": "supabase/migrations/016_rollout_onboarding_user_guides.sql",
       "occurrence": "create_view",
       "has_security_invoker": false,
       "sensitive": false
@@ -2768,6 +2801,48 @@
       "occurrence": "create_view",
       "has_security_invoker": true,
       "sensitive": false
+    },
+    {
+      "view": "v120_workspace_health_summary",
+      "file": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v120_data_quality_board",
+      "file": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v120_polish_backlog_board",
+      "file": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v120_executive_readiness_overview",
+      "file": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v120_due_diligence_calendar",
+      "file": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_setup_readiness_checklist",
+      "file": "supabase/migrations/055_rollout_onboarding_user_guides_compat.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
     }
   ],
   "findings": [
@@ -3202,7 +3277,7 @@
       "severity": "medium",
       "code": "VIEW_WITHOUT_SECURITY_INVOKER",
       "view": "v_setup_readiness_checklist",
-      "file": "supabase/migrations/016_rollout_onboarding_user_guides.sql",
+      "file": "supabase/migrations/055_rollout_onboarding_user_guides_compat.sql",
       "message": "View does not show security_invoker=true in static scan."
     },
     {

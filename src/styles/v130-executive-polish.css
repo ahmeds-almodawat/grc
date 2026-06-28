@@ -1,0 +1,112 @@
+:root {
+  --v130-surface: rgba(255, 255, 255, 0.92);
+  --v130-surface-strong: rgba(255, 255, 255, 0.98);
+  --v130-border: rgba(148, 163, 184, 0.28);
+  --v130-shadow: 0 22px 70px rgba(15, 23, 42, 0.12);
+  --v130-radius-xl: 28px;
+  --v130-radius-lg: 20px;
+  --v130-gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.v130-workbench {
+  display: grid;
+  gap: var(--v130-gap);
+  padding: clamp(1rem, 3vw, 2rem);
+  border: 1px solid var(--v130-border);
+  border-radius: var(--v130-radius-xl);
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.88));
+  box-shadow: var(--v130-shadow);
+}
+
+.v130-workbench__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.v130-workbench__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.v130-workbench__header h2,
+.v130-workbench__card h3,
+.v130-workbench__support-grid h3 {
+  margin: 0;
+  letter-spacing: -0.03em;
+}
+
+.v130-workbench__header p,
+.v130-workbench__card p,
+.v130-workbench__support-grid li {
+  color: rgb(71, 85, 105);
+  line-height: 1.65;
+}
+
+.v130-workbench__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--v130-gap);
+}
+
+.v130-workbench__card {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.1rem;
+  border: 1px solid var(--v130-border);
+  border-radius: var(--v130-radius-lg);
+  background: var(--v130-surface-strong);
+}
+
+.v130-workbench__card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  font-size: 0.78rem;
+}
+
+.v130-workbench__card-head span {
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--v130-border);
+  border-radius: 999px;
+  background: var(--v130-surface);
+  font-weight: 800;
+}
+
+.v130-workbench__card dl {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.v130-workbench__card dt {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgb(51, 65, 85);
+}
+
+.v130-workbench__card dd {
+  margin: 0.15rem 0 0;
+  color: rgb(71, 85, 105);
+}
+
+.v130-workbench__support-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--v130-gap);
+}
+
+.v130-workbench__support-grid > section {
+  padding: 1.1rem;
+  border: 1px solid var(--v130-border);
+  border-radius: var(--v130-radius-lg);
+  background: rgba(255, 255, 255, 0.72);
+}

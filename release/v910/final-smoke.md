@@ -2,8 +2,8 @@
 
 ```json
 {
-  "generated_at": "2026-06-28T12:47:05.281Z",
-  "status": "passed",
+  "generated_at": "2026-06-28T13:21:53.054Z",
+  "status": "failed_review_required",
   "production_ready": false,
   "ui_check": {
     "script": "v910:ui-polish-check",
@@ -49,12 +49,12 @@
     }
   ],
   "v72_persona_proof": {
-    "strict_passed": true,
+    "strict_passed": false,
     "authenticated_personas_passed": 8,
     "required_persona_count": 8,
-    "required_scenarios_passed": 9,
+    "required_scenarios_passed": 8,
     "required_scenario_count": 9,
-    "failed_count": 0,
+    "failed_count": 2,
     "cleanup_status": "passed"
   },
   "v66_gate_status": {
@@ -66,6 +66,8 @@
     ],
     "expected_manual_approval_failure_allowed": true
   },
-  "failures": []
+  "failures": [
+    "v72 persona proof report is not strict-passed; inspect release/v72/real-authenticated-persona-proof.json"
+  ]
 }
 ```

@@ -11,6 +11,62 @@ const password = 'V72-Local-Proof-Only!9274';
 const suffix = Date.now().toString(36);
 const emailDomain = 'v72.local.test';
 
+function runProcess(command, args, options = {}) {
+  return spawnSync(command, args, {
+    cwd: root,
+    encoding: 'utf8',
+    windowsHide: true,
+    maxBuffer: 4 * 1024 * 1024,
+    shell: process.platform === 'win32' && command === npx,
+    ...options,
+  });
+}
+
+function dockerNames(args) {
+  const result = runProcess('docker', args);
+  if (result.status !== 0) return [];
+  return (result.stdout || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function isDockerContainerRunning(name) {
+  return dockerNames(['ps', '--filter', `name=${name}`, '--format', '{{.Names}}'])
+    .includes(name);
+}
+
+function dockerContainerExists(name) {
+  return dockerNames(['ps', '-a', '--filter', `name=${name}`, '--format', '{{.Names}}'])
+    .includes(name);
+}
+
+function ensureLocalEdgeRuntime() {
+  const edgeRuntimeContainer = `supabase_edge_runtime_${path.basename(root)}`;
+  if (isDockerContainerRunning(edgeRuntimeContainer)) return;
+
+  if (dockerContainerExists(edgeRuntimeContainer)) {
+    console.log(`Starting stopped local Supabase Edge Runtime container: ${edgeRuntimeContainer}`);
+    const started = runProcess('docker', ['start', edgeRuntimeContainer]);
+    if (started.status !== 0) {
+      throw new Error(started.stderr || started.stdout || `Could not start ${edgeRuntimeContainer}.`);
+    }
+  } else {
+    console.log('Local Supabase Edge Runtime container was not found. Running supabase start...');
+    const start = runProcess(npx, ['supabase', 'start']);
+    if (start.status !== 0) {
+      throw new Error(start.stderr || start.stdout || 'Could not start local Supabase.');
+    }
+  }
+
+  if (!isDockerContainerRunning(edgeRuntimeContainer)) {
+    throw new Error(
+      `Local Supabase Edge Runtime is not running (${edgeRuntimeContainer}). `
+      + 'Run npm run v72:reload-edge, then retry npm run v72:persona-proof.',
+    );
+  }
+}
+
 function cleanupPersonaOrganizationsWithDocker() {
   const detection = spawnSync(
     'docker',
@@ -89,7 +145,7 @@ function localStatus() {
     shell: process.platform === 'win32',
   });
   if (result.status !== 0) {
-    throw new Error(result.stderr || result.stdout || 'npx supabase status failed');
+    throw new Error(result.error?.message || result.stderr || result.stdout || 'npx supabase status failed');
   }
   const start = result.stdout.indexOf('{');
   const end = result.stdout.lastIndexOf('}');
@@ -127,6 +183,7 @@ async function invokeBridge(personaClient, action, payload) {
   return { ok: false, data: null, error: message };
 }
 
+ensureLocalEdgeRuntime();
 const status = localStatus();
 const apiUrl = status.API_URL;
 const anonKey = status.ANON_KEY;

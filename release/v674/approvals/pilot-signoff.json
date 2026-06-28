@@ -1,30 +1,30 @@
 {
-  "pilot_scope": "",
-  "maximum_pilot_users": 0,
+  "pilot_scope": "Controlled internal pilot for GRC Control Center using synthetic and non-confidential operational data only. Pilot limited to approved internal users. No real patient identifiers. No confidential OVR details. No production-wide rollout.",
+  "maximum_pilot_users": 15,
   "management_admin": {
-    "name": "",
-    "role": "",
-    "date": "",
-    "decision": "",
-    "scope": ""
+    "name": "AHMED HELAL",
+    "role": "Operations / Finance Lead",
+    "date": "2026-06-28",
+    "decision": "approved",
+    "scope": "Controlled internal pilot for GRC Control Center using synthetic and non-confidential operational data only. Pilot limited to approved internal users. No real patient identifiers. No confidential OVR details. No production-wide rollout."
   },
   "it": {
-    "name": "",
-    "role": "",
-    "date": "",
-    "decision": "",
-    "scope": ""
+    "name": "MOHAMED MOHARAM",
+    "role": "IT MANAGER",
+    "date": "2026-06-28",
+    "decision": "approved",
+    "scope": "Controlled internal pilot for GRC Control Center using synthetic and non-confidential operational data only. Pilot limited to approved internal users. No real patient identifiers. No confidential OVR details. No production-wide rollout."
   },
   "quality": {
-    "name": "",
-    "role": "",
-    "date": "",
-    "decision": "",
-    "scope": ""
+    "name": "MOHAMED TAHER",
+    "role": "QUALITY ASSURANCE MANAGER",
+    "date": "2026-06-28",
+    "decision": "approved",
+    "scope": "Controlled internal pilot for GRC Control Center using synthetic and non-confidential operational data only. Pilot limited to approved internal users. No real patient identifiers. No confidential OVR details. No production-wide rollout."
   },
   "reviewed_evidence": {
-    "local_staging_sql_proofs_reviewed": false,
-    "restore_integrity_dryrun_reviewed": false,
-    "security_definer_audit_reviewed": false
+    "local_staging_sql_proofs_reviewed": true,
+    "restore_integrity_dryrun_reviewed": true,
+    "security_definer_audit_reviewed": true
   }
 }

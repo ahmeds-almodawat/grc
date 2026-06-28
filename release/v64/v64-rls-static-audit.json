@@ -1,14 +1,14 @@
 {
   "summary": {
-    "generated_at": "2026-06-28T12:48:07.082Z",
-    "migration_files_scanned": 54,
-    "created_tables_detected": 198,
-    "tables_with_explicit_rls": 151,
-    "tables_with_detected_policies": 148,
-    "findings_total": 47,
+    "generated_at": "2026-06-28T14:02:29.312Z",
+    "migration_files_scanned": 56,
+    "created_tables_detected": 214,
+    "tables_with_explicit_rls": 154,
+    "tables_with_detected_policies": 151,
+    "findings_total": 60,
     "critical": 0,
     "high": 0,
-    "medium": 47,
+    "medium": 60,
     "strict_passed": true,
     "note": "Static audit only. Final proof requires applying migrations to staging and running supabase/tests/v64_persona_security_tests.sql."
   },
@@ -324,6 +324,97 @@
     {
       "severity": "medium",
       "code": "RLS_NOT_ENABLED",
+      "table": "v120_action_decision_log",
+      "created_in": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "v120_adoption_metrics",
+      "created_in": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "v120_dashboard_tiles",
+      "created_in": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "v120_data_quality_rules",
+      "created_in": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "v120_executive_narratives",
+      "created_in": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "v120_glossary_terms",
+      "created_in": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "v120_help_articles",
+      "created_in": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "v120_polish_backlog",
+      "created_in": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "v120_program_workspaces",
+      "created_in": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "v120_saved_views",
+      "created_in": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "v120_workflow_sla_events",
+      "created_in": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "v120_workflow_sla_policies",
+      "created_in": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "v120_workspace_modules",
+      "created_in": "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
       "table": "v50_query_optimization_items",
       "created_in": "supabase/migrations/035_v50_scale_backup_restore.sql",
       "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
@@ -360,7 +451,6 @@
     "supabase/migrations/014_export_center_backups_custom_reports.sql",
     "supabase/migrations/015_production_hardening_health_print_controls.sql",
     "supabase/migrations/0165_ovr_workflow_prerequisites.sql",
-    "supabase/migrations/016_rollout_onboarding_user_guides.sql",
     "supabase/migrations/017_notifications_activity_timelines.sql",
     "supabase/migrations/018_qa_permission_deployment_readiness.sql",
     "supabase/migrations/019_performance_responsive_usability.sql",
@@ -397,6 +487,9 @@
     "supabase/migrations/050_v99_scenario_lab.sql",
     "supabase/migrations/051_v910_controlled_pilot_uat_issues.sql",
     "supabase/migrations/052_v100_unified_capa_risk_control_foundation.sql",
-    "supabase/migrations/053_v110_enterprise_grc_program_suite.sql"
+    "supabase/migrations/053_v110_enterprise_grc_program_suite.sql",
+    "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
+    "supabase/migrations/055_rollout_onboarding_user_guides_compat.sql",
+    "supabase/migrations/056_v131_security_persona_proof_hotfix.sql"
   ]
 }

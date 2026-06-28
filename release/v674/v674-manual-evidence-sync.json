@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-20T22:29:34.033Z",
+  "generated_at": "2026-06-28T13:51:59.378Z",
   "updates": [
     {
       "id": "backup_restore_dryrun",
@@ -9,21 +9,18 @@
     {
       "id": "ovr_confidentiality_no_real_patient_data",
       "updated": true,
-      "status": "manual_required"
+      "status": "verified"
     },
     {
       "id": "pilot_signoff_it_quality_admin",
       "updated": true,
-      "status": "manual_required"
+      "status": "verified"
     }
   ],
   "approval_hashes_match": true,
   "required_total": 6,
-  "verified_count": 4,
-  "missing_count": 2,
-  "missing": [
-    "ovr_confidentiality_no_real_patient_data",
-    "pilot_signoff_it_quality_admin"
-  ],
-  "strict_passed": false
+  "verified_count": 6,
+  "missing_count": 0,
+  "missing": [],
+  "strict_passed": true
 }

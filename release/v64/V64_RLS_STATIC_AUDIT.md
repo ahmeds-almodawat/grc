@@ -2,15 +2,15 @@
 
 ```json
 {
-  "generated_at": "2026-06-28T12:48:07.082Z",
-  "migration_files_scanned": 54,
-  "created_tables_detected": 198,
-  "tables_with_explicit_rls": 151,
-  "tables_with_detected_policies": 148,
-  "findings_total": 47,
+  "generated_at": "2026-06-28T14:02:29.312Z",
+  "migration_files_scanned": 56,
+  "created_tables_detected": 214,
+  "tables_with_explicit_rls": 154,
+  "tables_with_detected_policies": 151,
+  "findings_total": 60,
   "critical": 0,
   "high": 0,
-  "medium": 47,
+  "medium": 60,
   "strict_passed": true,
   "note": "Static audit only. Final proof requires applying migrations to staging and running supabase/tests/v64_persona_security_tests.sql."
 }
@@ -62,6 +62,19 @@
 - **medium** RLS_NOT_ENABLED on `rtl_visual_qa_items` (supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
 - **medium** RLS_NOT_ENABLED on `staging_validation_check_results` (supabase/migrations/025_staging_validation_consolidation.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
 - **medium** RLS_NOT_ENABLED on `staging_validation_cycles` (supabase/migrations/025_staging_validation_consolidation.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
+- **medium** RLS_NOT_ENABLED on `v120_action_decision_log` (supabase/migrations/054_v120_operational_polish_data_quality_suite.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
+- **medium** RLS_NOT_ENABLED on `v120_adoption_metrics` (supabase/migrations/054_v120_operational_polish_data_quality_suite.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
+- **medium** RLS_NOT_ENABLED on `v120_dashboard_tiles` (supabase/migrations/054_v120_operational_polish_data_quality_suite.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
+- **medium** RLS_NOT_ENABLED on `v120_data_quality_rules` (supabase/migrations/054_v120_operational_polish_data_quality_suite.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
+- **medium** RLS_NOT_ENABLED on `v120_executive_narratives` (supabase/migrations/054_v120_operational_polish_data_quality_suite.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
+- **medium** RLS_NOT_ENABLED on `v120_glossary_terms` (supabase/migrations/054_v120_operational_polish_data_quality_suite.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
+- **medium** RLS_NOT_ENABLED on `v120_help_articles` (supabase/migrations/054_v120_operational_polish_data_quality_suite.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
+- **medium** RLS_NOT_ENABLED on `v120_polish_backlog` (supabase/migrations/054_v120_operational_polish_data_quality_suite.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
+- **medium** RLS_NOT_ENABLED on `v120_program_workspaces` (supabase/migrations/054_v120_operational_polish_data_quality_suite.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
+- **medium** RLS_NOT_ENABLED on `v120_saved_views` (supabase/migrations/054_v120_operational_polish_data_quality_suite.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
+- **medium** RLS_NOT_ENABLED on `v120_workflow_sla_events` (supabase/migrations/054_v120_operational_polish_data_quality_suite.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
+- **medium** RLS_NOT_ENABLED on `v120_workflow_sla_policies` (supabase/migrations/054_v120_operational_polish_data_quality_suite.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
+- **medium** RLS_NOT_ENABLED on `v120_workspace_modules` (supabase/migrations/054_v120_operational_polish_data_quality_suite.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
 - **medium** RLS_NOT_ENABLED on `v50_query_optimization_items` (supabase/migrations/035_v50_scale_backup_restore.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
 - **medium** RLS_NOT_ENABLED on `v50_scale_test_plans` (supabase/migrations/035_v50_scale_backup_restore.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
 - **medium** RLS_NOT_ENABLED on `v50_scale_test_results` (supabase/migrations/035_v50_scale_backup_restore.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.

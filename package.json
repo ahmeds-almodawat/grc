@@ -326,7 +326,17 @@
     "v110:enterprise-report": "node scripts/v110-generate-enterprise-report.mjs",
     "v110:uat-matrix": "node scripts/v110-uat-scenario-matrix.mjs",
     "v110:final-proof": "node scripts/v110-final-proof.mjs",
-    "pilot:v110-enterprise": "npm run v110:enterprise-audit && npm run v110:enterprise-report && npm run v110:uat-matrix && npm run v110:final-proof"
+    "pilot:v110-enterprise": "npm run v110:enterprise-audit && npm run v110:enterprise-report && npm run v110:uat-matrix && npm run v110:final-proof",
+    "v120:polish-audit": "node scripts/v120-polish-static-audit.mjs",
+    "v120:polish-report": "node scripts/v120-generate-polish-report.mjs",
+    "v120:uat-matrix": "node scripts/v120-generate-uat-matrix.mjs",
+    "v120:final-proof": "node scripts/v120-final-proof.mjs",
+    "pilot:v120-polish": "npm run v120:polish-audit && npm run v120:polish-report && npm run v120:uat-matrix && npm run v120:final-proof",
+    "v130:ux-audit": "node scripts/v130-ux-static-audit.mjs",
+    "v130:polish-report": "node scripts/v130-generate-executive-polish-report.mjs",
+    "v130:guided-uat": "node scripts/v130-generate-guided-uat-script.mjs",
+    "v130:final-proof": "node scripts/v130-final-proof.mjs",
+    "pilot:v130-polish": "npm run v130:ux-audit && npm run v130:polish-report && npm run v130:guided-uat && npm run v130:final-proof"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

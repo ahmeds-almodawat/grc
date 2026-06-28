@@ -2,9 +2,9 @@
 
 ```json
 {
-  "generated_at": "2026-06-28T12:48:47.194Z",
-  "controlled_pilot_status": "not_ready_manual_evidence_required",
-  "strict_passed": false,
+  "generated_at": "2026-06-28T14:03:03.051Z",
+  "controlled_pilot_status": "ready_for_controlled_pilot_go_no_go_review",
+  "strict_passed": true,
   "gates": [
     {
       "id": "local_typecheck_build",
@@ -24,23 +24,10 @@
     },
     {
       "id": "manual_staging_evidence",
-      "status": "manual_required"
+      "status": "passed"
     }
   ],
-  "missing_manual_evidence": [
-    {
-      "id": "ovr_confidentiality_no_real_patient_data",
-      "title": "OVR confidentiality rule confirmed for pilot",
-      "status": "manual_required",
-      "evidence_needed": "Quality/IT confirmation that pilot will not include real patient identifiers or confidential OVR details until persona proof passes."
-    },
-    {
-      "id": "pilot_signoff_it_quality_admin",
-      "title": "IT, Quality, and Admin pilot signoff completed",
-      "status": "manual_required",
-      "evidence_needed": "Signed v66 pilot signoff file with names/dates."
-    }
-  ],
-  "recommendation": "Use only for controlled internal testing until missing manual staging evidence is attached."
+  "missing_manual_evidence": [],
+  "recommendation": "Hold final go/no-go meeting and keep pilot limited to approved users."
 }
 ```

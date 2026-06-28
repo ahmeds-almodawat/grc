@@ -1,6 +1,6 @@
 # v7.0 Frontend RPC Inventory
 
-Generated: 2026-06-28T12:48:15.751Z
+Generated: 2026-06-28T14:02:36.285Z
 
 - Direct frontend RPC calls: 1
 - Authenticated Edge bridge calls: 12

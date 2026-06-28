@@ -1,0 +1,8 @@
+{
+  "generated_at": "2026-06-28T13:20:42.909Z",
+  "status": "passed",
+  "high_findings": 0,
+  "findings_count": 0,
+  "findings": [],
+  "note": "Static UX/polish audit only. No database migration is included in v13.0."
+}

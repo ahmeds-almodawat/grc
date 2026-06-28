@@ -1,6 +1,6 @@
 # v11.0 Enterprise UAT Scenario Matrix
 
-- Generated: 2026-06-28T12:46:57.655Z
+- Generated: 2026-06-28T13:21:45.897Z
 - Scope: controlled UAT only
 - Data rule: synthetic/non-confidential only
 

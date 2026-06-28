@@ -1,6 +1,6 @@
 # v9.10 Final UAT Readiness Report
 
-- Generated: 2026-06-28T12:47:04.557Z
+- Generated: 2026-06-28T13:21:52.284Z
 - Status: **controlled UAT ready, pending real manual approvals**
 - Production readiness: **not asserted**
 - Synthetic data only: **yes**
@@ -21,14 +21,14 @@ The in-app UAT issue page writes to `public.controlled_pilot_issues` using authe
 
 ## v72 persona-proof inspection
 
-- Strict passed: **yes**
+- Strict passed: **no**
 - Authenticated personas: **8/8**
-- Required scenarios: **9/9**
-- Failed count: **0**
+- Required scenarios: **8/9**
+- Failed count: **2**
 - Cleanup status: **passed**
-- v700 gap status: **real_authenticated_persona_proof_passed**
+- v700 gap status: **real_authenticated_persona_tests_required**
 
-Interpretation: The v72 proof report shows the previous persona-proof failure is not a real persona/security failure in the current working tree. Re-running proof commands remains required for final evidence.
+Interpretation: The v72 proof is not passing in the current report. Do not hide this; re-run npm run v72:persona-proof and inspect the failing scenario before UAT signoff.
 
 ## Expected remaining blocker
 

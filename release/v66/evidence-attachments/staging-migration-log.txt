@@ -2,7 +2,7 @@ GRC Control Center local staging migration evidence
 Environment: Local Supabase Docker staging
 Project: grc-control-center
 Database container: supabase_db_grc-control-center
-Captured UTC: 2026-06-28T12:48:42.533Z
+Captured UTC: 2026-06-28T14:02:59.304Z
 Source: supabase_migrations.schema_migrations in the running local database
 Expected latest migration: 046_v673_lockdown_security_definer_execute.sql
 
@@ -23,7 +23,6 @@ version |                    name
  013     | kpi_analytics_heatmap_radar
  014     | export_center_backups_custom_reports
  015     | production_hardening_health_print_controls
- 016     | rollout_onboarding_user_guides
  0165    | ovr_workflow_prerequisites
  017     | notifications_activity_timelines
  018     | qa_permission_deployment_readiness
@@ -62,7 +61,9 @@ version |                    name
  051     | v910_controlled_pilot_uat_issues
  052     | v100_unified_capa_risk_control_foundation
  053     | v110_enterprise_grc_program_suite
-(54 rows)
+ 054     | v120_operational_polish_data_quality_suite
+ 055     | rollout_onboarding_user_guides_compat
+(55 rows)
 
 Verification status: PASSED
 psql exit code: 0
