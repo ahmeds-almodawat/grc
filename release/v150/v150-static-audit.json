@@ -1,0 +1,172 @@
+{
+  "version": "v15.0",
+  "name": "Audit Program Execution Pack",
+  "status": "passed",
+  "generated_at": "2026-06-28T18:29:07.834Z",
+  "professional_workflow_chain": "Audit Universe → Annual Audit Plan → Engagement Planning → Workpapers → Evidence Requests → Findings → Management Response → Action Plan Follow-up → Closure → Assurance Reporting",
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "passed": 25,
+    "total": 25
+  },
+  "checks": [
+    {
+      "id": "file:src/pages/Audit.tsx",
+      "severity": "none",
+      "status": "passed",
+      "message": "Required file exists."
+    },
+    {
+      "id": "file:src/lib/v150AuditProgramModel.ts",
+      "severity": "none",
+      "status": "passed",
+      "message": "Required file exists."
+    },
+    {
+      "id": "file:src/components/v150/AuditProgramWorkflowMap.tsx",
+      "severity": "none",
+      "status": "passed",
+      "message": "Required file exists."
+    },
+    {
+      "id": "file:src/components/v150/AuditEngagementChecklist.tsx",
+      "severity": "none",
+      "status": "passed",
+      "message": "Required file exists."
+    },
+    {
+      "id": "file:src/components/v150/AuditAssuranceCoveragePanel.tsx",
+      "severity": "none",
+      "status": "passed",
+      "message": "Required file exists."
+    },
+    {
+      "id": "file:src/styles/v150-audit-program.css",
+      "severity": "none",
+      "status": "passed",
+      "message": "Required file exists."
+    },
+    {
+      "id": "file:scripts/v150-audit-program-static-audit.mjs",
+      "severity": "none",
+      "status": "passed",
+      "message": "Required file exists."
+    },
+    {
+      "id": "file:scripts/v150-audit-program-report.mjs",
+      "severity": "none",
+      "status": "passed",
+      "message": "Required file exists."
+    },
+    {
+      "id": "file:scripts/v150-final-proof.mjs",
+      "severity": "none",
+      "status": "passed",
+      "message": "Required file exists."
+    },
+    {
+      "id": "file:release/v150/README.md",
+      "severity": "none",
+      "status": "passed",
+      "message": "Required file exists."
+    },
+    {
+      "id": "term:Audit Universe",
+      "severity": "none",
+      "status": "passed",
+      "message": "Found Audit Universe."
+    },
+    {
+      "id": "term:Annual Audit Plan",
+      "severity": "none",
+      "status": "passed",
+      "message": "Found Annual Audit Plan."
+    },
+    {
+      "id": "term:Engagement Planning",
+      "severity": "none",
+      "status": "passed",
+      "message": "Found Engagement Planning."
+    },
+    {
+      "id": "term:Workpapers",
+      "severity": "none",
+      "status": "passed",
+      "message": "Found Workpapers."
+    },
+    {
+      "id": "term:Evidence Requests",
+      "severity": "none",
+      "status": "passed",
+      "message": "Found Evidence Requests."
+    },
+    {
+      "id": "term:Findings",
+      "severity": "none",
+      "status": "passed",
+      "message": "Found Findings."
+    },
+    {
+      "id": "term:Management Response",
+      "severity": "none",
+      "status": "passed",
+      "message": "Found Management Response."
+    },
+    {
+      "id": "term:Action Plan Follow-up",
+      "severity": "none",
+      "status": "passed",
+      "message": "Found Action Plan Follow-up."
+    },
+    {
+      "id": "term:Closure",
+      "severity": "none",
+      "status": "passed",
+      "message": "Found Closure."
+    },
+    {
+      "id": "term:Assurance Reporting",
+      "severity": "none",
+      "status": "passed",
+      "message": "Found Assurance Reporting."
+    },
+    {
+      "id": "term:Audit Universe → Annual Audit Plan → Engagement Planning → Workpapers → Evidence Requests → Findings → Management Response → Action Plan Follow-up → Closure → Assurance Reporting",
+      "severity": "none",
+      "status": "passed",
+      "message": "Found Audit Universe → Annual Audit Plan → Engagement Planning → Workpapers → Evidence Requests → Findings → Management Response → Action Plan Follow-up → Closure → Assurance Reporting."
+    },
+    {
+      "id": "script:v150:audit-program-audit",
+      "severity": "none",
+      "status": "passed",
+      "message": "Package script is registered."
+    },
+    {
+      "id": "script:v150:audit-program-report",
+      "severity": "none",
+      "status": "passed",
+      "message": "Package script is registered."
+    },
+    {
+      "id": "script:v150:final-proof",
+      "severity": "none",
+      "status": "passed",
+      "message": "Package script is registered."
+    },
+    {
+      "id": "script:pilot:v150-audit-program",
+      "severity": "none",
+      "status": "passed",
+      "message": "Package script is registered."
+    }
+  ],
+  "scope": {
+    "database_migration": "not required",
+    "data_policy": "synthetic/static workflow scaffolding only",
+    "approval_files_touched": false,
+    "proof_all_logic_touched": false
+  }
+}

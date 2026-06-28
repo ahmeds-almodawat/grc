@@ -1,11 +1,10 @@
-# v14.0 Controlled UAT Static Audit
+# v14.0 Professional GRC Static Audit
 
-Status: **passed**
+- Generated: 2026-06-28T18:12:16.209Z
+- Status: **passed**
+- Critical: 0
+- High: 0
+- Medium: 0
 
-High findings: 0
-
-Findings: 0
-
-Manual UAT results asserted: **no**
-
-Database migration included: **no**
+## Findings
+- None

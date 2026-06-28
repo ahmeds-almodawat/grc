@@ -1,14 +1,34 @@
 {
-  "generated_at": "2026-06-28T16:31:56.827Z",
+  "generated_at": "2026-06-28T18:12:17.826Z",
+  "release": "v14.0 Professional GRC Workflow Maturity Pack",
   "status": "passed",
   "failed_count": 0,
-  "warning_count": 0,
-  "failures": [],
-  "warnings": [],
-  "total_day_one_scenarios": 18,
-  "uat_results_asserted": false,
-  "production_readiness_asserted": false,
-  "database_migration_included": false,
-  "approval_json_modified_by_v140": false,
-  "proof_scope": "v14.0 controlled UAT execution pack presence and wiring only; manual UAT execution remains human evidence."
+  "checks": [
+    {
+      "name": "static_audit_exists",
+      "passed": true,
+      "detail": "release/v140/v140-static-audit.json"
+    },
+    {
+      "name": "static_audit_passed",
+      "passed": true,
+      "detail": "passed"
+    },
+    {
+      "name": "professional_report_exists",
+      "passed": true,
+      "detail": "release/v140/v140-professional-grc-report.md"
+    },
+    {
+      "name": "no_database_migration_required",
+      "passed": true,
+      "detail": "v14 is frontend/static maturity layer only"
+    },
+    {
+      "name": "approval_files_unchanged_by_design",
+      "passed": true,
+      "detail": "No v674 approval files are touched by this proof."
+    }
+  ],
+  "note": "Professional workflow maturity proof only. Does not assert broad production readiness."
 }

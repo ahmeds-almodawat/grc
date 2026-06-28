@@ -7,6 +7,8 @@ import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { ScenarioFillButton } from '../components/ScenarioFillButton';
 import { StatusBadge } from '../components/StatusBadge';
+import { ProfessionalGrcMaturityPanel } from '../components/v140/ProfessionalGrcMaturityPanel';
+import { ProfessionalGrcWorkflowMap } from '../components/v140/ProfessionalGrcWorkflowMap';
 import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
 import { getDepartments, getOrganizations, getProfiles, getRisks } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
@@ -70,11 +72,14 @@ export function Risks() {
       {controlMessage ? <div className="notice-banner">{controlMessage}</div> : null}
 
       <div className="module-grid">
-        <div className="module-card danger"><strong>Critical risks</strong><span>Financial, regulatory, clinical and operational risks.</span></div>
-        <div className="module-card"><strong>Risk controls</strong><span>Preventive, detective, corrective and directive controls.</span></div>
-        <div className="module-card"><strong>Mitigation plans</strong><span>Convert risk treatment into tracked action plans.</span></div>
-        <div className="module-card"><strong>Review cycle</strong><span>Next review date, owner and evidence required.</span></div>
+        <div className="module-card danger"><strong>Enterprise risk register</strong><span>Strategic, financial, regulatory, clinical and operational risk records.</span></div>
+        <div className="module-card"><strong>Risk assessment and scoring</strong><span>Inherent and residual score with treatment priority.</span></div>
+        <div className="module-card"><strong>Risk appetite / KRI monitoring</strong><span>Thresholds and indicators that show when risk moves outside tolerance.</span></div>
+        <div className="module-card"><strong>Control mapping</strong><span>Connect material risks to controls, testing, issues and CAPA.</span></div>
       </div>
+
+      <ProfessionalGrcWorkflowMap highlight="risk" />
+      <ProfessionalGrcMaturityPanel domain="risk" />
 
       <div className="panel">
         <div className="panel-header"><h4>Risk register</h4></div>
