@@ -317,7 +317,11 @@
     "v910:ui-polish-check": "node scripts/v910-ui-polish-check.mjs",
     "v910:uat-readiness-report": "node scripts/v910-uat-readiness-report.mjs",
     "v910:final-smoke": "node scripts/v910-final-smoke.mjs",
-    "pilot:uat-readiness": "npm run v910:ui-polish-check && npm run v910:uat-readiness-report && npm run v910:final-smoke"
+    "pilot:uat-readiness": "npm run v910:ui-polish-check && npm run v910:uat-readiness-report && npm run v910:final-smoke",
+    "v100:foundation-audit": "node scripts/v100-foundation-static-audit.mjs",
+    "v100:foundation-report": "node scripts/v100-generate-foundation-report.mjs",
+    "v100:final-proof": "node scripts/v100-final-proof.mjs",
+    "pilot:v100-foundation": "npm run v100:foundation-audit && npm run v100:foundation-report && npm run v100:final-proof"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

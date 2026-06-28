@@ -1,6 +1,6 @@
 # v9.10 Manual UAT Readiness Checklist
 
-- Generated: 2026-06-24T07:23:03.196Z
+- Generated: 2026-06-28T09:25:36.919Z
 - Data boundary: **synthetic/non-confidential only**
 - Environment: **local/staging controlled pilot**
 

@@ -1,6 +1,6 @@
 # v9.9A Synthetic UAT User Matrix
 
-- Generated: 2026-06-24T07:23:00.953Z
+- Generated: 2026-06-28T09:25:31.474Z
 - Environment: **Local Supabase Docker / controlled pilot only**
 - Synthetic users: **30/30**
 - Dataset tag: `V99_BULK_UAT_USERS`

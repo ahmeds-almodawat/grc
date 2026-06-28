@@ -1,0 +1,191 @@
+{
+  "generated_at": "2026-06-28T09:25:32.787Z",
+  "status": "passed",
+  "migration": "supabase/migrations/052_v100_unified_capa_risk_control_foundation.sql",
+  "required_tables": [
+    {
+      "table": "control_library_items",
+      "create_found": true
+    },
+    {
+      "table": "risk_control_mappings",
+      "create_found": true
+    },
+    {
+      "table": "control_tests",
+      "create_found": true
+    },
+    {
+      "table": "capa_cases",
+      "create_found": true
+    },
+    {
+      "table": "capa_action_items",
+      "create_found": true
+    },
+    {
+      "table": "grc_issue_register",
+      "create_found": true
+    },
+    {
+      "table": "compliance_obligations",
+      "create_found": true
+    },
+    {
+      "table": "compliance_obligation_mappings",
+      "create_found": true
+    },
+    {
+      "table": "audit_universe_items",
+      "create_found": true
+    },
+    {
+      "table": "audit_engagements",
+      "create_found": true
+    },
+    {
+      "table": "audit_workpapers",
+      "create_found": true
+    }
+  ],
+  "required_views": [
+    {
+      "view": "v100_risk_control_capa_dashboard",
+      "create_found": true,
+      "security_invoker_found": true
+    },
+    {
+      "view": "v100_overdue_capa_actions",
+      "create_found": true,
+      "security_invoker_found": true
+    },
+    {
+      "view": "v100_control_test_effectiveness_summary",
+      "create_found": true,
+      "security_invoker_found": true
+    }
+  ],
+  "rls_tables": [
+    {
+      "table": "control_library_items",
+      "rls_found": true
+    },
+    {
+      "table": "risk_control_mappings",
+      "rls_found": true
+    },
+    {
+      "table": "control_tests",
+      "rls_found": true
+    },
+    {
+      "table": "capa_cases",
+      "rls_found": true
+    },
+    {
+      "table": "capa_action_items",
+      "rls_found": true
+    },
+    {
+      "table": "grc_issue_register",
+      "rls_found": true
+    },
+    {
+      "table": "compliance_obligations",
+      "rls_found": true
+    },
+    {
+      "table": "compliance_obligation_mappings",
+      "rls_found": true
+    },
+    {
+      "table": "audit_universe_items",
+      "rls_found": true
+    },
+    {
+      "table": "audit_engagements",
+      "rls_found": true
+    },
+    {
+      "table": "audit_workpapers",
+      "rls_found": true
+    }
+  ],
+  "grants_checked": [
+    {
+      "table": "control_library_items",
+      "grant_found": true
+    },
+    {
+      "table": "risk_control_mappings",
+      "grant_found": true
+    },
+    {
+      "table": "control_tests",
+      "grant_found": true
+    },
+    {
+      "table": "capa_cases",
+      "grant_found": true
+    },
+    {
+      "table": "capa_action_items",
+      "grant_found": true
+    },
+    {
+      "table": "grc_issue_register",
+      "grant_found": true
+    },
+    {
+      "table": "compliance_obligations",
+      "grant_found": true
+    },
+    {
+      "table": "compliance_obligation_mappings",
+      "grant_found": true
+    },
+    {
+      "table": "audit_universe_items",
+      "grant_found": true
+    },
+    {
+      "table": "audit_engagements",
+      "grant_found": true
+    },
+    {
+      "table": "audit_workpapers",
+      "grant_found": true
+    }
+  ],
+  "forbidden_patterns": [
+    {
+      "pattern": "service_role",
+      "present": false
+    },
+    {
+      "pattern": "release/v674/approvals",
+      "present": false
+    },
+    {
+      "pattern": "pilot-signoff.json",
+      "present": false
+    },
+    {
+      "pattern": "ovr-confidentiality-confirmation.json",
+      "present": false
+    },
+    {
+      "pattern": "disable row level security",
+      "present": false
+    },
+    {
+      "pattern": "grant delete on",
+      "present": false
+    },
+    {
+      "pattern": "grant all on",
+      "present": false
+    }
+  ],
+  "findings": []
+}

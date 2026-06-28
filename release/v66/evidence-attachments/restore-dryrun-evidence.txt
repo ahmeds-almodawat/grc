@@ -1,29 +1,29 @@
 v6.7.4 Restore Integrity Dry-Run Evidence
 Environment: Local Supabase Docker staging
-Generated UTC: 2026-06-24T07:24:09.365Z
+Generated UTC: 2026-06-28T09:27:19.830Z
 Source database: postgres in supabase_db_grc-control-center
 Temporary verification database: grc_v674_restore_verify
 Dump scope: auth, public, storage, supabase_migrations
 Managed service scope limitation: realtime and other Supabase service internals are not claimed by this application-data restore proof.
-Dump size bytes: 1900015
+Dump size bytes: 1910736
 
 Key table count comparison:
 - public.organizations: source=2, restored=2, MATCHED
-- public.profiles: source=32, restored=32, MATCHED
-- public.user_roles: source=32, restored=32, MATCHED
+- public.profiles: source=31, restored=31, MATCHED
+- public.user_roles: source=31, restored=31, MATCHED
 - public.projects: source=2, restored=2, MATCHED
 - public.milestones: source=0, restored=0, MATCHED
 - public.tasks: source=0, restored=0, MATCHED
-- public.ovr_reports: source=1, restored=1, MATCHED
+- public.ovr_reports: source=0, restored=0, MATCHED
 - public.evidence_files: source=0, restored=0, MATCHED
 - public.approvals: source=0, restored=0, MATCHED
 - public.controlled_pilot_runs: source=1, restored=1, MATCHED
 - public.controlled_pilot_evidence_items: source=0, restored=0, MATCHED
-- public.controlled_pilot_issues: source=1, restored=1, MATCHED
+- public.controlled_pilot_issues: source=0, restored=0, MATCHED
 - public.controlled_pilot_signoffs: source=0, restored=0, MATCHED
 - storage.buckets: source=1, restored=1, MATCHED
 - storage.objects: source=0, restored=0, MATCHED
-- supabase_migrations.schema_migrations: source=51, restored=51, MATCHED
+- supabase_migrations.schema_migrations: source=53, restored=53, MATCHED
 
 Evidence-related table verification:
 - public.evidence_files: VERIFIED
@@ -35,7 +35,7 @@ Evidence-related table verification:
 Post-restore smoke query: PASSED
 {
   "database": "grc_v674_restore_verify",
-  "latest_migration": "050_v99_scenario_lab",
+  "latest_migration": "052_v100_unified_capa_risk_control_foundation",
   "organization_count": 2,
   "evidence_file_count": 0,
   "pilot_evidence_count": 0,

@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-06-28T09:25:34.167Z",
+  "status": "passed",
+  "checks": [
+    {
+      "name": "migration_file_exists",
+      "passed": true,
+      "detail": "C:\\Users\\molte\\Downloads\\grc-control-center\\supabase\\migrations\\052_v100_unified_capa_risk_control_foundation.sql"
+    },
+    {
+      "name": "static_audit_exists",
+      "passed": true,
+      "detail": "C:\\Users\\molte\\Downloads\\grc-control-center\\release\\v100\\v100-foundation-static-audit.json"
+    },
+    {
+      "name": "foundation_report_exists",
+      "passed": true,
+      "detail": "C:\\Users\\molte\\Downloads\\grc-control-center\\release\\v100\\v100-foundation-report.md"
+    },
+    {
+      "name": "static_audit_passed",
+      "passed": true,
+      "detail": "passed"
+    },
+    {
+      "name": "no_static_findings",
+      "passed": true,
+      "detail": "0 findings"
+    },
+    {
+      "name": "no_approval_json_references",
+      "passed": true,
+      "detail": "Approval files not touched"
+    },
+    {
+      "name": "no_service_role_browser_pattern",
+      "passed": true,
+      "detail": "No service_role string in v10.0 migration"
+    },
+    {
+      "name": "no_delete_grants",
+      "passed": true,
+      "detail": "No delete grants"
+    },
+    {
+      "name": "security_invoker_views",
+      "passed": true,
+      "detail": "Expected at least 3 security-invoker views"
+    }
+  ],
+  "failed_count": 0,
+  "note": "Static/pack proof only. Database migration must still be applied and tested on local/staging Supabase before pilot use."
+}

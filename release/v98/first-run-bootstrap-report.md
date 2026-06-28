@@ -1,6 +1,6 @@
 # v9.8 First-Run Pilot Bootstrap Report
 
-- Generated: 2026-06-24T07:22:29.228Z
+- Generated: 2026-06-28T09:17:29.606Z
 - Status: **PASSED**
 - Environment: Local Supabase Docker staging/pilot only
 - Supabase project: grc-control-center
@@ -17,9 +17,9 @@
 
 ## Bootstrap result
 
-- Auth user ID: `5a305a09-afb6-4691-b432-2c000bf175d8`
-- Profile ID: `5a305a09-afb6-4691-b432-2c000bf175d8`
-- Organization: Al Modawat Specialized Medical Company (`69641b94-bc57-4cb0-80d9-ee84cc70db80`)
+- Auth user ID: `bbbd3a00-dc7f-49c4-b917-81bbd6091576`
+- Profile ID: `bbbd3a00-dc7f-49c4-b917-81bbd6091576`
+- Organization: Al Modawat Specialized Medical Company (`3edf43ce-bf3b-495c-80af-c9bfed20a208`)
 - Role: `super_admin` / `global`
 - Active matching role rows: 1
 

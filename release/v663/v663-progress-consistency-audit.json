@@ -1,15 +1,14 @@
 {
-  "generated_at": "2026-06-24T07:24:27.080Z",
+  "generated_at": "2026-06-28T09:27:34.315Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 52,
-    "latest_migration": "051_v910_controlled_pilot_uat_issues.sql",
+    "migration_count": 53,
+    "latest_migration": "052_v100_unified_capa_risk_control_foundation.sql",
     "prefix_gaps": [
-      52,
       53,
       54,
       55,

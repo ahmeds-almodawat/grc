@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-24T07:23:48.514Z",
-    "migration_files_scanned": 52,
-    "views_detected": 150,
+    "generated_at": "2026-06-28T09:26:52.736Z",
+    "migration_files_scanned": 53,
+    "views_detected": 153,
     "findings_total": 102,
     "critical": 0,
     "high": 0,
@@ -1230,6 +1230,30 @@
       ],
       "has_security_invoker": false,
       "sensitive": false
+    },
+    {
+      "view": "v100_control_test_effectiveness_summary",
+      "files": [
+        "supabase/migrations/052_v100_unified_capa_risk_control_foundation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v100_overdue_capa_actions",
+      "files": [
+        "supabase/migrations/052_v100_unified_capa_risk_control_foundation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v100_risk_control_capa_dashboard",
+      "files": [
+        "supabase/migrations/052_v100_unified_capa_risk_control_foundation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
     },
     {
       "view": "v35_consolidation_scorecard",
@@ -2676,6 +2700,27 @@
       "view": "v_ovr_workflow_control_summary",
       "file": "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
       "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v100_risk_control_capa_dashboard",
+      "file": "supabase/migrations/052_v100_unified_capa_risk_control_foundation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v100_overdue_capa_actions",
+      "file": "supabase/migrations/052_v100_unified_capa_risk_control_foundation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v100_control_test_effectiveness_summary",
+      "file": "supabase/migrations/052_v100_unified_capa_risk_control_foundation.sql",
+      "occurrence": "create_view",
       "has_security_invoker": true,
       "sensitive": true
     }

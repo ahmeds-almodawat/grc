@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-24T07:24:22.184Z",
+  "generated_at": "2026-06-28T09:27:29.685Z",
   "environment": "Local Supabase Docker staging",
   "project_id": "grc-control-center",
   "db_container": "supabase_db_grc-control-center",
   "container_state": {
     "status": "running",
     "health": "healthy",
-    "started_at": "2026-06-19T14:20:50.590000465Z",
+    "started_at": "2026-06-28T08:59:08.656678886Z",
     "inspect_exit_code": 0
   },
   "migration": {

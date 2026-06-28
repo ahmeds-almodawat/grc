@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-24T07:24:07.422Z",
+  "generated_at": "2026-06-28T09:27:18.313Z",
   "environment": "Local Supabase Docker staging",
   "synthetic_data_only": true,
   "no_real_patient_identifiers": true,
@@ -41,7 +41,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "c6ea3c6a-c7a2-45c9-85de-4ac77ea9da75",
+      "actual": "55c52bcc-f12a-4787-a313-4dbb9e0cc2a0",
       "details": null
     },
     {
@@ -61,7 +61,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "ebbc47a1-3cf2-4eaa-8fd6-f7f675cecc31",
+      "actual": "3c40626c-8102-47ad-bf89-77311a4759f3",
       "details": null
     },
     {
@@ -81,7 +81,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "f3e461ae-9e51-4475-8c11-2959d7cf55cd",
+      "actual": "22b0f3bf-4cef-4835-aed6-ad9519bcad84",
       "details": null
     },
     {
@@ -101,7 +101,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "c15ec08a-c6fe-48ba-b2e5-300141b257f7",
+      "actual": "5ef8f236-54cb-4286-bd13-2f94c8ecf3c2",
       "details": null
     },
     {
@@ -121,7 +121,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "4e984c71-204e-4834-9de4-4cc504003156",
+      "actual": "9d384583-3dd6-4633-8043-a25121be4741",
       "details": null
     },
     {
@@ -141,7 +141,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "89866912-3a47-46d8-90de-bcd556cdebe9",
+      "actual": "93e0b0dd-bd06-4e66-bb72-a04130a9c2f2",
       "details": null
     },
     {
@@ -161,7 +161,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "68fea233-2c10-4eb5-b8bd-0e298391f564",
+      "actual": "e876c2d1-f975-4fa2-aec2-bf873589ddc5",
       "details": null
     },
     {
@@ -181,7 +181,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "6f4fc3c8-ae88-4c2c-819e-c0304a72e897",
+      "actual": "50ab7991-45cb-4a88-8cdc-88f2cb91ba8b",
       "details": null
     },
     {
@@ -275,7 +275,7 @@
           "ok": true,
           "action": "assign_user_role",
           "result": {
-            "id": "5fc49318-33d0-45f0-bbd6-51162b76db04"
+            "id": "4312cbdc-2901-430c-8b31-0fea3e47db16"
           }
         },
         "admin_deactivate": {
@@ -308,7 +308,7 @@
       ],
       "passed": true,
       "expected": "permission error or zero rows",
-      "actual": "permission denied for table projects",
+      "actual": "permission denied for function can_access_scope",
       "details": null
     },
     {
@@ -326,7 +326,7 @@
           "ok": true,
           "action": "create_board_pack_snapshot",
           "result": {
-            "id": "9e1a0b25-97ef-4e4d-bf33-6d2594e77221"
+            "id": "5d5a59c3-23e5-417a-a0df-0d223f6d74b1"
           }
         },
         "acknowledge_escalation_event": {
@@ -347,7 +347,7 @@
           "ok": true,
           "action": "assign_user_role",
           "result": {
-            "id": "5fc49318-33d0-45f0-bbd6-51162b76db04"
+            "id": "4312cbdc-2901-430c-8b31-0fea3e47db16"
           }
         },
         "deactivate_user_role": {
@@ -361,12 +361,12 @@
           "ok": true,
           "action": "update_ovr_workflow",
           "result": {
-            "id": "eaa42363-8d4c-4e85-aa97-8ebde45bf9ed",
+            "id": "1ddac1bb-a4ce-4a0b-b723-133afd2fcc8c",
             "status": "manager_review",
             "closed_at": null,
             "final_verdict": null,
             "reporter_response": null,
-            "supervisor_due_date": "2026-06-25",
+            "supervisor_due_date": "2026-06-29",
             "quality_validated_at": null,
             "cross_department_notified_at": null
           }
@@ -375,7 +375,7 @@
           "ok": true,
           "action": "create_ovr_corrective_action_project",
           "result": {
-            "id": "469f7d78-9f55-4cac-a326-429432d72da4"
+            "id": "9a77dcad-7917-4d13-802f-a79c32abe90e"
           }
         },
         "unauthorized_assign_user_role": "V72_ROLE_ADMIN_NOT_AUTHORIZED"
