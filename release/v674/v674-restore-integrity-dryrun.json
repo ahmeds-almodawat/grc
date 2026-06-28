@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-28T16:33:20.073Z",
+  "generated_at": "2026-06-28T17:42:17.125Z",
   "environment": "Local Supabase Docker staging",
   "project_id": "grc-control-center",
   "db_container": "supabase_db_grc-control-center",
@@ -14,7 +14,7 @@
   "excluded_managed_schemas": [
     "realtime and other Supabase service internals"
   ],
-  "dump_bytes": 2210880,
+  "dump_bytes": 2211987,
   "source_counts": {
     "public.organizations": 2,
     "public.profiles": 31,
@@ -173,8 +173,8 @@
   "steps": [
     {
       "name": "capture_source_counts",
-      "started_at": "2026-06-28T16:33:20.241Z",
-      "finished_at": "2026-06-28T16:33:20.497Z",
+      "started_at": "2026-06-28T17:42:17.338Z",
+      "finished_at": "2026-06-28T17:42:17.593Z",
       "exit_code": 0,
       "passed": true,
       "stdout": "{\"public.organizations\" : 2, \"public.profiles\" : 31, \"public.user_roles\" : 31, \"public.projects\" : 2, \"public.milestones\" : 0, \"public.tasks\" : 0, \"public.ovr_reports\" : 0, \"public.evidence_files\" : 0, \"public.approvals\" : 0, \"public.controlled_pilot_runs\" : 1, \"public.controlled_pilot_evidence_items\" : 0, \"public.controlled_pilot_issues\" : 0, \"public.controlled_pilot_signoffs\" : 0, \"storage.buckets\" : 1, \"storage.objects\" : 0, \"supabase_migrations.schema_migrations\" : 55}",
@@ -182,8 +182,8 @@
     },
     {
       "name": "dump_application_schemas",
-      "started_at": "2026-06-28T16:33:20.498Z",
-      "finished_at": "2026-06-28T16:33:21.272Z",
+      "started_at": "2026-06-28T17:42:17.593Z",
+      "finished_at": "2026-06-28T17:42:18.474Z",
       "exit_code": 0,
       "passed": true,
       "stdout": "",
@@ -191,17 +191,17 @@
     },
     {
       "name": "verify_dump_file",
-      "started_at": "2026-06-28T16:33:21.272Z",
-      "finished_at": "2026-06-28T16:33:21.498Z",
+      "started_at": "2026-06-28T17:42:18.474Z",
+      "finished_at": "2026-06-28T17:42:18.729Z",
       "exit_code": 0,
       "passed": true,
-      "stdout": "2210880",
+      "stdout": "2211987",
       "stderr": ""
     },
     {
       "name": "drop_previous_verification_database",
-      "started_at": "2026-06-28T16:33:21.498Z",
-      "finished_at": "2026-06-28T16:33:21.922Z",
+      "started_at": "2026-06-28T17:42:18.729Z",
+      "finished_at": "2026-06-28T17:42:19.037Z",
       "exit_code": 0,
       "passed": true,
       "stdout": "",
@@ -209,8 +209,8 @@
     },
     {
       "name": "create_verification_database",
-      "started_at": "2026-06-28T16:33:21.922Z",
-      "finished_at": "2026-06-28T16:33:22.331Z",
+      "started_at": "2026-06-28T17:42:19.037Z",
+      "finished_at": "2026-06-28T17:42:19.519Z",
       "exit_code": 0,
       "passed": true,
       "stdout": "",
@@ -218,8 +218,8 @@
     },
     {
       "name": "prepare_verification_database",
-      "started_at": "2026-06-28T16:33:22.331Z",
-      "finished_at": "2026-06-28T16:33:22.561Z",
+      "started_at": "2026-06-28T17:42:19.519Z",
+      "finished_at": "2026-06-28T17:42:19.767Z",
       "exit_code": 0,
       "passed": true,
       "stdout": "DROP SCHEMA",
@@ -227,8 +227,8 @@
     },
     {
       "name": "restore_dump",
-      "started_at": "2026-06-28T16:33:22.561Z",
-      "finished_at": "2026-06-28T16:33:29.703Z",
+      "started_at": "2026-06-28T17:42:19.767Z",
+      "finished_at": "2026-06-28T17:42:27.771Z",
       "exit_code": 0,
       "passed": true,
       "stdout": "",
@@ -236,8 +236,8 @@
     },
     {
       "name": "capture_restored_counts",
-      "started_at": "2026-06-28T16:33:29.703Z",
-      "finished_at": "2026-06-28T16:33:29.959Z",
+      "started_at": "2026-06-28T17:42:27.771Z",
+      "finished_at": "2026-06-28T17:42:28.041Z",
       "exit_code": 0,
       "passed": true,
       "stdout": "{\"public.organizations\" : 2, \"public.profiles\" : 31, \"public.user_roles\" : 31, \"public.projects\" : 2, \"public.milestones\" : 0, \"public.tasks\" : 0, \"public.ovr_reports\" : 0, \"public.evidence_files\" : 0, \"public.approvals\" : 0, \"public.controlled_pilot_runs\" : 1, \"public.controlled_pilot_evidence_items\" : 0, \"public.controlled_pilot_issues\" : 0, \"public.controlled_pilot_signoffs\" : 0, \"storage.buckets\" : 1, \"storage.objects\" : 0, \"supabase_migrations.schema_migrations\" : 55}",
@@ -245,8 +245,8 @@
     },
     {
       "name": "verify_evidence_tables",
-      "started_at": "2026-06-28T16:33:29.959Z",
-      "finished_at": "2026-06-28T16:33:30.176Z",
+      "started_at": "2026-06-28T17:42:28.042Z",
+      "finished_at": "2026-06-28T17:42:28.296Z",
       "exit_code": 0,
       "passed": true,
       "stdout": "{\"public.evidence_files\" : true, \"public.v64_security_evidence\" : true, \"public.controlled_pilot_evidence_items\" : true, \"storage.buckets\" : true, \"storage.objects\" : true}",
@@ -254,8 +254,8 @@
     },
     {
       "name": "run_post_restore_smoke_query",
-      "started_at": "2026-06-28T16:33:30.176Z",
-      "finished_at": "2026-06-28T16:33:30.411Z",
+      "started_at": "2026-06-28T17:42:28.297Z",
+      "finished_at": "2026-06-28T17:42:28.543Z",
       "exit_code": 0,
       "passed": true,
       "stdout": "{\"database\" : \"grc_v674_restore_verify\", \"latest_migration\" : \"055_rollout_onboarding_user_guides_compat\", \"organization_count\" : 2, \"evidence_file_count\" : 0, \"pilot_evidence_count\" : 0, \"storage_object_count\" : 0}",
@@ -263,8 +263,8 @@
     },
     {
       "name": "cleanup_verification_database",
-      "started_at": "2026-06-28T16:33:30.411Z",
-      "finished_at": "2026-06-28T16:33:30.824Z",
+      "started_at": "2026-06-28T17:42:28.543Z",
+      "finished_at": "2026-06-28T17:42:29.048Z",
       "exit_code": 0,
       "passed": true,
       "stdout": "",
@@ -272,8 +272,8 @@
     },
     {
       "name": "cleanup_dump_file",
-      "started_at": "2026-06-28T16:33:30.824Z",
-      "finished_at": "2026-06-28T16:33:31.049Z",
+      "started_at": "2026-06-28T17:42:29.048Z",
+      "finished_at": "2026-06-28T17:42:29.372Z",
       "exit_code": 0,
       "passed": true,
       "stdout": "",
