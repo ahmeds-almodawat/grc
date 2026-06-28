@@ -5,6 +5,8 @@ import { ComplianceForm } from '../components/GrcForms';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
+import { ProfessionalGrcMaturityPanel } from '../components/v140/ProfessionalGrcMaturityPanel';
+import { ProfessionalGrcWorkflowMap } from '../components/v140/ProfessionalGrcWorkflowMap';
 import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
 import { getComplianceItems, getDepartments, getOrganizations, getProfiles } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
@@ -28,11 +30,14 @@ export function Compliance() {
       />
 
       <div className="module-grid">
-        <div className="module-card warning"><strong>Expiring soon</strong><span>MOH, Civil Defense, CBAHI and contract renewals.</span></div>
-        <div className="module-card"><strong>Evidence needed</strong><span>Required files before marking compliant.</span></div>
-        <div className="module-card"><strong>Escalation owners</strong><span>Notify responsible leaders before expiry.</span></div>
-        <div className="module-card"><strong>Compliance history</strong><span>Audit trail for submissions, reviews and closures.</span></div>
+        <div className="module-card warning"><strong>Compliance obligations register</strong><span>Controlled list of regulatory, licensing, policy and contractual obligations.</span></div>
+        <div className="module-card"><strong>Regulatory change pipeline</strong><span>Capture new requirements, assess impact and assign implementation owners.</span></div>
+        <div className="module-card"><strong>Compliance testing</strong><span>Test obligations with evidence before marking them compliant.</span></div>
+        <div className="module-card"><strong>Policy / attestation link</strong><span>Connect obligations to policies, versions, attestations and exceptions.</span></div>
       </div>
+
+      <ProfessionalGrcWorkflowMap highlight="compliance" />
+      <ProfessionalGrcMaturityPanel domain="compliance" />
 
       <div className="panel">
         <div className="panel-header"><h4>Compliance obligations</h4></div>

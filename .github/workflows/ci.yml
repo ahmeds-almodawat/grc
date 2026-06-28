@@ -46,5 +46,8 @@ jobs:
       - name: v14 controlled UAT execution proof
         run: npm run pilot:v140-uat-execution
 
+      - name: v14 professional GRC proof
+        run: npm run pilot:v140-professional-grc
+
       - name: UAT readiness static proof
         run: npm run pilot:uat-readiness

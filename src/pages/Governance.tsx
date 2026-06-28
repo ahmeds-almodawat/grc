@@ -5,6 +5,8 @@ import { DecisionForm } from '../components/GrcForms';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
+import { ProfessionalGrcMaturityPanel } from '../components/v140/ProfessionalGrcMaturityPanel';
+import { ProfessionalGrcWorkflowMap } from '../components/v140/ProfessionalGrcWorkflowMap';
 import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
 import { getDepartments, getGovernanceDecisions, getOrganizations, getProfiles } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
@@ -28,11 +30,14 @@ export function Governance() {
       />
 
       <div className="module-grid">
-        <div className="module-card"><strong>Authority matrix</strong><span>Approval levels, limits, roles, users and dual approval rules.</span></div>
-        <div className="module-card"><strong>Committees</strong><span>Meetings, minutes, decisions and assigned follow-up actions.</span></div>
-        <div className="module-card"><strong>Policies</strong><span>Policy register, review dates, versions and approvals.</span></div>
-        <div className="module-card"><strong>CEO directives</strong><span>Executive decisions converted into action plans.</span></div>
+        <div className="module-card"><strong>Executive GRC dashboard</strong><span>Material risks, high issues, overdue CAPA, compliance exposure and audit coverage.</span></div>
+        <div className="module-card"><strong>Assurance map</strong><span>Shows which risks and obligations are covered by controls, compliance and audit.</span></div>
+        <div className="module-card"><strong>Committee / board reporting</strong><span>Structured decisions, risk acceptance, exceptions and follow-up actions.</span></div>
+        <div className="module-card"><strong>Cross-module traceability</strong><span>Risk → control → test → evidence → issue → CAPA → report.</span></div>
       </div>
+
+      <ProfessionalGrcWorkflowMap highlight="reporting" />
+      <ProfessionalGrcMaturityPanel domain="governance" />
 
       <div className="panel">
         <div className="panel-header"><h4>Governance decisions</h4></div>

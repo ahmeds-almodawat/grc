@@ -6,6 +6,8 @@ import { AuditFindingForm } from '../components/GrcForms';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
+import { ProfessionalGrcMaturityPanel } from '../components/v140/ProfessionalGrcMaturityPanel';
+import { ProfessionalGrcWorkflowMap } from '../components/v140/ProfessionalGrcWorkflowMap';
 import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
 import { getAuditFindings, getDepartments, getOrganizations, getProfiles } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
@@ -32,12 +34,22 @@ export function Audit() {
         action={canManageFindings ? <button className="primary-button" onClick={() => setFormOpen(true)}>New Finding</button> : null}
       />
 
+      <ProfessionalGrcWorkflowMap highlight="audit" />
+      <ProfessionalGrcMaturityPanel domain="audit" />
+
       <div className="panel two-column">
         <div>
           <h4>Audit closure rule</h4>
           <p className="muted">The department should not close its own finding. Closure requires evidence review and approval by Audit or Governance.</p>
         </div>
         <div className="mini-card"><span>Workflow</span><strong>Finding → Action Plan → Evidence → Audit Review → Close / Reject</strong></div>
+      </div>
+
+      <div className="module-grid">
+        <div className="module-card"><strong>Audit universe</strong><span>Risk-based list of auditable entities, processes and departments.</span></div>
+        <div className="module-card"><strong>Annual audit plan</strong><span>Prioritized engagements connected to risk exposure and governance approval.</span></div>
+        <div className="module-card"><strong>Engagements / workpapers</strong><span>Document scope, procedures, evidence, review and conclusions.</span></div>
+        <div className="module-card"><strong>Findings and follow-up</strong><span>Track audit results through action plans, evidence and closure review.</span></div>
       </div>
 
       <div className="panel">
