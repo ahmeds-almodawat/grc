@@ -56,6 +56,9 @@ jobs:
       - name: v17 enterprise risk proof
         run: npm run pilot:v170-enterprise-risk
 
+
+      - name: v22 control testing proof
+        run: npm run pilot:v220-control-testing
       - name: UAT readiness static proof
         run: npm run pilot:uat-readiness
 
@@ -65,3 +68,5 @@ jobs:
             run: npm run pilot:v190-executive-reporting
           - name: v20 production readiness proof
             run: npm run pilot:v200-production-readiness
+          - name: v21 framework crosswalk proof
+            run: npm run pilot:v210-framework-crosswalk

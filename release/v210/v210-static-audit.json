@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-06-28T22:17:12.741Z",
+  "version": "v21.0",
+  "status": "passed",
+  "critical": 0,
+  "high": 0,
+  "medium": 0,
+  "injected_pages": [
+    "src/pages/Governance.tsx",
+    "src/pages/Risks.tsx",
+    "src/pages/Compliance.tsx",
+    "src/pages/Audit.tsx",
+    "src/pages/Evidence.tsx",
+    "src/pages/ExecutiveCommandCenter.tsx"
+  ],
+  "professional_chain": "Requirement → Risk → Control → Test → Evidence → Issue → CAPA → Closure → Report",
+  "findings": []
+}

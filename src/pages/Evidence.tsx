@@ -15,6 +15,7 @@ import {
   createScenarioLabScenario,
   V99_SCENARIO_TAG,
 } from '../lib/scenarioLab';
+import { FrameworkCrosswalkBackbonePanel } from '../components/v210/FrameworkCrosswalkBackbonePanel';
 
 export function Evidence() {
   const auth = useAuth();
@@ -73,6 +74,8 @@ export function Evidence() {
       />
 
       <GrcTraceabilityMap context="evidence" />
+      <FrameworkCrosswalkBackbonePanel context="evidence" />
+
 
       {error ? <div className="panel error-panel">{error}</div> : null}
       {testFillMessage ? <div className="notice-banner">{testFillMessage}</div> : null}

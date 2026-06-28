@@ -14,6 +14,7 @@ import { getComplianceItems, getDepartments, getOrganizations, getProfiles } fro
 import { useAsyncData } from '../hooks/useAsyncData';
 import type { ComplianceRow } from '../types/domain';
 import '../styles/v160-compliance-management.css';
+import { FrameworkCrosswalkBackbonePanel } from '../components/v210/FrameworkCrosswalkBackbonePanel';
 
 export function Compliance() {
   const auth = useAuth();
@@ -39,6 +40,8 @@ export function Compliance() {
       <ComplianceExecutionWorkflowMap />
       <ComplianceObligationMaturityPanel />
       <ComplianceTestingCalendar />
+      <FrameworkCrosswalkBackbonePanel context="compliance" />
+
 
       <div className="module-grid">
         <div className="module-card warning"><strong>Expiring soon</strong><span>MOH, Civil Defense, CBAHI and contract renewals with owner and evidence controls.</span></div>

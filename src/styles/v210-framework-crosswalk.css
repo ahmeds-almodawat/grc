@@ -1,0 +1,239 @@
+.v210-crosswalk-panel {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 24px;
+  padding: 22px;
+  margin: 18px 0;
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.92)),
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.15), transparent 36%);
+  color: #e5e7eb;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+}
+
+.v210-crosswalk-panel .eyebrow {
+  color: #93c5fd;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.v210-crosswalk-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.55fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.v210-crosswalk-hero h3 {
+  margin: 4px 0 8px;
+  font-size: 1.45rem;
+  color: #ffffff;
+}
+
+.v210-crosswalk-hero p {
+  margin: 0;
+  color: #cbd5e1;
+  line-height: 1.55;
+}
+
+.v210-chain-card,
+.v210-context-card,
+.v210-card,
+.v210-framework-card,
+.v210-metric-card,
+.v210-dashboard-score {
+  border: 1px solid rgba(203, 213, 225, 0.18);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.52);
+  padding: 16px;
+}
+
+.v210-chain-card span,
+.v210-context-card span,
+.v210-metric-card span,
+.v210-dashboard-score span {
+  display: block;
+  color: #93c5fd;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 7px;
+}
+
+.v210-chain-card strong,
+.v210-context-card strong {
+  color: #ffffff;
+  line-height: 1.5;
+}
+
+.v210-context-grid,
+.v210-framework-grid,
+.v210-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.v210-framework-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.v210-framework-card div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.v210-framework-card div span,
+.v210-metric-card strong {
+  text-transform: capitalize;
+}
+
+.v210-framework-card h4 {
+  color: #ffffff;
+  margin: 12px 0 8px;
+}
+
+.v210-framework-card p,
+.v210-metric-card p,
+.v210-workflow-step p,
+.v210-table-stack span {
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+
+.v210-framework-card ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: #dbeafe;
+}
+
+.v210-two-column {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.v210-card .panel-header h4 {
+  color: #ffffff;
+}
+
+.v210-workflow {
+  display: grid;
+  gap: 10px;
+}
+
+.v210-workflow-step {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(30, 41, 59, 0.58);
+}
+
+.v210-workflow-step > span {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.72);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.v210-workflow-step strong,
+.v210-table-stack strong,
+.v210-metric-card strong {
+  color: #ffffff;
+}
+
+.v210-workflow-step small,
+.v210-table-stack small {
+  color: #93c5fd;
+}
+
+.v210-table-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.v210-table-stack article {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(30, 41, 59, 0.58);
+}
+
+.v210-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.v210-chip-row small {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.2);
+  color: #dbeafe;
+  border: 1px solid rgba(147, 197, 253, 0.2);
+}
+
+.v210-details {
+  margin-top: 14px;
+  color: #dbeafe;
+}
+
+.v210-details summary {
+  cursor: pointer;
+  color: #bfdbfe;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.v210-metric-card.partial,
+.v210-framework-card.partial {
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.v210-metric-card.planned,
+.v210-framework-card.planned {
+  border-color: rgba(59, 130, 246, 0.42);
+}
+
+.v210-dashboard-panel .v210-crosswalk-hero {
+  grid-template-columns: minmax(0, 1fr) 180px 180px;
+}
+
+.v210-dashboard-score strong {
+  display: block;
+  font-size: 2.2rem;
+  color: #ffffff;
+}
+
+@media (max-width: 1100px) {
+  .v210-crosswalk-hero,
+  .v210-two-column,
+  .v210-dashboard-panel .v210-crosswalk-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .v210-framework-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .v210-context-grid,
+  .v210-framework-grid,
+  .v210-metric-grid {
+    grid-template-columns: 1fr;
+  }
+}

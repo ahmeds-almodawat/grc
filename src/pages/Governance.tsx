@@ -14,6 +14,8 @@ import type { GovernanceDecisionRow } from '../types/domain';
 import { AssuranceMapPanel } from '../components/v180/AssuranceMapPanel';
 import { GrcTraceabilityMap } from '../components/v180/GrcTraceabilityMap';
 import { TraceabilityGapPanel } from '../components/v180/TraceabilityGapPanel';
+import { FrameworkCrosswalkBackbonePanel } from '../components/v210/FrameworkCrosswalkBackbonePanel';
+import { ControlAssuranceReadinessPanel } from '../components/v220/ControlAssuranceReadinessPanel';
 
 export function Governance() {
   const [formOpen, setFormOpen] = useState(false);
@@ -32,9 +34,14 @@ export function Governance() {
         action={<button className="primary-button" onClick={() => setFormOpen(true)}>New Decision</button>}
       />
 
+      {/* v22-control-testing-capa: governance assurance readiness */}
+      <ControlAssuranceReadinessPanel />
+
       <GrcTraceabilityMap context="governance" />
       <AssuranceMapPanel />
       <TraceabilityGapPanel />
+      <FrameworkCrosswalkBackbonePanel context="governance" />
+
 
       <div className="module-grid">
         <div className="module-card"><strong>Executive GRC dashboard</strong><span>Material risks, high issues, overdue CAPA, compliance exposure and audit coverage.</span></div>

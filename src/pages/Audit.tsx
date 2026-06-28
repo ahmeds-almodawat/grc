@@ -15,6 +15,9 @@ import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
 import { getAuditFindings, getDepartments, getOrganizations, getProfiles } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
 import type { AuditFindingRow } from '../types/domain';
+import { FrameworkCrosswalkBackbonePanel } from '../components/v210/FrameworkCrosswalkBackbonePanel';
+import { CapaExecutionPanel } from '../components/v220/CapaExecutionPanel';
+import { ControlAssuranceReadinessPanel } from '../components/v220/ControlAssuranceReadinessPanel';
 
 export function Audit() {
   const auth = useAuth();
@@ -37,11 +40,17 @@ export function Audit() {
         action={canManageFindings ? <button className="primary-button" onClick={() => setFormOpen(true)}>New Finding</button> : null}
       />
 
+      {/* v22-control-testing-capa: audit CAPA execution linkage */}
+      <CapaExecutionPanel />
+      <ControlAssuranceReadinessPanel />
+
       <ProfessionalGrcWorkflowMap highlight="audit" />
       <ProfessionalGrcMaturityPanel domain="audit" />
       <AuditProgramWorkflowMap highlight="engagement-planning" />
       <AuditEngagementChecklist />
       <AuditAssuranceCoveragePanel />
+      <FrameworkCrosswalkBackbonePanel context="audit" />
+
 
       <div className="panel two-column">
         <div>

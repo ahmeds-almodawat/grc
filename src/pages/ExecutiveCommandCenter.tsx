@@ -9,6 +9,7 @@ import { AssuranceMapPanel } from '../components/v180/AssuranceMapPanel';
 import { TraceabilityGapPanel } from '../components/v180/TraceabilityGapPanel';
 import { ExecutiveGrcScorecard } from '../components/v190/ExecutiveGrcScorecard';
 import { AutomationAlertPanel } from '../components/v190/AutomationAlertPanel';
+import { FrameworkCrosswalkBackbonePanel } from '../components/v210/FrameworkCrosswalkBackbonePanel';
 
 export function ExecutiveCommandCenter() {
   const { t } = useI18n();
@@ -33,6 +34,8 @@ export function ExecutiveCommandCenter() {
 
       <ExecutiveGrcScorecard context="command-center" />
       <AutomationAlertPanel context="command-center" />
+
+      <FrameworkCrosswalkBackbonePanel context="executive" />
 
 
       <DataState

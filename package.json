@@ -367,7 +367,15 @@
     "v200:production-readiness-audit": "node scripts/v200-production-readiness-static-audit.mjs",
     "v200:production-readiness-report": "node scripts/v200-production-readiness-report.mjs",
     "v200:final-proof": "node scripts/v200-final-proof.mjs",
-    "pilot:v200-production-readiness": "npm run v200:production-readiness-audit && npm run v200:production-readiness-report && npm run v200:final-proof"
+    "pilot:v200-production-readiness": "npm run v200:production-readiness-audit && npm run v200:production-readiness-report && npm run v200:final-proof",
+    "v210:framework-crosswalk-audit": "node scripts/v210-framework-crosswalk-static-audit.mjs",
+    "v210:framework-crosswalk-report": "node scripts/v210-framework-crosswalk-report.mjs",
+    "v210:final-proof": "node scripts/v210-final-proof.mjs",
+    "pilot:v210-framework-crosswalk": "npm run v210:framework-crosswalk-audit && npm run v210:framework-crosswalk-report && npm run v210:final-proof",
+    "v220:control-testing-audit": "node scripts/v220-control-testing-static-audit.mjs",
+    "v220:control-testing-report": "node scripts/v220-control-testing-report.mjs",
+    "v220:final-proof": "node scripts/v220-final-proof.mjs",
+    "pilot:v220-control-testing": "npm run v220:control-testing-audit && npm run v220:control-testing-report && npm run v220:final-proof"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

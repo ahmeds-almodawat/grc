@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-06-28T22:59:28.804Z",
+  "version": "v22.0",
+  "status": "passed",
+  "evidence": {
+    "static_audit": "release/v220/v220-static-audit.json",
+    "report": "release/v220/v220-control-testing-report.md",
+    "migration": "supabase/migrations/058_v220_control_testing_capa_execution.sql"
+  },
+  "statement": "v22 adds a control testing and CAPA execution backbone. It does not claim accreditation or fake live assurance evidence."
+}

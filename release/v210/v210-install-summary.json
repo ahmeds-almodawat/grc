@@ -1,0 +1,30 @@
+{
+  "status": "applied",
+  "generated_at": "2026-06-28T22:15:54.976Z",
+  "injections": [
+    {
+      "file": "src/pages/Governance.tsx",
+      "status": "injected"
+    },
+    {
+      "file": "src/pages/Risks.tsx",
+      "status": "injected"
+    },
+    {
+      "file": "src/pages/Compliance.tsx",
+      "status": "injected"
+    },
+    {
+      "file": "src/pages/Audit.tsx",
+      "status": "injected"
+    },
+    {
+      "file": "src/pages/Evidence.tsx",
+      "status": "injected"
+    },
+    {
+      "file": "src/pages/ExecutiveCommandCenter.tsx",
+      "status": "injected"
+    }
+  ]
+}

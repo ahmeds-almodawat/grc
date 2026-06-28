@@ -1,18 +1,15 @@
 {
-  "generated_at": "2026-06-28T21:50:53.896Z",
+  "generated_at": "2026-06-28T23:00:51.708Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 56,
-    "latest_migration": "056_v131_security_persona_proof_hotfix.sql",
+    "migration_count": 59,
+    "latest_migration": "059_v221_rls_high_findings_fix.sql",
     "prefix_gaps": [
       16,
-      57,
-      58,
-      59,
       60,
       61,
       62,

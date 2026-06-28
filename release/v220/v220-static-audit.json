@@ -1,0 +1,110 @@
+{
+  "generated_at": "2026-06-28T22:59:27.304Z",
+  "version": "v22.0",
+  "status": "passed",
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "total": 16,
+    "passed": 16
+  },
+  "checks": [
+    {
+      "name": "model file exists",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "workflow component exists",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "CAPA component exists",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "assurance readiness component exists",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "migration exists",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "chain is explicit",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "workflow renders chain",
+      "passed": true,
+      "severity": "high",
+      "detail": ""
+    },
+    {
+      "name": "CAPA workflow is present",
+      "passed": true,
+      "severity": "high",
+      "detail": ""
+    },
+    {
+      "name": "assurance panel is present",
+      "passed": true,
+      "severity": "high",
+      "detail": ""
+    },
+    {
+      "name": "test plans table exists",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "test results table exists",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "exceptions table exists",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "CAPA table exists",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "RLS enabled",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "package pilot script exists",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "CI includes v22 pilot",
+      "passed": true,
+      "severity": "medium",
+      "detail": ""
+    }
+  ]
+}

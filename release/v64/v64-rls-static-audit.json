@@ -1,10 +1,10 @@
 {
   "summary": {
-    "generated_at": "2026-06-28T21:50:06.508Z",
-    "migration_files_scanned": 56,
-    "created_tables_detected": 214,
-    "tables_with_explicit_rls": 154,
-    "tables_with_detected_policies": 151,
+    "generated_at": "2026-06-28T23:00:15.315Z",
+    "migration_files_scanned": 59,
+    "created_tables_detected": 224,
+    "tables_with_explicit_rls": 164,
+    "tables_with_detected_policies": 155,
     "findings_total": 60,
     "critical": 0,
     "high": 0,
@@ -490,6 +490,9 @@
     "supabase/migrations/053_v110_enterprise_grc_program_suite.sql",
     "supabase/migrations/054_v120_operational_polish_data_quality_suite.sql",
     "supabase/migrations/055_rollout_onboarding_user_guides_compat.sql",
-    "supabase/migrations/056_v131_security_persona_proof_hotfix.sql"
+    "supabase/migrations/056_v131_security_persona_proof_hotfix.sql",
+    "supabase/migrations/057_v210_framework_crosswalk_backbone.sql",
+    "supabase/migrations/058_v220_control_testing_capa_execution.sql",
+    "supabase/migrations/059_v221_rls_high_findings_fix.sql"
   ]
 }

@@ -21,6 +21,9 @@ import {
   createScenarioLabScenario,
   V99_SCENARIO_TAG,
 } from '../lib/scenarioLab';
+import { FrameworkCrosswalkBackbonePanel } from '../components/v210/FrameworkCrosswalkBackbonePanel';
+import { ControlTestingWorkflowPanel } from '../components/v220/ControlTestingWorkflowPanel';
+import { ControlAssuranceReadinessPanel } from '../components/v220/ControlAssuranceReadinessPanel';
 
 export function Risks() {
   const auth = useAuth();
@@ -72,6 +75,12 @@ export function Risks() {
           </div>
         )}
       />
+
+      {/* v22-control-testing-capa: risk control testing linkage */}
+      <ControlTestingWorkflowPanel />
+      <ControlAssuranceReadinessPanel />
+      <FrameworkCrosswalkBackbonePanel context="risk" />
+
 
       {controlMessage ? <div className="notice-banner">{controlMessage}</div> : null}
 
