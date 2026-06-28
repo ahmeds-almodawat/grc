@@ -1,46 +1,60 @@
 import { useState } from 'react';
+import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { EntityTable } from '../components/EntityTable';
 import { ComplianceForm } from '../components/GrcForms';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
-import { ProfessionalGrcMaturityPanel } from '../components/v140/ProfessionalGrcMaturityPanel';
-import { ProfessionalGrcWorkflowMap } from '../components/v140/ProfessionalGrcWorkflowMap';
+import { ComplianceExecutionWorkflowMap } from '../components/v160/ComplianceExecutionWorkflowMap';
+import { ComplianceObligationMaturityPanel } from '../components/v160/ComplianceObligationMaturityPanel';
+import { ComplianceTestingCalendar } from '../components/v160/ComplianceTestingCalendar';
 import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
 import { getComplianceItems, getDepartments, getOrganizations, getProfiles } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
 import type { ComplianceRow } from '../types/domain';
+import '../styles/v160-compliance-management.css';
 
 export function Compliance() {
+  const auth = useAuth();
   const [formOpen, setFormOpen] = useState(false);
   const compliance = useAsyncData(getComplianceItems, []);
   const departments = useAsyncData(getDepartments, []);
   const profiles = useAsyncData(getProfiles, []);
   const organizations = useAsyncData(getOrganizations, []);
   const organizationId = organizations.data?.[0]?.id || '';
+  const canManageCompliance = auth.roles.some(role =>
+    ['super_admin', 'governance_admin', 'compliance_officer', 'department_manager'].includes(role.role),
+  );
 
   return (
     <section className="page-section">
       <ModuleHeader
-        eyebrow="Compliance calendar"
-        title="Licenses, regulatory obligations, expiry warnings and evidence"
-        subtitle="Designed for hospital obligations such as MOH, Civil Defense, CBAHI, HR and ZATCA deadlines."
-        action={<button className="primary-button" onClick={() => setFormOpen(true)}>New Obligation</button>}
+        eyebrow="Compliance management system"
+        title="Obligations, regulatory change, testing, evidence and non-compliance follow-up"
+        subtitle="v16 connects compliance work into an ISO 37301-style chain: obligation, change, policy/control, test, evidence, issue, CAPA and management reporting."
+        action={canManageCompliance ? <button className="primary-button" onClick={() => setFormOpen(true)}>New Obligation</button> : null}
       />
 
+      <ComplianceExecutionWorkflowMap />
+      <ComplianceObligationMaturityPanel />
+      <ComplianceTestingCalendar />
+
       <div className="module-grid">
-        <div className="module-card warning"><strong>Compliance obligations register</strong><span>Controlled list of regulatory, licensing, policy and contractual obligations.</span></div>
-        <div className="module-card"><strong>Regulatory change pipeline</strong><span>Capture new requirements, assess impact and assign implementation owners.</span></div>
-        <div className="module-card"><strong>Compliance testing</strong><span>Test obligations with evidence before marking them compliant.</span></div>
-        <div className="module-card"><strong>Policy / attestation link</strong><span>Connect obligations to policies, versions, attestations and exceptions.</span></div>
+        <div className="module-card warning"><strong>Expiring soon</strong><span>MOH, Civil Defense, CBAHI and contract renewals with owner and evidence controls.</span></div>
+        <div className="module-card"><strong>Evidence needed</strong><span>Required files, review decision and rejected-evidence follow-up before marking compliant.</span></div>
+        <div className="module-card"><strong>Regulatory change</strong><span>Changed requirement becomes impact assessment, policy/control update and verification.</span></div>
+        <div className="module-card"><strong>Non-compliance</strong><span>Failed obligations and tests create issue, CAPA and leadership reporting.</span></div>
       </div>
 
-      <ProfessionalGrcWorkflowMap highlight="compliance" />
-      <ProfessionalGrcMaturityPanel domain="compliance" />
-
       <div className="panel">
-        <div className="panel-header"><h4>Compliance obligations</h4></div>
+        <div className="panel-header">
+          <div>
+            <h4>Compliance obligations</h4>
+            <p className="muted">Operational register for regulatory obligations, expiry warnings, responsible owner, risk level and evidence status.</p>
+          </div>
+          <span className="status-chip neutral">Evidence-based CMS</span>
+        </div>
         <DataState loading={compliance.loading} error={compliance.error} empty={!compliance.data?.length}>
           <EntityTable<ComplianceRow>
             rows={compliance.data || []}
@@ -58,6 +72,19 @@ export function Compliance() {
             ]}
           />
         </DataState>
+      </div>
+
+      <div className="panel two-column">
+        <div>
+          <h4>Compliance closure rule</h4>
+          <p className="muted">
+            A high-risk obligation should not be closed only because the due date passed or a user changed the status. Closure should require reviewed evidence, a policy/control link where applicable, and issue/CAPA tracking when testing fails.
+          </p>
+        </div>
+        <div className="mini-card">
+          <span>Professional CMS workflow</span>
+          <strong>Obligation → Evidence → Test → Issue / CAPA → Management Reporting</strong>
+        </div>
       </div>
 
       <Modal open={formOpen} title="Create compliance obligation" onClose={() => setFormOpen(false)}>

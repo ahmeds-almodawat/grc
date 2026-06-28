@@ -1,0 +1,126 @@
+.v160-panel {
+  border: 1px solid rgba(14, 165, 233, 0.18);
+}
+
+.v160-eyebrow {
+  display: inline-flex;
+  margin-bottom: 0.2rem;
+  color: #0369a1;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.v160-chain {
+  font-weight: 800;
+}
+
+.v160-workflow-grid,
+.v160-capability-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1rem;
+}
+
+.v160-three-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.v160-workflow-card,
+.v160-capability-card,
+.v160-list-card {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 1rem;
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+}
+
+.v160-workflow-card h5,
+.v160-capability-card h5 {
+  margin: 0.35rem 0 0.45rem;
+}
+
+.v160-workflow-card p,
+.v160-capability-card p,
+.v160-list-card p,
+.v160-metric-grid p {
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.v160-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-weight: 900;
+}
+
+.v160-workflow-card dl {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.8rem 0 0;
+}
+
+.v160-workflow-card dt {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.v160-workflow-card dd {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.86rem;
+}
+
+.v160-score-strip,
+.v160-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.v160-recommendation {
+  margin-bottom: 1rem;
+}
+
+.v160-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.v160-card-header strong {
+  color: #0f172a;
+}
+
+.v160-capability-card ul {
+  margin: 0.7rem 0 0;
+  padding-inline-start: 1.2rem;
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+.v160-list-stack {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.v160-list-card small,
+.v160-capability-card small {
+  color: #64748b;
+  font-weight: 700;
+}

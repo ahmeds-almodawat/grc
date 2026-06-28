@@ -343,7 +343,15 @@
     "pilot:v140-uat-execution": "npm run v140:uat-audit && npm run v140:uat-report && npm run v140:final-proof",
     "v140:grc-audit": "node scripts/v140-professional-grc-static-audit.mjs",
     "v140:grc-report": "node scripts/v140-professional-grc-report.mjs",
-    "pilot:v140-professional-grc": "npm run v140:grc-audit && npm run v140:grc-report && npm run v140:final-proof"
+    "pilot:v140-professional-grc": "npm run v140:grc-audit && npm run v140:grc-report && npm run v140:final-proof",
+    "v150:audit-program-audit": "node scripts/v150-audit-program-static-audit.mjs",
+    "v150:audit-program-report": "node scripts/v150-audit-program-report.mjs",
+    "v150:final-proof": "node scripts/v150-final-proof.mjs",
+    "pilot:v150-audit-program": "npm run v150:audit-program-audit && npm run v150:audit-program-report && npm run v150:final-proof",
+    "v160:compliance-management-audit": "node scripts/v160-compliance-management-static-audit.mjs",
+    "v160:compliance-management-report": "node scripts/v160-compliance-management-report.mjs",
+    "v160:final-proof": "node scripts/v160-final-proof.mjs",
+    "pilot:v160-compliance-management": "npm run v160:compliance-management-audit && npm run v160:compliance-management-report && npm run v160:final-proof"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

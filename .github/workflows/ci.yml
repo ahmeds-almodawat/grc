@@ -49,5 +49,10 @@ jobs:
       - name: v14 professional GRC proof
         run: npm run pilot:v140-professional-grc
 
+      - name: v15 audit program proof
+        run: npm run pilot:v150-audit-program
+      - name: v16 compliance management proof
+        run: npm run pilot:v160-compliance-management
+
       - name: UAT readiness static proof
         run: npm run pilot:uat-readiness

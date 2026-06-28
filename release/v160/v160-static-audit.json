@@ -1,0 +1,93 @@
+{
+  "version": "v16.0",
+  "pack": "Compliance Management System Execution Pack",
+  "status": "passed",
+  "generated_at": "2026-06-28T18:43:16.747Z",
+  "critical": 0,
+  "high": 0,
+  "medium": 0,
+  "checks": [
+    {
+      "id": "v160-model-present",
+      "severity": "critical",
+      "file": "src/lib/v160ComplianceManagementModel.ts",
+      "tokens": [
+        "v160ComplianceExecutionChain",
+        "Obligation → Regulatory Change → Policy / Control → Compliance Test → Evidence → Issue → CAPA → Management Reporting",
+        "Compliance Obligations Register",
+        "Regulatory Change Management",
+        "Compliance Testing Program",
+        "Policy and Attestation Link",
+        "Non-compliance Issue Workflow"
+      ],
+      "exists": true,
+      "missing_tokens": [],
+      "passed": true
+    },
+    {
+      "id": "v160-components-present",
+      "severity": "critical",
+      "file": "src/components/v160/ComplianceExecutionWorkflowMap.tsx",
+      "tokens": [
+        "ComplianceExecutionWorkflowMap",
+        "v160ComplianceExecutionSteps"
+      ],
+      "exists": true,
+      "missing_tokens": [],
+      "passed": true
+    },
+    {
+      "id": "v160-maturity-panel-present",
+      "severity": "critical",
+      "file": "src/components/v160/ComplianceObligationMaturityPanel.tsx",
+      "tokens": [
+        "ComplianceObligationMaturityPanel",
+        "getV160ComplianceReadiness"
+      ],
+      "exists": true,
+      "missing_tokens": [],
+      "passed": true
+    },
+    {
+      "id": "v160-testing-calendar-present",
+      "severity": "critical",
+      "file": "src/components/v160/ComplianceTestingCalendar.tsx",
+      "tokens": [
+        "ComplianceTestingCalendar",
+        "v160RegulatoryChangePipeline",
+        "v160PolicyAttestationItems"
+      ],
+      "exists": true,
+      "missing_tokens": [],
+      "passed": true
+    },
+    {
+      "id": "v160-compliance-page-integrated",
+      "severity": "high",
+      "file": "src/pages/Compliance.tsx",
+      "tokens": [
+        "ComplianceExecutionWorkflowMap",
+        "ComplianceObligationMaturityPanel",
+        "ComplianceTestingCalendar",
+        "Compliance closure rule",
+        "Professional CMS workflow"
+      ],
+      "exists": true,
+      "missing_tokens": [],
+      "passed": true
+    },
+    {
+      "id": "v160-css-present",
+      "severity": "medium",
+      "file": "src/styles/v160-compliance-management.css",
+      "tokens": [
+        "v160-workflow-grid",
+        "v160-capability-grid",
+        "v160-three-panel-grid"
+      ],
+      "exists": true,
+      "missing_tokens": [],
+      "passed": true
+    }
+  ]
+}
