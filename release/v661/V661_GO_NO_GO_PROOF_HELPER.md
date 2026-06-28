@@ -1,6 +1,6 @@
 # v6.6.1 Go/No-Go Proof Helper
 
-Generated: 2026-06-28T09:27:32.416Z
+Generated: 2026-06-28T12:48:46.234Z
 
 Status: **ready_for_controlled_pilot_review**
 

@@ -1,6 +1,6 @@
 # v9.10 Final UAT Readiness Report
 
-- Generated: 2026-06-28T09:25:36.919Z
+- Generated: 2026-06-28T12:47:04.557Z
 - Status: **controlled UAT ready, pending real manual approvals**
 - Production readiness: **not asserted**
 - Synthetic data only: **yes**

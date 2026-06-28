@@ -2,7 +2,7 @@ GRC Control Center local staging migration evidence
 Environment: Local Supabase Docker staging
 Project: grc-control-center
 Database container: supabase_db_grc-control-center
-Captured UTC: 2026-06-28T09:27:29.685Z
+Captured UTC: 2026-06-28T12:48:42.533Z
 Source: supabase_migrations.schema_migrations in the running local database
 Expected latest migration: 046_v673_lockdown_security_definer_execute.sql
 
@@ -61,7 +61,8 @@ version |                    name
  050     | v99_scenario_lab
  051     | v910_controlled_pilot_uat_issues
  052     | v100_unified_capa_risk_control_foundation
-(53 rows)
+ 053     | v110_enterprise_grc_program_suite
+(54 rows)
 
 Verification status: PASSED
 psql exit code: 0

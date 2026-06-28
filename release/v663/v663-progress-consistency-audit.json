@@ -1,15 +1,14 @@
 {
-  "generated_at": "2026-06-28T09:27:34.315Z",
+  "generated_at": "2026-06-28T12:48:48.246Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 53,
-    "latest_migration": "052_v100_unified_capa_risk_control_foundation.sql",
+    "migration_count": 54,
+    "latest_migration": "053_v110_enterprise_grc_program_suite.sql",
     "prefix_gaps": [
-      53,
       54,
       55,
       56,

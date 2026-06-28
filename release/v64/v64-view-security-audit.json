@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-28T09:26:52.736Z",
-    "migration_files_scanned": 53,
-    "views_detected": 153,
+    "generated_at": "2026-06-28T12:48:09.026Z",
+    "migration_files_scanned": 54,
+    "views_detected": 156,
     "findings_total": 102,
     "critical": 0,
     "high": 0,
@@ -1254,6 +1254,30 @@
       ],
       "has_security_invoker": true,
       "sensitive": true
+    },
+    {
+      "view": "v110_board_pack_readiness_view",
+      "files": [
+        "supabase/migrations/053_v110_enterprise_grc_program_suite.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v110_due_diligence_calendar",
+      "files": [
+        "supabase/migrations/053_v110_enterprise_grc_program_suite.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v110_enterprise_grc_maturity_dashboard",
+      "files": [
+        "supabase/migrations/053_v110_enterprise_grc_program_suite.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
     },
     {
       "view": "v35_consolidation_scorecard",
@@ -2723,6 +2747,27 @@
       "occurrence": "create_view",
       "has_security_invoker": true,
       "sensitive": true
+    },
+    {
+      "view": "v110_enterprise_grc_maturity_dashboard",
+      "file": "supabase/migrations/053_v110_enterprise_grc_program_suite.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v110_due_diligence_calendar",
+      "file": "supabase/migrations/053_v110_enterprise_grc_program_suite.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v110_board_pack_readiness_view",
+      "file": "supabase/migrations/053_v110_enterprise_grc_program_suite.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
     }
   ],
   "findings": [

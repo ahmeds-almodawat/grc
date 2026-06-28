@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-28T09:25:32.787Z",
+  "generated_at": "2026-06-28T12:47:00.238Z",
   "status": "passed",
   "migration": "supabase/migrations/052_v100_unified_capa_risk_control_foundation.sql",
   "required_tables": [

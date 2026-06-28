@@ -2,7 +2,7 @@
 
 ```json
 {
-  "generated_at": "2026-06-28T09:25:37.655Z",
+  "generated_at": "2026-06-28T12:47:05.281Z",
   "status": "passed",
   "production_ready": false,
   "ui_check": {

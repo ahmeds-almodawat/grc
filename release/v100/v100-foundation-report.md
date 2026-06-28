@@ -1,6 +1,6 @@
 # v10.0 Unified CAPA + Risk-Control Foundation Report
 
-- Generated: 2026-06-28T09:25:33.462Z
+- Generated: 2026-06-28T12:47:00.972Z
 - Status: **patch generated / static-audit ready**
 - Production readiness: **not asserted**
 - Approval gates: **unchanged**

@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-06-28T12:46:56.211Z",
+  "status": "passed",
+  "migration": "supabase/migrations/053_v110_enterprise_grc_program_suite.sql",
+  "required_tables": 17,
+  "required_views": 3,
+  "required_enums": 9,
+  "security_invoker_views_detected": 3,
+  "findings_count": 0,
+  "findings": []
+}
