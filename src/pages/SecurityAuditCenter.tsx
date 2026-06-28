@@ -26,6 +26,7 @@ import {
   type SecurityGovernanceSummary,
   type SensitiveActivityTimeline
 } from '../lib/securityApi';
+import { SecurityBackupHardeningPanel } from '../components/v200/SecurityBackupHardeningPanel';
 
 function localize(language: 'en' | 'ar', en: string | null | undefined, ar: string | null | undefined) {
   return language === 'ar' ? ar || en || '—' : en || ar || '—';
@@ -214,6 +215,7 @@ export function SecurityAuditCenter() {
 
   return (
     <section className="modern-page security-page">
+      <SecurityBackupHardeningPanel context="security" />
       <div className="modern-hero security-hero">
         <div>
           <span className="modern-hero__eyebrow"><LockKeyhole size={14} /> {t('security.eyebrow')}</span>

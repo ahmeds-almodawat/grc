@@ -6,6 +6,7 @@ import { useAsyncData } from '../hooks/useAsyncData';
 import { useI18n } from '../i18n/I18nContext';
 import { getProductionChecklist, getUltraReleaseSummary, runReleasePreflight } from '../lib/releaseOpsApi';
 import { actionErrorMessage } from '../lib/privilegedAction';
+import { ProductionReadinessGatePanel } from '../components/v200/ProductionReadinessGatePanel';
 
 function copyCsv(filename: string, rows: Array<Record<string, unknown>>) {
   if (!rows.length) return;
@@ -47,6 +48,7 @@ export function ProductionReleaseCenter() {
 
   return (
     <section className="page-section ultra-release-page">
+      <ProductionReadinessGatePanel context="release" />
       <div className="section-heading command-hero ultra-hero">
         <div>
           <p className="eyebrow">{text.eyebrow}</p>

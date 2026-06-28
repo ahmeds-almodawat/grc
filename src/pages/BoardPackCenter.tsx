@@ -7,6 +7,7 @@ import { createBoardPackSnapshot, getBoardPackSummary, getDepartmentScorecards, 
 import { exportRows, printRows } from '../lib/exportUtils';
 import { useI18n } from '../i18n/I18nContext';
 import { actionErrorMessage } from '../lib/privilegedAction';
+import { BoardReportingPackPanel } from '../components/v190/BoardReportingPackPanel';
 
 export function BoardPackCenter() {
   const { t, direction, language } = useI18n();
@@ -57,6 +58,9 @@ export function BoardPackCenter() {
 
       {message && <div className="success-banner"><CheckCircle2 size={16} /> {message}</div>}
       {actionError && <div className="notice-banner danger">{actionError}</div>}
+
+      <BoardReportingPackPanel />
+
 
       <DataState loading={summary.loading} error={summary.error} empty={!data}>
         {data && (

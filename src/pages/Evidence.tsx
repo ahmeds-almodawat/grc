@@ -10,6 +10,7 @@ import { formatDate, humanize } from '../lib/format';
 import { getEvidenceQueue, reviewEvidence } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
 import type { EvidenceRow } from '../types/domain';
+import { GrcTraceabilityMap } from '../components/v180/GrcTraceabilityMap';
 import {
   createScenarioLabScenario,
   V99_SCENARIO_TAG,
@@ -70,6 +71,8 @@ export function Evidence() {
           />
         )}
       />
+
+      <GrcTraceabilityMap context="evidence" />
 
       {error ? <div className="panel error-panel">{error}</div> : null}
       {testFillMessage ? <div className="notice-banner">{testFillMessage}</div> : null}

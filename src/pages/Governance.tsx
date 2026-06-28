@@ -11,6 +11,9 @@ import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
 import { getDepartments, getGovernanceDecisions, getOrganizations, getProfiles } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
 import type { GovernanceDecisionRow } from '../types/domain';
+import { AssuranceMapPanel } from '../components/v180/AssuranceMapPanel';
+import { GrcTraceabilityMap } from '../components/v180/GrcTraceabilityMap';
+import { TraceabilityGapPanel } from '../components/v180/TraceabilityGapPanel';
 
 export function Governance() {
   const [formOpen, setFormOpen] = useState(false);
@@ -28,6 +31,10 @@ export function Governance() {
         subtitle="Governance decisions can generate controlled projects and evidence-based follow-up."
         action={<button className="primary-button" onClick={() => setFormOpen(true)}>New Decision</button>}
       />
+
+      <GrcTraceabilityMap context="governance" />
+      <AssuranceMapPanel />
+      <TraceabilityGapPanel />
 
       <div className="module-grid">
         <div className="module-card"><strong>Executive GRC dashboard</strong><span>Material risks, high issues, overdue CAPA, compliance exposure and audit coverage.</span></div>

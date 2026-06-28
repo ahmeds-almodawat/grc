@@ -1,0 +1,99 @@
+{
+  "generated_at": "2026-06-28T21:44:15.156Z",
+  "status": "passed",
+  "critical": 0,
+  "high": 0,
+  "medium": 0,
+  "checks": [
+    {
+      "id": "file:src/lib/v200ProductionReadinessModel.ts",
+      "severity": "critical",
+      "passed": true,
+      "detail": "src/lib/v200ProductionReadinessModel.ts must exist"
+    },
+    {
+      "id": "file:src/components/v200/UatClosureDashboard.tsx",
+      "severity": "critical",
+      "passed": true,
+      "detail": "src/components/v200/UatClosureDashboard.tsx must exist"
+    },
+    {
+      "id": "file:src/components/v200/ProductionReadinessGatePanel.tsx",
+      "severity": "critical",
+      "passed": true,
+      "detail": "src/components/v200/ProductionReadinessGatePanel.tsx must exist"
+    },
+    {
+      "id": "file:src/components/v200/SecurityBackupHardeningPanel.tsx",
+      "severity": "critical",
+      "passed": true,
+      "detail": "src/components/v200/SecurityBackupHardeningPanel.tsx must exist"
+    },
+    {
+      "id": "file:src/styles/v200-production-readiness.css",
+      "severity": "critical",
+      "passed": true,
+      "detail": "src/styles/v200-production-readiness.css must exist"
+    },
+    {
+      "id": "file:scripts/v200-production-readiness-report.mjs",
+      "severity": "critical",
+      "passed": true,
+      "detail": "scripts/v200-production-readiness-report.mjs must exist"
+    },
+    {
+      "id": "file:scripts/v200-final-proof.mjs",
+      "severity": "critical",
+      "passed": true,
+      "detail": "scripts/v200-final-proof.mjs must exist"
+    },
+    {
+      "id": "chain-present",
+      "severity": "critical",
+      "passed": true,
+      "detail": "v20 readiness chain must be present"
+    },
+    {
+      "id": "no-fake-uat-pass",
+      "severity": "high",
+      "passed": true,
+      "detail": "v20 must not fake UAT scenario passes"
+    },
+    {
+      "id": "review-required-recommendation",
+      "severity": "high",
+      "passed": true,
+      "detail": "v20 must keep readiness honest until real UAT closure"
+    },
+    {
+      "id": "injection:src/pages/ControlledUatWorkbench.tsx",
+      "severity": "high",
+      "passed": true,
+      "detail": "src/pages/ControlledUatWorkbench.tsx should render UatClosureDashboard"
+    },
+    {
+      "id": "injection:src/pages/ProductionReleaseCenter.tsx",
+      "severity": "high",
+      "passed": true,
+      "detail": "src/pages/ProductionReleaseCenter.tsx should render ProductionReadinessGatePanel"
+    },
+    {
+      "id": "injection:src/pages/ProductionProofCenter.tsx",
+      "severity": "high",
+      "passed": true,
+      "detail": "src/pages/ProductionProofCenter.tsx should render ProductionReadinessGatePanel"
+    },
+    {
+      "id": "injection:src/pages/SecurityAuditCenter.tsx",
+      "severity": "high",
+      "passed": true,
+      "detail": "src/pages/SecurityAuditCenter.tsx should render SecurityBackupHardeningPanel"
+    },
+    {
+      "id": "package-script",
+      "severity": "critical",
+      "passed": true,
+      "detail": "package.json must include pilot:v200-production-readiness"
+    }
+  ]
+}

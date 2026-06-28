@@ -16,6 +16,7 @@ import type { PageKey } from '../components/Layout';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { isScenarioLabEnabled } from '../lib/scenarioLab';
 import { listRecentUatIssues, type UatIssueRow } from '../lib/uatIssueApi';
+import { UatClosureDashboard } from '../components/v200/UatClosureDashboard';
 
 type ScenarioStatus = 'not_tested' | 'passed' | 'failed' | 'blocked';
 
@@ -289,6 +290,7 @@ export function ControlledUatWorkbench({ setPage }: { setPage: (page: PageKey) =
   if (!isScenarioLabEnabled) {
     return (
       <section className="page-section">
+      <UatClosureDashboard />
         <div className="panel error-panel">
           Controlled UAT execution tools are available only in local development or explicitly controlled pilot mode.
         </div>
