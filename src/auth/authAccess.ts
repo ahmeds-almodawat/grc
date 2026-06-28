@@ -134,6 +134,7 @@ export const pageGroups: Record<PageKey, PageGroup> = {
   loadSeedCenter: 'release',
   productionBackupStrategy: 'release',
   migrationRunbook: 'release',
+  controlledUatWorkbench: 'admin',
   scenarioTestConsole: 'admin',
   uatIssueCapture: 'personal',
   admin: 'admin',

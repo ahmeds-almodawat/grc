@@ -1,0 +1,187 @@
+{
+  "generated_at": "2026-06-28T16:31:56.041Z",
+  "scope": "Controlled internal pilot using synthetic and non-confidential operational data only. No real patient identifiers. No confidential OVR details. No production-wide rollout.",
+  "total_scenarios": 18,
+  "scripted_passed_scenarios": 0,
+  "scripted_failed_scenarios": 0,
+  "manual_execution_required": true,
+  "uat_results_asserted": false,
+  "go_no_go_recommendation": "not_ready_until_manual_uat_results_are_recorded",
+  "issue_log_fields": [
+    "issue id",
+    "date",
+    "user/persona",
+    "module",
+    "steps to reproduce",
+    "expected result",
+    "actual result",
+    "severity",
+    "screenshot available yes/no",
+    "status",
+    "owner"
+  ],
+  "scenarios": [
+    {
+      "id": "UAT-D1-01",
+      "title": "Super Admin login",
+      "persona": "Super Admin",
+      "module": "Authentication / Admin",
+      "expected_pass_condition": "Admin Hub, Departments, Access Control, Scenario Lab, and UAT workbench are visible.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-02",
+      "title": "Governance Admin login",
+      "persona": "Governance Admin",
+      "module": "Governance",
+      "expected_pass_condition": "Governance user can access GRC workspaces without super-admin-only shortcuts.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-03",
+      "title": "Quality user login",
+      "persona": "Quality / Patient Safety",
+      "module": "Quality / OVR",
+      "expected_pass_condition": "Quality can validate OVRs and manage final verdict work.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-04",
+      "title": "Auditor login",
+      "persona": "Auditor",
+      "module": "Audit",
+      "expected_pass_condition": "Auditor can review evidence and audit data without privileged writes.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-05",
+      "title": "Department Manager login",
+      "persona": "Department Manager",
+      "module": "Department work",
+      "expected_pass_condition": "Manager sees relevant department/team work and OVRs.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-06",
+      "title": "Employee login",
+      "persona": "Employee",
+      "module": "My Work / OVR",
+      "expected_pass_condition": "Employee can access own work and submit synthetic OVR records only.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-07",
+      "title": "Same-department OVR",
+      "persona": "Reporter + Manager",
+      "module": "OVR",
+      "expected_pass_condition": "Reporter submission and manager review are captured without cross-department notification.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-08",
+      "title": "Cross-department OVR",
+      "persona": "Reporter + Quality + Referred Department",
+      "module": "OVR",
+      "expected_pass_condition": "Cross-department referral waits for Quality validation.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-09",
+      "title": "Quality validation",
+      "persona": "Quality",
+      "module": "OVR",
+      "expected_pass_condition": "Validation state is visible and prevents premature cross-department notification.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-10",
+      "title": "Referred department reply",
+      "persona": "Referred Department",
+      "module": "OVR",
+      "expected_pass_condition": "Referred party sees only assigned/referred synthetic OVRs and can respond.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-11",
+      "title": "Quality close/escalate",
+      "persona": "Quality",
+      "module": "OVR",
+      "expected_pass_condition": "Closure/escalation follows final verdict and evidence/action rules.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-12",
+      "title": "CAPA from OVR",
+      "persona": "Quality / Governance",
+      "module": "Corrective Actions / Projects",
+      "expected_pass_condition": "CAPA/action record is traceable back to the synthetic OVR source.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-13",
+      "title": "Risk creation",
+      "persona": "Governance Admin",
+      "module": "Risks",
+      "expected_pass_condition": "Synthetic operational risk can be created with owner and scoring.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-14",
+      "title": "Control linked to risk",
+      "persona": "Governance Admin",
+      "module": "Controls",
+      "expected_pass_condition": "Control relationship is visible from risk/control workspaces.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-15",
+      "title": "Control test",
+      "persona": "Auditor / Governance",
+      "module": "Control testing",
+      "expected_pass_condition": "Synthetic control test result is visible to authorized reviewers.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-16",
+      "title": "Auditor read-only confirmation",
+      "persona": "Auditor",
+      "module": "Audit / Evidence",
+      "expected_pass_condition": "Read-only review succeeds; privileged write/admin actions are denied safely.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-17",
+      "title": "Employee restricted access confirmation",
+      "persona": "Employee",
+      "module": "Access control",
+      "expected_pass_condition": "Restricted pages are hidden or show safe unauthorized states.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    },
+    {
+      "id": "UAT-D1-18",
+      "title": "External/unauthorized denial confirmation",
+      "persona": "External synthetic denial user",
+      "module": "Access control",
+      "expected_pass_condition": "External synthetic user cannot see primary organization records.",
+      "scripted_result": "manual_not_executed_by_script",
+      "evidence_required": "Tester screenshot or structured UAT issue if failed/blocked."
+    }
+  ]
+}

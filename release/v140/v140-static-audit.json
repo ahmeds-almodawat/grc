@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-06-28T16:31:55.215Z",
+  "status": "passed",
+  "high_findings": 0,
+  "findings_count": 0,
+  "findings": [],
+  "day_one_scenarios_expected": 18,
+  "database_migration_included": false,
+  "uat_results_asserted": false,
+  "note": "Static controlled-UAT execution pack audit only. It does not claim manual UAT scenarios passed."
+}

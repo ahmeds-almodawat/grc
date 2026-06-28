@@ -104,6 +104,7 @@ import BackupHealthCheck from './pages/BackupHealthCheck';
 import CustomReports from './pages/CustomReports';
 import { ScenarioTestConsole } from './pages/ScenarioTestConsole';
 import { UatIssueCapture } from './pages/UatIssueCapture';
+import { ControlledUatWorkbench } from './pages/ControlledUatWorkbench';
 import { isScenarioLabEnabled } from './lib/scenarioLab';
 
 function ExecutiveHub() {
@@ -218,6 +219,13 @@ function AdminReleaseHub({ setPage }: { setPage: (page: PageKey) => void }) {
       title={t('hub.admin.title')}
       subtitle={t('hub.admin.subtitle')}
       tabs={[
+        ...(isScenarioLabEnabled ? [{
+          id: 'controlledUat',
+          label: t('hub.tab.controlledUat'),
+          description: t('hub.tab.controlledUat.desc'),
+          icon: <ClipboardCheck size={17} />,
+          content: <ControlledUatWorkbench setPage={setPage} />,
+        }] : []),
         ...(isScenarioLabEnabled ? [{
           id: 'scenarioLab',
           label: t('hub.tab.scenarioLab'),
@@ -413,6 +421,8 @@ export default function App() {
         return <MigrationRunbookCenter />;
       case 'scenarioTestConsole':
         return <ScenarioTestConsole setPage={setPage} />;
+      case 'controlledUatWorkbench':
+        return <ControlledUatWorkbench setPage={setPage} />;
       case 'uatIssueCapture':
         return <UatIssueCapture />;
       case 'admin':

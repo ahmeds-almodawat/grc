@@ -43,5 +43,8 @@ jobs:
       - name: v13 UX polish proof
         run: npm run pilot:v130-polish
 
+      - name: v14 controlled UAT execution proof
+        run: npm run pilot:v140-uat-execution
+
       - name: UAT readiness static proof
         run: npm run pilot:uat-readiness

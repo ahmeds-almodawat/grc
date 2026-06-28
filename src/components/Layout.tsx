@@ -103,6 +103,7 @@ export type PageKey =
   | 'loadSeedCenter'
   | 'productionBackupStrategy'
   | 'migrationRunbook'
+  | 'controlledUatWorkbench'
   | 'scenarioTestConsole'
   | 'uatIssueCapture'
   | 'admin';
@@ -139,6 +140,7 @@ const quickLinks: NavItem[] = [
 
 const uatLinks: NavItem[] = isScenarioLabEnabled
   ? [
+      { key: 'controlledUatWorkbench', labelKey: 'nav.controlledUatWorkbench', icon: <ClipboardCheck size={18} /> },
       { key: 'uatIssueCapture', labelKey: 'nav.uatIssueCapture', icon: <Bug size={18} /> },
       { key: 'scenarioTestConsole', labelKey: 'nav.scenarioLab', icon: <WandSparkles size={18} /> },
     ]
@@ -147,6 +149,7 @@ const uatLinks: NavItem[] = isScenarioLabEnabled
 export const legacyNavItems: NavItem[] = [
   ...(isScenarioLabEnabled
     ? [
+        { key: 'controlledUatWorkbench' as const, labelKey: 'nav.controlledUatWorkbench', icon: <ClipboardCheck size={18} /> },
         { key: 'uatIssueCapture' as const, labelKey: 'nav.uatIssueCapture', icon: <Bug size={18} /> },
         { key: 'scenarioTestConsole' as const, labelKey: 'nav.scenarioLab', icon: <WandSparkles size={18} /> },
       ]

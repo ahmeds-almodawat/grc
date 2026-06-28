@@ -6,11 +6,14 @@ type TranslationMap = Record<string, { en: string; ar: string }>;
 
 const translations: TranslationMap = {
   'nav.scenarioLab': { en: 'Scenario Lab', ar: 'مختبر السيناريوهات' },
+  'nav.controlledUatWorkbench': { en: 'Controlled UAT', ar: 'اختبار القبول المنضبط' },
   'nav.uatIssueCapture': { en: 'Report UAT issue', ar: 'تسجيل ملاحظة اختبار قبول' },
   'nav.uatTools': { en: 'UAT tools', ar: 'أدوات اختبار القبول' },
   'nav.externalPilotScope': { en: 'External pilot scope: internal company shortcuts are hidden. Database isolation remains enforced by RLS.', ar: 'نطاق تجريبي خارجي: تم إخفاء اختصارات الشركة الداخلية، مع استمرار فرض عزل البيانات بواسطة RLS.' },
   'hub.tab.scenarioLab': { en: 'Scenario Lab', ar: 'مختبر السيناريوهات' },
   'hub.tab.scenarioLab.desc': { en: 'Synthetic controlled-pilot test records', ar: 'بيانات اختبار اصطناعية للتجربة المنضبطة' },
+  'hub.tab.controlledUat': { en: 'Controlled UAT', ar: 'اختبار القبول المنضبط' },
+  'hub.tab.controlledUat.desc': { en: 'Day 1 checklist, issue log, and go/no-go signal', ar: 'قائمة اليوم الأول وسجل الملاحظات ومؤشر القرار' },
   'hub.tab.uatIssues': { en: 'UAT issues', ar: 'ملاحظات اختبار القبول' },
   'hub.tab.uatIssues.desc': { en: 'Structured controlled-pilot bug capture', ar: 'تسجيل منظم لملاحظات التجربة المنضبطة' },
   'pilot.controlled': { en: 'Controlled pilot', ar: 'تجربة منضبطة' },

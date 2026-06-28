@@ -336,7 +336,11 @@
     "v130:polish-report": "node scripts/v130-generate-executive-polish-report.mjs",
     "v130:guided-uat": "node scripts/v130-generate-guided-uat-script.mjs",
     "v130:final-proof": "node scripts/v130-final-proof.mjs",
-    "pilot:v130-polish": "npm run v130:ux-audit && npm run v130:polish-report && npm run v130:guided-uat && npm run v130:final-proof"
+    "pilot:v130-polish": "npm run v130:ux-audit && npm run v130:polish-report && npm run v130:guided-uat && npm run v130:final-proof",
+    "v140:uat-audit": "node scripts/v140-uat-audit.mjs",
+    "v140:uat-report": "node scripts/v140-uat-scenario-report.mjs",
+    "v140:final-proof": "node scripts/v140-final-proof.mjs",
+    "pilot:v140-uat-execution": "npm run v140:uat-audit && npm run v140:uat-report && npm run v140:final-proof"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

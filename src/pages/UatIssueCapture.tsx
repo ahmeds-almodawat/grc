@@ -33,7 +33,9 @@ const initialForm = {
   stepsToReproduce: '',
   expectedResult: '',
   actualResult: '',
+  screenshotAvailable: false,
   screenshotNote: '',
+  ownerName: '',
   severity: 'medium' as UatIssueSeverity,
   status: 'open' as UatIssueStatus,
 };
@@ -203,10 +205,10 @@ export function UatIssueCapture() {
                 value={form.severity}
                 onChange={event => setForm({ ...form, severity: event.target.value as UatIssueSeverity })}
               >
-                <option value="low">low</option>
-                <option value="medium">medium</option>
-                <option value="high">high</option>
-                <option value="blocker">blocker</option>
+                <option value="blocker">Blocker</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
               </select>
             </label>
             <label>
@@ -215,10 +217,28 @@ export function UatIssueCapture() {
                 value={form.status}
                 onChange={event => setForm({ ...form, status: event.target.value as UatIssueStatus })}
               >
-                <option value="open">open</option>
-                <option value="reviewing">reviewing</option>
-                <option value="fixed">fixed</option>
-                <option value="deferred">deferred</option>
+                <option value="open">Open</option>
+                <option value="reviewing">Reviewing</option>
+                <option value="fixed">Fixed</option>
+                <option value="deferred">Deferred</option>
+              </select>
+            </label>
+            <label>
+              Owner
+              <input
+                value={form.ownerName}
+                onChange={event => setForm({ ...form, ownerName: event.target.value })}
+                placeholder="Owner or triage lead"
+              />
+            </label>
+            <label>
+              Screenshot available
+              <select
+                value={form.screenshotAvailable ? 'yes' : 'no'}
+                onChange={event => setForm({ ...form, screenshotAvailable: event.target.value === 'yes' })}
+              >
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
               </select>
             </label>
             <label>
@@ -268,7 +288,7 @@ export function UatIssueCapture() {
           {message ? <div className="success-banner"><CheckCircle2 size={16} /> {message}</div> : null}
 
           <button className="primary-button" type="submit" disabled={!canSubmit || saving}>
-            {saving ? 'Saving…' : 'Capture UAT issue'}
+            {saving ? 'Saving...' : 'Capture UAT issue'}
           </button>
         </form>
 
@@ -280,7 +300,7 @@ export function UatIssueCapture() {
             </div>
             <ClipboardList size={24} />
           </div>
-          {loading ? <p className="muted">Loading recent issues…</p> : null}
+          {loading ? <p className="muted">Loading recent issues...</p> : null}
           {!loading && !issues.length && !error ? (
             <div className="professional-empty-state">
               <strong>No records yet</strong>
@@ -291,8 +311,9 @@ export function UatIssueCapture() {
             {issues.map(issue => (
               <article key={issue.id} className="uat-issue-list__item">
                 <div>
-                  <strong>{issue.title}</strong>
-                  <span>{issue.module || 'Module not specified'} · {issue.role_account_used || 'Role not specified'}</span>
+                  <strong>{issue.issue_code || issue.id.slice(0, 8)} - {issue.title}</strong>
+                  <span>{issue.module || 'Module not specified'} | {issue.role_account_used || 'Role not specified'}</span>
+                  <span>Owner: {issue.owner_name || 'Unassigned'}</span>
                   <small>{formatDate(issue.created_at)}</small>
                 </div>
                 <div className="uat-issue-list__badges">

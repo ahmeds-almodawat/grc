@@ -4440,3 +4440,244 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+.controlled-uat-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.controlled-uat-scope {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.controlled-uat-scope div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.controlled-uat-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.controlled-uat-kpi,
+.controlled-uat-recommendation {
+  min-height: 118px;
+}
+
+.controlled-uat-kpi {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-left: 5px solid #cbd5e1;
+}
+
+.controlled-uat-kpi.good {
+  border-left-color: #22c55e;
+}
+
+.controlled-uat-kpi.danger,
+.controlled-uat-recommendation.not-ready {
+  border-left-color: #ef4444;
+}
+
+.controlled-uat-kpi span,
+.controlled-uat-recommendation span,
+.controlled-uat-recommendation small {
+  color: #64748b;
+}
+
+.controlled-uat-kpi strong {
+  font-size: 34px;
+}
+
+.controlled-uat-recommendation {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  grid-column: span 1;
+  border-left: 5px solid #ef4444;
+}
+
+.controlled-uat-recommendation.ready {
+  border-left-color: #22c55e;
+}
+
+.controlled-uat-recommendation div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.controlled-uat-layout {
+  align-items: flex-start;
+}
+
+.controlled-uat-scenarios,
+.controlled-uat-side-stack {
+  min-width: 0;
+}
+
+.controlled-uat-side-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.controlled-uat-scenario-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.controlled-uat-scenario {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.controlled-uat-scenario.passed {
+  border-left: 5px solid #22c55e;
+}
+
+.controlled-uat-scenario.failed,
+.controlled-uat-scenario.blocked {
+  border-left: 5px solid #ef4444;
+}
+
+.controlled-uat-scenario__main,
+.controlled-uat-scenario__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.controlled-uat-scenario__main p,
+.controlled-uat-scenario__main small,
+.controlled-uat-scenario__main span {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.controlled-uat-scenario__actions {
+  min-width: 150px;
+}
+
+.controlled-uat-scenario__actions select {
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 9px 10px;
+  background: white;
+}
+
+.controlled-uat-action-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+button.uat-action-card {
+  text-align: left;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+}
+
+.controlled-uat-actions .professional-empty-state {
+  margin-top: 14px;
+  align-items: flex-start;
+}
+
+.controlled-uat-actions .professional-empty-state code {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #e2e8f0;
+  white-space: normal;
+}
+
+.controlled-uat-issue-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.controlled-uat-issue-table__head,
+.controlled-uat-issue-table__row {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1.5fr 1.2fr .8fr .8fr 1fr;
+  gap: 10px;
+  min-width: 980px;
+  align-items: center;
+}
+
+.controlled-uat-issue-table__head {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.controlled-uat-issue-table__row {
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.status-pill.blocker,
+.status-pill.critical {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-pill.high,
+.status-pill.blocked {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.status-pill.medium,
+.status-pill.reviewing,
+.status-pill.in_progress {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill.low,
+.status-pill.fixed,
+.status-pill.resolved,
+.status-pill.closed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+@media (max-width: 1200px) {
+  .controlled-uat-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .controlled-uat-kpi-grid,
+  .controlled-uat-action-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .controlled-uat-scenario {
+    grid-template-columns: 1fr;
+  }
+}
