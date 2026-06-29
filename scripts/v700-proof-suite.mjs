@@ -26,6 +26,10 @@ function resolveGroups(selected) {
 
 const selectedGroups = resolveGroups(mode);
 const results = [];
+const npmRunner = process.platform === 'win32'
+  ? { command: 'cmd.exe', argsPrefix: ['/d', '/s', '/c', 'npm'] }
+  : { command: 'npm', argsPrefix: [] };
+
 for (const group of selectedGroups) {
   for (const scriptName of groups[group]) {
     if (!scripts[scriptName]) {
@@ -33,7 +37,11 @@ for (const group of selectedGroups) {
       continue;
     }
     console.log(`\n=== npm run ${scriptName} ===`);
-    const r = spawnSync('npm', ['run', scriptName], { cwd: root, stdio: 'inherit', shell: process.platform === 'win32' });
+    const r = spawnSync(npmRunner.command, [...npmRunner.argsPrefix, 'run', scriptName], {
+      cwd: root,
+      stdio: 'inherit',
+      shell: false
+    });
     results.push({ group, script: scriptName, status: r.status === 0 ? 'passed' : 'failed', exit_code: r.status });
   }
 }

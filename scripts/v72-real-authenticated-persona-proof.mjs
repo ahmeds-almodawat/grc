@@ -11,14 +11,22 @@ const password = 'V72-Local-Proof-Only!9274';
 const suffix = Date.now().toString(36);
 const emailDomain = 'v72.local.test';
 
+function resolveProcess(command, args) {
+  if (process.platform === 'win32' && command === npx) {
+    return { command: 'cmd.exe', args: ['/d', '/s', '/c', npx, ...args] };
+  }
+  return { command, args };
+}
+
 function runProcess(command, args, options = {}) {
-  return spawnSync(command, args, {
+  const resolved = resolveProcess(command, args);
+  return spawnSync(resolved.command, resolved.args, {
     cwd: root,
     encoding: 'utf8',
     windowsHide: true,
     maxBuffer: 4 * 1024 * 1024,
-    shell: process.platform === 'win32' && command === npx,
     ...options,
+    shell: false,
   });
 }
 
@@ -137,13 +145,7 @@ set session_replication_role = origin;
 }
 
 function localStatus() {
-  const result = spawnSync(npx, ['supabase', 'status', '-o', 'json'], {
-    cwd: root,
-    encoding: 'utf8',
-    windowsHide: true,
-    maxBuffer: 4 * 1024 * 1024,
-    shell: process.platform === 'win32',
-  });
+  const result = runProcess(npx, ['supabase', 'status', '-o', 'json']);
   if (result.status !== 0) {
     throw new Error(result.error?.message || result.stderr || result.stdout || 'npx supabase status failed');
   }

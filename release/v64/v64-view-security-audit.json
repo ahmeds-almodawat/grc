@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T18:02:17.096Z",
-    "migration_files_scanned": 75,
-    "views_detected": 214,
+    "generated_at": "2026-06-29T18:37:47.235Z",
+    "migration_files_scanned": 76,
+    "views_detected": 217,
     "findings_total": 105,
     "critical": 0,
     "high": 0,
@@ -749,6 +749,30 @@
       "view": "v_patch14_production_hardening_summary",
       "files": [
         "supabase/migrations/075_patch14_production_hardening_launch_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch15_final_security_closure_summary",
+      "files": [
+        "supabase/migrations/076_patch15_final_warning_runtime_security_closure.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch15_rpc_review_queue",
+      "files": [
+        "supabase/migrations/076_patch15_final_warning_runtime_security_closure.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch15_warning_closure_queue",
+      "files": [
+        "supabase/migrations/076_patch15_final_warning_runtime_security_closure.sql"
       ],
       "has_security_invoker": true,
       "sensitive": false
@@ -3635,6 +3659,27 @@
     {
       "view": "v_patch14_launch_readiness_dashboard",
       "file": "supabase/migrations/075_patch14_production_hardening_launch_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch15_final_security_closure_summary",
+      "file": "supabase/migrations/076_patch15_final_warning_runtime_security_closure.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch15_warning_closure_queue",
+      "file": "supabase/migrations/076_patch15_final_warning_runtime_security_closure.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch15_rpc_review_queue",
+      "file": "supabase/migrations/076_patch15_final_warning_runtime_security_closure.sql",
       "occurrence": "create_view",
       "has_security_invoker": true,
       "sensitive": false
