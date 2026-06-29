@@ -1,15 +1,15 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T13:40:45.853Z",
-    "migration_files_scanned": 65,
-    "created_tables_detected": 301,
-    "tables_with_explicit_rls": 241,
+    "generated_at": "2026-06-29T14:15:05.539Z",
+    "migration_files_scanned": 66,
+    "created_tables_detected": 312,
+    "tables_with_explicit_rls": 252,
     "tables_with_detected_policies": 209,
-    "findings_total": 60,
+    "findings_total": 61,
     "critical": 0,
-    "high": 0,
+    "high": 1,
     "medium": 60,
-    "strict_passed": true,
+    "strict_passed": false,
     "note": "Static audit only. Final proof requires applying migrations to staging and running supabase/tests/v64_persona_security_tests.sql."
   },
   "findings": [
@@ -432,6 +432,13 @@
       "table": "v50_scale_test_results",
       "created_in": "supabase/migrations/035_v50_scale_backup_restore.sql",
       "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "high",
+      "code": "RLS_NO_POLICY_FOUND",
+      "table": "workflow_kernel_notifications",
+      "created_in": "supabase/migrations/066_patch5_workflow_kernel.sql",
+      "message": "Sensitive table has RLS enabled but no CREATE POLICY was detected in migrations."
     }
   ],
   "sources": [
@@ -499,6 +506,7 @@
     "supabase/migrations/062_v250_live_grc_operating_workspace.sql",
     "supabase/migrations/063_patch2_accreditation_standards_engine.sql",
     "supabase/migrations/064_patch3_live_grc_operating_core.sql",
-    "supabase/migrations/065_patch4_audit_evidence_production_governance.sql"
+    "supabase/migrations/065_patch4_audit_evidence_production_governance.sql",
+    "supabase/migrations/066_patch5_workflow_kernel.sql"
   ]
 }

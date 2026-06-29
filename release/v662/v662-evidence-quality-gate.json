@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-29T13:41:20.482Z",
+  "generated_at": "2026-06-29T14:15:37.704Z",
   "evidence_dir": "release/v66/evidence-attachments",
   "required_total": 6,
   "passed_count": 6,
@@ -21,7 +21,7 @@
       "file": "01-v64-persona-sql-output.txt",
       "kind": "persona_sql",
       "exists": true,
-      "bytes": 2406,
+      "bytes": 2403,
       "has_required_signal": true,
       "has_template_or_placeholder_signal": false,
       "passed": true,
