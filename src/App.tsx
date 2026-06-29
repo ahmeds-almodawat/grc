@@ -64,9 +64,11 @@ import { OVR } from './pages/OVR';
 import { OvrRiskIndicators } from './pages/OvrRiskIndicators';
 import { AccreditationCenter } from './pages/AccreditationCenter';
 import { QualityAccreditationOperatingCenter } from './pages/QualityAccreditationOperatingCenter';
+import { RealStandardsMasterDataCenter } from './pages/RealStandardsMasterDataCenter';
 import { LiveGrcOperatingCore } from './pages/LiveGrcOperatingCore';
 import { WorkflowKernelCenter } from './pages/WorkflowKernelCenter';
 import { ProfessionalWorkbenchesCenter } from './pages/ProfessionalWorkbenchesCenter';
+import { RealWorkflowExecutionCenter } from './pages/RealWorkflowExecutionCenter';
 import { RuntimeWorkflowActionsCenter } from './pages/RuntimeWorkflowActionsCenter';
 import { Governance } from './pages/Governance';
 import { Admin } from './pages/Admin';
@@ -165,6 +167,7 @@ function GrcHub() {
     { id: 'operatingCore', label: t('hub.tab.operatingCore', 'Operating Core'), description: t('hub.tab.operatingCore.desc', 'Risk, controls, tests, evidence, CAPA, and obligations.'), icon: <Network size={17} />, content: <LiveGrcOperatingCore /> },
     { id: 'workflowKernel', label: t('hub.tab.workflowKernel', 'Workflow Kernel'), description: t('hub.tab.workflowKernel.desc', 'Cross-module workflow routing, approvals, SLA, and escalation control.'), icon: <ClipboardList size={17} />, content: <WorkflowKernelCenter /> },
     { id: 'professionalWorkbenches', label: t('hub.tab.professionalWorkbenches', 'Professional Workbenches'), description: t('hub.tab.professionalWorkbenches.desc', 'Audit, risk, compliance, issue, response, and CAPA operating queues.'), icon: <FileSearch size={17} />, content: <ProfessionalWorkbenchesCenter /> },
+    { id: 'realWorkflowExecution', label: t('hub.tab.realWorkflowExecution', 'Real Workflow Execution'), description: t('hub.tab.realWorkflowExecution.desc', 'Submit, review, approve, evidence, close, escalate, issue CAPA, approve exceptions, and record management responses.'), icon: <ClipboardCheck size={17} />, content: <RealWorkflowExecutionCenter /> },
     { id: 'runtimeWorkflowActions', label: t('hub.tab.runtimeWorkflowActions', 'Runtime Actions'), description: t('hub.tab.runtimeWorkflowActions.desc', 'Action requests, transitions, notifications, escalation rules, integration outbox, and runtime exceptions.'), icon: <BellRing size={17} />, content: <RuntimeWorkflowActionsCenter /> },
     { id: 'kri', label: t('hub.tab.kri'), description: t('hub.tab.kri.desc'), icon: <Gauge size={17} />, content: <RiskAppetiteKriCenter /> },
     { id: 'compliance', label: t('hub.tab.compliance'), description: t('hub.tab.compliance.desc'), icon: <ClipboardCheck size={17} />, content: <Compliance /> },
@@ -196,6 +199,7 @@ function QualitySafetyHub() {
         { id: 'ovrRisk', label: t('hub.tab.ovrRisk'), description: t('hub.tab.ovrRisk.desc'), icon: <Activity size={17} />, content: <OvrRiskIndicators /> },
         { id: 'accreditation', label: t('hub.tab.accreditation', 'Accreditation'), description: t('hub.tab.accreditation.desc', 'CBAHI and international accreditation readiness engine.'), icon: <ClipboardCheck size={17} />, content: <AccreditationCenter /> },
         { id: 'qualityAccreditationOperating', label: t('hub.tab.qualityAccreditationOperating', 'Quality Operating Layer'), description: t('hub.tab.qualityAccreditationOperating.desc', 'Tracer rounds, indicators, RCA/CAPA, evidence packs, and requirement readiness work.'), icon: <ClipboardCheck size={17} />, content: <QualityAccreditationOperatingCenter /> },
+        { id: 'realStandardsMasterData', label: t('hub.tab.realStandardsMasterData', 'Standards & Master Data'), description: t('hub.tab.realStandardsMasterData.desc', 'Licensed standards metadata, departments, committees, evidence taxonomy, controls, indicators, tracers, and document ownership.'), icon: <ClipboardList size={17} />, content: <RealStandardsMasterDataCenter /> },
         { id: 'evidenceVault', label: t('hub.tab.evidenceVault'), description: t('hub.tab.evidenceVault.desc'), icon: <FileStack size={17} />, content: <EvidenceVault /> },
         { id: 'relationships', label: t('hub.tab.relationships'), description: t('hub.tab.relationships.desc'), icon: <Network size={17} />, content: <RelationshipMap /> },
       ]}

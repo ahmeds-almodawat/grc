@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T17:23:22.436Z",
-    "migration_files_scanned": 71,
-    "views_detected": 198,
+    "generated_at": "2026-06-29T17:48:16.832Z",
+    "migration_files_scanned": 73,
+    "views_detected": 207,
     "findings_total": 105,
     "critical": 0,
     "high": 0,
@@ -877,6 +877,22 @@
       "sensitive": true
     },
     {
+      "view": "v_real_action_queue",
+      "files": [
+        "supabase/migrations/073_patch12_real_workflow_execution_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_control_evidence_map",
+      "files": [
+        "supabase/migrations/072_patch11_real_standards_master_data_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
       "view": "v_real_data_activation_summary",
       "files": [
         "supabase/migrations/071_patch10_real_data_activation_uat_readiness.sql"
@@ -888,6 +904,62 @@
       "view": "v_real_data_import_quality_queue",
       "files": [
         "supabase/migrations/071_patch10_real_data_activation_uat_readiness.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_evidence_review_queue",
+      "files": [
+        "supabase/migrations/073_patch12_real_workflow_execution_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_real_gap_capa_queue",
+      "files": [
+        "supabase/migrations/073_patch12_real_workflow_execution_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_management_response_queue",
+      "files": [
+        "supabase/migrations/073_patch12_real_workflow_execution_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_master_data_coverage",
+      "files": [
+        "supabase/migrations/072_patch11_real_standards_master_data_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_standards_master_summary",
+      "files": [
+        "supabase/migrations/072_patch11_real_standards_master_data_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_standards_readiness_queue",
+      "files": [
+        "supabase/migrations/072_patch11_real_standards_master_data_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_workflow_execution_summary",
+      "files": [
+        "supabase/migrations/073_patch12_real_workflow_execution_pack.sql"
       ],
       "has_security_invoker": true,
       "sensitive": false
@@ -3398,6 +3470,69 @@
       "occurrence": "create_view",
       "has_security_invoker": true,
       "sensitive": true
+    },
+    {
+      "view": "v_real_standards_master_summary",
+      "file": "supabase/migrations/072_patch11_real_standards_master_data_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_standards_readiness_queue",
+      "file": "supabase/migrations/072_patch11_real_standards_master_data_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_master_data_coverage",
+      "file": "supabase/migrations/072_patch11_real_standards_master_data_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_control_evidence_map",
+      "file": "supabase/migrations/072_patch11_real_standards_master_data_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_real_workflow_execution_summary",
+      "file": "supabase/migrations/073_patch12_real_workflow_execution_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_action_queue",
+      "file": "supabase/migrations/073_patch12_real_workflow_execution_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_evidence_review_queue",
+      "file": "supabase/migrations/073_patch12_real_workflow_execution_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_real_gap_capa_queue",
+      "file": "supabase/migrations/073_patch12_real_workflow_execution_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_management_response_queue",
+      "file": "supabase/migrations/073_patch12_real_workflow_execution_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
     }
   ],
   "findings": [
