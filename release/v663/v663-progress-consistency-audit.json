@@ -1,16 +1,15 @@
 {
-  "generated_at": "2026-06-29T08:47:31.342Z",
+  "generated_at": "2026-06-29T09:22:25.102Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 62,
-    "latest_migration": "062_v250_live_grc_operating_workspace.sql",
+    "migration_count": 63,
+    "latest_migration": "063_patch2_accreditation_standards_engine.sql",
     "prefix_gaps": [
       16,
-      63,
       64,
       65,
       66,

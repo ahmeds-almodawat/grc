@@ -1,12 +1,12 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T08:46:55.609Z",
-    "migration_files_scanned": 62,
-    "views_detected": 161,
-    "findings_total": 102,
+    "generated_at": "2026-06-29T09:21:46.654Z",
+    "migration_files_scanned": 63,
+    "views_detected": 164,
+    "findings_total": 105,
     "critical": 0,
     "high": 0,
-    "medium": 102,
+    "medium": 105,
     "strict_passed": true,
     "note": "Static scan deduplicates views and recognizes later ALTER VIEW ... SET (security_invoker=true). Final proof still requires staging verification."
   },
@@ -37,6 +37,30 @@
       ],
       "has_security_invoker": true,
       "sensitive": true
+    },
+    {
+      "view": "v_accreditation_gap_dashboard",
+      "files": [
+        "supabase/migrations/063_patch2_accreditation_standards_engine.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_accreditation_readiness_summary",
+      "files": [
+        "supabase/migrations/063_patch2_accreditation_standards_engine.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_accreditation_requirement_matrix",
+      "files": [
+        "supabase/migrations/063_patch2_accreditation_standards_engine.sql"
+      ],
+      "has_security_invoker": false,
+      "sensitive": false
     },
     {
       "view": "v_activity_timeline",
@@ -2843,9 +2867,51 @@
       "occurrence": "create_view",
       "has_security_invoker": false,
       "sensitive": false
+    },
+    {
+      "view": "v_accreditation_readiness_summary",
+      "file": "supabase/migrations/063_patch2_accreditation_standards_engine.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_accreditation_requirement_matrix",
+      "file": "supabase/migrations/063_patch2_accreditation_standards_engine.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_accreditation_gap_dashboard",
+      "file": "supabase/migrations/063_patch2_accreditation_standards_engine.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
     }
   ],
   "findings": [
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_accreditation_gap_dashboard",
+      "file": "supabase/migrations/063_patch2_accreditation_standards_engine.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_accreditation_readiness_summary",
+      "file": "supabase/migrations/063_patch2_accreditation_standards_engine.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
+    {
+      "severity": "medium",
+      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
+      "view": "v_accreditation_requirement_matrix",
+      "file": "supabase/migrations/063_patch2_accreditation_standards_engine.sql",
+      "message": "View does not show security_invoker=true in static scan."
+    },
     {
       "severity": "medium",
       "code": "VIEW_WITHOUT_SECURITY_INVOKER",

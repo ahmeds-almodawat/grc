@@ -2,19 +2,22 @@
 
 ```json
 {
-  "generated_at": "2026-06-29T08:46:55.609Z",
-  "migration_files_scanned": 62,
-  "views_detected": 161,
-  "findings_total": 102,
+  "generated_at": "2026-06-29T09:21:46.654Z",
+  "migration_files_scanned": 63,
+  "views_detected": 164,
+  "findings_total": 105,
   "critical": 0,
   "high": 0,
-  "medium": 102,
+  "medium": 105,
   "strict_passed": true,
   "note": "Static scan deduplicates views and recognizes later ALTER VIEW ... SET (security_invoker=true). Final proof still requires staging verification."
 }
 ```
 
 ## Findings
+- **medium** VIEW_WITHOUT_SECURITY_INVOKER on `v_accreditation_gap_dashboard` (supabase/migrations/063_patch2_accreditation_standards_engine.sql) — View does not show security_invoker=true in static scan.
+- **medium** VIEW_WITHOUT_SECURITY_INVOKER on `v_accreditation_readiness_summary` (supabase/migrations/063_patch2_accreditation_standards_engine.sql) — View does not show security_invoker=true in static scan.
+- **medium** VIEW_WITHOUT_SECURITY_INVOKER on `v_accreditation_requirement_matrix` (supabase/migrations/063_patch2_accreditation_standards_engine.sql) — View does not show security_invoker=true in static scan.
 - **medium** VIEW_WITHOUT_SECURITY_INVOKER on `v_activity_timeline` (supabase/migrations/017_notifications_activity_timelines.sql) — View does not show security_invoker=true in static scan.
 - **medium** VIEW_WITHOUT_SECURITY_INVOKER on `v_admin_safety_console` (supabase/migrations/022_ultra_release_restore_admin_dictionary.sql) — View does not show security_invoker=true in static scan.
 - **medium** VIEW_WITHOUT_SECURITY_INVOKER on `v_automation_command_summary` (supabase/migrations/024_automation_intelligence_kri_reviews.sql) — View does not show security_invoker=true in static scan.
