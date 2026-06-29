@@ -60,6 +60,7 @@ import { Audit } from './pages/Audit';
 import { OVR } from './pages/OVR';
 import { OvrRiskIndicators } from './pages/OvrRiskIndicators';
 import { AccreditationCenter } from './pages/AccreditationCenter';
+import { LiveGrcOperatingCore } from './pages/LiveGrcOperatingCore';
 import { Governance } from './pages/Governance';
 import { Admin } from './pages/Admin';
 import { MyWork } from './pages/MyWork';
@@ -154,6 +155,7 @@ function GrcHub() {
     && !auth.roles.some(role => role.role === 'super_admin' || role.role === 'governance_admin');
   const tabs = [
     { id: 'risks', label: t('hub.tab.risks'), description: t('hub.tab.risks.desc'), icon: <ShieldAlert size={17} />, content: <Risks /> },
+    { id: 'operatingCore', label: t('hub.tab.operatingCore', 'Operating Core'), description: t('hub.tab.operatingCore.desc', 'Risk, controls, tests, evidence, CAPA, and obligations.'), icon: <Network size={17} />, content: <LiveGrcOperatingCore /> },
     { id: 'kri', label: t('hub.tab.kri'), description: t('hub.tab.kri.desc'), icon: <Gauge size={17} />, content: <RiskAppetiteKriCenter /> },
     { id: 'compliance', label: t('hub.tab.compliance'), description: t('hub.tab.compliance.desc'), icon: <ClipboardCheck size={17} />, content: <Compliance /> },
     { id: 'audit', label: t('hub.tab.audit'), description: t('hub.tab.audit.desc'), icon: <FileSearch size={17} />, content: <Audit /> },

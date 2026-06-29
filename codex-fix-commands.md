@@ -1,33 +1,33 @@
-# Patch 2 Codex Fix Commands
+# Patch 3 Codex Fix Commands
 
-Use Codex only for fixing compile/test issues after applying this patch.
+Use Codex only for fixing after applying Patch 3.
 
 ## TypeScript errors
 
 ```powershell
-codex exec "Fix TypeScript errors caused by Patch 2 only. Keep the accreditation standards engine, migration, AccreditationCenter page, and Quality hub tab. Do not add copyrighted CBAHI/JCI clause content. Run npm run typecheck after fixing."
+codex exec "Fix TypeScript errors caused by Patch 3 only. Keep the live GRC operating core migration, liveGrcOperatingApi, LiveGrcOperatingCore page, and GRC hub Operating Core tab. Do not remove Patch 2 accreditation files. Do not add mock/demo data. Run npm run typecheck after fixing."
 ```
 
 ## Build errors
 
 ```powershell
-codex exec "Fix build errors caused by Patch 2 only. Do not remove the AccreditationCenter. Do not weaken CI/proof checks. Run npm run build after fixing."
+codex exec "Fix build errors caused by Patch 3 only. Preserve the Patch 3 workflow model and do not weaken CI or proof gates. Run npm run build after fixing."
 ```
 
-## Migration SQL errors
+## Migration errors
 
 ```powershell
-codex exec "Fix SQL migration errors in supabase/migrations/063_patch2_accreditation_standards_engine.sql only. Preserve the table purpose, RLS, views, and licensed-content warning. Do not add broad public write policies. Validate the SQL syntax and explain the fix."
+codex exec "Fix Supabase migration errors in supabase/migrations/064_patch3_live_grc_operating_core.sql only. Keep organization-scoped RLS, security_invoker views, and the closure packet rule requiring requirement, risk, control, test, evidence review, and approval before closure. Do not reference tables that may not exist outside this migration."
 ```
 
-## Unit/E2E test errors
+## App integration errors
 
 ```powershell
-codex exec "Fix unit or E2E test failures caused by Patch 2 only. If a test needs to account for the new Accreditation tab, update the test expectation. Do not add fake runtime accreditation data. Run npm run test:unit and, if available, npm run test:e2e."
+codex exec "Fix App.tsx integration caused by Patch 3 only. Ensure AccreditationCenter is available in the Quality/Safety hub if Patch 2 installed it, and ensure LiveGrcOperatingCore appears in the GRC hub as an Operating Core tab. Do not redesign navigation. Run npm run typecheck after fixing."
 ```
 
-## README leftover inconsistency
+## Full Patch 3 cleanup
 
 ```powershell
-codex exec "Clean README.md truth-state wording only. Remove any remaining outdated statement that proof:all is expected to fail 16/1 if current proof passes. Keep production readiness blocked until real human approval, OVR confidentiality confirmation, live/staging RLS persona proof, live bridge/access review evidence, rollback, and pilot review are complete."
+codex exec "Review Patch 3 changes only. Ensure no fake production-ready claim is added, no mock/demo organization fallback is introduced, the new live GRC operating page uses LiveResult states, and README does not contain the old 16 passed / 1 failed proof expectation. Run npm run typecheck and npm run build."
 ```

@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T09:21:46.654Z",
-    "migration_files_scanned": 63,
-    "views_detected": 164,
+    "generated_at": "2026-06-29T12:27:45.925Z",
+    "migration_files_scanned": 64,
+    "views_detected": 168,
     "findings_total": 105,
     "critical": 0,
     "high": 0,
@@ -448,6 +448,38 @@
       ],
       "has_security_invoker": false,
       "sensitive": false
+    },
+    {
+      "view": "v_live_grc_capa_queue",
+      "files": [
+        "supabase/migrations/064_patch3_live_grc_operating_core.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_live_grc_obligation_dashboard",
+      "files": [
+        "supabase/migrations/064_patch3_live_grc_operating_core.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_live_grc_operating_summary",
+      "files": [
+        "supabase/migrations/064_patch3_live_grc_operating_core.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_live_grc_risk_control_map",
+      "files": [
+        "supabase/migrations/064_patch3_live_grc_operating_core.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
     },
     {
       "view": "v_load_test_seed_status",
@@ -2887,6 +2919,34 @@
       "file": "supabase/migrations/063_patch2_accreditation_standards_engine.sql",
       "occurrence": "create_view",
       "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_live_grc_operating_summary",
+      "file": "supabase/migrations/064_patch3_live_grc_operating_core.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_live_grc_risk_control_map",
+      "file": "supabase/migrations/064_patch3_live_grc_operating_core.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_live_grc_capa_queue",
+      "file": "supabase/migrations/064_patch3_live_grc_operating_core.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_live_grc_obligation_dashboard",
+      "file": "supabase/migrations/064_patch3_live_grc_operating_core.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
       "sensitive": false
     }
   ],
