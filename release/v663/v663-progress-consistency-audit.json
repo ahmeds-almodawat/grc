@@ -1,17 +1,15 @@
 {
-  "generated_at": "2026-06-29T17:48:55.021Z",
+  "generated_at": "2026-06-29T18:02:59.525Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 73,
-    "latest_migration": "073_patch12_real_workflow_execution_pack.sql",
+    "migration_count": 75,
+    "latest_migration": "075_patch14_production_hardening_launch_pack.sql",
     "prefix_gaps": [
       16,
-      74,
-      75,
       76,
       77,
       78,

@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T17:48:16.832Z",
-    "migration_files_scanned": 73,
-    "views_detected": 207,
+    "generated_at": "2026-06-29T18:02:17.096Z",
+    "migration_files_scanned": 75,
+    "views_detected": 214,
     "findings_total": 105,
     "critical": 0,
     "high": 0,
@@ -696,6 +696,62 @@
       ],
       "has_security_invoker": true,
       "sensitive": true
+    },
+    {
+      "view": "v_patch13_evidence_pack_readiness",
+      "files": [
+        "supabase/migrations/074_patch13_uat_accreditation_evidence_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch13_failed_retest_queue",
+      "files": [
+        "supabase/migrations/074_patch13_uat_accreditation_evidence_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch13_role_scenario_queue",
+      "files": [
+        "supabase/migrations/074_patch13_uat_accreditation_evidence_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch13_uat_evidence_summary",
+      "files": [
+        "supabase/migrations/074_patch13_uat_accreditation_evidence_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch14_hardening_queue",
+      "files": [
+        "supabase/migrations/075_patch14_production_hardening_launch_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch14_launch_readiness_dashboard",
+      "files": [
+        "supabase/migrations/075_patch14_production_hardening_launch_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch14_production_hardening_summary",
+      "files": [
+        "supabase/migrations/075_patch14_production_hardening_launch_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
     },
     {
       "view": "v_patch4_audit_engagement_dashboard",
@@ -3530,6 +3586,55 @@
     {
       "view": "v_real_management_response_queue",
       "file": "supabase/migrations/073_patch12_real_workflow_execution_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch13_uat_evidence_summary",
+      "file": "supabase/migrations/074_patch13_uat_accreditation_evidence_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch13_role_scenario_queue",
+      "file": "supabase/migrations/074_patch13_uat_accreditation_evidence_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch13_evidence_pack_readiness",
+      "file": "supabase/migrations/074_patch13_uat_accreditation_evidence_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch13_failed_retest_queue",
+      "file": "supabase/migrations/074_patch13_uat_accreditation_evidence_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch14_production_hardening_summary",
+      "file": "supabase/migrations/075_patch14_production_hardening_launch_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch14_hardening_queue",
+      "file": "supabase/migrations/075_patch14_production_hardening_launch_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch14_launch_readiness_dashboard",
+      "file": "supabase/migrations/075_patch14_production_hardening_launch_pack.sql",
       "occurrence": "create_view",
       "has_security_invoker": true,
       "sensitive": false

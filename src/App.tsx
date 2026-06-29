@@ -53,6 +53,7 @@ import { ProductionProofCenter } from './pages/ProductionProofCenter';
 import { AuditEvidenceGovernanceCenter } from './pages/AuditEvidenceGovernanceCenter';
 import { AssuranceGoLiveCenter } from './pages/AssuranceGoLiveCenter';
 import { RealDataUatReadinessCenter } from './pages/RealDataUatReadinessCenter';
+import { ProductionHardeningLaunchCenter } from './pages/ProductionHardeningLaunchCenter';
 import { Dashboard } from './pages/Dashboard';
 import { Analytics } from './pages/Analytics';
 import { Projects } from './pages/Projects';
@@ -65,6 +66,7 @@ import { OvrRiskIndicators } from './pages/OvrRiskIndicators';
 import { AccreditationCenter } from './pages/AccreditationCenter';
 import { QualityAccreditationOperatingCenter } from './pages/QualityAccreditationOperatingCenter';
 import { RealStandardsMasterDataCenter } from './pages/RealStandardsMasterDataCenter';
+import { UatAccreditationEvidenceCenter } from './pages/UatAccreditationEvidenceCenter';
 import { LiveGrcOperatingCore } from './pages/LiveGrcOperatingCore';
 import { WorkflowKernelCenter } from './pages/WorkflowKernelCenter';
 import { ProfessionalWorkbenchesCenter } from './pages/ProfessionalWorkbenchesCenter';
@@ -200,6 +202,7 @@ function QualitySafetyHub() {
         { id: 'accreditation', label: t('hub.tab.accreditation', 'Accreditation'), description: t('hub.tab.accreditation.desc', 'CBAHI and international accreditation readiness engine.'), icon: <ClipboardCheck size={17} />, content: <AccreditationCenter /> },
         { id: 'qualityAccreditationOperating', label: t('hub.tab.qualityAccreditationOperating', 'Quality Operating Layer'), description: t('hub.tab.qualityAccreditationOperating.desc', 'Tracer rounds, indicators, RCA/CAPA, evidence packs, and requirement readiness work.'), icon: <ClipboardCheck size={17} />, content: <QualityAccreditationOperatingCenter /> },
         { id: 'realStandardsMasterData', label: t('hub.tab.realStandardsMasterData', 'Standards & Master Data'), description: t('hub.tab.realStandardsMasterData.desc', 'Licensed standards metadata, departments, committees, evidence taxonomy, controls, indicators, tracers, and document ownership.'), icon: <ClipboardList size={17} />, content: <RealStandardsMasterDataCenter /> },
+        { id: 'uatAccreditationEvidence', label: t('hub.tab.uatAccreditationEvidence', 'UAT Evidence Pack'), description: t('hub.tab.uatAccreditationEvidence.desc', 'Role scenario scripts, screenshots, SQL proof, signoffs, failed scenarios, retests, and accreditation evidence readiness.'), icon: <FileCheck2 size={17} />, content: <UatAccreditationEvidenceCenter /> },
         { id: 'evidenceVault', label: t('hub.tab.evidenceVault'), description: t('hub.tab.evidenceVault.desc'), icon: <FileStack size={17} />, content: <EvidenceVault /> },
         { id: 'relationships', label: t('hub.tab.relationships'), description: t('hub.tab.relationships.desc'), icon: <Network size={17} />, content: <RelationshipMap /> },
       ]}
@@ -262,6 +265,7 @@ function AdminReleaseHub({ setPage }: { setPage: (page: PageKey) => void }) {
         { id: 'auditEvidenceGovernance', label: t('hub.tab.auditEvidenceGovernance', 'Audit & Evidence Integrity'), description: t('hub.tab.auditEvidenceGovernance.desc', 'Audit workbench, evidence integrity, and production governance gates.'), icon: <FileCheck2 size={17} />, content: <AuditEvidenceGovernanceCenter /> },
         { id: 'assuranceGoLive', label: t('hub.tab.assuranceGoLive', 'Assurance Go-Live Pack'), description: t('hub.tab.assuranceGoLive.desc', 'External auditor portal, signoffs, rollback, monitoring, training, and production decisions.'), icon: <PackageCheck size={17} />, content: <AssuranceGoLiveCenter /> },
         { id: 'realDataUatReadiness', label: t('hub.tab.realDataUatReadiness', 'Real Data & UAT'), description: t('hub.tab.realDataUatReadiness.desc', 'Licensed content loading, import validation, mappings, UAT cycles, training, signoffs, and go/no-go readiness.'), icon: <ClipboardCheck size={17} />, content: <RealDataUatReadinessCenter /> },
+        { id: 'productionHardeningLaunch', label: t('hub.tab.productionHardeningLaunch', 'Production Hardening Launch'), description: t('hub.tab.productionHardeningLaunch.desc', 'Warning cleanup, staging persona SQL, restore proof, change freeze, board go/no-go, launch signoffs, and monitoring.'), icon: <PackageCheck size={17} />, content: <ProductionHardeningLaunchCenter /> },
         { id: 'releaseFactory', label: t('hub.tab.releaseFactory'), description: t('hub.tab.releaseFactory.desc'), icon: <PackageCheck size={17} />, content: <ReleaseFactoryCenter /> },
         { id: 'productionProof', label: t('hub.tab.productionProof', 'Production Proof'), description: t('hub.tab.productionProof.desc', 'Final evidence-based go-live proof gates.'), icon: <PackageCheck size={17} />, content: <ProductionProofCenter /> },
         { id: 'productionFinish', label: t('hub.tab.productionFinish'), description: t('hub.tab.productionFinish.desc'), icon: <Rocket size={17} />, content: <ProductionFinishCenter /> },

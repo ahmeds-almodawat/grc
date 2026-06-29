@@ -2,7 +2,7 @@
 
 ```json
 {
-  "generated_at": "2026-06-29T17:48:37.127Z",
+  "generated_at": "2026-06-29T18:02:37.783Z",
   "status": "real_authenticated_persona_proof_passed",
   "proof_file": "release/v72/real-authenticated-persona-proof.json",
   "proof_read_error": null,
