@@ -23,6 +23,7 @@ import { actionErrorMessage } from '../lib/privilegedAction';
 import { ProductionReadinessGatePanel } from '../components/v200/ProductionReadinessGatePanel';
 import { SecurityBackupHardeningPanel } from '../components/v200/SecurityBackupHardeningPanel';
 
+import { AssuranceReadinessPanel } from '../components/v240/AssuranceReadinessPanel';
 type Tone = 'good' | 'warning' | 'danger' | 'neutral';
 
 const copy = {
@@ -164,7 +165,11 @@ export function ProductionProofCenter() {
           <span>{c.score}</span>
           <StatusPill tone={scoreTone}>{label(data?.scorecard.goLiveSignal ?? 'blocked')}</StatusPill>
         </div>
-      </section>
+      
+      {/* v24.0 final assurance readiness */}
+      <AssuranceReadinessPanel />
+
+</section>
 
       {actionError && <div className="notice-banner danger">{actionError}</div>}
 

@@ -59,6 +59,15 @@ jobs:
 
       - name: v22 control testing proof
         run: npm run pilot:v220-control-testing
+
+      - name: v23 compliance hardening proof
+        run: npm run pilot:v230-compliance-hardening
+
+      - name: v24 assurance and auditor proof
+        run: npm run pilot:v240-assurance
+
+      - name: v25 live GRC operating proof
+        run: npm run pilot:v250-live-operating
       - name: UAT readiness static proof
         run: npm run pilot:uat-readiness
 

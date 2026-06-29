@@ -1,9 +1,29 @@
-node_modules
-dist
-.env
-.env.local
-.DS_Store
-*.log
 
-# Local patch/build archives
-*.zip
+# dependencies
+node_modules/
+
+# build output
+dist/
+
+# test output
+test-results/
+playwright-report/
+coverage/
+
+# local environment
+.env.local
+.env
+.env.*.local
+
+# temporary logs
+.codex-*.log
+*.tmp
+*.bak
+
+# patch installer clutter
+APPLY_V*.ps1
+apply-v*.ps1
+README_APPLY_*.md
+package-lock.backup.*.json
+VALIDATION.txt
+PATCH_NOTES.md

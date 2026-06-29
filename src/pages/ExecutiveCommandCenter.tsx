@@ -11,6 +11,9 @@ import { ExecutiveGrcScorecard } from '../components/v190/ExecutiveGrcScorecard'
 import { AutomationAlertPanel } from '../components/v190/AutomationAlertPanel';
 import { FrameworkCrosswalkBackbonePanel } from '../components/v210/FrameworkCrosswalkBackbonePanel';
 
+import { LiveOperatingCyclePanel } from '../components/v250/LiveOperatingCyclePanel';
+import { DataBridgeGovernancePanel } from '../components/v250/DataBridgeGovernancePanel';
+import { AccessReviewOperatingPanel } from '../components/v250/AccessReviewOperatingPanel';
 export function ExecutiveCommandCenter() {
   const { t } = useI18n();
   const summary = useAsyncData(getCommandSummary, []);
@@ -108,6 +111,10 @@ export function ExecutiveCommandCenter() {
           <div className="rule-tile success"><strong>{t('command.rule4')}</strong><span>{t('command.rule4Text')}</span></div>
         </aside>
       </div>
-    </section>
+    
+      {/* v25.0 live GRC operating workspace */}
+      <DataBridgeGovernancePanel />
+
+</section>
   );
 }

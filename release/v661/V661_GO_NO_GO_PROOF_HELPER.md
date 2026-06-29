@@ -1,12 +1,12 @@
 # v6.6.1 Go/No-Go Proof Helper
 
-Generated: 2026-06-28T23:00:50.127Z
+Generated: 2026-06-28T23:32:16.156Z
 
-Status: **ready_for_controlled_pilot_review**
+Status: **not_ready_manual_evidence_required**
 
-Blockers: **0**
+Blockers: **1**
 
-- ✅ No helper-detected blockers.
+- ❌ No Playwright test-results/playwright-report folder found. Run npm run test:real.
 
 ## Controlled pilot rule
 

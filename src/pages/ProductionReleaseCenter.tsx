@@ -8,6 +8,9 @@ import { getProductionChecklist, getUltraReleaseSummary, runReleasePreflight } f
 import { actionErrorMessage } from '../lib/privilegedAction';
 import { ProductionReadinessGatePanel } from '../components/v200/ProductionReadinessGatePanel';
 
+import { LiveOperatingCyclePanel } from '../components/v250/LiveOperatingCyclePanel';
+import { DataBridgeGovernancePanel } from '../components/v250/DataBridgeGovernancePanel';
+import { AccessReviewOperatingPanel } from '../components/v250/AccessReviewOperatingPanel';
 function copyCsv(filename: string, rows: Array<Record<string, unknown>>) {
   if (!rows.length) return;
   const columns = Array.from(rows.reduce((set, row) => {
@@ -102,7 +105,12 @@ export function ProductionReleaseCenter() {
           </div>
         </DataState>
       </div>
-    </section>
+    
+      {/* v25.0 live GRC operating workspace */}
+      <LiveOperatingCyclePanel />
+      <AccessReviewOperatingPanel />
+
+</section>
   );
 }
 

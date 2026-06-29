@@ -17,6 +17,7 @@ import {
 } from '../lib/scenarioLab';
 import { FrameworkCrosswalkBackbonePanel } from '../components/v210/FrameworkCrosswalkBackbonePanel';
 
+import { AuditorEvidencePackPanel } from '../components/v240/AuditorEvidencePackPanel';
 export function Evidence() {
   const auth = useAuth();
   const evidence = useAsyncData(getEvidenceQueue, []);
@@ -163,6 +164,10 @@ export function Evidence() {
           </div>
         </div>
       </Modal>
-    </section>
+    
+      {/* v24.0 evidence integrity and auditor pack */}
+      <AuditorEvidencePackPanel />
+
+</section>
   );
 }

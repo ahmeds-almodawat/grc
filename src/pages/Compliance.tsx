@@ -16,6 +16,9 @@ import type { ComplianceRow } from '../types/domain';
 import '../styles/v160-compliance-management.css';
 import { FrameworkCrosswalkBackbonePanel } from '../components/v210/FrameworkCrosswalkBackbonePanel';
 
+import { ComplianceHardeningOverview } from '../components/v230/ComplianceHardeningOverview';
+import { PolicyAttestationTracker } from '../components/v230/PolicyAttestationTracker';
+import { VendorIncidentHardeningPanel } from '../components/v230/VendorIncidentHardeningPanel';
 export function Compliance() {
   const auth = useAuth();
   const [formOpen, setFormOpen] = useState(false);
@@ -93,6 +96,12 @@ export function Compliance() {
       <Modal open={formOpen} title="Create compliance obligation" onClose={() => setFormOpen(false)}>
         <ComplianceForm organizationId={organizationId} departments={departments.data || []} profiles={profiles.data || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void compliance.refresh(); }} />
       </Modal>
-    </section>
+    
+      {/* v23.0 compliance, policy, vendor and incident hardening */}
+      <ComplianceHardeningOverview />
+      <PolicyAttestationTracker />
+      <VendorIncidentHardeningPanel />
+
+</section>
   );
 }

@@ -1,15 +1,17 @@
 {
-  "generated_at": "2026-06-28T23:00:50.127Z",
-  "status": "ready_for_controlled_pilot_review",
-  "blocker_count": 0,
-  "blockers": [],
+  "generated_at": "2026-06-28T23:32:16.156Z",
+  "status": "not_ready_manual_evidence_required",
+  "blocker_count": 1,
+  "blockers": [
+    "No Playwright test-results/playwright-report folder found. Run npm run test:real."
+  ],
   "evidence_summary": {
     "required_total": 6,
     "attached_count": 6,
     "missing_count": 0
   },
   "previous_v66_gate": {
-    "generated_at": "2026-06-28T22:49:29.834Z",
+    "generated_at": "2026-06-28T23:20:42.403Z",
     "controlled_pilot_status": "ready_for_controlled_pilot_go_no_go_review",
     "strict_passed": true,
     "gates": [

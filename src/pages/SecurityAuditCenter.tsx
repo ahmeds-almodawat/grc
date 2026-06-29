@@ -28,6 +28,9 @@ import {
 } from '../lib/securityApi';
 import { SecurityBackupHardeningPanel } from '../components/v200/SecurityBackupHardeningPanel';
 
+import { VendorIncidentHardeningPanel } from '../components/v230/VendorIncidentHardeningPanel';
+import { SodImmutableAuditPanel } from '../components/v240/SodImmutableAuditPanel';
+import { AuditorEvidencePackPanel } from '../components/v240/AuditorEvidencePackPanel';
 function localize(language: 'en' | 'ar', en: string | null | undefined, ar: string | null | undefined) {
   return language === 'ar' ? ar || en || '—' : en || ar || '—';
 }
@@ -303,6 +306,15 @@ export function SecurityAuditCenter() {
           <p>{t('security.ruleRetentionApprovalText')}</p>
         </div>
       </div>
-    </section>
+    
+      {/* v23.0 incident and vendor hardening */}
+      <VendorIncidentHardeningPanel />
+
+
+      {/* v24.0 SoD and immutable audit controls */}
+      <SodImmutableAuditPanel />
+      <AuditorEvidencePackPanel />
+
+</section>
   );
 }

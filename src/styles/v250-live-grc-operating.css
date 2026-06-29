@@ -1,0 +1,82 @@
+.v250-panel {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 24px;
+  padding: 24px;
+  margin: 24px 0;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.9));
+  color: #e5e7eb;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18);
+}
+
+.v250-panel-heading { max-width: 940px; margin-bottom: 18px; }
+.v250-panel-heading.compact { max-width: 820px; }
+.v250-panel-heading h3 { margin: 4px 0 10px; font-size: clamp(1.35rem, 2vw, 1.9rem); }
+.v250-panel-heading p { margin: 0; color: #cbd5e1; line-height: 1.65; }
+.v250-chain {
+  border: 1px dashed rgba(250, 204, 21, 0.55);
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin: 16px 0 22px;
+  background: rgba(250, 204, 21, 0.08);
+  color: #fde68a;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.v250-metric-grid,
+.v250-cycle-grid,
+.v250-access-grid {
+  display: grid;
+  gap: 14px;
+}
+.v250-metric-grid { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); margin-bottom: 18px; }
+.v250-cycle-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.v250-access-grid { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin-top: 16px; }
+
+.v250-metric-card,
+.v250-cycle-card,
+.v250-access-card {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 18px;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.58);
+}
+.v250-metric-card span,
+.v250-card-topline span { color: #94a3b8; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.v250-metric-card strong { display: block; margin: 8px 0; font-size: 1.45rem; color: #f8fafc; }
+.v250-metric-card em,
+.v250-card-topline b { font-style: normal; color: #bfdbfe; text-transform: capitalize; }
+.v250-metric-card p,
+.v250-cycle-card dd,
+.v250-access-card p,
+.v250-access-card small { color: #cbd5e1; line-height: 1.55; }
+.v250-card-topline { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 10px; }
+.v250-cycle-card h4,
+.v250-access-card h4 { margin: 8px 0 12px; color: #f8fafc; }
+.v250-cycle-card dl { margin: 0; display: grid; gap: 10px; }
+.v250-cycle-card dt { color: #93c5fd; font-weight: 700; }
+.v250-cycle-card dd { margin: 2px 0 0; }
+
+.v250-bridge-table { display: grid; gap: 8px; margin-top: 16px; }
+.v250-bridge-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr 0.9fr 0.7fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.58);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+.v250-bridge-row.head { color: #93c5fd; font-weight: 800; background: rgba(59, 130, 246, 0.1); }
+.v250-bridge-row small { display: block; margin-top: 6px; color: #cbd5e1; line-height: 1.45; }
+.v250-bridge-row b { text-transform: capitalize; color: #fde68a; }
+
+.v250-panel .blocked { border-color: rgba(248, 113, 113, 0.45); }
+.v250-panel .evidence_required, .v250-panel .review_required { border-color: rgba(250, 204, 21, 0.42); }
+.v250-panel .ready, .v250-panel .monitoring { border-color: rgba(74, 222, 128, 0.28); }
+
+@media (max-width: 760px) {
+  .v250-bridge-row { grid-template-columns: 1fr; }
+  .v250-panel { padding: 18px; border-radius: 18px; }
+}

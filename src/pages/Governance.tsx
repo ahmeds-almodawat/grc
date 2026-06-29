@@ -17,6 +17,12 @@ import { TraceabilityGapPanel } from '../components/v180/TraceabilityGapPanel';
 import { FrameworkCrosswalkBackbonePanel } from '../components/v210/FrameworkCrosswalkBackbonePanel';
 import { ControlAssuranceReadinessPanel } from '../components/v220/ControlAssuranceReadinessPanel';
 
+import { AssuranceReadinessPanel } from '../components/v240/AssuranceReadinessPanel';
+import { SodImmutableAuditPanel } from '../components/v240/SodImmutableAuditPanel';
+import { AuditorEvidencePackPanel } from '../components/v240/AuditorEvidencePackPanel';
+import { LiveOperatingCyclePanel } from '../components/v250/LiveOperatingCyclePanel';
+import { DataBridgeGovernancePanel } from '../components/v250/DataBridgeGovernancePanel';
+import { AccessReviewOperatingPanel } from '../components/v250/AccessReviewOperatingPanel';
 export function Governance() {
   const [formOpen, setFormOpen] = useState(false);
   const decisions = useAsyncData(getGovernanceDecisions, []);
@@ -76,6 +82,18 @@ export function Governance() {
       <Modal open={formOpen} title="Create governance decision" onClose={() => setFormOpen(false)}>
         <DecisionForm organizationId={organizationId} departments={departments.data || []} profiles={profiles.data || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void decisions.refresh(); }} />
       </Modal>
-    </section>
+    
+      {/* v24.0 assurance, SoD, immutable audit and auditor evidence pack */}
+      <AssuranceReadinessPanel />
+      <SodImmutableAuditPanel />
+      <AuditorEvidencePackPanel />
+
+
+      {/* v25.0 live GRC operating workspace */}
+      <LiveOperatingCyclePanel />
+      <DataBridgeGovernancePanel />
+      <AccessReviewOperatingPanel />
+
+</section>
   );
 }

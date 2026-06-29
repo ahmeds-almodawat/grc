@@ -375,7 +375,19 @@
     "v220:control-testing-audit": "node scripts/v220-control-testing-static-audit.mjs",
     "v220:control-testing-report": "node scripts/v220-control-testing-report.mjs",
     "v220:final-proof": "node scripts/v220-final-proof.mjs",
-    "pilot:v220-control-testing": "npm run v220:control-testing-audit && npm run v220:control-testing-report && npm run v220:final-proof"
+    "pilot:v220-control-testing": "npm run v220:control-testing-audit && npm run v220:control-testing-report && npm run v220:final-proof",
+    "v230:compliance-hardening-audit": "node scripts/v230-compliance-hardening-static-audit.mjs",
+    "v230:compliance-hardening-report": "node scripts/v230-compliance-hardening-report.mjs",
+    "v230:final-proof": "node scripts/v230-final-proof.mjs",
+    "pilot:v230-compliance-hardening": "npm run v230:compliance-hardening-audit && npm run v230:compliance-hardening-report && npm run v230:final-proof",
+    "v240:assurance-audit": "node scripts/v240-assurance-sod-auditor-static-audit.mjs",
+    "v240:assurance-report": "node scripts/v240-assurance-sod-auditor-report.mjs",
+    "v240:final-proof": "node scripts/v240-final-proof.mjs",
+    "pilot:v240-assurance": "npm run v240:assurance-audit && npm run v240:assurance-report && npm run v240:final-proof",
+    "v250:live-operating-audit": "node scripts/v250-live-grc-operating-static-audit.mjs",
+    "v250:live-operating-report": "node scripts/v250-live-grc-operating-report.mjs",
+    "v250:final-proof": "node scripts/v250-final-proof.mjs",
+    "pilot:v250-live-operating": "npm run v250:live-operating-audit && npm run v250:live-operating-report && npm run v250:final-proof"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",
