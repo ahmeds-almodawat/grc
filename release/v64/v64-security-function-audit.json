@@ -1,7 +1,7 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T18:37:46.433Z",
-    "migration_files_scanned": 76,
+    "generated_at": "2026-06-29T18:55:00.618Z",
+    "migration_files_scanned": 77,
     "security_definer_functions_detected": 45,
     "global_security_definer_lockdown_detected": true,
     "findings_total": 0,

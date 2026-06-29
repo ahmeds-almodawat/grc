@@ -54,6 +54,7 @@ import { FinalRuntimeSecurityClosureCenter } from './pages/FinalRuntimeSecurityC
 import { AuditEvidenceGovernanceCenter } from './pages/AuditEvidenceGovernanceCenter';
 import { AssuranceGoLiveCenter } from './pages/AssuranceGoLiveCenter';
 import { RealDataUatReadinessCenter } from './pages/RealDataUatReadinessCenter';
+import { RealDataActivationCenter } from './pages/RealDataActivationCenter';
 import { ProductionHardeningLaunchCenter } from './pages/ProductionHardeningLaunchCenter';
 import { Dashboard } from './pages/Dashboard';
 import { Analytics } from './pages/Analytics';
@@ -265,6 +266,7 @@ function AdminReleaseHub({ setPage }: { setPage: (page: PageKey) => void }) {
         { id: 'auditEvidenceGovernance', label: t('hub.tab.auditEvidenceGovernance', 'Audit & Evidence Integrity'), description: t('hub.tab.auditEvidenceGovernance.desc', 'Audit workbench, evidence integrity, and production governance gates.'), icon: <FileCheck2 size={17} />, content: <AuditEvidenceGovernanceCenter /> },
         { id: 'assuranceGoLive', label: t('hub.tab.assuranceGoLive', 'Assurance Go-Live Pack'), description: t('hub.tab.assuranceGoLive.desc', 'External auditor portal, signoffs, rollback, monitoring, training, and production decisions.'), icon: <PackageCheck size={17} />, content: <AssuranceGoLiveCenter /> },
         { id: 'realDataUatReadiness', label: t('hub.tab.realDataUatReadiness', 'Real Data & UAT'), description: t('hub.tab.realDataUatReadiness.desc', 'Licensed content loading, import validation, mappings, UAT cycles, training, signoffs, and go/no-go readiness.'), icon: <ClipboardCheck size={17} />, content: <RealDataUatReadinessCenter /> },
+        { id: 'realDataActivation', label: t('hub.tab.realDataActivation', 'Real Data Activation'), description: t('hub.tab.realDataActivation.desc', 'Controlled activation of licensed metadata, master data, mappings, validations, load approvals, reconciliation, and cutover readiness.'), icon: <UploadCloud size={17} />, content: <RealDataActivationCenter /> },
         { id: 'finalRuntimeSecurityClosure', label: t('hub.tab.finalRuntimeSecurityClosure', 'Final Runtime Security Closure'), description: t('hub.tab.finalRuntimeSecurityClosure.desc', 'Close Supabase client warnings, v65 audit warning, RPC classifications, runtime-security exceptions, and final proof evidence.'), icon: <LockKeyhole size={17} />, content: <FinalRuntimeSecurityClosureCenter /> },
         { id: 'productionHardeningLaunch', label: t('hub.tab.productionHardeningLaunch', 'Production Hardening Launch'), description: t('hub.tab.productionHardeningLaunch.desc', 'Warning cleanup, staging persona SQL, restore proof, change freeze, board go/no-go, launch signoffs, and monitoring.'), icon: <PackageCheck size={17} />, content: <ProductionHardeningLaunchCenter /> },
         { id: 'releaseFactory', label: t('hub.tab.releaseFactory'), description: t('hub.tab.releaseFactory.desc'), icon: <PackageCheck size={17} />, content: <ReleaseFactoryCenter /> },

@@ -1,16 +1,15 @@
 {
-  "generated_at": "2026-06-29T18:38:22.521Z",
+  "generated_at": "2026-06-29T18:55:40.350Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 76,
-    "latest_migration": "076_patch15_final_warning_runtime_security_closure.sql",
+    "migration_count": 77,
+    "latest_migration": "077_patch16_real_data_activation_pack.sql",
     "prefix_gaps": [
       16,
-      77,
       78,
       79,
       80,

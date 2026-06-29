@@ -206,3 +206,6 @@ Patch 6 adds the daily operating layer for accreditation and quality work: licen
 ## Patch 7-8 Professional Workbenches and Assurance Go-Live Pack
 
 Patch 7 turns audit, risk, compliance, issue, management-response, and CAPA records into operating workbenches. Patch 8 adds go-live assurance controls including external auditor packages, read-only sessions, retention/confidentiality, training, SOPs, board/committee packs, signoffs, rollback/restore exercises, monitoring checks, controlled pilot signoff, and production decisions. Passing proof commands still does not equal production approval; real evidence and executive/IT/Quality signoffs remain required.
+
+## Patch 16 - Real Data Activation Pack
+Adds controlled real-data activation governance for licensed standards metadata, hospital master data, dataset mapping, validation, approval, reconciliation, cutover readiness, and signoffs. No demo data or copyrighted standards text is seeded.

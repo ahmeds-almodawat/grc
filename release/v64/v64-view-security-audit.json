@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T18:37:47.235Z",
-    "migration_files_scanned": 76,
-    "views_detected": 217,
+    "generated_at": "2026-06-29T18:55:01.512Z",
+    "migration_files_scanned": 77,
+    "views_detected": 221,
     "findings_total": 105,
     "critical": 0,
     "high": 0,
@@ -973,9 +973,34 @@
       "sensitive": true
     },
     {
+      "view": "v_real_data_activation_queue",
+      "files": [
+        "supabase/migrations/077_patch16_real_data_activation_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
       "view": "v_real_data_activation_summary",
       "files": [
-        "supabase/migrations/071_patch10_real_data_activation_uat_readiness.sql"
+        "supabase/migrations/071_patch10_real_data_activation_uat_readiness.sql",
+        "supabase/migrations/077_patch16_real_data_activation_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_data_approval_queue",
+      "files": [
+        "supabase/migrations/077_patch16_real_data_activation_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_real_data_cutover_readiness",
+      "files": [
+        "supabase/migrations/077_patch16_real_data_activation_pack.sql"
       ],
       "has_security_invoker": true,
       "sensitive": false
@@ -984,6 +1009,14 @@
       "view": "v_real_data_import_quality_queue",
       "files": [
         "supabase/migrations/071_patch10_real_data_activation_uat_readiness.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_data_validation_queue",
+      "files": [
+        "supabase/migrations/077_patch16_real_data_activation_pack.sql"
       ],
       "has_security_invoker": true,
       "sensitive": false
@@ -3680,6 +3713,41 @@
     {
       "view": "v_patch15_rpc_review_queue",
       "file": "supabase/migrations/076_patch15_final_warning_runtime_security_closure.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_data_activation_summary",
+      "file": "supabase/migrations/077_patch16_real_data_activation_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_data_activation_queue",
+      "file": "supabase/migrations/077_patch16_real_data_activation_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_data_validation_queue",
+      "file": "supabase/migrations/077_patch16_real_data_activation_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_data_approval_queue",
+      "file": "supabase/migrations/077_patch16_real_data_activation_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_real_data_cutover_readiness",
+      "file": "supabase/migrations/077_patch16_real_data_activation_pack.sql",
       "occurrence": "create_view",
       "has_security_invoker": true,
       "sensitive": false
