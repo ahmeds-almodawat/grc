@@ -444,4 +444,3 @@ export default function App() {
 
   return <Layout page={page} setPage={setPage}>{content}</Layout>;
 }
-
