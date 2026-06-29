@@ -1,33 +1,33 @@
-# Patch 3 Codex Fix Commands
+# Patch 4 Codex Fix Commands
 
-Use Codex only for fixing after applying Patch 3.
+Use Codex only for fixes caused by Patch 4.
 
 ## TypeScript errors
 
 ```powershell
-codex exec "Fix TypeScript errors caused by Patch 3 only. Keep the live GRC operating core migration, liveGrcOperatingApi, LiveGrcOperatingCore page, and GRC hub Operating Core tab. Do not remove Patch 2 accreditation files. Do not add mock/demo data. Run npm run typecheck after fixing."
+codex exec "Fix TypeScript errors caused by Patch 4 only. Keep the audit/evidence governance migration, auditEvidenceGovernanceApi, AuditEvidenceGovernanceCenter page, and Admin hub tab integration. Do not remove Patch 1, Patch 2, or Patch 3 files. Do not add mock/demo data. Run npm run typecheck after fixing."
 ```
 
 ## Build errors
 
 ```powershell
-codex exec "Fix build errors caused by Patch 3 only. Preserve the Patch 3 workflow model and do not weaken CI or proof gates. Run npm run build after fixing."
+codex exec "Fix build errors caused by Patch 4 only. Keep the AuditEvidenceGovernanceCenter page and App.tsx integration. Do not weaken CI, proof, audit, or RLS expectations. Run npm run build after fixing."
 ```
 
-## Migration errors
+## Supabase migration errors
 
 ```powershell
-codex exec "Fix Supabase migration errors in supabase/migrations/064_patch3_live_grc_operating_core.sql only. Keep organization-scoped RLS, security_invoker views, and the closure packet rule requiring requirement, risk, control, test, evidence review, and approval before closure. Do not reference tables that may not exist outside this migration."
+codex exec "Fix SQL migration errors caused by supabase/migrations/065_patch4_audit_evidence_production_governance.sql only. Preserve audit universe, annual plan, engagement, workpaper, findings, evidence versioning, immutable audit event hash chain, external auditor sessions, and production governance gates. Do not remove RLS. Run supabase db reset or provide the corrected SQL if the local Supabase CLI is unavailable."
 ```
 
-## App integration errors
+## App integration missing
 
 ```powershell
-codex exec "Fix App.tsx integration caused by Patch 3 only. Ensure AccreditationCenter is available in the Quality/Safety hub if Patch 2 installed it, and ensure LiveGrcOperatingCore appears in the GRC hub as an Operating Core tab. Do not redesign navigation. Run npm run typecheck after fixing."
+codex exec "Integrate Patch 4 UI into src/App.tsx only. Import AuditEvidenceGovernanceCenter and add an AdminReleaseHub tab named Audit & Evidence Integrity. Do not add a new route unless needed. Run npm run typecheck after fixing."
 ```
 
-## Full Patch 3 cleanup
+## Tests failing
 
 ```powershell
-codex exec "Review Patch 3 changes only. Ensure no fake production-ready claim is added, no mock/demo organization fallback is introduced, the new live GRC operating page uses LiveResult states, and README does not contain the old 16 passed / 1 failed proof expectation. Run npm run typecheck and npm run build."
+codex exec "Fix tests failing because of Patch 4. Update tests only if they depended on the absence of the new audit/evidence governance tab. Do not bypass or skip tests. Run npm run test:unit and npm run test:e2e after fixing."
 ```

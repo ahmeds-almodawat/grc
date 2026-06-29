@@ -1,4 +1,4 @@
-# GRC Control Center
+﻿# GRC Control Center
 
 GRC Control Center is a bilingual Arabic/English, RTL-ready governance, risk, compliance, audit, OVR, projects/tasks, evidence, approvals, reporting, and controlled-pilot readiness platform for a hospital/company environment.
 
@@ -64,7 +64,7 @@ Recommended controlled pilot scope:
 
 ```text
 Controlled internal pilot for GRC Control Center using synthetic/non-confidential data only.
-Pilot limited to 5–15 internal users.
+Pilot limited to 5â€“15 internal users.
 No real patient identifiers.
 No confidential OVR details.
 No production rollout.
@@ -179,10 +179,10 @@ proof:all = fully passed
 
 ## Documentation
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — technical architecture, security model, evidence flow, and pilot boundaries.
-- [`docs/RELEASE_POLICY.md`](docs/RELEASE_POLICY.md) — internal evidence versions, semantic versioning plan, and release gates.
-- [`docs/V73_MODULE_ACCEPTANCE_EVIDENCE_PACK.md`](docs/V73_MODULE_ACCEPTANCE_EVIDENCE_PACK.md) — v7.3 acceptance evidence pack notes.
-- [`docs/V74_REPO_HARDENING.md`](docs/V74_REPO_HARDENING.md) — v7.4 repo hardening summary.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) â€” technical architecture, security model, evidence flow, and pilot boundaries.
+- [`docs/RELEASE_POLICY.md`](docs/RELEASE_POLICY.md) â€” internal evidence versions, semantic versioning plan, and release gates.
+- [`docs/V73_MODULE_ACCEPTANCE_EVIDENCE_PACK.md`](docs/V73_MODULE_ACCEPTANCE_EVIDENCE_PACK.md) â€” v7.3 acceptance evidence pack notes.
+- [`docs/V74_REPO_HARDENING.md`](docs/V74_REPO_HARDENING.md) â€” v7.4 repo hardening summary.
 
 ## Production readiness statement
 
@@ -194,3 +194,7 @@ The platform should not be considered production ready until all of the followin
 4. CI/CD is passing on GitHub.
 5. Deployment process and rollback process are documented and tested.
 6. Controlled pilot results are reviewed by Management/Admin, IT, and Quality.
+
+## Patch 4 governance note
+
+Audit, evidence integrity, external auditor access, and production governance gates are now treated as live operating controls. Technical proof, generated evidence packs, or passing CI do not equal production approval. Production readiness remains blocked until real management, IT, Quality, confidentiality, live bridge, access review, restore/rollback, RLS persona, and controlled pilot signoff evidence are approved.

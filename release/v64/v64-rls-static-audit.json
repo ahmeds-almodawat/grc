@@ -1,10 +1,10 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T12:27:44.028Z",
-    "migration_files_scanned": 64,
-    "created_tables_detected": 282,
-    "tables_with_explicit_rls": 222,
-    "tables_with_detected_policies": 192,
+    "generated_at": "2026-06-29T13:00:42.540Z",
+    "migration_files_scanned": 65,
+    "created_tables_detected": 301,
+    "tables_with_explicit_rls": 241,
+    "tables_with_detected_policies": 209,
     "findings_total": 60,
     "critical": 0,
     "high": 0,
@@ -498,6 +498,7 @@
     "supabase/migrations/061_v240_assurance_sod_immutable_auditor_pack.sql",
     "supabase/migrations/062_v250_live_grc_operating_workspace.sql",
     "supabase/migrations/063_patch2_accreditation_standards_engine.sql",
-    "supabase/migrations/064_patch3_live_grc_operating_core.sql"
+    "supabase/migrations/064_patch3_live_grc_operating_core.sql",
+    "supabase/migrations/065_patch4_audit_evidence_production_governance.sql"
   ]
 }

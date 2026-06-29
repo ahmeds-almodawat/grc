@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T12:27:45.925Z",
-    "migration_files_scanned": 64,
-    "views_detected": 168,
+    "generated_at": "2026-06-29T13:00:44.152Z",
+    "migration_files_scanned": 65,
+    "views_detected": 172,
     "findings_total": 105,
     "critical": 0,
     "high": 0,
@@ -664,6 +664,38 @@
       ],
       "has_security_invoker": true,
       "sensitive": true
+    },
+    {
+      "view": "v_patch4_audit_engagement_dashboard",
+      "files": [
+        "supabase/migrations/065_patch4_audit_evidence_production_governance.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch4_audit_evidence_governance_summary",
+      "files": [
+        "supabase/migrations/065_patch4_audit_evidence_production_governance.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch4_evidence_integrity_index",
+      "files": [
+        "supabase/migrations/065_patch4_audit_evidence_production_governance.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch4_production_governance_gate_dashboard",
+      "files": [
+        "supabase/migrations/065_patch4_audit_evidence_production_governance.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
     },
     {
       "view": "v_pending_approvals_expanded",
@@ -2945,6 +2977,34 @@
     {
       "view": "v_live_grc_obligation_dashboard",
       "file": "supabase/migrations/064_patch3_live_grc_operating_core.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch4_audit_evidence_governance_summary",
+      "file": "supabase/migrations/065_patch4_audit_evidence_production_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch4_audit_engagement_dashboard",
+      "file": "supabase/migrations/065_patch4_audit_evidence_production_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch4_evidence_integrity_index",
+      "file": "supabase/migrations/065_patch4_audit_evidence_production_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch4_production_governance_gate_dashboard",
+      "file": "supabase/migrations/065_patch4_audit_evidence_production_governance.sql",
       "occurrence": "create_view",
       "has_security_invoker": true,
       "sensitive": false
