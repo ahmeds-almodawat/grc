@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T13:40:47.421Z",
-    "migration_files_scanned": 65,
-    "views_detected": 172,
+    "generated_at": "2026-06-29T16:55:15.903Z",
+    "migration_files_scanned": 67,
+    "views_detected": 182,
     "findings_total": 105,
     "critical": 0,
     "high": 0,
@@ -764,6 +764,46 @@
       "sensitive": false
     },
     {
+      "view": "v_quality_accreditation_operating_summary",
+      "files": [
+        "supabase/migrations/067_patch6_accreditation_quality_operating_layer.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_quality_accreditation_requirement_dashboard",
+      "files": [
+        "supabase/migrations/067_patch6_accreditation_quality_operating_layer.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_quality_indicator_dashboard",
+      "files": [
+        "supabase/migrations/067_patch6_accreditation_quality_operating_layer.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_quality_rca_capa_dashboard",
+      "files": [
+        "supabase/migrations/067_patch6_accreditation_quality_operating_layer.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_quality_tracer_round_dashboard",
+      "files": [
+        "supabase/migrations/067_patch6_accreditation_quality_operating_layer.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
       "view": "v_radar_control_profile",
       "files": [
         "supabase/migrations/013_kpi_analytics_heatmap_radar.sql",
@@ -1317,6 +1357,46 @@
         "supabase/migrations/015_production_hardening_health_print_controls.sql"
       ],
       "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_workflow_kernel_activity_log",
+      "files": [
+        "supabase/migrations/066_patch5_workflow_kernel.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_workflow_kernel_module_coverage",
+      "files": [
+        "supabase/migrations/066_patch5_workflow_kernel.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_workflow_kernel_queue",
+      "files": [
+        "supabase/migrations/066_patch5_workflow_kernel.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_workflow_kernel_sla_dashboard",
+      "files": [
+        "supabase/migrations/066_patch5_workflow_kernel.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_workflow_kernel_summary",
+      "files": [
+        "supabase/migrations/066_patch5_workflow_kernel.sql"
+      ],
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -3005,6 +3085,76 @@
     {
       "view": "v_patch4_production_governance_gate_dashboard",
       "file": "supabase/migrations/065_patch4_audit_evidence_production_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_workflow_kernel_summary",
+      "file": "supabase/migrations/066_patch5_workflow_kernel.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_workflow_kernel_queue",
+      "file": "supabase/migrations/066_patch5_workflow_kernel.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_workflow_kernel_sla_dashboard",
+      "file": "supabase/migrations/066_patch5_workflow_kernel.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_workflow_kernel_module_coverage",
+      "file": "supabase/migrations/066_patch5_workflow_kernel.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_workflow_kernel_activity_log",
+      "file": "supabase/migrations/066_patch5_workflow_kernel.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_quality_accreditation_operating_summary",
+      "file": "supabase/migrations/067_patch6_accreditation_quality_operating_layer.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_quality_accreditation_requirement_dashboard",
+      "file": "supabase/migrations/067_patch6_accreditation_quality_operating_layer.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_quality_indicator_dashboard",
+      "file": "supabase/migrations/067_patch6_accreditation_quality_operating_layer.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_quality_tracer_round_dashboard",
+      "file": "supabase/migrations/067_patch6_accreditation_quality_operating_layer.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_quality_rca_capa_dashboard",
+      "file": "supabase/migrations/067_patch6_accreditation_quality_operating_layer.sql",
       "occurrence": "create_view",
       "has_security_invoker": true,
       "sensitive": false

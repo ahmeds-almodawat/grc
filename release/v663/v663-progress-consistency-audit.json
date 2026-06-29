@@ -1,16 +1,15 @@
 {
-  "generated_at": "2026-06-29T14:15:40.373Z",
+  "generated_at": "2026-06-29T16:55:52.558Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 66,
-    "latest_migration": "066_patch5_workflow_kernel.sql",
+    "migration_count": 67,
+    "latest_migration": "067_patch6_accreditation_quality_operating_layer.sql",
     "prefix_gaps": [
       16,
-      67,
       68,
       69,
       70,

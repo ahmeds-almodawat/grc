@@ -198,3 +198,7 @@ The platform should not be considered production ready until all of the followin
 ## Patch 4 governance note
 
 Audit, evidence integrity, external auditor access, and production governance gates are now treated as live operating controls. Technical proof, generated evidence packs, or passing CI do not equal production approval. Production readiness remains blocked until real management, IT, Quality, confidentiality, live bridge, access review, restore/rollback, RLS persona, and controlled pilot signoff evidence are approved.
+
+## Patch 6 - Accreditation & Quality Operating Layer
+
+Patch 6 adds the daily operating layer for accreditation and quality work: licensed standards import governance, requirement ownership, measurable element scoring, tracer rounds, quality indicators, OVR/RCA/CAPA linkage, committee decisions, and survey evidence packs. It does not embed copyrighted CBAHI/JCI standard text. It also adds explicit Patch 5 workflow-kernel policies so static RLS proof can read the same org-scoped controls that runtime already enforces.

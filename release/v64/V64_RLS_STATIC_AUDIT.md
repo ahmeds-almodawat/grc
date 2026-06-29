@@ -2,16 +2,16 @@
 
 ```json
 {
-  "generated_at": "2026-06-29T14:15:05.539Z",
-  "migration_files_scanned": 66,
-  "created_tables_detected": 312,
-  "tables_with_explicit_rls": 252,
-  "tables_with_detected_policies": 209,
-  "findings_total": 61,
+  "generated_at": "2026-06-29T16:57:15.179Z",
+  "migration_files_scanned": 67,
+  "created_tables_detected": 322,
+  "tables_with_explicit_rls": 262,
+  "tables_with_detected_policies": 230,
+  "findings_total": 60,
   "critical": 0,
-  "high": 1,
+  "high": 0,
   "medium": 60,
-  "strict_passed": false,
+  "strict_passed": true,
   "note": "Static audit only. Final proof requires applying migrations to staging and running supabase/tests/v64_persona_security_tests.sql."
 }
 ```
@@ -78,4 +78,3 @@
 - **medium** RLS_NOT_ENABLED on `v50_query_optimization_items` (supabase/migrations/035_v50_scale_backup_restore.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
 - **medium** RLS_NOT_ENABLED on `v50_scale_test_plans` (supabase/migrations/035_v50_scale_backup_restore.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
 - **medium** RLS_NOT_ENABLED on `v50_scale_test_results` (supabase/migrations/035_v50_scale_backup_restore.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
-- **high** RLS_NO_POLICY_FOUND on `workflow_kernel_notifications` (supabase/migrations/066_patch5_workflow_kernel.sql) — Sensitive table has RLS enabled but no CREATE POLICY was detected in migrations.

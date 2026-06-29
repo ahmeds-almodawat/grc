@@ -61,6 +61,7 @@ import { Audit } from './pages/Audit';
 import { OVR } from './pages/OVR';
 import { OvrRiskIndicators } from './pages/OvrRiskIndicators';
 import { AccreditationCenter } from './pages/AccreditationCenter';
+import { QualityAccreditationOperatingCenter } from './pages/QualityAccreditationOperatingCenter';
 import { LiveGrcOperatingCore } from './pages/LiveGrcOperatingCore';
 import { WorkflowKernelCenter } from './pages/WorkflowKernelCenter';
 import { Governance } from './pages/Governance';
@@ -188,6 +189,7 @@ function QualitySafetyHub() {
         { id: 'ovr', label: t('hub.tab.ovr'), description: t('hub.tab.ovr.desc'), icon: <Hospital size={17} />, content: <OVR /> },
         { id: 'ovrRisk', label: t('hub.tab.ovrRisk'), description: t('hub.tab.ovrRisk.desc'), icon: <Activity size={17} />, content: <OvrRiskIndicators /> },
         { id: 'accreditation', label: t('hub.tab.accreditation', 'Accreditation'), description: t('hub.tab.accreditation.desc', 'CBAHI and international accreditation readiness engine.'), icon: <ClipboardCheck size={17} />, content: <AccreditationCenter /> },
+        { id: 'qualityAccreditationOperating', label: t('hub.tab.qualityAccreditationOperating', 'Quality Operating Layer'), description: t('hub.tab.qualityAccreditationOperating.desc', 'Tracer rounds, indicators, RCA/CAPA, evidence packs, and requirement readiness work.'), icon: <ClipboardCheck size={17} />, content: <QualityAccreditationOperatingCenter /> },
         { id: 'evidenceVault', label: t('hub.tab.evidenceVault'), description: t('hub.tab.evidenceVault.desc'), icon: <FileStack size={17} />, content: <EvidenceVault /> },
         { id: 'relationships', label: t('hub.tab.relationships'), description: t('hub.tab.relationships.desc'), icon: <Network size={17} />, content: <RelationshipMap /> },
       ]}
@@ -446,4 +448,5 @@ export default function App() {
 
   return <Layout page={page} setPage={setPage}>{content}</Layout>;
 }
+
 

@@ -2,15 +2,13 @@
 
 ```json
 {
-  "generated_at": "2026-06-29T14:15:40.408Z",
+  "generated_at": "2026-06-29T16:55:52.598Z",
   "mode": "all",
-  "status": "failed_review_required",
-  "passed_count": 16,
-  "failed_count": 1,
+  "status": "passed",
+  "passed_count": 17,
+  "failed_count": 0,
   "skipped_count": 0,
-  "failed_commands": [
-    "v64:strict-all"
-  ],
+  "failed_commands": [],
   "skipped_commands": [],
   "note": "This consolidated suite archives version-specific proof commands behind proof:* entry points. Skipped commands mean the current branch does not contain that legacy script.",
   "results": [
@@ -35,8 +33,8 @@
     {
       "group": "technical",
       "script": "v64:strict-all",
-      "status": "failed",
-      "exit_code": 1
+      "status": "passed",
+      "exit_code": 0
     },
     {
       "group": "technical",
