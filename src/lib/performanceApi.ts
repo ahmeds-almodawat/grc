@@ -74,7 +74,7 @@ export async function getUiPerformanceSummary(): Promise<UiPerformanceSummary> {
 }
 
 export async function getMobileReadinessGates(): Promise<MobileReadinessGate[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('v_mobile_readiness_gates')
@@ -84,12 +84,12 @@ export async function getMobileReadinessGates(): Promise<MobileReadinessGate[]> 
     return data?.length ? data : liveEmptyGates;
   } catch (error) {
     logFallback('getMobileReadinessGates', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getModulePressureRows(): Promise<ModulePressureRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('v_module_payload_pressure')
@@ -99,7 +99,7 @@ export async function getModulePressureRows(): Promise<ModulePressureRow[]> {
     return data?.length ? data : liveEmptyPressure;
   } catch (error) {
     logFallback('getModulePressureRows', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 

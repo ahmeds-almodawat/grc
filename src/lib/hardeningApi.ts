@@ -146,8 +146,16 @@ export async function fetchReportRows(sourceView: string, limit = 500): Promise<
 }
 
 export async function createHealthSnapshot(organizationId: string, createdBy?: string | null): Promise<string | null> {
-  if (!supabase || organizationId === 'demo') return null;
+  if (!supabase) {
+    throw new Error('System health snapshot requires a live Supabase connection.');
+  }
+
+  if (!organizationId || organizationId.trim().length === 0) {
+    throw new Error('System health snapshot requires a valid organization id.');
+  }
+
   void createdBy;
+
   return requireServerBridge(
     'System health snapshot creation',
     'create_system_health_snapshot',
@@ -164,7 +172,13 @@ export async function logExport(params: {
   status?: string;
   filters?: Record<string, unknown>;
 }) {
-  if (!supabase || !params.organizationId || params.organizationId === 'demo') return;
+  if (!supabase) {
+    throw new Error('Export logging requires a live Supabase connection.');
+  }
+
+  if (!params.organizationId || params.organizationId.trim().length === 0) {
+    throw new Error('Export logging requires a valid organization id.');
+  }
   const { error } = await supabase.from('export_logs').insert({
     organization_id: params.organizationId,
     export_type: params.exportType,

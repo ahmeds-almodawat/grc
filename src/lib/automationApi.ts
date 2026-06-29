@@ -208,15 +208,9 @@ export async function getExecutiveExceptions() {
 
 export async function refreshAutomationIntelligence() {
   if (!supabase) {
-    return {
-      organization_id: 'demo-org',
-      due_reviews: liveEmptyReviews.length,
-      kri_breaches_30_days: liveEmptyKriBreaches.length,
-      committee_overdue: liveEmptyCommittee.filter(row => row.automationSignal === 'overdue').length,
-      rules_touched: liveEmptyRules.length,
-      refreshed_at: new Date().toISOString()
-    };
+    throw new Error('Automation intelligence refresh requires a live Supabase connection.');
   }
+
   return requireServerBridge(
     'Automation intelligence refresh',
     'refresh_automation_intelligence',

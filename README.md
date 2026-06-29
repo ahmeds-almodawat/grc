@@ -13,26 +13,28 @@ The project is **not production ready yet**.
 Latest verified evidence state:
 
 ```text
-Technical controlled-pilot readiness: strong / passed
-Module acceptance evidence: passed with warnings
-Runtime security bridge: passed
-Authenticated persona proof: passed
-Restore dry-run: passed
-SQL evidence capture: passed
+Technical controlled-pilot readiness: passed
+Typecheck: passed
+Build: passed
+Unit tests: passed
+E2E tests: passed
+npm audit: 0 high/critical vulnerabilities expected
+Full proof suite: passed
 Human approval: pending
 Production readiness: not yet
 ```
 
-Current expected `proof:all` state before real human approval:
+Passing technical proof does **not** equal production approval.
 
-```text
-16 passed / 1 failed
-only failed command: v66:strict-proof
-reason: real Management/Admin, IT, Quality signoff and OVR confidentiality confirmation are still missing
-```
+The platform must not be considered production ready until:
 
-Do not bypass this failure. It is an intentional release gate.
-
+1. Real Management/Admin, IT, and Quality approvals are completed.
+2. OVR confidentiality confirmation is completed.
+3. Live/staging Supabase RLS and persona tests are executed against a real environment.
+4. Live bridge and access review evidence are approved.
+5. CI/CD is passing on GitHub.
+6. Backup restore dry-run and rollback procedures are tested.
+7. Controlled pilot results are reviewed and signed off.
 ## Main modules
 
 - Governance and controlled release gates

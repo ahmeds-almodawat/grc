@@ -106,11 +106,11 @@ export async function getUltraReleaseSummary(): Promise<UltraReleaseSummary> {
 }
 
 export async function getProductionChecklist(): Promise<ProductionChecklistItem[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase.from('v_production_cutover_checklist').select('*').order('sort_order');
     if (error) throw error;
-    if (!data?.length) return [];
+    if (!data?.length) return emptyLiveArray<any>();
     return (data as any[]).map(row => ({
       id: row.id,
       phase: row.phase,
@@ -123,16 +123,16 @@ export async function getProductionChecklist(): Promise<ProductionChecklistItem[
     }));
   } catch (error) {
     warnFallback('production checklist', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getMigrationVerification(): Promise<MigrationVerificationItem[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase.from('v_migration_verification_matrix').select('*').order('sequence_no');
     if (error) throw error;
-    if (!data?.length) return [];
+    if (!data?.length) return emptyLiveArray<any>();
     return (data as any[]).map(row => ({
       sequenceNo: row.sequence_no,
       migrationFile: row.migration_file,
@@ -144,16 +144,16 @@ export async function getMigrationVerification(): Promise<MigrationVerificationI
     }));
   } catch (error) {
     warnFallback('migration verification', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getRestoreDryRuns(): Promise<RestoreDryRunItem[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase.from('v_backup_restore_drillboard').select('*').order('started_at', { ascending: false, nullsFirst: false }).limit(100);
     if (error) throw error;
-    if (!data?.length) return [];
+    if (!data?.length) return emptyLiveArray<any>();
     return (data as any[]).map(row => ({
       id: row.id,
       backupPackageId: row.backup_package_id || '—',
@@ -166,16 +166,16 @@ export async function getRestoreDryRuns(): Promise<RestoreDryRunItem[]> {
     }));
   } catch (error) {
     warnFallback('restore dry-runs', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getAdminSafetyFindings(): Promise<AdminSafetyFinding[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase.from('v_admin_safety_console').select('*').order('severity_rank');
     if (error) throw error;
-    if (!data?.length) return [];
+    if (!data?.length) return emptyLiveArray<any>();
     return (data as any[]).map(row => ({
       id: row.id,
       area: row.area,
@@ -187,16 +187,16 @@ export async function getAdminSafetyFindings(): Promise<AdminSafetyFinding[]> {
     }));
   } catch (error) {
     warnFallback('admin safety findings', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getTranslationDictionary(): Promise<TranslationDictionaryRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase.from('v_bilingual_dictionary_status').select('*').order('category').order('key');
     if (error) throw error;
-    if (!data?.length) return [];
+    if (!data?.length) return emptyLiveArray<any>();
     return (data as any[]).map(row => ({
       key: row.key,
       englishLabel: row.english_label || '',
@@ -207,7 +207,7 @@ export async function getTranslationDictionary(): Promise<TranslationDictionaryR
     }));
   } catch (error) {
     warnFallback('translation dictionary', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 

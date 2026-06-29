@@ -32,15 +32,25 @@ export function emptyResult<T>(message = 'No live data available.', source: Live
   return { status: 'empty', data: null, source, isLive: false, generatedAt: now(), message };
 }
 
-export function unauthorizedResult<T>(message = 'You are not authorized to view this data.', source: LiveResultSource = 'supabase'): LiveResult<T> {
+export function unauthorizedResult<T>(
+  message = 'You are not authorized to view this data.',
+  source: LiveResultSource = 'supabase',
+): LiveResult<T> {
   return { status: 'unauthorized', data: null, source, isLive: false, generatedAt: now(), message, errorCode: 'UNAUTHORIZED' };
 }
 
-export function configurationErrorResult<T>(message = 'Live data source is not configured.', source: LiveResultSource = 'supabase'): LiveResult<T> {
+export function configurationErrorResult<T>(
+  message = 'Live data source is not configured.',
+  source: LiveResultSource = 'supabase',
+): LiveResult<T> {
   return { status: 'configuration_error', data: null, source, isLive: false, generatedAt: now(), message, errorCode: 'CONFIGURATION_ERROR' };
 }
 
-export function queryErrorResult<T>(error: unknown, message = 'Live data query failed.', source: LiveResultSource = 'supabase'): LiveResult<T> {
+export function queryErrorResult<T>(
+  error: unknown,
+  message = 'Live data query failed.',
+  source: LiveResultSource = 'supabase',
+): LiveResult<T> {
   return { status: 'query_error', data: null, source, isLive: false, generatedAt: now(), message, errorCode: 'QUERY_ERROR', error };
 }
 
@@ -61,4 +71,25 @@ export function getLiveResultMessage<T>(result: LiveResult<T>, arabic = false): 
     if (result.status === 'query_error') return 'تعذر تحميل البيانات الفعلية.';
   }
   return result.message;
+}
+
+export function liveSuccess<T>(data: T, source: LiveResultSource = 'supabase', message?: string): LiveResult<T> {
+  return liveResult(data, source, message);
+}
+
+export function liveEmpty<T>(message?: string, source: LiveResultSource = 'supabase'): LiveResult<T> {
+  return emptyResult<T>(message, source);
+}
+
+export function liveError<T>(err: unknown, source: LiveResultSource = 'supabase'): LiveResult<T> {
+  return queryErrorResult<T>(err, err instanceof Error ? err.message : String(err), source);
+}
+
+export function liveForbidden<T>(reason: string, source: LiveResultSource = 'supabase'): LiveResult<T> {
+  return unauthorizedResult<T>(reason, source);
+}
+
+export function assertLiveSuccess<T>(result: LiveResult<T>): T {
+  if (result.status === 'live') return result.data;
+  throw new Error(getLiveResultMessage(result));
 }

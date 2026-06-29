@@ -110,7 +110,7 @@ export async function getOperationalSummary(): Promise<OperationalSummary> {
 }
 
 export async function getReminderQueue(): Promise<ReminderQueueItem[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('v_due_reminder_queue')
@@ -121,12 +121,12 @@ export async function getReminderQueue(): Promise<ReminderQueueItem[]> {
     return (data as ReminderQueueItem[])?.length ? (data as ReminderQueueItem[]) : liveEmptyReminders;
   } catch (error) {
     logFallback('reminder queue', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getNotificationDigest(): Promise<NotificationDigestRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('v_notification_digest')
@@ -137,12 +137,12 @@ export async function getNotificationDigest(): Promise<NotificationDigestRow[]> 
     return (data as NotificationDigestRow[])?.length ? (data as NotificationDigestRow[]) : liveEmptyDigest;
   } catch (error) {
     logFallback('notification digest', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getActivityTimeline(): Promise<ActivityTimelineRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('v_activity_timeline')
@@ -153,12 +153,12 @@ export async function getActivityTimeline(): Promise<ActivityTimelineRow[]> {
     return (data as ActivityTimelineRow[])?.length ? (data as ActivityTimelineRow[]) : liveEmptyTimeline;
   } catch (error) {
     logFallback('activity timeline', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getManagerInbox(): Promise<ManagerInboxRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('v_manager_inbox')
@@ -169,7 +169,7 @@ export async function getManagerInbox(): Promise<ManagerInboxRow[]> {
     return (data as ManagerInboxRow[])?.length ? (data as ManagerInboxRow[]) : liveEmptyInbox;
   } catch (error) {
     logFallback('manager inbox', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 

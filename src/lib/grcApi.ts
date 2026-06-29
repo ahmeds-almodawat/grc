@@ -88,6 +88,14 @@ function logFallback(label: string, error: unknown) {
   console.warn(`[GRC live-data unavailable] ${label}`, error);
 }
 
+function unavailableLiveCount(): number | null {
+  return null;
+}
+
+function unavailableExportJob() {
+  return null;
+}
+
 function requireLiveSupabase() {
   if (!supabase) {
     throw new Error('Supabase is not configured. Add the local or staging credentials to .env before using this action.');
@@ -119,7 +127,7 @@ async function readExactCount(query: any, label: string): Promise<number | null>
     return typeof count === 'number' ? count : 0;
   } catch (error) {
     logFallback(`${label} count`, error);
-    return null;
+    return unavailableLiveCount();
   }
 }
 
@@ -130,7 +138,7 @@ async function readVisibleRowCount(query: any, label: string): Promise<number | 
     return Array.isArray(data) ? data.length : null;
   } catch (error) {
     logFallback(`${label} visible row count`, error);
-    return null;
+    return unavailableLiveCount();
   }
 }
 
@@ -229,7 +237,7 @@ export async function getExecutiveSummary(): Promise<ExecutiveSummary> {
 }
 
 export async function getCriticalAttentionItems(): Promise<CriticalAttentionItem[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -238,7 +246,7 @@ export async function getCriticalAttentionItems(): Promise<CriticalAttentionItem
       .order('sort_rank', { ascending: true })
       .limit(25);
     if (error) throw error;
-    if (!data || data.length === 0) return [];
+    if (!data || data.length === 0) return emptyLiveArray<any>();
 
     return (data as any[]).map(row => ({
       id: row.id,
@@ -253,12 +261,12 @@ export async function getCriticalAttentionItems(): Promise<CriticalAttentionItem
     }));
   } catch (error) {
     logFallback('critical attention items', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getProjects(): Promise<ProjectRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -270,7 +278,7 @@ export async function getProjects(): Promise<ProjectRow[]> {
     return (data as unknown as ProjectRow[])?.length ? (data as unknown as ProjectRow[]) : liveEmptyProjects;
   } catch (error) {
     logFallback('projects', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
@@ -311,7 +319,7 @@ export async function getProjectTasks(projectId: string): Promise<TaskRow[]> {
 }
 
 export async function getRisks(): Promise<RiskRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -323,12 +331,12 @@ export async function getRisks(): Promise<RiskRow[]> {
     return (data as unknown as RiskRow[])?.length ? (data as unknown as RiskRow[]) : liveEmptyRisks;
   } catch (error) {
     logFallback('risks', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getComplianceItems(): Promise<ComplianceRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -340,12 +348,12 @@ export async function getComplianceItems(): Promise<ComplianceRow[]> {
     return (data as unknown as ComplianceRow[])?.length ? (data as unknown as ComplianceRow[]) : liveEmptyCompliance;
   } catch (error) {
     logFallback('compliance items', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getAuditFindings(): Promise<AuditFindingRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -357,12 +365,12 @@ export async function getAuditFindings(): Promise<AuditFindingRow[]> {
     return (data as unknown as AuditFindingRow[])?.length ? (data as unknown as AuditFindingRow[]) : liveEmptyAuditFindings;
   } catch (error) {
     logFallback('audit findings', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getGovernanceDecisions(): Promise<GovernanceDecisionRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -374,12 +382,12 @@ export async function getGovernanceDecisions(): Promise<GovernanceDecisionRow[]>
     return (data as unknown as GovernanceDecisionRow[])?.length ? (data as unknown as GovernanceDecisionRow[]) : liveEmptyDecisions;
   } catch (error) {
     logFallback('governance decisions', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getMyWork(): Promise<MyWorkRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase.from('v_my_open_work_expanded').select('*').order('due_date', { ascending: true, nullsFirst: false }).limit(100);
@@ -387,12 +395,12 @@ export async function getMyWork(): Promise<MyWorkRow[]> {
     return (data as unknown as MyWorkRow[])?.length ? (data as unknown as MyWorkRow[]) : liveEmptyMyWork;
   } catch (error) {
     logFallback('my work', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getApprovals(): Promise<ApprovalRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase.from('v_pending_approvals_expanded').select('*').order('requested_at', { ascending: true }).limit(100);
@@ -400,12 +408,12 @@ export async function getApprovals(): Promise<ApprovalRow[]> {
     return (data as unknown as ApprovalRow[])?.length ? (data as unknown as ApprovalRow[]) : liveEmptyApprovals;
   } catch (error) {
     logFallback('approvals', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getEvidenceQueue(): Promise<EvidenceRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase.from('v_evidence_review_queue').select('*').order('created_at', { ascending: true }).limit(100);
@@ -413,13 +421,13 @@ export async function getEvidenceQueue(): Promise<EvidenceRow[]> {
     return (data as unknown as EvidenceRow[])?.length ? (data as unknown as EvidenceRow[]) : liveEmptyEvidence;
   } catch (error) {
     logFallback('evidence review queue', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 
 export async function getEscalations(): Promise<EscalationRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -432,12 +440,12 @@ export async function getEscalations(): Promise<EscalationRow[]> {
     return (data as unknown as EscalationRow[])?.length ? (data as unknown as EscalationRow[]) : liveEmptyEscalations;
   } catch (error) {
     logFallback('escalation center', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getDelayReasonQueue(): Promise<DelayReasonQueueRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -449,7 +457,7 @@ export async function getDelayReasonQueue(): Promise<DelayReasonQueueRow[]> {
     return (data as unknown as DelayReasonQueueRow[]) || [];
   } catch (error) {
     logFallback('delay reason queue', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
@@ -489,7 +497,7 @@ export async function resolveEscalation(eventId: string, note?: string) {
 }
 
 export async function getOrganizations(): Promise<OrganizationOption[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase.from('organizations').select('id,name_en,name_ar').eq('is_active', true).limit(20);
@@ -497,12 +505,12 @@ export async function getOrganizations(): Promise<OrganizationOption[]> {
     return data?.length ? (data as OrganizationOption[]) : [];
   } catch (error) {
     logFallback('organizations', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getDepartments(): Promise<DepartmentOption[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase.from('departments').select('id,name_en,name_ar').eq('is_active', true).order('name_en');
@@ -510,12 +518,12 @@ export async function getDepartments(): Promise<DepartmentOption[]> {
     return data?.length ? (data as DepartmentOption[]) : liveEmptyDepartments;
   } catch (error) {
     logFallback('departments', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getProfiles(): Promise<ProfileOption[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase.from('profiles').select('id,full_name_en,full_name_ar,email,department_id').eq('is_active', true).order('full_name_en').limit(1000);
@@ -523,7 +531,7 @@ export async function getProfiles(): Promise<ProfileOption[]> {
     return data?.length ? (data as ProfileOption[]) : liveEmptyProfiles;
   } catch (error) {
     logFallback('profiles', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
@@ -929,7 +937,7 @@ export async function requestApproval(input: RequestApprovalInput) {
 }
 
 export async function getDepartmentExecutionSummary(): Promise<DepartmentExecutionSummary[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -941,7 +949,7 @@ export async function getDepartmentExecutionSummary(): Promise<DepartmentExecuti
     return (data as unknown as DepartmentExecutionSummary[]) || [];
   } catch (error) {
     logFallback('department execution summary', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
@@ -1018,7 +1026,7 @@ export async function getAccessControlSummary(): Promise<AccessControlSummary> {
 }
 
 export async function getAccessControlUsers(): Promise<AccessControlUserRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -1030,12 +1038,12 @@ export async function getAccessControlUsers(): Promise<AccessControlUserRow[]> {
     return (data as unknown as AccessControlUserRow[])?.length ? (data as unknown as AccessControlUserRow[]) : liveEmptyAccessControlUsers;
   } catch (error) {
     logFallback('access control users', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getAccessControlWarnings(): Promise<AccessControlWarningRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -1047,7 +1055,7 @@ export async function getAccessControlWarnings(): Promise<AccessControlWarningRo
     return (data as unknown as AccessControlWarningRow[]) || [];
   } catch (error) {
     logFallback('access control warnings', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
@@ -1152,7 +1160,7 @@ export async function getOvrSummary(): Promise<OvrSummary> {
 }
 
 export async function getOvrReports(): Promise<OvrReportRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -1164,7 +1172,7 @@ export async function getOvrReports(): Promise<OvrReportRow[]> {
     return (data as unknown as OvrReportRow[])?.length ? (data as unknown as OvrReportRow[]) : liveEmptyOvrReports;
   } catch (error) {
     logFallback('OVR reports', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
@@ -1252,7 +1260,7 @@ export async function getOvrWorkflowControlSummary(): Promise<OvrWorkflowControl
 }
 
 export async function getOvrWorkflowQueue(): Promise<OvrWorkflowQueueRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -1265,7 +1273,7 @@ export async function getOvrWorkflowQueue(): Promise<OvrWorkflowQueueRow[]> {
     return (data as unknown as OvrWorkflowQueueRow[]) || [];
   } catch (error) {
     logFallback('OVR workflow queue', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
@@ -1335,7 +1343,7 @@ export async function getOvrRiskIndicatorSummary(): Promise<OvrRiskIndicatorSumm
 }
 
 export async function getOvrRiskIndicatorsByDepartment(): Promise<OvrRiskDepartmentIndicator[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -1349,12 +1357,12 @@ export async function getOvrRiskIndicatorsByDepartment(): Promise<OvrRiskDepartm
       : liveEmptyOvrRiskDepartmentIndicators;
   } catch (error) {
     logFallback('OVR risk indicators by department', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getOvrRepeatedCategoryAlerts(): Promise<OvrRepeatedCategoryAlert[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -1367,7 +1375,7 @@ export async function getOvrRepeatedCategoryAlerts(): Promise<OvrRepeatedCategor
       : liveEmptyOvrRepeatedCategoryAlerts;
   } catch (error) {
     logFallback('OVR repeated category alerts', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
@@ -1386,7 +1394,7 @@ export async function getGrcKpiScorecard(): Promise<GrcKpiScorecard> {
 }
 
 export async function getDepartmentRiskHeatmap(): Promise<DepartmentRiskHeatmapRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -1400,12 +1408,12 @@ export async function getDepartmentRiskHeatmap(): Promise<DepartmentRiskHeatmapR
       : liveEmptyDepartmentRiskHeatmap;
   } catch (error) {
     logFallback('department risk heatmap', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getMonthlyGrcTrend(): Promise<MonthlyGrcTrendRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -1418,12 +1426,12 @@ export async function getMonthlyGrcTrend(): Promise<MonthlyGrcTrendRow[]> {
       : liveEmptyMonthlyGrcTrend;
   } catch (error) {
     logFallback('monthly GRC trend', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getRadarControlProfile(): Promise<RadarControlProfileRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -1436,7 +1444,7 @@ export async function getRadarControlProfile(): Promise<RadarControlProfileRow[]
       : liveEmptyRadarControlProfile;
   } catch (error) {
     logFallback('radar control profile', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
@@ -1465,7 +1473,7 @@ export async function getExportCenterSummary(): Promise<ExportCenterSummary> {
 }
 
 export async function getCustomReportDefinitions(): Promise<CustomReportDefinition[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
 
   try {
     const { data, error } = await supabase
@@ -1478,7 +1486,7 @@ export async function getCustomReportDefinitions(): Promise<CustomReportDefiniti
     return (data as unknown as CustomReportDefinition[])?.length ? (data as unknown as CustomReportDefinition[]) : liveEmptyCustomReports;
   } catch (error) {
     logFallback('custom report definitions', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
@@ -1549,14 +1557,14 @@ export async function logDataExport(input: {
     return data;
   } catch (error) {
     logFallback('log data export', error);
-    return null;
+    return unavailableExportJob();
   }
 }
 
 function rowsFromObject(value: unknown): Record<string, unknown>[] {
   if (Array.isArray(value)) return value as Record<string, unknown>[];
   if (value && typeof value === 'object') return [value as Record<string, unknown>];
-  return [];
+  return emptyLiveArray<any>();
 }
 
 export async function getExportDataset(datasetKey: ExportDatasetKey): Promise<ExportDatasetPayload> {

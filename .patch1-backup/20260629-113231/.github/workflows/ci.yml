@@ -1,0 +1,81 @@
+name: GRC Control Center CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  static-validation:
+    name: Static validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: v10 foundation proof
+        run: npm run pilot:v100-foundation
+
+      - name: v11 enterprise proof
+        run: npm run pilot:v110-enterprise
+
+      - name: v12 polish proof
+        run: npm run pilot:v120-polish
+
+      - name: v13 UX polish proof
+        run: npm run pilot:v130-polish
+
+      - name: v14 controlled UAT execution proof
+        run: npm run pilot:v140-uat-execution
+
+      - name: v14 professional GRC proof
+        run: npm run pilot:v140-professional-grc
+
+      - name: v15 audit program proof
+        run: npm run pilot:v150-audit-program
+      - name: v16 compliance management proof
+        run: npm run pilot:v160-compliance-management
+      - name: v17 enterprise risk proof
+        run: npm run pilot:v170-enterprise-risk
+
+
+      - name: v22 control testing proof
+        run: npm run pilot:v220-control-testing
+
+      - name: v23 compliance hardening proof
+        run: npm run pilot:v230-compliance-hardening
+
+      - name: v24 assurance and auditor proof
+        run: npm run pilot:v240-assurance
+
+      - name: v25 live GRC operating proof
+        run: npm run pilot:v250-live-operating
+      - name: UAT readiness static proof
+        run: npm run pilot:uat-readiness
+
+          - name: v18 traceability proof
+            run: npm run pilot:v180-traceability
+          - name: v19 executive reporting proof
+            run: npm run pilot:v190-executive-reporting
+          - name: v20 production readiness proof
+            run: npm run pilot:v200-production-readiness
+          - name: v21 framework crosswalk proof
+            run: npm run pilot:v210-framework-crosswalk

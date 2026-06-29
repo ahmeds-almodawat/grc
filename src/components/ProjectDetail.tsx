@@ -28,7 +28,7 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
   const [activeControl, setActiveControl] = useState<ActiveControl>(null);
   const milestones = useAsyncData(() => getProjectMilestones(project.id), [project.id]);
   const tasks = useAsyncData(() => getProjectTasks(project.id), [project.id]);
-  const organizationId = project.organization_id || 'demo-org';
+  const organizationId = project.organization_id ?? null;
 
   function refreshDetail() {
     void milestones.refresh();
@@ -137,30 +137,38 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
       </div>
 
       <Modal open={milestoneFormOpen} title="Add controlled milestone" onClose={() => setMilestoneFormOpen(false)}>
-        <MilestoneForm
-          organizationId={organizationId}
-          projectId={project.id}
-          profiles={profiles}
-          onCancel={() => setMilestoneFormOpen(false)}
-          onCreated={() => {
-            setMilestoneFormOpen(false);
-            void milestones.refresh();
-          }}
-        />
+        {organizationId ? (
+          <MilestoneForm
+            organizationId={organizationId}
+            projectId={project.id}
+            profiles={profiles}
+            onCancel={() => setMilestoneFormOpen(false)}
+            onCreated={() => {
+              setMilestoneFormOpen(false);
+              void milestones.refresh();
+            }}
+          />
+        ) : (
+          <div className="notice-banner">Cannot add a milestone without a real organization context.</div>
+        )}
       </Modal>
 
       <Modal open={taskFormOpen} title="Add controlled task" onClose={() => setTaskFormOpen(false)}>
-        <TaskForm
-          organizationId={organizationId}
-          projectId={project.id}
-          milestones={milestones.data || []}
-          profiles={profiles}
-          onCancel={() => setTaskFormOpen(false)}
-          onCreated={() => {
-            setTaskFormOpen(false);
-            void tasks.refresh();
-          }}
-        />
+        {organizationId ? (
+          <TaskForm
+            organizationId={organizationId}
+            projectId={project.id}
+            milestones={milestones.data || []}
+            profiles={profiles}
+            onCancel={() => setTaskFormOpen(false)}
+            onCreated={() => {
+              setTaskFormOpen(false);
+              void tasks.refresh();
+            }}
+          />
+        ) : (
+          <div className="notice-banner">Cannot add a task without a real organization context.</div>
+        )}
       </Modal>
 
       <Modal open={Boolean(activeControl)} title={activeControl ? `${activeControl.title}` : 'Control item'} onClose={() => setActiveControl(null)}>
@@ -168,10 +176,18 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
           <StatusUpdateForm itemType={activeControl.itemType} itemId={activeControl.itemId} currentStatus={activeControl.status} currentProgress={activeControl.progress} onCancel={() => setActiveControl(null)} onUpdated={closeControlAndRefresh} />
         ) : null}
         {activeControl?.mode === 'evidence' ? (
-          <EvidenceUploadForm organizationId={organizationId} itemType={activeControl.itemType} itemId={activeControl.itemId} onCancel={() => setActiveControl(null)} onUploaded={closeControlAndRefresh} />
+          organizationId ? (
+            <EvidenceUploadForm organizationId={organizationId} itemType={activeControl.itemType} itemId={activeControl.itemId} onCancel={() => setActiveControl(null)} onUploaded={closeControlAndRefresh} />
+          ) : (
+            <div className="notice-banner">Cannot upload evidence without a real organization context.</div>
+          )
         ) : null}
         {activeControl?.mode === 'approval' ? (
-          <ApprovalRequestForm organizationId={organizationId} itemType={activeControl.itemType} itemId={activeControl.itemId} profiles={profiles} onCancel={() => setActiveControl(null)} onRequested={closeControlAndRefresh} />
+          organizationId ? (
+            <ApprovalRequestForm organizationId={organizationId} itemType={activeControl.itemType} itemId={activeControl.itemId} profiles={profiles} onCancel={() => setActiveControl(null)} onRequested={closeControlAndRefresh} />
+          ) : (
+            <div className="notice-banner">Cannot request approval without a real organization context.</div>
+          )
         ) : null}
       </Modal>
     </div>

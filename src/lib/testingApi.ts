@@ -104,7 +104,7 @@ export async function getQaReadinessSummary(): Promise<QaReadinessSummary> {
 }
 
 export async function getDeploymentGates(): Promise<DeploymentGate[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('v_deployment_readiness_gates')
@@ -115,12 +115,12 @@ export async function getDeploymentGates(): Promise<DeploymentGate[]> {
     return (data as DeploymentGate[] | null) ?? [];
   } catch (error) {
     logFallback('deployment gates', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getQaTestCases(): Promise<QaTestCase[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('v_qa_test_case_library')
@@ -132,24 +132,24 @@ export async function getQaTestCases(): Promise<QaTestCase[]> {
     return (data as QaTestCase[] | null) ?? [];
   } catch (error) {
     logFallback('test cases', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getPermissionPersonas(): Promise<PermissionPersona[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase.from('v_permission_test_personas').select('*');
     if (error) throw error;
     return (data as PermissionPersona[] | null) ?? [];
   } catch (error) {
     logFallback('permission personas', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getQaRuns(): Promise<QaRun[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('v_qa_test_runs_summary')
@@ -160,7 +160,7 @@ export async function getQaRuns(): Promise<QaRun[]> {
     return (data as QaRun[] | null) ?? [];
   } catch (error) {
     logFallback('qa runs', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 

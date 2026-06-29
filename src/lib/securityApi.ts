@@ -91,7 +91,7 @@ export async function getSecurityGovernanceSummary(): Promise<SecurityGovernance
 }
 
 export async function getSecurityAccessFindings(): Promise<SecurityAccessFinding[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('v_security_access_findings')
@@ -101,12 +101,12 @@ export async function getSecurityAccessFindings(): Promise<SecurityAccessFinding
     return data?.length ? data : liveEmptyFindings;
   } catch (error) {
     logFallback('getSecurityAccessFindings', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getDataRetentionReadiness(): Promise<DataRetentionReadiness[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('v_data_retention_readiness')
@@ -116,12 +116,12 @@ export async function getDataRetentionReadiness(): Promise<DataRetentionReadines
     return data?.length ? data : liveEmptyRetention;
   } catch (error) {
     logFallback('getDataRetentionReadiness', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getSensitiveActivityTimeline(): Promise<SensitiveActivityTimeline[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('v_sensitive_activity_timeline')
@@ -132,7 +132,7 @@ export async function getSensitiveActivityTimeline(): Promise<SensitiveActivityT
     return data?.length ? data : liveEmptyTimeline;
   } catch (error) {
     logFallback('getSensitiveActivityTimeline', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 

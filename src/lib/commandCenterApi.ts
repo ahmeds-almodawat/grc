@@ -142,7 +142,7 @@ export async function getCommandSummary(): Promise<CommandSummary> {
 }
 
 export async function getCommandStream(): Promise<CommandStreamItem[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('v_executive_command_stream')
@@ -150,7 +150,7 @@ export async function getCommandStream(): Promise<CommandStreamItem[]> {
       .order('sort_rank', { ascending: true })
       .limit(50);
     if (error) throw error;
-    if (!data?.length) return [];
+    if (!data?.length) return emptyLiveArray<any>();
     return (data as any[]).map(row => ({
       id: row.id,
       itemType: row.item_type,
@@ -166,12 +166,12 @@ export async function getCommandStream(): Promise<CommandStreamItem[]> {
     }));
   } catch (error) {
     warnFallback('command stream', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function searchGlobal(query: string): Promise<GlobalSearchResult[]> {
-  if (!query.trim()) return [];
+  if (!query.trim()) return emptyLiveArray<any>();
   if (!supabase) {
     const q = query.toLowerCase();
     return liveEmptySearch.filter(row => row.searchText.toLowerCase().includes(q) || row.title.toLowerCase().includes(q));
@@ -195,7 +195,7 @@ export async function searchGlobal(query: string): Promise<GlobalSearchResult[]>
     }));
   } catch (error) {
     warnFallback('global search', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
@@ -221,7 +221,7 @@ export async function getDocumentSummary(): Promise<DocumentSummary> {
 }
 
 export async function getDocuments(): Promise<DocumentItem[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('v_document_center_items')
@@ -229,7 +229,7 @@ export async function getDocuments(): Promise<DocumentItem[]> {
       .order('review_due_date', { ascending: true, nullsFirst: false })
       .limit(150);
     if (error) throw error;
-    if (!data?.length) return [];
+    if (!data?.length) return emptyLiveArray<any>();
     return (data as any[]).map(row => ({
       id: row.id,
       documentCode: row.document_code || '—',
@@ -247,16 +247,16 @@ export async function getDocuments(): Promise<DocumentItem[]> {
     }));
   } catch (error) {
     warnFallback('documents', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getRelationshipMap(): Promise<RelationshipItem[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase.from('v_cross_module_relationship_map').select('*').limit(200);
     if (error) throw error;
-    if (!data?.length) return [];
+    if (!data?.length) return emptyLiveArray<any>();
     return (data as any[]).map(row => ({
       id: row.id,
       sourceType: row.source_type,
@@ -272,16 +272,16 @@ export async function getRelationshipMap(): Promise<RelationshipItem[]> {
     }));
   } catch (error) {
     warnFallback('relationship map', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getReleaseGates(): Promise<ReleaseGate[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase.from('v_release_candidate_gates').select('*').order('severity_rank', { ascending: true });
     if (error) throw error;
-    if (!data?.length) return [];
+    if (!data?.length) return emptyLiveArray<any>();
     return (data as any[]).map(row => ({
       id: row.id,
       gateArea: row.gate_area,
@@ -294,16 +294,16 @@ export async function getReleaseGates(): Promise<ReleaseGate[]> {
     }));
   } catch (error) {
     warnFallback('release gates', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getMigrationSteps(): Promise<MigrationStep[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase.from('v_release_migration_order').select('*').order('sequence_no', { ascending: true });
     if (error) throw error;
-    if (!data?.length) return [];
+    if (!data?.length) return emptyLiveArray<any>();
     return (data as any[]).map(row => ({
       versionLabel: row.version_label,
       migrationFile: row.migration_file,
@@ -313,6 +313,6 @@ export async function getMigrationSteps(): Promise<MigrationStep[]> {
     }));
   } catch (error) {
     warnFallback('migration steps', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }

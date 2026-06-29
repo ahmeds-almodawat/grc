@@ -37,7 +37,7 @@ function logFallback(label: string, error: unknown) {
 }
 
 export async function getSetupReadiness(): Promise<SetupReadinessRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('v_setup_readiness_checklist')
@@ -48,12 +48,12 @@ export async function getSetupReadiness(): Promise<SetupReadinessRow[]> {
     return (data as SetupReadinessRow[])?.length ? (data as SetupReadinessRow[]) : liveEmptyReadiness;
   } catch (error) {
     logFallback('setup readiness', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }
 
 export async function getTrainingChecklist(): Promise<TrainingChecklistRow[]> {
-  if (!supabase) return [];
+  if (!supabase) return emptyLiveArray<any>();
   try {
     const { data, error } = await supabase
       .from('grc_training_checklist')
@@ -63,6 +63,6 @@ export async function getTrainingChecklist(): Promise<TrainingChecklistRow[]> {
     return (data as TrainingChecklistRow[])?.length ? (data as TrainingChecklistRow[]) : liveEmptyTraining;
   } catch (error) {
     logFallback('training checklist', error);
-    return [];
+    return emptyLiveArray<any>();
   }
 }

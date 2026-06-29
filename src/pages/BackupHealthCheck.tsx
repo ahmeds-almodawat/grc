@@ -49,19 +49,28 @@ export default function BackupHealthCheck() {
 
   const kpis = useMemo(() => buildHardeningKpis(health, blockers), [health, blockers]);
   const activeFindings = health.filter((row) => row.record_count > 0);
-  const organizationId = health[0]?.organization_id ?? 'demo';
+  const organizationId = health[0]?.organization_id ?? null;
 
   async function handleSnapshot() {
     try {
+      if (!organizationId) {
+        setMessage(
+          language === 'ar'
+            ? 'لا يمكن إنشاء لقطة صحة النظام بدون ربطها بمنظمة حقيقية.'
+            : 'Cannot create a system health snapshot without a real organization context.'
+        );
+        return;
+      }
+
       const id = await createHealthSnapshot(organizationId);
       setMessage(
         language === 'ar'
           ? id
             ? `تم إنشاء لقطة صحة النظام: ${id}`
-            : 'تم إنشاء لقطة تجريبية. اربط Supabase لحفظها.'
+            : 'لم يتم إنشاء لقطة صحة النظام.'
           : id
             ? `System health snapshot created: ${id}`
-            : 'Demo snapshot generated. Connect Supabase to save it.'
+            : 'System health snapshot was not created.'
       );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : String(error));
