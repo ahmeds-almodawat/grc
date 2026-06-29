@@ -69,6 +69,7 @@ import { AccreditationCenter } from './pages/AccreditationCenter';
 import { QualityAccreditationOperatingCenter } from './pages/QualityAccreditationOperatingCenter';
 import { RealStandardsMasterDataCenter } from './pages/RealStandardsMasterDataCenter';
 import { UatAccreditationEvidenceCenter } from './pages/UatAccreditationEvidenceCenter';
+import { RealUatExecutionCenter } from './pages/RealUatExecutionCenter';
 import { LiveGrcOperatingCore } from './pages/LiveGrcOperatingCore';
 import { WorkflowKernelCenter } from './pages/WorkflowKernelCenter';
 import { ProfessionalWorkbenchesCenter } from './pages/ProfessionalWorkbenchesCenter';
@@ -467,3 +468,4 @@ export default function App() {
 
   return <Layout page={page} setPage={setPage}>{content}</Layout>;
 }
+

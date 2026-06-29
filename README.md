@@ -209,3 +209,7 @@ Patch 7 turns audit, risk, compliance, issue, management-response, and CAPA reco
 
 ## Patch 16 - Real Data Activation Pack
 Adds controlled real-data activation governance for licensed standards metadata, hospital master data, dataset mapping, validation, approval, reconciliation, cutover readiness, and signoffs. No demo data or copyrighted standards text is seeded.
+
+## Patch 17 - Real UAT Execution Evidence Pack
+Adds controlled real UAT execution cycles, persona scripts, scenario runs, step evidence, SQL proof archive, findings, retests, signoffs, and accreditation evidence pack readiness. No fake evidence, fake signoffs, or copyrighted standards text is seeded.
+
