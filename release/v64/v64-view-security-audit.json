@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T19:39:21.913Z",
-    "migration_files_scanned": 78,
-    "views_detected": 226,
+    "generated_at": "2026-06-29T20:08:18.043Z",
+    "migration_files_scanned": 79,
+    "views_detected": 230,
     "findings_total": 105,
     "critical": 0,
     "high": 0,
@@ -849,6 +849,38 @@
         "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql"
       ],
       "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_production_go_no_go_decision_queue",
+      "files": [
+        "supabase/migrations/079_patch18_production_go_no_go_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_production_go_no_go_evidence_queue",
+      "files": [
+        "supabase/migrations/079_patch18_production_go_no_go_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_production_go_no_go_monitoring_dashboard",
+      "files": [
+        "supabase/migrations/079_patch18_production_go_no_go_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_production_go_no_go_summary",
+      "files": [
+        "supabase/migrations/079_patch18_production_go_no_go_pack.sql"
+      ],
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -3826,6 +3858,34 @@
       "occurrence": "create_view",
       "has_security_invoker": true,
       "sensitive": true
+    },
+    {
+      "view": "v_production_go_no_go_summary",
+      "file": "supabase/migrations/079_patch18_production_go_no_go_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_production_go_no_go_evidence_queue",
+      "file": "supabase/migrations/079_patch18_production_go_no_go_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_production_go_no_go_decision_queue",
+      "file": "supabase/migrations/079_patch18_production_go_no_go_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_production_go_no_go_monitoring_dashboard",
+      "file": "supabase/migrations/079_patch18_production_go_no_go_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
     }
   ],
   "findings": [

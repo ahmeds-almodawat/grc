@@ -56,6 +56,7 @@ import { AssuranceGoLiveCenter } from './pages/AssuranceGoLiveCenter';
 import { RealDataUatReadinessCenter } from './pages/RealDataUatReadinessCenter';
 import { RealDataActivationCenter } from './pages/RealDataActivationCenter';
 import { ProductionHardeningLaunchCenter } from './pages/ProductionHardeningLaunchCenter';
+import { ProductionGoNoGoCenter } from './pages/ProductionGoNoGoCenter';
 import { Dashboard } from './pages/Dashboard';
 import { Analytics } from './pages/Analytics';
 import { Projects } from './pages/Projects';
@@ -271,6 +272,7 @@ function AdminReleaseHub({ setPage }: { setPage: (page: PageKey) => void }) {
         { id: 'realDataActivation', label: t('hub.tab.realDataActivation', 'Real Data Activation'), description: t('hub.tab.realDataActivation.desc', 'Controlled activation of licensed metadata, master data, mappings, validations, load approvals, reconciliation, and cutover readiness.'), icon: <UploadCloud size={17} />, content: <RealDataActivationCenter /> },
         { id: 'finalRuntimeSecurityClosure', label: t('hub.tab.finalRuntimeSecurityClosure', 'Final Runtime Security Closure'), description: t('hub.tab.finalRuntimeSecurityClosure.desc', 'Close Supabase client warnings, v65 audit warning, RPC classifications, runtime-security exceptions, and final proof evidence.'), icon: <LockKeyhole size={17} />, content: <FinalRuntimeSecurityClosureCenter /> },
         { id: 'productionHardeningLaunch', label: t('hub.tab.productionHardeningLaunch', 'Production Hardening Launch'), description: t('hub.tab.productionHardeningLaunch.desc', 'Warning cleanup, staging persona SQL, restore proof, change freeze, board go/no-go, launch signoffs, and monitoring.'), icon: <PackageCheck size={17} />, content: <ProductionHardeningLaunchCenter /> },
+        { id: 'realProductionGoNoGo', label: t('hub.tab.realProductionGoNoGo', 'Production Go/No-Go'), description: t('hub.tab.realProductionGoNoGo.desc', 'Staging persona SQL, restore and rollback proof, change freeze, access and confidentiality review, board pack, executive decision, and launch monitoring.'), icon: <PackageCheck size={17} />, content: <ProductionGoNoGoCenter /> },
         { id: 'releaseFactory', label: t('hub.tab.releaseFactory'), description: t('hub.tab.releaseFactory.desc'), icon: <PackageCheck size={17} />, content: <ReleaseFactoryCenter /> },
         { id: 'productionProof', label: t('hub.tab.productionProof', 'Production Proof'), description: t('hub.tab.productionProof.desc', 'Final evidence-based go-live proof gates.'), icon: <PackageCheck size={17} />, content: <ProductionProofCenter /> },
         { id: 'productionFinish', label: t('hub.tab.productionFinish'), description: t('hub.tab.productionFinish.desc'), icon: <Rocket size={17} />, content: <ProductionFinishCenter /> },
@@ -469,4 +471,5 @@ export default function App() {
 
   return <Layout page={page} setPage={setPage}>{content}</Layout>;
 }
+
 

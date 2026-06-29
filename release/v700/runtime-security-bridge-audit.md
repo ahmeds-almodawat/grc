@@ -4,7 +4,7 @@
 
 ```json
 {
-  "generated_at": "2026-06-29T19:39:29.209Z",
+  "generated_at": "2026-06-29T20:11:33.325Z",
   "db_container": "supabase_db_grc-control-center",
   "db_query_status": "passed",
   "db_query_error": null,
