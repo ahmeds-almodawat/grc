@@ -1,16 +1,15 @@
 {
-  "generated_at": "2026-06-29T12:28:26.749Z",
+  "generated_at": "2026-06-29T13:01:19.477Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 64,
-    "latest_migration": "064_patch3_live_grc_operating_core.sql",
+    "migration_count": 65,
+    "latest_migration": "065_patch4_audit_evidence_production_governance.sql",
     "prefix_gaps": [
       16,
-      65,
       66,
       67,
       68,

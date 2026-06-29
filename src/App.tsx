@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import {
   Activity,
   ArchiveRestore,
@@ -50,6 +50,7 @@ import { FinalSprintCenter } from './pages/FinalSprintCenter';
 import { ProductionFinishCenter } from './pages/ProductionFinishCenter';
 import { ReleaseFactoryCenter } from './pages/ReleaseFactoryCenter';
 import { ProductionProofCenter } from './pages/ProductionProofCenter';
+import { AuditEvidenceGovernanceCenter } from './pages/AuditEvidenceGovernanceCenter';
 import { Dashboard } from './pages/Dashboard';
 import { Analytics } from './pages/Analytics';
 import { Projects } from './pages/Projects';
@@ -291,7 +292,7 @@ export default function App() {
         <section className="auth-card auth-card--compact">
           <div className="brand-mark">GRC</div>
           <h1>Loading secure session...</h1>
-          <p>جاري تحميل الجلسة الآمنة...</p>
+          <p>Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø¬Ù„Ø³Ø© Ø§Ù„Ø¢Ù…Ù†Ø©...</p>
         </section>
       </main>
     );
