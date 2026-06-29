@@ -62,6 +62,7 @@ import { OVR } from './pages/OVR';
 import { OvrRiskIndicators } from './pages/OvrRiskIndicators';
 import { AccreditationCenter } from './pages/AccreditationCenter';
 import { LiveGrcOperatingCore } from './pages/LiveGrcOperatingCore';
+import { WorkflowKernelCenter } from './pages/WorkflowKernelCenter';
 import { Governance } from './pages/Governance';
 import { Admin } from './pages/Admin';
 import { MyWork } from './pages/MyWork';
@@ -157,6 +158,7 @@ function GrcHub() {
   const tabs = [
     { id: 'risks', label: t('hub.tab.risks'), description: t('hub.tab.risks.desc'), icon: <ShieldAlert size={17} />, content: <Risks /> },
     { id: 'operatingCore', label: t('hub.tab.operatingCore', 'Operating Core'), description: t('hub.tab.operatingCore.desc', 'Risk, controls, tests, evidence, CAPA, and obligations.'), icon: <Network size={17} />, content: <LiveGrcOperatingCore /> },
+    { id: 'workflowKernel', label: t('hub.tab.workflowKernel', 'Workflow Kernel'), description: t('hub.tab.workflowKernel.desc', 'Cross-module workflow routing, approvals, SLA, and escalation control.'), icon: <ClipboardList size={17} />, content: <WorkflowKernelCenter /> },
     { id: 'kri', label: t('hub.tab.kri'), description: t('hub.tab.kri.desc'), icon: <Gauge size={17} />, content: <RiskAppetiteKriCenter /> },
     { id: 'compliance', label: t('hub.tab.compliance'), description: t('hub.tab.compliance.desc'), icon: <ClipboardCheck size={17} />, content: <Compliance /> },
     { id: 'audit', label: t('hub.tab.audit'), description: t('hub.tab.audit.desc'), icon: <FileSearch size={17} />, content: <Audit /> },
@@ -245,7 +247,7 @@ function AdminReleaseHub({ setPage }: { setPage: (page: PageKey) => void }) {
           icon: <Bug size={17} />,
           content: <UatIssueCapture />,
         }] : []),
-        { id: 'auditEvidenceGovernance', label: t('hub.tab.auditEvidenceGovernance', 'Audit Evidence Governance'), description: t('hub.tab.auditEvidenceGovernance.desc', 'Audit workbench, evidence integrity, and production governance gates.'), icon: <FileCheck2 size={17} />, content: <AuditEvidenceGovernanceCenter /> },
+        { id: 'auditEvidenceGovernance', label: t('hub.tab.auditEvidenceGovernance', 'Audit & Evidence Integrity'), description: t('hub.tab.auditEvidenceGovernance.desc', 'Audit workbench, evidence integrity, and production governance gates.'), icon: <FileCheck2 size={17} />, content: <AuditEvidenceGovernanceCenter /> },
         { id: 'releaseFactory', label: t('hub.tab.releaseFactory'), description: t('hub.tab.releaseFactory.desc'), icon: <PackageCheck size={17} />, content: <ReleaseFactoryCenter /> },
         { id: 'productionProof', label: t('hub.tab.productionProof', 'Production Proof'), description: t('hub.tab.productionProof.desc', 'Final evidence-based go-live proof gates.'), icon: <PackageCheck size={17} />, content: <ProductionProofCenter /> },
         { id: 'productionFinish', label: t('hub.tab.productionFinish'), description: t('hub.tab.productionFinish.desc'), icon: <Rocket size={17} />, content: <ProductionFinishCenter /> },
