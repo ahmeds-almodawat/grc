@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T17:11:42.683Z",
-    "migration_files_scanned": 69,
-    "views_detected": 190,
+    "generated_at": "2026-06-29T17:23:22.436Z",
+    "migration_files_scanned": 71,
+    "views_detected": 198,
     "findings_total": 105,
     "critical": 0,
     "high": 0,
@@ -877,6 +877,22 @@
       "sensitive": true
     },
     {
+      "view": "v_real_data_activation_summary",
+      "files": [
+        "supabase/migrations/071_patch10_real_data_activation_uat_readiness.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_data_import_quality_queue",
+      "files": [
+        "supabase/migrations/071_patch10_real_data_activation_uat_readiness.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
       "view": "v_recurring_review_queue",
       "files": [
         "supabase/migrations/024_automation_intelligence_kri_reviews.sql"
@@ -962,6 +978,38 @@
       "sensitive": false
     },
     {
+      "view": "v_runtime_workflow_action_queue",
+      "files": [
+        "supabase/migrations/070_patch9_runtime_workflow_actions_escalations.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_runtime_workflow_action_summary",
+      "files": [
+        "supabase/migrations/070_patch9_runtime_workflow_actions_escalations.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_runtime_workflow_exception_dashboard",
+      "files": [
+        "supabase/migrations/070_patch9_runtime_workflow_actions_escalations.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_runtime_workflow_notification_outbox",
+      "files": [
+        "supabase/migrations/070_patch9_runtime_workflow_actions_escalations.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
       "view": "v_scenario_matrix",
       "files": [
         "supabase/migrations/023_enterprise_intelligence_reporting.sql"
@@ -1017,6 +1065,22 @@
         "supabase/migrations/025_staging_validation_consolidation.sql"
       ],
       "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_uat_findings_queue",
+      "files": [
+        "supabase/migrations/071_patch10_real_data_activation_uat_readiness.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_uat_readiness_dashboard",
+      "files": [
+        "supabase/migrations/071_patch10_real_data_activation_uat_readiness.sql"
+      ],
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -3278,6 +3342,62 @@
       "occurrence": "create_view",
       "has_security_invoker": true,
       "sensitive": false
+    },
+    {
+      "view": "v_runtime_workflow_action_summary",
+      "file": "supabase/migrations/070_patch9_runtime_workflow_actions_escalations.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_runtime_workflow_action_queue",
+      "file": "supabase/migrations/070_patch9_runtime_workflow_actions_escalations.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_runtime_workflow_notification_outbox",
+      "file": "supabase/migrations/070_patch9_runtime_workflow_actions_escalations.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_runtime_workflow_exception_dashboard",
+      "file": "supabase/migrations/070_patch9_runtime_workflow_actions_escalations.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_data_activation_summary",
+      "file": "supabase/migrations/071_patch10_real_data_activation_uat_readiness.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_data_import_quality_queue",
+      "file": "supabase/migrations/071_patch10_real_data_activation_uat_readiness.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_uat_readiness_dashboard",
+      "file": "supabase/migrations/071_patch10_real_data_activation_uat_readiness.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_uat_findings_queue",
+      "file": "supabase/migrations/071_patch10_real_data_activation_uat_readiness.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
     }
   ],
   "findings": [

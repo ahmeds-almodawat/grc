@@ -1,10 +1,10 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T17:11:41.166Z",
-    "migration_files_scanned": 69,
-    "created_tables_detected": 346,
-    "tables_with_explicit_rls": 286,
-    "tables_with_detected_policies": 254,
+    "generated_at": "2026-06-29T17:23:20.910Z",
+    "migration_files_scanned": 71,
+    "created_tables_detected": 371,
+    "tables_with_explicit_rls": 311,
+    "tables_with_detected_policies": 279,
     "findings_total": 60,
     "critical": 0,
     "high": 0,
@@ -503,6 +503,8 @@
     "supabase/migrations/066_patch5_workflow_kernel.sql",
     "supabase/migrations/067_patch6_accreditation_quality_operating_layer.sql",
     "supabase/migrations/068_patch7_professional_audit_risk_compliance_workbenches.sql",
-    "supabase/migrations/069_patch8_assurance_security_go_live_pack.sql"
+    "supabase/migrations/069_patch8_assurance_security_go_live_pack.sql",
+    "supabase/migrations/070_patch9_runtime_workflow_actions_escalations.sql",
+    "supabase/migrations/071_patch10_real_data_activation_uat_readiness.sql"
   ]
 }

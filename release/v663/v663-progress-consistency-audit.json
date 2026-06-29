@@ -1,17 +1,15 @@
 {
-  "generated_at": "2026-06-29T17:12:18.762Z",
+  "generated_at": "2026-06-29T17:23:59.517Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 69,
-    "latest_migration": "069_patch8_assurance_security_go_live_pack.sql",
+    "migration_count": 71,
+    "latest_migration": "071_patch10_real_data_activation_uat_readiness.sql",
     "prefix_gaps": [
       16,
-      70,
-      71,
       72,
       73,
       74,
