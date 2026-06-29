@@ -51,6 +51,7 @@ import { ProductionFinishCenter } from './pages/ProductionFinishCenter';
 import { ReleaseFactoryCenter } from './pages/ReleaseFactoryCenter';
 import { ProductionProofCenter } from './pages/ProductionProofCenter';
 import { AuditEvidenceGovernanceCenter } from './pages/AuditEvidenceGovernanceCenter';
+import { AssuranceGoLiveCenter } from './pages/AssuranceGoLiveCenter';
 import { Dashboard } from './pages/Dashboard';
 import { Analytics } from './pages/Analytics';
 import { Projects } from './pages/Projects';
@@ -64,6 +65,7 @@ import { AccreditationCenter } from './pages/AccreditationCenter';
 import { QualityAccreditationOperatingCenter } from './pages/QualityAccreditationOperatingCenter';
 import { LiveGrcOperatingCore } from './pages/LiveGrcOperatingCore';
 import { WorkflowKernelCenter } from './pages/WorkflowKernelCenter';
+import { ProfessionalWorkbenchesCenter } from './pages/ProfessionalWorkbenchesCenter';
 import { Governance } from './pages/Governance';
 import { Admin } from './pages/Admin';
 import { MyWork } from './pages/MyWork';
@@ -160,6 +162,7 @@ function GrcHub() {
     { id: 'risks', label: t('hub.tab.risks'), description: t('hub.tab.risks.desc'), icon: <ShieldAlert size={17} />, content: <Risks /> },
     { id: 'operatingCore', label: t('hub.tab.operatingCore', 'Operating Core'), description: t('hub.tab.operatingCore.desc', 'Risk, controls, tests, evidence, CAPA, and obligations.'), icon: <Network size={17} />, content: <LiveGrcOperatingCore /> },
     { id: 'workflowKernel', label: t('hub.tab.workflowKernel', 'Workflow Kernel'), description: t('hub.tab.workflowKernel.desc', 'Cross-module workflow routing, approvals, SLA, and escalation control.'), icon: <ClipboardList size={17} />, content: <WorkflowKernelCenter /> },
+    { id: 'professionalWorkbenches', label: t('hub.tab.professionalWorkbenches', 'Professional Workbenches'), description: t('hub.tab.professionalWorkbenches.desc', 'Audit, risk, compliance, issue, response, and CAPA operating queues.'), icon: <FileSearch size={17} />, content: <ProfessionalWorkbenchesCenter /> },
     { id: 'kri', label: t('hub.tab.kri'), description: t('hub.tab.kri.desc'), icon: <Gauge size={17} />, content: <RiskAppetiteKriCenter /> },
     { id: 'compliance', label: t('hub.tab.compliance'), description: t('hub.tab.compliance.desc'), icon: <ClipboardCheck size={17} />, content: <Compliance /> },
     { id: 'audit', label: t('hub.tab.audit'), description: t('hub.tab.audit.desc'), icon: <FileSearch size={17} />, content: <Audit /> },
@@ -250,6 +253,7 @@ function AdminReleaseHub({ setPage }: { setPage: (page: PageKey) => void }) {
           content: <UatIssueCapture />,
         }] : []),
         { id: 'auditEvidenceGovernance', label: t('hub.tab.auditEvidenceGovernance', 'Audit & Evidence Integrity'), description: t('hub.tab.auditEvidenceGovernance.desc', 'Audit workbench, evidence integrity, and production governance gates.'), icon: <FileCheck2 size={17} />, content: <AuditEvidenceGovernanceCenter /> },
+        { id: 'assuranceGoLive', label: t('hub.tab.assuranceGoLive', 'Assurance Go-Live Pack'), description: t('hub.tab.assuranceGoLive.desc', 'External auditor portal, signoffs, rollback, monitoring, training, and production decisions.'), icon: <PackageCheck size={17} />, content: <AssuranceGoLiveCenter /> },
         { id: 'releaseFactory', label: t('hub.tab.releaseFactory'), description: t('hub.tab.releaseFactory.desc'), icon: <PackageCheck size={17} />, content: <ReleaseFactoryCenter /> },
         { id: 'productionProof', label: t('hub.tab.productionProof', 'Production Proof'), description: t('hub.tab.productionProof.desc', 'Final evidence-based go-live proof gates.'), icon: <PackageCheck size={17} />, content: <ProductionProofCenter /> },
         { id: 'productionFinish', label: t('hub.tab.productionFinish'), description: t('hub.tab.productionFinish.desc'), icon: <Rocket size={17} />, content: <ProductionFinishCenter /> },
@@ -448,5 +452,4 @@ export default function App() {
 
   return <Layout page={page} setPage={setPage}>{content}</Layout>;
 }
-
 

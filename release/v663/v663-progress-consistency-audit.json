@@ -1,17 +1,15 @@
 {
-  "generated_at": "2026-06-29T16:55:52.558Z",
+  "generated_at": "2026-06-29T17:12:18.762Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 67,
-    "latest_migration": "067_patch6_accreditation_quality_operating_layer.sql",
+    "migration_count": 69,
+    "latest_migration": "069_patch8_assurance_security_go_live_pack.sql",
     "prefix_gaps": [
       16,
-      68,
-      69,
       70,
       71,
       72,

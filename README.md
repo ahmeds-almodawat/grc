@@ -202,3 +202,7 @@ Audit, evidence integrity, external auditor access, and production governance ga
 ## Patch 6 - Accreditation & Quality Operating Layer
 
 Patch 6 adds the daily operating layer for accreditation and quality work: licensed standards import governance, requirement ownership, measurable element scoring, tracer rounds, quality indicators, OVR/RCA/CAPA linkage, committee decisions, and survey evidence packs. It does not embed copyrighted CBAHI/JCI standard text. It also adds explicit Patch 5 workflow-kernel policies so static RLS proof can read the same org-scoped controls that runtime already enforces.
+
+## Patch 7-8 Professional Workbenches and Assurance Go-Live Pack
+
+Patch 7 turns audit, risk, compliance, issue, management-response, and CAPA records into operating workbenches. Patch 8 adds go-live assurance controls including external auditor packages, read-only sessions, retention/confidentiality, training, SOPs, board/committee packs, signoffs, rollback/restore exercises, monitoring checks, controlled pilot signoff, and production decisions. Passing proof commands still does not equal production approval; real evidence and executive/IT/Quality signoffs remain required.

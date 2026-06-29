@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T16:55:15.903Z",
-    "migration_files_scanned": 67,
-    "views_detected": 182,
+    "generated_at": "2026-06-29T17:11:42.683Z",
+    "migration_files_scanned": 69,
+    "views_detected": 190,
     "findings_total": 105,
     "critical": 0,
     "high": 0,
@@ -76,6 +76,38 @@
         "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql"
       ],
       "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_assurance_external_auditor_portal",
+      "files": [
+        "supabase/migrations/069_patch8_assurance_security_go_live_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_assurance_gate_dashboard",
+      "files": [
+        "supabase/migrations/069_patch8_assurance_security_go_live_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_assurance_go_live_summary",
+      "files": [
+        "supabase/migrations/069_patch8_assurance_security_go_live_pack.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_assurance_signoff_readiness",
+      "files": [
+        "supabase/migrations/069_patch8_assurance_security_go_live_pack.sql"
+      ],
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -737,6 +769,38 @@
         "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql"
       ],
       "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_professional_audit_queue",
+      "files": [
+        "supabase/migrations/068_patch7_professional_audit_risk_compliance_workbenches.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_professional_issue_capa_queue",
+      "files": [
+        "supabase/migrations/068_patch7_professional_audit_risk_compliance_workbenches.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_professional_risk_compliance_queue",
+      "files": [
+        "supabase/migrations/068_patch7_professional_audit_risk_compliance_workbenches.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_professional_workbench_summary",
+      "files": [
+        "supabase/migrations/068_patch7_professional_audit_risk_compliance_workbenches.sql"
+      ],
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -3155,6 +3219,62 @@
     {
       "view": "v_quality_rca_capa_dashboard",
       "file": "supabase/migrations/067_patch6_accreditation_quality_operating_layer.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_professional_workbench_summary",
+      "file": "supabase/migrations/068_patch7_professional_audit_risk_compliance_workbenches.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_professional_audit_queue",
+      "file": "supabase/migrations/068_patch7_professional_audit_risk_compliance_workbenches.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_professional_risk_compliance_queue",
+      "file": "supabase/migrations/068_patch7_professional_audit_risk_compliance_workbenches.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_professional_issue_capa_queue",
+      "file": "supabase/migrations/068_patch7_professional_audit_risk_compliance_workbenches.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_assurance_go_live_summary",
+      "file": "supabase/migrations/069_patch8_assurance_security_go_live_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_assurance_gate_dashboard",
+      "file": "supabase/migrations/069_patch8_assurance_security_go_live_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_assurance_external_auditor_portal",
+      "file": "supabase/migrations/069_patch8_assurance_security_go_live_pack.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_assurance_signoff_readiness",
+      "file": "supabase/migrations/069_patch8_assurance_security_go_live_pack.sql",
       "occurrence": "create_view",
       "has_security_invoker": true,
       "sensitive": false
