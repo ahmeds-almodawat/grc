@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-29T19:12:27.396Z",
+  "generated_at": "2026-06-29T19:39:43.199Z",
   "environment": "Local Supabase Docker staging",
   "synthetic_data_only": true,
   "no_real_patient_identifiers": true,
@@ -41,7 +41,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "38c2b8d7-652b-44ff-a33a-2d9ad29704fc",
+      "actual": "6e731798-9c03-4e3f-9e89-1cc6a2798cb3",
       "details": null
     },
     {
@@ -61,7 +61,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "2506a88e-371b-48f3-8ec3-4906a2b571fb",
+      "actual": "63d15f0e-42a3-40ca-a776-2d23461bb6ce",
       "details": null
     },
     {
@@ -81,7 +81,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "3270777f-6704-4b7b-8339-f5f86cd2d317",
+      "actual": "36e716dc-6702-4588-8f8c-4eda6c2d49f8",
       "details": null
     },
     {
@@ -101,7 +101,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "e1f83de4-0bd9-4461-b71f-dbadea8bea21",
+      "actual": "0329ebd5-47f0-4cc8-9fea-a6ddbaf3fcd0",
       "details": null
     },
     {
@@ -121,7 +121,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "5224f56d-71a3-44d9-9682-2c4a9daf7ead",
+      "actual": "9835ecca-0afe-4bfb-b63e-00694f455ada",
       "details": null
     },
     {
@@ -141,7 +141,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "08264718-20fa-4e7b-806d-1a8c3a883868",
+      "actual": "204dc4cb-26e4-4d52-8913-fe7a785f3792",
       "details": null
     },
     {
@@ -161,7 +161,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "be141e95-778f-496e-8066-3f615862a4c6",
+      "actual": "b9058255-edbf-494c-a484-4d511a448bbf",
       "details": null
     },
     {
@@ -181,7 +181,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "ee9b8761-8b70-4635-a602-1865eec98e47",
+      "actual": "6d7427b3-4ed2-457a-9450-f6f026726046",
       "details": null
     },
     {
@@ -275,7 +275,7 @@
           "ok": true,
           "action": "assign_user_role",
           "result": {
-            "id": "1d0c83e2-409b-4c5f-a27f-bf1e41d24dad"
+            "id": "8a6cee77-3547-4f7e-a243-ad1a8f11921f"
           }
         },
         "admin_deactivate": {
@@ -326,7 +326,7 @@
           "ok": true,
           "action": "create_board_pack_snapshot",
           "result": {
-            "id": "5e7f2e2e-6ee1-43fb-a2a2-0a240b02b9b4"
+            "id": "696cf38d-24dd-41e3-bc58-fff9dfe5fd87"
           }
         },
         "acknowledge_escalation_event": {
@@ -347,7 +347,7 @@
           "ok": true,
           "action": "assign_user_role",
           "result": {
-            "id": "1d0c83e2-409b-4c5f-a27f-bf1e41d24dad"
+            "id": "8a6cee77-3547-4f7e-a243-ad1a8f11921f"
           }
         },
         "deactivate_user_role": {
@@ -361,7 +361,7 @@
           "ok": true,
           "action": "update_ovr_workflow",
           "result": {
-            "id": "943401a0-50b3-484b-a46f-d07ded33e851",
+            "id": "a006a666-4749-4812-b4f3-0290b6ca2882",
             "status": "manager_review",
             "closed_at": null,
             "final_verdict": null,
@@ -375,7 +375,7 @@
           "ok": true,
           "action": "create_ovr_corrective_action_project",
           "result": {
-            "id": "1dad1ea7-4d90-4383-9471-232909cf4af5"
+            "id": "0d4e62e6-4f82-4d5c-ade5-33d1cb539278"
           }
         },
         "unauthorized_assign_user_role": "V72_ROLE_ADMIN_NOT_AUTHORIZED"
