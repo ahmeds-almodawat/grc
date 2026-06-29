@@ -1,19 +1,17 @@
 {
-  "generated_at": "2026-06-28T23:32:16.156Z",
-  "status": "not_ready_manual_evidence_required",
-  "blocker_count": 1,
-  "blockers": [
-    "No Playwright test-results/playwright-report folder found. Run npm run test:real."
-  ],
+  "generated_at": "2026-06-29T07:18:08.598Z",
+  "status": "ready_for_controlled_pilot_review",
+  "blocker_count": 0,
+  "blockers": [],
   "evidence_summary": {
     "required_total": 6,
     "attached_count": 6,
     "missing_count": 0
   },
   "previous_v66_gate": {
-    "generated_at": "2026-06-28T23:20:42.403Z",
-    "controlled_pilot_status": "ready_for_controlled_pilot_go_no_go_review",
-    "strict_passed": true,
+    "generated_at": "2026-06-28T23:32:17.271Z",
+    "controlled_pilot_status": "not_ready_manual_evidence_required",
+    "strict_passed": false,
     "gates": [
       {
         "id": "local_typecheck_build",
@@ -29,7 +27,7 @@
       },
       {
         "id": "v65_real_tests",
-        "status": "evidence_present"
+        "status": "not_verified"
       },
       {
         "id": "manual_staging_evidence",
@@ -37,7 +35,7 @@
       }
     ],
     "missing_manual_evidence": [],
-    "recommendation": "Hold final go/no-go meeting and keep pilot limited to approved users."
+    "recommendation": "Use only for controlled internal testing until missing manual staging evidence is attached."
   },
   "controlled_pilot_rule": "Only 5-15 trusted users; no real patient identifiers or confidential OVR data until staging proof is complete and signed off."
 }

@@ -2,9 +2,9 @@
 
 ```json
 {
-  "generated_at": "2026-06-28T23:32:17.271Z",
-  "controlled_pilot_status": "not_ready_manual_evidence_required",
-  "strict_passed": false,
+  "generated_at": "2026-06-29T07:18:09.478Z",
+  "controlled_pilot_status": "ready_for_controlled_pilot_go_no_go_review",
+  "strict_passed": true,
   "gates": [
     {
       "id": "local_typecheck_build",
@@ -20,7 +20,7 @@
     },
     {
       "id": "v65_real_tests",
-      "status": "not_verified"
+      "status": "evidence_present"
     },
     {
       "id": "manual_staging_evidence",
@@ -28,6 +28,6 @@
     }
   ],
   "missing_manual_evidence": [],
-  "recommendation": "Use only for controlled internal testing until missing manual staging evidence is attached."
+  "recommendation": "Hold final go/no-go meeting and keep pilot limited to approved users."
 }
 ```

@@ -2,16 +2,13 @@
 
 ```json
 {
-  "generated_at": "2026-06-28T23:32:18.134Z",
+  "generated_at": "2026-06-29T07:18:10.329Z",
   "mode": "all",
-  "status": "failed_review_required",
-  "passed_count": 15,
-  "failed_count": 2,
+  "status": "passed",
+  "passed_count": 17,
+  "failed_count": 0,
   "skipped_count": 0,
-  "failed_commands": [
-    "v661:strict-proof",
-    "v66:strict-proof"
-  ],
+  "failed_commands": [],
   "skipped_commands": [],
   "note": "This consolidated suite archives version-specific proof commands behind proof:* entry points. Skipped commands mean the current branch does not contain that legacy script.",
   "results": [
@@ -102,14 +99,14 @@
     {
       "group": "pilot",
       "script": "v661:strict-proof",
-      "status": "failed",
-      "exit_code": 1
+      "status": "passed",
+      "exit_code": 0
     },
     {
       "group": "pilot",
       "script": "v66:strict-proof",
-      "status": "failed",
-      "exit_code": 1
+      "status": "passed",
+      "exit_code": 0
     },
     {
       "group": "pilot",
