@@ -1,18 +1,18 @@
 # v7.0 Frontend RPC Inventory
 
-Generated: 2026-06-29T22:45:47.909Z
+Generated: 2026-06-30T14:28:25.226Z
 
 - Direct frontend RPC calls: 1
-- Authenticated Edge bridge calls: 12
-- Unique RPC names: 13
+- Authenticated Edge bridge calls: 22
+- Unique RPC names: 21
 
 ## Classification counts
 
 ```json
 {
-  "unknown_requires_review": 7,
+  "unknown_requires_review": 14,
   "workflow_runtime_review": 4,
-  "privileged_admin_review": 2
+  "privileged_admin_review": 5
 }
 ```
 
@@ -22,8 +22,8 @@ Generated: 2026-06-29T22:45:47.909Z
 - `create_board_pack_snapshot` (1 call site)
 - `acknowledge_escalation_event` (1 call site)
 - `resolve_escalation_event` (1 call site)
-- `assign_user_role` (1 call site)
-- `deactivate_user_role` (1 call site)
+- `assign_user_role` (2 call sites)
+- `deactivate_user_role` (2 call sites)
 - `create_department` (1 call site)
 - `create_user` (1 call site)
 - `update_ovr_workflow` (1 call site)
@@ -31,3 +31,11 @@ Generated: 2026-06-29T22:45:47.909Z
 - `v99_create_scenario` (1 call site)
 - `v99_cleanup_scenarios` (1 call site)
 - `v99_scenario_status` (1 call site)
+- `patch19_apply_import_batch` (1 call site)
+- `patch19_update_user_profile` (1 call site)
+- `patch19_update_user_department` (1 call site)
+- `patch19_assign_user_role` (1 call site)
+- `patch19_deactivate_user` (1 call site)
+- `patch19_reactivate_user` (1 call site)
+- `patch19_archive_user` (1 call site)
+- `patch19_unarchive_user` (1 call site)

@@ -19,6 +19,14 @@ const allowedActions = new Set([
   'v99_create_scenario',
   'v99_cleanup_scenarios',
   'v99_scenario_status',
+  'patch19_update_user_profile',
+  'patch19_update_user_department',
+  'patch19_assign_user_role',
+  'patch19_deactivate_user',
+  'patch19_reactivate_user',
+  'patch19_archive_user',
+  'patch19_unarchive_user',
+  'patch19_apply_import_batch',
 ]);
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
@@ -114,6 +122,28 @@ Deno.serve(async (request) => {
     if (error) {
       const authorizationFailure =
         /SERVICE_ROLE|ADMIN_REQUIRED|ACTIVE_ACTOR|ORGANIZATION_MISMATCH|CONFIRMATION_REQUIRED/i
+          .test(error.message);
+      return jsonResponse({
+        ok: false,
+        error: error.message,
+        code: error.code,
+        action,
+      }, authorizationFailure ? 403 : 409);
+    }
+
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action.startsWith('patch19_')) {
+    const { data, error } = await serviceClient.rpc('patch19_user_management_bridge', {
+      p_actor_id: userData.user.id,
+      p_action: action,
+      p_payload: requestBody.payload ?? {},
+    });
+
+    if (error) {
+      const authorizationFailure =
+        /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|CROSS_ORG|ADMIN|LAST_SUPER_ADMIN|SELF_DEACTIVATION/i
           .test(error.message);
       return jsonResponse({
         ok: false,

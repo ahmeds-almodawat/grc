@@ -2,7 +2,7 @@
 
 ```json
 {
-  "generated_at": "2026-06-29T22:45:45.514Z",
+  "generated_at": "2026-06-30T13:52:49.586Z",
   "status": "passed",
   "canonical_file": "supabase/tests/v65_workflow_smoke_tests.sql",
   "generated_copies_checked": 3,

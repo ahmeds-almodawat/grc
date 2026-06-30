@@ -1,16 +1,15 @@
 {
-  "generated_at": "2026-06-29T22:46:29.621Z",
+  "generated_at": "2026-06-30T13:53:21.811Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 79,
-    "latest_migration": "079_patch18_production_go_no_go_pack.sql",
+    "migration_count": 80,
+    "latest_migration": "080_patch19_professional_user_management_center.sql",
     "prefix_gaps": [
       16,
-      80,
       81,
       82,
       83,

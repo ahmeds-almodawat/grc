@@ -2,11 +2,11 @@
 
 ```json
 {
-  "generated_at": "2026-06-29T22:45:39.040Z",
-  "migration_files_scanned": 79,
-  "created_tables_detected": 455,
-  "tables_with_explicit_rls": 395,
-  "tables_with_detected_policies": 363,
+  "generated_at": "2026-06-30T14:28:57.659Z",
+  "migration_files_scanned": 80,
+  "created_tables_detected": 458,
+  "tables_with_explicit_rls": 398,
+  "tables_with_detected_policies": 366,
   "findings_total": 60,
   "critical": 0,
   "high": 0,

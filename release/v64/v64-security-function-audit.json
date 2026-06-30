@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T22:45:39.994Z",
-    "migration_files_scanned": 79,
-    "security_definer_functions_detected": 45,
+    "generated_at": "2026-06-30T13:52:44.995Z",
+    "migration_files_scanned": 80,
+    "security_definer_functions_detected": 46,
     "global_security_definer_lockdown_detected": true,
     "findings_total": 0,
     "critical": 0,
@@ -281,6 +281,12 @@
       "function_name": "v99_scenario_status",
       "has_search_path": true,
       "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/080_patch19_professional_user_management_center.sql",
+      "function_name": "patch19_user_management_bridge",
+      "has_search_path": true,
+      "has_public_revoke": true
     }
   ],
   "globalSearchPathFixes": [
@@ -317,7 +323,8 @@
     "v99_create_ovr_scenario",
     "v99_create_scenario",
     "v99_cleanup_scenarios",
-    "v99_scenario_status"
+    "v99_scenario_status",
+    "patch19_user_management_bridge"
   ],
   "finalSecurityInvokerFunctions": [
     "current_user_org_id",

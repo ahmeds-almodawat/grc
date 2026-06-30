@@ -78,6 +78,7 @@ import { RealWorkflowExecutionCenter } from './pages/RealWorkflowExecutionCenter
 import { RuntimeWorkflowActionsCenter } from './pages/RuntimeWorkflowActionsCenter';
 import { Governance } from './pages/Governance';
 import { Admin } from './pages/Admin';
+import { UserManagementCenter } from './pages/UserManagementCenter';
 import { MyWork } from './pages/MyWork';
 import { Approvals } from './pages/Approvals';
 import { Evidence } from './pages/Evidence';
@@ -278,6 +279,7 @@ function AdminReleaseHub({ setPage }: { setPage: (page: PageKey) => void }) {
         { id: 'productionFinish', label: t('hub.tab.productionFinish'), description: t('hub.tab.productionFinish.desc'), icon: <Rocket size={17} />, content: <ProductionFinishCenter /> },
         { id: 'finishFast', label: t('hub.tab.finishFast'), description: t('hub.tab.finishFast.desc'), icon: <Rocket size={17} />, content: <FinalSprintCenter /> },
         { id: 'admin', label: t('hub.tab.admin'), description: t('hub.tab.admin.desc'), icon: <Users size={17} />, content: <Admin /> },
+        { id: 'userManagement', label: t('hub.tab.userManagement', 'User Management'), description: t('hub.tab.userManagement.desc', 'Professional user lifecycle, status, department, role, CSV import/export, and audit controls.'), icon: <Users size={17} />, content: <UserManagementCenter /> },
         { id: 'access', label: t('hub.tab.access'), description: t('hub.tab.access.desc'), icon: <KeyRound size={17} />, content: <AccessControl /> },
         { id: 'setup', label: t('hub.tab.setup'), description: t('hub.tab.setup.desc'), icon: <Rocket size={17} />, content: <SetupCenter /> },
         { id: 'guide', label: t('hub.tab.guide'), description: t('hub.tab.guide.desc'), icon: <BookCopy size={17} />, content: <UserGuide /> },

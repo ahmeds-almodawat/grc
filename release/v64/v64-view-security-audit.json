@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-06-29T22:45:40.908Z",
-    "migration_files_scanned": 79,
-    "views_detected": 230,
+    "generated_at": "2026-06-30T13:52:45.801Z",
+    "migration_files_scanned": 80,
+    "views_detected": 233,
     "findings_total": 105,
     "critical": 0,
     "high": 0,
@@ -1353,6 +1353,30 @@
       "files": [
         "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
         "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_user_management_roster",
+      "files": [
+        "supabase/migrations/080_patch19_professional_user_management_center.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_user_management_summary",
+      "files": [
+        "supabase/migrations/080_patch19_professional_user_management_center.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_user_profile_completeness",
+      "files": [
+        "supabase/migrations/080_patch19_professional_user_management_center.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -3886,6 +3910,27 @@
       "occurrence": "create_view",
       "has_security_invoker": true,
       "sensitive": false
+    },
+    {
+      "view": "v_user_management_roster",
+      "file": "supabase/migrations/080_patch19_professional_user_management_center.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_user_management_summary",
+      "file": "supabase/migrations/080_patch19_professional_user_management_center.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_user_profile_completeness",
+      "file": "supabase/migrations/080_patch19_professional_user_management_center.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
     }
   ],
   "findings": [

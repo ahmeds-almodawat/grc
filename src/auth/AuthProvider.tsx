@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
-import type { AuthProfile, AuthRole, AuthRoleAssignment, AuthUserState } from './authTypes';
+import type { AuthProfile, AuthRole, AuthRoleAssignment, AuthUserState, AuthUserStatus } from './authTypes';
 
 interface AuthContextValue extends AuthUserState {
   session: Session | null;
@@ -13,6 +13,9 @@ interface AuthContextValue extends AuthUserState {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const LOCAL_BYPASS_ENABLED = import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS_LOCAL === 'true';
+const PROFILE_SELECT_WITH_PATCH19_STATUS = 'id,email,full_name_en,full_name_ar,organization_id,division_id,department_id,unit_id,is_active,user_status,organizations(name_en)';
+const PROFILE_SELECT_LEGACY = 'id,email,full_name_en,full_name_ar,organization_id,division_id,department_id,unit_id,is_active,organizations(name_en)';
+const PATCH19_BLOCKING_STATUSES: AuthUserStatus[] = ['inactive', 'archived', 'locked'];
 
 function isAuthRole(value: unknown): value is AuthRole {
   return typeof value === 'string' && [
@@ -35,6 +38,23 @@ function toAuthRole(value: unknown): AuthRole {
   return isAuthRole(value) ? value : 'employee';
 }
 
+function isKnownAuthUserStatus(value: unknown): value is AuthUserStatus {
+  return typeof value === 'string' && ['active', 'inactive', 'archived', 'invited', 'locked'].includes(value);
+}
+
+function normalizePatch19UserStatus(value: unknown): AuthUserStatus {
+  // Recovery note: Patch 19 status is additive. Missing/null/unknown status must default
+  // to active so existing authenticated admins are not locked out before migration 080 lands.
+  return isKnownAuthUserStatus(value) ? value : 'active';
+}
+
+function isMissingPatch19StatusColumn(error: { code?: string; message?: string; details?: string | null } | null): boolean {
+  if (!error) return false;
+  const text = `${error.code ?? ''} ${error.message ?? ''} ${error.details ?? ''}`.toLowerCase();
+  return text.includes('user_status')
+    && (text.includes('does not exist') || text.includes('could not find') || text.includes('schema cache') || text.includes('42703') || text.includes('pgrst204'));
+}
+
 function localBypassState(): AuthUserState {
   return {
     status: 'authenticated',
@@ -44,6 +64,7 @@ function localBypassState(): AuthUserState {
       fullNameEn: 'Local Development User',
       fullNameAr: 'مستخدم التطوير المحلي',
       isActive: true,
+      userStatus: 'active',
     },
     roles: [{ role: 'super_admin', scope: 'global' }],
     primaryRole: 'super_admin',
@@ -70,11 +91,24 @@ async function loadAuthState(session: Session | null): Promise<AuthUserState> {
   }
 
   const user = session.user;
-  const { data: profileRow, error: profileError } = await supabase
+  const profileResult = await supabase
     .from('profiles')
-    .select('id,email,full_name_en,full_name_ar,organization_id,division_id,department_id,unit_id,is_active,organizations(name_en)')
+    .select(PROFILE_SELECT_WITH_PATCH19_STATUS)
     .eq('id', user.id)
     .maybeSingle();
+
+  let profileRow = profileResult.data as any | null;
+  let profileError = profileResult.error;
+
+  if (isMissingPatch19StatusColumn(profileError)) {
+    const legacyProfileResult = await supabase
+      .from('profiles')
+      .select(PROFILE_SELECT_LEGACY)
+      .eq('id', user.id)
+      .maybeSingle();
+    profileRow = legacyProfileResult.data as any | null;
+    profileError = legacyProfileResult.error;
+  }
 
   if (profileError) {
     return {
@@ -96,6 +130,7 @@ async function loadAuthState(session: Session | null): Promise<AuthUserState> {
     };
   }
 
+  const userStatus = normalizePatch19UserStatus(profileRow.user_status);
   const profile: AuthProfile = {
     id: String(profileRow.id),
     email: String(profileRow.email ?? user.email ?? ''),
@@ -106,18 +141,9 @@ async function loadAuthState(session: Session | null): Promise<AuthUserState> {
     divisionId: profileRow.division_id as string | null | undefined,
     departmentId: profileRow.department_id as string | null | undefined,
     unitId: profileRow.unit_id as string | null | undefined,
-    isActive: Boolean(profileRow.is_active),
+    isActive: !PATCH19_BLOCKING_STATUSES.includes(userStatus),
+    userStatus,
   };
-
-  if (!profile.isActive) {
-    return {
-      status: 'inactive',
-      profile,
-      roles: [],
-      primaryRole: null,
-      message: 'Your user profile is inactive. Contact the system administrator.',
-    };
-  }
 
   const { data: roleRows, error: roleError } = await supabase
     .from('user_roles')
@@ -143,16 +169,6 @@ async function loadAuthState(session: Session | null): Promise<AuthUserState> {
     departmentId: row.department_id as string | null | undefined,
     unitId: row.unit_id as string | null | undefined,
   }));
-
-  if (roles.length === 0) {
-    return {
-      status: 'profile_missing',
-      profile,
-      roles: [],
-      primaryRole: null,
-      message: 'Your profile has no active role assignment. Ask an administrator to assign a role.',
-    };
-  }
 
   return {
     status: 'authenticated',

@@ -23,6 +23,8 @@ export type AuthStatus =
   | 'profile_missing'
   | 'error';
 
+export type AuthUserStatus = 'active' | 'inactive' | 'archived' | 'invited' | 'locked';
+
 export interface AuthProfile {
   id: string;
   email: string;
@@ -34,6 +36,7 @@ export interface AuthProfile {
   departmentId?: string | null;
   unitId?: string | null;
   isActive: boolean;
+  userStatus?: AuthUserStatus;
 }
 
 export interface AuthRoleAssignment {
