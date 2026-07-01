@@ -1,6 +1,6 @@
 {
   "summary": {
-    "generated_at": "2026-07-01T13:08:50.343Z",
+    "generated_at": "2026-07-01T16:40:37.360Z",
     "source": "src/**/*.{ts,tsx,js,jsx}",
     "frontend_rpc_call_count": 1,
     "authenticated_edge_bridge_call_count": 22,
@@ -66,7 +66,7 @@
           },
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 586,
+            "line": 623,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin_review"
           }
@@ -83,7 +83,7 @@
           },
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 601,
+            "line": 638,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin_review"
           }
@@ -171,7 +171,7 @@
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 796,
+            "line": 854,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           }
@@ -182,7 +182,7 @@
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 860,
+            "line": 918,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           }
@@ -193,7 +193,7 @@
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 877,
+            "line": 935,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           }
@@ -204,7 +204,7 @@
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 896,
+            "line": 954,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin_review"
           }
@@ -215,7 +215,7 @@
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 912,
+            "line": 970,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           }
@@ -226,7 +226,7 @@
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 922,
+            "line": 980,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           }
@@ -237,7 +237,7 @@
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 931,
+            "line": 989,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           }
@@ -248,7 +248,7 @@
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 941,
+            "line": 999,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           }
@@ -363,7 +363,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 586,
+      "line": 623,
       "rpc": "assign_user_role",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin_review",
@@ -371,7 +371,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 601,
+      "line": 638,
       "rpc": "deactivate_user_role",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin_review",
@@ -379,7 +379,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 796,
+      "line": 854,
       "rpc": "patch19_apply_import_batch",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -387,7 +387,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 860,
+      "line": 918,
       "rpc": "patch19_update_user_profile",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -395,7 +395,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 877,
+      "line": 935,
       "rpc": "patch19_update_user_department",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -403,7 +403,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 896,
+      "line": 954,
       "rpc": "patch19_assign_user_role",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin_review",
@@ -411,7 +411,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 912,
+      "line": 970,
       "rpc": "patch19_deactivate_user",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -419,7 +419,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 922,
+      "line": 980,
       "rpc": "patch19_reactivate_user",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -427,7 +427,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 931,
+      "line": 989,
       "rpc": "patch19_archive_user",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -435,7 +435,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 941,
+      "line": 999,
       "rpc": "patch19_unarchive_user",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",

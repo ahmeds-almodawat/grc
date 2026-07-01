@@ -1,12 +1,12 @@
 # v6.4 Database Security Proof Report
 
-Generated: 2026-07-01T13:07:57.093Z
+Generated: 2026-07-01T16:40:33.579Z
 
 ## Overall
 
 ```json
 {
-  "generated_at": "2026-07-01T13:07:57.093Z",
+  "generated_at": "2026-07-01T16:40:33.579Z",
   "rls_static_strict_passed": true,
   "function_static_strict_passed": true,
   "view_static_strict_passed": true,
@@ -22,7 +22,7 @@ Generated: 2026-07-01T13:07:57.093Z
 
 ```json
 {
-  "generated_at": "2026-07-01T13:07:54.113Z",
+  "generated_at": "2026-07-01T16:40:30.609Z",
   "migration_files_scanned": 82,
   "created_tables_detected": 461,
   "tables_with_explicit_rls": 401,
@@ -40,7 +40,7 @@ Generated: 2026-07-01T13:07:57.093Z
 
 ```json
 {
-  "generated_at": "2026-07-01T13:07:54.909Z",
+  "generated_at": "2026-07-01T16:40:31.358Z",
   "migration_files_scanned": 82,
   "security_definer_functions_detected": 46,
   "global_security_definer_lockdown_detected": true,
@@ -57,7 +57,7 @@ Generated: 2026-07-01T13:07:57.093Z
 
 ```json
 {
-  "generated_at": "2026-07-01T13:07:55.675Z",
+  "generated_at": "2026-07-01T16:40:32.097Z",
   "migration_files_scanned": 82,
   "views_detected": 233,
   "findings_total": 105,

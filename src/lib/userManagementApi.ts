@@ -508,8 +508,8 @@ async function readCompatibilityUserRows(): Promise<UserManagementUserRow[]> {
   try {
     const profileRows = await readRowsFromProfiles();
     if (profileRows.length) {
-      const needsRoleFallback = profileRows.some(row => activeRoleCount(row) === 0);
-      if (!needsRoleFallback) return profileRows;
+      const needsRoleSupplementalCheck = profileRows.some(row => activeRoleCount(row) === 0);
+      if (!needsRoleSupplementalCheck) return profileRows;
       const accessMatrixRows = await readRowsFromAccessMatrix();
       return accessMatrixRows?.length ? mergeAccessMatrixRoleData(profileRows, accessMatrixRows) : profileRows;
     }

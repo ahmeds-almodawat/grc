@@ -4,7 +4,7 @@
 
 ```json
 {
-  "generated_at": "2026-07-01T13:08:50.797Z",
+  "generated_at": "2026-07-01T16:40:37.763Z",
   "db_container": "supabase_db_grc-control-center",
   "db_query_status": "passed",
   "db_query_error": null,
@@ -299,7 +299,7 @@
         },
         {
           "file": "src/lib/userManagementApi.ts",
-          "line": 586
+          "line": 623
         }
       ],
       "current_security_mode": "security_definer",
@@ -327,7 +327,7 @@
         },
         {
           "file": "src/lib/userManagementApi.ts",
-          "line": 601
+          "line": 638
         }
       ],
       "current_security_mode": "security_definer",

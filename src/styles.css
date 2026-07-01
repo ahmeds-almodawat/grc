@@ -5660,3 +5660,273 @@ tbody tr:hover,
     min-width: 1120px;
   }
 }
+
+/* ==========================================================================
+   UI Scaling, Responsive Layout, and RTL Alignment Overhaul
+   ========================================================================== */
+
+/* Modern CSS Grid for App Shell */
+.modern-app-shell {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.84) 0, rgba(255, 255, 255, 0) 34%),
+    linear-gradient(180deg, #f8fafc 0%, #eef3f8 100%);
+}
+
+/* Logical spacing for Sidebar to support RTL automatically */
+.modern-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  width: 100%;
+  height: 100vh;
+  min-width: 0;
+  padding: 20px 16px;
+  background: linear-gradient(180deg, #08111f 0%, #111827 58%, #0f172a 100%);
+  border-inline-end: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 12px 0 36px rgba(15, 23, 42, 0.16);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.rtl-shell .modern-sidebar {
+  border-inline-end: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: -12px 0 36px rgba(15, 23, 42, 0.16);
+}
+
+.modern-main-content {
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  margin: 0;
+  padding: 32px 24px;
+  overflow-x: hidden;
+}
+
+/* Make grids automatically scale and wrap across viewports */
+.stats-grid,
+.card-grid,
+.module-grid,
+.two-column,
+.two-column-grid,
+.form-grid,
+.compact-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  gap: 16px !important;
+}
+
+/* Let form-grid support two-column and three-column spans correctly when there's room */
+@media (min-width: 768px) {
+  .form-grid.two {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .form-grid.three {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  .two-column,
+  .two-column-grid {
+    grid-template-columns: 1.5fr 1fr !important;
+  }
+}
+
+/* Topbar actions scaling (buttons and auth info) */
+.modern-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 16px 24px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(31, 42, 68, 0.04);
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Roster / Table scroll wrappers to handle ultra-wide and mobile scales */
+.table-wrapper,
+.user-roster-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto !important;
+  overflow-y: visible;
+  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
+}
+
+.table-wrapper table,
+.user-roster-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Adjust layout rules on smaller viewports */
+@media (max-width: 980px) {
+  .modern-app-shell {
+    grid-template-columns: 1fr !important;
+  }
+
+  .modern-sidebar {
+    position: relative !important;
+    height: auto !important;
+    width: 100% !important;
+    max-height: none !important;
+    border-inline-end: 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.1) !important;
+  }
+
+  .modern-main-content {
+    padding: 16px !important;
+  }
+
+  .modern-topbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .topbar-actions > * {
+    flex: 1 1 140px;
+    justify-content: center;
+  }
+
+  .topbar-actions .auth-user-pill {
+    flex-basis: 100%;
+    text-align: center;
+  }
+}
+
+/* Modern Tab layout scaling */
+.hub-tab-layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .hub-tab-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hub-tab-rail.panel {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    white-space: nowrap;
+    padding: 8px !important;
+    gap: 8px;
+  }
+
+  .hub-tab-button {
+    flex: 0 0 auto !important;
+    min-width: 160px;
+  }
+}
+
+/* ==========================================================================
+   UI Redesign for Vertical Compactness and Grid-Based KPI Layout
+   ========================================================================== */
+
+/* Global Horizontal KPI summary tiles grid */
+.kpi-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+  gap: 12px !important;
+  width: 100% !important;
+  margin-bottom: 20px !important;
+}
+
+/* Compact KPI Tile style */
+.kpi-tile {
+  padding: 10px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  min-height: 72px !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02) !important;
+  border: 1px solid rgba(148, 163, 184, 0.12) !important;
+}
+
+.kpi-tile__value {
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  margin-top: 2px !important;
+}
+
+.kpi-tile__label {
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  color: #64748b !important;
+}
+
+/* Hide inner nested hub hero and active tab strip sections when compact is active */
+.hub-page-compact .hub-hero {
+  display: none !important;
+}
+
+.hub-page-compact .hub-active-strip {
+  display: none !important;
+}
+
+/* Streamline and condense sub-page headers when rendered inside a tabbed content panel */
+.hub-tab-content .hero-panel,
+.hub-tab-content .page-stack > .hero-panel {
+  padding: 12px 18px !important;
+  margin-bottom: 14px !important;
+  border-radius: 12px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 16px !important;
+  background: white !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+}
+
+.hub-tab-content .hero-panel > div:first-child {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.hub-tab-content .hero-panel h1 {
+  font-size: 18px !important;
+  margin: 0 !important;
+  font-weight: 700 !important;
+}
+
+/* Hide heavy subtitles and duplicate brows to maximize vertical workspace */
+.hub-tab-content .hero-panel .eyebrow,
+.hub-tab-content .hero-panel .section-subtitle {
+  display: none !important;
+}
+
+/* Condense layout spacing of status and notice banners */
+.notice-banner {
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  margin-bottom: 8px !important;
+  border-radius: 8px !important;
+}
