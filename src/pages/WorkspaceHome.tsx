@@ -134,11 +134,11 @@ export function WorkspaceHome({ setPage }: WorkspaceHomeProps) {
         }]
       : []),
     {
-      key: 'access',
-      page: 'accessControl',
+      key: 'control-pages',
+      page: 'adminHub',
       icon: <KeyRound size={22} />,
-      title: t('home.module.access'),
-      description: t('home.module.access.desc'),
+      title: t('home.module.controlPages'),
+      description: t('home.module.controlPages.desc'),
       metric: counts.data?.activeProfiles,
       metricLabel: t('home.metric.activeProfiles'),
       tone: 'amber',

@@ -1,13 +1,14 @@
 {
-  "generatedAt": "2026-06-17T21:40:21.842Z",
-  "usedKeys": 929,
-  "definedKeys": 1138,
+  "generatedAt": "2026-07-01T07:35:38.342Z",
+  "usedKeys": 967,
+  "definedKeys": 1248,
   "missing": [],
-  "unusedCount": 209,
+  "unusedCount": 281,
   "sampleUnused": [
     "command.backup.critical",
     "command.backup.healthy",
     "command.backup.warning",
+    "command.openSearch",
     "common.cancel",
     "common.confidential",
     "common.create",
@@ -53,8 +54,7 @@
     "guide.rule.qualityClosure.text",
     "guide.rule.qualityClosure.title",
     "guide.rule.selfApproval.text",
-    "guide.rule.selfApproval.title",
-    "home.badge.assurance"
+    "guide.rule.selfApproval.title"
   ],
   "status": "pass"
 }

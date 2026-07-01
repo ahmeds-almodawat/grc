@@ -239,6 +239,114 @@ function ReportsDocumentsHub() {
   );
 }
 
+function AdminSystemControls() {
+  const { t } = useI18n();
+  return (
+    <TabbedHub
+      compact
+      eyebrow={t('hub.admin.system.eyebrow', 'Control pages')}
+      title={t('hub.admin.system.title', 'System Control Pages')}
+      subtitle={t('hub.admin.system.subtitle', 'User lifecycle, access, setup, safety, and operating guidance.')}
+      tabs={[
+        { id: 'admin', label: t('hub.tab.admin'), description: t('hub.tab.admin.desc'), icon: <Users size={17} />, content: <Admin /> },
+        { id: 'userManagement', label: t('hub.tab.userManagement', 'User Management'), description: t('hub.tab.userManagement.desc', 'Professional user lifecycle, status, department, role, CSV import/export, and audit controls.'), icon: <Users size={17} />, content: <UserManagementCenter /> },
+        { id: 'access', label: t('hub.tab.access'), description: t('hub.tab.access.desc'), icon: <KeyRound size={17} />, content: <AccessControl /> },
+        { id: 'setup', label: t('hub.tab.setup'), description: t('hub.tab.setup.desc'), icon: <Rocket size={17} />, content: <SetupCenter /> },
+        { id: 'adminSafety', label: t('hub.tab.adminSafety'), description: t('hub.tab.adminSafety.desc'), icon: <LockKeyhole size={17} />, content: <AdminSafetyConsole /> },
+        { id: 'guide', label: t('hub.tab.guide'), description: t('hub.tab.guide.desc'), icon: <BookCopy size={17} />, content: <UserGuide /> },
+      ]}
+    />
+  );
+}
+
+function RealDataControlPages() {
+  const { t } = useI18n();
+  return (
+    <TabbedHub
+      compact
+      eyebrow={t('hub.admin.realData.eyebrow', 'Real data controls')}
+      title={t('hub.admin.realData.title', 'Real Data Import & Activation')}
+      subtitle={t('hub.admin.realData.subtitle', 'Import orchestration, activation queues, source validation, UAT readiness, and real-data handoff.')}
+      tabs={[
+        { id: 'realDataImportCenter', label: t('hub.tab.realDataImportCenter', 'Real Data Import Center'), description: t('hub.tab.realDataImportCenter.desc', 'Staging-first control center for the reviewed GRC import-ready pack, reports, snapshots, and production readiness.'), icon: <UploadCloud size={17} />, content: <RealDataImportCenter /> },
+        { id: 'realDataActivation', label: t('hub.tab.realDataActivation', 'Real Data Activation'), description: t('hub.tab.realDataActivation.desc', 'Controlled activation of licensed metadata, master data, mappings, validations, load approvals, reconciliation, and cutover readiness.'), icon: <UploadCloud size={17} />, content: <RealDataActivationCenter /> },
+        { id: 'realDataUatReadiness', label: t('hub.tab.realDataUatReadiness', 'Real Data & UAT'), description: t('hub.tab.realDataUatReadiness.desc', 'Licensed content loading, import validation, mappings, UAT cycles, training, signoffs, and go/no-go readiness.'), icon: <ClipboardCheck size={17} />, content: <RealDataUatReadinessCenter /> },
+      ]}
+    />
+  );
+}
+
+function ProductionGovernancePages() {
+  const { t } = useI18n();
+  return (
+    <TabbedHub
+      compact
+      eyebrow={t('hub.admin.production.eyebrow', 'Production control')}
+      title={t('hub.admin.production.title', 'Production Governance Pages')}
+      subtitle={t('hub.admin.production.subtitle', 'Go-live assurance, release governance, runtime closure, rollback, and executive signoff.')}
+      tabs={[
+        { id: 'auditEvidenceGovernance', label: t('hub.tab.auditEvidenceGovernance', 'Audit & Evidence Integrity'), description: t('hub.tab.auditEvidenceGovernance.desc', 'Audit workbench, evidence integrity, and production governance gates.'), icon: <FileCheck2 size={17} />, content: <AuditEvidenceGovernanceCenter /> },
+        { id: 'assuranceGoLive', label: t('hub.tab.assuranceGoLive', 'Assurance Go-Live Pack'), description: t('hub.tab.assuranceGoLive.desc', 'External auditor portal, signoffs, rollback, monitoring, training, and production decisions.'), icon: <PackageCheck size={17} />, content: <AssuranceGoLiveCenter /> },
+        { id: 'finalRuntimeSecurityClosure', label: t('hub.tab.finalRuntimeSecurityClosure', 'Runtime Security Closure'), description: t('hub.tab.finalRuntimeSecurityClosure.desc', 'Close Supabase client warnings, v65 audit warning, RPC classifications, runtime-security exceptions, and final proof evidence.'), icon: <LockKeyhole size={17} />, content: <FinalRuntimeSecurityClosureCenter /> },
+        { id: 'productionHardeningLaunch', label: t('hub.tab.productionHardeningLaunch', 'Production Hardening'), description: t('hub.tab.productionHardeningLaunch.desc', 'Warning cleanup, staging persona SQL, restore proof, change freeze, board go/no-go, launch signoffs, and monitoring.'), icon: <PackageCheck size={17} />, content: <ProductionHardeningLaunchCenter /> },
+        { id: 'realProductionGoNoGo', label: t('hub.tab.realProductionGoNoGo', 'Production Go/No-Go'), description: t('hub.tab.realProductionGoNoGo.desc', 'Staging persona SQL, restore and rollback proof, change freeze, access and confidentiality review, board pack, executive decision, and launch monitoring.'), icon: <PackageCheck size={17} />, content: <ProductionGoNoGoCenter /> },
+        { id: 'releaseFactory', label: t('hub.tab.releaseFactory'), description: t('hub.tab.releaseFactory.desc'), icon: <PackageCheck size={17} />, content: <ReleaseFactoryCenter /> },
+        { id: 'productionProof', label: t('hub.tab.productionProof', 'Production Proof'), description: t('hub.tab.productionProof.desc', 'Final evidence-based go-live proof gates.'), icon: <PackageCheck size={17} />, content: <ProductionProofCenter /> },
+        { id: 'productionRelease', label: t('hub.tab.productionRelease'), description: t('hub.tab.productionRelease.desc'), icon: <Rocket size={17} />, content: <ProductionReleaseCenter /> },
+        { id: 'releaseCandidate', label: t('hub.tab.releaseCandidate'), description: t('hub.tab.releaseCandidate.desc'), icon: <PackageCheck size={17} />, content: <ReleaseCandidateCenter /> },
+        { id: 'productionFinish', label: t('hub.tab.productionFinish'), description: t('hub.tab.productionFinish.desc'), icon: <Rocket size={17} />, content: <ProductionFinishCenter /> },
+        { id: 'finishFast', label: t('hub.tab.finishFast'), description: t('hub.tab.finishFast.desc'), icon: <Rocket size={17} />, content: <FinalSprintCenter /> },
+      ]}
+    />
+  );
+}
+
+function MaintenanceIndicatorPages() {
+  const { t } = useI18n();
+  return (
+    <TabbedHub
+      compact
+      eyebrow={t('hub.admin.maintenance.eyebrow', 'Maintenance pages')}
+      title={t('hub.admin.maintenance.title', 'Maintenance & Indicators')}
+      subtitle={t('hub.admin.maintenance.subtitle', 'Security, testing, performance, indicators, backup, migration, translation, and health-maintenance controls.')}
+      tabs={[
+        { id: 'security', label: t('hub.tab.security'), description: t('hub.tab.security.desc'), icon: <LockKeyhole size={17} />, content: <SecurityAuditCenter /> },
+        { id: 'performance', label: t('hub.tab.performance'), description: t('hub.tab.performance.desc'), icon: <Gauge size={17} />, content: <PerformanceCenter /> },
+        { id: 'testing', label: t('hub.tab.testing'), description: t('hub.tab.testing.desc'), icon: <TestTubeDiagonal size={17} />, content: <TestingCenter /> },
+        { id: 'staging', label: t('hub.tab.staging'), description: t('hub.tab.staging.desc'), icon: <PackageCheck size={17} />, content: <StagingValidationCenter /> },
+        { id: 'rls', label: t('hub.tab.rls'), description: t('hub.tab.rls.desc'), icon: <ShieldAlert size={17} />, content: <RlsPersonaLab /> },
+        { id: 'kriIndicators', label: t('hub.tab.kriIndicators', 'KRI Indicators'), description: t('hub.tab.kriIndicators.desc', 'Risk appetite, KRI thresholds, breach pressure, and indicator maintenance.'), icon: <Gauge size={17} />, content: <RiskAppetiteKriCenter /> },
+        { id: 'departmentIndicators', label: t('hub.tab.departmentIndicators', 'Department Indicators'), description: t('hub.tab.departmentIndicators.desc', 'Department scorecards and operating indicator maintenance.'), icon: <Radar size={17} />, content: <DepartmentScorecards /> },
+        { id: 'backupStrategy', label: t('hub.tab.backupStrategy'), description: t('hub.tab.backupStrategy.desc'), icon: <DatabaseBackup size={17} />, content: <ProductionBackupStrategyCenter /> },
+        { id: 'backupHealth', label: t('hub.tab.backupHealth'), description: t('hub.tab.backupHealth.desc'), icon: <ArchiveRestore size={17} />, content: <BackupHealthCheck /> },
+        { id: 'migrationVerifier', label: t('hub.tab.migrationVerifier'), description: t('hub.tab.migrationVerifier.desc'), icon: <ClipboardList size={17} />, content: <MigrationVerifierCenter /> },
+        { id: 'runbook', label: t('hub.tab.runbook'), description: t('hub.tab.runbook.desc'), icon: <ClipboardList size={17} />, content: <MigrationRunbookCenter /> },
+        { id: 'restore', label: t('hub.tab.restore'), description: t('hub.tab.restore.desc'), icon: <ArchiveRestore size={17} />, content: <RestoreDryRunCenter /> },
+        { id: 'translation', label: t('hub.tab.translation'), description: t('hub.tab.translation.desc'), icon: <Languages size={17} />, content: <TranslationCoverageCenter /> },
+        { id: 'seed', label: t('hub.tab.seed'), description: t('hub.tab.seed.desc'), icon: <FileSearch size={17} />, content: <LoadSeedCenter /> },
+        { id: 'dictionary', label: t('hub.tab.dictionary'), description: t('hub.tab.dictionary.desc'), icon: <Languages size={17} />, content: <BilingualDictionaryCenter /> },
+      ]}
+    />
+  );
+}
+
+function UatScenarioControlPages({ setPage }: { setPage: (page: PageKey) => void }) {
+  const { t } = useI18n();
+  return (
+    <TabbedHub
+      compact
+      eyebrow={t('hub.admin.uat.eyebrow', 'UAT control')}
+      title={t('hub.admin.uat.title', 'UAT & Scenario Controls')}
+      subtitle={t('hub.admin.uat.subtitle', 'Controlled UAT workbench, scenario lab, and issue capture for pilot execution.')}
+      tabs={[
+        { id: 'controlledUat', label: t('hub.tab.controlledUat'), description: t('hub.tab.controlledUat.desc'), icon: <ClipboardCheck size={17} />, content: <ControlledUatWorkbench setPage={setPage} /> },
+        { id: 'scenarioLab', label: t('hub.tab.scenarioLab'), description: t('hub.tab.scenarioLab.desc'), icon: <WandSparkles size={17} />, content: <ScenarioTestConsole setPage={setPage} /> },
+        { id: 'uatIssues', label: t('hub.tab.uatIssues'), description: t('hub.tab.uatIssues.desc'), icon: <Bug size={17} />, content: <UatIssueCapture /> },
+      ]}
+    />
+  );
+}
+
 function AdminReleaseHub({ setPage }: { setPage: (page: PageKey) => void }) {
   const { t } = useI18n();
   return (
@@ -247,59 +355,17 @@ function AdminReleaseHub({ setPage }: { setPage: (page: PageKey) => void }) {
       title={t('hub.admin.title')}
       subtitle={t('hub.admin.subtitle')}
       tabs={[
+        { id: 'systemControls', label: t('hub.tab.systemControls', 'System Controls'), description: t('hub.tab.systemControls.desc', 'Admin, users, roles, access, setup, safety, and guidance.'), icon: <Users size={17} />, content: <AdminSystemControls /> },
+        { id: 'realDataControls', label: t('hub.tab.realDataControls', 'Real Data Import'), description: t('hub.tab.realDataControls.desc', 'Import center, activation, real-data readiness, and UAT source handoff.'), icon: <UploadCloud size={17} />, content: <RealDataControlPages /> },
+        { id: 'productionControls', label: t('hub.tab.productionControls', 'Production Governance'), description: t('hub.tab.productionControls.desc', 'Release, assurance, go/no-go, runtime security, and launch controls.'), icon: <PackageCheck size={17} />, content: <ProductionGovernancePages /> },
+        { id: 'maintenanceControls', label: t('hub.tab.maintenanceControls', 'Maintenance & Indicators'), description: t('hub.tab.maintenanceControls.desc', 'Security, testing, performance, indicators, backups, migration, and health controls.'), icon: <Gauge size={17} />, content: <MaintenanceIndicatorPages /> },
         ...(isScenarioLabEnabled ? [{
-          id: 'controlledUat',
-          label: t('hub.tab.controlledUat'),
-          description: t('hub.tab.controlledUat.desc'),
+          id: 'uatScenarioControls',
+          label: t('hub.tab.uatScenarioControls', 'UAT Controls'),
+          description: t('hub.tab.uatScenarioControls.desc', 'Controlled UAT workbench, scenario lab, and issue capture.'),
           icon: <ClipboardCheck size={17} />,
-          content: <ControlledUatWorkbench setPage={setPage} />,
+          content: <UatScenarioControlPages setPage={setPage} />,
         }] : []),
-        ...(isScenarioLabEnabled ? [{
-          id: 'scenarioLab',
-          label: t('hub.tab.scenarioLab'),
-          description: t('hub.tab.scenarioLab.desc'),
-          icon: <WandSparkles size={17} />,
-          content: <ScenarioTestConsole setPage={setPage} />,
-        }] : []),
-        ...(isScenarioLabEnabled ? [{
-          id: 'uatIssues',
-          label: t('hub.tab.uatIssues'),
-          description: t('hub.tab.uatIssues.desc'),
-          icon: <Bug size={17} />,
-          content: <UatIssueCapture />,
-        }] : []),
-        { id: 'auditEvidenceGovernance', label: t('hub.tab.auditEvidenceGovernance', 'Audit & Evidence Integrity'), description: t('hub.tab.auditEvidenceGovernance.desc', 'Audit workbench, evidence integrity, and production governance gates.'), icon: <FileCheck2 size={17} />, content: <AuditEvidenceGovernanceCenter /> },
-        { id: 'assuranceGoLive', label: t('hub.tab.assuranceGoLive', 'Assurance Go-Live Pack'), description: t('hub.tab.assuranceGoLive.desc', 'External auditor portal, signoffs, rollback, monitoring, training, and production decisions.'), icon: <PackageCheck size={17} />, content: <AssuranceGoLiveCenter /> },
-        { id: 'realDataUatReadiness', label: t('hub.tab.realDataUatReadiness', 'Real Data & UAT'), description: t('hub.tab.realDataUatReadiness.desc', 'Licensed content loading, import validation, mappings, UAT cycles, training, signoffs, and go/no-go readiness.'), icon: <ClipboardCheck size={17} />, content: <RealDataUatReadinessCenter /> },
-        { id: 'realDataActivation', label: t('hub.tab.realDataActivation', 'Real Data Activation'), description: t('hub.tab.realDataActivation.desc', 'Controlled activation of licensed metadata, master data, mappings, validations, load approvals, reconciliation, and cutover readiness.'), icon: <UploadCloud size={17} />, content: <RealDataActivationCenter /> },
-        { id: 'realDataImportCenter', label: t('hub.tab.realDataImportCenter', 'Real Data Import Center'), description: t('hub.tab.realDataImportCenter.desc', 'Staging-first control center for the reviewed GRC import-ready pack, reports, snapshots, and production readiness.'), icon: <UploadCloud size={17} />, content: <RealDataImportCenter /> },
-        { id: 'finalRuntimeSecurityClosure', label: t('hub.tab.finalRuntimeSecurityClosure', 'Final Runtime Security Closure'), description: t('hub.tab.finalRuntimeSecurityClosure.desc', 'Close Supabase client warnings, v65 audit warning, RPC classifications, runtime-security exceptions, and final proof evidence.'), icon: <LockKeyhole size={17} />, content: <FinalRuntimeSecurityClosureCenter /> },
-        { id: 'productionHardeningLaunch', label: t('hub.tab.productionHardeningLaunch', 'Production Hardening Launch'), description: t('hub.tab.productionHardeningLaunch.desc', 'Warning cleanup, staging persona SQL, restore proof, change freeze, board go/no-go, launch signoffs, and monitoring.'), icon: <PackageCheck size={17} />, content: <ProductionHardeningLaunchCenter /> },
-        { id: 'realProductionGoNoGo', label: t('hub.tab.realProductionGoNoGo', 'Production Go/No-Go'), description: t('hub.tab.realProductionGoNoGo.desc', 'Staging persona SQL, restore and rollback proof, change freeze, access and confidentiality review, board pack, executive decision, and launch monitoring.'), icon: <PackageCheck size={17} />, content: <ProductionGoNoGoCenter /> },
-        { id: 'releaseFactory', label: t('hub.tab.releaseFactory'), description: t('hub.tab.releaseFactory.desc'), icon: <PackageCheck size={17} />, content: <ReleaseFactoryCenter /> },
-        { id: 'productionProof', label: t('hub.tab.productionProof', 'Production Proof'), description: t('hub.tab.productionProof.desc', 'Final evidence-based go-live proof gates.'), icon: <PackageCheck size={17} />, content: <ProductionProofCenter /> },
-        { id: 'productionFinish', label: t('hub.tab.productionFinish'), description: t('hub.tab.productionFinish.desc'), icon: <Rocket size={17} />, content: <ProductionFinishCenter /> },
-        { id: 'finishFast', label: t('hub.tab.finishFast'), description: t('hub.tab.finishFast.desc'), icon: <Rocket size={17} />, content: <FinalSprintCenter /> },
-        { id: 'admin', label: t('hub.tab.admin'), description: t('hub.tab.admin.desc'), icon: <Users size={17} />, content: <Admin /> },
-        { id: 'userManagement', label: t('hub.tab.userManagement', 'User Management'), description: t('hub.tab.userManagement.desc', 'Professional user lifecycle, status, department, role, CSV import/export, and audit controls.'), icon: <Users size={17} />, content: <UserManagementCenter /> },
-        { id: 'access', label: t('hub.tab.access'), description: t('hub.tab.access.desc'), icon: <KeyRound size={17} />, content: <AccessControl /> },
-        { id: 'setup', label: t('hub.tab.setup'), description: t('hub.tab.setup.desc'), icon: <Rocket size={17} />, content: <SetupCenter /> },
-        { id: 'guide', label: t('hub.tab.guide'), description: t('hub.tab.guide.desc'), icon: <BookCopy size={17} />, content: <UserGuide /> },
-        { id: 'security', label: t('hub.tab.security'), description: t('hub.tab.security.desc'), icon: <LockKeyhole size={17} />, content: <SecurityAuditCenter /> },
-        { id: 'performance', label: t('hub.tab.performance'), description: t('hub.tab.performance.desc'), icon: <Gauge size={17} />, content: <PerformanceCenter /> },
-        { id: 'testing', label: t('hub.tab.testing'), description: t('hub.tab.testing.desc'), icon: <TestTubeDiagonal size={17} />, content: <TestingCenter /> },
-        { id: 'staging', label: t('hub.tab.staging'), description: t('hub.tab.staging.desc'), icon: <PackageCheck size={17} />, content: <StagingValidationCenter /> },
-        { id: 'rls', label: t('hub.tab.rls'), description: t('hub.tab.rls.desc'), icon: <ShieldAlert size={17} />, content: <RlsPersonaLab /> },
-        { id: 'translation', label: t('hub.tab.translation'), description: t('hub.tab.translation.desc'), icon: <Languages size={17} />, content: <TranslationCoverageCenter /> },
-        { id: 'seed', label: t('hub.tab.seed'), description: t('hub.tab.seed.desc'), icon: <FileSearch size={17} />, content: <LoadSeedCenter /> },
-        { id: 'backupStrategy', label: t('hub.tab.backupStrategy'), description: t('hub.tab.backupStrategy.desc'), icon: <DatabaseBackup size={17} />, content: <ProductionBackupStrategyCenter /> },
-        { id: 'runbook', label: t('hub.tab.runbook'), description: t('hub.tab.runbook.desc'), icon: <ClipboardList size={17} />, content: <MigrationRunbookCenter /> },
-        { id: 'releaseCandidate', label: t('hub.tab.releaseCandidate'), description: t('hub.tab.releaseCandidate.desc'), icon: <PackageCheck size={17} />, content: <ReleaseCandidateCenter /> },
-        { id: 'productionRelease', label: t('hub.tab.productionRelease'), description: t('hub.tab.productionRelease.desc'), icon: <Rocket size={17} />, content: <ProductionReleaseCenter /> },
-        { id: 'migrationVerifier', label: t('hub.tab.migrationVerifier'), description: t('hub.tab.migrationVerifier.desc'), icon: <ClipboardList size={17} />, content: <MigrationVerifierCenter /> },
-        { id: 'restore', label: t('hub.tab.restore'), description: t('hub.tab.restore.desc'), icon: <ArchiveRestore size={17} />, content: <RestoreDryRunCenter /> },
-        { id: 'adminSafety', label: t('hub.tab.adminSafety'), description: t('hub.tab.adminSafety.desc'), icon: <LockKeyhole size={17} />, content: <AdminSafetyConsole /> },
-        { id: 'dictionary', label: t('hub.tab.dictionary'), description: t('hub.tab.dictionary.desc'), icon: <Languages size={17} />, content: <BilingualDictionaryCenter /> },
       ]}
     />
   );
