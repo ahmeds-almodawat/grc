@@ -1,11 +1,19 @@
 v6.7.4 Restore Integrity Dry-Run Evidence
 Environment: Local Supabase Docker staging
+<<<<<<< Updated upstream
 Generated UTC: 2026-07-01T17:29:17.405Z
+=======
+Generated UTC: 2026-07-01T23:08:59.116Z
+>>>>>>> Stashed changes
 Source database: postgres in supabase_db_grc-control-center
 Temporary verification database: grc_v674_restore_verify
 Dump scope: auth, public, storage, supabase_migrations
 Managed service scope limitation: realtime and other Supabase service internals are not claimed by this application-data restore proof.
+<<<<<<< Updated upstream
 Dump size bytes: 3099755
+=======
+Dump size bytes: 3243471
+>>>>>>> Stashed changes
 
 Key table count comparison:
 - public.organizations: source=2, restored=2, MATCHED

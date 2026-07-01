@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-07-01T23:07:48.144Z",
+  "status": "passed",
+  "controls": [
+    "containment_required",
+    "containment_due_at",
+    "containment_status",
+    "owner override reason",
+    "closure guard"
+  ]
+}

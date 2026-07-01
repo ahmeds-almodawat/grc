@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-07-01T23:07:48.144Z",
+  "status": "passed",
+  "controls": [
+    "conflict_of_interest_flag",
+    "conflicted_user_ids",
+    "alternate_reviewer_id",
+    "possible_duplicate_of_ovr_id",
+    "repeat_incident_flag",
+    "similar_ovr_count"
+  ]
+}

@@ -1,6 +1,10 @@
 # v6.6.2 Evidence Quality Gate
 
+<<<<<<< Updated upstream
 Generated: 2026-07-01T17:29:34.515Z
+=======
+Generated: 2026-07-01T23:09:18.603Z
+>>>>>>> Stashed changes
 
 Status: **ready_for_controlled_pilot_evidence_review**
 

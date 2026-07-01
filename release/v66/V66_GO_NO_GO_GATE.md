@@ -2,9 +2,15 @@
 
 ```json
 {
+<<<<<<< Updated upstream
   "generated_at": "2026-07-01T17:29:37.308Z",
   "controlled_pilot_status": "ready_for_controlled_pilot_go_no_go_review",
   "strict_passed": true,
+=======
+  "generated_at": "2026-07-01T23:09:20.716Z",
+  "controlled_pilot_status": "not_ready_manual_evidence_required",
+  "strict_passed": false,
+>>>>>>> Stashed changes
   "gates": [
     {
       "id": "local_typecheck_build",

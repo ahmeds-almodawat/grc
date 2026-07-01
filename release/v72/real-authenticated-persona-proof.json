@@ -1,5 +1,9 @@
 {
+<<<<<<< Updated upstream
   "generated_at": "2026-07-01T17:29:15.470Z",
+=======
+  "generated_at": "2026-07-01T23:08:56.852Z",
+>>>>>>> Stashed changes
   "environment": "Local Supabase Docker staging",
   "synthetic_data_only": true,
   "no_real_patient_identifiers": true,
@@ -41,7 +45,11 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
+<<<<<<< Updated upstream
       "actual": "8373b775-07c7-408e-a76e-c5d979983738",
+=======
+      "actual": "729a742d-41c7-4a0d-93d4-5730d68e0a4e",
+>>>>>>> Stashed changes
       "details": null
     },
     {
@@ -61,7 +69,11 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
+<<<<<<< Updated upstream
       "actual": "dcba67ff-bef9-4cfa-a944-4f545c41a559",
+=======
+      "actual": "883e9015-2129-40a9-8d72-d95f67e2ccc5",
+>>>>>>> Stashed changes
       "details": null
     },
     {
@@ -81,7 +93,11 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
+<<<<<<< Updated upstream
       "actual": "16017009-fa4f-486f-8070-db9540875e3b",
+=======
+      "actual": "9b2b3d67-8a7d-431e-862b-b87a6f380ce6",
+>>>>>>> Stashed changes
       "details": null
     },
     {
@@ -101,7 +117,11 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
+<<<<<<< Updated upstream
       "actual": "3a4ded8c-d57d-4c63-a329-81e60fecaa36",
+=======
+      "actual": "3f63a4a2-3333-40c5-a82b-6c2fa999d258",
+>>>>>>> Stashed changes
       "details": null
     },
     {
@@ -121,7 +141,11 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
+<<<<<<< Updated upstream
       "actual": "3554fe14-9cab-4ac6-9911-8732a22fa321",
+=======
+      "actual": "ca79e9c1-e48e-4fc7-8857-f0c59ffabcf3",
+>>>>>>> Stashed changes
       "details": null
     },
     {
@@ -141,7 +165,11 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
+<<<<<<< Updated upstream
       "actual": "3b5fdab1-e960-4d30-9269-7c12f8248012",
+=======
+      "actual": "84e06e16-af5a-4eff-822a-edecfd0a8ab3",
+>>>>>>> Stashed changes
       "details": null
     },
     {
@@ -161,7 +189,11 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
+<<<<<<< Updated upstream
       "actual": "e3a2c891-bd42-4b6d-8991-f7fb44238865",
+=======
+      "actual": "ee0db425-4c24-48a8-a072-aaa4a91f81c2",
+>>>>>>> Stashed changes
       "details": null
     },
     {
@@ -181,7 +213,11 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
+<<<<<<< Updated upstream
       "actual": "7aea4b9d-5967-4fc9-9f81-22ed22e19352",
+=======
+      "actual": "0def048b-a8aa-4863-bc87-291c8a42b3a6",
+>>>>>>> Stashed changes
       "details": null
     },
     {
@@ -275,7 +311,11 @@
           "ok": true,
           "action": "assign_user_role",
           "result": {
+<<<<<<< Updated upstream
             "id": "c9217e48-243e-486c-851a-7a9858163b10"
+=======
+            "id": "4972d70a-3553-4d01-a674-9ea45c644da7"
+>>>>>>> Stashed changes
           }
         },
         "admin_deactivate": {
@@ -326,7 +366,11 @@
           "ok": true,
           "action": "create_board_pack_snapshot",
           "result": {
+<<<<<<< Updated upstream
             "id": "8110da3a-24b6-429b-9ce6-6b7871bb0325"
+=======
+            "id": "08845a3e-ba7d-4864-aa46-490ed2db69c3"
+>>>>>>> Stashed changes
           }
         },
         "acknowledge_escalation_event": {
@@ -347,7 +391,11 @@
           "ok": true,
           "action": "assign_user_role",
           "result": {
+<<<<<<< Updated upstream
             "id": "c9217e48-243e-486c-851a-7a9858163b10"
+=======
+            "id": "4972d70a-3553-4d01-a674-9ea45c644da7"
+>>>>>>> Stashed changes
           }
         },
         "deactivate_user_role": {
@@ -375,7 +423,11 @@
           "ok": true,
           "action": "create_ovr_corrective_action_project",
           "result": {
+<<<<<<< Updated upstream
             "id": "c0ff87cd-a83f-4d5a-9d99-776946d9afda"
+=======
+            "id": "d4ec251c-9050-4a04-9550-4eb660ad3700"
+>>>>>>> Stashed changes
           }
         },
         "unauthorized_assign_user_role": "V72_ROLE_ADMIN_NOT_AUTHORIZED"

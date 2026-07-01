@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-07-01T23:07:48.144Z",
+  "status": "passed",
+  "controls": [
+    "rca_required",
+    "rca_level",
+    "rca_status",
+    "committee_review_required",
+    "committee_status",
+    "closure guard"
+  ]
+}

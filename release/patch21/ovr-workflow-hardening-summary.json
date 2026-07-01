@@ -1,0 +1,133 @@
+{
+  "generated_at": "2026-07-01T23:07:48.144Z",
+  "status": "passed",
+  "files": {
+    "migration": "supabase/migrations/083_patch21_ovr_workflow_hardening.sql",
+    "ovrPage": "src/pages/OVR.tsx",
+    "grcApi": "src/lib/grcApi.ts",
+    "authAccess": "src/auth/authAccess.ts",
+    "authTypes": "src/auth/authTypes.ts",
+    "userManagement": "src/lib/userManagementApi.ts",
+    "edge": "supabase/functions/privileged-action/index.ts",
+    "ownerScript": "scripts/patch21-assign-owner-role.mjs"
+  },
+  "passed_count": 23,
+  "failed_count": 0,
+  "checks": [
+    {
+      "id": "owner_role_enum_migration",
+      "passed": true,
+      "detail": "owner enum is added in migration 083"
+    },
+    {
+      "id": "owner_route_and_role_guards",
+      "passed": true,
+      "detail": "owner is included in route/page guard role groups"
+    },
+    {
+      "id": "owner_role_selectors",
+      "passed": true,
+      "detail": "owner is selectable in user-management role options"
+    },
+    {
+      "id": "owner_import_mapping",
+      "passed": true,
+      "detail": "owner is mapped and protected in Patch 20 importer"
+    },
+    {
+      "id": "owner_assignment_script",
+      "passed": true,
+      "detail": "owner assignment script is present and additive"
+    },
+    {
+      "id": "anonymous_masking",
+      "passed": true,
+      "detail": "anonymous reports retain reporter id but mask identity unless owner reveals with audit"
+    },
+    {
+      "id": "quality_immediate_notification",
+      "passed": true,
+      "detail": "submitted OVRs notify Quality immediately"
+    },
+    {
+      "id": "target_delay_urgent_bypass",
+      "passed": true,
+      "detail": "target notification is delayed until validation except urgent bypass"
+    },
+    {
+      "id": "containment_required_critical",
+      "passed": true,
+      "detail": "critical/sentinel containment defaults and two-hour SLA exist"
+    },
+    {
+      "id": "action_level_capa_logic",
+      "passed": true,
+      "detail": "action level separates minor closure from CAPA/committee requirements"
+    },
+    {
+      "id": "one_time_dispute",
+      "passed": true,
+      "detail": "reporter dispute is limited to one and final decision can lock"
+    },
+    {
+      "id": "sla_generation",
+      "passed": true,
+      "detail": "severity SLA due fields and overdue flags exist"
+    },
+    {
+      "id": "multi_department_routing",
+      "passed": true,
+      "detail": "multi-department routing fields exist"
+    },
+    {
+      "id": "mandatory_rca",
+      "passed": true,
+      "detail": "mandatory RCA fields and levels exist"
+    },
+    {
+      "id": "committee_blocking",
+      "passed": true,
+      "detail": "committee escalation fields and closure blocking exist"
+    },
+    {
+      "id": "conflict_blocking",
+      "passed": true,
+      "detail": "conflict protection blocks conflicted actors"
+    },
+    {
+      "id": "duplicate_repeat_signal",
+      "passed": true,
+      "detail": "duplicate/repeat intelligence fields and status exist"
+    },
+    {
+      "id": "reporter_safe_view",
+      "passed": true,
+      "detail": "reporter-safe view and summaries exist"
+    },
+    {
+      "id": "audit_masking_modes",
+      "passed": true,
+      "detail": "audit visibility modes exist"
+    },
+    {
+      "id": "closure_guard",
+      "passed": true,
+      "detail": "closure guard blocks mandatory incomplete work unless owner override is audited"
+    },
+    {
+      "id": "ui_controls",
+      "passed": true,
+      "detail": "OVR UI exposes functional Patch 21 controls"
+    },
+    {
+      "id": "api_bridge",
+      "passed": true,
+      "detail": "browser API uses privileged Edge bridge, not service role"
+    },
+    {
+      "id": "edge_bridge",
+      "passed": true,
+      "detail": "Edge Function exposes Patch 21 service-role bridge actions"
+    }
+  ]
+}

@@ -1,12 +1,20 @@
 # v6.4 Database Security Proof Report
 
+<<<<<<< Updated upstream
 Generated: 2026-07-01T17:28:56.494Z
+=======
+Generated: 2026-07-01T23:08:37.077Z
+>>>>>>> Stashed changes
 
 ## Overall
 
 ```json
 {
+<<<<<<< Updated upstream
   "generated_at": "2026-07-01T17:28:56.494Z",
+=======
+  "generated_at": "2026-07-01T23:08:37.077Z",
+>>>>>>> Stashed changes
   "rls_static_strict_passed": true,
   "function_static_strict_passed": true,
   "view_static_strict_passed": true,
@@ -22,11 +30,19 @@ Generated: 2026-07-01T17:28:56.494Z
 
 ```json
 {
+<<<<<<< Updated upstream
   "generated_at": "2026-07-01T17:28:52.775Z",
   "migration_files_scanned": 82,
   "created_tables_detected": 461,
   "tables_with_explicit_rls": 401,
   "tables_with_detected_policies": 369,
+=======
+  "generated_at": "2026-07-01T23:08:33.472Z",
+  "migration_files_scanned": 83,
+  "created_tables_detected": 462,
+  "tables_with_explicit_rls": 402,
+  "tables_with_detected_policies": 370,
+>>>>>>> Stashed changes
   "findings_total": 60,
   "critical": 0,
   "high": 0,
@@ -40,9 +56,15 @@ Generated: 2026-07-01T17:28:56.494Z
 
 ```json
 {
+<<<<<<< Updated upstream
   "generated_at": "2026-07-01T17:28:54.005Z",
   "migration_files_scanned": 82,
   "security_definer_functions_detected": 46,
+=======
+  "generated_at": "2026-07-01T23:08:34.413Z",
+  "migration_files_scanned": 83,
+  "security_definer_functions_detected": 55,
+>>>>>>> Stashed changes
   "global_security_definer_lockdown_detected": true,
   "findings_total": 0,
   "critical": 0,
@@ -57,9 +79,15 @@ Generated: 2026-07-01T17:28:56.494Z
 
 ```json
 {
+<<<<<<< Updated upstream
   "generated_at": "2026-07-01T17:28:54.905Z",
   "migration_files_scanned": 82,
   "views_detected": 233,
+=======
+  "generated_at": "2026-07-01T23:08:35.263Z",
+  "migration_files_scanned": 83,
+  "views_detected": 235,
+>>>>>>> Stashed changes
   "findings_total": 105,
   "critical": 0,
   "high": 0,

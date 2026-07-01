@@ -1,5 +1,9 @@
 {
+<<<<<<< Updated upstream
   "generated_at": "2026-07-01T17:29:17.405Z",
+=======
+  "generated_at": "2026-07-01T23:08:59.116Z",
+>>>>>>> Stashed changes
   "environment": "Local Supabase Docker staging",
   "project_id": "grc-control-center",
   "db_container": "supabase_db_grc-control-center",
@@ -14,7 +18,11 @@
   "excluded_managed_schemas": [
     "realtime and other Supabase service internals"
   ],
+<<<<<<< Updated upstream
   "dump_bytes": 3099755,
+=======
+  "dump_bytes": 3243471,
+>>>>>>> Stashed changes
   "source_counts": {
     "public.organizations": 2,
     "public.profiles": 486,
@@ -173,8 +181,13 @@
   "steps": [
     {
       "name": "capture_source_counts",
+<<<<<<< Updated upstream
       "started_at": "2026-07-01T17:29:17.617Z",
       "finished_at": "2026-07-01T17:29:17.905Z",
+=======
+      "started_at": "2026-07-01T23:08:59.345Z",
+      "finished_at": "2026-07-01T23:08:59.630Z",
+>>>>>>> Stashed changes
       "exit_code": 0,
       "passed": true,
       "stdout": "{\"public.organizations\" : 2, \"public.profiles\" : 486, \"public.user_roles\" : 943, \"public.projects\" : 3, \"public.milestones\" : 0, \"public.tasks\" : 0, \"public.ovr_reports\" : 1, \"public.evidence_files\" : 0, \"public.approvals\" : 0, \"public.controlled_pilot_runs\" : 1, \"public.controlled_pilot_evidence_items\" : 0, \"public.controlled_pilot_issues\" : 0, \"public.controlled_pilot_signoffs\" : 0, \"storage.buckets\" : 1, \"storage.objects\" : 0, \"supabase_migrations.schema_migrations\" : 56}",
@@ -182,8 +195,13 @@
     },
     {
       "name": "dump_application_schemas",
+<<<<<<< Updated upstream
       "started_at": "2026-07-01T17:29:17.905Z",
       "finished_at": "2026-07-01T17:29:18.872Z",
+=======
+      "started_at": "2026-07-01T23:08:59.630Z",
+      "finished_at": "2026-07-01T23:09:00.685Z",
+>>>>>>> Stashed changes
       "exit_code": 0,
       "passed": true,
       "stdout": "",
@@ -191,17 +209,30 @@
     },
     {
       "name": "verify_dump_file",
+<<<<<<< Updated upstream
       "started_at": "2026-07-01T17:29:18.872Z",
       "finished_at": "2026-07-01T17:29:19.166Z",
       "exit_code": 0,
       "passed": true,
       "stdout": "3099755",
+=======
+      "started_at": "2026-07-01T23:09:00.685Z",
+      "finished_at": "2026-07-01T23:09:01.079Z",
+      "exit_code": 0,
+      "passed": true,
+      "stdout": "3243471",
+>>>>>>> Stashed changes
       "stderr": ""
     },
     {
       "name": "drop_previous_verification_database",
+<<<<<<< Updated upstream
       "started_at": "2026-07-01T17:29:19.166Z",
       "finished_at": "2026-07-01T17:29:19.424Z",
+=======
+      "started_at": "2026-07-01T23:09:01.079Z",
+      "finished_at": "2026-07-01T23:09:01.347Z",
+>>>>>>> Stashed changes
       "exit_code": 0,
       "passed": true,
       "stdout": "",
@@ -209,8 +240,13 @@
     },
     {
       "name": "create_verification_database",
+<<<<<<< Updated upstream
       "started_at": "2026-07-01T17:29:19.424Z",
       "finished_at": "2026-07-01T17:29:19.755Z",
+=======
+      "started_at": "2026-07-01T23:09:01.347Z",
+      "finished_at": "2026-07-01T23:09:01.838Z",
+>>>>>>> Stashed changes
       "exit_code": 0,
       "passed": true,
       "stdout": "",
@@ -218,8 +254,13 @@
     },
     {
       "name": "prepare_verification_database",
+<<<<<<< Updated upstream
       "started_at": "2026-07-01T17:29:19.755Z",
       "finished_at": "2026-07-01T17:29:20.035Z",
+=======
+      "started_at": "2026-07-01T23:09:01.838Z",
+      "finished_at": "2026-07-01T23:09:02.794Z",
+>>>>>>> Stashed changes
       "exit_code": 0,
       "passed": true,
       "stdout": "DROP SCHEMA",
@@ -227,8 +268,13 @@
     },
     {
       "name": "restore_dump",
+<<<<<<< Updated upstream
       "started_at": "2026-07-01T17:29:20.035Z",
       "finished_at": "2026-07-01T17:29:28.071Z",
+=======
+      "started_at": "2026-07-01T23:09:02.794Z",
+      "finished_at": "2026-07-01T23:09:12.159Z",
+>>>>>>> Stashed changes
       "exit_code": 0,
       "passed": true,
       "stdout": "",
@@ -236,8 +282,13 @@
     },
     {
       "name": "capture_restored_counts",
+<<<<<<< Updated upstream
       "started_at": "2026-07-01T17:29:28.071Z",
       "finished_at": "2026-07-01T17:29:28.340Z",
+=======
+      "started_at": "2026-07-01T23:09:12.159Z",
+      "finished_at": "2026-07-01T23:09:12.443Z",
+>>>>>>> Stashed changes
       "exit_code": 0,
       "passed": true,
       "stdout": "{\"public.organizations\" : 2, \"public.profiles\" : 486, \"public.user_roles\" : 943, \"public.projects\" : 3, \"public.milestones\" : 0, \"public.tasks\" : 0, \"public.ovr_reports\" : 1, \"public.evidence_files\" : 0, \"public.approvals\" : 0, \"public.controlled_pilot_runs\" : 1, \"public.controlled_pilot_evidence_items\" : 0, \"public.controlled_pilot_issues\" : 0, \"public.controlled_pilot_signoffs\" : 0, \"storage.buckets\" : 1, \"storage.objects\" : 0, \"supabase_migrations.schema_migrations\" : 56}",
@@ -245,8 +296,13 @@
     },
     {
       "name": "verify_evidence_tables",
+<<<<<<< Updated upstream
       "started_at": "2026-07-01T17:29:28.340Z",
       "finished_at": "2026-07-01T17:29:28.591Z",
+=======
+      "started_at": "2026-07-01T23:09:12.443Z",
+      "finished_at": "2026-07-01T23:09:12.746Z",
+>>>>>>> Stashed changes
       "exit_code": 0,
       "passed": true,
       "stdout": "{\"public.evidence_files\" : true, \"public.v64_security_evidence\" : true, \"public.controlled_pilot_evidence_items\" : true, \"storage.buckets\" : true, \"storage.objects\" : true}",
@@ -254,8 +310,13 @@
     },
     {
       "name": "run_post_restore_smoke_query",
+<<<<<<< Updated upstream
       "started_at": "2026-07-01T17:29:28.591Z",
       "finished_at": "2026-07-01T17:29:28.875Z",
+=======
+      "started_at": "2026-07-01T23:09:12.746Z",
+      "finished_at": "2026-07-01T23:09:13.047Z",
+>>>>>>> Stashed changes
       "exit_code": 0,
       "passed": true,
       "stdout": "{\"database\" : \"grc_v674_restore_verify\", \"latest_migration\" : \"056_v131_security_persona_proof_hotfix\", \"organization_count\" : 2, \"evidence_file_count\" : 0, \"pilot_evidence_count\" : 0, \"storage_object_count\" : 0}",
@@ -263,8 +324,13 @@
     },
     {
       "name": "cleanup_verification_database",
+<<<<<<< Updated upstream
       "started_at": "2026-07-01T17:29:28.875Z",
       "finished_at": "2026-07-01T17:29:29.397Z",
+=======
+      "started_at": "2026-07-01T23:09:13.047Z",
+      "finished_at": "2026-07-01T23:09:13.527Z",
+>>>>>>> Stashed changes
       "exit_code": 0,
       "passed": true,
       "stdout": "",
@@ -272,8 +338,13 @@
     },
     {
       "name": "cleanup_dump_file",
+<<<<<<< Updated upstream
       "started_at": "2026-07-01T17:29:29.397Z",
       "finished_at": "2026-07-01T17:29:29.646Z",
+=======
+      "started_at": "2026-07-01T23:09:13.527Z",
+      "finished_at": "2026-07-01T23:09:13.792Z",
+>>>>>>> Stashed changes
       "exit_code": 0,
       "passed": true,
       "stdout": "",

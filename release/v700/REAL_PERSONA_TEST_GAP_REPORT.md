@@ -2,8 +2,13 @@
 
 ```json
 {
+<<<<<<< Updated upstream
   "generated_at": "2026-07-01T17:29:16.477Z",
   "status": "real_authenticated_persona_proof_passed",
+=======
+  "generated_at": "2026-07-01T23:08:58.114Z",
+  "status": "real_authenticated_persona_tests_required",
+>>>>>>> Stashed changes
   "proof_file": "release/v72/real-authenticated-persona-proof.json",
   "proof_read_error": null,
   "required_personas": [

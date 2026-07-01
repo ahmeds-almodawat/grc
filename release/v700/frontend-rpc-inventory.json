@@ -1,6 +1,10 @@
 {
   "summary": {
+<<<<<<< Updated upstream
     "generated_at": "2026-07-01T17:29:01.984Z",
+=======
+    "generated_at": "2026-07-01T23:09:28.729Z",
+>>>>>>> Stashed changes
     "source": "src/**/*.{ts,tsx,js,jsx}",
     "frontend_rpc_call_count": 1,
     "authenticated_edge_bridge_call_count": 23,
