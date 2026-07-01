@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Archive, Download, Eye, FileDown, FileUp, RefreshCw, RotateCcw, ShieldOff, UploadCloud, UserCog } from 'lucide-react';
+import { Archive, Building2, Download, Eye, FileDown, FileUp, KeyRound, RefreshCw, RotateCcw, ShieldOff, UploadCloud, UserCog } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { Modal } from '../components/Modal';
@@ -77,6 +77,11 @@ function statusTone(status?: string | null): 'neutral' | 'good' | 'warning' | 'd
 function roleSummary(user: UserManagementUserRow): string {
   const roles = user.roles?.filter(role => role.is_active) ?? [];
   return roles.length ? roles.map(role => humanize(role.role)).join(', ') : 'No active role';
+}
+
+function activeRoleTotal(user: UserManagementUserRow): number {
+  const activeRoles = user.roles?.filter(role => role.is_active).length ?? 0;
+  return Math.max(user.active_role_count ?? 0, activeRoles);
 }
 
 function linkedRecordCount(user: UserManagementUserRow): number {
@@ -186,7 +191,7 @@ export function UserManagementCenter() {
       ].filter(Boolean).join(' ').toLowerCase().includes(query);
       const matchesDepartment = !departmentFilter || user.department_id === departmentFilter;
       const matchesRole = roleFilter === 'all'
-        || (roleFilter === 'missing' ? user.active_role_count === 0 : user.roles?.some(role => role.is_active && role.role === roleFilter));
+        || (roleFilter === 'missing' ? activeRoleTotal(user) === 0 : user.roles?.some(role => role.is_active && role.role === roleFilter));
       const matchesStatus = statusFilter === 'all' || user.user_status === statusFilter;
       const matchesType = typeFilter === 'all' || user.user_type === typeFilter;
       return inCurrentDepartment
@@ -196,7 +201,7 @@ export function UserManagementCenter() {
         && matchesStatus
         && matchesType
         && (!missingDepartment || !user.department_id)
-        && (!missingRole || user.active_role_count === 0)
+        && (!missingRole || activeRoleTotal(user) === 0)
         && (!neverLoggedIn || !user.last_login_at);
     });
   }, [auth.profile?.departmentId, auth.roles, canModify, departmentFilter, missingDepartment, missingRole, neverLoggedIn, roleFilter, search, statusFilter, typeFilter, userRows]);
@@ -475,7 +480,7 @@ export function UserManagementCenter() {
         </div>
       </ModernCard>
 
-      <ModernCard title="Bulk actions" subtitle="Selected users can be exported or updated through safe app-level actions.">
+      <ModernCard title="Bulk actions" subtitle="Selected users can be exported or updated through safe app-level actions." className="user-management-bulk-card">
         <div className="form-grid">
           <label className="field">
             Bulk department
@@ -534,15 +539,15 @@ export function UserManagementCenter() {
         </div>
       </ModernCard>
 
-      <ModernCard title="User roster" subtitle={`${visibleUsers.length} user${visibleUsers.length === 1 ? '' : 's'} shown.`}>
+      <ModernCard title="User roster" subtitle={`${visibleUsers.length} user${visibleUsers.length === 1 ? '' : 's'} shown.`} className="user-roster-card">
         <DataState
           loading={loading}
           empty={!loading && visibleUsers.length === 0}
           emptyTitle="No users match the selected filters"
           emptyMessage={getLiveResultMessage(users)}
         >
-          <div className="table-scroll">
-            <table className="entity-table">
+          <div className="user-roster-scroll" tabIndex={0}>
+            <table className="entity-table user-roster-table">
               <thead>
                 <tr>
                   <th>
@@ -571,43 +576,43 @@ export function UserManagementCenter() {
                 {visibleUsers.map(user => (
                   <tr key={user.user_id}>
                     <td><input type="checkbox" checked={selectedIds.has(user.user_id)} onChange={() => toggleSelected(user.user_id)} /></td>
-                    <td><strong>{user.full_name_en}</strong><br /><span className="muted">{user.full_name_ar || user.employee_no || 'No Arabic name / employee ID'}</span></td>
-                    <td>{user.email}</td>
+                    <td className="user-roster-name"><strong>{user.full_name_en}</strong><br /><span className="muted">{user.full_name_ar || user.employee_no || 'No Arabic name / employee ID'}</span></td>
+                    <td className="user-roster-email">{user.email}</td>
                     <td>{user.department_name ?? <span className="warning-text">Missing department</span>}</td>
                     <td>{user.job_title ?? 'Not set'}</td>
-                    <td>{user.active_role_count ? roleSummary(user) : <span className="warning-text">Missing role</span>}</td>
+                    <td>{activeRoleTotal(user) ? roleSummary(user) : <span className="warning-text">Missing role</span>}</td>
                     <td><StatusPill tone={statusTone(user.user_status)}>{humanize(user.user_status)}</StatusPill></td>
                     <td>{user.last_login_at ?? 'Never / unavailable'}</td>
                     <td>{user.created_at?.slice(0, 10)}</td>
-                    <td>
-                      <div className="inline-actions">
-                        <button className="ghost-button compact-button" onClick={() => void openDetails(user)}><Eye size={14} /> View</button>
-                        <button className="ghost-button compact-button" disabled={writeDisabled} onClick={() => openEdit(user)}><UserCog size={14} /> Edit</button>
-                        <button className="ghost-button compact-button" disabled={writeDisabled} onClick={() => openRole(user)}>Role</button>
-                        <button className="ghost-button compact-button" disabled={writeDisabled} onClick={() => openDepartment(user)}>Department</button>
+                    <td className="user-roster-actions-cell">
+                      <div className="user-row-actions">
+                        <button className="ghost-button compact-button icon-button" title="View details" aria-label={`View ${user.full_name_en}`} onClick={() => void openDetails(user)}><Eye size={14} /></button>
+                        <button className="ghost-button compact-button icon-button" title="Edit profile" aria-label={`Edit ${user.full_name_en}`} disabled={writeDisabled} onClick={() => openEdit(user)}><UserCog size={14} /></button>
+                        <button className="ghost-button compact-button icon-button" title="Assign role" aria-label={`Assign role to ${user.full_name_en}`} disabled={writeDisabled} onClick={() => openRole(user)}><KeyRound size={14} /></button>
+                        <button className="ghost-button compact-button icon-button" title="Assign department" aria-label={`Assign department to ${user.full_name_en}`} disabled={writeDisabled} onClick={() => openDepartment(user)}><Building2 size={14} /></button>
                         {user.user_status === 'active' || user.user_status === 'invited' ? (
-                          <button className="ghost-button compact-button" disabled={writeDisabled} onClick={() => {
+                          <button className="ghost-button compact-button icon-button" title="Deactivate user" aria-label={`Deactivate ${user.full_name_en}`} disabled={writeDisabled} onClick={() => {
                             setReason('');
                             setLifecycle({ action: 'deactivate', users: [user] });
-                          }}>Deactivate</button>
+                          }}><ShieldOff size={14} /></button>
                         ) : (
-                          <button className="ghost-button compact-button" disabled={writeDisabled} onClick={() => {
+                          <button className="ghost-button compact-button icon-button" title="Reactivate user" aria-label={`Reactivate ${user.full_name_en}`} disabled={writeDisabled} onClick={() => {
                             setReason('Reactivation after admin review');
                             setLifecycle({ action: 'reactivate', users: [user] });
-                          }}><RotateCcw size={14} /> Reactivate</button>
+                          }}><RotateCcw size={14} /></button>
                         )}
                         {user.user_status === 'archived' ? (
-                          <button className="ghost-button compact-button" disabled={writeDisabled} onClick={() => {
+                          <button className="ghost-button compact-button icon-button" title="Unarchive user" aria-label={`Unarchive ${user.full_name_en}`} disabled={writeDisabled} onClick={() => {
                             setReason('Unarchive after admin review');
                             setLifecycle({ action: 'unarchive', users: [user] });
-                          }}>Unarchive</button>
+                          }}><RotateCcw size={14} /></button>
                         ) : (
-                          <button className="ghost-button compact-button" disabled={writeDisabled} onClick={() => {
+                          <button className="ghost-button compact-button icon-button" title="Archive user" aria-label={`Archive ${user.full_name_en}`} disabled={writeDisabled} onClick={() => {
                             setReason('');
                             setLifecycle({ action: 'archive', users: [user] });
-                          }}>Archive</button>
+                          }}><Archive size={14} /></button>
                         )}
-                        <button className="ghost-button compact-button" onClick={() => exportSelected([user])}><Download size={14} /> Export</button>
+                        <button className="ghost-button compact-button icon-button" title="Export user" aria-label={`Export ${user.full_name_en}`} onClick={() => exportSelected([user])}><Download size={14} /></button>
                       </div>
                     </td>
                   </tr>

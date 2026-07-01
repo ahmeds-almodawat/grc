@@ -283,6 +283,33 @@ function parseRoles(value: unknown): UserManagementRole[] {
   }));
 }
 
+function activeRoleCount(row: Pick<UserManagementUserRow, 'active_role_count' | 'roles'>): number {
+  const roleRows = row.roles?.filter(role => role.is_active).length ?? 0;
+  return Math.max(row.active_role_count ?? 0, roleRows);
+}
+
+function mergeAccessMatrixRoleData(profileRows: UserManagementUserRow[], accessRows: UserManagementUserRow[]): UserManagementUserRow[] {
+  const byUserId = new Map(accessRows.map(row => [row.user_id, row]));
+  const byEmail = new Map(accessRows.map(row => [row.email.toLowerCase(), row]));
+  return profileRows.map(row => {
+    if (activeRoleCount(row) > 0) return row;
+    const accessRow = byUserId.get(row.user_id) ?? byEmail.get(row.email.toLowerCase());
+    if (!accessRow || activeRoleCount(accessRow) === 0) return row;
+    return {
+      ...row,
+      roles: accessRow.roles,
+      active_role_count: activeRoleCount(accessRow),
+      linked_project_count: accessRow.linked_project_count,
+      linked_task_count: accessRow.linked_task_count,
+      linked_approval_count: accessRow.linked_approval_count,
+      linked_evidence_count: accessRow.linked_evidence_count,
+      open_project_count: accessRow.open_project_count,
+      open_task_count: accessRow.open_task_count,
+      pending_approval_count: accessRow.pending_approval_count,
+    };
+  });
+}
+
 function applyClientFilters(rows: UserManagementUserRow[], filters: UserManagementFilters): UserManagementUserRow[] {
   const query = filters.search?.trim().toLowerCase();
   return rows.filter(row => {
@@ -301,7 +328,7 @@ function applyClientFilters(rows: UserManagementUserRow[], filters: UserManageme
     const matchesType = !filters.userType || filters.userType === 'all' || row.user_type === filters.userType;
     const matchesRole = !filters.role || filters.role === 'all'
       || (filters.role === 'missing'
-        ? row.active_role_count === 0
+        ? activeRoleCount(row) === 0
         : row.roles?.some(role => role.is_active && role.role === filters.role));
     return matchesSearch
       && matchesDepartment
@@ -309,7 +336,7 @@ function applyClientFilters(rows: UserManagementUserRow[], filters: UserManageme
       && matchesType
       && matchesRole
       && (!filters.missingDepartment || !row.department_id)
-      && (!filters.missingRole || row.active_role_count === 0)
+      && (!filters.missingRole || activeRoleCount(row) === 0)
       && (!filters.neverLoggedIn || !row.last_login_at);
   });
 }
@@ -344,7 +371,7 @@ function accessMatrixRowToUserManagementRow(row: any): UserManagementUserRow {
     department_name_ar: null,
     unit_id: null,
     unit_name: row.unit_name ?? null,
-    active_role_count: Number(row.active_role_count ?? roles.filter(role => role.is_active).length),
+    active_role_count: Math.max(Number(row.active_role_count ?? 0), roles.filter(role => role.is_active).length),
     roles,
     linked_project_count: Number(row.owned_open_projects ?? 0),
     linked_task_count: Number(row.open_tasks ?? 0),
@@ -387,7 +414,7 @@ async function readRoleRowsByUser(userIds: string[]): Promise<Map<string, UserMa
     .select('id,user_id,role,scope,organization_id,department_id,is_active,assigned_at')
     .in('user_id', userIds)
     .limit(5000);
-  if (error) return rolesByUser;
+  if (error) throw error;
   (data ?? []).forEach((row: any) => {
     const userId = safeString(row.user_id);
     const role: UserManagementRole = {
@@ -478,9 +505,19 @@ async function readRowsFromProfiles(): Promise<UserManagementUserRow[]> {
 }
 
 async function readCompatibilityUserRows(): Promise<UserManagementUserRow[]> {
+  try {
+    const profileRows = await readRowsFromProfiles();
+    if (profileRows.length) {
+      const needsRoleFallback = profileRows.some(row => activeRoleCount(row) === 0);
+      if (!needsRoleFallback) return profileRows;
+      const accessMatrixRows = await readRowsFromAccessMatrix();
+      return accessMatrixRows?.length ? mergeAccessMatrixRoleData(profileRows, accessMatrixRows) : profileRows;
+    }
+  } catch {
+    // Fall back to the legacy access matrix only when direct profile/role reads are unavailable.
+  }
   const accessMatrixRows = await readRowsFromAccessMatrix();
-  if (accessMatrixRows?.length) return accessMatrixRows;
-  return readRowsFromProfiles();
+  return accessMatrixRows ?? [];
 }
 
 async function listUsersFromCompatibilitySources(filters: UserManagementFilters, originalError?: unknown): Promise<LiveResult<UserManagementUserRow[]>> {
@@ -506,8 +543,8 @@ function summaryFromRows(rows: UserManagementUserRow[]): UserManagementSummary {
     invited_users: visibleRows.filter(row => row.user_status === 'invited').length,
     locked_users: visibleRows.filter(row => row.user_status === 'locked').length,
     missing_department_users: nonArchivedRows.filter(row => !row.department_id && !row.department_name).length,
-    missing_role_users: nonArchivedRows.filter(row => row.active_role_count === 0).length,
-    pending_setup_users: nonArchivedRows.filter(row => row.user_status === 'invited' || (!row.department_id && !row.department_name) || row.active_role_count === 0).length,
+    missing_role_users: nonArchivedRows.filter(row => activeRoleCount(row) === 0).length,
+    pending_setup_users: nonArchivedRows.filter(row => row.user_status === 'invited' || (!row.department_id && !row.department_name) || activeRoleCount(row) === 0).length,
   };
 }
 
@@ -627,7 +664,18 @@ export async function listUsersWithFilters(filters: UserManagementFilters = {}):
   const { data, error } = await query;
   if (error) return listUsersFromCompatibilitySources(filters, error);
 
-  const rows = applyClientFilters((data ?? []) as UserManagementUserRow[], filters);
+  const rawRows = (data ?? []) as UserManagementUserRow[];
+  let rows = applyClientFilters(rawRows, filters);
+  if (rows.some(row => activeRoleCount(row) === 0)) {
+    try {
+      const compatibilityRows = await readCompatibilityUserRows();
+      if (compatibilityRows.length) {
+        rows = applyClientFilters(mergeAccessMatrixRoleData(rawRows, compatibilityRows), filters);
+      }
+    } catch {
+      // Keep the primary roster result if compatibility role enrichment is unavailable.
+    }
+  }
 
   return rows.length
     ? liveResult(rows)
@@ -645,6 +693,16 @@ export async function getUserManagementSummary(): Promise<LiveResult<UserManagem
 
   if (error) return getSummaryFromCompatibilitySources(error);
   const row = data?.[0] as UserManagementSummary | undefined;
+  if (row && row.missing_role_users > 0) {
+    const compatibilitySummary = await getSummaryFromCompatibilitySources();
+    if (
+      compatibilitySummary.status === 'live'
+      && compatibilitySummary.data
+      && compatibilitySummary.data.missing_role_users < row.missing_role_users
+    ) {
+      return compatibilitySummary;
+    }
+  }
   return row ? liveResult(row) : getSummaryFromCompatibilitySources();
 }
 
