@@ -383,6 +383,48 @@ function accessMatrixRowToUserManagementRow(row: any): UserManagementUserRow {
   };
 }
 
+function bridgeRowToUserManagementRow(row: any): UserManagementUserRow {
+  const roles = parseRoles(row.roles);
+  const isActive = row.is_active !== false;
+  return {
+    organization_id: row.organization_id ?? null,
+    user_id: safeString(row.user_id),
+    employee_no: row.employee_no ?? null,
+    full_name_en: safeString(row.full_name_en, row.email ?? 'User'),
+    full_name_ar: row.full_name_ar ?? null,
+    email: safeString(row.email),
+    phone: row.phone ?? null,
+    job_title: row.job_title ?? null,
+    user_type: toUserType(row.user_type),
+    user_status: toUserStatus(row.user_status, isActive),
+    is_active: isActive,
+    created_at: row.created_at ?? new Date(0).toISOString(),
+    updated_at: row.updated_at ?? null,
+    last_login_at: row.last_login_at ?? null,
+    last_reviewed_at: row.last_reviewed_at ?? null,
+    deactivated_at: row.deactivated_at ?? null,
+    deactivated_by: row.deactivated_by ?? null,
+    deactivation_reason: row.deactivation_reason ?? null,
+    division_id: row.division_id ?? null,
+    division_name: row.division_name ?? null,
+    department_id: row.department_id ?? null,
+    department_code: row.department_code ?? null,
+    department_name: row.department_name ?? null,
+    department_name_ar: row.department_name_ar ?? null,
+    unit_id: row.unit_id ?? null,
+    unit_name: row.unit_name ?? null,
+    active_role_count: Math.max(Number(row.active_role_count ?? 0), roles.filter(role => role.is_active).length),
+    roles,
+    linked_project_count: Number(row.linked_project_count ?? 0),
+    linked_task_count: Number(row.linked_task_count ?? 0),
+    linked_approval_count: Number(row.linked_approval_count ?? 0),
+    linked_evidence_count: Number(row.linked_evidence_count ?? 0),
+    open_project_count: Number(row.open_project_count ?? 0),
+    open_task_count: Number(row.open_task_count ?? 0),
+    pending_approval_count: Number(row.pending_approval_count ?? 0),
+  };
+}
+
 async function readRowsFromAccessMatrix(): Promise<UserManagementUserRow[] | null> {
   const { data, error } = await supabase!
     .from('v_access_control_matrix')
@@ -391,6 +433,15 @@ async function readRowsFromAccessMatrix(): Promise<UserManagementUserRow[] | nul
     .limit(2000);
   if (error || !data?.length) return null;
   return (data as any[]).map(accessMatrixRowToUserManagementRow);
+}
+
+async function readRowsFromServerBridge(): Promise<UserManagementUserRow[] | null> {
+  try {
+    const rows = await invokePrivilegedAction<unknown[]>('list_user_management_roster', {});
+    return Array.isArray(rows) ? rows.map(bridgeRowToUserManagementRow) : null;
+  } catch {
+    return null;
+  }
 }
 
 async function readLookupRows() {
@@ -645,6 +696,14 @@ export async function listUsersWithFilters(filters: UserManagementFilters = {}):
   const notConfigured = configuredOrResult<UserManagementUserRow[]>('Supabase is not configured for user management.');
   if (notConfigured) return notConfigured;
 
+  const bridgeRows = await readRowsFromServerBridge();
+  if (bridgeRows) {
+    const rows = applyClientFilters(bridgeRows, filters);
+    return rows.length
+      ? liveResult(rows, 'supabase', 'Showing admin user roster through the authenticated server bridge.')
+      : emptyResult<UserManagementUserRow[]>('No users match the selected filters.');
+  }
+
   let query = supabase!
     .from('v_user_management_roster')
     .select('*')
@@ -685,6 +744,9 @@ export async function listUsersWithFilters(filters: UserManagementFilters = {}):
 export async function getUserManagementSummary(): Promise<LiveResult<UserManagementSummary>> {
   const notConfigured = configuredOrResult<UserManagementSummary>('Supabase is not configured for user management summary.');
   if (notConfigured) return notConfigured;
+
+  const bridgeRows = await readRowsFromServerBridge();
+  if (bridgeRows) return liveResult(summaryFromRows(bridgeRows), 'supabase', 'Showing admin user summary through the authenticated server bridge.');
 
   const { data, error } = await supabase!
     .from('v_user_management_summary')

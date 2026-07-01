@@ -1,6 +1,6 @@
 # v6.6.2 Evidence Quality Gate
 
-Generated: 2026-07-01T16:41:04.514Z
+Generated: 2026-07-01T17:29:34.515Z
 
 Status: **ready_for_controlled_pilot_evidence_review**
 

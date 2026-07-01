@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 const allowedActions = new Set([
+  'list_user_management_roster',
   'create_board_pack_snapshot',
   'acknowledge_escalation_event',
   'resolve_escalation_event',
@@ -33,6 +34,181 @@ function jsonResponse(body: Record<string, unknown>, status: number) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+const userRoleOptions = new Set([
+  'super_admin',
+  'executive',
+  'governance_admin',
+  'division_head',
+  'department_manager',
+  'project_owner',
+  'milestone_owner',
+  'task_owner',
+  'auditor',
+  'compliance_officer',
+  'viewer',
+  'employee',
+]);
+
+const userTypeOptions = new Set(['employee', 'contractor', 'vendor', 'external_auditor', 'service_account']);
+const accessScopeOptions = new Set(['global', 'division', 'department', 'unit', 'assigned_only']);
+
+function safeString(value: unknown, fallback = '') {
+  return value === null || value === undefined ? fallback : String(value);
+}
+
+function normalizeRole(value: unknown) {
+  const role = String(value ?? 'employee');
+  return userRoleOptions.has(role) ? role : 'employee';
+}
+
+function normalizeScope(value: unknown) {
+  const scope = String(value ?? 'assigned_only');
+  return accessScopeOptions.has(scope) ? scope : 'assigned_only';
+}
+
+function normalizeUserType(value: unknown) {
+  const userType = String(value ?? 'employee');
+  return userTypeOptions.has(userType) ? userType : 'employee';
+}
+
+async function readUserManagementRoster(serviceClient: any, actorId: string) {
+  const { data: actorProfile, error: actorProfileError } = await serviceClient
+    .from('profiles')
+    .select('id,organization_id,is_active')
+    .eq('id', actorId)
+    .maybeSingle();
+  if (actorProfileError || !actorProfile?.is_active || !actorProfile.organization_id) {
+    throw new Error('USER_MANAGEMENT_ACTIVE_ACTOR_REQUIRED');
+  }
+
+  const { data: actorRoles, error: actorRolesError } = await serviceClient
+    .from('user_roles')
+    .select('role,organization_id,is_active')
+    .eq('user_id', actorId)
+    .eq('is_active', true);
+  if (actorRolesError) throw new Error(actorRolesError.message);
+
+  const authorized = (actorRoles ?? []).some((assignment: any) =>
+    ['super_admin', 'governance_admin'].includes(String(assignment.role))
+    && (
+      assignment.organization_id === null
+      || assignment.organization_id === actorProfile.organization_id
+    )
+  );
+  if (!authorized) throw new Error('USER_MANAGEMENT_ADMIN_REQUIRED');
+
+  const patch19Select = 'id,organization_id,employee_no,full_name_en,full_name_ar,email,phone,job_title,division_id,department_id,unit_id,is_active,created_at,updated_at,user_status,user_type,last_login_at,last_reviewed_at,deactivated_at,deactivated_by,deactivation_reason';
+  const legacySelect = 'id,organization_id,employee_no,full_name_en,full_name_ar,email,phone,job_title,division_id,department_id,unit_id,is_active,created_at,updated_at';
+  let profileResult = await serviceClient
+    .from('profiles')
+    .select(patch19Select)
+    .eq('organization_id', actorProfile.organization_id)
+    .order('full_name_en', { ascending: true })
+    .limit(5000);
+
+  if (profileResult.error) {
+    profileResult = await serviceClient
+      .from('profiles')
+      .select(legacySelect)
+      .eq('organization_id', actorProfile.organization_id)
+      .order('full_name_en', { ascending: true })
+      .limit(5000);
+  }
+  if (profileResult.error) throw new Error(profileResult.error.message);
+
+  const profiles = profileResult.data ?? [];
+  const userIds = profiles.map((profile: any) => safeString(profile.id)).filter(Boolean);
+  const [departmentResult, divisionResult, unitResult, roleResult] = await Promise.all([
+    serviceClient.from('departments').select('id,code,name_en,name_ar').eq('organization_id', actorProfile.organization_id).limit(5000),
+    serviceClient.from('divisions').select('id,name_en').eq('organization_id', actorProfile.organization_id).limit(5000),
+    serviceClient.from('units').select('id,name_en').eq('organization_id', actorProfile.organization_id).limit(5000),
+    userIds.length
+      ? serviceClient
+        .from('user_roles')
+        .select('id,user_id,role,scope,organization_id,department_id,is_active,assigned_at')
+        .or(`organization_id.is.null,organization_id.eq.${actorProfile.organization_id}`)
+        .limit(20000)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  if (departmentResult.error) throw new Error(departmentResult.error.message);
+  if (divisionResult.error) throw new Error(divisionResult.error.message);
+  if (unitResult.error) throw new Error(unitResult.error.message);
+  if (roleResult.error) throw new Error(roleResult.error.message);
+
+  const departments = new Map((departmentResult.data ?? []).map((row: any) => [row.id, row]));
+  const divisions = new Map((divisionResult.data ?? []).map((row: any) => [row.id, row]));
+  const units = new Map((unitResult.data ?? []).map((row: any) => [row.id, row]));
+  const rolesByUser = new Map<string, any[]>();
+  const visibleUserIds = new Set(userIds);
+  for (const row of roleResult.data ?? []) {
+    const userId = safeString(row.user_id);
+    if (!visibleUserIds.has(userId)) continue;
+    const role = {
+      user_role_id: safeString(row.id),
+      role: normalizeRole(row.role),
+      scope: normalizeScope(row.scope),
+      organization_id: row.organization_id ?? null,
+      department_id: row.department_id ?? null,
+      is_active: row.is_active !== false,
+      assigned_at: row.assigned_at ?? null,
+    };
+    rolesByUser.set(userId, [...(rolesByUser.get(userId) ?? []), role]);
+  }
+
+  return profiles.map((profile: any) => {
+    const userId = safeString(profile.id);
+    const roles = rolesByUser.get(userId) ?? [];
+    const roleDepartmentId = roles.find((role: any) => role.is_active && role.department_id)?.department_id ?? null;
+    const resolvedDepartmentId = profile.department_id ?? roleDepartmentId;
+    const department = resolvedDepartmentId ? departments.get(resolvedDepartmentId) as any | undefined : undefined;
+    const division = profile.division_id ? divisions.get(profile.division_id) as any | undefined : undefined;
+    const unit = profile.unit_id ? units.get(profile.unit_id) as any | undefined : undefined;
+    const active = profile.is_active !== false;
+    const userStatus = typeof profile.user_status === 'string'
+      ? profile.user_status
+      : active ? 'active' : 'inactive';
+
+    return {
+      organization_id: profile.organization_id ?? null,
+      user_id: userId,
+      employee_no: profile.employee_no ?? null,
+      full_name_en: safeString(profile.full_name_en, profile.email ?? 'User'),
+      full_name_ar: profile.full_name_ar ?? null,
+      email: safeString(profile.email),
+      phone: profile.phone ?? null,
+      job_title: profile.job_title ?? null,
+      user_type: normalizeUserType(profile.user_type),
+      user_status: userStatus,
+      is_active: active,
+      created_at: profile.created_at ?? new Date(0).toISOString(),
+      updated_at: profile.updated_at ?? null,
+      last_login_at: profile.last_login_at ?? null,
+      last_reviewed_at: profile.last_reviewed_at ?? null,
+      deactivated_at: profile.deactivated_at ?? null,
+      deactivated_by: profile.deactivated_by ?? null,
+      deactivation_reason: profile.deactivation_reason ?? null,
+      division_id: profile.division_id ?? null,
+      division_name: division?.name_en ?? null,
+      department_id: resolvedDepartmentId ?? null,
+      department_code: department?.code ?? null,
+      department_name: department?.name_en ?? null,
+      department_name_ar: department?.name_ar ?? null,
+      unit_id: profile.unit_id ?? null,
+      unit_name: unit?.name_en ?? null,
+      active_role_count: roles.filter((role: any) => role.is_active).length,
+      roles,
+      linked_project_count: 0,
+      linked_task_count: 0,
+      linked_approval_count: 0,
+      linked_evidence_count: 0,
+      open_project_count: 0,
+      open_task_count: 0,
+      pending_approval_count: 0,
+    };
   });
 }
 
@@ -80,6 +256,20 @@ Deno.serve(async (request) => {
   const serviceClient = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  if (action === 'list_user_management_roster') {
+    try {
+      const roster = await readUserManagementRoster(serviceClient, userData.user.id);
+      return jsonResponse({ ok: true, action, result: roster }, 200);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to load user management roster.';
+      return jsonResponse({
+        ok: false,
+        error: message,
+        action,
+      }, /REQUIRED|NOT_AUTHORIZED|DENIED/i.test(message) ? 403 : 409);
+    }
+  }
 
   if (action.startsWith('v99_')) {
     const localRuntime = /(^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$)|(^https?:\/\/kong(:\d+)?$)/i

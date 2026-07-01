@@ -253,14 +253,15 @@ export function UserManagementCenter() {
   };
 
   const openRole = (user: UserManagementUserRow) => {
-    setRoleDraft('employee');
-    setScopeDraft('assigned_only');
-    setRoleDepartmentDraft(user.department_id ?? '');
+    const activeRole = user.roles?.find(role => role.is_active);
+    setRoleDraft(activeRole?.role ?? 'employee');
+    setScopeDraft(activeRole?.scope ?? 'assigned_only');
+    setRoleDepartmentDraft(activeRole?.department_id ?? user.department_id ?? '');
     setReason('Role assignment review');
     setRoleUser(user);
   };
 
-  const runAction = async (operation: () => Promise<void>, success: string) => {
+  const runAction = async (operation: () => Promise<void>, success: string): Promise<boolean> => {
     setSaving(true);
     setActionError(null);
     setMessage(null);
@@ -268,8 +269,10 @@ export function UserManagementCenter() {
       await operation();
       setMessage(success);
       await load();
+      return true;
     } catch (error) {
       setActionError(error instanceof Error ? error.message : 'User management action failed.');
+      return false;
     } finally {
       setSaving(false);
     }
@@ -277,7 +280,7 @@ export function UserManagementCenter() {
 
   const submitProfile = async () => {
     if (!editUser) return;
-    await runAction(
+    const saved = await runAction(
       () => updateUserProfile({
         userId: editUser.user_id,
         fullNameEn: profileDraft.fullNameEn,
@@ -289,7 +292,7 @@ export function UserManagementCenter() {
       }),
       'Profile updated.',
     );
-    setEditUser(null);
+    if (saved) setEditUser(null);
   };
 
   const submitDepartment = async () => {
@@ -298,7 +301,7 @@ export function UserManagementCenter() {
       setActionError('Select at least one user.');
       return;
     }
-    await runAction(
+    const saved = await runAction(
       async () => {
         await Promise.all(targets.map(user => updateUserDepartment({
           userId: user.user_id,
@@ -308,7 +311,7 @@ export function UserManagementCenter() {
       },
       `${targets.length} department assignment${targets.length === 1 ? '' : 's'} updated.`,
     );
-    setDepartmentUser(null);
+    if (saved) setDepartmentUser(null);
   };
 
   const submitRole = async () => {
@@ -317,7 +320,7 @@ export function UserManagementCenter() {
       setActionError('Select at least one user.');
       return;
     }
-    await runAction(
+    const saved = await runAction(
       async () => {
         await Promise.all(targets.map(user => updateUserRole({
           userId: user.user_id,
@@ -329,7 +332,7 @@ export function UserManagementCenter() {
       },
       `${targets.length} role assignment${targets.length === 1 ? '' : 's'} updated.`,
     );
-    setRoleUser(null);
+    if (saved) setRoleUser(null);
   };
 
   const submitLifecycle = async () => {
@@ -345,14 +348,16 @@ export function UserManagementCenter() {
       archive: (user, reasonText) => archiveUser(user.user_id, reasonText, user.roles),
       unarchive: (user, reasonText) => unarchiveUser(user.user_id, reasonText),
     };
-    await runAction(
+    const saved = await runAction(
       async () => {
         await Promise.all(targets.map(user => actionMap[action](user, reason)));
       },
       `${targets.length} user${targets.length === 1 ? '' : 's'} ${action}d.`,
     );
-    setLifecycle(null);
-    setReason('');
+    if (saved) {
+      setLifecycle(null);
+      setReason('');
+    }
   };
 
   const handleImportFile = async (file: File) => {
@@ -366,14 +371,16 @@ export function UserManagementCenter() {
 
   const applyImport = async () => {
     if (!importValidation) return;
-    await runAction(
+    const saved = await runAction(
       async () => {
         await applyImportBatch(importFileName || 'user-management-import.csv', importValidation);
       },
       'Import batch applied. Existing profiles were updated; unknown accounts were tracked for account creation.',
     );
-    setImportOpen(false);
-    setImportValidation(null);
+    if (saved) {
+      setImportOpen(false);
+      setImportValidation(null);
+    }
   };
 
   const exportSelected = (rows: UserManagementUserRow[]) => {
@@ -481,23 +488,25 @@ export function UserManagementCenter() {
       </ModernCard>
 
       <ModernCard title="Bulk actions" subtitle="Selected users can be exported or updated through safe app-level actions." className="user-management-bulk-card">
-        <div className="form-grid">
-          <label className="field">
-            Bulk department
-            <select value={bulkDepartment} onChange={event => setBulkDepartment(event.target.value)} disabled={writeDisabled}>
-              <option value="">No department</option>
-              {departmentRows.map(department => (
-                <option key={department.id} value={department.id}>{department.name_en}</option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            Bulk role
-            <select value={bulkRole} onChange={event => setBulkRole(event.target.value as AppRole)} disabled={writeDisabled}>
-              {userRoleOptions.map(role => <option key={role} value={role}>{humanize(role)}</option>)}
-            </select>
-          </label>
-          <div className="form-actions full-width">
+        <div className="bulk-actions-toolbar">
+          <div className="bulk-actions-selects">
+            <label className="field">
+              Bulk department
+              <select value={bulkDepartment} onChange={event => setBulkDepartment(event.target.value)} disabled={writeDisabled}>
+                <option value="">No department</option>
+                {departmentRows.map(department => (
+                  <option key={department.id} value={department.id}>{department.name_en}</option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              Bulk role
+              <select value={bulkRole} onChange={event => setBulkRole(event.target.value as AppRole)} disabled={writeDisabled}>
+                {userRoleOptions.map(role => <option key={role} value={role}>{humanize(role)}</option>)}
+              </select>
+            </label>
+          </div>
+          <div className="bulk-actions-buttons">
             <button className="ghost-button" onClick={() => setSelectedIds(new Set(visibleUsers.map(user => user.user_id)))}>Select filtered</button>
             <button className="ghost-button" onClick={() => setSelectedIds(new Set())}>Clear</button>
             <button className="ghost-button" onClick={() => exportSelected(selectedUsers)}><Download size={16} /> Export selected</button>
@@ -538,6 +547,7 @@ export function UserManagementCenter() {
           </div>
         </div>
       </ModernCard>
+
 
       <ModernCard title="User roster" subtitle={`${visibleUsers.length} user${visibleUsers.length === 1 ? '' : 's'} shown.`} className="user-roster-card">
         <DataState
