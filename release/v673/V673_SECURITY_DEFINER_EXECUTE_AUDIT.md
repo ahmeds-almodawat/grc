@@ -1,6 +1,6 @@
 # v6.7.3 Security Definer Execute Audit
 
-Generated: 2026-06-30T13:52:48.767Z
+Generated: 2026-06-30T22:48:26.857Z
 
 - SECURITY DEFINER functions: **44**
 - Remaining broad execute grants: **0**

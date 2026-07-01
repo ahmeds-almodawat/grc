@@ -1,16 +1,15 @@
 {
-  "generated_at": "2026-06-30T13:53:21.811Z",
+  "generated_at": "2026-06-30T22:48:58.811Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 80,
-    "latest_migration": "080_patch19_professional_user_management_center.sql",
+    "migration_count": 81,
+    "latest_migration": "081_patch20_real_data_import_orchestrator.sql",
     "prefix_gaps": [
       16,
-      81,
       82,
       83,
       84,

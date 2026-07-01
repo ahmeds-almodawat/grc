@@ -2,8 +2,8 @@
 
 ```json
 {
-  "generated_at": "2026-06-30T13:52:44.995Z",
-  "migration_files_scanned": 80,
+  "generated_at": "2026-06-30T22:48:22.983Z",
+  "migration_files_scanned": 81,
   "security_definer_functions_detected": 46,
   "global_security_definer_lockdown_detected": true,
   "findings_total": 0,

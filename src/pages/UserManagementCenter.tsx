@@ -165,7 +165,7 @@ export function UserManagementCenter() {
   const departmentRows = isLive(departments) ? departments.data : [];
   const summaryData = isLive(summary) ? summary.data : null;
   const blockedLifecycleCount = (summaryData?.inactive_users ?? 0) + (summaryData?.archived_users ?? 0) + (summaryData?.locked_users ?? 0);
-  const fallbackMode = [summary.message, users.message].some(item => item?.includes('existing People/profiles'));
+  const compatibilityMode = [summary.message, users.message].some(item => item?.includes('existing People/profiles'));
   const writeDisabled = readOnly;
 
   const visibleUsers = useMemo(() => {
@@ -400,7 +400,7 @@ export function UserManagementCenter() {
       {readOnly ? (
         <div className="notice-banner">Read-only mode is active for this role. User changes require Super Admin or Governance Admin access.</div>
       ) : null}
-      {fallbackMode ? (
+      {compatibilityMode ? (
         <div className="notice-banner">
           Showing existing People/profile records because Patch 19 user management views are not available yet. Actions use compatibility mode through existing profile RLS and role bridges; apply migration 080 to enable Patch 19 lifecycle audit history and import batch tracking.
         </div>

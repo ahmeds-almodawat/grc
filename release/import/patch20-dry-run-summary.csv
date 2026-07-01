@@ -1,0 +1,16 @@
+file,dataset_key,present,row_count,column_count,target_table
+01_departments.csv,departments,false,0,0,"departments, real_department_master"
+02_committees.csv,committees,false,0,0,real_committee_master
+03_role_matrix.csv,role_matrix,false,0,0,"real_role_matrix, user_roles"
+04_users_owners.csv,users,false,0,0,"profiles, patch20_pending_auth_users"
+05_evidence_taxonomy.csv,evidence_taxonomy,false,0,0,real_evidence_taxonomy
+06_control_library.csv,control_library,false,0,0,real_control_library
+07_kpi_indicators.csv,kpi_indicators,false,0,0,real_indicator_catalog
+08_tracer_templates.csv,tracer_templates,false,0,0,real_tracer_templates
+09_audit_universe.csv,audit_universe,false,0,0,patch20_real_import_rows
+10_compliance_obligations.csv,compliance_obligations,false,0,0,compliance_obligations
+11_document_register.csv,document_register,false,0,0,real_document_register
+12_standards_metadata.csv,standards_metadata,false,0,0,real_standard_libraries
+13_uat_scenarios.csv,uat_scenarios,false,0,0,patch20_real_import_rows
+14_go_no_go_signoffs.csv,go_no_go_signoffs,false,0,0,patch20_real_import_rows
+15_payroll_department_map.csv,payroll_department_map,false,0,0,patch20_real_import_rows

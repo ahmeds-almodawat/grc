@@ -1,0 +1,122 @@
+[
+  {
+    "order": 1,
+    "file": "01_departments.csv",
+    "dataset_key": "departments",
+    "label": "Departments",
+    "target_table": "departments, real_department_master",
+    "dependency_note": "Departments first so every later file can validate references."
+  },
+  {
+    "order": 2,
+    "file": "02_committees.csv",
+    "dataset_key": "committees",
+    "label": "Committees",
+    "target_table": "real_committee_master",
+    "dependency_note": "Depends on departments and previously loaded identity/reference rows."
+  },
+  {
+    "order": 3,
+    "file": "03_role_matrix.csv",
+    "dataset_key": "role_matrix",
+    "label": "Role matrix",
+    "target_table": "real_role_matrix, user_roles",
+    "dependency_note": "Depends on departments and previously loaded identity/reference rows."
+  },
+  {
+    "order": 4,
+    "file": "04_users_owners.csv",
+    "dataset_key": "users",
+    "label": "Users and owners",
+    "target_table": "profiles, patch20_pending_auth_users",
+    "dependency_note": "Depends on departments and previously loaded identity/reference rows."
+  },
+  {
+    "order": 5,
+    "file": "05_evidence_taxonomy.csv",
+    "dataset_key": "evidence_taxonomy",
+    "label": "Evidence taxonomy",
+    "target_table": "real_evidence_taxonomy",
+    "dependency_note": "Depends on departments and previously loaded identity/reference rows."
+  },
+  {
+    "order": 6,
+    "file": "06_control_library.csv",
+    "dataset_key": "control_library",
+    "label": "Control library",
+    "target_table": "real_control_library",
+    "dependency_note": "Depends on departments and previously loaded identity/reference rows."
+  },
+  {
+    "order": 7,
+    "file": "07_kpi_indicators.csv",
+    "dataset_key": "kpi_indicators",
+    "label": "KPI indicators",
+    "target_table": "real_indicator_catalog",
+    "dependency_note": "Depends on departments and previously loaded identity/reference rows."
+  },
+  {
+    "order": 8,
+    "file": "08_tracer_templates.csv",
+    "dataset_key": "tracer_templates",
+    "label": "Tracer templates",
+    "target_table": "real_tracer_templates",
+    "dependency_note": "Depends on departments and previously loaded identity/reference rows."
+  },
+  {
+    "order": 9,
+    "file": "09_audit_universe.csv",
+    "dataset_key": "audit_universe",
+    "label": "Audit universe",
+    "target_table": "patch20_real_import_rows",
+    "dependency_note": "Depends on departments and previously loaded identity/reference rows."
+  },
+  {
+    "order": 10,
+    "file": "10_compliance_obligations.csv",
+    "dataset_key": "compliance_obligations",
+    "label": "Compliance obligations",
+    "target_table": "compliance_obligations",
+    "dependency_note": "Depends on departments and previously loaded identity/reference rows."
+  },
+  {
+    "order": 11,
+    "file": "11_document_register.csv",
+    "dataset_key": "document_register",
+    "label": "Document register",
+    "target_table": "real_document_register",
+    "dependency_note": "Depends on departments and previously loaded identity/reference rows."
+  },
+  {
+    "order": 12,
+    "file": "12_standards_metadata.csv",
+    "dataset_key": "standards_metadata",
+    "label": "Standards metadata",
+    "target_table": "real_standard_libraries",
+    "dependency_note": "Depends on departments and previously loaded identity/reference rows."
+  },
+  {
+    "order": 13,
+    "file": "13_uat_scenarios.csv",
+    "dataset_key": "uat_scenarios",
+    "label": "UAT scenarios",
+    "target_table": "patch20_real_import_rows",
+    "dependency_note": "Depends on departments and previously loaded identity/reference rows."
+  },
+  {
+    "order": 14,
+    "file": "14_go_no_go_signoffs.csv",
+    "dataset_key": "go_no_go_signoffs",
+    "label": "Go/no-go signoffs",
+    "target_table": "patch20_real_import_rows",
+    "dependency_note": "Depends on departments and previously loaded identity/reference rows."
+  },
+  {
+    "order": 15,
+    "file": "15_payroll_department_map.csv",
+    "dataset_key": "payroll_department_map",
+    "label": "Payroll department map",
+    "target_table": "patch20_real_import_rows",
+    "dependency_note": "Depends on departments and previously loaded identity/reference rows."
+  }
+]

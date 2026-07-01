@@ -217,7 +217,7 @@ function valueFor(record: Record<string, string>, keys: string[]): string {
   return '';
 }
 
-const PATCH19_PROFILE_FALLBACK_MESSAGE = 'Showing existing People/profiles because Patch 19 user management views are not available yet. Apply migration 080 to enable lifecycle audit, import batches, and full role linkage.';
+const PATCH19_PROFILE_COMPAT_MESSAGE = 'Showing existing People/profiles because Patch 19 user management views are not available yet. Apply migration 080 to enable lifecycle audit, import batches, and full role linkage.';
 
 function errorText(error: unknown): string {
   if (!error || typeof error !== 'object') return String(error ?? '');
@@ -404,7 +404,7 @@ async function readRoleRowsByUser(userIds: string[]): Promise<Map<string, UserMa
   return rolesByUser;
 }
 
-async function readProfileRowsForFallback(): Promise<any[]> {
+async function readProfileRowsForCompatibility(): Promise<any[]> {
   const patch19Select = 'id,organization_id,employee_no,full_name_en,full_name_ar,email,phone,job_title,division_id,department_id,unit_id,is_active,created_at,updated_at,user_status,user_type,last_login_at,last_reviewed_at,deactivated_at,deactivated_by,deactivation_reason';
   const legacySelect = 'id,organization_id,employee_no,full_name_en,full_name_ar,email,phone,job_title,division_id,department_id,unit_id,is_active,created_at,updated_at';
   const patch19Result = await supabase!
@@ -425,7 +425,7 @@ async function readProfileRowsForFallback(): Promise<any[]> {
 }
 
 async function readRowsFromProfiles(): Promise<UserManagementUserRow[]> {
-  const profiles = await readProfileRowsForFallback();
+  const profiles = await readProfileRowsForCompatibility();
   const [lookups, rolesByUser] = await Promise.all([
     readLookupRows(),
     readRoleRowsByUser(profiles.map((profile: any) => safeString(profile.id)).filter(Boolean)),
@@ -477,20 +477,20 @@ async function readRowsFromProfiles(): Promise<UserManagementUserRow[]> {
   });
 }
 
-async function readFallbackUserRows(): Promise<UserManagementUserRow[]> {
+async function readCompatibilityUserRows(): Promise<UserManagementUserRow[]> {
   const accessMatrixRows = await readRowsFromAccessMatrix();
   if (accessMatrixRows?.length) return accessMatrixRows;
   return readRowsFromProfiles();
 }
 
-async function listUsersFromFallbackSources(filters: UserManagementFilters, originalError?: unknown): Promise<LiveResult<UserManagementUserRow[]>> {
+async function listUsersFromCompatibilitySources(filters: UserManagementFilters, originalError?: unknown): Promise<LiveResult<UserManagementUserRow[]>> {
   try {
-    const rows = applyClientFilters(await readFallbackUserRows(), filters);
+    const rows = applyClientFilters(await readCompatibilityUserRows(), filters);
     return rows.length
-      ? liveResult(rows, 'supabase', PATCH19_PROFILE_FALLBACK_MESSAGE)
-      : emptyResult<UserManagementUserRow[]>(`No users match the selected filters. ${PATCH19_PROFILE_FALLBACK_MESSAGE}`);
-  } catch (fallbackError) {
-    return queryErrorResult<UserManagementUserRow[]>(originalError ?? fallbackError, 'Unable to load user management roster or existing profiles.');
+      ? liveResult(rows, 'supabase', PATCH19_PROFILE_COMPAT_MESSAGE)
+      : emptyResult<UserManagementUserRow[]>(`No users match the selected filters. ${PATCH19_PROFILE_COMPAT_MESSAGE}`);
+  } catch (compatibilityError) {
+    return queryErrorResult<UserManagementUserRow[]>(originalError ?? compatibilityError, 'Unable to load user management roster or existing profiles.');
   }
 }
 
@@ -511,14 +511,14 @@ function summaryFromRows(rows: UserManagementUserRow[]): UserManagementSummary {
   };
 }
 
-async function getSummaryFromFallbackSources(originalError?: unknown): Promise<LiveResult<UserManagementSummary>> {
+async function getSummaryFromCompatibilitySources(originalError?: unknown): Promise<LiveResult<UserManagementSummary>> {
   try {
-    const rows = await readFallbackUserRows();
+    const rows = await readCompatibilityUserRows();
     return rows.length
-      ? liveResult(summaryFromRows(rows), 'supabase', PATCH19_PROFILE_FALLBACK_MESSAGE)
-      : emptyResult<UserManagementSummary>(`No visible profiles are available. ${PATCH19_PROFILE_FALLBACK_MESSAGE}`);
-  } catch (fallbackError) {
-    return queryErrorResult<UserManagementSummary>(originalError ?? fallbackError, 'Unable to load user management summary or existing profile counts.');
+      ? liveResult(summaryFromRows(rows), 'supabase', PATCH19_PROFILE_COMPAT_MESSAGE)
+      : emptyResult<UserManagementSummary>(`No visible profiles are available. ${PATCH19_PROFILE_COMPAT_MESSAGE}`);
+  } catch (compatibilityError) {
+    return queryErrorResult<UserManagementSummary>(originalError ?? compatibilityError, 'Unable to load user management summary or existing profile counts.');
   }
 }
 
@@ -538,7 +538,7 @@ async function updateProfilePatchViaRls(
   throw new Error(error.message);
 }
 
-async function updateProfileViaFallback(input: {
+async function updateProfileViaCompatibility(input: {
   userId: string;
   fullNameEn: string;
   fullNameAr?: string | null;
@@ -558,11 +558,11 @@ async function updateProfileViaFallback(input: {
   }, legacyPatch);
 }
 
-async function updateDepartmentViaFallback(userId: string, departmentId: string | null) {
+async function updateDepartmentViaCompatibility(userId: string, departmentId: string | null) {
   await updateProfilePatchViaRls(userId, { department_id: departmentId || null });
 }
 
-async function updateLifecycleViaFallback(userId: string, action: LifecycleFallbackAction, reason: string) {
+async function updateLifecycleViaCompatibility(userId: string, action: LifecycleCompatibilityAction, reason: string) {
   const active = action === 'reactivate' || action === 'unarchive';
   const status: UserStatus = action === 'archive' ? 'archived' : active ? 'active' : 'inactive';
   const legacyPatch = { is_active: active };
@@ -574,9 +574,9 @@ async function updateLifecycleViaFallback(userId: string, action: LifecycleFallb
   }, legacyPatch);
 }
 
-type LifecycleFallbackAction = 'deactivate' | 'reactivate' | 'archive' | 'unarchive';
+type LifecycleCompatibilityAction = 'deactivate' | 'reactivate' | 'archive' | 'unarchive';
 
-async function assignRoleViaFallback(input: {
+async function assignRoleViaCompatibility(input: {
   userId: string;
   role: AppRole;
   scope: AccessScope;
@@ -625,7 +625,7 @@ export async function listUsersWithFilters(filters: UserManagementFilters = {}):
   }
 
   const { data, error } = await query;
-  if (error) return listUsersFromFallbackSources(filters, error);
+  if (error) return listUsersFromCompatibilitySources(filters, error);
 
   const rows = applyClientFilters((data ?? []) as UserManagementUserRow[], filters);
 
@@ -643,9 +643,9 @@ export async function getUserManagementSummary(): Promise<LiveResult<UserManagem
     .select('*')
     .limit(1);
 
-  if (error) return getSummaryFromFallbackSources(error);
+  if (error) return getSummaryFromCompatibilitySources(error);
   const row = data?.[0] as UserManagementSummary | undefined;
-  return row ? liveResult(row) : getSummaryFromFallbackSources();
+  return row ? liveResult(row) : getSummaryFromCompatibilitySources();
 }
 
 export async function getUserManagementDepartments(): Promise<LiveResult<DepartmentLookup[]>> {
@@ -817,7 +817,7 @@ export async function applyImportBatch(fileName: string, validation: UserImportV
         pendingAccountCreationCount += 1;
         continue;
       }
-      await updateProfileViaFallback({
+      await updateProfileViaCompatibility({
         userId: row.matched_user_id,
         fullNameEn: row.full_name_en,
         fullNameAr: row.full_name_ar,
@@ -825,11 +825,11 @@ export async function applyImportBatch(fileName: string, validation: UserImportV
         jobTitle: row.job_title,
         userType: normalizeUserType(row.user_type),
       });
-      if (row.department_id !== undefined) await updateDepartmentViaFallback(row.matched_user_id, row.department_id ?? null);
-      if (row.status) await updateLifecycleViaFallback(row.matched_user_id, toUserStatus(row.status) === 'active' ? 'reactivate' : toUserStatus(row.status) === 'archived' ? 'archive' : 'deactivate', 'CSV import compatibility update');
+      if (row.department_id !== undefined) await updateDepartmentViaCompatibility(row.matched_user_id, row.department_id ?? null);
+      if (row.status) await updateLifecycleViaCompatibility(row.matched_user_id, toUserStatus(row.status) === 'active' ? 'reactivate' : toUserStatus(row.status) === 'archived' ? 'archive' : 'deactivate', 'CSV import compatibility update');
       const role = normalizeRole(row.role);
       if (role) {
-        await assignRoleViaFallback({
+        await assignRoleViaCompatibility({
           userId: row.matched_user_id,
           role,
           scope: row.department_id ? 'department' : 'assigned_only',
@@ -868,7 +868,7 @@ export async function updateUserProfile(input: {
     });
   } catch (error) {
     if (!isPatch19UnavailableError(error)) throw error;
-    await updateProfileViaFallback(input);
+    await updateProfileViaCompatibility(input);
   }
 }
 
@@ -881,7 +881,7 @@ export async function updateUserDepartment(input: { userId: string; departmentId
     });
   } catch (error) {
     if (!isPatch19UnavailableError(error)) throw error;
-    await updateDepartmentViaFallback(input.userId, input.departmentId);
+    await updateDepartmentViaCompatibility(input.userId, input.departmentId);
   }
 }
 
@@ -903,7 +903,7 @@ export async function updateUserRole(input: {
     return result.id;
   } catch (error) {
     if (!isPatch19UnavailableError(error)) throw error;
-    return assignRoleViaFallback(input);
+    return assignRoleViaCompatibility(input);
   }
 }
 
@@ -912,7 +912,7 @@ export async function deactivateUser(userId: string, reason: string, roles: User
     await invokePrivilegedAction('patch19_deactivate_user', { user_id: userId, reason });
   } catch (error) {
     if (!isPatch19UnavailableError(error)) throw error;
-    await updateLifecycleViaFallback(userId, 'deactivate', reason);
+    await updateLifecycleViaCompatibility(userId, 'deactivate', reason);
     await deactivateVisibleRoleAssignments(roles, reason);
   }
 }
@@ -922,7 +922,7 @@ export async function reactivateUser(userId: string, reason: string) {
     await invokePrivilegedAction('patch19_reactivate_user', { user_id: userId, reason });
   } catch (error) {
     if (!isPatch19UnavailableError(error)) throw error;
-    await updateLifecycleViaFallback(userId, 'reactivate', reason);
+    await updateLifecycleViaCompatibility(userId, 'reactivate', reason);
   }
 }
 
@@ -931,7 +931,7 @@ export async function archiveUser(userId: string, reason: string, roles: UserMan
     await invokePrivilegedAction('patch19_archive_user', { user_id: userId, reason });
   } catch (error) {
     if (!isPatch19UnavailableError(error)) throw error;
-    await updateLifecycleViaFallback(userId, 'archive', reason);
+    await updateLifecycleViaCompatibility(userId, 'archive', reason);
     await deactivateVisibleRoleAssignments(roles, reason);
   }
 }
@@ -941,7 +941,7 @@ export async function unarchiveUser(userId: string, reason: string) {
     await invokePrivilegedAction('patch19_unarchive_user', { user_id: userId, reason });
   } catch (error) {
     if (!isPatch19UnavailableError(error)) throw error;
-    await updateLifecycleViaFallback(userId, 'unarchive', reason);
+    await updateLifecycleViaCompatibility(userId, 'unarchive', reason);
   }
 }
 
