@@ -1,2 +1,1 @@
 type,severity,blocking,file_name,row_number,field,message,value
-input_folder_missing,warning,false,,,folder,Input folder was not found: C:\Users\molte\Downloads\grc_import_ready_pack_after_review. This report is an environment precheck; rerun with --folder once the pack is available.,C:\Users\molte\Downloads\grc_import_ready_pack_after_review

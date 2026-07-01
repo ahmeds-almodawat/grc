@@ -1,16 +1,16 @@
-file,dataset_key,present,row_count,column_count,target_table
-01_departments.csv,departments,false,0,0,"departments, real_department_master"
-02_committees.csv,committees,false,0,0,real_committee_master
-03_role_matrix.csv,role_matrix,false,0,0,"real_role_matrix, user_roles"
-04_users_owners.csv,users,false,0,0,"profiles, patch20_pending_auth_users"
-05_evidence_taxonomy.csv,evidence_taxonomy,false,0,0,real_evidence_taxonomy
-06_control_library.csv,control_library,false,0,0,real_control_library
-07_kpi_indicators.csv,kpi_indicators,false,0,0,real_indicator_catalog
-08_tracer_templates.csv,tracer_templates,false,0,0,real_tracer_templates
-09_audit_universe.csv,audit_universe,false,0,0,patch20_real_import_rows
-10_compliance_obligations.csv,compliance_obligations,false,0,0,compliance_obligations
-11_document_register.csv,document_register,false,0,0,real_document_register
-12_standards_metadata.csv,standards_metadata,false,0,0,real_standard_libraries
-13_uat_scenarios.csv,uat_scenarios,false,0,0,patch20_real_import_rows
-14_go_no_go_signoffs.csv,go_no_go_signoffs,false,0,0,patch20_real_import_rows
-15_payroll_department_map.csv,payroll_department_map,false,0,0,patch20_real_import_rows
+file,dataset_key,present,row_count,column_count,target_table,business_key_strategy,sample_business_key
+01_departments.csv,departments,true,36,8,"departments, real_department_master",single: department_code|code|dept_code,ENG
+02_committees.csv,committees,true,7,8,real_committee_master,single: committee_code|code,COM-QPS
+03_role_matrix.csv,role_matrix,true,14,9,"real_role_matrix, user_roles","composite: role + scope + department_code, with matrix_code/user_type when present; empty scope defaults to assigned_only and empty department_code defaults to global",role=super_admin|scope=all_modules|department=global
+04_users_owners.csv,users,true,455,10,"profiles, patch20_pending_auth_users",single: email|email_address,n.farag79@gmail.com
+05_evidence_taxonomy.csv,evidence_taxonomy,true,6,6,real_evidence_taxonomy,single: taxonomy_code|evidence_code|code,EV-POL
+06_control_library.csv,control_library,true,5,9,real_control_library,single: control_code|code,CTRL-QPS-001
+07_kpi_indicators.csv,kpi_indicators,true,4,9,real_indicator_catalog,single: indicator_code|kpi_code|code,KPI-QPS-001
+08_tracer_templates.csv,tracer_templates,true,4,8,real_tracer_templates,single: tracer_code|template_code|code,TR-QPS-001
+09_audit_universe.csv,audit_universe,true,4,9,patch20_real_import_rows,single: audit_code|auditable_entity_code|code,AUD-QPS
+10_compliance_obligations.csv,compliance_obligations,true,4,9,compliance_obligations,single: obligation_code|compliance_code|code,OBL-MOH-001
+11_document_register.csv,document_register,true,4,10,real_document_register,single: document_code|doc_code|code,DOC-GRC-001
+12_standards_metadata.csv,standards_metadata,true,3,9,real_standard_libraries,single: framework_code|standard_code|code,STD-CBAHI-META
+13_uat_scenarios.csv,uat_scenarios,true,4,11,patch20_real_import_rows,single: scenario_code|uat_code|code,UAT-USR-001
+14_go_no_go_signoffs.csv,go_no_go_signoffs,true,5,11,patch20_real_import_rows,single: signoff_code|decision_code|code,SIGN-EXEC
+15_payroll_department_map.csv,payroll_department_map,true,36,6,patch20_real_import_rows,single: payroll_department_code|department_code|code,NURS

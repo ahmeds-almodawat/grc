@@ -5,6 +5,7 @@
     "dataset_key": "departments",
     "label": "Departments",
     "target_table": "departments, real_department_master",
+    "business_key_strategy": "single: department_code|code|dept_code",
     "dependency_note": "Departments first so every later file can validate references."
   },
   {
@@ -13,6 +14,7 @@
     "dataset_key": "committees",
     "label": "Committees",
     "target_table": "real_committee_master",
+    "business_key_strategy": "single: committee_code|code",
     "dependency_note": "Depends on departments and previously loaded identity/reference rows."
   },
   {
@@ -21,6 +23,7 @@
     "dataset_key": "role_matrix",
     "label": "Role matrix",
     "target_table": "real_role_matrix, user_roles",
+    "business_key_strategy": "composite: role + scope + department_code, with matrix_code/user_type when present; empty scope defaults to assigned_only and empty department_code defaults to global",
     "dependency_note": "Depends on departments and previously loaded identity/reference rows."
   },
   {
@@ -29,6 +32,7 @@
     "dataset_key": "users",
     "label": "Users and owners",
     "target_table": "profiles, patch20_pending_auth_users",
+    "business_key_strategy": "single: email|email_address",
     "dependency_note": "Depends on departments and previously loaded identity/reference rows."
   },
   {
@@ -37,6 +41,7 @@
     "dataset_key": "evidence_taxonomy",
     "label": "Evidence taxonomy",
     "target_table": "real_evidence_taxonomy",
+    "business_key_strategy": "single: taxonomy_code|evidence_code|code",
     "dependency_note": "Depends on departments and previously loaded identity/reference rows."
   },
   {
@@ -45,6 +50,7 @@
     "dataset_key": "control_library",
     "label": "Control library",
     "target_table": "real_control_library",
+    "business_key_strategy": "single: control_code|code",
     "dependency_note": "Depends on departments and previously loaded identity/reference rows."
   },
   {
@@ -53,6 +59,7 @@
     "dataset_key": "kpi_indicators",
     "label": "KPI indicators",
     "target_table": "real_indicator_catalog",
+    "business_key_strategy": "single: indicator_code|kpi_code|code",
     "dependency_note": "Depends on departments and previously loaded identity/reference rows."
   },
   {
@@ -61,6 +68,7 @@
     "dataset_key": "tracer_templates",
     "label": "Tracer templates",
     "target_table": "real_tracer_templates",
+    "business_key_strategy": "single: tracer_code|template_code|code",
     "dependency_note": "Depends on departments and previously loaded identity/reference rows."
   },
   {
@@ -69,6 +77,7 @@
     "dataset_key": "audit_universe",
     "label": "Audit universe",
     "target_table": "patch20_real_import_rows",
+    "business_key_strategy": "single: audit_code|auditable_entity_code|code",
     "dependency_note": "Depends on departments and previously loaded identity/reference rows."
   },
   {
@@ -77,6 +86,7 @@
     "dataset_key": "compliance_obligations",
     "label": "Compliance obligations",
     "target_table": "compliance_obligations",
+    "business_key_strategy": "single: obligation_code|compliance_code|code",
     "dependency_note": "Depends on departments and previously loaded identity/reference rows."
   },
   {
@@ -85,6 +95,7 @@
     "dataset_key": "document_register",
     "label": "Document register",
     "target_table": "real_document_register",
+    "business_key_strategy": "single: document_code|doc_code|code",
     "dependency_note": "Depends on departments and previously loaded identity/reference rows."
   },
   {
@@ -93,6 +104,7 @@
     "dataset_key": "standards_metadata",
     "label": "Standards metadata",
     "target_table": "real_standard_libraries",
+    "business_key_strategy": "single: framework_code|standard_code|code",
     "dependency_note": "Depends on departments and previously loaded identity/reference rows."
   },
   {
@@ -101,6 +113,7 @@
     "dataset_key": "uat_scenarios",
     "label": "UAT scenarios",
     "target_table": "patch20_real_import_rows",
+    "business_key_strategy": "single: scenario_code|uat_code|code",
     "dependency_note": "Depends on departments and previously loaded identity/reference rows."
   },
   {
@@ -109,6 +122,7 @@
     "dataset_key": "go_no_go_signoffs",
     "label": "Go/no-go signoffs",
     "target_table": "patch20_real_import_rows",
+    "business_key_strategy": "single: signoff_code|decision_code|code",
     "dependency_note": "Depends on departments and previously loaded identity/reference rows."
   },
   {
@@ -117,6 +131,7 @@
     "dataset_key": "payroll_department_map",
     "label": "Payroll department map",
     "target_table": "patch20_real_import_rows",
+    "business_key_strategy": "single: payroll_department_code|department_code|code",
     "dependency_note": "Depends on departments and previously loaded identity/reference rows."
   }
 ]

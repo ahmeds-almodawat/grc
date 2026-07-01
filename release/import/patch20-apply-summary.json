@@ -1,0 +1,6 @@
+{
+  "generated_at": "2026-07-01T11:35:52.372Z",
+  "mode": "apply",
+  "status": "failed",
+  "error": "Multiple active organizations found. Pass --organization-id explicitly."
+}

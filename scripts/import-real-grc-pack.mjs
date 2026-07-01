@@ -123,6 +123,7 @@ const EXPECTED_FILES = [
     label: 'Role matrix',
     targetTable: 'real_role_matrix, user_roles',
     businessKeyAliases: ['role_code', 'role_name', 'role'],
+    businessKeyStrategy: 'composite: role + scope + department_code, with matrix_code/user_type when present; empty scope defaults to assigned_only and empty department_code defaults to global',
     required: [
       ['role_name', 'role', 'app_role'],
       ['module_key', 'module', 'area'],
@@ -450,7 +451,49 @@ function isValidDate(value) {
 }
 
 function businessKeyFor(config, row) {
+  if (config.key === 'role_matrix') return roleMatrixBusinessKeyFor(row);
   return valueFor(row, config.businessKeyAliases);
+}
+
+function businessKeyStrategyFor(config) {
+  if (config.businessKeyStrategy) return config.businessKeyStrategy;
+  return `single: ${config.businessKeyAliases.join('|')}`;
+}
+
+function businessKeyComponent(value, fallback = '') {
+  const normalized = normalizeHeader(value);
+  return normalized || fallback;
+}
+
+function roleMatrixBusinessKeyFor(row) {
+  const rawRole = valueFor(row, ['role', 'role_name', 'app_role', 'role_code', 'primary_role', 'requested_role']);
+  const role = roleToAppRole(rawRole) || businessKeyComponent(rawRole);
+  const scope = businessKeyComponent(
+    valueFor(row, [
+      'scope',
+      'role_scope',
+      'access_scope',
+      'assignment_scope',
+      'module_scope',
+      'module_key',
+      'module',
+      'area',
+      'responsibility',
+      'responsibility_area',
+    ]),
+    'assigned_only',
+  );
+  const departmentCode = businessKeyComponent(
+    valueFor(row, ['department_code', 'dept_code', 'owner_department_code', 'responsible_department_code']),
+    'global',
+  );
+  const matrixCode = businessKeyComponent(valueFor(row, ['matrix_code', 'role_matrix_code', 'code']));
+  const userType = businessKeyComponent(valueFor(row, ['user_type', 'user_category', 'persona_type']));
+  const optionalSegments = [
+    matrixCode ? `matrix=${matrixCode}` : '',
+    userType ? `user_type=${userType}` : '',
+  ].filter(Boolean);
+  return [`role=${role}`, `scope=${scope}`, `department=${departmentCode}`, ...optionalSegments].join('|');
 }
 
 function hashRow(row) {
@@ -464,6 +507,7 @@ function importPlan() {
     dataset_key: config.key,
     label: config.label,
     target_table: config.targetTable,
+    business_key_strategy: businessKeyStrategyFor(config),
     dependency_note: index === 0
       ? 'Departments first so every later file can validate references.'
       : 'Depends on departments and previously loaded identity/reference rows.',
@@ -649,6 +693,8 @@ function validatePack(options) {
     row_count: rows.length,
     column_count: headers.length,
     target_table: config.targetTable,
+    business_key_strategy: businessKeyStrategyFor(config),
+    sample_business_key: rows[0] ? businessKeyFor(config, rows[0]) : '',
   }));
   const blockingErrorCount = errors.filter(issue => issue.blocking).length;
   const warningCount = warnings.length;
@@ -678,7 +724,7 @@ function validatePack(options) {
 function writeDryRunReports(validation) {
   ensureReportDir();
   writeJson('patch20-dry-run-summary.json', validation.report);
-  writeCsv('patch20-dry-run-summary.csv', validation.report.files, ['file', 'dataset_key', 'present', 'row_count', 'column_count', 'target_table']);
+  writeCsv('patch20-dry-run-summary.csv', validation.report.files, ['file', 'dataset_key', 'present', 'row_count', 'column_count', 'target_table', 'business_key_strategy', 'sample_business_key']);
   writeCsv('patch20-validation-errors.csv', validation.errors, ['type', 'severity', 'blocking', 'file_name', 'row_number', 'field', 'message', 'value']);
   writeCsv('patch20-validation-warnings.csv', validation.warnings, ['type', 'severity', 'blocking', 'file_name', 'row_number', 'field', 'message', 'value']);
   writeCsv('patch20-pending-auth-users.csv', validation.pendingAuthUsers, ['file_name', 'row_number', 'email', 'employee_no', 'full_name_en', 'department_code', 'requested_role', 'default_action']);

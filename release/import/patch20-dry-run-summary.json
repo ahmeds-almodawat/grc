@@ -1,138 +1,168 @@
 {
-  "generated_at": "2026-07-01T07:40:42.117Z",
+  "generated_at": "2026-07-01T11:39:43.983Z",
   "mode": "dry_run",
-  "input_folder": "C:\\Users\\molte\\Downloads\\grc_import_ready_pack_after_review",
-  "input_available": false,
-  "environment_precheck_only": true,
+  "input_folder": "C:\\Users\\molte\\Downloads\\grc_import_ready_pack_after_review_PATCH20_FIXED",
+  "input_available": true,
+  "environment_precheck_only": false,
   "required_file_count": 15,
-  "present_file_count": 0,
-  "total_rows": 0,
+  "present_file_count": 15,
+  "total_rows": 591,
   "blocking_error_count": 0,
-  "warning_count": 1,
-  "can_apply": false,
+  "warning_count": 0,
+  "can_apply": true,
   "create_auth_users_requested": false,
   "create_auth_users_effective": false,
-  "note": "Input folder was not available here. No database data changed; rerun with the reviewed CSV pack folder before apply.",
+  "note": "Dry-run validation completed without changing database data.",
   "files": [
     {
       "file": "01_departments.csv",
       "dataset_key": "departments",
-      "present": false,
-      "row_count": 0,
-      "column_count": 0,
-      "target_table": "departments, real_department_master"
+      "present": true,
+      "row_count": 36,
+      "column_count": 8,
+      "target_table": "departments, real_department_master",
+      "business_key_strategy": "single: department_code|code|dept_code",
+      "sample_business_key": "ENG"
     },
     {
       "file": "02_committees.csv",
       "dataset_key": "committees",
-      "present": false,
-      "row_count": 0,
-      "column_count": 0,
-      "target_table": "real_committee_master"
+      "present": true,
+      "row_count": 7,
+      "column_count": 8,
+      "target_table": "real_committee_master",
+      "business_key_strategy": "single: committee_code|code",
+      "sample_business_key": "COM-QPS"
     },
     {
       "file": "03_role_matrix.csv",
       "dataset_key": "role_matrix",
-      "present": false,
-      "row_count": 0,
-      "column_count": 0,
-      "target_table": "real_role_matrix, user_roles"
+      "present": true,
+      "row_count": 14,
+      "column_count": 9,
+      "target_table": "real_role_matrix, user_roles",
+      "business_key_strategy": "composite: role + scope + department_code, with matrix_code/user_type when present; empty scope defaults to assigned_only and empty department_code defaults to global",
+      "sample_business_key": "role=super_admin|scope=all_modules|department=global"
     },
     {
       "file": "04_users_owners.csv",
       "dataset_key": "users",
-      "present": false,
-      "row_count": 0,
-      "column_count": 0,
-      "target_table": "profiles, patch20_pending_auth_users"
+      "present": true,
+      "row_count": 455,
+      "column_count": 10,
+      "target_table": "profiles, patch20_pending_auth_users",
+      "business_key_strategy": "single: email|email_address",
+      "sample_business_key": "n.farag79@gmail.com"
     },
     {
       "file": "05_evidence_taxonomy.csv",
       "dataset_key": "evidence_taxonomy",
-      "present": false,
-      "row_count": 0,
-      "column_count": 0,
-      "target_table": "real_evidence_taxonomy"
+      "present": true,
+      "row_count": 6,
+      "column_count": 6,
+      "target_table": "real_evidence_taxonomy",
+      "business_key_strategy": "single: taxonomy_code|evidence_code|code",
+      "sample_business_key": "EV-POL"
     },
     {
       "file": "06_control_library.csv",
       "dataset_key": "control_library",
-      "present": false,
-      "row_count": 0,
-      "column_count": 0,
-      "target_table": "real_control_library"
+      "present": true,
+      "row_count": 5,
+      "column_count": 9,
+      "target_table": "real_control_library",
+      "business_key_strategy": "single: control_code|code",
+      "sample_business_key": "CTRL-QPS-001"
     },
     {
       "file": "07_kpi_indicators.csv",
       "dataset_key": "kpi_indicators",
-      "present": false,
-      "row_count": 0,
-      "column_count": 0,
-      "target_table": "real_indicator_catalog"
+      "present": true,
+      "row_count": 4,
+      "column_count": 9,
+      "target_table": "real_indicator_catalog",
+      "business_key_strategy": "single: indicator_code|kpi_code|code",
+      "sample_business_key": "KPI-QPS-001"
     },
     {
       "file": "08_tracer_templates.csv",
       "dataset_key": "tracer_templates",
-      "present": false,
-      "row_count": 0,
-      "column_count": 0,
-      "target_table": "real_tracer_templates"
+      "present": true,
+      "row_count": 4,
+      "column_count": 8,
+      "target_table": "real_tracer_templates",
+      "business_key_strategy": "single: tracer_code|template_code|code",
+      "sample_business_key": "TR-QPS-001"
     },
     {
       "file": "09_audit_universe.csv",
       "dataset_key": "audit_universe",
-      "present": false,
-      "row_count": 0,
-      "column_count": 0,
-      "target_table": "patch20_real_import_rows"
+      "present": true,
+      "row_count": 4,
+      "column_count": 9,
+      "target_table": "patch20_real_import_rows",
+      "business_key_strategy": "single: audit_code|auditable_entity_code|code",
+      "sample_business_key": "AUD-QPS"
     },
     {
       "file": "10_compliance_obligations.csv",
       "dataset_key": "compliance_obligations",
-      "present": false,
-      "row_count": 0,
-      "column_count": 0,
-      "target_table": "compliance_obligations"
+      "present": true,
+      "row_count": 4,
+      "column_count": 9,
+      "target_table": "compliance_obligations",
+      "business_key_strategy": "single: obligation_code|compliance_code|code",
+      "sample_business_key": "OBL-MOH-001"
     },
     {
       "file": "11_document_register.csv",
       "dataset_key": "document_register",
-      "present": false,
-      "row_count": 0,
-      "column_count": 0,
-      "target_table": "real_document_register"
+      "present": true,
+      "row_count": 4,
+      "column_count": 10,
+      "target_table": "real_document_register",
+      "business_key_strategy": "single: document_code|doc_code|code",
+      "sample_business_key": "DOC-GRC-001"
     },
     {
       "file": "12_standards_metadata.csv",
       "dataset_key": "standards_metadata",
-      "present": false,
-      "row_count": 0,
-      "column_count": 0,
-      "target_table": "real_standard_libraries"
+      "present": true,
+      "row_count": 3,
+      "column_count": 9,
+      "target_table": "real_standard_libraries",
+      "business_key_strategy": "single: framework_code|standard_code|code",
+      "sample_business_key": "STD-CBAHI-META"
     },
     {
       "file": "13_uat_scenarios.csv",
       "dataset_key": "uat_scenarios",
-      "present": false,
-      "row_count": 0,
-      "column_count": 0,
-      "target_table": "patch20_real_import_rows"
+      "present": true,
+      "row_count": 4,
+      "column_count": 11,
+      "target_table": "patch20_real_import_rows",
+      "business_key_strategy": "single: scenario_code|uat_code|code",
+      "sample_business_key": "UAT-USR-001"
     },
     {
       "file": "14_go_no_go_signoffs.csv",
       "dataset_key": "go_no_go_signoffs",
-      "present": false,
-      "row_count": 0,
-      "column_count": 0,
-      "target_table": "patch20_real_import_rows"
+      "present": true,
+      "row_count": 5,
+      "column_count": 11,
+      "target_table": "patch20_real_import_rows",
+      "business_key_strategy": "single: signoff_code|decision_code|code",
+      "sample_business_key": "SIGN-EXEC"
     },
     {
       "file": "15_payroll_department_map.csv",
       "dataset_key": "payroll_department_map",
-      "present": false,
-      "row_count": 0,
-      "column_count": 0,
-      "target_table": "patch20_real_import_rows"
+      "present": true,
+      "row_count": 36,
+      "column_count": 6,
+      "target_table": "patch20_real_import_rows",
+      "business_key_strategy": "single: payroll_department_code|department_code|code",
+      "sample_business_key": "NURS"
     }
   ]
 }

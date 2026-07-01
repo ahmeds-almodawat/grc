@@ -1,0 +1,71 @@
+{
+  "generated_at": "2026-07-01T11:39:44.233Z",
+  "organization_id": "3edf43ce-bf3b-495c-80af-c9bfed20a208",
+  "counts": [
+    {
+      "table": "departments",
+      "count": 9,
+      "error": null
+    },
+    {
+      "table": "profiles",
+      "count": 29,
+      "error": null
+    },
+    {
+      "table": "user_roles",
+      "count": 31,
+      "error": null
+    },
+    {
+      "table": "real_department_master",
+      "count": null,
+      "error": null
+    },
+    {
+      "table": "real_committee_master",
+      "count": null,
+      "error": null
+    },
+    {
+      "table": "real_role_matrix",
+      "count": null,
+      "error": null
+    },
+    {
+      "table": "real_evidence_taxonomy",
+      "count": null,
+      "error": null
+    },
+    {
+      "table": "real_control_library",
+      "count": null,
+      "error": null
+    },
+    {
+      "table": "real_indicator_catalog",
+      "count": null,
+      "error": null
+    },
+    {
+      "table": "real_tracer_templates",
+      "count": null,
+      "error": null
+    },
+    {
+      "table": "real_document_register",
+      "count": null,
+      "error": null
+    },
+    {
+      "table": "real_standard_libraries",
+      "count": null,
+      "error": null
+    },
+    {
+      "table": "patch20_pending_auth_users",
+      "count": null,
+      "error": null
+    }
+  ]
+}
