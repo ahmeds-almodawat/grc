@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-01T11:39:43.983Z",
+  "generated_at": "2026-07-01T12:23:11.360Z",
   "mode": "dry_run",
   "input_folder": "C:\\Users\\molte\\Downloads\\grc_import_ready_pack_after_review_PATCH20_FIXED",
   "input_available": true,
@@ -10,7 +10,7 @@
   "blocking_error_count": 0,
   "warning_count": 0,
   "can_apply": true,
-  "create_auth_users_requested": false,
+  "create_auth_users_requested": true,
   "create_auth_users_effective": false,
   "note": "Dry-run validation completed without changing database data.",
   "files": [

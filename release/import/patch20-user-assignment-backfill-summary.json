@@ -1,0 +1,41 @@
+{
+  "generated_at": "2026-07-01T13:06:08.137Z",
+  "mode": "apply",
+  "organization_id": "3edf43ce-bf3b-495c-80af-c9bfed20a208",
+  "folder": "C:\\Users\\molte\\Downloads\\grc_import_ready_pack_after_review_PATCH20_FIXED",
+  "source_file": "C:\\Users\\molte\\Downloads\\grc_import_ready_pack_after_review_PATCH20_FIXED\\04_users_owners.csv",
+  "before": {
+    "csv_user_count": 455,
+    "matched_profile_count": 455,
+    "profiles_in_organization_count": 455,
+    "profiles_with_department_count": 455,
+    "profiles_with_active_role_count": 455
+  },
+  "after": {
+    "csv_user_count": 455,
+    "matched_profile_count": 455,
+    "profiles_in_organization_count": 455,
+    "profiles_with_department_count": 455,
+    "profiles_with_active_role_count": 455
+  },
+  "changes": {
+    "profiles_created": 0,
+    "profiles_updated": 0,
+    "role_rows_inserted": 0,
+    "role_rows_updated": 0,
+    "higher_roles_preserved": 0,
+    "already_correct_profiles": 455,
+    "already_correct_roles": 455
+  },
+  "unmatched_count": 0,
+  "unmatched_users": 0,
+  "unmatched_departments": 0,
+  "unmatched_report": "release/import/patch20-user-assignment-backfill-unmatched.csv",
+  "safety": {
+    "hard_delete_used": false,
+    "auth_users_created": false,
+    "sensitive_fields_touched": false,
+    "service_role_browser_usage": false,
+    "higher_admin_roles_preserved": true
+  }
+}

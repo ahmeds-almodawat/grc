@@ -1,0 +1,258 @@
+{
+  "generated_at": "2026-07-01T12:25:13.288Z",
+  "pre_import_snapshot": {
+    "generated_at": "2026-07-01T12:23:11.676Z",
+    "organization_id": "3edf43ce-bf3b-495c-80af-c9bfed20a208",
+    "counts": [
+      {
+        "table": "departments",
+        "count": 36,
+        "error": null
+      },
+      {
+        "table": "profiles",
+        "count": 29,
+        "error": null
+      },
+      {
+        "table": "user_roles",
+        "count": 31,
+        "error": null
+      },
+      {
+        "table": "real_department_master",
+        "count": 36,
+        "error": null
+      },
+      {
+        "table": "real_committee_master",
+        "count": 7,
+        "error": null
+      },
+      {
+        "table": "real_role_matrix",
+        "count": 14,
+        "error": null
+      },
+      {
+        "table": "real_evidence_taxonomy",
+        "count": 6,
+        "error": null
+      },
+      {
+        "table": "real_control_library",
+        "count": 5,
+        "error": null
+      },
+      {
+        "table": "real_indicator_catalog",
+        "count": 4,
+        "error": null
+      },
+      {
+        "table": "real_tracer_templates",
+        "count": 4,
+        "error": null
+      },
+      {
+        "table": "real_document_register",
+        "count": 4,
+        "error": null
+      },
+      {
+        "table": "real_standard_libraries",
+        "count": 3,
+        "error": null
+      },
+      {
+        "table": "patch20_pending_auth_users",
+        "count": 455,
+        "error": null
+      }
+    ]
+  },
+  "post_import_snapshot": {
+    "generated_at": "2026-07-01T12:25:13.268Z",
+    "organization_id": "3edf43ce-bf3b-495c-80af-c9bfed20a208",
+    "counts": [
+      {
+        "table": "departments",
+        "count": 36,
+        "error": null
+      },
+      {
+        "table": "profiles",
+        "count": 484,
+        "error": null
+      },
+      {
+        "table": "user_roles",
+        "count": 486,
+        "error": null
+      },
+      {
+        "table": "real_department_master",
+        "count": 36,
+        "error": null
+      },
+      {
+        "table": "real_committee_master",
+        "count": 7,
+        "error": null
+      },
+      {
+        "table": "real_role_matrix",
+        "count": 14,
+        "error": null
+      },
+      {
+        "table": "real_evidence_taxonomy",
+        "count": 6,
+        "error": null
+      },
+      {
+        "table": "real_control_library",
+        "count": 5,
+        "error": null
+      },
+      {
+        "table": "real_indicator_catalog",
+        "count": 4,
+        "error": null
+      },
+      {
+        "table": "real_tracer_templates",
+        "count": 4,
+        "error": null
+      },
+      {
+        "table": "real_document_register",
+        "count": 4,
+        "error": null
+      },
+      {
+        "table": "real_standard_libraries",
+        "count": 3,
+        "error": null
+      },
+      {
+        "table": "patch20_pending_auth_users",
+        "count": 455,
+        "error": null
+      }
+    ]
+  },
+  "schema_preflight": {
+    "generated_at": "2026-07-01T12:23:11.582Z",
+    "required_table_count": 15,
+    "available_table_count": 15,
+    "blocking_error_count": 0,
+    "can_apply": true,
+    "missing_tables": [],
+    "errored_tables": [],
+    "required_migrations": [
+      "072_patch11_real_standards_master_data_pack.sql",
+      "081_patch20_real_data_import_orchestrator.sql",
+      "082_patch20_real_target_table_repair.sql"
+    ],
+    "checks": [
+      {
+        "table": "departments",
+        "available": true,
+        "error": null,
+        "blocking": false
+      },
+      {
+        "table": "profiles",
+        "available": true,
+        "error": null,
+        "blocking": false
+      },
+      {
+        "table": "user_roles",
+        "available": true,
+        "error": null,
+        "blocking": false
+      },
+      {
+        "table": "patch20_pending_auth_users",
+        "available": true,
+        "error": null,
+        "blocking": false
+      },
+      {
+        "table": "patch20_real_import_runs",
+        "available": true,
+        "error": null,
+        "blocking": false
+      },
+      {
+        "table": "patch20_real_import_rows",
+        "available": true,
+        "error": null,
+        "blocking": false
+      },
+      {
+        "table": "real_department_master",
+        "available": true,
+        "error": null,
+        "blocking": false
+      },
+      {
+        "table": "real_committee_master",
+        "available": true,
+        "error": null,
+        "blocking": false
+      },
+      {
+        "table": "real_role_matrix",
+        "available": true,
+        "error": null,
+        "blocking": false
+      },
+      {
+        "table": "real_evidence_taxonomy",
+        "available": true,
+        "error": null,
+        "blocking": false
+      },
+      {
+        "table": "real_control_library",
+        "available": true,
+        "error": null,
+        "blocking": false
+      },
+      {
+        "table": "real_indicator_catalog",
+        "available": true,
+        "error": null,
+        "blocking": false
+      },
+      {
+        "table": "real_tracer_templates",
+        "available": true,
+        "error": null,
+        "blocking": false
+      },
+      {
+        "table": "real_document_register",
+        "available": true,
+        "error": null,
+        "blocking": false
+      },
+      {
+        "table": "real_standard_libraries",
+        "available": true,
+        "error": null,
+        "blocking": false
+      }
+    ]
+  },
+  "failed_count": 0,
+  "reporting_reconciliation": {
+    "input_row_count": 591,
+    "result_row_count": 1537,
+    "total_outcome_count": 1537,
+    "reconciled": true
+  }
+}

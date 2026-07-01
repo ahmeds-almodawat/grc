@@ -1,6 +1,18 @@
 {
-  "generated_at": "2026-07-01T11:35:52.372Z",
+  "generated_at": "2026-07-01T12:25:13.269Z",
   "mode": "apply",
-  "status": "failed",
-  "error": "Multiple active organizations found. Pass --organization-id explicitly."
+  "organization_id": "3edf43ce-bf3b-495c-80af-c9bfed20a208",
+  "run_id": "9929385d-6781-4a7f-adcd-72720e9d1aa4",
+  "create_auth_users_requested": true,
+  "input_row_count": 591,
+  "result_row_count": 1537,
+  "created_count": 1365,
+  "updated_count": 119,
+  "staged_count": 53,
+  "skipped_count": 0,
+  "pending_auth_user_count": 0,
+  "failed_count": 0,
+  "total_outcome_count": 1537,
+  "reporting_reconciled": true,
+  "rollback_note": "Review created/updated reports and reverse manually from pre-import snapshot. No hard-delete rollback is generated."
 }

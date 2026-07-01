@@ -1,16 +1,15 @@
 {
-  "generated_at": "2026-07-01T09:30:03.495Z",
+  "generated_at": "2026-07-01T13:08:40.539Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 81,
-    "latest_migration": "081_patch20_real_data_import_orchestrator.sql",
+    "migration_count": 82,
+    "latest_migration": "082_patch20_real_target_table_repair.sql",
     "prefix_gaps": [
       16,
-      82,
       83,
       84,
       85,

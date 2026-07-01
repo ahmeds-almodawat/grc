@@ -6,6 +6,23 @@ import { createClient } from '@supabase/supabase-js';
 const ROOT = process.cwd();
 const DEFAULT_FOLDER = 'C:\\Users\\molte\\Downloads\\grc_import_ready_pack_after_review';
 const REPORT_DIR = path.join(ROOT, 'release', 'import');
+const PATCH20_REQUIRED_APPLY_TABLES = [
+  'departments',
+  'profiles',
+  'user_roles',
+  'patch20_pending_auth_users',
+  'patch20_real_import_runs',
+  'patch20_real_import_rows',
+  'real_department_master',
+  'real_committee_master',
+  'real_role_matrix',
+  'real_evidence_taxonomy',
+  'real_control_library',
+  'real_indicator_catalog',
+  'real_tracer_templates',
+  'real_document_register',
+  'real_standard_libraries',
+];
 const SENSITIVE_FIELD_PATTERNS = [
   /salary/i,
   /bank/i,
@@ -62,6 +79,21 @@ const STATUS_ALIASES = new Map([
   ['pending setup', 'invited'],
   ['invited', 'invited'],
 ]);
+const ROLE_RANK = {
+  employee: 10,
+  viewer: 20,
+  task_owner: 30,
+  milestone_owner: 40,
+  project_owner: 50,
+  auditor: 60,
+  compliance_officer: 65,
+  department_manager: 70,
+  division_head: 80,
+  executive: 90,
+  governance_admin: 100,
+  super_admin: 110,
+};
+const PROTECTED_HIGH_ROLES = new Set(['super_admin', 'governance_admin', 'executive', 'division_head']);
 const WORKFLOW_STATUS_VALUES = new Set([
   'approved',
   'accepted',
@@ -350,6 +382,30 @@ function writeCsv(fileName, rows, headers = null) {
 
 function writeJson(fileName, value) {
   fs.writeFileSync(path.join(REPORT_DIR, fileName), `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+}
+
+function writeEmptyApplyReports(reason) {
+  const headers = ['file_name', 'dataset_key', 'row_number', 'business_key', 'target_table', 'action', 'action_status', 'message', 'row_hash', 'sanitized_payload'];
+  writeCsv('patch20-created-records.csv', [], headers);
+  writeCsv('patch20-updated-records.csv', [], headers);
+  writeCsv('patch20-staged-records.csv', [], headers);
+  writeCsv('patch20-skipped-records.csv', [], headers);
+  writeCsv('patch20-pending-auth-users-after-apply.csv', [], headers);
+  const failedRows = Array.isArray(reason)
+    ? reason
+    : reason ? [{
+      file_name: '',
+      dataset_key: 'schema_preflight',
+      row_number: '',
+      business_key: '',
+      target_table: '',
+      action: 'preflight',
+      action_status: 'failed',
+      message: reason,
+      row_hash: '',
+      sanitized_payload: '',
+    }] : [];
+  writeCsv('patch20-failed-records.csv', failedRows, headers);
 }
 
 function parseCsv(text) {
@@ -761,7 +817,57 @@ async function countTable(client, tableName, organizationId = null) {
   let query = client.from(tableName).select('id', { count: 'exact', head: true });
   if (organizationId) query = query.eq('organization_id', organizationId);
   const { count, error } = await query;
-  return { table: tableName, count: error ? null : count, error: error?.message ?? null };
+  if (error) return { table: tableName, count: null, error: error.message };
+  if (typeof count === 'number') return { table: tableName, count, error: null };
+
+  let fallback = client.from(tableName).select('id').limit(1);
+  if (organizationId) fallback = fallback.eq('organization_id', organizationId);
+  const fallbackResult = await fallback;
+  return {
+    table: tableName,
+    count: null,
+    error: fallbackResult.error?.message ?? 'Count unavailable: Supabase returned null count without an error.',
+  };
+}
+
+function isMissingTableError(error) {
+  if (!error) return false;
+  const text = `${error.code ?? ''} ${error.message ?? ''} ${error.details ?? ''}`.toLowerCase();
+  return text.includes('does not exist')
+    || text.includes('could not find the table')
+    || text.includes('schema cache')
+    || text.includes('42p01')
+    || text.includes('pgrst205');
+}
+
+async function checkApplySchema(client) {
+  const checks = [];
+  for (const table of PATCH20_REQUIRED_APPLY_TABLES) {
+    const { error } = await client.from(table).select('id', { count: 'exact', head: true }).limit(0);
+    checks.push({
+      table,
+      available: !error,
+      error: error?.message ?? null,
+      blocking: Boolean(error),
+    });
+  }
+  const missingTables = checks.filter(check => !check.available && isMissingTableError({ message: check.error }));
+  const erroredTables = checks.filter(check => !check.available && !isMissingTableError({ message: check.error }));
+  return {
+    generated_at: new Date().toISOString(),
+    required_table_count: PATCH20_REQUIRED_APPLY_TABLES.length,
+    available_table_count: checks.filter(check => check.available).length,
+    blocking_error_count: checks.filter(check => check.blocking).length,
+    can_apply: checks.every(check => check.available),
+    missing_tables: missingTables.map(check => check.table),
+    errored_tables: erroredTables,
+    required_migrations: [
+      '072_patch11_real_standards_master_data_pack.sql',
+      '081_patch20_real_data_import_orchestrator.sql',
+      '082_patch20_real_target_table_repair.sql',
+    ],
+    checks,
+  };
 }
 
 async function preImportSnapshot(client, organizationId) {
@@ -801,7 +907,7 @@ async function createRun(client, mode, options, organizationId, validation, snap
     rollback_note: 'Use patch20-created-records.csv and patch20-updated-records.csv to manually reverse staging changes. No hard-delete rollback is generated.',
   };
   const { data, error } = await client.from('patch20_real_import_runs').insert(payload).select('id').maybeSingle();
-  if (error) return null;
+  if (error) throw new Error(`Unable to create Patch 20 import run ledger: ${error.message}`);
   return data?.id ?? null;
 }
 
@@ -819,6 +925,8 @@ function reportPaths(mode) {
     created_records_csv: 'release/import/patch20-created-records.csv',
     updated_records_csv: 'release/import/patch20-updated-records.csv',
     skipped_records_csv: 'release/import/patch20-skipped-records.csv',
+    staged_records_csv: 'release/import/patch20-staged-records.csv',
+    failed_records_csv: 'release/import/patch20-failed-records.csv',
     post_import_checks_json: 'release/import/patch20-post-import-checks.json',
   };
 }
@@ -948,18 +1056,29 @@ function scopeForRole(role, departmentId) {
   return departmentId ? 'department' : 'assigned_only';
 }
 
+function roleRank(role) {
+  return ROLE_RANK[role] ?? 0;
+}
+
+function shouldPreserveHigherRole(existingRoles, requestedRole) {
+  const requestedRank = roleRank(requestedRole);
+  return existingRoles.some(role => role.is_active
+    && PROTECTED_HIGH_ROLES.has(role.role)
+    && roleRank(role.role) > requestedRank);
+}
+
+function sameNullableValue(left, right) {
+  return (left ?? null) === (right ?? null);
+}
+
 async function upsertUserRole(client, runId, organizationId, resultRows, config, row, profileId, role, departmentId, active) {
   if (!profileId || !role) return;
   const scope = scopeForRole(role, departmentId);
-  let query = client
+  const { data: existingRoles, error: roleReadError } = await client
     .from('user_roles')
-    .select('id,is_active')
+    .select('id,role,scope,organization_id,department_id,is_active')
     .eq('user_id', profileId)
-    .eq('role', role)
-    .eq('scope', scope)
-    .eq('organization_id', organizationId);
-  query = departmentId ? query.eq('department_id', departmentId) : query.is('department_id', null);
-  const existing = await query.limit(1).maybeSingle();
+    .limit(100);
   const base = {
     file_name: config.file,
     dataset_key: config.key,
@@ -970,9 +1089,44 @@ async function upsertUserRole(client, runId, organizationId, resultRows, config,
     sanitized_payload: sanitizeRow(row),
   };
 
-  if (existing.data) {
-    const { error } = await client.from('user_roles').update({ is_active: active }).eq('id', existing.data.id);
-    const result = { ...base, action: 'update', action_status: error ? 'failed' : 'success', message: error?.message ?? 'Updated existing role assignment by user, role, scope, and organization.' };
+  if (roleReadError) {
+    const result = { ...base, action: 'update', action_status: 'failed', message: roleReadError.message };
+    resultRows.push(result);
+    await insertResultRow(client, runId, organizationId, result);
+    return;
+  }
+
+  const roles = existingRoles ?? [];
+  if (shouldPreserveHigherRole(roles, role)) {
+    const result = { ...base, action: 'skip', action_status: 'success', message: 'Preserved existing higher privileged role; no downgrade applied.' };
+    resultRows.push(result);
+    await insertResultRow(client, runId, organizationId, result);
+    return;
+  }
+
+  const effectiveDepartmentId = scope === 'department' ? departmentId : null;
+  const exactRole = roles.find(existing => existing.role === role
+    && existing.scope === scope
+    && sameNullableValue(existing.organization_id, organizationId)
+    && sameNullableValue(existing.department_id, effectiveDepartmentId));
+  const repairableRole = exactRole ?? roles.find(existing => existing.role === role && (
+    !existing.is_active
+    || existing.scope === 'assigned_only'
+    || !existing.department_id
+  ));
+  const rolePatch = {
+    role,
+    scope,
+    organization_id: organizationId,
+    division_id: null,
+    department_id: effectiveDepartmentId,
+    unit_id: null,
+    is_active: active,
+  };
+
+  if (repairableRole) {
+    const { error } = await client.from('user_roles').update(rolePatch).eq('id', repairableRole.id);
+    const result = { ...base, action: 'update', action_status: error ? 'failed' : 'success', message: error?.message ?? 'Updated existing role assignment by user, role, scope, organization, and department.' };
     resultRows.push(result);
     await insertResultRow(client, runId, organizationId, result);
     return;
@@ -983,7 +1137,7 @@ async function upsertUserRole(client, runId, organizationId, resultRows, config,
     role,
     scope,
     organization_id: organizationId,
-    department_id: scope === 'department' ? departmentId : null,
+    department_id: effectiveDepartmentId,
     is_active: active,
   };
   const { error } = await client.from('user_roles').insert(payload);
@@ -1011,6 +1165,12 @@ async function applyUsers(client, runId, organizationId, resultRows, config, row
       row_hash: hashRow(row),
       sanitized_payload: sanitizeRow(row),
     };
+    if (departmentCode && !department) {
+      const result = { ...base, action: 'update', action_status: 'failed', message: `Department code ${departmentCode} was not found in public.departments for this organization.` };
+      resultRows.push(result);
+      await insertResultRow(client, runId, organizationId, result);
+      continue;
+    }
     if (!authUser && options.createAuthUsers && !isGeneratedEmail(email)) {
       const password = crypto.randomBytes(24).toString('base64url');
       const created = await client.auth.admin.createUser({ email, password, email_confirm: true });
@@ -1026,7 +1186,7 @@ async function applyUsers(client, runId, organizationId, resultRows, config, row
       await insertResultRow(client, runId, organizationId, createdAuthResult);
     }
     if (!profile && !authUser) {
-      await client.from('patch20_pending_auth_users').upsert({
+      const { error } = await client.from('patch20_pending_auth_users').upsert({
         run_id: runId,
         organization_id: organizationId,
         email,
@@ -1037,7 +1197,12 @@ async function applyUsers(client, runId, organizationId, resultRows, config, row
         requested_role: role || null,
         status: 'pending_review',
       }, { onConflict: 'organization_id,email' });
-      const result = { ...base, action: 'pending_auth_user', action_status: 'success', message: 'No matching auth/profile account. Added to pending account creation queue.' };
+      const result = {
+        ...base,
+        action: 'pending_auth_user',
+        action_status: error ? 'failed' : 'success',
+        message: error?.message ?? 'No matching auth/profile account. Added to pending account creation queue.',
+      };
       resultRows.push(result);
       await insertResultRow(client, runId, organizationId, result);
       continue;
@@ -1068,6 +1233,7 @@ async function applyUsers(client, runId, organizationId, resultRows, config, row
     }
     resultRows.push(result);
     await insertResultRow(client, runId, organizationId, result);
+    if (result.action_status === 'failed') continue;
     if (effectiveProfile?.id && role) {
       await upsertUserRole(client, runId, organizationId, resultRows, config, row, effectiveProfile.id, role, department?.id ?? null, activeForRole);
     }
@@ -1130,6 +1296,52 @@ async function applyPack(options, validation) {
 
   const client = serviceClient();
   const organizationId = await detectOrganization(client, options.organizationId);
+  const schemaPreflight = await checkApplySchema(client);
+  writeJson('patch20-apply-schema-preflight.json', schemaPreflight);
+  if (!schemaPreflight.can_apply) {
+    const failedRows = schemaPreflight.checks.filter(check => check.blocking).map(check => ({
+      file_name: '',
+      dataset_key: 'schema_preflight',
+      row_number: '',
+      business_key: '',
+      target_table: check.table,
+      action: 'preflight',
+      action_status: 'failed',
+      message: check.error || 'Required Patch 20 target table is unavailable.',
+      row_hash: '',
+      sanitized_payload: '',
+    }));
+    const missing = schemaPreflight.missing_tables.length
+      ? schemaPreflight.missing_tables.join(', ')
+      : schemaPreflight.errored_tables.map(table => `${table.table}: ${table.error}`).join('; ');
+    const message = `Apply refused before data writes: required Patch 20 target tables are unavailable. Missing/errored tables: ${missing}. Apply migrations 072_patch11_real_standards_master_data_pack.sql, 081_patch20_real_data_import_orchestrator.sql, and 082_patch20_real_target_table_repair.sql, then rerun dry-run before apply.`;
+    const summary = {
+      generated_at: new Date().toISOString(),
+      mode: 'apply',
+      organization_id: organizationId,
+      run_id: null,
+      status: 'schema_preflight_failed',
+      create_auth_users_requested: options.createAuthUsers,
+      created_count: 0,
+      updated_count: 0,
+      staged_count: 0,
+      skipped_count: 0,
+      pending_auth_user_count: 0,
+      failed_count: failedRows.length,
+      total_outcome_count: failedRows.length,
+      result_row_count: failedRows.length,
+      reporting_reconciled: true,
+      schema_blocking_error_count: schemaPreflight.blocking_error_count,
+      rollback_note: 'No apply writes were attempted because schema preflight failed.',
+      schema_preflight_report: 'release/import/patch20-apply-schema-preflight.json',
+    };
+    writeJson('patch20-apply-summary.json', summary);
+    writeCsv('patch20-apply-summary.csv', [summary], Object.keys(summary));
+    writeEmptyApplyReports(failedRows);
+    const error = new Error(message);
+    error.patch20AlreadyReported = true;
+    throw error;
+  }
   const snapshot = await preImportSnapshot(client, organizationId);
   ensureReportDir();
   writeJson('patch20-pre-import-snapshot.json', snapshot);
@@ -1142,27 +1354,52 @@ async function applyPack(options, validation) {
     await applyDataset(client, runId, organizationId, resultRows, config, file.rows, options);
   }
   const postSnapshot = await preImportSnapshot(client, organizationId);
+  const createdRows = resultRows.filter(row => row.action === 'create' && row.action_status === 'success');
+  const updatedRows = resultRows.filter(row => row.action === 'update' && row.action_status === 'success');
+  const stagedRows = resultRows.filter(row => row.action === 'stage' && row.action_status === 'success');
+  const skippedRows = resultRows.filter(row => row.action === 'skip' && row.action_status !== 'failed');
+  const pendingAuthRows = resultRows.filter(row => row.action === 'pending_auth_user' && row.action_status === 'success');
+  const failedRows = resultRows.filter(row => row.action_status === 'failed');
+  const totalOutcomeCount = createdRows.length + updatedRows.length + stagedRows.length + skippedRows.length + pendingAuthRows.length + failedRows.length;
   const summary = {
     generated_at: new Date().toISOString(),
     mode: 'apply',
     organization_id: organizationId,
     run_id: runId,
     create_auth_users_requested: options.createAuthUsers,
-    created_count: resultRows.filter(row => row.action === 'create' && row.action_status === 'success').length,
-    updated_count: resultRows.filter(row => row.action === 'update' && row.action_status === 'success').length,
-    staged_count: resultRows.filter(row => row.action === 'stage' && row.action_status === 'success').length,
-    skipped_count: resultRows.filter(row => row.action === 'skip').length,
-    pending_auth_user_count: resultRows.filter(row => row.action === 'pending_auth_user').length,
-    failed_count: resultRows.filter(row => row.action_status === 'failed').length,
+    input_row_count: validation.report.files.reduce((total, file) => total + file.row_count, 0),
+    result_row_count: resultRows.length,
+    created_count: createdRows.length,
+    updated_count: updatedRows.length,
+    staged_count: stagedRows.length,
+    skipped_count: skippedRows.length,
+    pending_auth_user_count: pendingAuthRows.length,
+    failed_count: failedRows.length,
+    total_outcome_count: totalOutcomeCount,
+    reporting_reconciled: totalOutcomeCount === resultRows.length,
     rollback_note: 'Review created/updated reports and reverse manually from pre-import snapshot. No hard-delete rollback is generated.',
   };
   writeJson('patch20-apply-summary.json', summary);
   writeCsv('patch20-apply-summary.csv', [summary], Object.keys(summary));
-  writeCsv('patch20-created-records.csv', resultRows.filter(row => row.action === 'create'));
-  writeCsv('patch20-updated-records.csv', resultRows.filter(row => row.action === 'update'));
-  writeCsv('patch20-skipped-records.csv', resultRows.filter(row => ['skip', 'stage'].includes(row.action)));
-  writeCsv('patch20-pending-auth-users-after-apply.csv', resultRows.filter(row => row.action === 'pending_auth_user'));
-  writeJson('patch20-post-import-checks.json', { generated_at: new Date().toISOString(), pre_import_snapshot: snapshot, post_import_snapshot: postSnapshot, failed_count: summary.failed_count });
+  writeCsv('patch20-created-records.csv', createdRows);
+  writeCsv('patch20-updated-records.csv', updatedRows);
+  writeCsv('patch20-staged-records.csv', stagedRows);
+  writeCsv('patch20-skipped-records.csv', skippedRows);
+  writeCsv('patch20-pending-auth-users-after-apply.csv', pendingAuthRows);
+  writeCsv('patch20-failed-records.csv', failedRows);
+  writeJson('patch20-post-import-checks.json', {
+    generated_at: new Date().toISOString(),
+    pre_import_snapshot: snapshot,
+    post_import_snapshot: postSnapshot,
+    schema_preflight: schemaPreflight,
+    failed_count: summary.failed_count,
+    reporting_reconciliation: {
+      input_row_count: summary.input_row_count,
+      result_row_count: summary.result_row_count,
+      total_outcome_count: summary.total_outcome_count,
+      reconciled: summary.reporting_reconciled,
+    },
+  });
   if (runId) {
     await client.from('patch20_real_import_runs').update({
       status: summary.failed_count ? 'failed' : 'applied',
@@ -1188,12 +1425,29 @@ async function main() {
 
 main().catch(error => {
   ensureReportDir();
+  if (error?.patch20AlreadyReported) {
+    console.error(error.message);
+    process.exitCode = 1;
+    return;
+  }
   const summary = {
     generated_at: new Date().toISOString(),
     mode: process.argv.includes('--apply') ? 'apply' : 'dry_run',
     status: 'failed',
     error: error instanceof Error ? error.message : String(error),
   };
+  if (process.argv.includes('--apply')) {
+    summary.created_count = 0;
+    summary.updated_count = 0;
+    summary.staged_count = 0;
+    summary.skipped_count = 0;
+    summary.pending_auth_user_count = 0;
+    summary.failed_count = 1;
+    summary.total_outcome_count = 1;
+    summary.result_row_count = 1;
+    summary.reporting_reconciled = true;
+    writeEmptyApplyReports(summary.error);
+  }
   writeJson(process.argv.includes('--apply') ? 'patch20-apply-summary.json' : 'patch20-dry-run-summary.json', summary);
   console.error(error instanceof Error ? error.message : error);
   process.exitCode = 1;

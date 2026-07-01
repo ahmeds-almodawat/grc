@@ -1,0 +1,2 @@
+generated_at,mode,organization_id,run_id,create_auth_users_requested,input_row_count,result_row_count,created_count,updated_count,staged_count,skipped_count,pending_auth_user_count,failed_count,total_outcome_count,reporting_reconciled,rollback_note
+2026-07-01T12:25:13.269Z,apply,3edf43ce-bf3b-495c-80af-c9bfed20a208,9929385d-6781-4a7f-adcd-72720e9d1aa4,true,591,1537,1365,119,53,0,0,0,1537,true,Review created/updated reports and reverse manually from pre-import snapshot. No hard-delete rollback is generated.

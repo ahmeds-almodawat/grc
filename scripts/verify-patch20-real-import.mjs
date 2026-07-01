@@ -38,6 +38,7 @@ const requiredArtifacts = [
   'release/import/patch20-generated-email-review.csv',
   'release/import/patch20-payroll-discovered-departments-review.csv',
   'release/import/patch20-import-plan.json',
+  'release/import/patch20-failed-records.csv',
 ];
 
 const checks = [];
@@ -84,6 +85,9 @@ const orchestratorDocs = read('docs/PATCH20_REAL_IMPORT_ORCHESTRATOR.md');
 const userManagement = read('src/pages/UserManagementCenter.tsx');
 const dryRunReport = JSON.parse(read('release/import/patch20-dry-run-summary.json'));
 const importPlan = JSON.parse(read('release/import/patch20-import-plan.json'));
+const applySummary = fs.existsSync(relPath('release/import/patch20-apply-summary.json'))
+  ? JSON.parse(read('release/import/patch20-apply-summary.json'))
+  : null;
 const proofSuite = fs.existsSync(relPath('release/v700/proof-suite-all.json'))
   ? JSON.parse(read('release/v700/proof-suite-all.json'))
   : null;
@@ -124,6 +128,8 @@ for (const sensitive of ['salary', 'bank', 'iqama', 'deduction', 'allowance', 'n
 assert(importer.includes('SENSITIVE_FIELD_PATTERNS'), 'importer centralizes payroll-sensitive field patterns');
 assert(importer.includes('sanitizeRow') && importer.includes('if (hasSensitiveHeader(key)) continue'), 'importer excludes sensitive fields from sanitized payloads');
 assert(importer.includes('organization-id must be a real organization UUID'), 'importer rejects placeholder organization IDs with a PowerShell-safe hint');
+assert(importer.includes('PATCH20_REQUIRED_APPLY_TABLES') && importer.includes('checkApplySchema'), 'importer checks required apply target tables before data writes');
+assert(importer.includes('patch20-failed-records.csv'), 'importer writes failed row evidence CSV');
 
 assert(importer.includes('LONG_STANDARD_TEXT_LIMIT'), 'importer has long standards text limit');
 assert(importer.includes('copyright_text_risk'), 'importer blocks long copyrighted standards text');
@@ -154,6 +160,10 @@ assert(migration.includes('has_any_role'), 'Patch 20 policies keep admin role ch
 assert(dryRunReport.blocking_error_count === 0, 'latest dry-run has no blocking errors');
 assert(dryRunReport.mode === 'dry_run', 'latest report is a dry-run report');
 assert(dryRunReport.input_available === true || dryRunReport.environment_precheck_only === true, 'dry-run records input availability or environment precheck');
+if (applySummary && Number(applySummary.failed_count ?? 0) > 0) {
+  const failedCsv = read('release/import/patch20-failed-records.csv').trim().split(/\r?\n/);
+  assert(failedCsv.length - 1 === Number(applySummary.failed_count), 'failed row CSV count matches latest apply failed_count');
+}
 assert(!proofSuite || proofSuite.status === 'passed', 'latest proof suite report remains clean when present');
 
 const summary = {

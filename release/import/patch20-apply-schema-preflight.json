@@ -1,0 +1,106 @@
+{
+  "generated_at": "2026-07-01T12:23:11.582Z",
+  "required_table_count": 15,
+  "available_table_count": 15,
+  "blocking_error_count": 0,
+  "can_apply": true,
+  "missing_tables": [],
+  "errored_tables": [],
+  "required_migrations": [
+    "072_patch11_real_standards_master_data_pack.sql",
+    "081_patch20_real_data_import_orchestrator.sql",
+    "082_patch20_real_target_table_repair.sql"
+  ],
+  "checks": [
+    {
+      "table": "departments",
+      "available": true,
+      "error": null,
+      "blocking": false
+    },
+    {
+      "table": "profiles",
+      "available": true,
+      "error": null,
+      "blocking": false
+    },
+    {
+      "table": "user_roles",
+      "available": true,
+      "error": null,
+      "blocking": false
+    },
+    {
+      "table": "patch20_pending_auth_users",
+      "available": true,
+      "error": null,
+      "blocking": false
+    },
+    {
+      "table": "patch20_real_import_runs",
+      "available": true,
+      "error": null,
+      "blocking": false
+    },
+    {
+      "table": "patch20_real_import_rows",
+      "available": true,
+      "error": null,
+      "blocking": false
+    },
+    {
+      "table": "real_department_master",
+      "available": true,
+      "error": null,
+      "blocking": false
+    },
+    {
+      "table": "real_committee_master",
+      "available": true,
+      "error": null,
+      "blocking": false
+    },
+    {
+      "table": "real_role_matrix",
+      "available": true,
+      "error": null,
+      "blocking": false
+    },
+    {
+      "table": "real_evidence_taxonomy",
+      "available": true,
+      "error": null,
+      "blocking": false
+    },
+    {
+      "table": "real_control_library",
+      "available": true,
+      "error": null,
+      "blocking": false
+    },
+    {
+      "table": "real_indicator_catalog",
+      "available": true,
+      "error": null,
+      "blocking": false
+    },
+    {
+      "table": "real_tracer_templates",
+      "available": true,
+      "error": null,
+      "blocking": false
+    },
+    {
+      "table": "real_document_register",
+      "available": true,
+      "error": null,
+      "blocking": false
+    },
+    {
+      "table": "real_standard_libraries",
+      "available": true,
+      "error": null,
+      "blocking": false
+    }
+  ]
+}

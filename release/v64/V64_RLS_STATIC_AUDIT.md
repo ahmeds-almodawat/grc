@@ -2,8 +2,8 @@
 
 ```json
 {
-  "generated_at": "2026-07-01T09:29:10.881Z",
-  "migration_files_scanned": 81,
+  "generated_at": "2026-07-01T13:07:54.113Z",
+  "migration_files_scanned": 82,
   "created_tables_detected": 461,
   "tables_with_explicit_rls": 401,
   "tables_with_detected_policies": 369,
