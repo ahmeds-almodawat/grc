@@ -35,7 +35,8 @@ Expected files:
 Run this from the repo root:
 
 ```powershell
-node scripts/import-real-grc-pack.mjs --dry-run --folder "C:\Users\molte\Downloads\grc_import_ready_pack_after_review"
+$env:GRC_IMPORT_FOLDER = "C:\Users\molte\Downloads\grc_import_ready_pack_after_review"
+node scripts/import-real-grc-pack.mjs --dry-run --folder "$env:GRC_IMPORT_FOLDER"
 ```
 
 Dry-run does not write to the database. It validates required files, flexible column names, duplicate codes, duplicate emails, email formats, department/user/committee references, platform role names, status values, date formats, generated emails, payroll-discovered departments, import order, and long standards text risk.
@@ -47,14 +48,20 @@ If the folder is not visible to the current process, the dry-run writes an envir
 Default apply mode does not create Supabase Auth users:
 
 ```powershell
-node scripts/import-real-grc-pack.mjs --apply --folder "C:\Users\molte\Downloads\grc_import_ready_pack_after_review" --organization-id <organization_uuid> --skip-auth-user-creation
+$env:GRC_IMPORT_FOLDER = "C:\Users\molte\Downloads\grc_import_ready_pack_after_review"
+$env:GRC_ORGANIZATION_ID = "paste-real-organization-uuid-here"
+node scripts/import-real-grc-pack.mjs --apply --folder "$env:GRC_IMPORT_FOLDER" --organization-id "$env:GRC_ORGANIZATION_ID" --skip-auth-user-creation
 ```
 
 Auth-user creation is opt-in and only works from the CLI/server environment with `SUPABASE_SERVICE_ROLE_KEY`:
 
 ```powershell
-node scripts/import-real-grc-pack.mjs --apply --folder "C:\Users\molte\Downloads\grc_import_ready_pack_after_review" --organization-id <organization_uuid> --create-auth-users true
+$env:GRC_IMPORT_FOLDER = "C:\Users\molte\Downloads\grc_import_ready_pack_after_review"
+$env:GRC_ORGANIZATION_ID = "paste-real-organization-uuid-here"
+node scripts/import-real-grc-pack.mjs --apply --folder "$env:GRC_IMPORT_FOLDER" --organization-id "$env:GRC_ORGANIZATION_ID" --create-auth-users true
 ```
+
+Do not paste angle-bracket placeholders into PowerShell. PowerShell treats the opening angle bracket as an operator.
 
 Production-looking Supabase URLs require an explicit `--confirm-production` flag after staging approval.
 

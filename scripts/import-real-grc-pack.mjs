@@ -272,19 +272,45 @@ function parseArgs(argv) {
     limit: null,
     confirmProduction: false,
   };
+
+  const readValue = (index, flag) => {
+    const value = argv[index + 1];
+    if (!value || value.startsWith('--')) throw new Error(`${flag} requires a value.`);
+    return value;
+  };
+
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--dry-run') options.mode = 'dry-run';
     else if (arg === '--apply') options.mode = 'apply';
-    else if (arg === '--folder') options.folder = argv[++index];
-    else if (arg === '--organization-id') options.organizationId = argv[++index];
-    else if (arg === '--create-auth-users') options.createAuthUsers = String(argv[++index]).toLowerCase() === 'true';
+    else if (arg === '--folder') {
+      options.folder = readValue(index, arg);
+      index += 1;
+    } else if (arg === '--organization-id') {
+      options.organizationId = readValue(index, arg);
+      index += 1;
+    } else if (arg === '--create-auth-users') {
+      const value = readValue(index, arg).toLowerCase();
+      if (!['true', 'false'].includes(value)) throw new Error('--create-auth-users must be true or false.');
+      options.createAuthUsers = value === 'true';
+      index += 1;
+    }
     else if (arg === '--skip-auth-user-creation') {
       options.skipAuthUserCreation = true;
       options.createAuthUsers = false;
-    } else if (arg === '--limit') options.limit = Number(argv[++index]);
+    } else if (arg === '--limit') {
+      options.limit = Number(readValue(index, arg));
+      if (!Number.isFinite(options.limit) || options.limit < 1) throw new Error('--limit must be a positive number.');
+      index += 1;
+    }
     else if (arg === '--confirm-production') options.confirmProduction = true;
     else throw new Error(`Unsupported argument: ${arg}`);
+  }
+  if (options.organizationId) {
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidPattern.test(options.organizationId)) {
+      throw new Error('--organization-id must be a real organization UUID. In PowerShell, set $env:GRC_ORGANIZATION_ID = "your-real-uuid" and pass --organization-id "$env:GRC_ORGANIZATION_ID".');
+    }
   }
   return options;
 }
