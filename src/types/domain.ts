@@ -250,8 +250,218 @@ export interface RiskRow {
   response_type: string;
   status: string;
   next_review_date: string | null;
+  lifecycle_status?: RiskLifecycleStatus;
+  risk_owner_id?: string | null;
+  control_owner_id?: string | null;
+  treatment_owner_id?: string | null;
+  executive_sponsor_id?: string | null;
+  inherent_likelihood?: number | null;
+  inherent_impact?: number | null;
+  residual_likelihood?: number | null;
+  residual_impact?: number | null;
+  scoring_method?: string | null;
+  score_last_changed_at?: string | null;
+  appetite_level?: string | null;
+  appetite_threshold?: number | null;
+  appetite_breached?: boolean | null;
+  appetite_breach_reason?: string | null;
+  treatment_required?: boolean | null;
+  treatment_status?: string | null;
+  treatment_plan_summary?: string | null;
+  treatment_due_date?: string | null;
+  treatment_completed_at?: string | null;
+  acceptance_required?: boolean | null;
+  acceptance_status?: string | null;
+  acceptance_requested_at?: string | null;
+  accepted_at?: string | null;
+  acceptance_expiry_date?: string | null;
+  acceptance_reason?: string | null;
+  review_frequency?: string | null;
+  last_reviewed_at?: string | null;
+  review_overdue?: boolean | null;
+  closure_requested_at?: string | null;
+  closure_approved_at?: string | null;
+  closure_reason?: string | null;
+  closure_evidence_required?: boolean | null;
+  closure_blocker?: string | null;
+  escalation_required?: boolean | null;
+  escalation_level?: string | null;
+  escalated_at?: string | null;
+  executive_visible?: boolean | null;
+  duplicate_of_risk_id?: string | null;
+  related_risk_ids?: string[] | null;
+  repeat_signal_flag?: boolean | null;
+  source_ovr_id?: string | null;
+  source_audit_finding_id?: string | null;
+  source_compliance_id?: string | null;
+  source_project_id?: string | null;
   departments?: { name_en: string | null; name_ar: string | null } | null;
   owner?: { full_name_en: string | null; full_name_ar: string | null } | null;
+  risk_owner?: { full_name_en: string | null; full_name_ar: string | null } | null;
+  control_owner?: { full_name_en: string | null; full_name_ar: string | null } | null;
+  treatment_owner?: { full_name_en: string | null; full_name_ar: string | null } | null;
+  executive_sponsor?: { full_name_en: string | null; full_name_ar: string | null } | null;
+}
+
+export type RiskLifecycleStatus =
+  | 'identified'
+  | 'assessed'
+  | 'treatment_required'
+  | 'treatment_in_progress'
+  | 'acceptance_requested'
+  | 'accepted'
+  | 'monitoring'
+  | 'closure_requested'
+  | 'closed'
+  | 'reopened'
+  | 'cancelled';
+
+export interface RiskWorkflowQueueRow {
+  organization_id: string;
+  risk_id: string;
+  risk_code: string | null;
+  title: string;
+  risk_level: RiskLevel;
+  status: string;
+  lifecycle_status: RiskLifecycleStatus;
+  residual_score: number;
+  appetite_breached: boolean;
+  treatment_required: boolean;
+  treatment_status: string;
+  treatment_due_date: string | null;
+  acceptance_required: boolean;
+  acceptance_status: string;
+  next_review_date: string | null;
+  review_overdue: boolean;
+  closure_requested_at: string | null;
+  escalation_required: boolean;
+  escalation_level: string;
+  executive_visible: boolean;
+  department_name: string | null;
+  risk_owner_name: string | null;
+  treatment_owner_name: string | null;
+  queue_reason: string;
+  due_date: string | null;
+  is_overdue: boolean;
+}
+
+export interface RiskAppetiteBreachRow {
+  organization_id: string;
+  risk_id: string;
+  risk_code: string | null;
+  title: string;
+  risk_level: RiskLevel;
+  residual_score: number;
+  appetite_level: string;
+  appetite_threshold: number;
+  appetite_breached: boolean;
+  appetite_breach_reason: string | null;
+  acceptance_status: string;
+  acceptance_expiry_date: string | null;
+  department_name: string | null;
+  risk_owner_name: string | null;
+}
+
+export interface RiskTreatmentQueueRow {
+  organization_id: string;
+  risk_id: string;
+  risk_code: string | null;
+  title: string;
+  risk_level: RiskLevel;
+  residual_score: number;
+  treatment_required: boolean;
+  treatment_status: string;
+  treatment_plan_summary: string | null;
+  treatment_due_date: string | null;
+  treatment_owner_id: string | null;
+  treatment_owner_name: string | null;
+  treatment_overdue: boolean;
+}
+
+export interface RiskKriAlertRow {
+  organization_id: string;
+  kri_id: string;
+  risk_id: string;
+  risk_code: string | null;
+  risk_title: string;
+  kri_code: string | null;
+  name_en: string;
+  name_ar: string | null;
+  current_value: number | null;
+  threshold_warning: number | null;
+  threshold_critical: number | null;
+  direction: string;
+  status: 'normal' | 'warning' | 'critical' | string;
+  measured_at: string;
+  owner_id: string | null;
+  owner_name: string | null;
+  risk_level: RiskLevel;
+  residual_score: number;
+}
+
+export interface ExecutiveRiskEscalationRow {
+  organization_id: string;
+  risk_id: string;
+  risk_code: string | null;
+  title: string;
+  risk_level: RiskLevel;
+  residual_score: number;
+  escalation_required: boolean;
+  escalation_level: string;
+  escalated_at: string | null;
+  executive_visible: boolean;
+  appetite_breached: boolean;
+  treatment_status: string;
+  acceptance_status: string;
+  next_review_date: string | null;
+  department_name: string | null;
+  executive_owner_name: string | null;
+}
+
+export interface RiskClosureBlockerRow {
+  organization_id: string;
+  risk_id: string;
+  risk_code: string | null;
+  title: string;
+  risk_level: RiskLevel;
+  status: string;
+  closure_requested_at: string | null;
+  closure_reason: string | null;
+  closure_evidence_required: boolean;
+  blocker_reason: string | null;
+}
+
+export interface RiskReassessmentHistoryRow {
+  id: string;
+  organization_id: string;
+  risk_id: string;
+  previous_likelihood: number | null;
+  previous_impact: number | null;
+  previous_score: number | null;
+  new_likelihood: number | null;
+  new_impact: number | null;
+  new_score: number | null;
+  previous_residual_likelihood: number | null;
+  previous_residual_impact: number | null;
+  previous_residual_score: number | null;
+  new_residual_likelihood: number | null;
+  new_residual_impact: number | null;
+  new_residual_score: number | null;
+  change_reason: string | null;
+  changed_by: string | null;
+  changed_at: string;
+}
+
+export interface RiskWorkflowEventRow {
+  id: string;
+  organization_id: string;
+  risk_id: string;
+  from_status: string | null;
+  to_status: string | null;
+  action: string;
+  note: string | null;
+  actor_id: string | null;
+  created_at: string;
 }
 
 export interface ComplianceRow {

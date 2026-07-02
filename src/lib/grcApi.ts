@@ -31,6 +31,14 @@ const liveEmptyOvrRepeatedCategoryAlerts: any[] = emptyLiveArray<any>();
 const liveEmptyProfiles: any[] = emptyLiveArray<any>();
 const liveEmptyProjects: any[] = emptyLiveArray<any>();
 const liveEmptyRisks: any[] = emptyLiveArray<any>();
+const liveEmptyRiskWorkflowQueue: any[] = emptyLiveArray<any>();
+const liveEmptyRiskAppetiteBreaches: any[] = emptyLiveArray<any>();
+const liveEmptyRiskTreatmentQueue: any[] = emptyLiveArray<any>();
+const liveEmptyRiskKriAlerts: any[] = emptyLiveArray<any>();
+const liveEmptyExecutiveRiskEscalations: any[] = emptyLiveArray<any>();
+const liveEmptyRiskClosureBlockers: any[] = emptyLiveArray<any>();
+const liveEmptyRiskReassessmentHistory: any[] = emptyLiveArray<any>();
+const liveEmptyRiskWorkflowEvents: any[] = emptyLiveArray<any>();
 const liveEmptyTasks: any[] = emptyLiveArray<any>();
 
 import type {
@@ -76,8 +84,16 @@ import type {
   ProfileOption,
   ProjectRow,
   ProjectStatus,
+  ExecutiveRiskEscalationRow,
+  RiskAppetiteBreachRow,
+  RiskClosureBlockerRow,
+  RiskKriAlertRow,
   RiskLevel,
+  RiskReassessmentHistoryRow,
   RiskRow,
+  RiskTreatmentQueueRow,
+  RiskWorkflowEventRow,
+  RiskWorkflowQueueRow,
   SourceType,
   TaskRow,
   WorkStatus
@@ -322,16 +338,106 @@ export async function getRisks(): Promise<RiskRow[]> {
   if (!supabase) return emptyLiveArray<any>();
 
   try {
-    const { data, error } = await supabase
+    const patch22Select = '*, departments(name_en,name_ar), owner:profiles!risks_owner_id_fkey(full_name_en,full_name_ar), risk_owner:profiles!risks_risk_owner_id_fkey(full_name_en,full_name_ar), control_owner:profiles!risks_control_owner_id_fkey(full_name_en,full_name_ar), treatment_owner:profiles!risks_treatment_owner_id_fkey(full_name_en,full_name_ar), executive_sponsor:profiles!risks_executive_sponsor_id_fkey(full_name_en,full_name_ar)';
+    const legacySelect = '*, departments(name_en,name_ar), owner:profiles!risks_owner_id_fkey(full_name_en,full_name_ar)';
+    let result = await supabase
       .from('risks')
-      .select('*, departments(name_en,name_ar), owner:profiles!risks_owner_id_fkey(full_name_en,full_name_ar)')
+      .select(patch22Select)
       .order('risk_level', { ascending: true })
       .limit(100);
+    if (result.error) {
+      result = await supabase
+        .from('risks')
+        .select(legacySelect)
+        .order('risk_level', { ascending: true })
+        .limit(100);
+    }
+    const { data, error } = result;
     if (error) throw error;
     return (data as unknown as RiskRow[])?.length ? (data as unknown as RiskRow[]) : liveEmptyRisks;
   } catch (error) {
     logFallback('risks', error);
     return emptyLiveArray<any>();
+  }
+}
+
+async function readPatch22View<T>(view: string, label: string, orderColumn = 'risk_level'): Promise<T[]> {
+  if (!supabase) return emptyLiveArray<any>();
+  try {
+    const { data, error } = await supabase
+      .from(view)
+      .select('*')
+      .order(orderColumn, { ascending: true, nullsFirst: false })
+      .limit(250);
+    if (error) throw error;
+    return (data as unknown as T[]) || [];
+  } catch (error) {
+    logFallback(label, error);
+    return emptyLiveArray<any>();
+  }
+}
+
+export async function getRiskWorkflowQueue(): Promise<RiskWorkflowQueueRow[]> {
+  const rows = await readPatch22View<RiskWorkflowQueueRow>('v_patch22_risk_workflow_queue', 'risk workflow queue', 'due_date');
+  return rows.length ? rows : liveEmptyRiskWorkflowQueue;
+}
+
+export async function getRiskAppetiteBreaches(): Promise<RiskAppetiteBreachRow[]> {
+  const rows = await readPatch22View<RiskAppetiteBreachRow>('v_patch22_risk_appetite_breaches', 'risk appetite breaches', 'residual_score');
+  return rows.length ? rows : liveEmptyRiskAppetiteBreaches;
+}
+
+export async function getRiskTreatmentQueue(): Promise<RiskTreatmentQueueRow[]> {
+  const rows = await readPatch22View<RiskTreatmentQueueRow>('v_patch22_risk_treatment_queue', 'risk treatment queue', 'treatment_due_date');
+  return rows.length ? rows : liveEmptyRiskTreatmentQueue;
+}
+
+export async function getRiskKriAlerts(): Promise<RiskKriAlertRow[]> {
+  const rows = await readPatch22View<RiskKriAlertRow>('v_patch22_risk_kri_alerts', 'risk KRI alerts', 'measured_at');
+  return rows.length ? rows : liveEmptyRiskKriAlerts;
+}
+
+export async function getExecutiveRiskEscalations(): Promise<ExecutiveRiskEscalationRow[]> {
+  const rows = await readPatch22View<ExecutiveRiskEscalationRow>('v_patch22_executive_risk_escalations', 'executive risk escalations', 'residual_score');
+  return rows.length ? rows : liveEmptyExecutiveRiskEscalations;
+}
+
+export async function getRiskClosureBlockers(): Promise<RiskClosureBlockerRow[]> {
+  const rows = await readPatch22View<RiskClosureBlockerRow>('v_patch22_risk_closure_blockers', 'risk closure blockers', 'risk_level');
+  return rows.length ? rows : liveEmptyRiskClosureBlockers;
+}
+
+export async function getRiskReassessmentHistory(riskId: string): Promise<RiskReassessmentHistoryRow[]> {
+  if (!supabase || !riskId) return liveEmptyRiskReassessmentHistory;
+  try {
+    const { data, error } = await supabase
+      .from('risk_reassessment_history')
+      .select('*')
+      .eq('risk_id', riskId)
+      .order('changed_at', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return (data as unknown as RiskReassessmentHistoryRow[]) || [];
+  } catch (error) {
+    logFallback('risk reassessment history', error);
+    return liveEmptyRiskReassessmentHistory;
+  }
+}
+
+export async function getRiskWorkflowEvents(riskId: string): Promise<RiskWorkflowEventRow[]> {
+  if (!supabase || !riskId) return liveEmptyRiskWorkflowEvents;
+  try {
+    const { data, error } = await supabase
+      .from('risk_workflow_events')
+      .select('*')
+      .eq('risk_id', riskId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return (data as unknown as RiskWorkflowEventRow[]) || [];
+  } catch (error) {
+    logFallback('risk workflow events', error);
+    return liveEmptyRiskWorkflowEvents;
   }
 }
 
@@ -608,6 +714,109 @@ export async function createRisk(input: CreateRiskInput) {
     .single();
   if (error) throw error;
   return data;
+}
+
+export interface RiskWorkflowActionResult {
+  status: string;
+  action: string;
+  risk_id: string;
+}
+
+export interface UpdateRiskAssessmentInput {
+  risk_id: string;
+  likelihood?: number;
+  impact?: number;
+  inherent_likelihood?: number;
+  inherent_impact?: number;
+  residual_likelihood?: number;
+  residual_impact?: number;
+  appetite_threshold?: number;
+  appetite_breach_reason?: string;
+  scoring_method?: string;
+  change_reason: string;
+}
+
+export interface RiskAcceptanceInput {
+  risk_id: string;
+  reason?: string;
+  acceptance_expiry_date?: string;
+}
+
+export interface RiskTreatmentInput {
+  risk_id: string;
+  treatment_status?: string;
+  treatment_plan_summary?: string;
+  treatment_due_date?: string;
+  treatment_owner_id?: string;
+  note?: string;
+}
+
+export interface RiskClosureInput {
+  risk_id: string;
+  reason?: string;
+}
+
+export interface RiskSourceLinkInput {
+  risk_id: string;
+  source_ovr_id?: string;
+  source_audit_finding_id?: string;
+  source_compliance_id?: string;
+  source_project_id?: string;
+  note?: string;
+}
+
+export interface MarkDuplicateRiskInput {
+  risk_id: string;
+  duplicate_of_risk_id: string;
+  reason?: string;
+}
+
+function patch22RiskAction(action: string, payload: Record<string, unknown>) {
+  return invokePrivilegedAction<RiskWorkflowActionResult>(action, payload);
+}
+
+export async function updateRiskAssessment(input: UpdateRiskAssessmentInput) {
+  return patch22RiskAction('update_risk_assessment', input as unknown as Record<string, unknown>);
+}
+
+export async function requestRiskAcceptance(input: RiskAcceptanceInput) {
+  return patch22RiskAction('request_risk_acceptance', input as unknown as Record<string, unknown>);
+}
+
+export async function approveRiskAcceptance(input: RiskAcceptanceInput) {
+  return patch22RiskAction('approve_risk_acceptance', input as unknown as Record<string, unknown>);
+}
+
+export async function rejectRiskAcceptance(input: RiskAcceptanceInput) {
+  return patch22RiskAction('reject_risk_acceptance', input as unknown as Record<string, unknown>);
+}
+
+export async function updateRiskTreatment(input: RiskTreatmentInput) {
+  return patch22RiskAction('update_risk_treatment', input as unknown as Record<string, unknown>);
+}
+
+export async function completeRiskTreatment(input: RiskClosureInput) {
+  return patch22RiskAction('complete_risk_treatment', input as unknown as Record<string, unknown>);
+}
+
+export async function requestRiskClosure(input: RiskClosureInput) {
+  return patch22RiskAction('request_risk_closure', input as unknown as Record<string, unknown>);
+}
+
+export async function approveRiskClosure(input: RiskClosureInput) {
+  return patch22RiskAction('approve_risk_closure', input as unknown as Record<string, unknown>);
+}
+
+export async function reopenRiskWithReason(input: RiskClosureInput) {
+  return patch22RiskAction('reopen_risk_with_reason', input as unknown as Record<string, unknown>);
+}
+
+export async function linkRiskSource(input: RiskSourceLinkInput) {
+  return patch22RiskAction('link_risk_source', input as unknown as Record<string, unknown>);
+}
+
+export async function markDuplicateRisk(input: MarkDuplicateRiskInput) {
+  return patch22RiskAction('mark_duplicate_risk', input as unknown as Record<string, unknown>);
 }
 
 export interface CreateComplianceInput {

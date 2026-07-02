@@ -2,19 +2,11 @@
 
 ```json
 {
-<<<<<<< Updated upstream
-  "generated_at": "2026-07-01T17:28:52.775Z",
-  "migration_files_scanned": 82,
-  "created_tables_detected": 461,
-  "tables_with_explicit_rls": 401,
-  "tables_with_detected_policies": 369,
-=======
-  "generated_at": "2026-07-01T23:08:33.472Z",
+  "generated_at": "2026-07-02T00:16:17.813Z",
   "migration_files_scanned": 83,
-  "created_tables_detected": 462,
-  "tables_with_explicit_rls": 402,
-  "tables_with_detected_policies": 370,
->>>>>>> Stashed changes
+  "created_tables_detected": 464,
+  "tables_with_explicit_rls": 404,
+  "tables_with_detected_policies": 372,
   "findings_total": 60,
   "critical": 0,
   "high": 0,

@@ -2,15 +2,9 @@
 
 ```json
 {
-<<<<<<< Updated upstream
-  "generated_at": "2026-07-01T17:28:54.905Z",
-  "migration_files_scanned": 82,
-  "views_detected": 233,
-=======
-  "generated_at": "2026-07-01T23:08:35.263Z",
+  "generated_at": "2026-07-02T00:16:19.358Z",
   "migration_files_scanned": 83,
-  "views_detected": 235,
->>>>>>> Stashed changes
+  "views_detected": 239,
   "findings_total": 105,
   "critical": 0,
   "high": 0,

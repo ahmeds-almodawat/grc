@@ -1,10 +1,6 @@
 # v6.6.1 Go/No-Go Proof Helper
 
-<<<<<<< Updated upstream
-Generated: 2026-07-01T17:29:35.562Z
-=======
-Generated: 2026-07-01T23:09:19.640Z
->>>>>>> Stashed changes
+Generated: 2026-07-02T00:16:52.233Z
 
 Status: **ready_for_controlled_pilot_review**
 

@@ -1,10 +1,6 @@
 # v6.6.3 Progress Consistency Audit
 
-<<<<<<< Updated upstream
-Generated: 2026-07-01T17:29:38.223Z
-=======
-Generated: 2026-07-01T23:09:21.881Z
->>>>>>> Stashed changes
+Generated: 2026-07-02T00:16:53.819Z
 
 Status: **needs_cleanup_or_manual_evidence**
 
@@ -13,8 +9,8 @@ Status: **needs_cleanup_or_manual_evidence**
 | Check | Result |
 |---|---:|
 | Unstable dependency ranges | 0 |
-| Migration files | 82 |
-| Prefix gaps | 83 |
+| Migration files | 83 |
+| Prefix gaps | 82 |
 | Duplicate prefixes | 0 |
 | Missing package scripts | 0 |
 | Missing staging SQL files | 0 |

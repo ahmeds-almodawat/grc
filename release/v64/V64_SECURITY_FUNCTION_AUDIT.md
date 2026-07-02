@@ -2,15 +2,9 @@
 
 ```json
 {
-<<<<<<< Updated upstream
-  "generated_at": "2026-07-01T17:28:54.005Z",
-  "migration_files_scanned": 82,
-  "security_definer_functions_detected": 46,
-=======
-  "generated_at": "2026-07-01T23:08:34.413Z",
+  "generated_at": "2026-07-02T00:16:18.602Z",
   "migration_files_scanned": 83,
-  "security_definer_functions_detected": 55,
->>>>>>> Stashed changes
+  "security_definer_functions_detected": 48,
   "global_security_definer_lockdown_detected": true,
   "findings_total": 0,
   "critical": 0,

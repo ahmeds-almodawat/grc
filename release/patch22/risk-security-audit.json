@@ -1,0 +1,303 @@
+{
+  "generated_at": "2026-07-02T00:19:29.720Z",
+  "patch": "Patch 22",
+  "status": "passed",
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "total": 48,
+    "passed": 48,
+    "failed": 0
+  },
+  "findings": [
+    {
+      "name": "migration avoids destructive pattern /drop\\s+table/i",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "migration avoids destructive pattern /truncate\\s+/i",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "migration avoids destructive pattern /delete\\s+from\\s+public\\.risks/i",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "migration avoids destructive pattern /alter\\s+table\\s+public\\.risks\\s+disable\\s+row\\s+level\\s+security/i",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "migration avoids destructive pattern /drop\\s+column/i",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "risk_kri_indicators has RLS enabled",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "risk_kri_indicators has read policy",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "risk_reassessment_history has RLS enabled",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "risk_reassessment_history has read policy",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "risk_workflow_events has RLS enabled",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "risk_workflow_events has read policy",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "risk KRI write is RLS constrained",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "reassessment history direct writes are not granted to authenticated",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "workflow event direct writes are not granted to authenticated",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "v_patch22_risk_workflow_queue is SECURITY INVOKER",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "v_patch22_risk_workflow_queue grants select only to authenticated",
+      "passed": true,
+      "severity": "high",
+      "detail": ""
+    },
+    {
+      "name": "v_patch22_risk_appetite_breaches is SECURITY INVOKER",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "v_patch22_risk_appetite_breaches grants select only to authenticated",
+      "passed": true,
+      "severity": "high",
+      "detail": ""
+    },
+    {
+      "name": "v_patch22_risk_treatment_queue is SECURITY INVOKER",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "v_patch22_risk_treatment_queue grants select only to authenticated",
+      "passed": true,
+      "severity": "high",
+      "detail": ""
+    },
+    {
+      "name": "v_patch22_risk_kri_alerts is SECURITY INVOKER",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "v_patch22_risk_kri_alerts grants select only to authenticated",
+      "passed": true,
+      "severity": "high",
+      "detail": ""
+    },
+    {
+      "name": "v_patch22_executive_risk_escalations is SECURITY INVOKER",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "v_patch22_executive_risk_escalations grants select only to authenticated",
+      "passed": true,
+      "severity": "high",
+      "detail": ""
+    },
+    {
+      "name": "v_patch22_risk_closure_blockers is SECURITY INVOKER",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "v_patch22_risk_closure_blockers grants select only to authenticated",
+      "passed": true,
+      "severity": "high",
+      "detail": ""
+    },
+    {
+      "name": "workflow bridge is SECURITY DEFINER",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "workflow bridge sets search_path",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "workflow bridge requires service role",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "workflow bridge revoke blocks public anon authenticated",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "workflow bridge execute is service-role only",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "write-event helper is service-role only",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "bridge validates active actor",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "bridge validates organization scope",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "bridge validates authorized roles or owners",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "closure approval uses blocker view",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "acceptance approval requires authorized role",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "closure approval requires authorized role",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "edge bridge contains Patch 22 action allow-list",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "edge bridge calls RPC with service client",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "edge bridge passes authenticated actor id",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "edge bridge maps authorization failures to 403",
+      "passed": true,
+      "severity": "high",
+      "detail": ""
+    },
+    {
+      "name": "frontend calls privileged action bridge",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "frontend does not call Patch 22 RPC directly",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "browser source has no service-role key usage",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "migration does not grant delete on Patch 22 tables",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "migration does not add authenticated delete policies",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "Patch 22 does not alter Patch 20 importer",
+      "passed": true,
+      "severity": "medium",
+      "detail": ""
+    }
+  ]
+}

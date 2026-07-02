@@ -2,15 +2,9 @@
 
 ```json
 {
-<<<<<<< Updated upstream
-  "generated_at": "2026-07-01T17:29:37.308Z",
-  "controlled_pilot_status": "ready_for_controlled_pilot_go_no_go_review",
-  "strict_passed": true,
-=======
-  "generated_at": "2026-07-01T23:09:20.716Z",
+  "generated_at": "2026-07-02T00:16:53.004Z",
   "controlled_pilot_status": "not_ready_manual_evidence_required",
   "strict_passed": false,
->>>>>>> Stashed changes
   "gates": [
     {
       "id": "local_typecheck_build",
@@ -30,10 +24,23 @@
     },
     {
       "id": "manual_staging_evidence",
-      "status": "passed"
+      "status": "manual_required"
     }
   ],
-  "missing_manual_evidence": [],
-  "recommendation": "Hold final go/no-go meeting and keep pilot limited to approved users."
+  "missing_manual_evidence": [
+    {
+      "id": "staging_persona_sql_v64",
+      "title": "v64 persona SQL tests passed in staging",
+      "status": "manual_required",
+      "evidence_needed": "Result/output from supabase/tests/v64_persona_security_tests.sql."
+    },
+    {
+      "id": "staging_workflow_sql_v65",
+      "title": "v65 workflow SQL smoke tests passed in staging",
+      "status": "manual_required",
+      "evidence_needed": "Result/output from supabase/tests/v65_workflow_smoke_tests.sql."
+    }
+  ],
+  "recommendation": "Use only for controlled internal testing until missing manual staging evidence is attached."
 }
 ```

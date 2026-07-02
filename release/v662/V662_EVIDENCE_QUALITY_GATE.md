@@ -1,18 +1,14 @@
 # v6.6.2 Evidence Quality Gate
 
-<<<<<<< Updated upstream
-Generated: 2026-07-01T17:29:34.515Z
-=======
-Generated: 2026-07-01T23:09:18.603Z
->>>>>>> Stashed changes
+Generated: 2026-07-02T00:16:51.374Z
 
-Status: **ready_for_controlled_pilot_evidence_review**
+Status: **not_ready_manual_evidence_required**
 
 | Evidence file | Passed | Reason |
 |---|---:|---|
 | `staging-migration-log.txt` | ✅ | ok |
-| `01-v64-persona-sql-output.txt` | ✅ | ok |
-| `02-v65-workflow-sql-output.txt` | ✅ | ok |
+| `01-v64-persona-sql-output.txt` | ❌ | missing_pass_verified_success_signal |
+| `02-v65-workflow-sql-output.txt` | ❌ | missing_pass_verified_success_signal |
 | `03-v66-pilot-evidence-sql-output.txt` | ✅ | ok |
 | `restore-dryrun-evidence.txt` | ✅ | ok |
 | `pilot-signoff.md` | ✅ | ok |

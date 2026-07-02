@@ -1,9 +1,5 @@
 {
-<<<<<<< Updated upstream
-  "generated_at": "2026-07-01T17:28:59.119Z",
-=======
-  "generated_at": "2026-07-01T23:08:39.769Z",
->>>>>>> Stashed changes
+  "generated_at": "2026-07-02T00:16:23.060Z",
   "status": "passed",
   "canonical_file": "supabase/tests/v65_workflow_smoke_tests.sql",
   "generated_copies_checked": 3,

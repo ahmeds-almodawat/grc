@@ -1,14 +1,8 @@
 {
   "summary": {
-<<<<<<< Updated upstream
-    "generated_at": "2026-07-01T17:28:54.905Z",
-    "migration_files_scanned": 82,
-    "views_detected": 233,
-=======
-    "generated_at": "2026-07-01T23:08:35.263Z",
+    "generated_at": "2026-07-02T00:16:19.358Z",
     "migration_files_scanned": 83,
-    "views_detected": 235,
->>>>>>> Stashed changes
+    "views_detected": 239,
     "findings_total": 105,
     "critical": 0,
     "high": 0,
@@ -782,6 +776,60 @@
       ],
       "has_security_invoker": true,
       "sensitive": false
+    },
+    {
+      "view": "v_patch22_executive_risk_escalations",
+      "files": [
+        "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+        "supabase/migrations/084_patch22_risk_workflow_hardening.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_risk_appetite_breaches",
+      "files": [
+        "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+        "supabase/migrations/084_patch22_risk_workflow_hardening.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_risk_closure_blockers",
+      "files": [
+        "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+        "supabase/migrations/084_patch22_risk_workflow_hardening.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_risk_kri_alerts",
+      "files": [
+        "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+        "supabase/migrations/084_patch22_risk_workflow_hardening.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_risk_treatment_queue",
+      "files": [
+        "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+        "supabase/migrations/084_patch22_risk_workflow_hardening.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_risk_workflow_queue",
+      "files": [
+        "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+        "supabase/migrations/084_patch22_risk_workflow_hardening.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
     },
     {
       "view": "v_patch4_audit_engagement_dashboard",
@@ -3935,6 +3983,90 @@
       "view": "v_user_profile_completeness",
       "file": "supabase/migrations/080_patch19_professional_user_management_center.sql",
       "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_risk_workflow_queue",
+      "file": "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_risk_appetite_breaches",
+      "file": "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_risk_treatment_queue",
+      "file": "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_risk_kri_alerts",
+      "file": "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_executive_risk_escalations",
+      "file": "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_risk_closure_blockers",
+      "file": "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_risk_workflow_queue",
+      "file": "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_risk_appetite_breaches",
+      "file": "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_risk_treatment_queue",
+      "file": "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_risk_kri_alerts",
+      "file": "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_executive_risk_escalations",
+      "file": "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch22_risk_closure_blockers",
+      "file": "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+      "occurrence": "alter_view_security_invoker",
       "has_security_invoker": true,
       "sensitive": true
     }
