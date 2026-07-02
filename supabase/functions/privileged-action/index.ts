@@ -6,6 +6,20 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+const patch22RiskActions = new Set([
+  'update_risk_assessment',
+  'request_risk_acceptance',
+  'approve_risk_acceptance',
+  'reject_risk_acceptance',
+  'update_risk_treatment',
+  'complete_risk_treatment',
+  'request_risk_closure',
+  'approve_risk_closure',
+  'reopen_risk_with_reason',
+  'link_risk_source',
+  'mark_duplicate_risk',
+]);
+
 const allowedActions = new Set([
   'list_user_management_roster',
   'create_board_pack_snapshot',
@@ -28,6 +42,7 @@ const allowedActions = new Set([
   'patch19_archive_user',
   'patch19_unarchive_user',
   'patch19_apply_import_batch',
+  ...patch22RiskActions,
 ]);
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
@@ -334,6 +349,28 @@ Deno.serve(async (request) => {
     if (error) {
       const authorizationFailure =
         /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|CROSS_ORG|ADMIN|LAST_SUPER_ADMIN|SELF_DEACTIVATION/i
+          .test(error.message);
+      return jsonResponse({
+        ok: false,
+        error: error.message,
+        code: error.code,
+        action,
+      }, authorizationFailure ? 403 : 409);
+    }
+
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (patch22RiskActions.has(action)) {
+    const { data, error } = await serviceClient.rpc('patch22_risk_workflow_bridge', {
+      p_actor_id: userData.user.id,
+      p_action: action,
+      p_payload: requestBody.payload ?? {},
+    });
+
+    if (error) {
+      const authorizationFailure =
+        /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|CROSS_ORGANIZATION|APPROVER|RANGE|REASON|EXPIRY|BLOCKED/i
           .test(error.message);
       return jsonResponse({
         ok: false,

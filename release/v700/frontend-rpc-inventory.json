@@ -1,10 +1,6 @@
 {
   "summary": {
-<<<<<<< Updated upstream
-    "generated_at": "2026-07-01T17:29:01.984Z",
-=======
-    "generated_at": "2026-07-01T23:09:28.729Z",
->>>>>>> Stashed changes
+    "generated_at": "2026-07-02T00:19:41.506Z",
     "source": "src/**/*.{ts,tsx,js,jsx}",
     "frontend_rpc_call_count": 1,
     "authenticated_edge_bridge_call_count": 23,
@@ -42,7 +38,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 485,
+            "line": 591,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime_review"
           }
@@ -53,7 +49,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 493,
+            "line": 599,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime_review"
           }
@@ -64,7 +60,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1075,
+            "line": 1284,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin_review"
           },
@@ -81,7 +77,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1090,
+            "line": 1299,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin_review"
           },
@@ -98,7 +94,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1104,
+            "line": 1313,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           }
@@ -109,7 +105,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1129,
+            "line": 1338,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           }
@@ -120,7 +116,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1297,
+            "line": 1506,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime_review"
           }
@@ -131,7 +127,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1324,
+            "line": 1533,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime_review"
           }
@@ -290,7 +286,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 485,
+      "line": 591,
       "rpc": "acknowledge_escalation_event",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime_review",
@@ -298,7 +294,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 493,
+      "line": 599,
       "rpc": "resolve_escalation_event",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime_review",
@@ -306,7 +302,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1075,
+      "line": 1284,
       "rpc": "assign_user_role",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin_review",
@@ -314,7 +310,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1090,
+      "line": 1299,
       "rpc": "deactivate_user_role",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin_review",
@@ -322,7 +318,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1104,
+      "line": 1313,
       "rpc": "create_department",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -330,7 +326,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1129,
+      "line": 1338,
       "rpc": "create_user",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -338,7 +334,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1297,
+      "line": 1506,
       "rpc": "update_ovr_workflow",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime_review",
@@ -346,7 +342,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1324,
+      "line": 1533,
       "rpc": "create_ovr_corrective_action_project",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime_review",

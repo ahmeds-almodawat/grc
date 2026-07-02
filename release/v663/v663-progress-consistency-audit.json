@@ -1,21 +1,16 @@
 {
-<<<<<<< Updated upstream
-  "generated_at": "2026-07-01T17:29:38.223Z",
-=======
-  "generated_at": "2026-07-01T23:09:21.881Z",
->>>>>>> Stashed changes
+  "generated_at": "2026-07-02T00:16:53.819Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 82,
-    "latest_migration": "082_patch20_real_target_table_repair.sql",
+    "migration_count": 83,
+    "latest_migration": "084_patch22_risk_workflow_hardening.sql",
     "prefix_gaps": [
       16,
       83,
-      84,
       85,
       86,
       87,
@@ -123,7 +118,7 @@
     "v60_no_mock_blockers": null,
     "v62_real_data_static_blockers": 0,
     "v64_database_security_status": "static_ready_pending_staging_persona_sql",
-    "v662_quality_status": "ready_for_controlled_pilot_evidence_review"
+    "v662_quality_status": "not_ready_manual_evidence_required"
   },
   "manual_evidence": {
     "required_total": 6,

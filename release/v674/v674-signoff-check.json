@@ -1,9 +1,5 @@
 {
-<<<<<<< Updated upstream
-  "generated_at": "2026-07-01T17:29:31.155Z",
-=======
-  "generated_at": "2026-07-01T23:09:14.772Z",
->>>>>>> Stashed changes
+  "generated_at": "2026-07-02T00:16:48.470Z",
   "signoff_file": "release/v674/approvals/pilot-signoff.json",
   "confidentiality_file": "release/v674/approvals/ovr-confidentiality-confirmation.json",
   "file_hashes": {
@@ -11,8 +7,11 @@
     "confidentiality_confirmation_sha256": "0b8725562be47dbe3ba2236428f819a1686aedbe0486ca3c1b0637fa1996180a"
   },
   "signoff": {
-    "valid": true,
-    "errors": [],
+    "valid": false,
+    "errors": [
+      "The v6.6.2 evidence quality report must pass before signoff can be verified.",
+      "The v6.7.3 Security Definer audit must pass before signoff can be verified."
+    ],
     "reviewers": [
       {
         "label": "management_admin",
@@ -32,8 +31,10 @@
     ]
   },
   "confidentiality": {
-    "valid": true,
-    "errors": [],
+    "valid": false,
+    "errors": [
+      "Local/staging SQL and Security Definer proof reports must pass before confidentiality confirmation can be verified."
+    ],
     "reviewers": [
       {
         "label": "it_reviewer",
@@ -47,6 +48,6 @@
       }
     ]
   },
-  "strict_passed": true,
+  "strict_passed": false,
   "rule": "Human governance items are verified only from explicit, complete, non-placeholder approval records."
 }

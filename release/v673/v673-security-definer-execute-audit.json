@@ -1,16 +1,83 @@
 {
-<<<<<<< Updated upstream
-  "generated_at": "2026-07-01T17:28:58.189Z",
-=======
-  "generated_at": "2026-07-01T23:08:38.767Z",
->>>>>>> Stashed changes
+  "generated_at": "2026-07-02T00:16:22.278Z",
   "environment": "Local Supabase Docker staging",
   "project_id": "grc-control-center",
   "db_container": "supabase_db_grc-control-center",
-  "security_definer_functions": 44,
-  "remaining_broad_execute_grants": 0,
-  "strict_passed": true,
-  "findings": [],
+  "security_definer_functions": 52,
+  "remaining_broad_execute_grants": 14,
+  "strict_passed": false,
+  "findings": [
+    {
+      "schema_name": "public",
+      "function_signature": "can_access_org(uuid)",
+      "grantee": "authenticated"
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "can_manage_grc()",
+      "grantee": "authenticated"
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "patch21_actor_is_owner(uuid,uuid)",
+      "grantee": "anon"
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "patch21_actor_is_owner(uuid,uuid)",
+      "grantee": "authenticated"
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "patch21_actor_is_owner(uuid,uuid)",
+      "grantee": "public"
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "patch21_actor_is_quality(uuid,uuid)",
+      "grantee": "anon"
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "patch21_actor_is_quality(uuid,uuid)",
+      "grantee": "authenticated"
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "patch21_actor_is_quality(uuid,uuid)",
+      "grantee": "public"
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "patch21_can_close_ovr(uuid,uuid,text)",
+      "grantee": "anon"
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "patch21_can_close_ovr(uuid,uuid,text)",
+      "grantee": "authenticated"
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "patch21_can_close_ovr(uuid,uuid,text)",
+      "grantee": "public"
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "patch21_write_ovr_audit_event(uuid,uuid,text,text,jsonb,jsonb)",
+      "grantee": "anon"
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "patch21_write_ovr_audit_event(uuid,uuid,text,text,jsonb,jsonb)",
+      "grantee": "authenticated"
+    },
+    {
+      "schema_name": "public",
+      "function_signature": "patch21_write_ovr_audit_event(uuid,uuid,text,text,jsonb,jsonb)",
+      "grantee": "public"
+    }
+  ],
   "inventory": [
     {
       "function_signature": "acknowledge_escalation_event(uuid,text)",
@@ -34,9 +101,23 @@
       "service_role_execute": true
     },
     {
+      "function_signature": "can_access_org(uuid)",
+      "security_mode": "definer",
+      "authenticated_execute": true,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
       "function_signature": "can_close_ovr(uuid)",
       "security_mode": "definer",
       "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "can_manage_grc()",
+      "security_mode": "definer",
+      "authenticated_execute": true,
       "anon_execute": false,
       "service_role_execute": true
     },
@@ -108,6 +189,48 @@
       "security_mode": "definer",
       "authenticated_execute": false,
       "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "patch21_actor_is_owner(uuid,uuid)",
+      "security_mode": "definer",
+      "authenticated_execute": true,
+      "anon_execute": true,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "patch21_actor_is_quality(uuid,uuid)",
+      "security_mode": "definer",
+      "authenticated_execute": true,
+      "anon_execute": true,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "patch21_can_close_ovr(uuid,uuid,text)",
+      "security_mode": "definer",
+      "authenticated_execute": true,
+      "anon_execute": true,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "patch21_update_ovr_controls(uuid,uuid,jsonb)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "patch21_update_ovr_workflow(uuid,uuid,text,jsonb)",
+      "security_mode": "definer",
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "service_role_execute": true
+    },
+    {
+      "function_signature": "patch21_write_ovr_audit_event(uuid,uuid,text,text,jsonb,jsonb)",
+      "security_mode": "definer",
+      "authenticated_execute": true,
+      "anon_execute": true,
       "service_role_execute": true
     },
     {
@@ -321,21 +444,7 @@
       "service_role_execute": true
     },
     {
-      "function_signature": "can_access_org(uuid)",
-      "security_mode": "invoker",
-      "authenticated_execute": true,
-      "anon_execute": false,
-      "service_role_execute": true
-    },
-    {
       "function_signature": "can_access_scope(uuid,uuid,uuid,uuid)",
-      "security_mode": "invoker",
-      "authenticated_execute": true,
-      "anon_execute": false,
-      "service_role_execute": true
-    },
-    {
-      "function_signature": "can_manage_grc()",
       "security_mode": "invoker",
       "authenticated_execute": true,
       "anon_execute": false,

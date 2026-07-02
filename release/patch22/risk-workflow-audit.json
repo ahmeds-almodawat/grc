@@ -1,0 +1,1011 @@
+{
+  "generated_at": "2026-07-02T00:19:28.900Z",
+  "patch": "Patch 22",
+  "status": "passed",
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "total": 166,
+    "passed": 166,
+    "failed": 0
+  },
+  "findings": [
+    {
+      "name": "required file exists: supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "required file exists: src/types/domain.ts",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "required file exists: src/lib/grcApi.ts",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "required file exists: src/pages/Risks.tsx",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "required file exists: supabase/functions/privileged-action/index.ts",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "required file exists: release/patch22/risk-workflow-hardening-checklist.md",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "required file exists: release/patch22/risk-business-rules.md",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "required file exists: release/patch22/risk-migration-summary.md",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "required file exists: release/patch22/risk-ui-test-plan.md",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "required file exists: release/patch22/risk-security-review.md",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "required file exists: release/patch22/patch22-proof-summary.md",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "risk additive field: alter table public.risks",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: alter table public.risks"
+    },
+    {
+      "name": "risk additive field: add column if not exists lifecycle_status",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists lifecycle_status"
+    },
+    {
+      "name": "risk additive field: add column if not exists risk_owner_id",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists risk_owner_id"
+    },
+    {
+      "name": "risk additive field: add column if not exists control_owner_id",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists control_owner_id"
+    },
+    {
+      "name": "risk additive field: add column if not exists treatment_owner_id",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists treatment_owner_id"
+    },
+    {
+      "name": "risk additive field: add column if not exists executive_sponsor_id",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists executive_sponsor_id"
+    },
+    {
+      "name": "risk additive field: add column if not exists inherent_likelihood",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists inherent_likelihood"
+    },
+    {
+      "name": "risk additive field: add column if not exists inherent_impact",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists inherent_impact"
+    },
+    {
+      "name": "risk additive field: add column if not exists scoring_method",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists scoring_method"
+    },
+    {
+      "name": "risk additive field: add column if not exists score_last_changed_at",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists score_last_changed_at"
+    },
+    {
+      "name": "risk additive field: add column if not exists score_last_changed_by",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists score_last_changed_by"
+    },
+    {
+      "name": "risk additive field: add column if not exists appetite_level",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists appetite_level"
+    },
+    {
+      "name": "risk additive field: add column if not exists appetite_threshold",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists appetite_threshold"
+    },
+    {
+      "name": "risk additive field: add column if not exists appetite_breached",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists appetite_breached"
+    },
+    {
+      "name": "risk additive field: add column if not exists appetite_breach_reason",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists appetite_breach_reason"
+    },
+    {
+      "name": "risk additive field: add column if not exists treatment_required",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists treatment_required"
+    },
+    {
+      "name": "risk additive field: add column if not exists treatment_status",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists treatment_status"
+    },
+    {
+      "name": "risk additive field: add column if not exists treatment_plan_summary",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists treatment_plan_summary"
+    },
+    {
+      "name": "risk additive field: add column if not exists treatment_due_date",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists treatment_due_date"
+    },
+    {
+      "name": "risk additive field: add column if not exists treatment_completed_at",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists treatment_completed_at"
+    },
+    {
+      "name": "risk additive field: add column if not exists acceptance_required",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists acceptance_required"
+    },
+    {
+      "name": "risk additive field: add column if not exists acceptance_status",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists acceptance_status"
+    },
+    {
+      "name": "risk additive field: add column if not exists acceptance_requested_by",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists acceptance_requested_by"
+    },
+    {
+      "name": "risk additive field: add column if not exists acceptance_requested_at",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists acceptance_requested_at"
+    },
+    {
+      "name": "risk additive field: add column if not exists accepted_by",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists accepted_by"
+    },
+    {
+      "name": "risk additive field: add column if not exists accepted_at",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists accepted_at"
+    },
+    {
+      "name": "risk additive field: add column if not exists acceptance_expiry_date",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists acceptance_expiry_date"
+    },
+    {
+      "name": "risk additive field: add column if not exists acceptance_reason",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists acceptance_reason"
+    },
+    {
+      "name": "risk additive field: add column if not exists review_overdue",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists review_overdue"
+    },
+    {
+      "name": "risk additive field: add column if not exists last_reviewed_by",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists last_reviewed_by"
+    },
+    {
+      "name": "risk additive field: add column if not exists closure_requested_at",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists closure_requested_at"
+    },
+    {
+      "name": "risk additive field: add column if not exists closure_requested_by",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists closure_requested_by"
+    },
+    {
+      "name": "risk additive field: add column if not exists closure_approved_by",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists closure_approved_by"
+    },
+    {
+      "name": "risk additive field: add column if not exists closure_approved_at",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists closure_approved_at"
+    },
+    {
+      "name": "risk additive field: add column if not exists closure_reason",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists closure_reason"
+    },
+    {
+      "name": "risk additive field: add column if not exists closure_evidence_required",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists closure_evidence_required"
+    },
+    {
+      "name": "risk additive field: add column if not exists closure_blocker",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists closure_blocker"
+    },
+    {
+      "name": "risk additive field: add column if not exists escalation_required",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists escalation_required"
+    },
+    {
+      "name": "risk additive field: add column if not exists escalation_level",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists escalation_level"
+    },
+    {
+      "name": "risk additive field: add column if not exists escalated_at",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists escalated_at"
+    },
+    {
+      "name": "risk additive field: add column if not exists escalated_to",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists escalated_to"
+    },
+    {
+      "name": "risk additive field: add column if not exists executive_visible",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists executive_visible"
+    },
+    {
+      "name": "risk additive field: add column if not exists duplicate_of_risk_id",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists duplicate_of_risk_id"
+    },
+    {
+      "name": "risk additive field: add column if not exists related_risk_ids",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists related_risk_ids"
+    },
+    {
+      "name": "risk additive field: add column if not exists repeat_signal_flag",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists repeat_signal_flag"
+    },
+    {
+      "name": "risk additive field: add column if not exists source_ovr_id",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists source_ovr_id"
+    },
+    {
+      "name": "risk additive field: add column if not exists source_audit_finding_id",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists source_audit_finding_id"
+    },
+    {
+      "name": "risk additive field: add column if not exists source_compliance_id",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists source_compliance_id"
+    },
+    {
+      "name": "risk additive field: add column if not exists source_project_id",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: add column if not exists source_project_id"
+    },
+    {
+      "name": "preserved risk schema field: inherent_score",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: inherent_score"
+    },
+    {
+      "name": "preserved risk schema field: residual_likelihood",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: residual_likelihood"
+    },
+    {
+      "name": "preserved risk schema field: residual_impact",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: residual_impact"
+    },
+    {
+      "name": "preserved risk schema field: residual_score",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: residual_score"
+    },
+    {
+      "name": "preserved risk schema field: review_frequency",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: review_frequency"
+    },
+    {
+      "name": "preserved risk schema field: next_review_date",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: next_review_date"
+    },
+    {
+      "name": "preserved risk schema field: last_reviewed_at",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: last_reviewed_at"
+    },
+    {
+      "name": "risk workflow storage: create table if not exists public.risk_kri_indicators",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: create table if not exists public.risk_kri_indicators"
+    },
+    {
+      "name": "risk workflow storage: create table if not exists public.risk_reassessment_history",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: create table if not exists public.risk_reassessment_history"
+    },
+    {
+      "name": "risk workflow storage: create table if not exists public.risk_workflow_events",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: create table if not exists public.risk_workflow_events"
+    },
+    {
+      "name": "risk workflow storage: create index if not exists idx_patch22_risks_org",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: create index if not exists idx_patch22_risks_org"
+    },
+    {
+      "name": "risk workflow storage: create index if not exists idx_patch22_risks_risk_owner",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: create index if not exists idx_patch22_risks_risk_owner"
+    },
+    {
+      "name": "risk workflow storage: create index if not exists idx_patch22_risks_treatment_owner",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: create index if not exists idx_patch22_risks_treatment_owner"
+    },
+    {
+      "name": "risk workflow storage: create index if not exists idx_patch22_risks_risk_level",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: create index if not exists idx_patch22_risks_risk_level"
+    },
+    {
+      "name": "risk workflow storage: create index if not exists idx_patch22_risks_residual_score",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: create index if not exists idx_patch22_risks_residual_score"
+    },
+    {
+      "name": "risk workflow storage: create index if not exists idx_patch22_risks_appetite",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: create index if not exists idx_patch22_risks_appetite"
+    },
+    {
+      "name": "risk workflow storage: create index if not exists idx_patch22_risks_treatment_required",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: create index if not exists idx_patch22_risks_treatment_required"
+    },
+    {
+      "name": "risk workflow storage: create index if not exists idx_patch22_risks_treatment_due",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: create index if not exists idx_patch22_risks_treatment_due"
+    },
+    {
+      "name": "risk workflow storage: create index if not exists idx_patch22_risks_next_review",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: create index if not exists idx_patch22_risks_next_review"
+    },
+    {
+      "name": "risk workflow storage: create index if not exists idx_patch22_risks_acceptance",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: create index if not exists idx_patch22_risks_acceptance"
+    },
+    {
+      "name": "risk workflow storage: create index if not exists idx_patch22_risks_escalation",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: create index if not exists idx_patch22_risks_escalation"
+    },
+    {
+      "name": "risk workflow view: public.v_patch22_risk_workflow_queue",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: public.v_patch22_risk_workflow_queue"
+    },
+    {
+      "name": "risk workflow view: public.v_patch22_risk_appetite_breaches",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: public.v_patch22_risk_appetite_breaches"
+    },
+    {
+      "name": "risk workflow view: public.v_patch22_risk_treatment_queue",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: public.v_patch22_risk_treatment_queue"
+    },
+    {
+      "name": "risk workflow view: public.v_patch22_risk_kri_alerts",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: public.v_patch22_risk_kri_alerts"
+    },
+    {
+      "name": "risk workflow view: public.v_patch22_executive_risk_escalations",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: public.v_patch22_executive_risk_escalations"
+    },
+    {
+      "name": "risk workflow view: public.v_patch22_risk_closure_blockers",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: public.v_patch22_risk_closure_blockers"
+    },
+    {
+      "name": "database workflow action: update_risk_assessment",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: update_risk_assessment"
+    },
+    {
+      "name": "database workflow action: request_risk_acceptance",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: request_risk_acceptance"
+    },
+    {
+      "name": "database workflow action: approve_risk_acceptance",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: approve_risk_acceptance"
+    },
+    {
+      "name": "database workflow action: reject_risk_acceptance",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: reject_risk_acceptance"
+    },
+    {
+      "name": "database workflow action: update_risk_treatment",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: update_risk_treatment"
+    },
+    {
+      "name": "database workflow action: complete_risk_treatment",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: complete_risk_treatment"
+    },
+    {
+      "name": "database workflow action: request_risk_closure",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: request_risk_closure"
+    },
+    {
+      "name": "database workflow action: approve_risk_closure",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: approve_risk_closure"
+    },
+    {
+      "name": "database workflow action: reopen_risk_with_reason",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: reopen_risk_with_reason"
+    },
+    {
+      "name": "database workflow action: link_risk_source",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: link_risk_source"
+    },
+    {
+      "name": "database workflow action: mark_duplicate_risk",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: mark_duplicate_risk"
+    },
+    {
+      "name": "edge bridge workflow action: update_risk_assessment",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: update_risk_assessment"
+    },
+    {
+      "name": "edge bridge workflow action: request_risk_acceptance",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: request_risk_acceptance"
+    },
+    {
+      "name": "edge bridge workflow action: approve_risk_acceptance",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: approve_risk_acceptance"
+    },
+    {
+      "name": "edge bridge workflow action: reject_risk_acceptance",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: reject_risk_acceptance"
+    },
+    {
+      "name": "edge bridge workflow action: update_risk_treatment",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: update_risk_treatment"
+    },
+    {
+      "name": "edge bridge workflow action: complete_risk_treatment",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: complete_risk_treatment"
+    },
+    {
+      "name": "edge bridge workflow action: request_risk_closure",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: request_risk_closure"
+    },
+    {
+      "name": "edge bridge workflow action: approve_risk_closure",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: approve_risk_closure"
+    },
+    {
+      "name": "edge bridge workflow action: reopen_risk_with_reason",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: reopen_risk_with_reason"
+    },
+    {
+      "name": "edge bridge workflow action: link_risk_source",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: link_risk_source"
+    },
+    {
+      "name": "edge bridge workflow action: mark_duplicate_risk",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: mark_duplicate_risk"
+    },
+    {
+      "name": "api function: getRiskWorkflowQueue",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: getRiskWorkflowQueue"
+    },
+    {
+      "name": "api function: getRiskAppetiteBreaches",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: getRiskAppetiteBreaches"
+    },
+    {
+      "name": "api function: getRiskTreatmentQueue",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: getRiskTreatmentQueue"
+    },
+    {
+      "name": "api function: getRiskKriAlerts",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: getRiskKriAlerts"
+    },
+    {
+      "name": "api function: getExecutiveRiskEscalations",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: getExecutiveRiskEscalations"
+    },
+    {
+      "name": "api function: getRiskClosureBlockers",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: getRiskClosureBlockers"
+    },
+    {
+      "name": "api function: getRiskReassessmentHistory",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: getRiskReassessmentHistory"
+    },
+    {
+      "name": "api function: getRiskWorkflowEvents",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: getRiskWorkflowEvents"
+    },
+    {
+      "name": "api function: updateRiskAssessment",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: updateRiskAssessment"
+    },
+    {
+      "name": "api function: requestRiskAcceptance",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: requestRiskAcceptance"
+    },
+    {
+      "name": "api function: approveRiskAcceptance",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: approveRiskAcceptance"
+    },
+    {
+      "name": "api function: rejectRiskAcceptance",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: rejectRiskAcceptance"
+    },
+    {
+      "name": "api function: updateRiskTreatment",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: updateRiskTreatment"
+    },
+    {
+      "name": "api function: completeRiskTreatment",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: completeRiskTreatment"
+    },
+    {
+      "name": "api function: requestRiskClosure",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: requestRiskClosure"
+    },
+    {
+      "name": "api function: approveRiskClosure",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: approveRiskClosure"
+    },
+    {
+      "name": "api function: reopenRiskWithReason",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: reopenRiskWithReason"
+    },
+    {
+      "name": "api function: linkRiskSource",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: linkRiskSource"
+    },
+    {
+      "name": "api function: markDuplicateRisk",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: markDuplicateRisk"
+    },
+    {
+      "name": "api function: invokePrivilegedAction",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: invokePrivilegedAction"
+    },
+    {
+      "name": "type definition: RiskLifecycleStatus",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: RiskLifecycleStatus"
+    },
+    {
+      "name": "type definition: RiskWorkflowQueueRow",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: RiskWorkflowQueueRow"
+    },
+    {
+      "name": "type definition: RiskAppetiteBreachRow",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: RiskAppetiteBreachRow"
+    },
+    {
+      "name": "type definition: RiskTreatmentQueueRow",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: RiskTreatmentQueueRow"
+    },
+    {
+      "name": "type definition: RiskKriAlertRow",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: RiskKriAlertRow"
+    },
+    {
+      "name": "type definition: ExecutiveRiskEscalationRow",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: ExecutiveRiskEscalationRow"
+    },
+    {
+      "name": "type definition: RiskClosureBlockerRow",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: RiskClosureBlockerRow"
+    },
+    {
+      "name": "type definition: RiskReassessmentHistoryRow",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: RiskReassessmentHistoryRow"
+    },
+    {
+      "name": "type definition: RiskWorkflowEventRow",
+      "passed": true,
+      "severity": "critical",
+      "detail": "Missing required Patch 22 term: RiskWorkflowEventRow"
+    },
+    {
+      "name": "risk workflow UI: Patch 22 workflow queues",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Patch 22 workflow queues"
+    },
+    {
+      "name": "risk workflow UI: Appetite breaches",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Appetite breaches"
+    },
+    {
+      "name": "risk workflow UI: Treatment queue",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Treatment queue"
+    },
+    {
+      "name": "risk workflow UI: KRI alerts",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: KRI alerts"
+    },
+    {
+      "name": "risk workflow UI: Executive escalations",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Executive escalations"
+    },
+    {
+      "name": "risk workflow UI: Closure blockers",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Closure blockers"
+    },
+    {
+      "name": "risk workflow UI: Risk workflow detail",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Risk workflow detail"
+    },
+    {
+      "name": "risk workflow UI: Reassess risk",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Reassess risk"
+    },
+    {
+      "name": "risk workflow UI: Request acceptance",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Request acceptance"
+    },
+    {
+      "name": "risk workflow UI: Approve acceptance",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Approve acceptance"
+    },
+    {
+      "name": "risk workflow UI: Reject acceptance",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Reject acceptance"
+    },
+    {
+      "name": "risk workflow UI: Update treatment",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Update treatment"
+    },
+    {
+      "name": "risk workflow UI: Complete treatment",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Complete treatment"
+    },
+    {
+      "name": "risk workflow UI: Request closure",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Request closure"
+    },
+    {
+      "name": "risk workflow UI: Approve closure",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Approve closure"
+    },
+    {
+      "name": "risk workflow UI: Reopen with reason",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Reopen with reason"
+    },
+    {
+      "name": "risk workflow UI: Mark duplicate",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: Mark duplicate"
+    },
+    {
+      "name": "score changes write reassessment history",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "workflow actions write event records",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "acceptance requires reason",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "acceptance requires expiry",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "closure blockers are enforced",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "reopen requires reason",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "high residual risks drive treatment",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "critical risks become executive visible",
+      "passed": true,
+      "severity": "high",
+      "detail": ""
+    },
+    {
+      "name": "Patch 22 all script exists",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "Patch 22 audit script exists",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    },
+    {
+      "name": "Patch 22 security script exists",
+      "passed": true,
+      "severity": "critical",
+      "detail": ""
+    }
+  ]
+}

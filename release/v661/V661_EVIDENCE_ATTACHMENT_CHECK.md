@@ -1,10 +1,6 @@
 # v6.6.1 Evidence Attachment Check
 
-<<<<<<< Updated upstream
-Generated: 2026-07-01T17:29:35.464Z
-=======
-Generated: 2026-07-01T23:09:19.522Z
->>>>>>> Stashed changes
+Generated: 2026-07-02T00:16:52.154Z
 
 Evidence folder: `release\v66\evidence-attachments`
 
