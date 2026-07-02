@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-07-02T23:34:07.595Z",
+  "migration_path": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+  "status": "passed",
+  "finding_count": 0,
+  "findings": [],
+  "skipped_scope": [
+    "No UI redesign",
+    "No Patch 20 import changes",
+    "No Patch 21 OVR workflow rewrite",
+    "No Patch 22 risk workflow rewrite",
+    "No Patch 23 evidence bridge rewrite",
+    "No Patch 24 audit findings rewrite",
+    "No Patch 25 compliance rewrite",
+    "No Patch 26 document control rewrite",
+    "No Patch 27 approval authority rewrite",
+    "No Patch 29 training workflow"
+  ]
+}
