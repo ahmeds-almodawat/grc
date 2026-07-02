@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-07-02T21:19:00.172Z",
+  "migration_path": "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+  "status": "passed",
+  "finding_count": 0,
+  "findings": [],
+  "skipped_scope": [
+    "No broad UI redesign",
+    "No Patch 28 CAPA workflow",
+    "No Patch 29 training workflow",
+    "No prior workflow rewrites"
+  ]
+}
