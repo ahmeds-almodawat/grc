@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-07-02T20:36:24.862Z",
+  "migration_path": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+  "migration_found": true,
+  "missing_tables": [],
+  "missing_views": [],
+  "missing_fields": [],
+  "missing_link_types": [],
+  "duplicate_088_avoided": true,
+  "status": "passed",
+  "blocking_count": 0
+}
