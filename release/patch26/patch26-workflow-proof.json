@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-07-02T20:36:25.659Z",
+  "migration_path": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+  "status": "passed",
+  "finding_count": 0,
+  "findings": [],
+  "skipped_scope": [
+    "No full SOP editor UI",
+    "No file upload UI",
+    "No training workflow",
+    "No approval authority matrix",
+    "No CAPA workflow"
+  ]
+}
