@@ -1,11 +1,11 @@
 v6.7.4 Restore Integrity Dry-Run Evidence
 Environment: Local Supabase Docker staging
-Generated UTC: 2026-07-02T00:16:37.171Z
+Generated UTC: 2026-07-02T16:30:07.579Z
 Source database: postgres in supabase_db_grc-control-center
 Temporary verification database: grc_v674_restore_verify
 Dump scope: auth, public, storage, supabase_migrations
 Managed service scope limitation: realtime and other Supabase service internals are not claimed by this application-data restore proof.
-Dump size bytes: 3247032
+Dump size bytes: 3254182
 
 Key table count comparison:
 - public.organizations: source=1, restored=1, MATCHED
@@ -23,7 +23,7 @@ Key table count comparison:
 - public.controlled_pilot_signoffs: source=0, restored=0, MATCHED
 - storage.buckets: source=1, restored=1, MATCHED
 - storage.objects: source=0, restored=0, MATCHED
-- supabase_migrations.schema_migrations: source=56, restored=56, MATCHED
+- supabase_migrations.schema_migrations: source=57, restored=57, MATCHED
 
 Evidence-related table verification:
 - public.evidence_files: VERIFIED
@@ -35,7 +35,7 @@ Evidence-related table verification:
 Post-restore smoke query: PASSED
 {
   "database": "grc_v674_restore_verify",
-  "latest_migration": "056_v131_security_persona_proof_hotfix",
+  "latest_migration": "088_platform_security_definer_post_patch_lockdown",
   "organization_count": 1,
   "evidence_file_count": 0,
   "pilot_evidence_count": 0,

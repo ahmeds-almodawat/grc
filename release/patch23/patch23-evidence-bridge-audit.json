@@ -1,0 +1,35 @@
+{
+  "generated_at": "2026-07-02T13:38:35.455Z",
+  "status": "passed",
+  "missing_count": 0,
+  "missing": [],
+  "supported_item_types": [
+    "risk",
+    "ovr",
+    "audit_finding",
+    "compliance",
+    "project",
+    "milestone",
+    "task",
+    "approval",
+    "capa",
+    "control",
+    "policy",
+    "department"
+  ],
+  "bridge_actions": [
+    "create_evidence_requirement",
+    "link_evidence_to_item",
+    "submit_evidence_for_review",
+    "accept_evidence",
+    "reject_evidence",
+    "request_evidence_revision",
+    "supersede_evidence",
+    "lock_evidence",
+    "request_evidence_gate_waiver",
+    "approve_evidence_gate_waiver",
+    "reject_evidence_gate_waiver",
+    "check_evidence_gate_status",
+    "generate_evidence_pack_index"
+  ]
+}

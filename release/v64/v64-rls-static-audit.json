@@ -1,10 +1,10 @@
 {
   "summary": {
-    "generated_at": "2026-07-02T00:16:17.813Z",
-    "migration_files_scanned": 83,
-    "created_tables_detected": 464,
-    "tables_with_explicit_rls": 404,
-    "tables_with_detected_policies": 372,
+    "generated_at": "2026-07-02T16:29:43.868Z",
+    "migration_files_scanned": 87,
+    "created_tables_detected": 472,
+    "tables_with_explicit_rls": 412,
+    "tables_with_detected_policies": 380,
     "findings_total": 60,
     "critical": 0,
     "high": 0,
@@ -517,6 +517,10 @@
     "supabase/migrations/080_patch19_professional_user_management_center.sql",
     "supabase/migrations/081_patch20_real_data_import_orchestrator.sql",
     "supabase/migrations/082_patch20_real_target_table_repair.sql",
-    "supabase/migrations/084_patch22_risk_workflow_hardening.sql"
+    "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+    "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+    "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+    "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+    "supabase/migrations/088_platform_security_definer_post_patch_lockdown.sql"
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-02T00:16:52.233Z",
+  "generated_at": "2026-07-02T16:30:27.056Z",
   "status": "ready_for_controlled_pilot_review",
   "blocker_count": 0,
   "blockers": [],
@@ -9,9 +9,9 @@
     "missing_count": 0
   },
   "previous_v66_gate": {
-    "generated_at": "2026-07-02T00:13:19.266Z",
-    "controlled_pilot_status": "not_ready_manual_evidence_required",
-    "strict_passed": false,
+    "generated_at": "2026-07-02T15:48:12.176Z",
+    "controlled_pilot_status": "ready_for_controlled_pilot_go_no_go_review",
+    "strict_passed": true,
     "gates": [
       {
         "id": "local_typecheck_build",
@@ -31,11 +31,11 @@
       },
       {
         "id": "manual_staging_evidence",
-        "status": "manual_required"
+        "status": "passed"
       }
     ],
     "missing_manual_evidence": [],
-    "recommendation": "Use only for controlled internal testing until missing manual staging evidence is attached."
+    "recommendation": "Hold final go/no-go meeting and keep pilot limited to approved users."
   },
   "controlled_pilot_rule": "Only 5-15 trusted users; no real patient identifiers or confidential OVR data until staging proof is complete and signed off."
 }

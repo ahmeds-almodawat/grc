@@ -3,7 +3,7 @@ Environment: Local Supabase Docker staging
 Source SQL: supabase/tests/v65_workflow_smoke_tests.sql
 Executed copy: release/v662/staging-sql/v65_workflow_smoke_tests.sql
 Database container: supabase_db_grc-control-center
-Captured UTC: 2026-07-02T00:16:49.290Z
+Captured UTC: 2026-07-02T16:30:22.562Z
 Command: docker exec -i supabase_db_grc-control-center psql -U postgres -d postgres -v ON_ERROR_STOP=1
 Completion marker note: the helper sends a psql \echo marker after the unmodified staged SQL; ON_ERROR_STOP prevents it from running after a SQL error.
 
@@ -11,11 +11,57 @@ Completion marker note: the helper sends a psql \echo marker after the unmodifie
 BEGIN
 DO
 DO
-ERROR:  V65_FAIL_BROAD_SECURITY_DEFINER_EXECUTE: can_access_org(uuid), can_manage_grc(), patch21_actor_is_owner(uuid,uuid), patch21_actor_is_quality(uuid,uuid), patch21_can_close_ovr(uuid,uuid,text), patch21_write_ovr_audit_event(uuid,uuid,text,text,jsonb,jsonb)
-CONTEXT:  PL/pgSQL function inline_code_block line 18 at RAISE
+DO
+             relation_name             | exists 
+---------------------------------------+--------
+ public.approvals                      | t
+ public.audit_logs                     | t
+ public.auth_route_protection_controls | t
+ public.evidence_files                 | t
+ public.milestones                     | t
+ public.organizations                  | t
+ public.ovr_reports                    | t
+ public.profiles                       | t
+ public.projects                       | t
+ public.tasks                          | t
+ public.user_roles                     | t
+ public.v64_security_control_catalog   | t
+(12 rows)
+
+    relname     | relrowsecurity | relforcerowsecurity 
+----------------+----------------+---------------------
+ approvals      | t              | f
+ audit_logs     | t              | f
+ evidence_files | t              | f
+ milestones     | t              | f
+ organizations  | t              | f
+ ovr_reports    | t              | f
+ profiles       | t              | f
+ projects       | t              | f
+ tasks          | t              | f
+ user_roles     | t              | f
+(10 rows)
+
+           result            | expected_relations | verified_relations 
+-----------------------------+--------------------+--------------------
+ V65_PASS_CRITICAL_RELATIONS |                 12 |                 12
+(1 row)
+
+        result         | expected_rls_relations | verified_rls_relations 
+-----------------------+------------------------+------------------------
+ V65_PASS_RLS_SECURITY |                     10 |                     10
+(1 row)
+
+              result               | broad_execute_functions 
+-----------------------------------+-------------------------
+ V65_PASS_SECURITY_DEFINER_EXECUTE |                       0
+(1 row)
+
+ROLLBACK
+V672_SQL_EXECUTION_PASSED_V65
 ----- end psql output -----
 
-Verification status: FAILED
-psql exit code: 3
-Completion marker observed: no
-Failure reason: psql_exit_3
+Verification status: PASSED
+psql exit code: 0
+Completion marker observed: yes
+Failure reason: none

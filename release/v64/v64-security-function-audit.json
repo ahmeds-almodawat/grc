@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-07-02T00:16:18.602Z",
-    "migration_files_scanned": 83,
-    "security_definer_functions_detected": 48,
+    "generated_at": "2026-07-02T16:29:44.971Z",
+    "migration_files_scanned": 87,
+    "security_definer_functions_detected": 55,
     "global_security_definer_lockdown_detected": true,
     "findings_total": 0,
     "critical": 0,
@@ -299,6 +299,48 @@
       "function_name": "patch22_risk_workflow_bridge",
       "has_search_path": true,
       "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+      "function_name": "patch23_write_evidence_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+      "function_name": "patch23_evidence_governance_bridge",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+      "function_name": "patch24_write_audit_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+      "function_name": "patch24_audit_finding_workflow_bridge",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "function_name": "patch25_write_compliance_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "function_name": "patch25_generate_calendar_events",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "function_name": "patch25_compliance_obligation_bridge",
+      "has_search_path": true,
+      "has_public_revoke": true
     }
   ],
   "globalSearchPathFixes": [
@@ -338,7 +380,18 @@
     "v99_scenario_status",
     "patch19_user_management_bridge",
     "patch22_write_risk_event",
-    "patch22_risk_workflow_bridge"
+    "patch22_risk_workflow_bridge",
+    "patch23_write_evidence_event",
+    "patch23_evidence_governance_bridge",
+    "patch24_audit_closure_satisfied",
+    "patch24_write_audit_event",
+    "patch24_audit_finding_workflow_bridge",
+    "patch25_compliance_accepted_evidence_count",
+    "patch25_compliance_active_waiver_count",
+    "patch25_compliance_closure_satisfied",
+    "patch25_write_compliance_event",
+    "patch25_generate_calendar_events",
+    "patch25_compliance_obligation_bridge"
   ],
   "finalSecurityInvokerFunctions": [
     "current_user_org_id",

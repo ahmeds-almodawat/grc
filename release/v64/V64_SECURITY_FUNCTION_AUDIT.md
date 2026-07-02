@@ -2,9 +2,9 @@
 
 ```json
 {
-  "generated_at": "2026-07-02T00:16:18.602Z",
-  "migration_files_scanned": 83,
-  "security_definer_functions_detected": 48,
+  "generated_at": "2026-07-02T16:29:44.971Z",
+  "migration_files_scanned": 87,
+  "security_definer_functions_detected": 55,
   "global_security_definer_lockdown_detected": true,
   "findings_total": 0,
   "critical": 0,

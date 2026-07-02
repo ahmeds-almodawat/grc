@@ -2,18 +2,13 @@
 
 ```json
 {
-  "generated_at": "2026-07-02T00:16:53.856Z",
+  "generated_at": "2026-07-02T16:30:28.816Z",
   "mode": "all",
-  "status": "failed_review_required",
-  "passed_count": 13,
-  "failed_count": 4,
+  "status": "passed",
+  "passed_count": 17,
+  "failed_count": 0,
   "skipped_count": 0,
-  "failed_commands": [
-    "v673:security-definer-audit",
-    "v672:capture",
-    "v662:strict-proof",
-    "v66:strict-proof"
-  ],
+  "failed_commands": [],
   "skipped_commands": [],
   "note": "This consolidated suite archives version-specific proof commands behind proof:* entry points. Skipped commands mean the current branch does not contain that legacy script.",
   "results": [
@@ -44,8 +39,8 @@
     {
       "group": "technical",
       "script": "v673:security-definer-audit",
-      "status": "failed",
-      "exit_code": 1
+      "status": "passed",
+      "exit_code": 0
     },
     {
       "group": "technical",
@@ -92,14 +87,14 @@
     {
       "group": "pilot",
       "script": "v672:capture",
-      "status": "failed",
-      "exit_code": 1
+      "status": "passed",
+      "exit_code": 0
     },
     {
       "group": "pilot",
       "script": "v662:strict-proof",
-      "status": "failed",
-      "exit_code": 1
+      "status": "passed",
+      "exit_code": 0
     },
     {
       "group": "pilot",
@@ -110,8 +105,8 @@
     {
       "group": "pilot",
       "script": "v66:strict-proof",
-      "status": "failed",
-      "exit_code": 1
+      "status": "passed",
+      "exit_code": 0
     },
     {
       "group": "pilot",

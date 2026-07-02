@@ -490,8 +490,272 @@ export interface AuditFindingRow {
   risk_level: RiskLevel;
   due_date: string | null;
   status: string;
+  finding_status?: AuditFindingWorkflowStatus | null;
+  workflow_stage?: AuditFindingWorkflowStage | null;
+  severity_level?: AuditFindingSeverityLevel | null;
+  finding_owner_id?: string | null;
+  audit_manager_id?: string | null;
+  responsible_department_id?: string | null;
+  responsible_owner_id?: string | null;
+  corrective_action_owner_id?: string | null;
+  executive_sponsor_id?: string | null;
+  original_due_date?: string | null;
+  revised_due_date?: string | null;
+  closed_at?: string | null;
+  closed_by?: string | null;
+  reopened_at?: string | null;
+  reopened_by?: string | null;
+  reopen_reason?: string | null;
+  management_response_required?: boolean | null;
+  management_response?: string | null;
+  management_response_due_date?: string | null;
+  management_response_submitted_by?: string | null;
+  management_response_submitted_at?: string | null;
+  management_response_status?: AuditFindingManagementResponseStatus | null;
+  management_response_rejection_reason?: string | null;
+  corrective_action_required?: boolean | null;
+  corrective_action_plan?: string | null;
+  corrective_action_due_date?: string | null;
+  corrective_action_status?: AuditFindingCorrectiveActionStatus | null;
+  corrective_action_completed_at?: string | null;
+  corrective_action_completed_by?: string | null;
+  corrective_action_rejection_reason?: string | null;
+  root_cause?: string | null;
+  root_cause_category?: string | null;
+  root_cause_summary?: string | null;
+  repeat_finding_flag?: boolean | null;
+  repeat_of_finding_id?: string | null;
+  recurrence_count?: number | null;
+  recurrence_window_days?: number | null;
+  systemic_issue_flag?: boolean | null;
+  related_risk_id?: string | null;
+  related_compliance_id?: string | null;
+  related_project_id?: string | null;
+  source_ovr_id?: string | null;
+  evidence_required?: boolean | null;
+  minimum_accepted_evidence_count?: number | null;
+  evidence_gate_status?: string | null;
+  closure_requested_at?: string | null;
+  closure_requested_by?: string | null;
+  closure_validation_status?: AuditFindingClosureValidationStatus | null;
+  closure_validation_note?: string | null;
+  closure_validated_by?: string | null;
+  closure_validated_at?: string | null;
+  closure_blocker?: string | null;
+  closure_pack_generated_at?: string | null;
+  closure_pack_reference?: string | null;
+  escalation_required?: boolean | null;
+  escalation_level?: string | null;
+  escalated_at?: string | null;
+  escalated_to?: string | null;
+  escalation_reason?: string | null;
+  executive_visible?: boolean | null;
+  committee_review_required?: boolean | null;
+  committee_review_status?: string | null;
+  committee_review_note?: string | null;
   departments?: { name_en: string | null; name_ar: string | null } | null;
   owner?: { full_name_en: string | null; full_name_ar: string | null } | null;
+}
+
+export type AuditFindingWorkflowStatus =
+  | 'draft'
+  | 'issued'
+  | 'management_response_required'
+  | 'management_response_submitted'
+  | 'action_plan_required'
+  | 'action_plan_in_progress'
+  | 'evidence_required'
+  | 'closure_requested'
+  | 'auditor_validation'
+  | 'returned_for_correction'
+  | 'escalated'
+  | 'closed'
+  | 'rejected'
+  | 'cancelled'
+  | 'reopened';
+
+export type AuditFindingWorkflowStage =
+  | 'draft'
+  | 'management_response'
+  | 'management_response_review'
+  | 'action_plan'
+  | 'action_plan_review'
+  | 'evidence'
+  | 'closure_request'
+  | 'auditor_validation'
+  | 'correction'
+  | 'escalation'
+  | 'closed'
+  | 'cancelled'
+  | 'reopened';
+
+export type AuditFindingSeverityLevel = 'low' | 'medium' | 'high' | 'critical';
+export type AuditFindingManagementResponseStatus = 'not_required' | 'required' | 'submitted' | 'accepted' | 'rejected' | 'overdue' | 'waived';
+export type AuditFindingCorrectiveActionStatus = 'not_required' | 'required' | 'submitted' | 'accepted' | 'in_progress' | 'completed' | 'rejected' | 'overdue';
+export type AuditFindingClosureValidationStatus = 'not_requested' | 'requested' | 'in_validation' | 'accepted' | 'rejected' | 'blocked';
+
+export interface AuditFindingWorkflowQueueRow {
+  organization_id: string;
+  audit_finding_id: string;
+  finding_code: string | null;
+  audit_title: string | null;
+  title: string;
+  finding_status: AuditFindingWorkflowStatus;
+  workflow_stage: AuditFindingWorkflowStage;
+  severity_level: AuditFindingSeverityLevel;
+  management_response_status: AuditFindingManagementResponseStatus;
+  corrective_action_status: AuditFindingCorrectiveActionStatus;
+  evidence_gate_status: string;
+  closure_validation_status: AuditFindingClosureValidationStatus;
+  due_date: string | null;
+  management_response_due_date: string | null;
+  corrective_action_due_date: string | null;
+  responsible_department_id: string | null;
+  department_name: string | null;
+  responsible_owner_name: string | null;
+  corrective_action_owner_name: string | null;
+  audit_manager_name: string | null;
+  accepted_evidence_count: number;
+  minimum_accepted_evidence_count: number;
+  can_close: boolean;
+  closure_blocker: string | null;
+  queue_reason: string;
+  is_overdue: boolean;
+}
+
+export interface OverdueAuditFindingRow {
+  organization_id: string;
+  audit_finding_id: string;
+  finding_code: string | null;
+  title: string;
+  finding_status: AuditFindingWorkflowStatus;
+  severity_level: AuditFindingSeverityLevel;
+  due_date: string | null;
+  management_response_due_date: string | null;
+  corrective_action_due_date: string | null;
+  closure_requested_at: string | null;
+  department_name: string | null;
+  responsible_owner_name: string | null;
+  overdue_reason: string;
+  days_overdue: number;
+}
+
+export interface RepeatAuditFindingRow {
+  organization_id: string;
+  audit_finding_id: string;
+  finding_code: string | null;
+  title: string;
+  severity_level: AuditFindingSeverityLevel;
+  root_cause_category: string | null;
+  root_cause_summary: string | null;
+  repeat_finding_flag: boolean;
+  repeat_of_finding_id: string | null;
+  repeat_of_finding_code: string | null;
+  recurrence_count: number;
+  recurrence_window_days: number;
+  systemic_issue_flag: boolean;
+  responsible_department_id: string | null;
+  department_name: string | null;
+  detected_repeat_count: number;
+}
+
+export interface AuditClosureGateStatusRow {
+  organization_id: string;
+  audit_finding_id: string;
+  finding_code: string | null;
+  title: string;
+  finding_status: AuditFindingWorkflowStatus;
+  workflow_stage: AuditFindingWorkflowStage;
+  severity_level: AuditFindingSeverityLevel;
+  evidence_required: boolean;
+  minimum_accepted_evidence_count: number;
+  accepted_evidence_count: number;
+  approved_waiver_count: number;
+  waiver_approved_at: string | null;
+  evidence_gate_status: string;
+  can_close: boolean;
+  closure_blocker: string | null;
+  closure_requested_at: string | null;
+  closure_validation_status: AuditFindingClosureValidationStatus;
+}
+
+export interface AuditExecutiveEscalationRow {
+  organization_id: string;
+  audit_finding_id: string;
+  finding_code: string | null;
+  title: string;
+  finding_status: AuditFindingWorkflowStatus;
+  severity_level: AuditFindingSeverityLevel;
+  escalation_required: boolean;
+  escalation_level: string | null;
+  escalated_at: string | null;
+  escalated_to: string | null;
+  escalated_to_name: string | null;
+  escalation_reason: string | null;
+  executive_visible: boolean;
+  committee_review_required: boolean;
+  committee_review_status: string;
+  committee_review_note: string | null;
+  repeat_finding_flag: boolean;
+  systemic_issue_flag: boolean;
+  due_date: string | null;
+  department_name: string | null;
+  escalation_reason_code: string;
+}
+
+export interface AuditClosurePackIndexRow {
+  organization_id: string;
+  audit_finding_id: string;
+  finding_code: string | null;
+  title: string;
+  audit_title: string | null;
+  finding_status: AuditFindingWorkflowStatus;
+  severity_level: AuditFindingSeverityLevel;
+  management_response_status: AuditFindingManagementResponseStatus;
+  corrective_action_status: AuditFindingCorrectiveActionStatus;
+  closure_validation_status: AuditFindingClosureValidationStatus;
+  closure_pack_reference: string | null;
+  closure_pack_generated_at: string | null;
+  evidence_required: boolean;
+  accepted_evidence_count: number;
+  minimum_accepted_evidence_count: number;
+  approved_waiver_count: number;
+  evidence_gate_status: string;
+  can_close: boolean;
+  closure_blocker: string | null;
+  closure_validated_by: string | null;
+  closure_validator_name: string | null;
+  closure_validated_at: string | null;
+  linked_evidence_count: number;
+}
+
+export interface AuditFindingValidationEventRow {
+  id: string;
+  organization_id: string;
+  audit_finding_id: string;
+  validation_type: string;
+  from_status: string | null;
+  to_status: string | null;
+  actor_id: string | null;
+  note: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface AuditFindingDueDateExtensionRow {
+  id: string;
+  organization_id: string;
+  audit_finding_id: string;
+  previous_due_date: string | null;
+  requested_due_date: string;
+  extension_reason: string;
+  requested_by: string | null;
+  requested_at: string;
+  approved_by: string | null;
+  approved_at: string | null;
+  status: 'requested' | 'approved' | 'rejected' | 'cancelled';
+  rejection_reason: string | null;
+  created_at: string;
 }
 
 export interface GovernanceDecisionRow {
@@ -545,8 +809,256 @@ export interface EvidenceRow {
   file_path: string;
   description: string | null;
   status: EvidenceStatus;
+  evidence_code?: string | null;
+  evidence_title?: string | null;
+  evidence_description?: string | null;
+  evidence_type?: string | null;
+  sensitivity_level?: EvidenceSensitivityLevel | null;
+  classification_reason?: string | null;
+  evidence_source?: string | null;
+  evidence_owner_id?: string | null;
+  reviewer_id?: string | null;
+  review_status?: EvidenceReviewStatus | null;
+  review_required?: boolean | null;
+  review_due_date?: string | null;
+  review_note?: string | null;
+  revision_required?: boolean | null;
+  revision_due_date?: string | null;
+  superseded_by_evidence_id?: string | null;
+  version_number?: number | null;
+  is_current_version?: boolean | null;
+  locked_at?: string | null;
+  locked_by?: string | null;
+  expiry_date?: string | null;
+  renewal_required?: boolean | null;
+  renewal_due_date?: string | null;
+  chain_of_custody_hash?: string | null;
   uploaded_by_name: string | null;
   reviewed_by_name: string | null;
+  created_at: string;
+}
+
+export type EvidenceReviewStatus =
+  | 'submitted'
+  | 'pending_review'
+  | 'accepted'
+  | 'rejected'
+  | 'needs_revision'
+  | 'superseded'
+  | 'locked'
+  | 'expired'
+  | 'renewed'
+  | 'waived';
+
+export type EvidenceSensitivityLevel =
+  | 'public'
+  | 'internal'
+  | 'confidential'
+  | 'highly_sensitive'
+  | 'restricted';
+
+export type EvidenceLinkedItemType =
+  | 'risk'
+  | 'ovr'
+  | 'audit_finding'
+  | 'compliance'
+  | 'project'
+  | 'milestone'
+  | 'task'
+  | 'approval'
+  | 'capa'
+  | 'control'
+  | 'policy'
+  | 'department';
+
+export type EvidenceRequirementGate =
+  | 'closure'
+  | 'approval'
+  | 'acceptance'
+  | 'treatment'
+  | 'review'
+  | 'audit'
+  | 'regulatory'
+  | 'board_pack';
+
+export interface EvidenceFileGovernanceRow extends EvidenceRow {
+  evidence_file_id?: string;
+  owner_name?: string | null;
+  reviewer_name?: string | null;
+  queue_reason?: string | null;
+}
+
+export interface EvidenceLinkRow {
+  id: string;
+  organization_id: string;
+  evidence_file_id: string;
+  linked_item_type: EvidenceLinkedItemType;
+  linked_item_id: string;
+  linked_item_title: string | null;
+  link_reason: string | null;
+  is_primary: boolean;
+  required_for_closure: boolean;
+  required_for_acceptance: boolean;
+  required_for_approval: boolean;
+  required_for_treatment: boolean;
+  linked_by: string | null;
+  linked_at: string;
+  is_active: boolean;
+}
+
+export interface EvidenceRequirementRow {
+  id: string;
+  organization_id: string;
+  requirement_code: string | null;
+  linked_item_type: EvidenceLinkedItemType;
+  linked_item_id: string;
+  requirement_title: string;
+  requirement_description: string | null;
+  evidence_type_required: string | null;
+  minimum_accepted_files: number;
+  sensitivity_required: EvidenceSensitivityLevel | null;
+  due_date: string | null;
+  required_for_gate: EvidenceRequirementGate;
+  gate_status: 'pending' | 'partially_satisfied' | 'satisfied' | 'overdue' | 'waived';
+  owner_id: string | null;
+  reviewer_role: string | null;
+  reviewer_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+}
+
+export interface EvidenceReviewEventRow {
+  id?: string;
+  event_id?: string;
+  organization_id: string;
+  evidence_file_id: string | null;
+  evidence_code?: string | null;
+  evidence_title?: string | null;
+  event_type: string;
+  from_status: string | null;
+  to_status: string | null;
+  actor_id: string | null;
+  actor_name?: string | null;
+  note: string | null;
+  metadata?: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface EvidenceGateWaiverRow {
+  id: string;
+  organization_id: string;
+  requirement_id: string;
+  linked_item_type: EvidenceLinkedItemType;
+  linked_item_id: string;
+  waiver_reason: string;
+  requested_by: string | null;
+  requested_at: string;
+  approved_by: string | null;
+  approved_at: string | null;
+  status: 'requested' | 'approved' | 'rejected' | 'expired';
+  expiry_date: string | null;
+  audit_note: string | null;
+}
+
+export interface EvidenceReviewQueueRow {
+  organization_id: string;
+  evidence_file_id: string;
+  evidence_code: string;
+  evidence_title: string;
+  file_name: string;
+  evidence_type: string;
+  sensitivity_level: EvidenceSensitivityLevel;
+  review_status: EvidenceReviewStatus;
+  legacy_status: EvidenceStatus;
+  review_required: boolean;
+  review_due_date: string | null;
+  revision_required: boolean;
+  revision_due_date: string | null;
+  expiry_date: string | null;
+  renewal_required: boolean;
+  is_current_version: boolean;
+  locked_at: string | null;
+  uploaded_by: string | null;
+  uploaded_by_name: string | null;
+  evidence_owner_id: string | null;
+  owner_name: string | null;
+  reviewer_id: string | null;
+  reviewer_name: string | null;
+  created_at: string;
+  queue_reason: string;
+}
+
+export interface EvidenceClosureGateStatusRow {
+  organization_id: string;
+  requirement_id: string;
+  requirement_code: string | null;
+  linked_item_type: EvidenceLinkedItemType;
+  linked_item_id: string;
+  requirement_title: string;
+  required_for_gate: EvidenceRequirementGate;
+  minimum_accepted_files: number;
+  accepted_evidence_count: number;
+  waiver_active: boolean;
+  waiver_approved_at: string | null;
+  due_date: string | null;
+  gate_status: 'pending' | 'partially_satisfied' | 'satisfied' | 'overdue' | 'waived';
+  can_close: boolean;
+}
+
+export interface EvidenceGapDashboardRow extends EvidenceClosureGateStatusRow {
+  gap_reason: string;
+}
+
+export interface EvidenceChainOfCustodyRow extends EvidenceReviewEventRow {
+  event_id: string;
+  evidence_code: string | null;
+  evidence_title: string | null;
+}
+
+export interface EvidencePackIndexRow {
+  organization_id: string;
+  linked_item_type: EvidenceLinkedItemType;
+  linked_item_id: string;
+  linked_item_title: string | null;
+  evidence_file_id: string;
+  evidence_code: string;
+  evidence_title: string;
+  file_name: string;
+  evidence_type: string;
+  sensitivity_level: EvidenceSensitivityLevel;
+  review_status: EvidenceReviewStatus;
+  reviewer_id: string | null;
+  reviewer_name: string | null;
+  reviewed_at: string | null;
+  is_primary: boolean;
+  required_for_closure: boolean;
+  required_for_acceptance: boolean;
+  required_for_approval: boolean;
+  required_for_treatment: boolean;
+  linked_at: string;
+}
+
+export interface SensitiveEvidenceRegisterRow {
+  organization_id: string;
+  evidence_file_id: string;
+  evidence_code: string;
+  evidence_title: string;
+  file_name: string;
+  sensitivity_level: EvidenceSensitivityLevel;
+  classification_reason: string | null;
+  review_status: EvidenceReviewStatus;
+  evidence_owner_id: string | null;
+  owner_name: string | null;
+  reviewer_id: string | null;
+  reviewer_name: string | null;
+  expiry_date: string | null;
+  renewal_required: boolean;
+  renewal_due_date: string | null;
+  locked_at: string | null;
+  locked_by: string | null;
+  locked_by_name: string | null;
   created_at: string;
 }
 

@@ -20,6 +20,44 @@ const patch22RiskActions = new Set([
   'mark_duplicate_risk',
 ]);
 
+const patch23EvidenceActions = new Set([
+  'create_evidence_requirement',
+  'link_evidence_to_item',
+  'submit_evidence_for_review',
+  'accept_evidence',
+  'reject_evidence',
+  'request_evidence_revision',
+  'supersede_evidence',
+  'lock_evidence',
+  'request_evidence_gate_waiver',
+  'approve_evidence_gate_waiver',
+  'reject_evidence_gate_waiver',
+  'check_evidence_gate_status',
+  'generate_evidence_pack_index',
+]);
+
+const patch24AuditActions = new Set([
+  'issue_audit_finding',
+  'submit_management_response',
+  'accept_management_response',
+  'reject_management_response',
+  'submit_corrective_action_plan',
+  'accept_corrective_action_plan',
+  'reject_corrective_action_plan',
+  'request_audit_finding_extension',
+  'approve_audit_finding_extension',
+  'reject_audit_finding_extension',
+  'request_audit_finding_closure',
+  'validate_audit_finding_closure',
+  'reject_audit_finding_closure',
+  'reopen_audit_finding_with_reason',
+  'escalate_audit_finding',
+  'mark_repeat_audit_finding',
+  'link_audit_finding_to_risk',
+  'link_audit_finding_to_compliance',
+  'generate_audit_closure_pack_index',
+]);
+
 const allowedActions = new Set([
   'list_user_management_roster',
   'create_board_pack_snapshot',
@@ -43,6 +81,8 @@ const allowedActions = new Set([
   'patch19_unarchive_user',
   'patch19_apply_import_batch',
   ...patch22RiskActions,
+  ...patch23EvidenceActions,
+  ...patch24AuditActions,
 ]);
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
@@ -371,6 +411,50 @@ Deno.serve(async (request) => {
     if (error) {
       const authorizationFailure =
         /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|CROSS_ORGANIZATION|APPROVER|RANGE|REASON|EXPIRY|BLOCKED/i
+          .test(error.message);
+      return jsonResponse({
+        ok: false,
+        error: error.message,
+        code: error.code,
+        action,
+      }, authorizationFailure ? 403 : 409);
+    }
+
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (patch23EvidenceActions.has(action)) {
+    const { data, error } = await serviceClient.rpc('patch23_evidence_governance_bridge', {
+      p_actor_id: userData.user.id,
+      p_action: action,
+      p_payload: requestBody.payload ?? {},
+    });
+
+    if (error) {
+      const authorizationFailure =
+        /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|CROSS_ORGANIZATION|REVIEWER|ADMIN|LOCKED|CLASSIFICATION|WAIVER/i
+          .test(error.message);
+      return jsonResponse({
+        ok: false,
+        error: error.message,
+        code: error.code,
+        action,
+      }, authorizationFailure ? 403 : 409);
+    }
+
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (patch24AuditActions.has(action)) {
+    const { data, error } = await serviceClient.rpc('patch24_audit_finding_workflow_bridge', {
+      p_actor_id: userData.user.id,
+      p_action: action,
+      p_payload: requestBody.payload ?? {},
+    });
+
+    if (error) {
+      const authorizationFailure =
+        /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|CROSS_ORGANIZATION|REVIEWER|VALIDATOR|APPROVER|ADMIN|BLOCKED|EVIDENCE|WAIVER|REASON/i
           .test(error.message);
       return jsonResponse({
         ok: false,

@@ -10,6 +10,16 @@ const npx = 'npx';
 const password = 'V72-Local-Proof-Only!9274';
 const suffix = Date.now().toString(36);
 const emailDomain = 'v72.local.test';
+const configPath = path.join(root, 'supabase', 'config.toml');
+
+function projectId() {
+  if (fs.existsSync(configPath)) {
+    const config = fs.readFileSync(configPath, 'utf8');
+    const match = config.match(/^\s*project_id\s*=\s*"([^"]+)"/m);
+    if (match) return match[1];
+  }
+  return path.basename(root);
+}
 
 function resolveProcess(command, args) {
   if (process.platform === 'win32' && command === npx) {
@@ -50,7 +60,7 @@ function dockerContainerExists(name) {
 }
 
 function ensureLocalEdgeRuntime() {
-  const edgeRuntimeContainer = `supabase_edge_runtime_${path.basename(root)}`;
+  const edgeRuntimeContainer = `supabase_edge_runtime_${projectId()}`;
   if (isDockerContainerRunning(edgeRuntimeContainer)) return;
 
   if (dockerContainerExists(edgeRuntimeContainer)) {
@@ -76,9 +86,15 @@ function ensureLocalEdgeRuntime() {
 }
 
 function cleanupPersonaOrganizationsWithDocker() {
+  const project = projectId();
   const detection = spawnSync(
     'docker',
-    ['ps', '--filter', 'name=supabase_db_grc-control-center', '--format', '{{.Names}}'],
+    [
+      'ps',
+      '--filter', `label=com.supabase.cli.project=${project}`,
+      '--filter', 'name=supabase_db_',
+      '--format', '{{.Names}}',
+    ],
     { cwd: root, encoding: 'utf8', windowsHide: true },
   );
   const container = (detection.stdout || '').split(/\r?\n/).find(Boolean)?.trim();

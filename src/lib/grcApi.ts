@@ -12,6 +12,13 @@ const liveEmptyAccessControlWarnings: any[] = emptyLiveArray<any>();
 const liveEmptyAccessControlUsers: any[] = emptyLiveArray<any>();
 const liveEmptyApprovals: any[] = emptyLiveArray<any>();
 const liveEmptyAuditFindings: any[] = emptyLiveArray<any>();
+const liveEmptyAuditFindingWorkflowQueue: any[] = emptyLiveArray<any>();
+const liveEmptyOverdueAuditFindings: any[] = emptyLiveArray<any>();
+const liveEmptyRepeatAuditFindings: any[] = emptyLiveArray<any>();
+const liveEmptyAuditClosureGateStatus: any[] = emptyLiveArray<any>();
+const liveEmptyAuditExecutiveEscalations: any[] = emptyLiveArray<any>();
+const liveEmptyAuditClosurePackIndex: any[] = emptyLiveArray<any>();
+const liveEmptyAuditFindingValidationEvents: any[] = emptyLiveArray<any>();
 const liveEmptyCompliance: any[] = emptyLiveArray<any>();
 const liveEmptyCriticalItems: any[] = emptyLiveArray<any>();
 const liveEmptyCustomReports: any[] = emptyLiveArray<any>();
@@ -19,6 +26,12 @@ const liveEmptyDecisions: any[] = emptyLiveArray<any>();
 const liveEmptyDelayReasonQueue: any[] = emptyLiveArray<any>();
 const liveEmptyDepartments: any[] = emptyLiveArray<any>();
 const liveEmptyEvidence: any[] = emptyLiveArray<any>();
+const liveEmptyEvidenceReviewQueue: any[] = emptyLiveArray<any>();
+const liveEmptyEvidenceGapDashboard: any[] = emptyLiveArray<any>();
+const liveEmptyEvidenceClosureGateStatus: any[] = emptyLiveArray<any>();
+const liveEmptyEvidenceChainOfCustody: any[] = emptyLiveArray<any>();
+const liveEmptyEvidencePackIndex: any[] = emptyLiveArray<any>();
+const liveEmptySensitiveEvidenceRegister: any[] = emptyLiveArray<any>();
 const liveEmptyEscalations: any[] = emptyLiveArray<any>();
 const liveEmptyDepartmentRiskHeatmap: any[] = emptyLiveArray<any>();
 const liveEmptyMonthlyGrcTrend: any[] = emptyLiveArray<any>();
@@ -49,13 +62,31 @@ import type {
   AccessControlUserRow,
   ApprovalRow,
   AuditFindingRow,
+  AuditClosureGateStatusRow,
+  AuditClosurePackIndexRow,
+  AuditExecutiveEscalationRow,
+  AuditFindingValidationEventRow,
+  AuditFindingWorkflowQueueRow,
+  OverdueAuditFindingRow,
+  RepeatAuditFindingRow,
   ComplianceRow,
   DelayReasonQueueRow,
   CriticalAttentionItem,
   CustomReportDefinition,
   DepartmentOption,
   DepartmentExecutionSummary,
+  EvidenceChainOfCustodyRow,
+  EvidenceClosureGateStatusRow,
+  EvidenceGapDashboardRow,
+  EvidenceGateWaiverRow,
+  EvidenceLinkedItemType,
+  EvidencePackIndexRow,
+  EvidenceRequirementRow,
+  EvidenceRequirementGate,
+  EvidenceReviewEventRow,
+  EvidenceReviewQueueRow,
   EvidenceRow,
+  SensitiveEvidenceRegisterRow,
   EscalationRow,
   ExecutiveSummary,
   ExportCenterSummary,
@@ -475,6 +506,70 @@ export async function getAuditFindings(): Promise<AuditFindingRow[]> {
   }
 }
 
+async function readPatch24View<T>(view: string, label: string, orderColumn = 'due_date'): Promise<T[]> {
+  if (!supabase) return emptyLiveArray<any>();
+  try {
+    const { data, error } = await supabase
+      .from(view)
+      .select('*')
+      .order(orderColumn, { ascending: true, nullsFirst: false })
+      .limit(250);
+    if (error) throw error;
+    return (data as unknown as T[]) || [];
+  } catch (error) {
+    logFallback(label, error);
+    return emptyLiveArray<any>();
+  }
+}
+
+export async function getAuditFindingWorkflowQueue(): Promise<AuditFindingWorkflowQueueRow[]> {
+  const rows = await readPatch24View<AuditFindingWorkflowQueueRow>('v_patch24_audit_finding_workflow_queue', 'Patch 24 audit finding workflow queue', 'due_date');
+  return rows.length ? rows : liveEmptyAuditFindingWorkflowQueue;
+}
+
+export async function getOverdueAuditFindings(): Promise<OverdueAuditFindingRow[]> {
+  const rows = await readPatch24View<OverdueAuditFindingRow>('v_patch24_overdue_audit_findings', 'Patch 24 overdue audit findings', 'days_overdue');
+  return rows.length ? rows : liveEmptyOverdueAuditFindings;
+}
+
+export async function getRepeatAuditFindings(): Promise<RepeatAuditFindingRow[]> {
+  const rows = await readPatch24View<RepeatAuditFindingRow>('v_patch24_repeat_audit_findings', 'Patch 24 repeat audit findings', 'detected_repeat_count');
+  return rows.length ? rows : liveEmptyRepeatAuditFindings;
+}
+
+export async function getAuditClosureGateStatus(): Promise<AuditClosureGateStatusRow[]> {
+  const rows = await readPatch24View<AuditClosureGateStatusRow>('v_patch24_audit_closure_gate_status', 'Patch 24 audit closure gate status', 'finding_code');
+  return rows.length ? rows : liveEmptyAuditClosureGateStatus;
+}
+
+export async function getAuditExecutiveEscalations(): Promise<AuditExecutiveEscalationRow[]> {
+  const rows = await readPatch24View<AuditExecutiveEscalationRow>('v_patch24_audit_executive_escalations', 'Patch 24 audit executive escalations', 'due_date');
+  return rows.length ? rows : liveEmptyAuditExecutiveEscalations;
+}
+
+export async function getAuditClosurePackIndex(): Promise<AuditClosurePackIndexRow[]> {
+  const rows = await readPatch24View<AuditClosurePackIndexRow>('v_patch24_audit_closure_pack_index', 'Patch 24 audit closure pack index', 'closure_pack_generated_at');
+  return rows.length ? rows : liveEmptyAuditClosurePackIndex;
+}
+
+export async function getAuditFindingValidationEvents(auditFindingId?: string): Promise<AuditFindingValidationEventRow[]> {
+  if (!supabase) return liveEmptyAuditFindingValidationEvents;
+  try {
+    let query = supabase
+      .from('audit_finding_validation_events')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (auditFindingId) query = query.eq('audit_finding_id', auditFindingId);
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data as unknown as AuditFindingValidationEventRow[]) || [];
+  } catch (error) {
+    logFallback('Patch 24 audit finding validation events', error);
+    return liveEmptyAuditFindingValidationEvents;
+  }
+}
+
 export async function getGovernanceDecisions(): Promise<GovernanceDecisionRow[]> {
   if (!supabase) return emptyLiveArray<any>();
 
@@ -529,6 +624,65 @@ export async function getEvidenceQueue(): Promise<EvidenceRow[]> {
     logFallback('evidence review queue', error);
     return emptyLiveArray<any>();
   }
+}
+
+async function readPatch23View<T>(view: string, label: string, orderColumn = 'created_at'): Promise<T[]> {
+  if (!supabase) return emptyLiveArray<any>();
+  try {
+    const { data, error } = await supabase
+      .from(view)
+      .select('*')
+      .order(orderColumn, { ascending: true, nullsFirst: false })
+      .limit(250);
+    if (error) throw error;
+    return (data as unknown as T[]) || [];
+  } catch (error) {
+    logFallback(label, error);
+    return emptyLiveArray<any>();
+  }
+}
+
+export async function getEvidenceReviewQueue(): Promise<EvidenceReviewQueueRow[]> {
+  const rows = await readPatch23View<EvidenceReviewQueueRow>('v_patch23_evidence_review_queue', 'Patch 23 evidence review queue', 'review_due_date');
+  return rows.length ? rows : liveEmptyEvidenceReviewQueue;
+}
+
+export async function getEvidenceGapDashboard(): Promise<EvidenceGapDashboardRow[]> {
+  const rows = await readPatch23View<EvidenceGapDashboardRow>('v_patch23_evidence_gap_dashboard', 'Patch 23 evidence gap dashboard', 'due_date');
+  return rows.length ? rows : liveEmptyEvidenceGapDashboard;
+}
+
+export async function getEvidenceClosureGateStatus(): Promise<EvidenceClosureGateStatusRow[]> {
+  const rows = await readPatch23View<EvidenceClosureGateStatusRow>('v_patch23_evidence_closure_gate_status', 'Patch 23 evidence closure gate status', 'due_date');
+  return rows.length ? rows : liveEmptyEvidenceClosureGateStatus;
+}
+
+export async function getEvidenceChainOfCustody(evidenceFileId?: string): Promise<EvidenceChainOfCustodyRow[]> {
+  if (!supabase) return liveEmptyEvidenceChainOfCustody;
+  try {
+    let query = supabase
+      .from('v_patch23_evidence_chain_of_custody')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (evidenceFileId) query = query.eq('evidence_file_id', evidenceFileId);
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data as unknown as EvidenceChainOfCustodyRow[]) || [];
+  } catch (error) {
+    logFallback('Patch 23 evidence chain of custody', error);
+    return liveEmptyEvidenceChainOfCustody;
+  }
+}
+
+export async function getEvidencePackIndex(): Promise<EvidencePackIndexRow[]> {
+  const rows = await readPatch23View<EvidencePackIndexRow>('v_patch23_evidence_pack_index', 'Patch 23 evidence pack index', 'linked_at');
+  return rows.length ? rows : liveEmptyEvidencePackIndex;
+}
+
+export async function getSensitiveEvidenceRegister(): Promise<SensitiveEvidenceRegisterRow[]> {
+  const rows = await readPatch23View<SensitiveEvidenceRegisterRow>('v_patch23_sensitive_evidence_register', 'Patch 23 sensitive evidence register', 'expiry_date');
+  return rows.length ? rows : liveEmptySensitiveEvidenceRegister;
 }
 
 
@@ -901,6 +1055,128 @@ export async function createAuditFinding(input: CreateAuditFindingInput) {
   return data;
 }
 
+export interface AuditFindingWorkflowActionResult {
+  status: string;
+  action: string;
+  audit_finding_id: string;
+  result?: Record<string, unknown>;
+}
+
+export interface AuditFindingWorkflowActionInput {
+  audit_finding_id: string;
+  note?: string;
+  reason?: string;
+  finding_status?: string;
+  workflow_stage?: string;
+  severity_level?: string;
+  due_date?: string;
+  management_response_required?: boolean;
+  management_response?: string;
+  management_response_due_date?: string;
+  corrective_action_plan?: string;
+  corrective_action_owner_id?: string;
+  corrective_action_due_date?: string;
+  requested_due_date?: string;
+  extension_id?: string;
+  extension_reason?: string;
+  rejection_reason?: string;
+  reopen_reason?: string;
+  escalation_level?: string;
+  escalated_to?: string;
+  repeat_finding_flag?: boolean;
+  repeat_of_finding_id?: string;
+  recurrence_count?: number;
+  recurrence_window_days?: number;
+  systemic_issue_flag?: boolean;
+  related_risk_id?: string;
+  related_compliance_id?: string;
+  closure_pack_reference?: string;
+  finding_owner_id?: string;
+  audit_manager_id?: string;
+  responsible_department_id?: string;
+  responsible_owner_id?: string;
+}
+
+function patch24AuditAction(action: string, payload: Record<string, unknown>) {
+  return invokePrivilegedAction<AuditFindingWorkflowActionResult>(action, payload);
+}
+
+export async function issueAuditFinding(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('issue_audit_finding', input as unknown as Record<string, unknown>);
+}
+
+export async function submitManagementResponse(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('submit_management_response', input as unknown as Record<string, unknown>);
+}
+
+export async function acceptManagementResponse(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('accept_management_response', input as unknown as Record<string, unknown>);
+}
+
+export async function rejectManagementResponse(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('reject_management_response', input as unknown as Record<string, unknown>);
+}
+
+export async function submitCorrectiveActionPlan(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('submit_corrective_action_plan', input as unknown as Record<string, unknown>);
+}
+
+export async function acceptCorrectiveActionPlan(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('accept_corrective_action_plan', input as unknown as Record<string, unknown>);
+}
+
+export async function rejectCorrectiveActionPlan(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('reject_corrective_action_plan', input as unknown as Record<string, unknown>);
+}
+
+export async function requestAuditFindingExtension(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('request_audit_finding_extension', input as unknown as Record<string, unknown>);
+}
+
+export async function approveAuditFindingExtension(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('approve_audit_finding_extension', input as unknown as Record<string, unknown>);
+}
+
+export async function rejectAuditFindingExtension(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('reject_audit_finding_extension', input as unknown as Record<string, unknown>);
+}
+
+export async function requestAuditFindingClosure(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('request_audit_finding_closure', input as unknown as Record<string, unknown>);
+}
+
+export async function validateAuditFindingClosure(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('validate_audit_finding_closure', input as unknown as Record<string, unknown>);
+}
+
+export async function rejectAuditFindingClosure(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('reject_audit_finding_closure', input as unknown as Record<string, unknown>);
+}
+
+export async function reopenAuditFindingWithReason(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('reopen_audit_finding_with_reason', input as unknown as Record<string, unknown>);
+}
+
+export async function escalateAuditFinding(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('escalate_audit_finding', input as unknown as Record<string, unknown>);
+}
+
+export async function markRepeatAuditFinding(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('mark_repeat_audit_finding', input as unknown as Record<string, unknown>);
+}
+
+export async function linkAuditFindingToRisk(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('link_audit_finding_to_risk', input as unknown as Record<string, unknown>);
+}
+
+export async function linkAuditFindingToCompliance(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('link_audit_finding_to_compliance', input as unknown as Record<string, unknown>);
+}
+
+export async function generateAuditClosurePackIndex(input: AuditFindingWorkflowActionInput) {
+  return patch24AuditAction('generate_audit_closure_pack_index', input as unknown as Record<string, unknown>);
+}
+
 export interface CreateDecisionInput {
   organization_id: string;
   decision_code?: string;
@@ -1027,14 +1303,134 @@ export async function decideApproval(approvalId: string, status: 'approved' | 'r
   if (error) throw error;
 }
 
+export interface EvidenceGovernanceActionResult {
+  status: string;
+  action: string;
+  result?: Record<string, unknown>;
+}
+
+export interface CreateEvidenceRequirementInput {
+  linked_item_type: EvidenceLinkedItemType;
+  linked_item_id: string;
+  requirement_title: string;
+  requirement_code?: string;
+  requirement_description?: string;
+  evidence_type_required?: string;
+  minimum_accepted_files?: number;
+  sensitivity_required?: string;
+  due_date?: string;
+  required_for_gate?: EvidenceRequirementGate;
+  owner_id?: string;
+  reviewer_role?: string;
+  reviewer_id?: string;
+}
+
+export interface LinkEvidenceToItemInput {
+  evidence_file_id: string;
+  linked_item_type: EvidenceLinkedItemType;
+  linked_item_id: string;
+  linked_item_title?: string;
+  link_reason?: string;
+  is_primary?: boolean;
+  required_for_closure?: boolean;
+  required_for_acceptance?: boolean;
+  required_for_approval?: boolean;
+  required_for_treatment?: boolean;
+}
+
+export interface EvidenceReviewActionInput {
+  evidence_file_id: string;
+  note?: string;
+  reason?: string;
+  review_note?: string;
+  review_due_date?: string;
+  revision_due_date?: string;
+  reviewer_id?: string;
+}
+
+export interface SupersedeEvidenceInput {
+  evidence_file_id: string;
+  superseded_by_evidence_id: string;
+  note?: string;
+}
+
+export interface EvidenceWaiverInput {
+  requirement_id?: string;
+  waiver_id?: string;
+  linked_item_type?: EvidenceLinkedItemType;
+  linked_item_id?: string;
+  reason?: string;
+  waiver_reason?: string;
+  audit_note?: string;
+  expiry_date?: string;
+}
+
+export interface EvidenceGateStatusInput {
+  requirement_id?: string;
+  linked_item_type?: EvidenceLinkedItemType;
+  linked_item_id?: string;
+}
+
+function patch23EvidenceAction(action: string, payload: Record<string, unknown>) {
+  return invokePrivilegedAction<EvidenceGovernanceActionResult>(action, payload);
+}
+
+export async function createEvidenceRequirement(input: CreateEvidenceRequirementInput) {
+  return patch23EvidenceAction('create_evidence_requirement', input as unknown as Record<string, unknown>);
+}
+
+export async function linkEvidenceToItem(input: LinkEvidenceToItemInput) {
+  return patch23EvidenceAction('link_evidence_to_item', input as unknown as Record<string, unknown>);
+}
+
+export async function submitEvidenceForReview(input: EvidenceReviewActionInput) {
+  return patch23EvidenceAction('submit_evidence_for_review', input as unknown as Record<string, unknown>);
+}
+
+export async function acceptEvidence(input: EvidenceReviewActionInput) {
+  return patch23EvidenceAction('accept_evidence', input as unknown as Record<string, unknown>);
+}
+
+export async function rejectEvidence(input: EvidenceReviewActionInput) {
+  return patch23EvidenceAction('reject_evidence', input as unknown as Record<string, unknown>);
+}
+
+export async function requestEvidenceRevision(input: EvidenceReviewActionInput) {
+  return patch23EvidenceAction('request_evidence_revision', input as unknown as Record<string, unknown>);
+}
+
+export async function supersedeEvidence(input: SupersedeEvidenceInput) {
+  return patch23EvidenceAction('supersede_evidence', input as unknown as Record<string, unknown>);
+}
+
+export async function lockEvidence(input: EvidenceReviewActionInput) {
+  return patch23EvidenceAction('lock_evidence', input as unknown as Record<string, unknown>);
+}
+
+export async function requestEvidenceGateWaiver(input: EvidenceWaiverInput) {
+  return patch23EvidenceAction('request_evidence_gate_waiver', input as unknown as Record<string, unknown>);
+}
+
+export async function approveEvidenceGateWaiver(input: EvidenceWaiverInput) {
+  return patch23EvidenceAction('approve_evidence_gate_waiver', input as unknown as Record<string, unknown>);
+}
+
+export async function rejectEvidenceGateWaiver(input: EvidenceWaiverInput) {
+  return patch23EvidenceAction('reject_evidence_gate_waiver', input as unknown as Record<string, unknown>);
+}
+
+export async function checkEvidenceGateStatus(input: EvidenceGateStatusInput) {
+  return patch23EvidenceAction('check_evidence_gate_status', input as unknown as Record<string, unknown>);
+}
+
+export async function generateEvidencePackIndex(input: EvidenceGateStatusInput = {}) {
+  return patch23EvidenceAction('generate_evidence_pack_index', input as unknown as Record<string, unknown>);
+}
+
 export async function reviewEvidence(evidenceId: string, status: 'accepted' | 'rejected' | 'needs_revision', rejection_reason?: string) {
-  const client = requireLiveSupabase();
-  const userId = await currentUserId();
-  const { error } = await client
-    .from('evidence_files')
-    .update({ status, reviewed_by: userId, reviewed_at: new Date().toISOString(), rejection_reason: rejection_reason || null })
-    .eq('id', evidenceId);
-  if (error) throw error;
+  if (status === 'accepted') return acceptEvidence({ evidence_file_id: evidenceId, note: rejection_reason });
+  if (status === 'rejected') return rejectEvidence({ evidence_file_id: evidenceId, reason: rejection_reason, note: rejection_reason });
+  return requestEvidenceRevision({ evidence_file_id: evidenceId, reason: rejection_reason, note: rejection_reason });
 }
 
 export type ApprovalItemType = 'project' | 'milestone' | 'task' | 'risk' | 'compliance_item' | 'audit_finding' | 'policy' | 'committee_decision' | 'ovr_report';

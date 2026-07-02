@@ -1,20 +1,16 @@
 {
-  "generated_at": "2026-07-02T00:16:53.819Z",
+  "generated_at": "2026-07-02T16:30:28.773Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 83,
-    "latest_migration": "084_patch22_risk_workflow_hardening.sql",
+    "migration_count": 87,
+    "latest_migration": "088_platform_security_definer_post_patch_lockdown.sql",
     "prefix_gaps": [
       16,
       83,
-      85,
-      86,
-      87,
-      88,
       89,
       90,
       91,
@@ -118,7 +114,7 @@
     "v60_no_mock_blockers": null,
     "v62_real_data_static_blockers": 0,
     "v64_database_security_status": "static_ready_pending_staging_persona_sql",
-    "v662_quality_status": "not_ready_manual_evidence_required"
+    "v662_quality_status": "ready_for_controlled_pilot_evidence_review"
   },
   "manual_evidence": {
     "required_total": 6,

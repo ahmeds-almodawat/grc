@@ -4,7 +4,7 @@
 
 ```json
 {
-  "generated_at": "2026-07-02T00:19:41.922Z",
+  "generated_at": "2026-07-02T16:30:37.660Z",
   "db_container": "supabase_db_grc-control-center",
   "db_query_status": "passed",
   "db_query_error": null,
@@ -12,8 +12,8 @@
   "authenticated_edge_bridge_call_total": 23,
   "unique_frontend_rpc_total": 1,
   "database_function_total": 213,
-  "database_security_definer_functions": 60,
-  "remaining_broad_security_definer_execute_grants": 6,
+  "database_security_definer_functions": 58,
+  "remaining_broad_security_definer_execute_grants": 0,
   "managed_schema_broad_security_definer_observations": 5,
   "service_role_only_rpc_called_by_frontend": 0,
   "service_role_only_rpc_without_bridge_plan": 0,
@@ -25,76 +25,9 @@
     "real_persona_proof": true
   },
   "critical_runtime_security_findings": 0,
-  "status": "critical_remediation_required",
+  "status": "passed",
   "scope_resolution": "Blocking broad-grant scope is the application-owned public schema. Supabase-managed net and supabase_functions functions are printed separately and are not changed by application migrations.",
-  "application_broad_security_definer_grants": [
-    {
-      "schema": "public",
-      "function_name": "can_access_org",
-      "identity_arguments": "target_org_id uuid",
-      "function_signature": "can_access_org(uuid)",
-      "security_mode": "security_definer",
-      "public_execute": false,
-      "anon_execute": false,
-      "authenticated_execute": true,
-      "service_role_execute": true
-    },
-    {
-      "schema": "public",
-      "function_name": "can_manage_grc",
-      "identity_arguments": "",
-      "function_signature": "can_manage_grc()",
-      "security_mode": "security_definer",
-      "public_execute": false,
-      "anon_execute": false,
-      "authenticated_execute": true,
-      "service_role_execute": true
-    },
-    {
-      "schema": "public",
-      "function_name": "patch21_actor_is_owner",
-      "identity_arguments": "p_actor_id uuid, p_organization_id uuid",
-      "function_signature": "patch21_actor_is_owner(uuid,uuid)",
-      "security_mode": "security_definer",
-      "public_execute": true,
-      "anon_execute": true,
-      "authenticated_execute": true,
-      "service_role_execute": true
-    },
-    {
-      "schema": "public",
-      "function_name": "patch21_actor_is_quality",
-      "identity_arguments": "p_actor_id uuid, p_organization_id uuid",
-      "function_signature": "patch21_actor_is_quality(uuid,uuid)",
-      "security_mode": "security_definer",
-      "public_execute": true,
-      "anon_execute": true,
-      "authenticated_execute": true,
-      "service_role_execute": true
-    },
-    {
-      "schema": "public",
-      "function_name": "patch21_can_close_ovr",
-      "identity_arguments": "p_ovr_report_id uuid, p_actor_id uuid, p_owner_override_reason text",
-      "function_signature": "patch21_can_close_ovr(uuid,uuid,text)",
-      "security_mode": "security_definer",
-      "public_execute": true,
-      "anon_execute": true,
-      "authenticated_execute": true,
-      "service_role_execute": true
-    },
-    {
-      "schema": "public",
-      "function_name": "patch21_write_ovr_audit_event",
-      "identity_arguments": "p_ovr_report_id uuid, p_actor_id uuid, p_event_type text, p_reason text, p_old_data jsonb, p_new_data jsonb",
-      "function_signature": "patch21_write_ovr_audit_event(uuid,uuid,text,text,jsonb,jsonb)",
-      "security_mode": "security_definer",
-      "public_execute": true,
-      "anon_execute": true,
-      "authenticated_execute": true,
-      "service_role_execute": true
-    }
-  ],
+  "application_broad_security_definer_grants": [],
   "managed_schema_broad_security_definer_grants": [
     {
       "schema": "graphql",
@@ -314,7 +247,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 591
+          "line": 745
         }
       ],
       "current_security_mode": "security_definer",
@@ -338,7 +271,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 599
+          "line": 753
         }
       ],
       "current_security_mode": "security_definer",
@@ -362,7 +295,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1284
+          "line": 1680
         },
         {
           "file": "src/lib/userManagementApi.ts",
@@ -390,7 +323,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1299
+          "line": 1695
         },
         {
           "file": "src/lib/userManagementApi.ts",
@@ -418,7 +351,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1506
+          "line": 1902
         }
       ],
       "current_security_mode": "security_definer",
@@ -442,7 +375,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1533
+          "line": 1929
         }
       ],
       "current_security_mode": "security_definer",

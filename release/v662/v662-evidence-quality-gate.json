@@ -1,17 +1,17 @@
 {
-  "generated_at": "2026-07-02T00:16:51.374Z",
+  "generated_at": "2026-07-02T16:30:26.037Z",
   "evidence_dir": "release/v66/evidence-attachments",
   "required_total": 6,
-  "passed_count": 4,
-  "failed_count": 2,
-  "strict_passed": false,
-  "quality_status": "not_ready_manual_evidence_required",
+  "passed_count": 6,
+  "failed_count": 0,
+  "strict_passed": true,
+  "quality_status": "ready_for_controlled_pilot_evidence_review",
   "results": [
     {
       "file": "staging-migration-log.txt",
       "kind": "migration",
       "exists": true,
-      "bytes": 2915,
+      "bytes": 2978,
       "has_required_signal": true,
       "has_template_or_placeholder_signal": false,
       "passed": true,
@@ -21,21 +21,21 @@
       "file": "01-v64-persona-sql-output.txt",
       "kind": "persona_sql",
       "exists": true,
-      "bytes": 897,
-      "has_required_signal": false,
+      "bytes": 2409,
+      "has_required_signal": true,
       "has_template_or_placeholder_signal": false,
-      "passed": false,
-      "reason": "missing_pass_verified_success_signal"
+      "passed": true,
+      "reason": ""
     },
     {
       "file": "02-v65-workflow-sql-output.txt",
       "kind": "workflow_sql",
       "exists": true,
-      "bytes": 1050,
-      "has_required_signal": false,
+      "bytes": 2526,
+      "has_required_signal": true,
       "has_template_or_placeholder_signal": false,
-      "passed": false,
-      "reason": "missing_pass_verified_success_signal"
+      "passed": true,
+      "reason": ""
     },
     {
       "file": "03-v66-pilot-evidence-sql-output.txt",
@@ -51,7 +51,7 @@
       "file": "restore-dryrun-evidence.txt",
       "kind": "restore",
       "exists": true,
-      "bytes": 2067,
+      "bytes": 2078,
       "has_required_signal": true,
       "has_template_or_placeholder_signal": false,
       "passed": true,

@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-07-02T00:16:19.358Z",
-    "migration_files_scanned": 83,
-    "views_detected": 239,
+    "generated_at": "2026-07-02T16:29:46.506Z",
+    "migration_files_scanned": 87,
+    "views_detected": 259,
     "findings_total": 105,
     "critical": 0,
     "high": 0,
@@ -830,6 +830,186 @@
       ],
       "has_security_invoker": true,
       "sensitive": true
+    },
+    {
+      "view": "v_patch23_evidence_chain_of_custody",
+      "files": [
+        "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+        "supabase/migrations/085_patch23_evidence_bridge_governance.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_evidence_closure_gate_status",
+      "files": [
+        "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+        "supabase/migrations/085_patch23_evidence_bridge_governance.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_evidence_gap_dashboard",
+      "files": [
+        "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+        "supabase/migrations/085_patch23_evidence_bridge_governance.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_evidence_pack_index",
+      "files": [
+        "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+        "supabase/migrations/085_patch23_evidence_bridge_governance.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_evidence_review_queue",
+      "files": [
+        "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+        "supabase/migrations/085_patch23_evidence_bridge_governance.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_sensitive_evidence_register",
+      "files": [
+        "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+        "supabase/migrations/085_patch23_evidence_bridge_governance.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_audit_closure_gate_status",
+      "files": [
+        "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+        "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_audit_closure_pack_index",
+      "files": [
+        "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+        "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_audit_executive_escalations",
+      "files": [
+        "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+        "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_audit_finding_workflow_queue",
+      "files": [
+        "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+        "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_overdue_audit_findings",
+      "files": [
+        "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+        "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_repeat_audit_findings",
+      "files": [
+        "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+        "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch25_compliance_closure_blockers",
+      "files": [
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch25_compliance_evidence_gap_dashboard",
+      "files": [
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch25_compliance_obligation_queue",
+      "files": [
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch25_due_soon_obligations",
+      "files": [
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch25_executive_compliance_escalations",
+      "files": [
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch25_overdue_obligations",
+      "files": [
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch25_regulatory_calendar",
+      "files": [
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch25_renewal_queue",
+      "files": [
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+        "supabase/migrations/087_patch25_compliance_obligation_calendar.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
     },
     {
       "view": "v_patch4_audit_engagement_dashboard",
@@ -4066,6 +4246,286 @@
     {
       "view": "v_patch22_risk_closure_blockers",
       "file": "supabase/migrations/084_patch22_risk_workflow_hardening.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_evidence_review_queue",
+      "file": "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_evidence_closure_gate_status",
+      "file": "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_evidence_gap_dashboard",
+      "file": "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_evidence_chain_of_custody",
+      "file": "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_evidence_pack_index",
+      "file": "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_sensitive_evidence_register",
+      "file": "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_evidence_review_queue",
+      "file": "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_evidence_gap_dashboard",
+      "file": "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_evidence_closure_gate_status",
+      "file": "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_evidence_chain_of_custody",
+      "file": "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_evidence_pack_index",
+      "file": "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch23_sensitive_evidence_register",
+      "file": "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_audit_closure_gate_status",
+      "file": "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_audit_finding_workflow_queue",
+      "file": "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_overdue_audit_findings",
+      "file": "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_repeat_audit_findings",
+      "file": "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_audit_executive_escalations",
+      "file": "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_audit_closure_pack_index",
+      "file": "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_audit_finding_workflow_queue",
+      "file": "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_overdue_audit_findings",
+      "file": "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_repeat_audit_findings",
+      "file": "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_audit_closure_gate_status",
+      "file": "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_audit_executive_escalations",
+      "file": "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch24_audit_closure_pack_index",
+      "file": "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch25_compliance_closure_blockers",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch25_compliance_obligation_queue",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch25_regulatory_calendar",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch25_due_soon_obligations",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch25_overdue_obligations",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch25_renewal_queue",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch25_compliance_evidence_gap_dashboard",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch25_executive_compliance_escalations",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch25_compliance_obligation_queue",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch25_regulatory_calendar",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch25_due_soon_obligations",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch25_overdue_obligations",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch25_renewal_queue",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch25_compliance_evidence_gap_dashboard",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch25_executive_compliance_escalations",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch25_compliance_closure_blockers",
+      "file": "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
       "occurrence": "alter_view_security_invoker",
       "has_security_invoker": true,
       "sensitive": true

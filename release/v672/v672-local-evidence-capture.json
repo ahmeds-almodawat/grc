@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-02T00:16:49.290Z",
+  "generated_at": "2026-07-02T16:30:22.562Z",
   "environment": "Local Supabase Docker staging",
   "project_id": "grc-control-center",
   "db_container": "supabase_db_grc-control-center",
@@ -22,13 +22,13 @@
       "staged": "release/v662/staging-sql/v64_persona_security_tests.sql",
       "compatibilityStaged": "release/v662/staging-sql/01-v64-persona-security-tests.sql",
       "output": "release/v66/evidence-attachments/01-v64-persona-sql-output.txt",
-      "passed": false,
-      "exit_code": 3,
-      "bytes": 897,
-      "has_completion_marker": false,
-      "has_sql_error": true,
+      "passed": true,
+      "exit_code": 0,
+      "bytes": 2409,
+      "has_completion_marker": true,
+      "has_sql_error": false,
       "has_false_assertion": false,
-      "reason": "psql_exit_3"
+      "reason": ""
     },
     {
       "id": "v65",
@@ -36,13 +36,13 @@
       "staged": "release/v662/staging-sql/v65_workflow_smoke_tests.sql",
       "compatibilityStaged": "release/v662/staging-sql/02-v65-workflow-smoke-tests.sql",
       "output": "release/v66/evidence-attachments/02-v65-workflow-sql-output.txt",
-      "passed": false,
-      "exit_code": 3,
-      "bytes": 1050,
-      "has_completion_marker": false,
-      "has_sql_error": true,
+      "passed": true,
+      "exit_code": 0,
+      "bytes": 2526,
+      "has_completion_marker": true,
+      "has_sql_error": false,
       "has_false_assertion": false,
-      "reason": "psql_exit_3"
+      "reason": ""
     },
     {
       "id": "v66",
@@ -63,16 +63,16 @@
     {
       "file": "release/v66/evidence-attachments/01-v64-persona-sql-output.txt",
       "exists": true,
-      "bytes": 897,
-      "has_pass_signal": false,
-      "passed": false
+      "bytes": 2409,
+      "has_pass_signal": true,
+      "passed": true
     },
     {
       "file": "release/v66/evidence-attachments/02-v65-workflow-sql-output.txt",
       "exists": true,
-      "bytes": 1050,
-      "has_pass_signal": false,
-      "passed": false
+      "bytes": 2526,
+      "has_pass_signal": true,
+      "passed": true
     },
     {
       "file": "release/v66/evidence-attachments/03-v66-pilot-evidence-sql-output.txt",
@@ -96,12 +96,7 @@
   "manual_evidence_register": {
     "updated": true
   },
-  "blocking_count": 4,
-  "blockers": [
-    "V64 SQL proof failed; review release/v66/evidence-attachments/01-v64-persona-sql-output.txt.",
-    "V65 SQL proof failed; review release/v66/evidence-attachments/02-v65-workflow-sql-output.txt.",
-    "Evidence verification failed for release/v66/evidence-attachments/01-v64-persona-sql-output.txt.",
-    "Evidence verification failed for release/v66/evidence-attachments/02-v65-workflow-sql-output.txt."
-  ],
-  "capture_status": "failed_review_required"
+  "blocking_count": 0,
+  "blockers": [],
+  "capture_status": "captured_pending_human_approval"
 }
