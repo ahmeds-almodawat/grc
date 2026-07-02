@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-02T20:36:24.862Z",
+  "generated_at": "2026-07-02T20:53:29.476Z",
   "migration_path": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
   "migration_found": true,
   "missing_tables": [],
