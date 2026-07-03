@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-07-03T02:17:35.610Z",
+  "migration_path": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+  "migration_found": true,
+  "missing_tables": [],
+  "missing_views": [],
+  "missing_functions": [],
+  "missing_fields": [],
+  "missing_rls_enablement": [],
+  "missing_policies": [],
+  "status": "passed",
+  "blocking_count": 0
+}

@@ -1,0 +1,58 @@
+{
+  "generated_at": "2026-07-03T02:17:37.020Z",
+  "migration_path": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+  "runtime_security_path": "release/v700/runtime-security-bridge-audit.json",
+  "supported_relationship_types": [
+    "clause",
+    "control",
+    "evidence",
+    "document",
+    "sop",
+    "capa",
+    "risk",
+    "audit_finding",
+    "training_program",
+    "training_assignment"
+  ],
+  "supported_evidence_statuses": [
+    "missing",
+    "pending_collection",
+    "pending_review",
+    "accepted",
+    "rejected",
+    "stale",
+    "expired",
+    "not_applicable"
+  ],
+  "supported_request_statuses": [
+    "open",
+    "in_progress",
+    "submitted",
+    "under_review",
+    "accepted",
+    "rejected",
+    "overdue",
+    "cancelled",
+    "waived"
+  ],
+  "supported_review_statuses": [
+    "pending_review",
+    "accepted",
+    "rejected",
+    "needs_rework",
+    "waived"
+  ],
+  "supported_freshness_statuses": [
+    "current",
+    "due_soon",
+    "stale",
+    "expired",
+    "unknown"
+  ],
+  "service_role_only_rpc_called_by_frontend": 0,
+  "remaining_broad_security_definer_execute_grants": 0,
+  "runtime_security_status": "passed",
+  "status": "passed",
+  "finding_count": 0,
+  "findings": []
+}
