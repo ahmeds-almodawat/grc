@@ -10,6 +10,7 @@ import { getOvrRepeatedCategoryAlerts, getOvrRiskIndicatorsByDepartment, getOvrR
 import { humanize } from '../lib/format';
 import { useI18n } from '../i18n/I18nContext';
 import type { OvrRepeatedCategoryAlert, OvrRiskDepartmentIndicator } from '../types/domain';
+import { OvrRcaCenter } from './OvrRcaCenter';
 
 function signalTone(level: string): 'normal' | 'warning' | 'danger' | 'success' {
   if (level === 'critical' || level === 'high') return 'danger';
@@ -101,6 +102,10 @@ export function OvrRiskIndicators() {
             ]}
           />
         </DataState>
+      </div>
+
+      <div className="mt-8">
+        <OvrRcaCenter />
       </div>
     </section>
   );

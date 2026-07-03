@@ -23,7 +23,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { ProfessionalGrcMaturityPanel } from '../components/v140/ProfessionalGrcMaturityPanel';
 import { ProfessionalGrcWorkflowMap } from '../components/v140/ProfessionalGrcWorkflowMap';
 import { AuditAssuranceCoveragePanel } from '../components/v150/AuditAssuranceCoveragePanel';
-import { AuditEngagementChecklist } from '../components/v150/AuditEngagementChecklist';
+import { AuditExecutionCenter } from './AuditExecutionCenter';
 import { AuditProgramWorkflowMap } from '../components/v150/AuditProgramWorkflowMap';
 import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
 import {
@@ -354,7 +354,7 @@ export function Audit() {
       <ProfessionalGrcWorkflowMap highlight="audit" />
       <ProfessionalGrcMaturityPanel domain="audit" />
       <AuditProgramWorkflowMap highlight="engagement-planning" />
-      <AuditEngagementChecklist />
+      <AuditExecutionCenter />
       <AuditAssuranceCoveragePanel />
       <FrameworkCrosswalkBackbonePanel context="audit" />
 
