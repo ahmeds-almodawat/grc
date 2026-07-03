@@ -1,0 +1,107 @@
+{
+  "total_flaws": 12,
+  "flaws_by_severity": {
+    "critical": 2,
+    "high": 5,
+    "medium": 3,
+    "low": 2
+  },
+  "flaws": [
+    {
+      "id": "FLAW-001",
+      "severity": "critical",
+      "module": "Audit & GRC Hub",
+      "title": "Audit Engagement Checklist is Workflow Scaffolding Only",
+      "description": "The Audit Engagement Checklist (AuditEngagementChecklist.tsx) is designated as visual scaffolding only and does not write or read real audit results, presenting a false workflow progress block.",
+      "remediation": "Replace the static checklist component with state-driven database rows referencing the audit_engagements table."
+    },
+    {
+      "id": "FLAW-002",
+      "severity": "critical",
+      "module": "Quality & OVR Hub",
+      "title": "CBAHI Accreditation Readiness Overview is a Static Scaffold",
+      "description": "The central AccreditationCenter.tsx renders a static, non-interactive layout of CBAHI standard sections, offering no path to track live accreditation scores or progress metrics in the DB.",
+      "remediation": "Implement an accreditation_obligations table mapping standard codes to actual department audit checklists."
+    },
+    {
+      "id": "FLAW-003",
+      "severity": "high",
+      "module": "Security",
+      "title": "Runtime RPC classification review remains before production signoff",
+      "description": "The latest security proof shows zero remaining broad SECURITY DEFINER execute grants, so there is no confirmed exposed broad Security Definer grant finding. However, the runtime RPC inventory still classifies multiple frontend/bridge RPCs as unknown_requires_review or privileged_admin_review. These should be reviewed and documented before production signoff.",
+      "remediation": "Review and document all privileged and unknown RPC classifications before production signoff (specifically during a dedicated runtime RPC classification closure patch)."
+    },
+    {
+      "id": "FLAW-004",
+      "severity": "high",
+      "module": "Quality & GRC Hub",
+      "title": "Missing Direct OVR Incident to Evidence Log Bridging",
+      "description": "Incident Occurrence Variance Reports (OVR) are tracked separately in ovr_reports but cannot be linked as supporting evidence for general GRC compliance controls or risks.",
+      "remediation": "Add an ovr_id foreign key to evidence_files or create a join table grc_incident_evidence."
+    },
+    {
+      "id": "FLAW-005",
+      "severity": "high",
+      "module": "Reports & Data Hub",
+      "title": "No Automated Verification of Backup Restores",
+      "description": "Backup dry-run verifications (v674:restore-dryrun) run locally via helper scripts but lack staging-ready automation in the main web application UI, exposing operators to undetected corruption.",
+      "remediation": "Integrate restore status checks and data checksums directly into the BackupSchedulerCenter.tsx dashboard."
+    },
+    {
+      "id": "FLAW-006",
+      "severity": "high",
+      "module": "Bilingual / Localization",
+      "title": "Missing Translation Keys in Unified CAPA and Framework Crosswalks",
+      "description": "Newer components like FrameworkCrosswalkBackbonePanel and ControlTestingWorkflowPanel use hardcoded English labels, breaking bilingual layout integrity when toggled to Arabic.",
+      "remediation": "Move all text labels to i18n JSON files and reference them via useI18n t() calls."
+    },
+    {
+      "id": "FLAW-007",
+      "severity": "high",
+      "module": "Executive Hub",
+      "title": "Empty Placeholder View for Mobile Command Simulator",
+      "description": "The ExecutiveMobileCommand page renders a static, empty mobile mockup iframe with no live dashboard connectivity, giving users a broken experience when accessed.",
+      "remediation": "Implement a responsive dashboard preview inside the mockup frame that displays live charts."
+    },
+    {
+      "id": "FLAW-008",
+      "severity": "medium",
+      "module": "Build & Scripts",
+      "title": "Excessive Duplicated Legacy Test and Audit Scripts",
+      "description": "Over 50 legacy test and audit runner scripts (scripts/v*) clutter package.json and the repo index, creating high maintenance overhead and testing confusion.",
+      "remediation": "Consolidate versioned audit scripts into a unified CLI test runner (e.g. proof-suite.mjs)."
+    },
+    {
+      "id": "FLAW-009",
+      "severity": "medium",
+      "module": "Bilingual / Localization",
+      "title": "Dictionary Dashboard is Read-Only",
+      "description": "The BilingualDictionaryCenter page displays dictionary keys and status correctly but offers no interface to correct or add translations, requiring direct DB updates.",
+      "remediation": "Add editable form inputs in the rows with a save button calling patch19_update_translation API."
+    },
+    {
+      "id": "FLAW-010",
+      "severity": "medium",
+      "module": "UI / Layout",
+      "title": "Visual Overflow Risks on GRC Hub Tabs on Narrow Screens",
+      "description": "The horizontal compact tab rail on the GRC Hub has 13 tabs. On narrow or medium screens, this list overflows, requiring scrolling but lacking clear scroll indicators or pagination controls.",
+      "remediation": "Add gradient masking at the edge of the tab rail and left/right navigation arrows to indicate scrollability."
+    },
+    {
+      "id": "FLAW-011",
+      "severity": "low",
+      "module": "Navigation",
+      "title": "Duplicated Sidebar Child Links and Quick Links",
+      "description": "Items like My Work, OVR, and Approvals are duplicated under both the sidebar accordions and the Quick Links list, leading to a cluttered sidebar interface.",
+      "remediation": "Add a configuration toggle in layout settings to hide duplicate Quick Links."
+    },
+    {
+      "id": "FLAW-012",
+      "severity": "low",
+      "module": "UI / Layout",
+      "title": "Missing Accordion Auto-Expand on Direct Page Entry",
+      "description": "If a user navigates to a child route directly (e.g. risks) from outside the sidebar (e.g. global search), the parent accordion module in the sidebar remains collapsed.",
+      "remediation": "Add a useEffect listener in Layout.tsx to automatically expand the parent accordion module based on the active page key."
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "patch": "Patch 29",
+    "title": "Training & Change Management Hardening",
+    "priority": "high",
+    "complexity": "medium",
+    "target_impact": "User onboarding, bilingual label translations coverage, and inline dictionary translation updates.",
+    "prerequisites": ["patch28-capa-action-plan-hardening"]
+  },
+  {
+    "patch": "Patch 30",
+    "title": "Executive Dashboard Truth Layer & Visual Hardening",
+    "priority": "medium",
+    "complexity": "low",
+    "target_impact": "Responsive tab container layout polish, mobile simulation framework connection, and Quick Links layout decluttering.",
+    "prerequisites": ["Patch 29"]
+  },
+  {
+    "patch": "Patch 31",
+    "title": "Security Hardening & Audit Evidence Bridging",
+    "priority": "critical",
+    "complexity": "high",
+    "target_impact": "Runtime RPC classification closure and human security signoff review, live audit checklist database persistence, and OVR incident-to-evidence relationships bridging.",
+    "prerequisites": ["Patch 30"]
+  },
+  {
+    "patch": "Patch 32",
+    "title": "Production Readiness Verification",
+    "priority": "high",
+    "complexity": "low",
+    "target_impact": "Disaster recovery restore automation reporting, final deployment proof verification, and sign-off meeting checklists.",
+    "prerequisites": ["Patch 31"]
+  }
+]
