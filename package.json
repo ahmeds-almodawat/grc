@@ -208,6 +208,8 @@
     "patch33:schema-proof": "node scripts/patch33-evidence-bridge-schema-proof.mjs",
     "patch33:workflow-proof": "node scripts/patch33-evidence-bridge-workflow-proof.mjs",
     "patch33:all": "npm run typecheck && npm run build && npm run patch33:schema-proof && npm run patch33:workflow-proof && npm run v700:runtime-security",
+    "patch34:frontend-proof": "node scripts/patch34-evidence-bridge-frontend-proof.mjs",
+    "patch34:all": "npm run typecheck && npm run build && npm run patch34:frontend-proof && npm run v700:runtime-security",
     "v73:module-acceptance": "node scripts/v73-module-acceptance.mjs",
     "v73:module-report": "node scripts/v73-module-report.mjs",
     "v73:all": "npm run v73:module-acceptance && npm run v73:module-report",
