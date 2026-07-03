@@ -1,0 +1,37 @@
+{
+  "patch": "47",
+  "generated_at": "2026-07-03T23:08:10.026Z",
+  "status": "passed",
+  "execution_mode": "verified_existing_local_evidence",
+  "local_supabase_container_reachable": true,
+  "sql_files_available": true,
+  "sql_files": [
+    {
+      "file": "supabase/tests/v64_persona_security_tests.sql",
+      "exists": true
+    },
+    {
+      "file": "supabase/tests/v65_workflow_smoke_tests.sql",
+      "exists": true
+    },
+    {
+      "file": "supabase/tests/v66_controlled_pilot_evidence_tests.sql",
+      "exists": true
+    }
+  ],
+  "migration_count": null,
+  "migrations_replayed": true,
+  "persona_sql_executed": true,
+  "rls_check_passed": true,
+  "function_check_passed": true,
+  "view_check_passed": true,
+  "restore_dryrun_passed": true,
+  "failure_count": 0,
+  "blockers": [],
+  "evidence_paths": {
+    "v64_database_security_summary": "release/v64/v64-database-security-proof-summary.json",
+    "v672_local_evidence_capture": "release/v672/v672-local-evidence-capture.json",
+    "v674_restore_dryrun": "release/v674/v674-restore-integrity-dryrun.json"
+  },
+  "run_notes": "Verified existing local/staging evidence artifacts. No new staging execution was started by this runner."
+}

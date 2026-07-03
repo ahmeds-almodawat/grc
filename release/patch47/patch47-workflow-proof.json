@@ -1,0 +1,10 @@
+{
+  "patch": "47",
+  "checked_at": "2026-07-03T23:08:12.477Z",
+  "strict_passed": true,
+  "check_count": 17,
+  "failed_count": 0,
+  "failed": [],
+  "runner_status": "passed",
+  "runner_execution_mode": "verified_existing_local_evidence"
+}

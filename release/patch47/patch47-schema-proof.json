@@ -1,0 +1,27 @@
+{
+  "patch": "47",
+  "checked_at": "2026-07-03T23:08:11.693Z",
+  "strict_passed": true,
+  "check_count": 27,
+  "failed_count": 0,
+  "failed": [],
+  "tables": [
+    "staging_migration_evidence_runs",
+    "staging_migration_evidence_events"
+  ],
+  "views": [
+    "v_patch47_staging_migration_evidence_register",
+    "v_patch47_latest_staging_migration_evidence",
+    "v_patch47_staging_persona_sql_evidence",
+    "v_patch47_staging_security_blockers",
+    "v_patch47_staging_evidence_summary",
+    "v_patch47_production_readiness_staging_overlay"
+  ],
+  "functions": [
+    "create_staging_migration_evidence_run",
+    "update_staging_migration_evidence_run_status",
+    "record_staging_migration_evidence_event",
+    "get_staging_evidence_summary",
+    "get_production_readiness_staging_overlay"
+  ]
+}
