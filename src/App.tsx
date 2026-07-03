@@ -71,6 +71,7 @@ import { AccreditationCenter } from './pages/AccreditationCenter';
 import { QualityAccreditationOperatingCenter } from './pages/QualityAccreditationOperatingCenter';
 import { EvidenceBridgeCenter } from './pages/EvidenceBridgeCenter';
 import { AccreditationWorkflowCenter } from './pages/AccreditationWorkflowCenter';
+import { AccreditationWarRoomCenter } from './pages/AccreditationWarRoomCenter';
 import { ClinicalGovernanceCenter } from './pages/ClinicalGovernanceCenter';
 import { HospitalGovernanceCenter } from './pages/HospitalGovernanceCenter';
 import { MyWorkCenter } from './pages/MyWorkCenter';
@@ -219,6 +220,7 @@ function QualitySafetyHub() {
         { id: 'accreditation', label: t('hub.tab.accreditation', 'Accreditation'), description: t('hub.tab.accreditation.desc', 'CBAHI and international accreditation readiness engine.'), icon: <ClipboardCheck size={17} />, content: <AccreditationCenter /> },
         { id: 'qualityAccreditationOperating', label: t('hub.tab.qualityAccreditationOperating', 'Quality Operating Layer'), description: t('hub.tab.qualityAccreditationOperating.desc', 'Tracer rounds, indicators, RCA/CAPA, evidence packs, and requirement readiness work.'), icon: <ClipboardCheck size={17} />, content: <QualityAccreditationOperatingCenter /> },
         { id: 'evidenceBridge', label: t('hub.tab.evidenceBridge', 'Evidence Bridge'), description: t('hub.tab.evidenceBridge.desc', 'Live clause-to-control-to-evidence operations, gaps, collection queues, reviews, freshness, and readiness.'), icon: <Network size={17} />, content: <EvidenceBridgeCenter /> },
+        { id: 'accreditationWarRoom', label: t('hub.tab.accreditationWarRoom', 'Accreditation War Room'), description: t('hub.tab.accreditationWarRoom.desc', 'Survey readiness, evidence gates, waivers, blockers, queue overlays, and traceability chains.'), icon: <Radar size={17} />, content: <AccreditationWarRoomCenter /> },
         { id: 'accreditationWorkflow', label: t('hub.tab.accreditationWorkflow', 'Accreditation Workflow'), description: t('hub.tab.accreditationWorkflow.desc', 'Clause owners, review cycles, task queues, blockers, signoffs, escalations, and survey readiness.'), icon: <ClipboardList size={17} />, content: <AccreditationWorkflowCenter /> },
         { id: 'realStandardsMasterData', label: t('hub.tab.realStandardsMasterData', 'Standards & Master Data'), description: t('hub.tab.realStandardsMasterData.desc', 'Licensed standards metadata, departments, committees, evidence taxonomy, controls, indicators, tracers, and document ownership.'), icon: <ClipboardList size={17} />, content: <RealStandardsMasterDataCenter /> },
         { id: 'uatAccreditationEvidence', label: t('hub.tab.uatAccreditationEvidence', 'UAT Evidence Pack'), description: t('hub.tab.uatAccreditationEvidence.desc', 'Role scenario scripts, screenshots, SQL proof, signoffs, failed scenarios, retests, and accreditation evidence readiness.'), icon: <FileCheck2 size={17} />, content: <UatAccreditationEvidenceCenter /> },

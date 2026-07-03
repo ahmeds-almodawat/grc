@@ -1,0 +1,13 @@
+{
+  "patch": "43",
+  "checked_at": "2026-07-03T17:53:42.884Z",
+  "strict_passed": true,
+  "check_count": 25,
+  "failed_count": 0,
+  "failed": [],
+  "enforcement_strategy": {
+    "level_1": "evidence_gate_evaluations persists gate status",
+    "level_2": "v_patch43_queue_evidence_gate_overlay exposes gate status in work queues",
+    "level_3": "hard closure blocking is limited to safe future integration points; legacy workflows are not forced through uncertain gates in this patch"
+  }
+}
