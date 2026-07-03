@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-07-02T21:18:59.392Z",
+  "migration_path": "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+  "migration_found": true,
+  "missing_tables": [],
+  "missing_views": [],
+  "missing_fields": [],
+  "missing_workflow_types": [],
+  "missing_actions": [],
+  "status": "passed",
+  "blocking_count": 0
+}
