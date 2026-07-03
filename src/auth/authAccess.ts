@@ -137,6 +137,7 @@ export const pageGroups: Record<PageKey, PageGroup> = {
   controlledUatWorkbench: 'admin',
   scenarioTestConsole: 'admin',
   uatIssueCapture: 'personal',
+  trainingGovernance: 'grc',
   admin: 'admin',
 };
 

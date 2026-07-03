@@ -35,6 +35,7 @@ import {
   UserCheck,
   Users,
   WandSparkles,
+  GraduationCap,
 } from 'lucide-react';
 import { useI18n } from '../i18n/I18nContext';
 import { useAuth } from '../auth/AuthProvider';
@@ -106,6 +107,7 @@ export type PageKey =
   | 'controlledUatWorkbench'
   | 'scenarioTestConsole'
   | 'uatIssueCapture'
+  | 'trainingGovernance'
   | 'admin';
 
 interface LayoutProps {
@@ -147,6 +149,7 @@ const uatLinks: NavItem[] = isScenarioLabEnabled
   : [];
 
 export const legacyNavItems: NavItem[] = [
+  { key: 'trainingGovernance' as const, labelKey: 'nav.trainingGovernance', icon: <GraduationCap size={18} /> },
   ...(isScenarioLabEnabled
     ? [
         { key: 'controlledUatWorkbench' as const, labelKey: 'nav.controlledUatWorkbench', icon: <ClipboardCheck size={18} /> },

@@ -1102,6 +1102,7 @@ const translations: TranslationMap = {
 
   'nav.home': { en: 'Home', ar: 'الرئيسية' },
   'nav.home.hint': { en: 'workspaces overview', ar: 'نظرة على المساحات' },
+  'nav.trainingGovernance': { en: 'Training Governance', ar: 'حوكمة التدريب' },
   'nav.sidebarHint': { en: 'Tip: use hubs first, quick links only for daily actions.', ar: 'تلميح: استخدم المساحات الرئيسية أولاً، والروابط السريعة للمتابعة اليومية.' },
 
   'home.kicker': { en: 'Executive-ready workspace', ar: 'مساحة جاهزة للإدارة التنفيذية' },
