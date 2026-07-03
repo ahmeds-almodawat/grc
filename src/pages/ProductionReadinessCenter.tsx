@@ -17,6 +17,9 @@ import {
   getRuntimeActionAuthorizationOverlay,
   getRuntimeActionReviewRegister,
   getRuntimeDirectBrowserRpcExceptions,
+  getRuntimeAccessReviewOverlay,
+  getRuntimeAccessReviewRegister,
+  getRuntimeAccessReviewBlockers,
   getProofSuiteReadinessSummary,
   getControlledPilotReadinessSummary,
   getExecutiveProductionReadinessSummary
@@ -41,6 +44,9 @@ export function ProductionReadinessCenter() {
   const runtimeAuthorization = useAsyncData(getRuntimeActionAuthorizationOverlay, []);
   const runtimeActionRegister = useAsyncData(getRuntimeActionReviewRegister, []);
   const directRpcExceptions = useAsyncData(getRuntimeDirectBrowserRpcExceptions, []);
+  const runtimeAccessReview = useAsyncData(getRuntimeAccessReviewOverlay, []);
+  const runtimeAccessRegister = useAsyncData(getRuntimeAccessReviewRegister, []);
+  const runtimeAccessBlockers = useAsyncData(getRuntimeAccessReviewBlockers, []);
   const proofSummary = useAsyncData(getProofSuiteReadinessSummary, []);
   const pilotSummary = useAsyncData(getControlledPilotReadinessSummary, []);
   const execSummary = useAsyncData(getExecutiveProductionReadinessSummary, []);
@@ -79,6 +85,20 @@ export function ProductionReadinessCenter() {
     service_role_only_frontend_calls: 0,
     broad_security_definer_execute_grants: 0,
     readiness_status: 'needs_access_review',
+    next_action_required: '-'
+  };
+
+  const runtimeAccessData = runtimeAccessReview.data || {
+    total_runtime_actions: 0,
+    approved_signoffs: 0,
+    pending_signoffs: 0,
+    overdue_signoffs: 0,
+    rejected_signoffs: 0,
+    approved_with_limitation_signoffs: 0,
+    direct_browser_rpc_exception_count: 0,
+    direct_browser_rpc_exception_pending_count: 0,
+    risk_acceptance_required_count: 0,
+    access_review_readiness_status: 'pending_review',
     next_action_required: '-'
   };
 
@@ -495,6 +515,123 @@ export function ProductionReadinessCenter() {
                 </DataState>
               </ModernCard>
 
+              <ModernCard title={text.runtimeAccessReviewTitle} subtitle={text.runtimeAccessReviewSubtitle}>
+                <DataState loading={runtimeAccessReview.loading} error={runtimeAccessReview.error} empty={!runtimeAccessReview.data}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '14px', marginBottom: '20px' }}>
+                    <div className="stat-card">
+                      <div className="stat-value">{runtimeAccessData.total_runtime_actions}</div>
+                      <div className="stat-label">{text.runtimeActions}</div>
+                    </div>
+                    <div className="stat-card success">
+                      <div className="stat-value">{runtimeAccessData.approved_signoffs}</div>
+                      <div className="stat-label">{text.approvedRuntimeSignoffs}</div>
+                    </div>
+                    <div className="stat-card warning">
+                      <div className="stat-value">{runtimeAccessData.pending_signoffs}</div>
+                      <div className="stat-label">{text.pendingSignoffs}</div>
+                    </div>
+                    <div className="stat-card danger">
+                      <div className="stat-value">{runtimeAccessData.overdue_signoffs}</div>
+                      <div className="stat-label">{text.overdueSignoffs}</div>
+                    </div>
+                    <div className="stat-card danger">
+                      <div className="stat-value">{runtimeAccessData.rejected_signoffs}</div>
+                      <div className="stat-label">{text.rejectedSignoffs}</div>
+                    </div>
+                    <div className="stat-card warning">
+                      <div className="stat-value">{runtimeAccessData.approved_with_limitation_signoffs}</div>
+                      <div className="stat-label">{text.approvedWithLimitationSignoffs}</div>
+                    </div>
+                    <div className="stat-card warning">
+                      <div className="stat-value">{runtimeAccessData.risk_acceptance_required_count}</div>
+                      <div className="stat-label">{text.riskAcceptanceRequired}</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-value">
+                        <StatusPill tone={
+                          runtimeAccessData.access_review_readiness_status === 'ready' ? 'good' :
+                          runtimeAccessData.access_review_readiness_status === 'ready_with_limitations' ? 'warning' :
+                          runtimeAccessData.access_review_readiness_status === 'blocked' ? 'danger' : 'neutral'
+                        }>
+                          {runtimeAccessData.access_review_readiness_status}
+                        </StatusPill>
+                      </div>
+                      <div className="stat-label">{text.accessReviewReadinessStatus}</div>
+                    </div>
+                  </div>
+                  <div className="alert alert-info">
+                    <strong>{text.directBrowserExceptionReview}: </strong>
+                    {runtimeAccessData.direct_browser_rpc_exception_pending_count} / {runtimeAccessData.direct_browser_rpc_exception_count} {text.pendingSignoffs}
+                    <br />
+                    <strong>{text.nextActionRequired}: </strong>{runtimeAccessData.next_action_required}
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.accessReviewBlockersTitle} subtitle={text.accessReviewBlockersSubtitle}>
+                <DataState loading={runtimeAccessBlockers.loading} error={runtimeAccessBlockers.error} empty={!runtimeAccessBlockers.data?.length}>
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead>
+                        <tr>
+                          <th>{text.actionName}</th>
+                          <th>{text.moduleName}</th>
+                          <th>{text.riskLevel}</th>
+                          <th>{text.reviewStatus}</th>
+                          <th>{text.blockerReason}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(runtimeAccessBlockers.data || []).slice(0, 80).map((row: any) => (
+                          <tr key={row.action_name ?? row.actionName}>
+                            <td><code>{row.action_name ?? row.actionName}</code></td>
+                            <td>{row.module_name ?? row.moduleName}</td>
+                            <td><StatusPill tone={row.risk_level === 'critical' ? 'danger' : row.risk_level === 'high' ? 'warning' : 'neutral'}>{row.risk_level ?? row.riskLevel}</StatusPill></td>
+                            <td><StatusPill tone={row.signoff_status === 'rejected' ? 'danger' : row.signoff_status === 'approved_with_limitation' ? 'warning' : 'neutral'}>{row.signoff_status ?? row.signoffStatus}</StatusPill></td>
+                            <td>{row.blocker_reason ?? '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.accessReviewRegisterTitle} subtitle={text.accessReviewRegisterSubtitle}>
+                <DataState loading={runtimeAccessRegister.loading} error={runtimeAccessRegister.error} empty={!runtimeAccessRegister.data?.length}>
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead>
+                        <tr>
+                          <th>{text.actionName}</th>
+                          <th>{text.reviewer}</th>
+                          <th>{text.reviewStatus}</th>
+                          <th>{text.dueAt}</th>
+                          <th>{text.evidenceReference}</th>
+                          <th>{text.limitationSummary}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(runtimeAccessRegister.data || []).slice(0, 80).map((row: any) => (
+                          <tr key={row.action_name ?? row.actionName}>
+                            <td><code>{row.action_name ?? row.actionName}</code></td>
+                            <td>{row.reviewer_role ?? row.reviewerRole}</td>
+                            <td><StatusPill tone={
+                              row.signoff_status === 'approved' ? 'good' :
+                              row.signoff_status === 'approved_with_limitation' ? 'warning' :
+                              row.signoff_status === 'rejected' || row.is_overdue ? 'danger' : 'neutral'
+                            }>{row.signoff_status ?? row.signoffStatus}</StatusPill></td>
+                            <td>{row.due_at ? new Date(row.due_at).toLocaleDateString() : '-'}</td>
+                            <td><code>{row.evidence_reference ?? '-'}</code></td>
+                            <td>{row.limitation_summary ?? '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
               <ModernCard title={text.directBrowserExceptionTitle} subtitle={text.directBrowserExceptionSubtitle}>
                 <DataState loading={directRpcExceptions.loading} error={directRpcExceptions.error} empty={!directRpcExceptions.data?.length}>
                   <div className="table-wrap">
@@ -662,6 +799,25 @@ const en = {
   securityRuntimeChecks: 'Runtime security checks',
   serviceRoleOnlyCalls: 'Service-role-only frontend calls',
   broadDefinerGrants: 'Broad definer grants',
+  runtimeAccessReviewTitle: 'Runtime access review signoff closure',
+  runtimeAccessReviewSubtitle: 'Operational closure for runtime action approvals, limitations, rejected signoffs, overdue reviews, and risk acceptance evidence.',
+  approvedRuntimeSignoffs: 'Approved Signoffs',
+  pendingSignoffs: 'Pending Signoffs',
+  overdueSignoffs: 'Overdue Signoffs',
+  rejectedSignoffs: 'Rejected Signoffs',
+  approvedWithLimitationSignoffs: 'Approved With Limitation',
+  riskAcceptanceRequired: 'Risk Acceptance Required',
+  accessReviewReadinessStatus: 'Access Review Readiness',
+  directBrowserExceptionReview: 'Direct browser RPC review',
+  accessReviewBlockersTitle: 'Runtime access review blockers',
+  accessReviewBlockersSubtitle: 'Pending high-risk, overdue, rejected, and evidence-missing runtime action signoffs.',
+  blockerReason: 'Blocker Reason',
+  accessReviewRegisterTitle: 'Runtime access review signoff register',
+  accessReviewRegisterSubtitle: 'Reviewer assignment, due date, signoff status, limitation notes, and closure evidence for runtime actions.',
+  reviewer: 'Reviewer',
+  dueAt: 'Due',
+  evidenceReference: 'Evidence',
+  limitationSummary: 'Limitation Notes',
   directBrowserExceptionTitle: 'Direct browser RPC exception register',
   directBrowserExceptionSubtitle: 'Explicitly tracked direct browser calls that require RLS and security-invoker proof.',
   runtimeActionRegisterTitle: 'Runtime action register',
@@ -746,6 +902,25 @@ const ar = {
   securityRuntimeChecks: 'فحوصات أمان التشغيل',
   serviceRoleOnlyCalls: 'استدعاءات service-role من الواجهة',
   broadDefinerGrants: 'صلاحيات definer العامة',
+  runtimeAccessReviewTitle: 'إغلاق اعتمادات مراجعة صلاحيات التشغيل',
+  runtimeAccessReviewSubtitle: 'إغلاق تشغيلي لاعتمادات إجراءات التشغيل، والمحددات، والرفض، والمراجعات المتأخرة، وأدلة قبول المخاطر.',
+  approvedRuntimeSignoffs: 'اعتمادات موافق عليها',
+  pendingSignoffs: 'اعتمادات معلقة',
+  overdueSignoffs: 'اعتمادات متأخرة',
+  rejectedSignoffs: 'اعتمادات مرفوضة',
+  approvedWithLimitationSignoffs: 'موافق مع محددات',
+  riskAcceptanceRequired: 'يتطلب قبول مخاطر',
+  accessReviewReadinessStatus: 'جاهزية مراجعة الصلاحيات',
+  directBrowserExceptionReview: 'مراجعة استثناء RPC مباشر',
+  accessReviewBlockersTitle: 'معوقات مراجعة صلاحيات التشغيل',
+  accessReviewBlockersSubtitle: 'اعتمادات معلقة عالية المخاطر أو متأخرة أو مرفوضة أو ناقصة الدليل.',
+  blockerReason: 'سبب التعطيل',
+  accessReviewRegisterTitle: 'سجل اعتمادات مراجعة صلاحيات التشغيل',
+  accessReviewRegisterSubtitle: 'المراجع، وتاريخ الاستحقاق، والحالة، وملاحظات المحددات، ودليل الإغلاق لإجراءات التشغيل.',
+  reviewer: 'المراجع',
+  dueAt: 'الاستحقاق',
+  evidenceReference: 'الدليل',
+  limitationSummary: 'ملاحظات المحددات',
   directBrowserExceptionTitle: 'سجل استثناءات RPC المباشرة من المتصفح',
   directBrowserExceptionSubtitle: 'استدعاءات المتصفح المباشرة الموثقة التي تتطلب إثبات RLS و security-invoker.',
   runtimeActionRegisterTitle: 'سجل إجراءات التشغيل',
