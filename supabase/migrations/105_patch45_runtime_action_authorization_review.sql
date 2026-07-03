@@ -160,6 +160,14 @@ select
   end as readiness_status
 from public.v_patch45_runtime_authorization_summary s;
 
+alter view if exists public.v_patch45_runtime_action_register set (security_invoker = true);
+alter view if exists public.v_patch45_unclassified_runtime_action_register set (security_invoker = true);
+alter view if exists public.v_patch45_privileged_runtime_action_register set (security_invoker = true);
+alter view if exists public.v_patch45_direct_browser_rpc_exception_register set (security_invoker = true);
+alter view if exists public.v_patch45_runtime_authorization_summary set (security_invoker = true);
+alter view if exists public.v_patch45_access_review_evidence_register set (security_invoker = true);
+alter view if exists public.v_patch45_production_security_readiness_overlay set (security_invoker = true);
+
 grant select on public.v_patch45_runtime_action_register to authenticated;
 grant select on public.v_patch45_unclassified_runtime_action_register to authenticated;
 grant select on public.v_patch45_privileged_runtime_action_register to authenticated;

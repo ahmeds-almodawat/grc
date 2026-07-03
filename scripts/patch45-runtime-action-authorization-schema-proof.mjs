@@ -34,7 +34,11 @@ const checks = [
   { name: 'read policies exist', passed: lower.includes('patch45_runtime_action_reviews_read') && lower.includes('patch45_runtime_action_events_read') },
   { name: 'write policies exist', passed: lower.includes('patch45_runtime_action_reviews_write') && lower.includes('patch45_runtime_action_events_write') },
   ...views.map(view => ({ name: `view exists: ${view}`, passed: lower.includes(`view public.${view}`) })),
-  ...views.map(view => ({ name: `security_invoker view: ${view}`, passed: lower.includes(`view public.${view}\nwith (security_invoker = true)`) })),
+  ...views.map(view => {
+    const inlinePattern = new RegExp(`create\\s+or\\s+replace\\s+view\\s+public\\.${view}\\s+with\\s*\\([^)]*security_invoker\\s*=\\s*true`, 'i');
+    const alterPattern = new RegExp(`alter\\s+view\\s+(?:if\\s+exists\\s+)?public\\.${view}\\s+set\\s*\\([^)]*security_invoker\\s*=\\s*true`, 'i');
+    return { name: `security_invoker view: ${view}`, passed: inlinePattern.test(sql) || alterPattern.test(sql) };
+  }),
   ...functions.map(fn => ({ name: `function exists: ${fn}`, passed: lower.includes(`function public.${fn}`) })),
   { name: 'mutating functions are service-role-gated', passed: lower.includes('patch45_service_role_required') && (sql.match(/perform public\.patch45_service_role_required\(\)/g) ?? []).length >= 3 },
   { name: 'no broad execute grant for mutating functions', passed: !grantExecuteLines.some(line => /public\.(record_runtime_action_review_event|create_runtime_action_review|update_runtime_action_review_status)/i.test(line) && /authenticated/i.test(line)) },
