@@ -161,6 +161,16 @@ export function ProductionReadinessCenter() {
                       <span style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>{gonogoData.readiness_percentage}%</span>
                     </div>
                     <span style={{ fontWeight: '500' }}>{text.readinessScore}</span>
+                    <div style={{ display: 'flex', gap: '20px', marginTop: '10px' }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{gonogoData.approved_reviews ?? 0}</div>
+                        <small>{language === 'ar' ? 'مراجعات معتمدة' : 'Approved Reviews'}</small>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--danger-color)' }}>{gonogoData.blocking_issues ?? 0}</div>
+                        <small>{language === 'ar' ? 'مشاكل معطلة' : 'Blocking Issues'}</small>
+                      </div>
+                    </div>
                   </div>
                 </ModernCard>
 

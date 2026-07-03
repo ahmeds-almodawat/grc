@@ -1,0 +1,33 @@
+{
+  "patch": "44",
+  "migration": "supabase\\migrations\\104_patch44_production_ux_readiness_pilot_hardening.sql",
+  "checked_at": "2026-07-03T19:43:41.497Z",
+  "strict_passed": true,
+  "check_count": 31,
+  "failed_count": 0,
+  "failed": [],
+  "required_tables": [
+    "pilot_go_no_go_reviews",
+    "pilot_go_no_go_events"
+  ],
+  "required_views": [
+    "v_patch44_role_landing_matrix",
+    "v_patch44_navigation_readiness_map",
+    "v_patch44_production_readiness_summary",
+    "v_patch44_backup_restore_readiness_summary",
+    "v_patch44_known_limitations_summary",
+    "v_patch44_bilingual_readiness_summary",
+    "v_patch44_pilot_blocker_register",
+    "v_patch44_pilot_go_no_go_dashboard",
+    "v_patch44_executive_readiness_summary",
+    "v_patch44_daily_operations_landing_summary"
+  ],
+  "required_functions": [
+    "create_pilot_go_no_go_review",
+    "update_pilot_go_no_go_review_status",
+    "record_pilot_go_no_go_event",
+    "get_pilot_go_no_go_dashboard",
+    "get_executive_readiness_summary",
+    "get_daily_operations_landing_summary"
+  ]
+}

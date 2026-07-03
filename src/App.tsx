@@ -154,22 +154,23 @@ function ExecutiveHub() {
     />
   );
 }
-function WorkExecutionHub() {
+function DailyOperationsHub() {
   const { t } = useI18n();
   return (
     <TabbedHub
-      eyebrow={t('hub.work.eyebrow')}
-      title={t('hub.work.title')}
-      subtitle={t('hub.work.subtitle')}
+      eyebrow={t('hub.dailyOperations.eyebrow', 'Daily operations')}
+      title={t('hub.dailyOperations.title', 'Daily Operations')}
+      subtitle={t('hub.dailyOperations.subtitle', 'Unified queue across all active tasks.')}
       tabs={[
         { id: 'unifiedMyWork', label: t('hub.tab.unifiedMyWork', 'Unified My Work'), description: t('hub.tab.unifiedMyWork.desc', 'One daily queue across accreditation, evidence, audit, OVR/RCA, CAPA, training, documents, approvals, and escalations.'), icon: <ClipboardList size={17} />, content: <MyWorkCenter /> },
         { id: 'my', label: t('hub.tab.myWork'), description: t('hub.tab.myWork.desc'), icon: <UserCheck size={17} />, content: <MyWork /> },
+        { id: 'ovr', label: t('hub.tab.ovr'), description: t('hub.tab.ovr.desc'), icon: <Hospital size={17} />, content: <OVR /> },
+        { id: 'evidence', label: t('hub.tab.evidence'), description: t('hub.tab.evidence.desc'), icon: <FileCheck2 size={17} />, content: <Evidence /> },
         { id: 'projects', label: t('hub.tab.projects'), description: t('hub.tab.projects.desc'), icon: <GanttChartSquare size={17} />, content: <Projects /> },
         { id: 'departments', label: t('hub.tab.departments'), description: t('hub.tab.departments.desc'), icon: <Building2 size={17} />, content: <Departments /> },
         { id: 'operations', label: t('hub.tab.operations'), description: t('hub.tab.operations.desc'), icon: <BellRing size={17} />, content: <OperationsCenter /> },
         { id: 'escalations', label: t('hub.tab.escalations'), description: t('hub.tab.escalations.desc'), icon: <Siren size={17} />, content: <Escalations /> },
         { id: 'approvals', label: t('hub.tab.approvals'), description: t('hub.tab.approvals.desc'), icon: <ClipboardCheck size={17} />, content: <Approvals /> },
-        { id: 'evidence', label: t('hub.tab.evidence'), description: t('hub.tab.evidence.desc'), icon: <FileCheck2 size={17} />, content: <Evidence /> },
       ]}
     />
   );
@@ -209,48 +210,71 @@ function QualitySafetyHub() {
   const { t } = useI18n();
   return (
     <TabbedHub
-      eyebrow={t('hub.quality.eyebrow')}
-      title={t('hub.quality.title')}
-      subtitle={t('hub.quality.subtitle')}
+      eyebrow={t('hub.quality.eyebrow', 'Quality & safety')}
+      title={t('hub.quality.title', 'Quality & Safety')}
+      subtitle={t('hub.quality.subtitle', 'Clinical governance, indicators, and risk management.')}
       tabs={[
-        { id: 'ovr', label: t('hub.tab.ovr'), description: t('hub.tab.ovr.desc'), icon: <Hospital size={17} />, content: <OVR /> },
-        { id: 'ovrRisk', label: t('hub.tab.ovrRisk'), description: t('hub.tab.ovrRisk.desc'), icon: <Activity size={17} />, content: <OvrRiskIndicators /> },
         { id: 'clinicalGovernance', label: t('hub.tab.clinicalGovernance', 'Clinical Governance'), description: t('hub.tab.clinicalGovernance.desc', 'Audit execution, OVR RCA, CAPA, evidence, accreditation links, and clinical escalations.'), icon: <FileSearch size={17} />, content: <ClinicalGovernanceCenter /> },
         { id: 'hospitalGovernancePack', label: t('hub.tab.hospitalGovernancePack', 'Hospital Governance Pack'), description: t('hub.tab.hospitalGovernancePack.desc', 'Infection control, clinical quality indicators, committees, credentialing, facility safety, evidence gaps, and accreditation blockers.'), icon: <Hospital size={17} />, content: <HospitalGovernanceCenter /> },
-        { id: 'accreditation', label: t('hub.tab.accreditation', 'Accreditation'), description: t('hub.tab.accreditation.desc', 'CBAHI and international accreditation readiness engine.'), icon: <ClipboardCheck size={17} />, content: <AccreditationCenter /> },
+        { id: 'ovrRisk', label: t('hub.tab.ovrRisk'), description: t('hub.tab.ovrRisk.desc'), icon: <Activity size={17} />, content: <OvrRiskIndicators /> },
         { id: 'qualityAccreditationOperating', label: t('hub.tab.qualityAccreditationOperating', 'Quality Operating Layer'), description: t('hub.tab.qualityAccreditationOperating.desc', 'Tracer rounds, indicators, RCA/CAPA, evidence packs, and requirement readiness work.'), icon: <ClipboardCheck size={17} />, content: <QualityAccreditationOperatingCenter /> },
-        { id: 'evidenceBridge', label: t('hub.tab.evidenceBridge', 'Evidence Bridge'), description: t('hub.tab.evidenceBridge.desc', 'Live clause-to-control-to-evidence operations, gaps, collection queues, reviews, freshness, and readiness.'), icon: <Network size={17} />, content: <EvidenceBridgeCenter /> },
-        { id: 'accreditationWarRoom', label: t('hub.tab.accreditationWarRoom', 'Accreditation War Room'), description: t('hub.tab.accreditationWarRoom.desc', 'Survey readiness, evidence gates, waivers, blockers, queue overlays, and traceability chains.'), icon: <Radar size={17} />, content: <AccreditationWarRoomCenter /> },
-        { id: 'accreditationWorkflow', label: t('hub.tab.accreditationWorkflow', 'Accreditation Workflow'), description: t('hub.tab.accreditationWorkflow.desc', 'Clause owners, review cycles, task queues, blockers, signoffs, escalations, and survey readiness.'), icon: <ClipboardList size={17} />, content: <AccreditationWorkflowCenter /> },
-        { id: 'realStandardsMasterData', label: t('hub.tab.realStandardsMasterData', 'Standards & Master Data'), description: t('hub.tab.realStandardsMasterData.desc', 'Licensed standards metadata, departments, committees, evidence taxonomy, controls, indicators, tracers, and document ownership.'), icon: <ClipboardList size={17} />, content: <RealStandardsMasterDataCenter /> },
-        { id: 'uatAccreditationEvidence', label: t('hub.tab.uatAccreditationEvidence', 'UAT Evidence Pack'), description: t('hub.tab.uatAccreditationEvidence.desc', 'Role scenario scripts, screenshots, SQL proof, signoffs, failed scenarios, retests, and accreditation evidence readiness.'), icon: <FileCheck2 size={17} />, content: <UatAccreditationEvidenceCenter /> },
-        { id: 'realUatExecution', label: t('hub.tab.realUatExecution', 'Real UAT Execution'), description: t('hub.tab.realUatExecution.desc', 'Real scenario execution, screenshots, SQL proof, findings, retests, and signoffs.'), icon: <FileCheck2 size={17} />, content: <RealUatExecutionCenter /> },
-        { id: 'evidenceVault', label: t('hub.tab.evidenceVault'), description: t('hub.tab.evidenceVault.desc'), icon: <FileStack size={17} />, content: <EvidenceVault /> },
         { id: 'relationships', label: t('hub.tab.relationships'), description: t('hub.tab.relationships.desc'), icon: <Network size={17} />, content: <RelationshipMap /> },
       ]}
     />
   );
 }
 
-function ReportsDocumentsHub() {
+function AccreditationHub() {
+  const { t } = useI18n();
+  return (
+    <TabbedHub
+      eyebrow={t('hub.accreditation.eyebrow', 'Accreditation operations')}
+      title={t('hub.accreditation.title', 'Accreditation & Readiness')}
+      subtitle={t('hub.accreditation.subtitle', 'Standards, workflows, war room, and evidence.')}
+      tabs={[
+        { id: 'accreditationWarRoom', label: t('hub.tab.accreditationWarRoom', 'Accreditation War Room'), description: t('hub.tab.accreditationWarRoom.desc', 'Survey readiness, evidence gates, waivers, blockers, queue overlays, and traceability chains.'), icon: <Radar size={17} />, content: <AccreditationWarRoomCenter /> },
+        { id: 'accreditation', label: t('hub.tab.accreditation', 'Accreditation'), description: t('hub.tab.accreditation.desc', 'CBAHI and international accreditation readiness engine.'), icon: <ClipboardCheck size={17} />, content: <AccreditationCenter /> },
+        { id: 'accreditationWorkflow', label: t('hub.tab.accreditationWorkflow', 'Accreditation Workflow'), description: t('hub.tab.accreditationWorkflow.desc', 'Clause owners, review cycles, task queues, blockers, signoffs, escalations, and survey readiness.'), icon: <ClipboardList size={17} />, content: <AccreditationWorkflowCenter /> },
+        { id: 'realStandardsMasterData', label: t('hub.tab.realStandardsMasterData', 'Standards & Master Data'), description: t('hub.tab.realStandardsMasterData.desc', 'Licensed standards metadata, departments, committees, evidence taxonomy, controls, indicators, tracers, and document ownership.'), icon: <ClipboardList size={17} />, content: <RealStandardsMasterDataCenter /> },
+      ]}
+    />
+  );
+}
+
+function EvidenceDocumentsHub() {
+  const { t } = useI18n();
+  return (
+    <TabbedHub
+      eyebrow={t('hub.evidenceDocuments.eyebrow', 'Evidence & files')}
+      title={t('hub.evidenceDocuments.title', 'Evidence & Documents')}
+      subtitle={t('hub.evidenceDocuments.subtitle', 'Manage policies, documents, and vault.')}
+      tabs={[
+        { id: 'documents', label: t('hub.tab.documents'), description: t('hub.tab.documents.desc'), icon: <FolderKanban size={17} />, content: <PolicyDocumentCenter /> },
+        { id: 'evidenceVault', label: t('hub.tab.evidenceVault'), description: t('hub.tab.evidenceVault.desc'), icon: <FileStack size={17} />, content: <EvidenceVault /> },
+        { id: 'evidenceBridge', label: t('hub.tab.evidenceBridge', 'Evidence Bridge'), description: t('hub.tab.evidenceBridge.desc', 'Live clause-to-control-to-evidence operations, gaps, collection queues, reviews, freshness, and readiness.'), icon: <Network size={17} />, content: <EvidenceBridgeCenter /> },
+        { id: 'importExport', label: t('hub.tab.importExport'), description: t('hub.tab.importExport.desc'), icon: <UploadCloud size={17} />, content: <ImportExport /> },
+      ]}
+    />
+  );
+}
+
+function ReportsHub() {
   const { t } = useI18n();
   const auth = useAuth();
   const readOnlyReporting = auth.roles.some(role => role.role === 'viewer' || role.role === 'auditor')
     && !auth.roles.some(role => ['super_admin', 'executive', 'governance_admin', 'division_head', 'department_manager', 'compliance_officer'].includes(role.role));
   const tabs = [
-    { id: 'documents', label: t('hub.tab.documents'), description: t('hub.tab.documents.desc'), icon: <FolderKanban size={17} />, content: <PolicyDocumentCenter /> },
-    { id: 'importExport', label: t('hub.tab.importExport'), description: t('hub.tab.importExport.desc'), icon: <UploadCloud size={17} />, content: <ImportExport /> },
+    { id: 'executiveTruth', label: t('hub.tab.executiveTruth', 'Executive Summary'), description: t('hub.tab.executiveTruth.desc', 'Executive Truth Center.'), icon: <BarChart3 size={17} />, content: <ExecutiveTruthCenter /> },
     { id: 'reportBuilder', label: t('hub.tab.reportBuilder'), description: t('hub.tab.reportBuilder.desc'), icon: <BookCopy size={17} />, content: <AdvancedReportBuilder /> },
     { id: 'customReports', label: t('hub.tab.customReports'), description: t('hub.tab.customReports.desc'), icon: <ClipboardList size={17} />, content: <CustomReports /> },
     { id: 'backupScheduler', label: t('hub.tab.backupScheduler'), description: t('hub.tab.backupScheduler.desc'), icon: <DatabaseBackup size={17} />, content: <BackupSchedulerCenter /> },
-    { id: 'backupHealth', label: t('hub.tab.backupHealth'), description: t('hub.tab.backupHealth.desc'), icon: <ArchiveRestore size={17} />, content: <BackupHealthCheck /> },
   ];
   return (
     <TabbedHub
       eyebrow={t('hub.reports.eyebrow')}
       title={t('hub.reports.title')}
       subtitle={t('hub.reports.subtitle')}
-      tabs={readOnlyReporting ? tabs.filter(tab => ['documents', 'customReports', 'backupHealth'].includes(tab.id)) : tabs}
+      tabs={readOnlyReporting ? tabs.filter(tab => ['customReports'].includes(tab.id)) : tabs}
     />
   );
 }
@@ -364,14 +388,15 @@ function UatScenarioControlPages({ setPage }: { setPage: (page: PageKey) => void
   );
 }
 
-function AdminReleaseHub({ setPage }: { setPage: (page: PageKey) => void }) {
+function AdminMaintenanceHub({ setPage }: { setPage: (page: PageKey) => void }) {
   const { t } = useI18n();
   return (
     <TabbedHub
       eyebrow={t('hub.admin.eyebrow')}
-      title={t('hub.admin.title')}
+      title={t('hub.admin.title', 'Admin Maintenance')}
       subtitle={t('hub.admin.subtitle')}
       tabs={[
+        { id: 'productionReadiness', label: t('hub.tab.productionReadiness', 'Production Readiness'), description: t('hub.tab.productionReadiness.desc', 'Go/No-Go controls and validations.'), icon: <ShieldAlert size={17} />, content: <ProductionReadinessCenter /> },
         { id: 'systemControls', label: t('hub.tab.systemControls', 'System Controls'), description: t('hub.tab.systemControls.desc', 'Admin, users, roles, access, setup, safety, and guidance.'), icon: <Users size={17} />, content: <AdminSystemControls /> },
         { id: 'realDataControls', label: t('hub.tab.realDataControls', 'Real Data Import'), description: t('hub.tab.realDataControls.desc', 'Import center, activation, real-data readiness, and UAT source handoff.'), icon: <UploadCloud size={17} />, content: <RealDataControlPages /> },
         { id: 'productionControls', label: t('hub.tab.productionControls', 'Production Governance'), description: t('hub.tab.productionControls.desc', 'Release, assurance, go/no-go, runtime security, and launch controls.'), icon: <PackageCheck size={17} />, content: <ProductionGovernancePages /> },
@@ -424,15 +449,20 @@ export default function App() {
       case 'executiveHub':
         return <ExecutiveHub />;
       case 'workHub':
-        return <WorkExecutionHub />;
+      case 'dailyOperationsHub' as any:
+        return <DailyOperationsHub />;
       case 'grcHub':
         return <GrcHub />;
       case 'qualityHub':
         return <QualitySafetyHub />;
+      case 'accreditationHub' as any:
+        return <AccreditationHub />;
+      case 'evidenceHub' as any:
+        return <EvidenceDocumentsHub />;
       case 'reportsHub':
-        return <ReportsDocumentsHub />;
+        return <ReportsHub />;
       case 'adminHub':
-        return <AdminReleaseHub setPage={setPage} />;
+        return <AdminMaintenanceHub setPage={setPage} />;
       case 'finishFast':
         return <FinalSprintCenter />;
       case 'productionFinish':

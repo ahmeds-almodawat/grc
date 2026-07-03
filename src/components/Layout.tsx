@@ -48,8 +48,11 @@ export type PageKey =
   | 'home'
   | 'executiveHub'
   | 'workHub'
+  | 'dailyOperationsHub'
   | 'grcHub'
   | 'qualityHub'
+  | 'accreditationHub'
+  | 'evidenceHub'
   | 'reportsHub'
   | 'adminHub'
   | 'finishFast'
@@ -128,10 +131,10 @@ interface NavItem {
 
 const primaryNav: NavItem[] = [
   { key: 'home', labelKey: 'nav.home', hintKey: 'nav.home.hint', icon: <Home size={18} /> },
-  { key: 'executiveHub', labelKey: 'nav.executiveHub', hintKey: 'nav.executiveHub.hint', icon: <Command size={18} /> },
-  { key: 'workHub', labelKey: 'nav.workHub', hintKey: 'nav.workHub.hint', icon: <GanttChartSquare size={18} /> },
-  { key: 'grcHub', labelKey: 'nav.grcHub', hintKey: 'nav.grcHub.hint', icon: <ShieldAlert size={18} /> },
+  { key: 'dailyOperationsHub', labelKey: 'nav.dailyOperationsHub', hintKey: 'nav.dailyOperationsHub.hint', icon: <GanttChartSquare size={18} /> },
   { key: 'qualityHub', labelKey: 'nav.qualityHub', hintKey: 'nav.qualityHub.hint', icon: <Hospital size={18} /> },
+  { key: 'accreditationHub', labelKey: 'nav.accreditationHub', hintKey: 'nav.accreditationHub.hint', icon: <ClipboardCheck size={18} /> },
+  { key: 'evidenceHub', labelKey: 'nav.evidenceHub', hintKey: 'nav.evidenceHub.hint', icon: <FileCheck2 size={18} /> },
   { key: 'reportsHub', labelKey: 'nav.reportsHub', hintKey: 'nav.reportsHub.hint', icon: <FolderKanban size={18} /> },
   { key: 'adminHub', labelKey: 'nav.adminHub', hintKey: 'nav.adminHub.hint', icon: <LockKeyhole size={18} /> },
 ];
