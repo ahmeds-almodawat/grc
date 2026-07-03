@@ -1,6 +1,7 @@
 import { isSupabaseConfigured, supabase } from './supabase';
 import { emptyLiveArray, emptyLiveObject } from './liveData';
 import { requireServerBridge, invokePrivilegedAction, throwRpcActionError } from './privilegedAction';
+import { getRuntimeActionRegistrySummary, runtimeActionRegistry } from './runtimeActionRegistry';
 
 export interface ProductionScorecard {
   goLiveScore: number;
@@ -352,6 +353,58 @@ export async function getRuntimeRpcSignoffDashboard(): Promise<any> {
   } catch (error) {
     logApiWarning('getRuntimeRpcSignoffDashboard', error);
     return emptyLiveObject('getRuntimeRpcSignoffDashboard');
+  }
+}
+
+export async function getRuntimeActionAuthorizationOverlay(): Promise<any> {
+  const registrySummary = getRuntimeActionRegistrySummary();
+  if (!supabase) return registrySummary;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch45_production_security_readiness_overlay')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data || Number(data.runtime_action_total ?? 0) === 0) return registrySummary;
+    return data;
+  } catch (error) {
+    logApiWarning('getRuntimeActionAuthorizationOverlay', error);
+    return registrySummary;
+  }
+}
+
+export async function getRuntimeActionReviewRegister(): Promise<any[]> {
+  if (!supabase) return runtimeActionRegistry;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch45_runtime_action_register')
+      .select('*')
+      .order('risk_level', { ascending: true })
+      .order('action_name', { ascending: true });
+    if (error) throw error;
+    if (!data || data.length === 0) return runtimeActionRegistry;
+    return data;
+  } catch (error) {
+    logApiWarning('getRuntimeActionReviewRegister', error);
+    return runtimeActionRegistry;
+  }
+}
+
+export async function getRuntimeDirectBrowserRpcExceptions(): Promise<any[]> {
+  const directBrowserEntries = runtimeActionRegistry.filter(action => action.directBrowserException);
+  if (!supabase) return directBrowserEntries;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch45_direct_browser_rpc_exception_register')
+      .select('*')
+      .order('action_name', { ascending: true });
+    if (error) throw error;
+    if (!data || data.length === 0) return directBrowserEntries;
+    return data;
+  } catch (error) {
+    logApiWarning('getRuntimeDirectBrowserRpcExceptions', error);
+    return directBrowserEntries;
   }
 }
 

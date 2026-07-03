@@ -1,0 +1,28 @@
+{
+  "patch": "45",
+  "checked_at": "2026-07-03T20:06:41.902Z",
+  "strict_passed": true,
+  "check_count": 29,
+  "failed_count": 0,
+  "failed": [],
+  "tables": [
+    "runtime_action_reviews",
+    "runtime_action_review_events"
+  ],
+  "views": [
+    "v_patch45_runtime_action_register",
+    "v_patch45_unclassified_runtime_action_register",
+    "v_patch45_privileged_runtime_action_register",
+    "v_patch45_direct_browser_rpc_exception_register",
+    "v_patch45_runtime_authorization_summary",
+    "v_patch45_access_review_evidence_register",
+    "v_patch45_production_security_readiness_overlay"
+  ],
+  "functions": [
+    "record_runtime_action_review_event",
+    "create_runtime_action_review",
+    "update_runtime_action_review_status",
+    "get_runtime_authorization_summary",
+    "get_production_security_readiness_overlay"
+  ]
+}

@@ -14,6 +14,9 @@ import {
   getMissingTranslationRegister,
   getNavigationSimplificationRegister,
   getRuntimeRpcSignoffDashboard,
+  getRuntimeActionAuthorizationOverlay,
+  getRuntimeActionReviewRegister,
+  getRuntimeDirectBrowserRpcExceptions,
   getProofSuiteReadinessSummary,
   getControlledPilotReadinessSummary,
   getExecutiveProductionReadinessSummary
@@ -35,6 +38,9 @@ export function ProductionReadinessCenter() {
   const missingTrans = useAsyncData(getMissingTranslationRegister, []);
   const navProposals = useAsyncData(getNavigationSimplificationRegister, []);
   const rpcDashboard = useAsyncData(getRuntimeRpcSignoffDashboard, []);
+  const runtimeAuthorization = useAsyncData(getRuntimeActionAuthorizationOverlay, []);
+  const runtimeActionRegister = useAsyncData(getRuntimeActionReviewRegister, []);
+  const directRpcExceptions = useAsyncData(getRuntimeDirectBrowserRpcExceptions, []);
   const proofSummary = useAsyncData(getProofSuiteReadinessSummary, []);
   const pilotSummary = useAsyncData(getControlledPilotReadinessSummary, []);
   const execSummary = useAsyncData(getExecutiveProductionReadinessSummary, []);
@@ -61,6 +67,19 @@ export function ProductionReadinessCenter() {
     rejected_blocked: 0,
     service_role_only_frontend_calls: 0,
     broad_security_definer_execute_grants: 0
+  };
+
+  const runtimeAuthData = runtimeAuthorization.data || {
+    runtime_action_total: 0,
+    classified_action_count: 0,
+    unknown_requires_review_count: 0,
+    pending_review_count: 0,
+    privileged_action_count: 0,
+    direct_browser_rpc_exception_count: 0,
+    service_role_only_frontend_calls: 0,
+    broad_security_definer_execute_grants: 0,
+    readiness_status: 'needs_access_review',
+    next_action_required: '-'
   };
 
   const bilingualSummary = bilingual.data || {
@@ -447,6 +466,93 @@ export function ProductionReadinessCenter() {
                 </div>
               </ModernCard>
 
+              <ModernCard title={text.runtimeActionReviewTitle} subtitle={text.runtimeActionReviewSubtitle}>
+                <DataState loading={runtimeAuthorization.loading} error={runtimeAuthorization.error} empty={!runtimeAuthorization.data}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '14px', marginBottom: '20px' }}>
+                    <div className="stat-card">
+                      <div className="stat-value">{runtimeAuthData.runtime_action_total ?? runtimeAuthData.total_runtime_actions}</div>
+                      <div className="stat-label">{text.runtimeActions}</div>
+                    </div>
+                    <div className="stat-card success">
+                      <div className="stat-value">{runtimeAuthData.classified_action_count ?? runtimeAuthData.classified_actions}</div>
+                      <div className="stat-label">{text.classifiedActions}</div>
+                    </div>
+                    <div className="stat-card warning">
+                      <div className="stat-value">{runtimeAuthData.pending_review_count ?? runtimeAuthData.pending_review_actions}</div>
+                      <div className="stat-label">{text.pendingAccessReview}</div>
+                    </div>
+                    <div className="stat-card danger">
+                      <div className="stat-value">{runtimeAuthData.direct_browser_rpc_exception_count ?? runtimeAuthData.direct_browser_rpc_exceptions}</div>
+                      <div className="stat-label">{text.directBrowserExceptions}</div>
+                    </div>
+                  </div>
+                  <div className="alert alert-info">
+                    <strong>{text.nextActionRequired}: </strong>{runtimeAuthData.next_action_required}
+                    <br />
+                    <strong>{text.securityRuntimeChecks}: </strong>
+                    {text.serviceRoleOnlyCalls}: {runtimeAuthData.service_role_only_frontend_calls}; {text.broadDefinerGrants}: {runtimeAuthData.broad_security_definer_execute_grants}
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.directBrowserExceptionTitle} subtitle={text.directBrowserExceptionSubtitle}>
+                <DataState loading={directRpcExceptions.loading} error={directRpcExceptions.error} empty={!directRpcExceptions.data?.length}>
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead>
+                        <tr>
+                          <th>{text.actionName}</th>
+                          <th>{text.classification}</th>
+                          <th>{text.riskLevel}</th>
+                          <th>{text.justification}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(directRpcExceptions.data || []).map((row: any) => (
+                          <tr key={row.action_name ?? row.actionName}>
+                            <td><code>{row.action_name ?? row.actionName}</code></td>
+                            <td><StatusPill tone="warning">{row.classification}</StatusPill></td>
+                            <td><StatusPill tone={row.risk_level === 'critical' || row.riskLevel === 'critical' ? 'danger' : 'warning'}>{row.risk_level ?? row.riskLevel}</StatusPill></td>
+                            <td>{row.review_notes ?? row.notes}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.runtimeActionRegisterTitle} subtitle={text.runtimeActionRegisterSubtitle}>
+                <DataState loading={runtimeActionRegister.loading} error={runtimeActionRegister.error} empty={!runtimeActionRegister.data?.length}>
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead>
+                        <tr>
+                          <th>{text.actionName}</th>
+                          <th>{text.moduleName}</th>
+                          <th>{text.transport}</th>
+                          <th>{text.classification}</th>
+                          <th>{text.reviewStatus}</th>
+                          <th>{text.ownerRole}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(runtimeActionRegister.data || []).slice(0, 80).map((row: any) => (
+                          <tr key={row.action_name ?? row.actionName}>
+                            <td><code>{row.action_name ?? row.actionName}</code></td>
+                            <td>{row.module_name ?? row.moduleName}</td>
+                            <td>{row.action_transport ?? row.actionTransport}</td>
+                            <td><StatusPill tone={(row.classification ?? '').includes('unknown') ? 'danger' : 'good'}>{row.classification}</StatusPill></td>
+                            <td><StatusPill tone={(row.review_status ?? row.reviewStatus) === 'pending_review' ? 'warning' : 'good'}>{row.review_status ?? row.reviewStatus}</StatusPill></td>
+                            <td>{row.owner_role ?? row.ownerRole}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
               {/* Navigation proposals */}
               <ModernCard title={text.navigationProposalsTitle} subtitle={text.navigationProposalsSubtitle}>
                 <DataState loading={navProposals.loading} error={navProposals.error} empty={!navProposals.data?.length}>
@@ -546,6 +652,28 @@ const en = {
   serviceRoleFrontend: 'Direct Public Calls',
   securityHardeningInfo: 'Database Hardening Enforcement',
   securityHardeningDesc: 'Zero remaining broad SECURITY DEFINER execute grants verified. All client RPC triggers route securely through edge-bridge layers.',
+  runtimeActionReviewTitle: 'Runtime action authorization review',
+  runtimeActionReviewSubtitle: 'Source-controlled classification, owner, risk, transport, and review status for every frontend-triggered runtime action.',
+  runtimeActions: 'Runtime Actions',
+  classifiedActions: 'Classified',
+  pendingAccessReview: 'Pending Review',
+  directBrowserExceptions: 'Direct Browser Exceptions',
+  nextActionRequired: 'Next action',
+  securityRuntimeChecks: 'Runtime security checks',
+  serviceRoleOnlyCalls: 'Service-role-only frontend calls',
+  broadDefinerGrants: 'Broad definer grants',
+  directBrowserExceptionTitle: 'Direct browser RPC exception register',
+  directBrowserExceptionSubtitle: 'Explicitly tracked direct browser calls that require RLS and security-invoker proof.',
+  runtimeActionRegisterTitle: 'Runtime action register',
+  runtimeActionRegisterSubtitle: 'Full current registry of runtime actions, module ownership, risk, and review status.',
+  actionName: 'Action',
+  classification: 'Classification',
+  riskLevel: 'Risk',
+  justification: 'Justification',
+  moduleName: 'Module',
+  transport: 'Transport',
+  reviewStatus: 'Review Status',
+  ownerRole: 'Owner Role',
   navigationProposalsTitle: 'Controlled Route Simplification proposals',
   navigationProposalsSubtitle: 'Register mapping deprecated, consolidated, or hidden routes before production release.',
   routeKey: 'Route ID',
@@ -608,6 +736,28 @@ const ar = {
   serviceRoleFrontend: 'الاستدعاءات العامة المباشرة',
   securityHardeningInfo: 'تعزيز أمان قاعدة البيانات',
   securityHardeningDesc: 'تم التحقق من وجود 0 صلاحيات execute عامة للوظائف بصلاحية SECURITY DEFINER. جميع استدعاءات الواجهة الأمامية تمر بشكل آمن.',
+  runtimeActionReviewTitle: 'مراجعة صلاحيات إجراءات التشغيل',
+  runtimeActionReviewSubtitle: 'تصنيف موثق للمصدر، والمالك، والمخاطر، وطريقة الاستدعاء، وحالة المراجعة لكل إجراء تشغيل من الواجهة.',
+  runtimeActions: 'إجراءات التشغيل',
+  classifiedActions: 'مصنفة',
+  pendingAccessReview: 'بانتظار المراجعة',
+  directBrowserExceptions: 'استثناءات مباشرة',
+  nextActionRequired: 'الإجراء التالي',
+  securityRuntimeChecks: 'فحوصات أمان التشغيل',
+  serviceRoleOnlyCalls: 'استدعاءات service-role من الواجهة',
+  broadDefinerGrants: 'صلاحيات definer العامة',
+  directBrowserExceptionTitle: 'سجل استثناءات RPC المباشرة من المتصفح',
+  directBrowserExceptionSubtitle: 'استدعاءات المتصفح المباشرة الموثقة التي تتطلب إثبات RLS و security-invoker.',
+  runtimeActionRegisterTitle: 'سجل إجراءات التشغيل',
+  runtimeActionRegisterSubtitle: 'السجل الحالي الكامل لإجراءات التشغيل والمالك والمخاطر وحالة المراجعة.',
+  actionName: 'الإجراء',
+  classification: 'التصنيف',
+  riskLevel: 'المخاطر',
+  justification: 'المبرر',
+  moduleName: 'الوحدة',
+  transport: 'طريقة الاستدعاء',
+  reviewStatus: 'حالة المراجعة',
+  ownerRole: 'دور المالك',
   navigationProposalsTitle: 'مقترحات تبسيط وإدارة مسارات التنقل',
   navigationProposalsSubtitle: 'سجل يوضح المسارات الملغاة أو المدمجة أو المخفية قبل الإطلاق الإنتاجي.',
   routeKey: 'معرف المسار',
