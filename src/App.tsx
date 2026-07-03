@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Activity,
   ArchiveRestore,
@@ -107,6 +107,7 @@ import { AdvancedReportBuilder } from './pages/AdvancedReportBuilder';
 import { EvidenceVault } from './pages/EvidenceVault';
 import { DepartmentScorecards } from './pages/DepartmentScorecards';
 import { BackupSchedulerCenter } from './pages/BackupSchedulerCenter';
+import { TrainingGovernanceCenter } from './pages/TrainingGovernanceCenter';
 import { ScenarioPlanningCenter } from './pages/ScenarioPlanningCenter';
 import { ExecutiveMobileCommand } from './pages/ExecutiveMobileCommand';
 import { AutomationIntelligenceCenter } from './pages/AutomationIntelligenceCenter';
@@ -528,6 +529,8 @@ export default function App() {
         return <ControlledUatWorkbench setPage={setPage} />;
       case 'uatIssueCapture':
         return <UatIssueCapture />;
+      case 'trainingGovernance':
+        return <TrainingGovernanceCenter />;
       case 'admin':
         return <Admin />;
       default:

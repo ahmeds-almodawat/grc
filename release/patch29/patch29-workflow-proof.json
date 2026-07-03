@@ -1,0 +1,7 @@
+{
+  "generated_at": "2026-07-03T00:43:00.778Z",
+  "migration_path": "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+  "findings": [],
+  "status": "passed",
+  "blocking_count": 0
+}
