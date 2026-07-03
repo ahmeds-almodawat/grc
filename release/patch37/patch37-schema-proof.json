@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-07-03T12:29:46.407Z",
+  "migration_path": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+  "migration_found": true,
+  "required_table_count": 11,
+  "required_view_count": 12,
+  "required_function_count": 24,
+  "missing_tables": [],
+  "missing_views": [],
+  "missing_functions": [],
+  "missing_rls_enablement": [],
+  "missing_policies": [],
+  "missing_status_sets": [],
+  "missing_integrations": [],
+  "status": "passed",
+  "blocking_count": 0,
+  "blockers": []
+}

@@ -71,6 +71,7 @@ import { AccreditationCenter } from './pages/AccreditationCenter';
 import { QualityAccreditationOperatingCenter } from './pages/QualityAccreditationOperatingCenter';
 import { EvidenceBridgeCenter } from './pages/EvidenceBridgeCenter';
 import { AccreditationWorkflowCenter } from './pages/AccreditationWorkflowCenter';
+import { ClinicalGovernanceCenter } from './pages/ClinicalGovernanceCenter';
 import { RealStandardsMasterDataCenter } from './pages/RealStandardsMasterDataCenter';
 import { UatAccreditationEvidenceCenter } from './pages/UatAccreditationEvidenceCenter';
 import { RealUatExecutionCenter } from './pages/RealUatExecutionCenter';
@@ -208,6 +209,7 @@ function QualitySafetyHub() {
       tabs={[
         { id: 'ovr', label: t('hub.tab.ovr'), description: t('hub.tab.ovr.desc'), icon: <Hospital size={17} />, content: <OVR /> },
         { id: 'ovrRisk', label: t('hub.tab.ovrRisk'), description: t('hub.tab.ovrRisk.desc'), icon: <Activity size={17} />, content: <OvrRiskIndicators /> },
+        { id: 'clinicalGovernance', label: t('hub.tab.clinicalGovernance', 'Clinical Governance'), description: t('hub.tab.clinicalGovernance.desc', 'Audit execution, OVR RCA, CAPA, evidence, accreditation links, and clinical escalations.'), icon: <FileSearch size={17} />, content: <ClinicalGovernanceCenter /> },
         { id: 'accreditation', label: t('hub.tab.accreditation', 'Accreditation'), description: t('hub.tab.accreditation.desc', 'CBAHI and international accreditation readiness engine.'), icon: <ClipboardCheck size={17} />, content: <AccreditationCenter /> },
         { id: 'qualityAccreditationOperating', label: t('hub.tab.qualityAccreditationOperating', 'Quality Operating Layer'), description: t('hub.tab.qualityAccreditationOperating.desc', 'Tracer rounds, indicators, RCA/CAPA, evidence packs, and requirement readiness work.'), icon: <ClipboardCheck size={17} />, content: <QualityAccreditationOperatingCenter /> },
         { id: 'evidenceBridge', label: t('hub.tab.evidenceBridge', 'Evidence Bridge'), description: t('hub.tab.evidenceBridge.desc', 'Live clause-to-control-to-evidence operations, gaps, collection queues, reviews, freshness, and readiness.'), icon: <Network size={17} />, content: <EvidenceBridgeCenter /> },
