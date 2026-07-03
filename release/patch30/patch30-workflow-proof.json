@@ -1,0 +1,7 @@
+{
+  "generated_at": "2026-07-03T01:15:42.011Z",
+  "migration_path": "supabase/migrations/093_patch30_executive_dashboard_truth_layer.sql",
+  "findings": [],
+  "status": "passed",
+  "blocking_count": 0
+}

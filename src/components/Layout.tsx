@@ -36,6 +36,7 @@ import {
   Users,
   WandSparkles,
   GraduationCap,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useI18n } from '../i18n/I18nContext';
 import { useAuth } from '../auth/AuthProvider';
@@ -108,6 +109,7 @@ export type PageKey =
   | 'scenarioTestConsole'
   | 'uatIssueCapture'
   | 'trainingGovernance'
+  | 'executiveTruth'
   | 'admin';
 
 interface LayoutProps {
@@ -149,6 +151,7 @@ const uatLinks: NavItem[] = isScenarioLabEnabled
   : [];
 
 export const legacyNavItems: NavItem[] = [
+  { key: 'executiveTruth' as const, labelKey: 'nav.executiveTruth', icon: <FileSpreadsheet size={18} /> },
   { key: 'trainingGovernance' as const, labelKey: 'nav.trainingGovernance', icon: <GraduationCap size={18} /> },
   ...(isScenarioLabEnabled
     ? [
