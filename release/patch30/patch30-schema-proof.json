@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-07-03T01:15:41.288Z",
+  "migration_path": "supabase/migrations/093_patch30_executive_dashboard_truth_layer.sql",
+  "migration_found": true,
+  "missing_tables": [],
+  "missing_views": [],
+  "missing_functions": [],
+  "missing_rls_enablement": [],
+  "status": "passed",
+  "blocking_count": 0
+}

@@ -108,6 +108,7 @@ import { EvidenceVault } from './pages/EvidenceVault';
 import { DepartmentScorecards } from './pages/DepartmentScorecards';
 import { BackupSchedulerCenter } from './pages/BackupSchedulerCenter';
 import { TrainingGovernanceCenter } from './pages/TrainingGovernanceCenter';
+import { ExecutiveTruthCenter } from './pages/ExecutiveTruthCenter';
 import { ScenarioPlanningCenter } from './pages/ScenarioPlanningCenter';
 import { ExecutiveMobileCommand } from './pages/ExecutiveMobileCommand';
 import { AutomationIntelligenceCenter } from './pages/AutomationIntelligenceCenter';
@@ -531,6 +532,8 @@ export default function App() {
         return <UatIssueCapture />;
       case 'trainingGovernance':
         return <TrainingGovernanceCenter />;
+      case 'executiveTruth':
+        return <ExecutiveTruthCenter />;
       case 'admin':
         return <Admin />;
       default:
