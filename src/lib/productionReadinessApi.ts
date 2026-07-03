@@ -227,7 +227,7 @@ export async function getProductionReadinessSignoffRegister(): Promise<any[]> {
   if (!supabase) return emptyLiveArray();
   try {
     const { data, error } = await supabase
-      .from('v_patch40_production_readiness_signoff_register')
+      .from('v_patch44_production_readiness_summary')
       .select('*');
     if (error) throw error;
     return data || [];
@@ -241,7 +241,7 @@ export async function getGoNoGoDashboard(): Promise<any> {
   if (!supabase) return emptyLiveObject('getGoNoGoDashboard');
   try {
     const { data, error } = await supabase
-      .from('v_patch40_go_no_go_dashboard')
+      .from('v_patch44_pilot_go_no_go_dashboard')
       .select('*')
       .limit(1)
       .maybeSingle();
@@ -257,7 +257,7 @@ export async function getKnownLimitationsRegister(): Promise<any[]> {
   if (!supabase) return emptyLiveArray();
   try {
     const { data, error } = await supabase
-      .from('v_patch40_known_limitations_register')
+      .from('v_patch44_known_limitations_summary')
       .select('*');
     if (error) throw error;
     return data || [];
@@ -271,7 +271,7 @@ export async function getBlockingLimitations(): Promise<any[]> {
   if (!supabase) return emptyLiveArray();
   try {
     const { data, error } = await supabase
-      .from('v_patch40_blocking_limitations')
+      .from('v_patch44_pilot_blocker_register')
       .select('*');
     if (error) throw error;
     return data || [];
@@ -285,7 +285,7 @@ export async function getBackupRestoreOperationsDashboard(): Promise<any[]> {
   if (!supabase) return emptyLiveArray();
   try {
     const { data, error } = await supabase
-      .from('v_patch40_backup_restore_operations_dashboard')
+      .from('v_patch44_backup_restore_readiness_summary')
       .select('*');
     if (error) throw error;
     return data || [];
@@ -299,7 +299,7 @@ export async function getBilingualReadinessDashboard(): Promise<any> {
   if (!supabase) return emptyLiveObject('getBilingualReadinessDashboard');
   try {
     const { data, error } = await supabase
-      .from('v_patch40_bilingual_readiness_dashboard')
+      .from('v_patch44_bilingual_readiness_summary')
       .select('*')
       .limit(1)
       .maybeSingle();
@@ -329,7 +329,7 @@ export async function getNavigationSimplificationRegister(): Promise<any[]> {
   if (!supabase) return emptyLiveArray();
   try {
     const { data, error } = await supabase
-      .from('v_patch40_navigation_simplification_register')
+      .from('v_patch44_navigation_readiness_map')
       .select('*');
     if (error) throw error;
     return data || [];
@@ -387,7 +387,7 @@ export async function getExecutiveProductionReadinessSummary(): Promise<any> {
   if (!supabase) return emptyLiveObject('getExecutiveProductionReadinessSummary');
   try {
     const { data, error } = await supabase
-      .from('v_patch40_executive_production_readiness_summary')
+      .from('v_patch44_executive_readiness_summary')
       .select('*')
       .limit(1)
       .maybeSingle();
@@ -538,4 +538,42 @@ export async function updateNavigationSimplificationStatus(payload: {
     return throwRpcActionError(error, 'Update Navigation status', 'update_navigation_simplification_status');
   }
 }
+
+export async function createPilotGoNoGoReview(payload: {
+  title: string;
+  actor_id: string;
+}): Promise<string> {
+  try {
+    return await invokePrivilegedAction<string>('create_pilot_go_no_go_review', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Create Pilot Review', 'create_pilot_go_no_go_review');
+  }
+}
+
+export async function updatePilotGoNoGoReviewStatus(payload: {
+  review_id: string;
+  status: string;
+  notes: string;
+  actor_id: string;
+}): Promise<void> {
+  try {
+    await invokePrivilegedAction<void>('update_pilot_go_no_go_review_status', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Update Pilot Review Status', 'update_pilot_go_no_go_review_status');
+  }
+}
+
+export async function recordPilotGoNoGoEvent(payload: {
+  review_id: string;
+  event_type: string;
+  event_summary: string;
+  actor_id: string;
+}): Promise<void> {
+  try {
+    await invokePrivilegedAction<void>('record_pilot_go_no_go_event', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Record Pilot Event', 'record_pilot_go_no_go_event');
+  }
+}
+
 

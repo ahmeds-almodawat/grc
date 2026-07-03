@@ -77,8 +77,11 @@ export const pageGroups: Record<PageKey, PageGroup> = {
   home: 'home',
   executiveHub: 'executive',
   workHub: 'work',
+  dailyOperationsHub: 'work',
   grcHub: 'grc',
   qualityHub: 'quality',
+  accreditationHub: 'quality',
+  evidenceHub: 'reports',
   reportsHub: 'reports',
   adminHub: 'admin',
   finishFast: 'release',
@@ -194,7 +197,27 @@ export function canAccessPageForUser(
 }
 
 export function firstAllowedPage(roles: AuthRoleAssignment[], organizationName?: string | null): PageKey {
-  if (canAccessPageForUser('executiveHub', roles, organizationName)) return 'executiveHub';
+  if (isExternalPilotOrganization(organizationName)) return 'home';
+
+  const has = (r: AuthRole[]) => hasRole(roles, r);
+
+  if (has(['super_admin', 'governance_admin']) && canAccessPageForUser('adminHub', roles, organizationName)) {
+    return 'adminHub';
+  }
+  
+  if (has(['executive']) && canAccessPageForUser('reportsHub', roles, organizationName)) {
+    return 'reportsHub'; // Has Executive Summary / Go-No-Go
+  }
+  
+  if (has(['auditor']) && canAccessPageForUser('grcHub', roles, organizationName)) {
+    return 'grcHub'; // Has Audit Execution
+  }
+  
+  if (has(['compliance_officer']) && canAccessPageForUser('accreditationHub', roles, organizationName)) {
+    return 'accreditationHub';
+  }
+
+  if (canAccessPageForUser('dailyOperationsHub', roles, organizationName)) return 'dailyOperationsHub';
   if (canAccessPageForUser('workHub', roles, organizationName)) return 'workHub';
   if (canAccessPageForUser('grcHub', roles, organizationName)) return 'grcHub';
   if (canAccessPageForUser('qualityHub', roles, organizationName)) return 'qualityHub';
