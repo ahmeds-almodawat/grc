@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-07-03T16:52:26.883Z",
+  "workflow_tested": "Unified Operations Queue routing",
+  "scenarios": [
+    {
+      "name": "Executive Signal Generation",
+      "expected": "Attention Required / Watch / On Track",
+      "passed": true
+    },
+    {
+      "name": "Overdue Filter",
+      "expected": "is_overdue = true",
+      "passed": true
+    },
+    {
+      "name": "Missing Owner Identification",
+      "expected": "assigned_to_user_id is null",
+      "passed": true
+    }
+  ],
+  "status": "passed"
+}

@@ -1,0 +1,8 @@
+{
+  "generated_at": "2026-07-03T16:52:26.139Z",
+  "migration_path": "supabase/migrations/102_patch42_unified_operations_spine.sql",
+  "migration_found": true,
+  "missing_views": [],
+  "status": "passed",
+  "blocking_count": 0
+}

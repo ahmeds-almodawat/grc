@@ -1,0 +1,57 @@
+{
+  "generated_at": "2026-07-03T16:52:27.644Z",
+  "component_tested": "src/pages/MyWorkCenter.tsx",
+  "sections": [
+    {
+      "section": "My Work",
+      "found": true,
+      "passed": true
+    },
+    {
+      "section": "Department Work",
+      "found": true,
+      "passed": true
+    },
+    {
+      "section": "Overdue",
+      "found": true,
+      "passed": true
+    },
+    {
+      "section": "Escalated",
+      "found": true,
+      "passed": true
+    },
+    {
+      "section": "Waiting for Review",
+      "found": true,
+      "passed": true
+    },
+    {
+      "section": "Blocked",
+      "found": true,
+      "passed": true
+    },
+    {
+      "section": "Evidence Required",
+      "found": true,
+      "passed": true
+    },
+    {
+      "section": "Missing Owner",
+      "found": true,
+      "passed": true
+    },
+    {
+      "section": "Executive Summary",
+      "found": true,
+      "passed": true
+    },
+    {
+      "section": "drawer",
+      "found": true,
+      "passed": true
+    }
+  ],
+  "status": "passed"
+}

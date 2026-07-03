@@ -2,14 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { DataState } from '../components/DataState';
 import { KpiTile, ModernCard, StatusPill } from '../components/ModernCard';
 import {
-  getDepartmentWorkQueue,
-  getEscalatedWorkQueue,
-  getGovernanceOperatingSummary,
-  getMyWorkQueue,
-  getOverdueWorkQueue,
-  getWaitingForReviewQueue,
+  unifiedWorkQueueApi,
   type GovernanceOperatingSummaryRow,
-  type UnifiedWorkQueueRow,
+  type UnifiedQueueItem,
 } from '../lib/unifiedWorkQueueApi';
 import { getLiveResultMessage, isLive, type LiveResult } from '../lib/liveResult';
 
@@ -55,23 +50,23 @@ function signalTone(signal?: string | null): Tone {
   return 'neutral';
 }
 
-function WorkTable({ data, label }: { data: UnifiedWorkQueueRow[]; label: string }) {
+function WorkTable({ data, label, onSelect }: { data: UnifiedQueueItem[]; label: string; onSelect: (item: UnifiedQueueItem) => void }) {
   return (
     <div className="table-scroll">
       <table className="entity-table">
-        <thead><tr><th>Work</th><th>Module</th><th>Status</th><th>Priority</th><th>Department</th><th>Due</th><th>Flags</th></tr></thead>
+        <thead><tr><th>Work</th><th>Module</th><th>Status</th><th>Priority</th><th>Due</th><th>Flags</th><th>Action</th></tr></thead>
         <tbody>
           {data.length === 0 ? (
             <tr><td colSpan={7}><strong>No {label} records returned.</strong></td></tr>
           ) : data.slice(0, 100).map(row => (
-            <tr key={`${row.source_module}-${row.work_type}-${row.work_id}`}>
-              <td><strong>{value(row.work_title)}</strong><br /><small>{value(row.work_description)}</small></td>
-              <td><StatusPill tone="neutral">{value(row.source_module)}</StatusPill><br /><small>{value(row.work_type)}</small></td>
-              <td><StatusPill tone={row.is_overdue ? 'danger' : statusTone(row.work_status)}>{row.is_overdue ? 'Overdue' : value(row.work_status)}</StatusPill></td>
+            <tr key={`${row.source_module}-${row.source_entity_type}-${row.queue_item_id}`}>
+              <td><strong>{value(row.title)}</strong><br /><small>{value(row.description)}</small></td>
+              <td><StatusPill tone="neutral">{value(row.source_module)}</StatusPill><br /><small>{value(row.source_entity_type)}</small></td>
+              <td><StatusPill tone={row.is_overdue ? 'danger' : statusTone(row.status)}>{row.is_overdue ? 'Overdue' : value(row.status)}</StatusPill></td>
               <td><StatusPill tone={priorityTone(row.priority)}>{value(row.priority)}</StatusPill></td>
-              <td>{value(row.department_name)}</td>
               <td>{value(row.due_date)}</td>
-              <td>{row.waiting_for_review ? 'Review' : '-'}{row.is_escalated ? ' / Escalated' : ''}</td>
+              <td>{row.waiting_for_review ? 'Review' : '-'}{row.is_escalated ? ' / Escalated' : ''}{row.evidence_required ? ' / Evidence' : ''}</td>
+              <td><button className="secondary-button" onClick={() => onSelect(row)}>View</button></td>
             </tr>
           ))}
         </tbody>
@@ -81,25 +76,37 @@ function WorkTable({ data, label }: { data: UnifiedWorkQueueRow[]; label: string
 }
 
 export function MyWorkCenter() {
-  const [myWork, setMyWork] = useState<LiveResult<UnifiedWorkQueueRow[]>>(emptyRows('No assigned work loaded yet.'));
-  const [departmentWork, setDepartmentWork] = useState<LiveResult<UnifiedWorkQueueRow[]>>(emptyRows('No department work loaded yet.'));
-  const [overdue, setOverdue] = useState<LiveResult<UnifiedWorkQueueRow[]>>(emptyRows('No overdue work loaded yet.'));
-  const [review, setReview] = useState<LiveResult<UnifiedWorkQueueRow[]>>(emptyRows('No review queue loaded yet.'));
-  const [escalated, setEscalated] = useState<LiveResult<UnifiedWorkQueueRow[]>>(emptyRows('No escalated work loaded yet.'));
+  const [myWork, setMyWork] = useState<LiveResult<UnifiedQueueItem[]>>(emptyRows('No assigned work loaded yet.'));
+  const [departmentWork, setDepartmentWork] = useState<LiveResult<UnifiedQueueItem[]>>(emptyRows('No department work loaded yet.'));
+  const [overdue, setOverdue] = useState<LiveResult<UnifiedQueueItem[]>>(emptyRows('No overdue work loaded yet.'));
+  const [review, setReview] = useState<LiveResult<UnifiedQueueItem[]>>(emptyRows('No review queue loaded yet.'));
+  const [escalated, setEscalated] = useState<LiveResult<UnifiedQueueItem[]>>(emptyRows('No escalated work loaded yet.'));
+  const [blocked, setBlocked] = useState<LiveResult<UnifiedQueueItem[]>>(emptyRows('No blocked work loaded yet.'));
+  const [evidenceRequired, setEvidenceRequired] = useState<LiveResult<UnifiedQueueItem[]>>(emptyRows('No evidence required loaded yet.'));
+  const [missingOwner, setMissingOwner] = useState<LiveResult<UnifiedQueueItem[]>>(emptyRows('No missing owner loaded yet.'));
   const [summary, setSummary] = useState<LiveResult<GovernanceOperatingSummaryRow[]>>(emptyRows('No operating summary loaded yet.'));
   const [loading, setLoading] = useState(true);
+  
+  const [selectedItem, setSelectedItem] = useState<UnifiedQueueItem | null>(null);
 
   useEffect(() => {
     let mounted = true;
     async function load() {
       setLoading(true);
-      const [myResult, deptResult, overdueResult, reviewResult, escalatedResult, summaryResult] = await Promise.all([
-        getMyWorkQueue(),
-        getDepartmentWorkQueue(),
-        getOverdueWorkQueue(),
-        getWaitingForReviewQueue(),
-        getEscalatedWorkQueue(),
-        getGovernanceOperatingSummary(),
+      const [
+        myResult, deptResult, overdueResult, reviewResult, 
+        escalatedResult, blockedResult, evidenceResult, 
+        missingResult, summaryResult
+      ] = await Promise.all([
+        unifiedWorkQueueApi.fetchMyWorkQueue(),
+        unifiedWorkQueueApi.fetchDepartmentWorkQueue(),
+        unifiedWorkQueueApi.fetchOverdueWorkQueue(),
+        unifiedWorkQueueApi.fetchWaitingForReviewQueue(),
+        unifiedWorkQueueApi.fetchEscalatedWorkQueue(),
+        unifiedWorkQueueApi.fetchBlockedWorkQueue(),
+        unifiedWorkQueueApi.fetchEvidenceRequiredQueue(),
+        unifiedWorkQueueApi.fetchMissingOwnerQueue(),
+        unifiedWorkQueueApi.fetchGovernanceOperatingSummary(),
       ]);
       if (!mounted) return;
       setMyWork(myResult);
@@ -107,6 +114,9 @@ export function MyWorkCenter() {
       setOverdue(overdueResult);
       setReview(reviewResult);
       setEscalated(escalatedResult);
+      setBlocked(blockedResult);
+      setEvidenceRequired(evidenceResult);
+      setMissingOwner(missingResult);
       setSummary(summaryResult);
       setLoading(false);
     }
@@ -119,13 +129,16 @@ export function MyWorkCenter() {
   const overdueRows = rows(overdue);
   const reviewRows = rows(review);
   const escalatedRows = rows(escalated);
+  const blockedRows = rows(blocked);
+  const evidenceRows = rows(evidenceRequired);
+  const missingRows = rows(missingOwner);
   const summaryRow = first(summary);
-  const hasAnyData = myRows.length + deptRows.length + overdueRows.length + reviewRows.length + escalatedRows.length > 0 || Boolean(summaryRow);
+  const hasAnyData = myRows.length + deptRows.length + overdueRows.length + reviewRows.length + escalatedRows.length + blockedRows.length + evidenceRows.length + missingRows.length > 0 || Boolean(summaryRow);
 
-  const messages = useMemo(() => ([myWork, departmentWork, overdue, review, escalated, summary] as LiveResult<unknown>[])
+  const messages = useMemo(() => ([myWork, departmentWork, overdue, review, escalated, blocked, evidenceRequired, missingOwner, summary] as LiveResult<unknown>[])
     .filter(result => !isLive(result))
     .map(result => getLiveResultMessage(result))
-    .filter((message, index, all) => all.indexOf(message) === index), [myWork, departmentWork, overdue, review, escalated, summary]);
+    .filter((message, index, all) => all.indexOf(message) === index), [myWork, departmentWork, overdue, review, escalated, blocked, evidenceRequired, missingOwner, summary]);
 
   return (
     <div className="page-stack my-work-center">
@@ -136,20 +149,45 @@ export function MyWorkCenter() {
           <p className="section-subtitle">Assigned, overdue, department, escalated, and review work across accreditation, evidence, audit, OVR/RCA, CAPA, training, documents, and approvals.</p>
         </div>
       </section>
+      
+      {selectedItem && (
+        <div className="drawer-overlay" onClick={() => setSelectedItem(null)}>
+          <div className="drawer-panel" onClick={e => e.stopPropagation()}>
+            <div className="drawer-header">
+              <h3>Queue Item Detail</h3>
+              <button className="secondary-button" onClick={() => setSelectedItem(null)}>Close</button>
+            </div>
+            <div className="drawer-content">
+              <p><strong>Title:</strong> {selectedItem.title}</p>
+              <p><strong>Module:</strong> {selectedItem.source_module}</p>
+              <p><strong>Status:</strong> {selectedItem.status}</p>
+              <p><strong>Priority:</strong> {selectedItem.priority}</p>
+              <p><strong>Due Date:</strong> {selectedItem.due_date || 'None'}</p>
+              <p><strong>Description:</strong> {selectedItem.description}</p>
+              <pre>{JSON.stringify(selectedItem.source_context, null, 2)}</pre>
+            </div>
+          </div>
+        </div>
+      )}
+
       <DataState loading={loading} empty={!loading && !hasAnyData} emptyTitle="No unified work is visible yet" emptyMessage={messages[0] ?? 'Work appears here when live module queues assign tasks, reviews, escalations, approvals, or evidence requests.'}>
+        <h2>Executive Summary</h2>
         <div className="kpi-grid">
           <KpiTile label="Signal" value={value(summaryRow?.executive_signal)} hint="Operating posture" tone={signalTone(summaryRow?.executive_signal)} />
           <KpiTile label="My work" value={summaryRow?.my_work_count ?? myRows.length} hint="Assigned to me" />
           <KpiTile label="Overdue" value={summaryRow?.overdue_work_count ?? overdueRows.length} hint="Past due" tone={(summaryRow?.overdue_work_count ?? overdueRows.length) > 0 ? 'danger' : 'good'} />
           <KpiTile label="Waiting review" value={summaryRow?.waiting_for_review_count ?? reviewRows.length} hint="Submitted or pending" tone={(summaryRow?.waiting_for_review_count ?? reviewRows.length) > 0 ? 'warning' : 'good'} />
           <KpiTile label="Escalated" value={summaryRow?.escalated_work_count ?? escalatedRows.length} hint="Blocked or escalated" tone={(summaryRow?.escalated_work_count ?? escalatedRows.length) > 0 ? 'danger' : 'good'} />
-          <KpiTile label="Master data exceptions" value={summaryRow?.master_data_exception_count ?? 0} hint="Owner/status gaps" tone={(summaryRow?.master_data_exception_count ?? 0) > 0 ? 'warning' : 'good'} />
+          <KpiTile label="Master data exceptions" value={summaryRow?.master_data_exception_count ?? missingRows.length} hint="Owner/status gaps" tone={(summaryRow?.master_data_exception_count ?? missingRows.length) > 0 ? 'warning' : 'good'} />
         </div>
-        <ModernCard title="My assigned work"><WorkTable data={myRows} label="my work" /></ModernCard>
-        <ModernCard title="Overdue work"><WorkTable data={overdueRows} label="overdue work" /></ModernCard>
-        <ModernCard title="Waiting for review"><WorkTable data={reviewRows} label="review work" /></ModernCard>
-        <ModernCard title="Escalated or blocked work"><WorkTable data={escalatedRows} label="escalated work" /></ModernCard>
-        <ModernCard title="Department work"><WorkTable data={deptRows} label="department work" /></ModernCard>
+        <ModernCard title="My Work"><WorkTable data={myRows} label="my work" onSelect={setSelectedItem} /></ModernCard>
+        <ModernCard title="Department Work"><WorkTable data={deptRows} label="department work" onSelect={setSelectedItem} /></ModernCard>
+        <ModernCard title="Overdue"><WorkTable data={overdueRows} label="overdue work" onSelect={setSelectedItem} /></ModernCard>
+        <ModernCard title="Waiting for Review"><WorkTable data={reviewRows} label="review work" onSelect={setSelectedItem} /></ModernCard>
+        <ModernCard title="Escalated"><WorkTable data={escalatedRows} label="escalated work" onSelect={setSelectedItem} /></ModernCard>
+        <ModernCard title="Blocked"><WorkTable data={blockedRows} label="blocked work" onSelect={setSelectedItem} /></ModernCard>
+        <ModernCard title="Evidence Required"><WorkTable data={evidenceRows} label="evidence required" onSelect={setSelectedItem} /></ModernCard>
+        <ModernCard title="Missing Owner / Routing Exceptions"><WorkTable data={missingRows} label="missing owner" onSelect={setSelectedItem} /></ModernCard>
       </DataState>
     </div>
   );
