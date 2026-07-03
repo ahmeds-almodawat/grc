@@ -139,6 +139,7 @@ export const pageGroups: Record<PageKey, PageGroup> = {
   uatIssueCapture: 'personal',
   trainingGovernance: 'grc',
   executiveTruth: 'executive',
+  productionReadiness: 'release',
   admin: 'admin',
 };
 

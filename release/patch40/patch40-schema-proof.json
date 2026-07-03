@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-07-03T13:39:59.788Z",
+  "migration_path": "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+  "migration_found": true,
+  "missing_tables": [],
+  "missing_views": [],
+  "missing_functions": [],
+  "missing_rls_enablement": [],
+  "status": "passed",
+  "blocking_count": 0
+}

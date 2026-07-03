@@ -115,6 +115,7 @@ import { DepartmentScorecards } from './pages/DepartmentScorecards';
 import { BackupSchedulerCenter } from './pages/BackupSchedulerCenter';
 import { TrainingGovernanceCenter } from './pages/TrainingGovernanceCenter';
 import { ExecutiveTruthCenter } from './pages/ExecutiveTruthCenter';
+import { ProductionReadinessCenter } from './pages/ProductionReadinessCenter';
 import { ScenarioPlanningCenter } from './pages/ScenarioPlanningCenter';
 import { ExecutiveMobileCommand } from './pages/ExecutiveMobileCommand';
 import { AutomationIntelligenceCenter } from './pages/AutomationIntelligenceCenter';
@@ -546,6 +547,8 @@ export default function App() {
         return <TrainingGovernanceCenter />;
       case 'executiveTruth':
         return <ExecutiveTruthCenter />;
+      case 'productionReadiness':
+        return <ProductionReadinessCenter />;
       case 'admin':
         return <Admin />;
       default:

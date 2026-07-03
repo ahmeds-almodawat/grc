@@ -1,6 +1,6 @@
 import { isSupabaseConfigured, supabase } from './supabase';
-import { emptyLiveArray } from './liveData';
-import { requireServerBridge } from './privilegedAction';
+import { emptyLiveArray, emptyLiveObject } from './liveData';
+import { requireServerBridge, invokePrivilegedAction, throwRpcActionError } from './privilegedAction';
 
 export interface ProductionScorecard {
   goLiveScore: number;
@@ -217,3 +217,325 @@ export async function getProductionFinishData(): Promise<ProductionFinishData> {
     return emptyProductionFinishData();
   }
 }
+
+const logApiWarning = (label: string, error: unknown) => {
+  // eslint-disable-next-line no-console
+  console.warn(`[Production Hardening live-data unavailable] ${label}`, error);
+};
+
+export async function getProductionReadinessSignoffRegister(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch40_production_readiness_signoff_register')
+      .select('*');
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getProductionReadinessSignoffRegister', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getGoNoGoDashboard(): Promise<any> {
+  if (!supabase) return emptyLiveObject('getGoNoGoDashboard');
+  try {
+    const { data, error } = await supabase
+      .from('v_patch40_go_no_go_dashboard')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    return data || emptyLiveObject('getGoNoGoDashboard');
+  } catch (error) {
+    logApiWarning('getGoNoGoDashboard', error);
+    return emptyLiveObject('getGoNoGoDashboard');
+  }
+}
+
+export async function getKnownLimitationsRegister(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch40_known_limitations_register')
+      .select('*');
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getKnownLimitationsRegister', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getBlockingLimitations(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch40_blocking_limitations')
+      .select('*');
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getBlockingLimitations', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getBackupRestoreOperationsDashboard(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch40_backup_restore_operations_dashboard')
+      .select('*');
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getBackupRestoreOperationsDashboard', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getBilingualReadinessDashboard(): Promise<any> {
+  if (!supabase) return emptyLiveObject('getBilingualReadinessDashboard');
+  try {
+    const { data, error } = await supabase
+      .from('v_patch40_bilingual_readiness_dashboard')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    return data || emptyLiveObject('getBilingualReadinessDashboard');
+  } catch (error) {
+    logApiWarning('getBilingualReadinessDashboard', error);
+    return emptyLiveObject('getBilingualReadinessDashboard');
+  }
+}
+
+export async function getMissingTranslationRegister(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch40_missing_translation_register')
+      .select('*');
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getMissingTranslationRegister', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getNavigationSimplificationRegister(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch40_navigation_simplification_register')
+      .select('*');
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getNavigationSimplificationRegister', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getRuntimeRpcSignoffDashboard(): Promise<any> {
+  if (!supabase) return emptyLiveObject('getRuntimeRpcSignoffDashboard');
+  try {
+    const { data, error } = await supabase
+      .from('v_patch40_runtime_rpc_signoff_dashboard')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    return data || emptyLiveObject('getRuntimeRpcSignoffDashboard');
+  } catch (error) {
+    logApiWarning('getRuntimeRpcSignoffDashboard', error);
+    return emptyLiveObject('getRuntimeRpcSignoffDashboard');
+  }
+}
+
+export async function getProofSuiteReadinessSummary(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch40_proof_suite_readiness_summary')
+      .select('*');
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getProofSuiteReadinessSummary', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getControlledPilotReadinessSummary(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch40_controlled_pilot_readiness_summary')
+      .select('*');
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getControlledPilotReadinessSummary', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getExecutiveProductionReadinessSummary(): Promise<any> {
+  if (!supabase) return emptyLiveObject('getExecutiveProductionReadinessSummary');
+  try {
+    const { data, error } = await supabase
+      .from('v_patch40_executive_production_readiness_summary')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    return data || emptyLiveObject('getExecutiveProductionReadinessSummary');
+  } catch (error) {
+    logApiWarning('getExecutiveProductionReadinessSummary', error);
+    return emptyLiveObject('getExecutiveProductionReadinessSummary');
+  }
+}
+
+// Mutation edge bridge wrappers
+export async function createProductionReadinessSignoff(payload: {
+  signoff_area: string;
+  signoff_status: string;
+  notes: string;
+  evidence_ref: string | null;
+  actor_id: string;
+}): Promise<string> {
+  try {
+    return await invokePrivilegedAction<string>('create_production_readiness_signoff', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Create Signoff', 'create_production_readiness_signoff');
+  }
+}
+
+export async function updateProductionReadinessSignoffStatus(payload: {
+  id: string;
+  status: string;
+  notes: string;
+  actor_id: string;
+}): Promise<void> {
+  try {
+    await invokePrivilegedAction<void>('update_production_readiness_signoff_status', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Update Signoff Status', 'update_production_readiness_signoff_status');
+  }
+}
+
+export async function createKnownLimitation(payload: {
+  title: string;
+  description: string | null;
+  area: string;
+  severity: string;
+  mitigation: string | null;
+  actor_id: string;
+}): Promise<string> {
+  try {
+    return await invokePrivilegedAction<string>('create_known_limitation', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Create Limitation', 'create_known_limitation');
+  }
+}
+
+export async function updateKnownLimitationStatus(payload: {
+  id: string;
+  status: string;
+  mitigation: string | null;
+  actor_id: string;
+}): Promise<void> {
+  try {
+    await invokePrivilegedAction<void>('update_known_limitation_status', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Update Limitation Status', 'update_known_limitation_status');
+  }
+}
+
+export async function createBackupRestoreOperation(payload: {
+  type: string;
+  status: string;
+  summary: string;
+  evidence: string | null;
+  actor_id: string;
+}): Promise<string> {
+  try {
+    return await invokePrivilegedAction<string>('create_backup_restore_operation', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Create Backup Operation', 'create_backup_restore_operation');
+  }
+}
+
+export async function updateBackupRestoreOperationStatus(payload: {
+  id: string;
+  status: string;
+  summary: string;
+  actor_id: string;
+}): Promise<void> {
+  try {
+    await invokePrivilegedAction<void>('update_backup_restore_operation_status', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Update Backup Operation Status', 'update_backup_restore_operation_status');
+  }
+}
+
+export async function createBilingualReadinessItem(payload: {
+  key: string;
+  area: string;
+  lang: string;
+  status: string;
+  eng: string | null;
+  loc: string | null;
+  actor_id: string;
+}): Promise<string> {
+  try {
+    return await invokePrivilegedAction<string>('create_bilingual_readiness_item', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Create Bilingual Item', 'create_bilingual_readiness_item');
+  }
+}
+
+export async function updateBilingualReadinessStatus(payload: {
+  id: string;
+  status: string;
+  loc: string | null;
+  actor_id: string;
+}): Promise<void> {
+  try {
+    await invokePrivilegedAction<void>('update_bilingual_readiness_status', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Update Bilingual Status', 'update_bilingual_readiness_status');
+  }
+}
+
+export async function createNavigationSimplificationItem(payload: {
+  key: string;
+  label: string;
+  curr: string | null;
+  prop: string | null;
+  status: string;
+  actor_id: string;
+}): Promise<string> {
+  try {
+    return await invokePrivilegedAction<string>('create_navigation_simplification_item', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Create Navigation proposal', 'create_navigation_simplification_item');
+  }
+}
+
+export async function updateNavigationSimplificationStatus(payload: {
+  id: string;
+  status: string;
+  notes: string | null;
+  actor_id: string;
+}): Promise<void> {
+  try {
+    await invokePrivilegedAction<void>('update_navigation_simplification_status', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Update Navigation status', 'update_navigation_simplification_status');
+  }
+}
+

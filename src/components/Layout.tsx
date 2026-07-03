@@ -110,6 +110,7 @@ export type PageKey =
   | 'uatIssueCapture'
   | 'trainingGovernance'
   | 'executiveTruth'
+  | 'productionReadiness'
   | 'admin';
 
 interface LayoutProps {
@@ -151,6 +152,7 @@ const uatLinks: NavItem[] = isScenarioLabEnabled
   : [];
 
 export const legacyNavItems: NavItem[] = [
+  { key: 'productionReadiness' as const, labelKey: 'nav.productionReadiness', icon: <ClipboardList size={18} /> },
   { key: 'executiveTruth' as const, labelKey: 'nav.executiveTruth', icon: <FileSpreadsheet size={18} /> },
   { key: 'trainingGovernance' as const, labelKey: 'nav.trainingGovernance', icon: <GraduationCap size={18} /> },
   ...(isScenarioLabEnabled
