@@ -1,0 +1,50 @@
+{
+  "generated_at": "2026-07-03T02:55:35.814Z",
+  "migration_path": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+  "runtime_security_path": "release/v700/runtime-security-bridge-audit.json",
+  "owner_assignment_statuses": [
+    "active",
+    "inactive",
+    "transferred",
+    "suspended"
+  ],
+  "review_cycle_statuses": [
+    "draft",
+    "active",
+    "completed",
+    "cancelled",
+    "archived"
+  ],
+  "task_statuses": [
+    "open",
+    "in_progress",
+    "submitted",
+    "under_review",
+    "approved",
+    "rejected",
+    "overdue",
+    "reopened",
+    "escalated",
+    "waived",
+    "cancelled"
+  ],
+  "signoff_statuses": [
+    "pending",
+    "signed_off",
+    "rejected",
+    "reopened",
+    "waived"
+  ],
+  "escalation_statuses": [
+    "open",
+    "acknowledged",
+    "resolved",
+    "cancelled"
+  ],
+  "service_role_only_rpc_called_by_frontend": 0,
+  "remaining_broad_security_definer_execute_grants": 0,
+  "runtime_security_status": "passed",
+  "status": "passed",
+  "finding_count": 0,
+  "findings": []
+}
