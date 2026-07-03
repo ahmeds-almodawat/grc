@@ -69,6 +69,7 @@ import { OVR } from './pages/OVR';
 import { OvrRiskIndicators } from './pages/OvrRiskIndicators';
 import { AccreditationCenter } from './pages/AccreditationCenter';
 import { QualityAccreditationOperatingCenter } from './pages/QualityAccreditationOperatingCenter';
+import { EvidenceBridgeCenter } from './pages/EvidenceBridgeCenter';
 import { RealStandardsMasterDataCenter } from './pages/RealStandardsMasterDataCenter';
 import { UatAccreditationEvidenceCenter } from './pages/UatAccreditationEvidenceCenter';
 import { RealUatExecutionCenter } from './pages/RealUatExecutionCenter';
@@ -208,6 +209,7 @@ function QualitySafetyHub() {
         { id: 'ovrRisk', label: t('hub.tab.ovrRisk'), description: t('hub.tab.ovrRisk.desc'), icon: <Activity size={17} />, content: <OvrRiskIndicators /> },
         { id: 'accreditation', label: t('hub.tab.accreditation', 'Accreditation'), description: t('hub.tab.accreditation.desc', 'CBAHI and international accreditation readiness engine.'), icon: <ClipboardCheck size={17} />, content: <AccreditationCenter /> },
         { id: 'qualityAccreditationOperating', label: t('hub.tab.qualityAccreditationOperating', 'Quality Operating Layer'), description: t('hub.tab.qualityAccreditationOperating.desc', 'Tracer rounds, indicators, RCA/CAPA, evidence packs, and requirement readiness work.'), icon: <ClipboardCheck size={17} />, content: <QualityAccreditationOperatingCenter /> },
+        { id: 'evidenceBridge', label: t('hub.tab.evidenceBridge', 'Evidence Bridge'), description: t('hub.tab.evidenceBridge.desc', 'Live clause-to-control-to-evidence operations, gaps, collection queues, reviews, freshness, and readiness.'), icon: <Network size={17} />, content: <EvidenceBridgeCenter /> },
         { id: 'realStandardsMasterData', label: t('hub.tab.realStandardsMasterData', 'Standards & Master Data'), description: t('hub.tab.realStandardsMasterData.desc', 'Licensed standards metadata, departments, committees, evidence taxonomy, controls, indicators, tracers, and document ownership.'), icon: <ClipboardList size={17} />, content: <RealStandardsMasterDataCenter /> },
         { id: 'uatAccreditationEvidence', label: t('hub.tab.uatAccreditationEvidence', 'UAT Evidence Pack'), description: t('hub.tab.uatAccreditationEvidence.desc', 'Role scenario scripts, screenshots, SQL proof, signoffs, failed scenarios, retests, and accreditation evidence readiness.'), icon: <FileCheck2 size={17} />, content: <UatAccreditationEvidenceCenter /> },
         { id: 'realUatExecution', label: t('hub.tab.realUatExecution', 'Real UAT Execution'), description: t('hub.tab.realUatExecution.desc', 'Real scenario execution, screenshots, SQL proof, findings, retests, and signoffs.'), icon: <FileCheck2 size={17} />, content: <RealUatExecutionCenter /> },

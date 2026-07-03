@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-07-03T02:30:22.706Z",
+  "api_file_exists": true,
+  "page_file_exists": true,
+  "required_view_count": 12,
+  "required_method_count": 12,
+  "safe_action_count": 11,
+  "route_navigation_integrated": true,
+  "conflict_marker_count": 0,
+  "runtime_security_status": "passed",
+  "status": "passed",
+  "finding_count": 0,
+  "findings": []
+}
