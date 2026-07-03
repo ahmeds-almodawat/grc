@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-07-03T02:03:02.846Z",
+  "migration_path": "supabase/migrations/095_patch32_accreditation_traceability_matrix.sql",
+  "runtime_security_path": "release/v700/runtime-security-bridge-audit.json",
+  "supported_link_types": [
+    "control",
+    "sop",
+    "document",
+    "evidence",
+    "capa",
+    "risk",
+    "audit_finding",
+    "training_program",
+    "training_assignment",
+    "approval_authority",
+    "policy"
+  ],
+  "supported_assessment_statuses": [
+    "not_assessed",
+    "ready",
+    "partial_gap",
+    "major_gap",
+    "not_applicable",
+    "pending_evidence",
+    "pending_owner_review"
+  ],
+  "service_role_only_rpc_called_by_frontend": 0,
+  "remaining_broad_security_definer_execute_grants": 0,
+  "runtime_security_status": "passed",
+  "status": "passed",
+  "finding_count": 0,
+  "findings": []
+}
