@@ -6,6 +6,21 @@ const srcDir = path.join(root, 'src');
 const outDir = path.join(root, 'release', 'v700');
 fs.mkdirSync(outDir, { recursive: true });
 
+function loadRuntimeActionRegistry() {
+  const registryPath = path.join(root, 'src', 'lib', 'runtimeActionRegistry.ts');
+  if (!fs.existsSync(registryPath)) return new Map();
+  const text = fs.readFileSync(registryPath, 'utf8');
+  const entries = new Map();
+  const rx = /actionName:\s*['"`]([^'"`]+)['"`][\s\S]*?classification:\s*['"`]([^'"`]+)['"`]/g;
+  let match;
+  while ((match = rx.exec(text))) {
+    entries.set(match[1], match[2]);
+  }
+  return entries;
+}
+
+const runtimeActionRegistry = loadRuntimeActionRegistry();
+
 function walk(dir) {
   if (!fs.existsSync(dir)) return [];
   const out = [];
@@ -25,6 +40,8 @@ function lineNo(text, index) {
 }
 
 function classifyRpc(name, file) {
+  const registryClassification = runtimeActionRegistry.get(name);
+  if (registryClassification) return registryClassification;
   const hay = `${name || ''} ${file}`.toLowerCase();
   if (/backup|restore|release|migration|admin|role|user_role|access|security|export|retention|lock|change_request|cutover/.test(hay)) {
     return 'privileged_admin_review';
