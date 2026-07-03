@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-07-03T02:55:34.434Z",
+  "migration_path": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+  "migration_found": true,
+  "missing_tables": [],
+  "missing_views": [],
+  "missing_functions": [],
+  "missing_rls_enablement": [],
+  "missing_policies": [],
+  "missing_integrations": [],
+  "missing_status_sets": [],
+  "status": "passed",
+  "blocking_count": 0
+}
