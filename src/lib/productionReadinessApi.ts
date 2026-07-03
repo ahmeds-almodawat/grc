@@ -408,6 +408,109 @@ export async function getRuntimeDirectBrowserRpcExceptions(): Promise<any[]> {
   }
 }
 
+function getRuntimeAccessReviewStaticRegister() {
+  return runtimeActionRegistry.map(action => ({
+    action_name: action.actionName,
+    action_transport: action.actionTransport,
+    module_name: action.moduleName,
+    risk_level: action.riskLevel,
+    classification: action.classification,
+    classification_review_status: action.reviewStatus,
+    required_access_level: action.requiredAccessLevel,
+    owner_role: action.ownerRole,
+    direct_browser_exception: action.directBrowserException,
+    signoff_id: null,
+    reviewer_role: action.ownerRole,
+    reviewer_user_id: null,
+    signoff_status: 'pending',
+    risk_acceptance_required: action.riskLevel === 'critical' || action.riskLevel === 'high' || action.directBrowserException,
+    limitation_summary: null,
+    evidence_reference: null,
+    due_at: null,
+    signed_off_at: null,
+    created_at: null,
+    is_overdue: false,
+    blocker_reason: action.riskLevel === 'critical' || action.riskLevel === 'high'
+      ? 'high-risk runtime action pending signoff'
+      : 'missing access-review signoff',
+  }));
+}
+
+function getRuntimeAccessReviewStaticSummary() {
+  const register = getRuntimeAccessReviewStaticRegister();
+  const pendingHighRisk = register.filter(row => row.signoff_status === 'pending' && ['critical', 'high'].includes(row.risk_level)).length;
+  const directBrowserPending = register.filter(row => row.direct_browser_exception && row.signoff_status === 'pending').length;
+  return {
+    total_runtime_actions: register.length,
+    approved_signoffs: 0,
+    pending_signoffs: register.length,
+    overdue_signoffs: 0,
+    rejected_signoffs: 0,
+    approved_with_limitation_signoffs: 0,
+    direct_browser_rpc_exception_count: register.filter(row => row.direct_browser_exception).length,
+    direct_browser_rpc_exception_pending_count: directBrowserPending,
+    risk_acceptance_required_count: register.filter(row => row.risk_acceptance_required).length,
+    pending_high_risk_signoffs: pendingHighRisk,
+    blocker_count: register.filter(row => row.blocker_reason).length,
+    access_review_readiness_status: 'pending_review',
+    next_action_required: 'Complete pending runtime access review signoffs, starting with critical and high-risk actions.',
+  };
+}
+
+export async function getRuntimeAccessReviewOverlay(): Promise<any> {
+  const staticSummary = getRuntimeAccessReviewStaticSummary();
+  if (!supabase) return staticSummary;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch46_production_readiness_access_review_overlay')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data || Number(data.total_runtime_actions ?? 0) === 0) return staticSummary;
+    return data;
+  } catch (error) {
+    logApiWarning('getRuntimeAccessReviewOverlay', error);
+    return staticSummary;
+  }
+}
+
+export async function getRuntimeAccessReviewRegister(): Promise<any[]> {
+  const staticRegister = getRuntimeAccessReviewStaticRegister();
+  if (!supabase) return staticRegister;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch46_runtime_access_review_register')
+      .select('*')
+      .order('risk_level', { ascending: true })
+      .order('action_name', { ascending: true });
+    if (error) throw error;
+    if (!data || data.length === 0) return staticRegister;
+    return data;
+  } catch (error) {
+    logApiWarning('getRuntimeAccessReviewRegister', error);
+    return staticRegister;
+  }
+}
+
+export async function getRuntimeAccessReviewBlockers(): Promise<any[]> {
+  const staticBlockers = getRuntimeAccessReviewStaticRegister().filter(row => row.blocker_reason);
+  if (!supabase) return staticBlockers;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch46_runtime_access_review_blockers')
+      .select('*')
+      .order('risk_level', { ascending: true })
+      .order('action_name', { ascending: true });
+    if (error) throw error;
+    if (!data || data.length === 0) return staticBlockers;
+    return data;
+  } catch (error) {
+    logApiWarning('getRuntimeAccessReviewBlockers', error);
+    return staticBlockers;
+  }
+}
+
 export async function getProofSuiteReadinessSummary(): Promise<any[]> {
   if (!supabase) return emptyLiveArray();
   try {

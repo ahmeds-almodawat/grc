@@ -1,0 +1,28 @@
+{
+  "patch": "46",
+  "checked_at": "2026-07-03T22:30:55.178Z",
+  "strict_passed": true,
+  "check_count": 29,
+  "failed_count": 0,
+  "failed": [],
+  "tables": [
+    "runtime_action_review_signoffs",
+    "runtime_action_review_signoff_events"
+  ],
+  "views": [
+    "v_patch46_runtime_access_review_register",
+    "v_patch46_pending_runtime_access_reviews",
+    "v_patch46_overdue_runtime_access_reviews",
+    "v_patch46_runtime_access_review_blockers",
+    "v_patch46_runtime_access_review_summary",
+    "v_patch46_runtime_action_risk_acceptance_register",
+    "v_patch46_production_readiness_access_review_overlay"
+  ],
+  "functions": [
+    "record_runtime_action_review_signoff_event",
+    "create_runtime_action_review_signoff",
+    "update_runtime_action_review_signoff_status",
+    "get_runtime_access_review_summary",
+    "get_production_readiness_access_review_overlay"
+  ]
+}
