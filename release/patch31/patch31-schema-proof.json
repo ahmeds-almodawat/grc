@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-07-03T01:51:20.798Z",
+  "migration_path": "supabase/migrations/094_patch31_runtime_rpc_classification_signoff.sql",
+  "migration_found": true,
+  "missing_tables": [],
+  "missing_views": [],
+  "missing_functions": [],
+  "missing_fields": [],
+  "missing_rls_enablement": [],
+  "missing_policies": [],
+  "status": "passed",
+  "blocking_count": 0
+}

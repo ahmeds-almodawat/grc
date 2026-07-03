@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-07-03T01:51:22.270Z",
+  "migration_path": "supabase/migrations/094_patch31_runtime_rpc_classification_signoff.sql",
+  "inventory_path": "release/v700/frontend-rpc-inventory.json",
+  "runtime_security_path": "release/v700/runtime-security-bridge-audit.json",
+  "current_unique_rpc_count": 36,
+  "missing_classification_count": 0,
+  "missing_classifications": [],
+  "classification_counts_from_seed": {
+    "browser_safe_candidate": 1,
+    "pending_security_review": 6,
+    "workflow_runtime_review": 16,
+    "privileged_admin_review": 13
+  },
+  "signoff_status_counts_from_seed": {
+    "approved_for_production": 1,
+    "pending_security_review": 6,
+    "workflow_runtime_review": 16,
+    "privileged_admin_review": 13
+  },
+  "service_role_only_rpc_called_by_frontend": 0,
+  "remaining_broad_security_definer_execute_grants": 0,
+  "runtime_security_status": "passed",
+  "status": "passed",
+  "finding_count": 0,
+  "findings": []
+}
