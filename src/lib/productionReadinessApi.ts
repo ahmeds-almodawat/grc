@@ -511,6 +511,82 @@ export async function getRuntimeAccessReviewBlockers(): Promise<any[]> {
   }
 }
 
+function getStagingEvidenceRequiredSummary() {
+  return {
+    evidence_run_count: 0,
+    passed_run_count: 0,
+    blocked_run_count: 0,
+    evidence_required_run_count: 1,
+    latest_run_id: null,
+    latest_run_label: 'No staging/local-clean evidence run recorded',
+    latest_environment_type: 'local_clean',
+    latest_run_status: 'evidence_required',
+    latest_migration_count: 0,
+    migrations_replayed: false,
+    persona_sql_executed: false,
+    rls_check_passed: false,
+    function_check_passed: false,
+    view_check_passed: false,
+    restore_dryrun_passed: false,
+    failure_count: 0,
+    evidence_path: null,
+    run_notes: 'Staging or local-clean migration replay/persona SQL evidence has not been captured in the live evidence register.',
+    completed_at: null,
+    staging_evidence_readiness_status: 'evidence_required',
+    next_action_required: 'Run local-clean or staging migration/persona SQL evidence capture before production readiness signoff.',
+  };
+}
+
+function getStagingEvidenceRequiredBlockers() {
+  return [
+    {
+      id: 'patch47-evidence-required',
+      run_label: 'No staging/local-clean evidence run recorded',
+      environment_type: 'local_clean',
+      run_status: 'evidence_required',
+      failure_count: 0,
+      evidence_path: null,
+      run_notes: 'No live staging/local-clean evidence run is available.',
+      blocker_reason: 'staging migration replay and persona SQL evidence required',
+    },
+  ];
+}
+
+export async function getStagingEvidenceOverlay(): Promise<any> {
+  const evidenceRequired = getStagingEvidenceRequiredSummary();
+  if (!supabase) return evidenceRequired;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch47_production_readiness_staging_overlay')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data || Number(data.evidence_run_count ?? 0) === 0) return evidenceRequired;
+    return data;
+  } catch (error) {
+    logApiWarning('getStagingEvidenceOverlay', error);
+    return evidenceRequired;
+  }
+}
+
+export async function getStagingEvidenceBlockers(): Promise<any[]> {
+  const evidenceRequired = getStagingEvidenceRequiredBlockers();
+  if (!supabase) return evidenceRequired;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch47_staging_security_blockers')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    if (!data || data.length === 0) return evidenceRequired;
+    return data;
+  } catch (error) {
+    logApiWarning('getStagingEvidenceBlockers', error);
+    return evidenceRequired;
+  }
+}
+
 export async function getProofSuiteReadinessSummary(): Promise<any[]> {
   if (!supabase) return emptyLiveArray();
   try {

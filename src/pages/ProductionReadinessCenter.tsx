@@ -20,6 +20,8 @@ import {
   getRuntimeAccessReviewOverlay,
   getRuntimeAccessReviewRegister,
   getRuntimeAccessReviewBlockers,
+  getStagingEvidenceOverlay,
+  getStagingEvidenceBlockers,
   getProofSuiteReadinessSummary,
   getControlledPilotReadinessSummary,
   getExecutiveProductionReadinessSummary
@@ -47,6 +49,8 @@ export function ProductionReadinessCenter() {
   const runtimeAccessReview = useAsyncData(getRuntimeAccessReviewOverlay, []);
   const runtimeAccessRegister = useAsyncData(getRuntimeAccessReviewRegister, []);
   const runtimeAccessBlockers = useAsyncData(getRuntimeAccessReviewBlockers, []);
+  const stagingEvidence = useAsyncData(getStagingEvidenceOverlay, []);
+  const stagingBlockers = useAsyncData(getStagingEvidenceBlockers, []);
   const proofSummary = useAsyncData(getProofSuiteReadinessSummary, []);
   const pilotSummary = useAsyncData(getControlledPilotReadinessSummary, []);
   const execSummary = useAsyncData(getExecutiveProductionReadinessSummary, []);
@@ -99,6 +103,24 @@ export function ProductionReadinessCenter() {
     direct_browser_rpc_exception_pending_count: 0,
     risk_acceptance_required_count: 0,
     access_review_readiness_status: 'pending_review',
+    next_action_required: '-'
+  };
+
+  const stagingEvidenceData = stagingEvidence.data || {
+    evidence_run_count: 0,
+    latest_run_label: 'No staging/local-clean evidence run recorded',
+    latest_environment_type: 'local_clean',
+    latest_run_status: 'evidence_required',
+    latest_migration_count: 0,
+    migrations_replayed: false,
+    persona_sql_executed: false,
+    rls_check_passed: false,
+    function_check_passed: false,
+    view_check_passed: false,
+    restore_dryrun_passed: false,
+    failure_count: 0,
+    evidence_path: null,
+    staging_evidence_readiness_status: 'evidence_required',
     next_action_required: '-'
   };
 
@@ -294,6 +316,95 @@ export function ProductionReadinessCenter() {
                           <tr key={i}>
                             <td><code>{row.signoff_area}</code></td>
                             <td><StatusPill tone={row.signoff_status === 'ready' ? 'good' : 'danger'}>{row.signoff_status}</StatusPill></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.stagingEvidenceTitle} subtitle={text.stagingEvidenceSubtitle}>
+                <DataState loading={stagingEvidence.loading} error={stagingEvidence.error} empty={!stagingEvidence.data}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '14px', marginBottom: '20px' }}>
+                    <div className="stat-card">
+                      <div className="stat-value">{stagingEvidenceData.latest_migration_count}</div>
+                      <div className="stat-label">{text.migrationsReplayed}</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-value">
+                        <StatusPill tone={stagingEvidenceData.persona_sql_executed ? 'good' : 'warning'}>
+                          {stagingEvidenceData.persona_sql_executed ? text.ready : text.evidenceRequired}
+                        </StatusPill>
+                      </div>
+                      <div className="stat-label">{text.personaSqlStatus}</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-value">
+                        <StatusPill tone={stagingEvidenceData.rls_check_passed && stagingEvidenceData.function_check_passed && stagingEvidenceData.view_check_passed ? 'good' : 'warning'}>
+                          {stagingEvidenceData.rls_check_passed && stagingEvidenceData.function_check_passed && stagingEvidenceData.view_check_passed ? text.ready : text.evidenceRequired}
+                        </StatusPill>
+                      </div>
+                      <div className="stat-label">{text.securityProofStatus}</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-value">
+                        <StatusPill tone={stagingEvidenceData.staging_evidence_readiness_status === 'ready' ? 'good' : stagingEvidenceData.staging_evidence_readiness_status === 'blocked' || stagingEvidenceData.staging_evidence_readiness_status === 'failed' ? 'danger' : 'warning'}>
+                          {stagingEvidenceData.staging_evidence_readiness_status}
+                        </StatusPill>
+                      </div>
+                      <div className="stat-label">{text.stagingEvidenceReadiness}</div>
+                    </div>
+                  </div>
+                  <div className="table-wrap" style={{ marginBottom: '16px' }}>
+                    <table className="entity-table">
+                      <thead>
+                        <tr>
+                          <th>{text.latestRun}</th>
+                          <th>{text.environment}</th>
+                          <th>{text.restoreDryRun}</th>
+                          <th>{text.evidence}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><strong>{stagingEvidenceData.latest_run_label}</strong></td>
+                          <td>{stagingEvidenceData.latest_environment_type}</td>
+                          <td>
+                            <StatusPill tone={stagingEvidenceData.restore_dryrun_passed ? 'good' : 'warning'}>
+                              {stagingEvidenceData.restore_dryrun_passed ? text.ready : text.evidenceRequired}
+                            </StatusPill>
+                          </td>
+                          <td><code>{stagingEvidenceData.evidence_path || '-'}</code></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="alert alert-info">
+                    <strong>{text.nextActionRequired}: </strong>{stagingEvidenceData.next_action_required}
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.stagingBlockersTitle} subtitle={text.stagingBlockersSubtitle}>
+                <DataState loading={stagingBlockers.loading} error={stagingBlockers.error} empty={!stagingBlockers.data?.length}>
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead>
+                        <tr>
+                          <th>{text.latestRun}</th>
+                          <th>{text.status}</th>
+                          <th>{text.blockerReason}</th>
+                          <th>{text.notes}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(stagingBlockers.data || []).slice(0, 40).map((row: any) => (
+                          <tr key={row.id ?? row.run_label}>
+                            <td><strong>{row.run_label}</strong></td>
+                            <td><StatusPill tone={row.run_status === 'failed' || row.run_status === 'blocked' ? 'danger' : 'warning'}>{row.run_status}</StatusPill></td>
+                            <td>{row.blocker_reason ?? '-'}</td>
+                            <td>{row.run_notes ?? '-'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -761,6 +872,19 @@ const en = {
   proofSuitesTitle: 'Proof Suite Verification Status',
   proofSuitesSubtitle: 'Status of automated audit suites.',
   suiteName: 'Proof Suite Identifier',
+  stagingEvidenceTitle: 'Staging migration and persona evidence',
+  stagingEvidenceSubtitle: 'Operational proof that migration replay, persona SQL, RLS/function/view checks, and restore dry-run evidence are complete.',
+  migrationsReplayed: 'Migrations Replayed',
+  personaSqlStatus: 'Persona SQL Status',
+  securityProofStatus: 'RLS / Function / View Proof',
+  stagingEvidenceReadiness: 'Staging Evidence Readiness',
+  latestRun: 'Latest Run',
+  environment: 'Environment',
+  restoreDryRun: 'Restore Dry-run',
+  ready: 'Ready',
+  evidenceRequired: 'Evidence Required',
+  stagingBlockersTitle: 'Staging evidence blockers',
+  stagingBlockersSubtitle: 'Missing or failed staging/local-clean evidence that blocks final production readiness.',
   blockingLimitationsTitle: 'Production Blocking Limitations',
   blockingLimitationsSubtitle: 'High and Critical issues blocking pilot roll-out.',
   limitationTitle: 'Limitation Title',
@@ -864,6 +988,19 @@ const ar = {
   proofSuitesTitle: 'حالة التحقق من أدلة الإثبات',
   proofSuitesSubtitle: 'حالة مجموعات التدقيق التلقائية.',
   suiteName: 'معرف مجموعة التدقيق',
+  stagingEvidenceTitle: 'أدلة الترحيل وPersona في بيئة التدقيق',
+  stagingEvidenceSubtitle: 'إثبات تشغيلي لاكتمال إعادة تشغيل الترحيلات، واختبارات Persona SQL، وفحوصات RLS/الدوال/العروض، وتجربة الاستعادة.',
+  migrationsReplayed: 'الترحيلات المعادة',
+  personaSqlStatus: 'حالة Persona SQL',
+  securityProofStatus: 'إثبات RLS / الدوال / العروض',
+  stagingEvidenceReadiness: 'جاهزية أدلة التدقيق',
+  latestRun: 'آخر تشغيل',
+  environment: 'البيئة',
+  restoreDryRun: 'تجربة الاستعادة',
+  ready: 'جاهز',
+  evidenceRequired: 'الدليل مطلوب',
+  stagingBlockersTitle: 'معوقات أدلة بيئة التدقيق',
+  stagingBlockersSubtitle: 'الأدلة المفقودة أو الفاشلة التي تمنع اعتماد الجاهزية النهائية للتشغيل.',
   blockingLimitationsTitle: 'المحددات المعطلة للتشغيل',
   blockingLimitationsSubtitle: 'المشكلات العالية والحرجة التي تمنع بدء التشغيل التجريبي.',
   limitationTitle: 'عنوان المحدد/المشكلة',
