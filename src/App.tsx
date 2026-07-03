@@ -72,6 +72,8 @@ import { QualityAccreditationOperatingCenter } from './pages/QualityAccreditatio
 import { EvidenceBridgeCenter } from './pages/EvidenceBridgeCenter';
 import { AccreditationWorkflowCenter } from './pages/AccreditationWorkflowCenter';
 import { ClinicalGovernanceCenter } from './pages/ClinicalGovernanceCenter';
+import { MyWorkCenter } from './pages/MyWorkCenter';
+import { HospitalMasterDataCenter } from './pages/HospitalMasterDataCenter';
 import { RealStandardsMasterDataCenter } from './pages/RealStandardsMasterDataCenter';
 import { UatAccreditationEvidenceCenter } from './pages/UatAccreditationEvidenceCenter';
 import { RealUatExecutionCenter } from './pages/RealUatExecutionCenter';
@@ -157,6 +159,7 @@ function WorkExecutionHub() {
       title={t('hub.work.title')}
       subtitle={t('hub.work.subtitle')}
       tabs={[
+        { id: 'unifiedMyWork', label: t('hub.tab.unifiedMyWork', 'Unified My Work'), description: t('hub.tab.unifiedMyWork.desc', 'One daily queue across accreditation, evidence, audit, OVR/RCA, CAPA, training, documents, approvals, and escalations.'), icon: <ClipboardList size={17} />, content: <MyWorkCenter /> },
         { id: 'my', label: t('hub.tab.myWork'), description: t('hub.tab.myWork.desc'), icon: <UserCheck size={17} />, content: <MyWork /> },
         { id: 'projects', label: t('hub.tab.projects'), description: t('hub.tab.projects.desc'), icon: <GanttChartSquare size={17} />, content: <Projects /> },
         { id: 'departments', label: t('hub.tab.departments'), description: t('hub.tab.departments.desc'), icon: <Building2 size={17} />, content: <Departments /> },
@@ -258,6 +261,7 @@ function AdminSystemControls() {
       tabs={[
         { id: 'admin', label: t('hub.tab.admin'), description: t('hub.tab.admin.desc'), icon: <Users size={17} />, content: <Admin /> },
         { id: 'userManagement', label: t('hub.tab.userManagement', 'User Management'), description: t('hub.tab.userManagement.desc', 'Professional user lifecycle, status, department, role, CSV import/export, and audit controls.'), icon: <Users size={17} />, content: <UserManagementCenter /> },
+        { id: 'hospitalMasterData', label: t('hub.tab.hospitalMasterData', 'Hospital Master Data'), description: t('hub.tab.hospitalMasterData.desc', 'Governed locations, services, clinical areas, committees, job titles, indicators, and ownership mappings.'), icon: <Building2 size={17} />, content: <HospitalMasterDataCenter /> },
         { id: 'access', label: t('hub.tab.access'), description: t('hub.tab.access.desc'), icon: <KeyRound size={17} />, content: <AccessControl /> },
         { id: 'setup', label: t('hub.tab.setup'), description: t('hub.tab.setup.desc'), icon: <Rocket size={17} />, content: <SetupCenter /> },
         { id: 'adminSafety', label: t('hub.tab.adminSafety'), description: t('hub.tab.adminSafety.desc'), icon: <LockKeyhole size={17} />, content: <AdminSafetyConsole /> },

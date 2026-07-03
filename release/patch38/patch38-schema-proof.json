@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-07-03T12:49:32.464Z",
+  "migration_path": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+  "migration_found": true,
+  "required_table_count": 8,
+  "required_view_count": 18,
+  "required_function_count": 19,
+  "missing_tables": [],
+  "missing_views": [],
+  "missing_functions": [],
+  "missing_rls_enablement": [],
+  "missing_policies": [],
+  "missing_type_markers": [],
+  "missing_unified_queue_sources": [],
+  "status": "passed",
+  "blocking_count": 0,
+  "blockers": []
+}

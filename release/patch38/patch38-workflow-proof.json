@@ -1,0 +1,10 @@
+{
+  "generated_at": "2026-07-03T12:49:33.903Z",
+  "migration_path": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+  "runtime_security_status": "passed",
+  "remaining_broad_security_definer_execute_grants": 0,
+  "service_role_only_rpc_called_by_frontend": 0,
+  "status": "passed",
+  "finding_count": 0,
+  "findings": []
+}
