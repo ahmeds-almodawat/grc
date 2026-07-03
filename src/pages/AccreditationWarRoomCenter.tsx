@@ -332,14 +332,14 @@ export function AccreditationWarRoomCenter() {
   ]);
 
   return (
-    <div className="page-stack accreditation-war-room-center">
-      <section className="hero-panel">
+    <section className="page-section accreditation-war-room-center">
+      <div className="section-heading command-hero">
         <div>
-          <p className="eyebrow">Patch 43 / Accreditation Assurance</p>
-          <h1>Accreditation War Room</h1>
+          <p className="eyebrow">Accreditation Assurance</p>
+          <h3>Accreditation War Room</h3>
           <p className="section-subtitle">Live survey readiness, evidence gates, waivers, blockers, queue overlays, and traceability chains across accreditation, OVR/RCA, audit, CAPA, training, and documents.</p>
         </div>
-      </section>
+      </div>
 
       <DataState loading={loading} empty={!loading && !hasAnyData} emptyTitle="No accreditation assurance data is visible yet" emptyMessage={messages[0] ?? 'Live readiness appears when evidence bridge, accreditation workflow, and unified queue records are available.'}>
         <div className="kpi-grid">
@@ -364,6 +364,6 @@ export function AccreditationWarRoomCenter() {
         <ModernCard title="CAPA Evidence Chain"><ChainTable data={capaRows} label="CAPA" /></ModernCard>
         <ModernCard title="Training and Document Evidence Chain"><ChainTable data={trainingDocumentRows} label="Training / Document" /></ModernCard>
       </DataState>
-    </div>
+    </section>
   );
 }
