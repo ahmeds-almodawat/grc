@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-07-02T23:34:06.818Z",
+  "migration_path": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+  "migration_found": true,
+  "missing_tables": [],
+  "missing_views": [],
+  "missing_fields": [],
+  "missing_source_types": [],
+  "missing_statuses": [],
+  "missing_link_targets": [],
+  "status": "passed",
+  "blocking_count": 0
+}
