@@ -3,6 +3,7 @@ import { DataState } from '../components/DataState';
 import { KpiTile, ModernCard, StatusPill } from '../components/ModernCard';
 import {
   unifiedWorkQueueApi,
+  type EvidenceGateOverlayRow,
   type GovernanceOperatingSummaryRow,
   type UnifiedQueueItem,
 } from '../lib/unifiedWorkQueueApi';
@@ -50,6 +51,13 @@ function signalTone(signal?: string | null): Tone {
   return 'neutral';
 }
 
+function gateTone(status?: string | null): Tone {
+  if (['pass', 'waived', 'not_required'].includes(status ?? '')) return 'good';
+  if (['requires_review'].includes(status ?? '')) return 'warning';
+  if ((status ?? '').startsWith('fail')) return 'danger';
+  return 'neutral';
+}
+
 function WorkTable({ data, label, onSelect }: { data: UnifiedQueueItem[]; label: string; onSelect: (item: UnifiedQueueItem) => void }) {
   return (
     <div className="table-scroll">
@@ -75,6 +83,29 @@ function WorkTable({ data, label, onSelect }: { data: UnifiedQueueItem[]; label:
   );
 }
 
+function EvidenceGateOverlayTable({ data }: { data: EvidenceGateOverlayRow[] }) {
+  return (
+    <div className="table-scroll">
+      <table className="entity-table">
+        <thead><tr><th>Work</th><th>Module</th><th>Gate</th><th>Evidence</th><th>Next action</th></tr></thead>
+        <tbody>
+          {data.length === 0 ? (
+            <tr><td colSpan={5}><strong>No evidence gate overlay records returned.</strong></td></tr>
+          ) : data.slice(0, 80).map(row => (
+            <tr key={row.queue_item_id}>
+              <td><strong>{value(row.title)}</strong><br /><small>{value(row.due_date)}</small></td>
+              <td><StatusPill tone="neutral">{value(row.source_module)}</StatusPill><br /><small>{value(row.source_entity_type)}</small></td>
+              <td><StatusPill tone={gateTone(row.gate_status)}>{value(row.gate_status)}</StatusPill><br /><small>{value(row.evaluated_at)}</small></td>
+              <td>{value(row.accepted_evidence_count)} accepted<br /><small>{value(row.missing_evidence_count)} missing</small></td>
+              <td>{value(row.evidence_gate_next_action)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function MyWorkCenter() {
   const [myWork, setMyWork] = useState<LiveResult<UnifiedQueueItem[]>>(emptyRows('No assigned work loaded yet.'));
   const [departmentWork, setDepartmentWork] = useState<LiveResult<UnifiedQueueItem[]>>(emptyRows('No department work loaded yet.'));
@@ -83,6 +114,7 @@ export function MyWorkCenter() {
   const [escalated, setEscalated] = useState<LiveResult<UnifiedQueueItem[]>>(emptyRows('No escalated work loaded yet.'));
   const [blocked, setBlocked] = useState<LiveResult<UnifiedQueueItem[]>>(emptyRows('No blocked work loaded yet.'));
   const [evidenceRequired, setEvidenceRequired] = useState<LiveResult<UnifiedQueueItem[]>>(emptyRows('No evidence required loaded yet.'));
+  const [evidenceGateOverlay, setEvidenceGateOverlay] = useState<LiveResult<EvidenceGateOverlayRow[]>>(emptyRows('No evidence gate overlay loaded yet.'));
   const [missingOwner, setMissingOwner] = useState<LiveResult<UnifiedQueueItem[]>>(emptyRows('No missing owner loaded yet.'));
   const [summary, setSummary] = useState<LiveResult<GovernanceOperatingSummaryRow[]>>(emptyRows('No operating summary loaded yet.'));
   const [loading, setLoading] = useState(true);
@@ -95,8 +127,8 @@ export function MyWorkCenter() {
       setLoading(true);
       const [
         myResult, deptResult, overdueResult, reviewResult, 
-        escalatedResult, blockedResult, evidenceResult, 
-        missingResult, summaryResult
+        escalatedResult, blockedResult, evidenceResult,
+        gateOverlayResult, missingResult, summaryResult
       ] = await Promise.all([
         unifiedWorkQueueApi.fetchMyWorkQueue(),
         unifiedWorkQueueApi.fetchDepartmentWorkQueue(),
@@ -105,6 +137,7 @@ export function MyWorkCenter() {
         unifiedWorkQueueApi.fetchEscalatedWorkQueue(),
         unifiedWorkQueueApi.fetchBlockedWorkQueue(),
         unifiedWorkQueueApi.fetchEvidenceRequiredQueue(),
+        unifiedWorkQueueApi.fetchEvidenceGateOverlay(),
         unifiedWorkQueueApi.fetchMissingOwnerQueue(),
         unifiedWorkQueueApi.fetchGovernanceOperatingSummary(),
       ]);
@@ -116,6 +149,7 @@ export function MyWorkCenter() {
       setEscalated(escalatedResult);
       setBlocked(blockedResult);
       setEvidenceRequired(evidenceResult);
+      setEvidenceGateOverlay(gateOverlayResult);
       setMissingOwner(missingResult);
       setSummary(summaryResult);
       setLoading(false);
@@ -131,14 +165,15 @@ export function MyWorkCenter() {
   const escalatedRows = rows(escalated);
   const blockedRows = rows(blocked);
   const evidenceRows = rows(evidenceRequired);
+  const evidenceGateRows = rows(evidenceGateOverlay);
   const missingRows = rows(missingOwner);
   const summaryRow = first(summary);
-  const hasAnyData = myRows.length + deptRows.length + overdueRows.length + reviewRows.length + escalatedRows.length + blockedRows.length + evidenceRows.length + missingRows.length > 0 || Boolean(summaryRow);
+  const hasAnyData = myRows.length + deptRows.length + overdueRows.length + reviewRows.length + escalatedRows.length + blockedRows.length + evidenceRows.length + evidenceGateRows.length + missingRows.length > 0 || Boolean(summaryRow);
 
-  const messages = useMemo(() => ([myWork, departmentWork, overdue, review, escalated, blocked, evidenceRequired, missingOwner, summary] as LiveResult<unknown>[])
+  const messages = useMemo(() => ([myWork, departmentWork, overdue, review, escalated, blocked, evidenceRequired, evidenceGateOverlay, missingOwner, summary] as LiveResult<unknown>[])
     .filter(result => !isLive(result))
     .map(result => getLiveResultMessage(result))
-    .filter((message, index, all) => all.indexOf(message) === index), [myWork, departmentWork, overdue, review, escalated, blocked, evidenceRequired, missingOwner, summary]);
+    .filter((message, index, all) => all.indexOf(message) === index), [myWork, departmentWork, overdue, review, escalated, blocked, evidenceRequired, evidenceGateOverlay, missingOwner, summary]);
 
   return (
     <div className="page-stack my-work-center">
@@ -187,6 +222,7 @@ export function MyWorkCenter() {
         <ModernCard title="Escalated"><WorkTable data={escalatedRows} label="escalated work" onSelect={setSelectedItem} /></ModernCard>
         <ModernCard title="Blocked"><WorkTable data={blockedRows} label="blocked work" onSelect={setSelectedItem} /></ModernCard>
         <ModernCard title="Evidence Required"><WorkTable data={evidenceRows} label="evidence required" onSelect={setSelectedItem} /></ModernCard>
+        <ModernCard title="Evidence Gate Overlay"><EvidenceGateOverlayTable data={evidenceGateRows} /></ModernCard>
         <ModernCard title="Missing Owner / Routing Exceptions"><WorkTable data={missingRows} label="missing owner" onSelect={setSelectedItem} /></ModernCard>
       </DataState>
     </div>

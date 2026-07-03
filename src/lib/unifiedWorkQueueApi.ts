@@ -44,6 +44,25 @@ export interface GovernanceOperatingSummaryRow {
   [key: string]: unknown;
 }
 
+export interface EvidenceGateOverlayRow {
+  queue_item_id: string;
+  source_module: string | null;
+  source_entity_type: string | null;
+  source_entity_id: string | null;
+  title: string | null;
+  work_status: string | null;
+  priority: string | null;
+  severity: string | null;
+  due_date: string | null;
+  gate_status: string | null;
+  accepted_evidence_count: number | null;
+  missing_evidence_count: number | null;
+  active_waiver_id: string | null;
+  evaluated_at: string | null;
+  evidence_gate_next_action: string | null;
+  [key: string]: unknown;
+}
+
 async function selectView<T>(viewName: string, options: { order?: string; ascending?: boolean; limit?: number; filters?: Record<string, any> } = {}): Promise<LiveResult<T[]>> {
   if (!supabase) {
     return configurationErrorResult<T[]>('Supabase is not configured.');
@@ -109,6 +128,10 @@ export const unifiedWorkQueueApi = {
 
   fetchGovernanceOperatingSummary(): Promise<LiveResult<GovernanceOperatingSummaryRow[]>> {
     return selectView<GovernanceOperatingSummaryRow>('v_patch42_executive_operations_summary', { limit: 1 });
+  },
+
+  fetchEvidenceGateOverlay(): Promise<LiveResult<EvidenceGateOverlayRow[]>> {
+    return selectView<EvidenceGateOverlayRow>('v_patch43_queue_evidence_gate_overlay', { order: 'due_date', ascending: true, limit: 250 });
   },
   
   fetchQueueItemDetailContext(queue_item_id: string): Promise<LiveResult<UnifiedQueueItem[]>> {

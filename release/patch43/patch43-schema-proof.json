@@ -1,0 +1,46 @@
+{
+  "patch": "43",
+  "migration": "supabase\\migrations\\103_patch43_accreditation_evidence_assurance.sql",
+  "checked_at": "2026-07-03T17:53:42.096Z",
+  "strict_passed": true,
+  "check_count": 54,
+  "failed_count": 0,
+  "failed": [],
+  "required_tables": [
+    "evidence_gate_rules",
+    "evidence_gate_evaluations",
+    "evidence_gate_waivers",
+    "accreditation_war_room_snapshots",
+    "survey_readiness_events"
+  ],
+  "required_views": [
+    "v_patch43_accreditation_war_room",
+    "v_patch43_clause_readiness_register",
+    "v_patch43_department_readiness_register",
+    "v_patch43_evidence_gap_register",
+    "v_patch43_evidence_gate_failure_register",
+    "v_patch43_evidence_waiver_register",
+    "v_patch43_mock_survey_finding_register",
+    "v_patch43_incident_evidence_chain",
+    "v_patch43_audit_evidence_chain",
+    "v_patch43_capa_evidence_chain",
+    "v_patch43_training_document_evidence_chain",
+    "v_patch43_survey_blocker_summary",
+    "v_patch43_executive_survey_readiness_summary",
+    "v_patch43_queue_evidence_gate_overlay"
+  ],
+  "required_functions": [
+    "evaluate_evidence_gate",
+    "evaluate_evidence_gate_for_entity",
+    "request_evidence_gate_waiver",
+    "approve_evidence_gate_waiver",
+    "reject_evidence_gate_waiver",
+    "revoke_evidence_gate_waiver",
+    "record_survey_readiness_event",
+    "create_accreditation_war_room_snapshot",
+    "get_accreditation_war_room",
+    "get_evidence_gate_failure_register",
+    "get_survey_blocker_summary",
+    "get_executive_survey_readiness_summary"
+  ]
+}
