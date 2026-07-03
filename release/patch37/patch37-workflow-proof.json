@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-07-03T12:29:48.337Z",
+  "migration_path": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+  "api_path": "src/lib/clinicalGovernanceApi.ts",
+  "page_path": "src/pages/ClinicalGovernanceCenter.tsx",
+  "runtime_security_path": "release/v700/runtime-security-bridge-audit.json",
+  "required_function_count": 26,
+  "runtime_security_status": "passed",
+  "remaining_broad_security_definer_execute_grants": 0,
+  "service_role_only_rpc_called_by_frontend": 0,
+  "status": "passed",
+  "finding_count": 0,
+  "findings": []
+}
