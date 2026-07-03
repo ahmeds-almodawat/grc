@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-07-03T12:12:31.987Z",
+  "api_file_exists": true,
+  "page_file_exists": true,
+  "required_view_count": 12,
+  "required_method_count": 12,
+  "safe_action_count": 15,
+  "route_navigation_integrated": true,
+  "conflict_marker_count": 0,
+  "runtime_security_status": "passed",
+  "remaining_broad_security_definer_execute_grants": 0,
+  "service_role_only_rpc_called_by_frontend": 0,
+  "status": "passed",
+  "finding_count": 0,
+  "findings": []
+}
