@@ -4,6 +4,7 @@
 
 - Current patch level: Patch 58 after implementation.
 - Patch 58 capability: Production Evidence Capture & Closure Workflow for live hospital evidence gaps, owner follow-up, review state, limitations, recovery assurance, and executive closure readiness.
+- Patch 58.1 scope: validation/runtime command structure only. It reduces duplicate nested validation work and adds fast, build, proof, security, release, and profiling lanes.
 - Patch 57 capability: Production Operator Console for the daily operating view across production readiness, hospital rollout, hypercare, access, recovery, adoption, policy/SOP, and executive action.
 - Patch 56 scope: release, proof, and script consolidation only. It adds no platform workflow capability, database migration, RLS change, or runtime behavior change.
 - Patch 55 remains the latest hospital operations readiness capability: department launch packs, support readiness, policy/SOP attestation, and adoption readiness.
@@ -14,11 +15,7 @@
 Run:
 
 ```powershell
-npm run typecheck
-npm run build
-npm run patch58:all
-npm run proof:all
-npm run v700:runtime-security
+npm run validate:release
 npm run release:restore-noise
 ```
 
@@ -27,11 +24,7 @@ npm run release:restore-noise
 Run on `main` after pulling:
 
 ```powershell
-npm run typecheck
-npm run build
-npm run patch58:all
-npm run proof:all
-npm run v700:runtime-security
+npm run validate:release
 npm run release:restore-noise
 git status --short --branch
 ```
@@ -41,6 +34,8 @@ git status --short --branch
 Real hospital-wide production still requires live department launch evidence, user training adoption, policy/SOP attestations, support readiness, backup and restore evidence, DR restore evidence, and executive signoff.
 
 `proof:all` and `v700:runtime-security` remain required gates. After validation, run `npm run release:restore-noise` to remove expected generated release artifact churn unless intentionally updating release evidence.
+
+Use `npm run validate:fast` for the local development loop, `npm run validate:build` for build readiness, `npm run validate:proof` for the proof suite, `npm run validate:security` for runtime security, and `npm run validate:release` for the full release gate.
 
 ## Evidence Locations
 
