@@ -37,6 +37,11 @@ import {
   getLivePilotWorkflowBlockers,
   getLivePilotPendingWalkthroughs,
   getLivePilotFailedWalkthroughs,
+  getPilotClosureGoLiveOverlay,
+  getPilotClosureBlockers,
+  getPilotRemediationActions,
+  getPilotAcceptedLimitations,
+  getProductionGoLiveDecisions,
   getProofSuiteReadinessSummary,
   getControlledPilotReadinessSummary,
   getExecutiveProductionReadinessSummary
@@ -81,6 +86,11 @@ export function ProductionReadinessCenter() {
   const livePilotBlockers = useAsyncData(getLivePilotWorkflowBlockers, []);
   const livePilotPending = useAsyncData(getLivePilotPendingWalkthroughs, []);
   const livePilotFailed = useAsyncData(getLivePilotFailedWalkthroughs, []);
+  const pilotClosure = useAsyncData(getPilotClosureGoLiveOverlay, []);
+  const pilotClosureBlockers = useAsyncData(getPilotClosureBlockers, []);
+  const pilotRemediations = useAsyncData(getPilotRemediationActions, []);
+  const pilotLimitations = useAsyncData(getPilotAcceptedLimitations, []);
+  const goliveDecisions = useAsyncData(getProductionGoLiveDecisions, []);
   const proofSummary = useAsyncData(getProofSuiteReadinessSummary, []);
   const pilotSummary = useAsyncData(getControlledPilotReadinessSummary, []);
   const execSummary = useAsyncData(getExecutiveProductionReadinessSummary, []);
@@ -207,6 +217,29 @@ export function ProductionReadinessCenter() {
     evidence_needing_review: 0,
     workflow_blocker_count: 0,
     live_execution_readiness_status: 'evidence_required',
+    next_action_required: '-'
+  };
+
+  const pilotClosureData = pilotClosure.data || {
+    closure_review_total: 0,
+    closure_reviews_in_review: 0,
+    closure_reviews_ready_for_decision: 0,
+    blocked_or_deferred_closures: 0,
+    open_remediation_actions: 0,
+    overdue_remediation_actions: 0,
+    high_critical_remediation_actions: 0,
+    accepted_limitations: 0,
+    high_critical_accepted_limitations: 0,
+    pending_limitation_reviews: 0,
+    pending_golive_decisions: 0,
+    rejected_or_deferred_decisions: 0,
+    approved_golive_decisions: 0,
+    approved_with_limitations_decisions: 0,
+    missing_golive_decisions: 0,
+    failed_or_blocked_workflows: 0,
+    missing_workflow_evidence_count: 0,
+    open_high_critical_live_issues: 0,
+    production_golive_readiness_status: 'evidence_required',
     next_action_required: '-'
   };
 
@@ -817,6 +850,123 @@ export function ProductionReadinessCenter() {
                   </DataState>
                 </ModernCard>
               </div>
+
+              <ModernCard title={text.pilotClosureTitle} subtitle={text.pilotClosureSubtitle}>
+                <DataState loading={pilotClosure.loading} error={pilotClosure.error} empty={!pilotClosure.data}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '14px', marginBottom: '20px' }}>
+                    <div className="stat-card">
+                      <div className="stat-value">
+                        <StatusPill tone={
+                          pilotClosureData.production_golive_readiness_status === 'ready' ? 'good' :
+                          pilotClosureData.production_golive_readiness_status === 'ready_with_limitations' ? 'warning' :
+                          pilotClosureData.production_golive_readiness_status === 'blocked' ? 'danger' : 'neutral'
+                        }>
+                          {pilotClosureData.production_golive_readiness_status}
+                        </StatusPill>
+                      </div>
+                      <div className="stat-label">{text.productionGoLiveReadiness}</div>
+                    </div>
+                    <div className="stat-card"><div className="stat-value">{pilotClosureData.closure_review_total}</div><div className="stat-label">{text.closureReviews}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{pilotClosureData.closure_reviews_in_review}</div><div className="stat-label">{text.inReview}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{pilotClosureData.missing_golive_decisions}</div><div className="stat-label">{text.missingGoLiveDecisions}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{pilotClosureData.rejected_or_deferred_decisions}</div><div className="stat-label">{text.rejectedDeferredDecisions}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{pilotClosureData.open_remediation_actions}</div><div className="stat-label">{text.openRemediations}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{pilotClosureData.overdue_remediation_actions}</div><div className="stat-label">{text.overdueRemediations}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{pilotClosureData.high_critical_remediation_actions}</div><div className="stat-label">{text.highCriticalRemediations}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{pilotClosureData.accepted_limitations}</div><div className="stat-label">{text.acceptedLimitations}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{pilotClosureData.pending_limitation_reviews}</div><div className="stat-label">{text.pendingLimitationReviews}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{pilotClosureData.failed_or_blocked_workflows}</div><div className="stat-label">{text.failedBlockedWorkflows}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{pilotClosureData.missing_workflow_evidence_count}</div><div className="stat-label">{text.missingEvidence}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{pilotClosureData.open_high_critical_live_issues}</div><div className="stat-label">{text.highCriticalIssues}</div></div>
+                  </div>
+                  <div className="alert alert-info">
+                    <strong>{text.nextActionRequired}: </strong>{pilotClosureData.next_action_required}
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.pilotClosureBlockersTitle} subtitle={text.pilotClosureBlockersSubtitle}>
+                <DataState loading={pilotClosureBlockers.loading} error={pilotClosureBlockers.error} empty={!pilotClosureBlockers.data?.length}>
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead><tr><th>{text.review}</th><th>{text.area}</th><th>{text.blockerReason}</th><th>{text.evidence}</th></tr></thead>
+                      <tbody>
+                        {(pilotClosureBlockers.data || []).slice(0, 60).map((row: any, index: number) => (
+                          <tr key={`${row.closure_label}-${row.blocker_type}-${index}`}>
+                            <td><strong>{row.closure_label || '-'}</strong></td>
+                            <td>{row.blocker_area || row.blocker_type}</td>
+                            <td>{row.blocker_summary}</td>
+                            <td><code>{row.evidence_reference || '-'}</code></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <ModernCard title={text.remediationActionsTitle} subtitle={text.remediationActionsSubtitle}>
+                  <DataState loading={pilotRemediations.loading} error={pilotRemediations.error} empty={!pilotRemediations.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead><tr><th>{text.action}</th><th>{text.status}</th><th>{text.severity}</th><th>{text.dueDate}</th></tr></thead>
+                        <tbody>
+                          {(pilotRemediations.data || []).slice(0, 40).map((row: any) => (
+                            <tr key={row.id}>
+                              <td><strong>{row.remediation_title}</strong></td>
+                              <td>{row.remediation_status}</td>
+                              <td><StatusPill tone={row.severity === 'critical' || row.severity === 'high' ? 'danger' : row.severity === 'medium' ? 'warning' : 'neutral'}>{row.severity}</StatusPill></td>
+                              <td>{row.due_at ? new Date(row.due_at).toLocaleDateString() : '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+
+                <ModernCard title={text.acceptedLimitationsTitle} subtitle={text.acceptedLimitationsSubtitle}>
+                  <DataState loading={pilotLimitations.loading} error={pilotLimitations.error} empty={!pilotLimitations.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead><tr><th>{text.limitation}</th><th>{text.status}</th><th>{text.severity}</th><th>{text.expires}</th></tr></thead>
+                        <tbody>
+                          {(pilotLimitations.data || []).slice(0, 40).map((row: any) => (
+                            <tr key={row.id}>
+                              <td><strong>{row.limitation_title}</strong></td>
+                              <td>{row.limitation_status}</td>
+                              <td><StatusPill tone={row.severity === 'critical' || row.severity === 'high' ? 'danger' : row.severity === 'medium' ? 'warning' : 'neutral'}>{row.severity}</StatusPill></td>
+                              <td>{row.expires_at ? new Date(row.expires_at).toLocaleDateString() : '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+              </div>
+
+              <ModernCard title={text.goLiveDecisionTitle} subtitle={text.goLiveDecisionSubtitle}>
+                <DataState loading={goliveDecisions.loading} error={goliveDecisions.error} empty={!goliveDecisions.data?.length}>
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead><tr><th>{text.review}</th><th>{text.level}</th><th>{text.status}</th><th>{text.notes}</th><th>{text.evidence}</th></tr></thead>
+                      <tbody>
+                        {(goliveDecisions.data || []).slice(0, 40).map((row: any) => (
+                          <tr key={row.id}>
+                            <td><strong>{row.closure_label || '-'}</strong></td>
+                            <td>{row.decision_level}</td>
+                            <td><StatusPill tone={row.decision_status === 'approved' ? 'good' : row.decision_status === 'approved_with_limitations' ? 'warning' : row.decision_status === 'rejected' || row.decision_status === 'deferred' || row.decision_status === 'revoked' ? 'danger' : 'neutral'}>{row.decision_status}</StatusPill></td>
+                            <td>{row.decision_summary || row.conditions_summary || '-'}</td>
+                            <td><code>{row.evidence_reference || '-'}</code></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
 
               {/* Signoff Register */}
               <ModernCard title={text.signoffRegisterTitle} subtitle={text.signoffRegisterSubtitle}>
@@ -1473,6 +1623,33 @@ const en = {
   pendingWalkthroughsSubtitle: 'Critical workflows scheduled, not started, or still in progress.',
   failedWalkthroughsTitle: 'Failed or Blocked Walkthroughs',
   failedWalkthroughsSubtitle: 'Workflow runs that must be corrected before pilot approval.',
+  pilotClosureTitle: 'Pilot Closure & Go-Live Decision',
+  pilotClosureSubtitle: 'Formal closure status, remediation, accepted limitations, and executive decision readiness before production use.',
+  productionGoLiveReadiness: 'Go-Live Readiness',
+  closureReviews: 'Closure Reviews',
+  inReview: 'In Review',
+  missingGoLiveDecisions: 'Missing Decisions',
+  rejectedDeferredDecisions: 'Rejected / Deferred',
+  openRemediations: 'Open Remediation',
+  overdueRemediations: 'Overdue Remediation',
+  highCriticalRemediations: 'High/Critical Remediation',
+  acceptedLimitations: 'Accepted Limitations',
+  pendingLimitationReviews: 'Pending Limitation Review',
+  failedBlockedWorkflows: 'Failed / Blocked Workflows',
+  pilotClosureBlockersTitle: 'Pilot Closure Blockers',
+  pilotClosureBlockersSubtitle: 'Open remediation, pending decisions, unresolved limitations, failed workflows, missing evidence, and high-risk issues.',
+  review: 'Review',
+  remediationActionsTitle: 'Remediation Actions',
+  remediationActionsSubtitle: 'Open, overdue, completed, and risk-accepted actions required for pilot closure.',
+  action: 'Action',
+  dueDate: 'Due Date',
+  acceptedLimitationsTitle: 'Accepted Limitations',
+  acceptedLimitationsSubtitle: 'Limitations under review or accepted for controlled production launch conditions.',
+  limitation: 'Limitation',
+  expires: 'Expires',
+  goLiveDecisionTitle: 'Production Go-Live Decision Register',
+  goLiveDecisionSubtitle: 'Quality, Audit, IT/Admin, executive, and board-level launch decisions with evidence and conditions.',
+  level: 'Level',
   workflow: 'Workflow',
   department: 'Department',
   owner: 'Owner',
@@ -1653,6 +1830,33 @@ const ar = {
   pendingWalkthroughsSubtitle: 'مسارات العمل الحرجة المجدولة أو غير التي لم تبدأ أو ما زالت قيد التنفيذ.',
   failedWalkthroughsTitle: 'جولات فاشلة أو معطلة',
   failedWalkthroughsSubtitle: 'مسارات العمل التي يجب تصحيحها قبل اعتماد التشغيل التجريبي.',
+  pilotClosureTitle: 'إغلاق التشغيل التجريبي وقرار الإطلاق',
+  pilotClosureSubtitle: 'حالة الإغلاق الرسمية، والمعالجات، والمحددات المقبولة، وجاهزية القرار التنفيذي قبل التشغيل الإنتاجي.',
+  productionGoLiveReadiness: 'جاهزية الإطلاق',
+  closureReviews: 'مراجعات الإغلاق',
+  inReview: 'قيد المراجعة',
+  missingGoLiveDecisions: 'قرارات ناقصة',
+  rejectedDeferredDecisions: 'مرفوض / مؤجل',
+  openRemediations: 'معالجات مفتوحة',
+  overdueRemediations: 'معالجات متأخرة',
+  highCriticalRemediations: 'معالجات عالية/حرجة',
+  acceptedLimitations: 'محددات مقبولة',
+  pendingLimitationReviews: 'محددات قيد المراجعة',
+  failedBlockedWorkflows: 'مسارات فاشلة / معطلة',
+  pilotClosureBlockersTitle: 'معوقات إغلاق التشغيل التجريبي',
+  pilotClosureBlockersSubtitle: 'المعالجات المفتوحة، والقرارات المعلقة، والمحددات غير المغلقة، والمسارات الفاشلة، والأدلة المفقودة، والمشكلات عالية المخاطر.',
+  review: 'المراجعة',
+  remediationActionsTitle: 'إجراءات المعالجة',
+  remediationActionsSubtitle: 'الإجراءات المفتوحة أو المتأخرة أو المكتملة أو المقبولة كمخاطر والمطلوبة لإغلاق التشغيل التجريبي.',
+  action: 'الإجراء',
+  dueDate: 'تاريخ الاستحقاق',
+  acceptedLimitationsTitle: 'المحددات المقبولة',
+  acceptedLimitationsSubtitle: 'المحددات قيد المراجعة أو المقبولة كاشتراطات للتشغيل الإنتاجي المنضبط.',
+  limitation: 'المحدد',
+  expires: 'ينتهي',
+  goLiveDecisionTitle: 'سجل قرارات الإطلاق الإنتاجي',
+  goLiveDecisionSubtitle: 'قرارات الجودة والتدقيق وتقنية المعلومات والإدارة التنفيذية والمجلس مع الأدلة والاشتراطات.',
+  level: 'المستوى',
   workflow: 'مسار العمل',
   department: 'القسم',
   owner: 'المسؤول',

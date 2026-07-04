@@ -1,0 +1,41 @@
+{
+  "patch": "52",
+  "checked_at": "2026-07-04T12:24:22.958Z",
+  "strict_passed": true,
+  "check_count": 50,
+  "failed_count": 0,
+  "failed": [],
+  "tables": [
+    "pilot_closure_reviews",
+    "pilot_remediation_actions",
+    "pilot_accepted_limitations",
+    "production_golive_decisions",
+    "pilot_closure_events"
+  ],
+  "views": [
+    "v_patch52_pilot_closure_review_register",
+    "v_patch52_pilot_remediation_action_register",
+    "v_patch52_overdue_remediation_action_register",
+    "v_patch52_open_high_critical_remediation_register",
+    "v_patch52_accepted_limitation_register",
+    "v_patch52_expiring_limitation_register",
+    "v_patch52_production_golive_decision_register",
+    "v_patch52_missing_golive_decision_register",
+    "v_patch52_pilot_closure_blocker_register",
+    "v_patch52_pilot_closure_summary",
+    "v_patch52_production_readiness_golive_decision_overlay"
+  ],
+  "functions": [
+    "record_pilot_closure_event",
+    "create_pilot_closure_review",
+    "update_pilot_closure_review_status",
+    "create_pilot_remediation_action",
+    "update_pilot_remediation_action_status",
+    "create_pilot_accepted_limitation",
+    "update_pilot_accepted_limitation_status",
+    "create_production_golive_decision",
+    "update_production_golive_decision_status",
+    "get_pilot_closure_summary",
+    "get_production_readiness_golive_decision_overlay"
+  ]
+}
