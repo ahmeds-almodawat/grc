@@ -1,0 +1,107 @@
+{
+  "generated_at": "2026-07-04T22:35:59.852Z",
+  "strict_passed": true,
+  "check_count": 23,
+  "failed_count": 0,
+  "failed": [],
+  "checks": [
+    {
+      "name": "no Patch 58.2 migration exists",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "no Patch 59 route exists",
+      "passed": true
+    },
+    {
+      "name": "no Patch 59 page key exists",
+      "passed": true
+    },
+    {
+      "name": "no Patch 59 source files exist",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "root no longer contains obsolete codex patch command markdown files",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "root no longer contains obsolete PATCH deploy instruction markdown files",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "root no longer contains obsolete one-time helper files",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "archive README exists",
+      "passed": true
+    },
+    {
+      "name": "archive README explains traceability only",
+      "passed": true
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true
+    },
+    {
+      "name": "restore covers Patch 56 generated proof JSON",
+      "passed": true
+    },
+    {
+      "name": "restore covers Patch 57 generated proof JSON",
+      "passed": true
+    },
+    {
+      "name": "restore covers Patch 58 generated proof JSON",
+      "passed": true
+    },
+    {
+      "name": "restore covers Patch 58.1 generated proof JSON",
+      "passed": true
+    },
+    {
+      "name": "validate:fast exists",
+      "passed": true
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true
+    },
+    {
+      "name": "proof:all exists",
+      "passed": true
+    },
+    {
+      "name": "v700:runtime-security exists",
+      "passed": true
+    },
+    {
+      "name": "patch58-2:proof exists",
+      "passed": true
+    },
+    {
+      "name": "patch58-2:all is lightweight",
+      "passed": true
+    },
+    {
+      "name": "status doc keeps production caveat",
+      "passed": true
+    },
+    {
+      "name": "status doc mentions Patch 58.2 hygiene only",
+      "passed": true
+    },
+    {
+      "name": "no conflict markers",
+      "passed": true,
+      "findings": []
+    }
+  ]
+}

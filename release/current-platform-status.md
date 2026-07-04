@@ -5,6 +5,7 @@
 - Current patch level: Patch 58 after implementation.
 - Patch 58 capability: Production Evidence Capture & Closure Workflow for live hospital evidence gaps, owner follow-up, review state, limitations, recovery assurance, and executive closure readiness.
 - Patch 58.1 scope: validation/runtime command structure only. It reduces duplicate nested validation work and adds fast, build, proof, security, release, and profiling lanes.
+- Patch 58.2 scope: repository hygiene and release noise restore coverage only. It archives legacy root patch helper files and extends generated proof JSON cleanup coverage.
 - Patch 57 capability: Production Operator Console for the daily operating view across production readiness, hospital rollout, hypercare, access, recovery, adoption, policy/SOP, and executive action.
 - Patch 56 scope: release, proof, and script consolidation only. It adds no platform workflow capability, database migration, RLS change, or runtime behavior change.
 - Patch 55 remains the latest hospital operations readiness capability: department launch packs, support readiness, policy/SOP attestation, and adoption readiness.

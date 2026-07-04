@@ -29,6 +29,10 @@ const allowlistedPaths = [
   'release/patch53',
   'release/patch54',
   'release/patch55',
+  'release/patch56/patch56-proof-release-script-consolidation-proof.json',
+  'release/patch57/patch57-production-operator-console-proof.json',
+  'release/patch58/patch58-production-evidence-closure-proof.json',
+  'release/patch58-1/patch58-1-validation-runtime-optimization-proof.json',
 ];
 
 const existing = [];

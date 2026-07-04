@@ -93,7 +93,7 @@ const checks = [
   { name: 'restore script exists', passed: exists('scripts/restore-generated-release-noise.mjs') },
   ...requiredVPaths.map(relPath => ({ name: `restore allowlists ${relPath}`, passed: restoreSource.includes(`'${relPath}'`) })),
   ...requiredPatchPaths.map(relPath => ({ name: `restore allowlists ${relPath}`, passed: restoreSource.includes(`'${relPath}'`) })),
-  { name: 'restore script excludes release/patch56', passed: !restoreSource.includes('release/patch56') },
+  { name: 'restore script excludes release/patch56 folder', passed: !restoreSource.includes("'release/patch56'") && !restoreSource.includes('"release/patch56"') },
   { name: 'restore script excludes release/current-platform-status.md', passed: !restoreSource.includes('release/current-platform-status.md') },
   { name: 'restore script excludes release/current-proof-command-index.md', passed: !restoreSource.includes('release/current-proof-command-index.md') },
   { name: 'proof command index exists', passed: exists('release/current-proof-command-index.md') },
