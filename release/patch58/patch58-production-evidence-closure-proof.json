@@ -1,0 +1,173 @@
+{
+  "generated_at": "2026-07-04T20:49:45.663Z",
+  "strict_passed": true,
+  "check_count": 40,
+  "failed_count": 0,
+  "failed": [],
+  "checks": [
+    {
+      "name": "no Patch 58 migration exists",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "closure page exists",
+      "passed": true
+    },
+    {
+      "name": "closure API wrapper exists",
+      "passed": true
+    },
+    {
+      "name": "route /production-evidence-closure exists",
+      "passed": true
+    },
+    {
+      "name": "navigation label Production Evidence Closure exists",
+      "passed": true
+    },
+    {
+      "name": "page key added to layout",
+      "passed": true
+    },
+    {
+      "name": "access control maps closure page to authorized group",
+      "passed": true
+    },
+    {
+      "name": "operator console links to closure page",
+      "passed": true
+    },
+    {
+      "name": "closure page links to Production Readiness Center",
+      "passed": true
+    },
+    {
+      "name": "closure page links back to Production Operator Console",
+      "passed": true
+    },
+    {
+      "name": "closure section: Evidence Closure Overview",
+      "passed": true
+    },
+    {
+      "name": "closure section: Evidence Intake Queue",
+      "passed": true
+    },
+    {
+      "name": "closure section: Evidence Detail",
+      "passed": true
+    },
+    {
+      "name": "closure section: Department Evidence Register",
+      "passed": true
+    },
+    {
+      "name": "closure section: Executive Closure Pack",
+      "passed": true
+    },
+    {
+      "name": "professional empty/evidence states exist",
+      "passed": true
+    },
+    {
+      "name": "operational UI has no banned technical wording",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "page and API have no fake/demo/fallback records",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "uses existing readiness/evidence API: getHospitalDepartmentLaunchPacks",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness/evidence API: getHospitalOperationsLaunchBlockers",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness/evidence API: getHospitalSupportReadinessRecords",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness/evidence API: getHospitalPolicyAttestationReadiness",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness/evidence API: getHospitalAdoptionReadinessReviews",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness/evidence API: getBackupRestoreOperationsDashboard",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness/evidence API: getRuntimeAccessReviewBlockers",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness/evidence API: getProductionReadinessSignoffRegister",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness/evidence API: getKnownLimitationsRegister",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness/evidence API: getBlockingLimitations",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness/evidence API: getPilotAcceptedLimitations",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness/evidence API: getProductionGoLiveDecisions",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness/evidence API: getProductionHypercareBlockers",
+      "passed": true
+    },
+    {
+      "name": "package patch58:proof exists",
+      "passed": true
+    },
+    {
+      "name": "package patch58:all exists",
+      "passed": true
+    },
+    {
+      "name": "current platform status mentions Patch 58",
+      "passed": true
+    },
+    {
+      "name": "current platform status keeps production caveat",
+      "passed": true
+    },
+    {
+      "name": "proof:all remains present",
+      "passed": true
+    },
+    {
+      "name": "v700:runtime-security remains present",
+      "passed": true
+    },
+    {
+      "name": "patch57:all remains present",
+      "passed": true
+    },
+    {
+      "name": "release:restore-noise remains present",
+      "passed": true
+    },
+    {
+      "name": "no conflict markers",
+      "passed": true,
+      "findings": []
+    }
+  ]
+}

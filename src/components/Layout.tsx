@@ -56,6 +56,7 @@ export type PageKey =
   | 'reportsHub'
   | 'adminHub'
   | 'productionOperatorConsole'
+  | 'productionEvidenceClosure'
   | 'finishFast'
   | 'productionFinish'
   | 'releaseFactory'
@@ -133,6 +134,7 @@ interface NavItem {
 const primaryNav: NavItem[] = [
   { key: 'home', labelKey: 'nav.home', hintKey: 'nav.home.hint', icon: <Home size={18} /> },
   { key: 'productionOperatorConsole', labelKey: 'nav.productionOperatorConsole', hintKey: 'nav.productionOperatorConsole.hint', icon: <Activity size={18} /> },
+  { key: 'productionEvidenceClosure', labelKey: 'nav.productionEvidenceClosure', hintKey: 'nav.productionEvidenceClosure.hint', icon: <FileCheck2 size={18} /> },
   { key: 'dailyOperationsHub', labelKey: 'nav.dailyOperationsHub', hintKey: 'nav.dailyOperationsHub.hint', icon: <GanttChartSquare size={18} /> },
   { key: 'qualityHub', labelKey: 'nav.qualityHub', hintKey: 'nav.qualityHub.hint', icon: <Hospital size={18} /> },
   { key: 'accreditationHub', labelKey: 'nav.accreditationHub', hintKey: 'nav.accreditationHub.hint', icon: <ClipboardCheck size={18} /> },

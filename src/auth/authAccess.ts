@@ -85,6 +85,7 @@ export const pageGroups: Record<PageKey, PageGroup> = {
   reportsHub: 'reports',
   adminHub: 'admin',
   productionOperatorConsole: 'release',
+  productionEvidenceClosure: 'release',
   finishFast: 'release',
   productionFinish: 'release',
   releaseFactory: 'release',

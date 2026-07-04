@@ -32,6 +32,8 @@ const translations: TranslationMap = {
   'nav.dashboard': { en: 'Executive Dashboard', ar: 'لوحة القيادة التنفيذية' },
   'nav.productionOperatorConsole': { en: 'Production Operator Console', ar: 'لوحة تشغيل الإنتاج' },
   'nav.productionOperatorConsole.hint': { en: 'Daily operating safety view', ar: 'عرض يومي لسلامة التشغيل' },
+  'nav.productionEvidenceClosure': { en: 'Production Evidence Closure', ar: 'إغلاق أدلة الإنتاج' },
+  'nav.productionEvidenceClosure.hint': { en: 'Live evidence closure workflow', ar: 'سير عمل إغلاق الأدلة التشغيلية' },
   'nav.analytics': { en: 'Analytics & Heatmaps', ar: 'التحليلات والخرائط الحرارية' },
   'nav.myWork': { en: 'My Work', ar: 'أعمالي' },
   'nav.projects': { en: 'Projects & Actions', ar: 'المشاريع وخطط العمل' },

@@ -289,6 +289,8 @@
     "patch56:all": "npm run typecheck && npm run build && npm run patch56:proof && npm run patch55:all && npm run proof:all && npm run v700:runtime-security",
     "patch57:proof": "node scripts/patch57-production-operator-console-proof.mjs",
     "patch57:all": "npm run typecheck && npm run build && npm run patch57:proof && npm run patch56:all && npm run proof:all && npm run v700:runtime-security",
+    "patch58:proof": "node scripts/patch58-production-evidence-closure-proof.mjs",
+    "patch58:all": "npm run typecheck && npm run build && npm run patch58:proof && npm run patch57:all && npm run proof:all && npm run v700:runtime-security",
     "v73:module-acceptance": "node scripts/v73-module-acceptance.mjs",
     "v73:module-report": "node scripts/v73-module-report.mjs",
     "v73:all": "npm run v73:module-acceptance && npm run v73:module-report",
