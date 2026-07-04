@@ -54,5 +54,31 @@ export function BilingualDictionaryCenter() {
     </section>
   );
 }
-const en = { eyebrow: 'Bilingual governance', title: 'Bilingual Dictionary Center', subtitle: 'Central review of role, status, source, workflow and governance terms in Arabic and English.', export: 'Export dictionary', coverage: 'Coverage', review: 'Needs review', keys: 'Dictionary keys', dictionary: 'Core dictionary', dictionaryHint: 'Use this list to standardize language before rollout to all employees.', key: 'Key', category: 'Category', status: 'Status' };
-const ar = { eyebrow: 'حوكمة ثنائية اللغة', title: 'مركز القاموس العربي/الإنجليزي', subtitle: 'مراجعة مركزية للمسميات والأدوار والحالات والمصادر وسير العمل بالعربية والإنجليزية.', export: 'تصدير القاموس', coverage: 'نسبة الاكتمال', review: 'تحتاج مراجعة', keys: 'مفاتيح القاموس', dictionary: 'القاموس الأساسي', dictionaryHint: 'استخدم هذه القائمة لتوحيد اللغة قبل تعميم النظام على الموظفين.', key: 'المفتاح', category: 'التصنيف', status: 'الحالة' };
+const en = {
+  eyebrow: 'Bilingual governance',
+  title: 'Translation Review Register',
+  subtitle: 'Controlled review of role, status, source, workflow and governance terms before hospital rollout.',
+  export: 'Export current dictionary',
+  coverage: 'Coverage',
+  review: 'Review required',
+  keys: 'Dictionary keys',
+  dictionary: 'Translation review register',
+  dictionaryHint: 'Review required terms here. Governed editing is handled through the authorized release workflow.',
+  key: 'Key',
+  category: 'Category',
+  status: 'Status'
+};
+const ar = {
+  eyebrow: 'حوكمة ثنائية اللغة',
+  title: 'سجل مراجعة الترجمة',
+  subtitle: 'مراجعة منضبطة للمسميات والأدوار والحالات والمصادر وسير العمل قبل تعميم النظام في المستشفى.',
+  export: 'تصدير القاموس الحالي',
+  coverage: 'نسبة الاكتمال',
+  review: 'تحتاج مراجعة',
+  keys: 'مفاتيح القاموس',
+  dictionary: 'سجل مراجعة الترجمة',
+  dictionaryHint: 'راجع المصطلحات المطلوبة هنا. يتم تعديل الترجمة عبر مسار إصدار معتمد.',
+  key: 'المفتاح',
+  category: 'التصنيف',
+  status: 'الحالة'
+};

@@ -329,7 +329,7 @@ function ProductionGovernancePages() {
         { id: 'auditEvidenceGovernance', label: t('hub.tab.auditEvidenceGovernance', 'Audit & Evidence Integrity'), description: t('hub.tab.auditEvidenceGovernance.desc', 'Audit workbench, evidence integrity, and production governance gates.'), icon: <FileCheck2 size={17} />, content: <AuditEvidenceGovernanceCenter /> },
         { id: 'assuranceGoLive', label: t('hub.tab.assuranceGoLive', 'Assurance Go-Live Pack'), description: t('hub.tab.assuranceGoLive.desc', 'External auditor portal, signoffs, rollback, monitoring, training, and production decisions.'), icon: <PackageCheck size={17} />, content: <AssuranceGoLiveCenter /> },
         { id: 'finalRuntimeSecurityClosure', label: t('hub.tab.finalRuntimeSecurityClosure', 'Security Closure'), description: t('hub.tab.finalRuntimeSecurityClosure.desc', 'Close security warnings, action classifications, access exceptions, and final evidence.'), icon: <LockKeyhole size={17} />, content: <FinalRuntimeSecurityClosureCenter /> },
-        { id: 'productionHardeningLaunch', label: t('hub.tab.productionHardeningLaunch', 'Production Hardening'), description: t('hub.tab.productionHardeningLaunch.desc', 'Warning cleanup, staging persona SQL, restore proof, change freeze, board go/no-go, launch signoffs, and monitoring.'), icon: <PackageCheck size={17} />, content: <ProductionHardeningLaunchCenter /> },
+        { id: 'productionHardeningLaunch', label: t('hub.tab.productionHardeningLaunch', 'Production Hardening'), description: t('hub.tab.productionHardeningLaunch.desc', 'Warning cleanup, role testing, restore evidence, change freeze, board go/no-go, launch signoffs, and monitoring.'), icon: <PackageCheck size={17} />, content: <ProductionHardeningLaunchCenter /> },
         { id: 'realProductionGoNoGo', label: t('hub.tab.realProductionGoNoGo', 'Production Go/No-Go'), description: t('hub.tab.realProductionGoNoGo.desc', 'Restore and rollback verification, change freeze, access and confidentiality review, board pack, executive decision, and launch monitoring.'), icon: <PackageCheck size={17} />, content: <ProductionGoNoGoCenter /> },
         { id: 'releaseFactory', label: t('hub.tab.releaseFactory'), description: t('hub.tab.releaseFactory.desc'), icon: <PackageCheck size={17} />, content: <ReleaseFactoryCenter /> },
         { id: 'productionProof', label: t('hub.tab.productionProof', 'Production Readiness'), description: t('hub.tab.productionProof.desc', 'Final evidence-based go-live gates.'), icon: <PackageCheck size={17} />, content: <ProductionProofCenter /> },
@@ -349,7 +349,7 @@ function MaintenanceIndicatorPages() {
       compact
       eyebrow={t('hub.admin.maintenance.eyebrow', 'Maintenance pages')}
       title={t('hub.admin.maintenance.title', 'Maintenance & Indicators')}
-      subtitle={t('hub.admin.maintenance.subtitle', 'Security, testing, performance, indicators, backup, migration, translation, and health-maintenance controls.')}
+      subtitle={t('hub.admin.maintenance.subtitle', 'Security, testing, performance, indicators, backup, release readiness, translation, and health-maintenance controls.')}
       tabs={[
         { id: 'security', label: t('hub.tab.security'), description: t('hub.tab.security.desc'), icon: <LockKeyhole size={17} />, content: <SecurityAuditCenter /> },
         { id: 'performance', label: t('hub.tab.performance'), description: t('hub.tab.performance.desc'), icon: <Gauge size={17} />, content: <PerformanceCenter /> },
@@ -400,7 +400,7 @@ function AdminMaintenanceHub({ setPage }: { setPage: (page: PageKey) => void }) 
         { id: 'systemControls', label: t('hub.tab.systemControls', 'System Controls'), description: t('hub.tab.systemControls.desc', 'Admin, users, roles, access, setup, safety, and guidance.'), icon: <Users size={17} />, content: <AdminSystemControls /> },
         { id: 'realDataControls', label: t('hub.tab.realDataControls', 'Real Data Import'), description: t('hub.tab.realDataControls.desc', 'Import center, activation, real-data readiness, and UAT source handoff.'), icon: <UploadCloud size={17} />, content: <RealDataControlPages /> },
         { id: 'productionControls', label: t('hub.tab.productionControls', 'Production Governance'), description: t('hub.tab.productionControls.desc', 'Release, assurance, go/no-go, access security, and launch controls.'), icon: <PackageCheck size={17} />, content: <ProductionGovernancePages /> },
-        { id: 'maintenanceControls', label: t('hub.tab.maintenanceControls', 'Maintenance & Indicators'), description: t('hub.tab.maintenanceControls.desc', 'Security, testing, performance, indicators, backups, migration, and health controls.'), icon: <Gauge size={17} />, content: <MaintenanceIndicatorPages /> },
+        { id: 'maintenanceControls', label: t('hub.tab.maintenanceControls', 'Maintenance & Indicators'), description: t('hub.tab.maintenanceControls.desc', 'Security, testing, performance, indicators, backups, release readiness, and health controls.'), icon: <Gauge size={17} />, content: <MaintenanceIndicatorPages /> },
         ...(isScenarioLabEnabled ? [{
           id: 'uatScenarioControls',
           label: t('hub.tab.uatScenarioControls', 'UAT Controls'),

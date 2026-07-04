@@ -42,9 +42,9 @@ export function BackupSchedulerCenter() {
       {actionError && <div className="notice-banner danger">{actionError}</div>}
       <div className="stats-grid">
         <KpiTile label={t('backupScheduler.totalPlans')} value={rows.length} />
-        <KpiTile label={t('backupScheduler.neverRun')} value={rows.filter(r => r.readinessStatus === 'never_run').length} tone="danger" />
-        <KpiTile label={t('backupScheduler.restoreDue')} value={rows.filter(r => r.readinessStatus === 'restore_test_due').length} tone="warning" />
-        <KpiTile label={t('backupScheduler.healthy')} value={rows.filter(r => r.readinessStatus === 'healthy').length} tone="good" />
+        <KpiTile label={t('backupScheduler.neverRun')} value={rows.filter(r => r.readinessStatus === 'never_run').length} hint={t('backupScheduler.evidenceRequired', 'Evidence required')} tone="danger" />
+        <KpiTile label={t('backupScheduler.restoreDue')} value={rows.filter(r => r.readinessStatus === 'restore_test_due').length} hint={t('backupScheduler.nextRestoreTest', 'Next restore test due')} tone="warning" />
+        <KpiTile label={t('backupScheduler.healthy')} value={rows.filter(r => r.readinessStatus === 'healthy').length} hint={t('backupScheduler.drReadiness', 'DR readiness')} tone="good" />
       </div>
       <ModernCard title={t('backupScheduler.plans')} subtitle={t('backupScheduler.plansHint')}>
         <DataState loading={plans.loading} error={plans.error} empty={!rows.length}>
@@ -52,8 +52,12 @@ export function BackupSchedulerCenter() {
             {rows.map(plan => (
               <article className={`backup-plan-card ${plan.readinessStatus}`} key={plan.id}>
                 <div className="backup-plan-head"><DatabaseBackup size={20} /><strong>{language === 'ar' ? plan.titleAr : plan.titleEn}</strong><StatusPill tone={tone(plan.readinessStatus)}>{plan.readinessStatus}</StatusPill></div>
-                <p><CalendarClock size={14} /> {plan.frequency} · {t('backupScheduler.nextDue')}: {plan.nextDueAt ? new Date(plan.nextDueAt).toLocaleDateString() : '—'}</p>
-                <div className="backup-plan-meta"><span>{t('backupScheduler.retention')}: {plan.retentionDays}</span><span>{t('backupScheduler.runs')}: {plan.runCount}</span><span>{plan.lastStatus ?? 'not run'}</span></div>
+                <p><CalendarClock size={14} /> {plan.frequency} · {t('backupScheduler.nextDue')}: {plan.nextDueAt ? new Date(plan.nextDueAt).toLocaleDateString() : t('backupScheduler.notRecorded', 'Not yet recorded')}</p>
+                <div className="backup-plan-meta">
+                  <span>{t('backupScheduler.retention')}: {plan.retentionDays}</span>
+                  <span>{t('backupScheduler.restoreEvidence', 'Restore evidence')}: {plan.runCount ? `${plan.runCount} ${t('backupScheduler.runs')}` : t('backupScheduler.evidenceRequired', 'Evidence required')}</span>
+                  <span>{t('backupScheduler.latestRestoreTest', 'Latest restore test')}: {plan.lastStatus ?? t('backupScheduler.notRecorded', 'Not yet recorded')}</span>
+                </div>
                 <button className="ghost-button compact-button" onClick={() => markRun(plan.id)}><Play size={14} /> {t('backupScheduler.markRun')}</button>
               </article>
             ))}
