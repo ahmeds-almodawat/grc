@@ -1,0 +1,42 @@
+{
+  "patch": "53",
+  "checked_at": "2026-07-04T12:59:02.727Z",
+  "strict_passed": true,
+  "check_count": 52,
+  "failed_count": 0,
+  "failed": [],
+  "tables": [
+    "production_hypercare_periods",
+    "production_hypercare_issues",
+    "production_operating_cadence_events",
+    "production_adoption_feedback",
+    "production_hypercare_events"
+  ],
+  "views": [
+    "v_patch53_hypercare_period_register",
+    "v_patch53_hypercare_issue_register",
+    "v_patch53_open_high_critical_hypercare_issue_register",
+    "v_patch53_overdue_hypercare_issue_register",
+    "v_patch53_operating_cadence_event_register",
+    "v_patch53_missed_operating_cadence_register",
+    "v_patch53_department_adoption_feedback_register",
+    "v_patch53_missing_department_feedback_register",
+    "v_patch53_low_adoption_register",
+    "v_patch53_hypercare_blocker_register",
+    "v_patch53_hypercare_stability_summary",
+    "v_patch53_production_readiness_hypercare_overlay"
+  ],
+  "functions": [
+    "record_production_hypercare_event",
+    "create_production_hypercare_period",
+    "update_production_hypercare_period_status",
+    "create_production_hypercare_issue",
+    "update_production_hypercare_issue_status",
+    "create_production_operating_cadence_event",
+    "update_production_operating_cadence_event_status",
+    "create_production_adoption_feedback",
+    "update_production_adoption_feedback_status",
+    "get_production_hypercare_stability_summary",
+    "get_production_readiness_hypercare_overlay"
+  ]
+}
