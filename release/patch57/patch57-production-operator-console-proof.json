@@ -1,0 +1,165 @@
+{
+  "generated_at": "2026-07-04T19:06:00.274Z",
+  "strict_passed": true,
+  "check_count": 38,
+  "failed_count": 0,
+  "failed": [],
+  "checks": [
+    {
+      "name": "no Patch 57 migration exists",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "console page exists",
+      "passed": true
+    },
+    {
+      "name": "console API wrapper exists",
+      "passed": true
+    },
+    {
+      "name": "route /production-operator-console exists",
+      "passed": true
+    },
+    {
+      "name": "navigation label Production Operator Console exists",
+      "passed": true
+    },
+    {
+      "name": "page key added to layout",
+      "passed": true
+    },
+    {
+      "name": "access control maps console to authorized group",
+      "passed": true
+    },
+    {
+      "name": "console section: Today’s Operating Status",
+      "passed": true
+    },
+    {
+      "name": "console section: Critical Blockers",
+      "passed": true
+    },
+    {
+      "name": "console section: Department Rollout Readiness",
+      "passed": true
+    },
+    {
+      "name": "console section: Hypercare and Support",
+      "passed": true
+    },
+    {
+      "name": "console section: Access, Security, and Governance",
+      "passed": true
+    },
+    {
+      "name": "console section: Backup, Restore, and DR Readiness",
+      "passed": true
+    },
+    {
+      "name": "console section: Adoption, Training, and Policy/SOP",
+      "passed": true
+    },
+    {
+      "name": "console section: Executive Action Queue",
+      "passed": true
+    },
+    {
+      "name": "console section: Department-Level Register",
+      "passed": true
+    },
+    {
+      "name": "professional empty/evidence states exist",
+      "passed": true
+    },
+    {
+      "name": "console has no banned operational UI wording",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "console has no fake/demo records",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "uses existing readiness API: getHospitalOperationsReadinessOverlay",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness API: getProductionHypercareOverlay",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness API: getRuntimeAccessReviewOverlay",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness API: getBackupRestoreOperationsDashboard",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness API: getPilotClosureGoLiveOverlay",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness API: getHospitalDepartmentLaunchPacks",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness API: getHospitalOperationsLaunchBlockers",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness API: getHospitalAdoptionReadinessReviews",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness API: getHospitalPolicyAttestationReadiness",
+      "passed": true
+    },
+    {
+      "name": "uses existing readiness API: getHospitalSupportReadinessRecords",
+      "passed": true
+    },
+    {
+      "name": "package patch57:proof exists",
+      "passed": true
+    },
+    {
+      "name": "package patch57:all exists",
+      "passed": true
+    },
+    {
+      "name": "current platform status mentions Patch 57",
+      "passed": true
+    },
+    {
+      "name": "current platform status keeps production caveat",
+      "passed": true
+    },
+    {
+      "name": "proof:all remains present",
+      "passed": true
+    },
+    {
+      "name": "v700:runtime-security remains present",
+      "passed": true
+    },
+    {
+      "name": "patch56:all remains present",
+      "passed": true
+    },
+    {
+      "name": "release:restore-noise remains present",
+      "passed": true
+    },
+    {
+      "name": "no conflict markers",
+      "passed": true,
+      "findings": []
+    }
+  ]
+}

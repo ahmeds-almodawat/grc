@@ -100,7 +100,7 @@ npm run dev
 
 ## Important commands
 
-Current operator command guidance lives in `release/current-proof-command-index.md` and `release/current-validation-runbook.md`.
+Current operator command guidance lives in `release/current-proof-command-index.md` and `release/current-validation-runbook.md`. Daily production follow-up is surfaced in the Production Operator Console.
 
 Run static checks:
 

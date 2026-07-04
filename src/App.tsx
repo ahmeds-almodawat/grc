@@ -117,6 +117,7 @@ import { BackupSchedulerCenter } from './pages/BackupSchedulerCenter';
 import { TrainingGovernanceCenter } from './pages/TrainingGovernanceCenter';
 import { ExecutiveTruthCenter } from './pages/ExecutiveTruthCenter';
 import { ProductionReadinessCenter } from './pages/ProductionReadinessCenter';
+import { ProductionOperatorConsole } from './pages/ProductionOperatorConsole';
 import { ScenarioPlanningCenter } from './pages/ScenarioPlanningCenter';
 import { ExecutiveMobileCommand } from './pages/ExecutiveMobileCommand';
 import { AutomationIntelligenceCenter } from './pages/AutomationIntelligenceCenter';
@@ -135,6 +136,15 @@ import { ScenarioTestConsole } from './pages/ScenarioTestConsole';
 import { UatIssueCapture } from './pages/UatIssueCapture';
 import { ControlledUatWorkbench } from './pages/ControlledUatWorkbench';
 import { isScenarioLabEnabled } from './lib/scenarioLab';
+
+const routeAliases: Record<string, PageKey> = {
+  '/production-operator-console': 'productionOperatorConsole',
+};
+
+function initialPageFromPath(): PageKey {
+  if (typeof window === 'undefined') return 'home';
+  return routeAliases[window.location.pathname] ?? 'home';
+}
 
 function ExecutiveHub() {
   const { t } = useI18n();
@@ -414,7 +424,7 @@ function AdminMaintenanceHub({ setPage }: { setPage: (page: PageKey) => void }) 
 }
 
 export default function App() {
-  const [page, setPage] = useState<PageKey>('home');
+  const [page, setPage] = useState<PageKey>(initialPageFromPath);
   const auth = useAuth();
 
   useEffect(() => {
@@ -463,6 +473,8 @@ export default function App() {
         return <ReportsHub />;
       case 'adminHub':
         return <AdminMaintenanceHub setPage={setPage} />;
+      case 'productionOperatorConsole':
+        return <ProductionOperatorConsole setPage={setPage} />;
       case 'finishFast':
         return <FinalSprintCenter />;
       case 'productionFinish':
