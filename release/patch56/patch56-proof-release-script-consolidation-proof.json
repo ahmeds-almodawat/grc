@@ -1,0 +1,235 @@
+{
+  "generated_at": "2026-07-04T17:51:04.772Z",
+  "strict_passed": true,
+  "check_count": 56,
+  "failed_count": 0,
+  "failed": [],
+  "checks": [
+    {
+      "name": "no Patch 56 migration exists",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "package release:restore-noise exists",
+      "passed": true
+    },
+    {
+      "name": "package patch56:proof exists",
+      "passed": true
+    },
+    {
+      "name": "package patch56:all exists",
+      "passed": true
+    },
+    {
+      "name": "restore script exists",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/v62",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/v64",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/v66",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/v661",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/v662",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/v663",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/v672",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/v673",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/v674",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/v700",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/v72",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/patch43",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/patch44",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/patch45",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/patch46",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/patch47",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/patch48",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/patch49",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/patch50",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/patch51",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/patch52",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/patch53",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/patch54",
+      "passed": true
+    },
+    {
+      "name": "restore allowlists release/patch55",
+      "passed": true
+    },
+    {
+      "name": "restore script excludes release/patch56",
+      "passed": true
+    },
+    {
+      "name": "restore script excludes release/current-platform-status.md",
+      "passed": true
+    },
+    {
+      "name": "restore script excludes release/current-proof-command-index.md",
+      "passed": true
+    },
+    {
+      "name": "proof command index exists",
+      "passed": true
+    },
+    {
+      "name": "validation runbook exists",
+      "passed": true
+    },
+    {
+      "name": "proof command index references before PR checks",
+      "passed": true
+    },
+    {
+      "name": "validation runbook warns against git add dot",
+      "passed": true
+    },
+    {
+      "name": "current platform status mentions Patch 56",
+      "passed": true
+    },
+    {
+      "name": "current platform status keeps hospital production caveat",
+      "passed": true
+    },
+    {
+      "name": "proof:all remains present",
+      "passed": true
+    },
+    {
+      "name": "v700:runtime-security remains present",
+      "passed": true
+    },
+    {
+      "name": "patch55:all remains present",
+      "passed": true
+    },
+    {
+      "name": "existing proof script remains: scripts/v700-proof-suite.mjs",
+      "passed": true
+    },
+    {
+      "name": "existing proof script remains: scripts/v700-runtime-security-bridge-audit.mjs",
+      "passed": true
+    },
+    {
+      "name": "existing proof script remains: scripts/patch54-product-surface-proof.mjs",
+      "passed": true
+    },
+    {
+      "name": "existing proof script remains: scripts/patch55-hospital-operations-schema-proof.mjs",
+      "passed": true
+    },
+    {
+      "name": "existing proof script remains: scripts/patch55-hospital-operations-workflow-proof.mjs",
+      "passed": true
+    },
+    {
+      "name": "existing proof script remains: scripts/patch55-hospital-operations-frontend-proof.mjs",
+      "passed": true
+    },
+    {
+      "name": "no conflict markers: package.json",
+      "passed": true
+    },
+    {
+      "name": "no conflict markers: scripts/restore-generated-release-noise.mjs",
+      "passed": true
+    },
+    {
+      "name": "no conflict markers: scripts/patch56-proof-release-script-consolidation-proof.mjs",
+      "passed": true
+    },
+    {
+      "name": "no conflict markers: release/current-platform-status.md",
+      "passed": true
+    },
+    {
+      "name": "no conflict markers: release/current-proof-command-index.md",
+      "passed": true
+    },
+    {
+      "name": "no conflict markers: release/current-validation-runbook.md",
+      "passed": true
+    },
+    {
+      "name": "no conflict markers: release/patch56/patch56-implementation-summary.md",
+      "passed": true
+    },
+    {
+      "name": "no conflict markers: release/patch56/patch56-validation-report.md",
+      "passed": true
+    },
+    {
+      "name": "no fake/demo records introduced",
+      "passed": true,
+      "findings": []
+    }
+  ]
+}
