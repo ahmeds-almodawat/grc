@@ -587,6 +587,120 @@ export async function getStagingEvidenceBlockers(): Promise<any[]> {
   }
 }
 
+function getPilotActivationEvidenceRequiredSummary() {
+  return {
+    activation_run_id: null,
+    run_label: 'No controlled pilot activation run recorded',
+    activation_status: 'planning',
+    pilot_scope: 'controlled_internal_pilot',
+    departments_in_scope: 0,
+    departments_ready: 0,
+    departments_blocked: 0,
+    missing_department_owners: 0,
+    pending_signoffs: 0,
+    overdue_signoffs: 0,
+    rejected_signoffs: 0,
+    approved_with_limitation_signoffs: 0,
+    participant_count: 0,
+    confirmed_participants: 0,
+    training_required_participants: 0,
+    blocker_count: 1,
+    pilot_readiness_status: 'evidence_required',
+    next_action_required: 'Create a controlled pilot activation run, assign department owners, and collect department readiness signoffs.',
+  };
+}
+
+function getPilotActivationEvidenceRequiredBlockers() {
+  return [
+    {
+      activation_run_id: null,
+      department_name: 'Controlled pilot scope',
+      blocker_type: 'activation_required',
+      blocker_reason: 'controlled pilot activation run and department readiness signoffs required',
+      evidence_reference: null,
+    },
+  ];
+}
+
+export async function getPilotActivationOverlay(): Promise<any> {
+  const evidenceRequired = getPilotActivationEvidenceRequiredSummary();
+  if (!supabase) return evidenceRequired;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch49_production_readiness_pilot_activation_overlay')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data || !data.activation_run_id) return evidenceRequired;
+    return data;
+  } catch (error) {
+    logApiWarning('getPilotActivationOverlay', error);
+    return evidenceRequired;
+  }
+}
+
+export async function getPilotActivationBlockers(): Promise<any[]> {
+  const evidenceRequired = getPilotActivationEvidenceRequiredBlockers();
+  if (!supabase) return evidenceRequired;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch49_controlled_pilot_blockers')
+      .select('*');
+    if (error) throw error;
+    if (!data || data.length === 0) return evidenceRequired;
+    return data;
+  } catch (error) {
+    logApiWarning('getPilotActivationBlockers', error);
+    return evidenceRequired;
+  }
+}
+
+export async function getPilotDepartmentReadinessRegister(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch49_department_pilot_readiness_register')
+      .select('*')
+      .order('department_name', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getPilotDepartmentReadinessRegister', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getPilotDepartmentSignoffRegister(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch49_department_signoff_register')
+      .select('*')
+      .order('department_name', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getPilotDepartmentSignoffRegister', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getPilotParticipantCoverage(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch49_pilot_participant_coverage')
+      .select('*')
+      .order('department_name', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getPilotParticipantCoverage', error);
+    return emptyLiveArray();
+  }
+}
+
 export async function getProofSuiteReadinessSummary(): Promise<any[]> {
   if (!supabase) return emptyLiveArray();
   try {
