@@ -27,6 +27,12 @@ import {
   getPilotDepartmentReadinessRegister,
   getPilotDepartmentSignoffRegister,
   getPilotParticipantCoverage,
+  getRealPilotSetupOverlay,
+  getRealPilotLaunchBlockers,
+  getRealPilotSetupChecklistRegister,
+  getRealPilotParticipantSetupGaps,
+  getRealPilotTrainingGaps,
+  getRealPilotMasterDataExceptions,
   getProofSuiteReadinessSummary,
   getControlledPilotReadinessSummary,
   getExecutiveProductionReadinessSummary
@@ -61,6 +67,12 @@ export function ProductionReadinessCenter() {
   const pilotDepartments = useAsyncData(getPilotDepartmentReadinessRegister, []);
   const pilotSignoffs = useAsyncData(getPilotDepartmentSignoffRegister, []);
   const pilotParticipants = useAsyncData(getPilotParticipantCoverage, []);
+  const realPilotSetup = useAsyncData(getRealPilotSetupOverlay, []);
+  const realPilotBlockers = useAsyncData(getRealPilotLaunchBlockers, []);
+  const realPilotChecklist = useAsyncData(getRealPilotSetupChecklistRegister, []);
+  const realPilotParticipantGaps = useAsyncData(getRealPilotParticipantSetupGaps, []);
+  const realPilotTrainingGaps = useAsyncData(getRealPilotTrainingGaps, []);
+  const realPilotExceptions = useAsyncData(getRealPilotMasterDataExceptions, []);
   const proofSummary = useAsyncData(getProofSuiteReadinessSummary, []);
   const pilotSummary = useAsyncData(getControlledPilotReadinessSummary, []);
   const execSummary = useAsyncData(getExecutiveProductionReadinessSummary, []);
@@ -148,6 +160,29 @@ export function ProductionReadinessCenter() {
     confirmed_participants: 0,
     training_required_participants: 0,
     pilot_readiness_status: 'evidence_required',
+    next_action_required: '-'
+  };
+
+  const realPilotSetupData = realPilotSetup.data || {
+    run_label: 'No controlled pilot activation run recorded',
+    activation_status: 'planning',
+    departments_in_scope: 0,
+    departments_missing_owners: 0,
+    departments_blocked: 0,
+    required_participants: 0,
+    confirmed_participants: 0,
+    participant_count: 0,
+    participant_gap_count: 0,
+    training_gap_count: 0,
+    pending_signoffs: 0,
+    overdue_signoffs: 0,
+    missing_signoff_owners: 0,
+    open_exception_count: 0,
+    critical_exception_count: 0,
+    high_exception_count: 0,
+    launch_blocker_count: 0,
+    participant_coverage_percentage: 0,
+    setup_readiness_status: 'evidence_required',
     next_action_required: '-'
   };
 
@@ -464,6 +499,207 @@ export function ProductionReadinessCenter() {
                   </div>
                 </DataState>
               </ModernCard>
+
+              <ModernCard title={text.realPilotSetupTitle} subtitle={text.realPilotSetupSubtitle}>
+                <DataState loading={realPilotSetup.loading} error={realPilotSetup.error} empty={!realPilotSetup.data}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '14px', marginBottom: '20px' }}>
+                    <div className="stat-card">
+                      <div className="stat-value">
+                        <StatusPill tone={
+                          realPilotSetupData.setup_readiness_status === 'ready' ? 'good' :
+                          realPilotSetupData.setup_readiness_status === 'ready_with_limitations' ? 'warning' :
+                          realPilotSetupData.setup_readiness_status === 'blocked' ? 'danger' : 'neutral'
+                        }>
+                          {realPilotSetupData.setup_readiness_status}
+                        </StatusPill>
+                      </div>
+                      <div className="stat-label">{text.setupReadinessStatus}</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-value">{realPilotSetupData.departments_in_scope}</div>
+                      <div className="stat-label">{text.departmentsInScope}</div>
+                    </div>
+                    <div className="stat-card warning">
+                      <div className="stat-value">{realPilotSetupData.departments_missing_owners}</div>
+                      <div className="stat-label">{text.missingDepartmentOwners}</div>
+                    </div>
+                    <div className="stat-card danger">
+                      <div className="stat-value">{realPilotSetupData.departments_blocked}</div>
+                      <div className="stat-label">{text.departmentsBlocked}</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-value">{realPilotSetupData.participant_coverage_percentage}%</div>
+                      <div className="stat-label">{text.participantCoverage}</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-value">{realPilotSetupData.confirmed_participants} / {realPilotSetupData.required_participants}</div>
+                      <div className="stat-label">{text.requiredParticipants}</div>
+                    </div>
+                    <div className="stat-card warning">
+                      <div className="stat-value">{realPilotSetupData.participant_gap_count}</div>
+                      <div className="stat-label">{text.participantGaps}</div>
+                    </div>
+                    <div className="stat-card warning">
+                      <div className="stat-value">{realPilotSetupData.training_gap_count}</div>
+                      <div className="stat-label">{text.trainingGaps}</div>
+                    </div>
+                    <div className="stat-card warning">
+                      <div className="stat-value">{realPilotSetupData.pending_signoffs}</div>
+                      <div className="stat-label">{text.pendingDepartmentSignoffs}</div>
+                    </div>
+                    <div className="stat-card danger">
+                      <div className="stat-value">{realPilotSetupData.launch_blocker_count}</div>
+                      <div className="stat-label">{text.launchBlockers}</div>
+                    </div>
+                  </div>
+                  <div className="alert alert-info">
+                    <strong>{text.currentPilotActivation}: </strong>{realPilotSetupData.run_label} ({realPilotSetupData.activation_status})
+                    <br />
+                    <strong>{text.nextActionRequired}: </strong>{realPilotSetupData.next_action_required}
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.realPilotLaunchBlockersTitle} subtitle={text.realPilotLaunchBlockersSubtitle}>
+                <DataState loading={realPilotBlockers.loading} error={realPilotBlockers.error} empty={!realPilotBlockers.data?.length}>
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead>
+                        <tr>
+                          <th>{text.department}</th>
+                          <th>{text.area}</th>
+                          <th>{text.severity}</th>
+                          <th>{text.blockerReason}</th>
+                          <th>{text.evidence}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(realPilotBlockers.data || []).slice(0, 60).map((row: any, index: number) => (
+                          <tr key={`${row.department_name}-${row.blocker_type}-${index}`}>
+                            <td><strong>{row.department_name}</strong></td>
+                            <td>{row.blocker_type}</td>
+                            <td><StatusPill tone={row.severity === 'critical' || row.severity === 'high' ? 'danger' : 'warning'}>{row.severity}</StatusPill></td>
+                            <td>{row.blocker_summary}</td>
+                            <td><code>{row.evidence_reference || '-'}</code></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <ModernCard title={text.realPilotChecklistTitle} subtitle={text.realPilotChecklistSubtitle}>
+                  <DataState loading={realPilotChecklist.loading} error={realPilotChecklist.error} empty={!realPilotChecklist.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead>
+                          <tr>
+                            <th>{text.area}</th>
+                            <th>{text.status}</th>
+                            <th>{text.owner}</th>
+                            <th>{text.blockerReason}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(realPilotChecklist.data || []).slice(0, 40).map((row: any) => (
+                            <tr key={row.id}>
+                              <td><strong>{row.item_label}</strong><br /><small>{row.checklist_area}</small></td>
+                              <td><StatusPill tone={row.item_status === 'ready' ? 'good' : row.item_status === 'blocked' ? 'danger' : 'warning'}>{row.item_status}</StatusPill></td>
+                              <td>{row.owner_user_id ? text.assigned : text.evidenceRequired}</td>
+                              <td>{row.checklist_gap_reason || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+
+                <ModernCard title={text.realPilotExceptionsTitle} subtitle={text.realPilotExceptionsSubtitle}>
+                  <DataState loading={realPilotExceptions.loading} error={realPilotExceptions.error} empty={!realPilotExceptions.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead>
+                          <tr>
+                            <th>{text.area}</th>
+                            <th>{text.severity}</th>
+                            <th>{text.status}</th>
+                            <th>{text.summary}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(realPilotExceptions.data || []).slice(0, 40).map((row: any) => (
+                            <tr key={row.id}>
+                              <td>{row.exception_type}</td>
+                              <td><StatusPill tone={row.severity === 'critical' || row.severity === 'high' ? 'danger' : 'warning'}>{row.severity}</StatusPill></td>
+                              <td>{row.exception_status}</td>
+                              <td>{row.exception_summary}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <ModernCard title={text.realPilotParticipantGapsTitle} subtitle={text.realPilotParticipantGapsSubtitle}>
+                  <DataState loading={realPilotParticipantGaps.loading} error={realPilotParticipantGaps.error} empty={!realPilotParticipantGaps.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead>
+                          <tr>
+                            <th>{text.department}</th>
+                            <th>{text.participants}</th>
+                            <th>{text.status}</th>
+                            <th>{text.blockerReason}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(realPilotParticipantGaps.data || []).slice(0, 40).map((row: any) => (
+                            <tr key={row.participant_id}>
+                              <td>{row.department_name}</td>
+                              <td><strong>{row.display_name}</strong><br /><small>{row.participant_role || text.evidenceRequired}</small></td>
+                              <td>{row.participation_status}</td>
+                              <td>{row.gap_summary}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+
+                <ModernCard title={text.realPilotTrainingGapsTitle} subtitle={text.realPilotTrainingGapsSubtitle}>
+                  <DataState loading={realPilotTrainingGaps.loading} error={realPilotTrainingGaps.error} empty={!realPilotTrainingGaps.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead>
+                          <tr>
+                            <th>{text.department}</th>
+                            <th>{text.participants}</th>
+                            <th>{text.signoffRole}</th>
+                            <th>{text.blockerReason}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(realPilotTrainingGaps.data || []).slice(0, 40).map((row: any) => (
+                            <tr key={row.participant_id}>
+                              <td>{row.department_name}</td>
+                              <td><strong>{row.display_name}</strong></td>
+                              <td>{row.participant_role}</td>
+                              <td>{row.gap_summary}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+              </div>
 
               {/* Signoff Register */}
               <ModernCard title={text.signoffRegisterTitle} subtitle={text.signoffRegisterSubtitle}>
@@ -1085,6 +1321,23 @@ const en = {
   participantCoverageSubtitle: 'Confirmed participants, pending participants, and training confirmation by department.',
   departmentSignoffTitle: 'Department Signoff Pack',
   departmentSignoffSubtitle: 'Formal department, quality, internal audit, IT, and executive signoffs for controlled pilot activation.',
+  realPilotSetupTitle: 'Real Pilot Setup Readiness',
+  realPilotSetupSubtitle: 'Operational onboarding status for real departments, owners, participants, roles, training coverage, signoffs, and launch blockers.',
+  setupReadinessStatus: 'Setup Readiness',
+  requiredParticipants: 'Required Participants',
+  participantGaps: 'Participant Gaps',
+  trainingGaps: 'Training Gaps',
+  launchBlockers: 'Launch Blockers',
+  realPilotLaunchBlockersTitle: 'Real Pilot Launch Blockers',
+  realPilotLaunchBlockersSubtitle: 'Real setup gaps that must be resolved before the controlled pilot can launch.',
+  realPilotChecklistTitle: 'Setup Checklist',
+  realPilotChecklistSubtitle: 'Department scope, owner assignment, participant mapping, roles, training, signoffs, and launch review.',
+  realPilotExceptionsTitle: 'Master Data Exceptions',
+  realPilotExceptionsSubtitle: 'Open setup exceptions, accepted limitations, ownership, and evidence status.',
+  realPilotParticipantGapsTitle: 'Participant Setup Gaps',
+  realPilotParticipantGapsSubtitle: 'Pending, unavailable, inactive, or training-required pilot participants.',
+  realPilotTrainingGapsTitle: 'Training Readiness Gaps',
+  realPilotTrainingGapsSubtitle: 'Participants whose required training is not yet confirmed.',
   department: 'Department',
   owner: 'Owner',
   assigned: 'Assigned',
@@ -1229,6 +1482,23 @@ const ar = {
   participantCoverageSubtitle: 'المشاركون المؤكدون والمعلقون وتأكيد التدريب حسب القسم.',
   departmentSignoffTitle: 'حزمة اعتمادات الأقسام',
   departmentSignoffSubtitle: 'اعتمادات الأقسام والجودة والتدقيق الداخلي وتقنية المعلومات والتنفيذيين لتفعيل التشغيل التجريبي.',
+  realPilotSetupTitle: 'جاهزية إعداد التشغيل التجريبي الفعلي',
+  realPilotSetupSubtitle: 'حالة تجهيز الأقسام الفعلية، والمسؤولين، والمشاركين، والأدوار، والتدريب، والاعتمادات، ومعوقات الإطلاق.',
+  setupReadinessStatus: 'جاهزية الإعداد',
+  requiredParticipants: 'المشاركون المطلوبون',
+  participantGaps: 'فجوات المشاركين',
+  trainingGaps: 'فجوات التدريب',
+  launchBlockers: 'معوقات الإطلاق',
+  realPilotLaunchBlockersTitle: 'معوقات إطلاق التشغيل الفعلي',
+  realPilotLaunchBlockersSubtitle: 'فجوات الإعداد الفعلية التي يجب حلها قبل إطلاق التشغيل التجريبي المنضبط.',
+  realPilotChecklistTitle: 'قائمة تحقق الإعداد',
+  realPilotChecklistSubtitle: 'نطاق الأقسام، وتعيين المسؤولين، وربط المشاركين، والأدوار، والتدريب، والاعتمادات، ومراجعة الإطلاق.',
+  realPilotExceptionsTitle: 'استثناءات البيانات الأساسية',
+  realPilotExceptionsSubtitle: 'استثناءات الإعداد المفتوحة والمحددات المقبولة والملكية وحالة الأدلة.',
+  realPilotParticipantGapsTitle: 'فجوات إعداد المشاركين',
+  realPilotParticipantGapsSubtitle: 'المشاركون المعلقون أو غير المتاحين أو غير النشطين أو الذين يحتاجون إلى تدريب.',
+  realPilotTrainingGapsTitle: 'فجوات جاهزية التدريب',
+  realPilotTrainingGapsSubtitle: 'المشاركون الذين لم يتم تأكيد تدريبهم المطلوب بعد.',
   department: 'القسم',
   owner: 'المسؤول',
   assigned: 'محدد',

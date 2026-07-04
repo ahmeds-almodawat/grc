@@ -1,0 +1,39 @@
+{
+  "patch": "50",
+  "checked_at": "2026-07-04T09:17:15.682Z",
+  "strict_passed": true,
+  "check_count": 48,
+  "failed_count": 0,
+  "failed": [],
+  "tables": [
+    "real_pilot_onboarding_reviews",
+    "real_pilot_setup_checklist_items",
+    "real_pilot_master_data_exceptions",
+    "real_pilot_onboarding_events"
+  ],
+  "views": [
+    "v_patch50_real_pilot_onboarding_review_register",
+    "v_patch50_department_setup_checklist_register",
+    "v_patch50_missing_department_owner_register",
+    "v_patch50_pilot_participant_setup_gap_register",
+    "v_patch50_pilot_role_assignment_gap_register",
+    "v_patch50_pilot_training_gap_register",
+    "v_patch50_pilot_signoff_assignment_gap_register",
+    "v_patch50_inactive_or_unconfirmed_participant_register",
+    "v_patch50_real_pilot_master_data_exception_register",
+    "v_patch50_real_pilot_launch_blocker_register",
+    "v_patch50_real_pilot_setup_summary",
+    "v_patch50_production_readiness_real_pilot_setup_overlay"
+  ],
+  "functions": [
+    "record_real_pilot_onboarding_event",
+    "create_real_pilot_onboarding_review",
+    "update_real_pilot_onboarding_review_status",
+    "create_real_pilot_setup_checklist_item",
+    "update_real_pilot_setup_checklist_item_status",
+    "create_real_pilot_master_data_exception",
+    "update_real_pilot_master_data_exception_status",
+    "get_real_pilot_setup_summary",
+    "get_production_readiness_real_pilot_setup_overlay"
+  ]
+}

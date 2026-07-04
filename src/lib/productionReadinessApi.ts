@@ -701,6 +701,140 @@ export async function getPilotParticipantCoverage(): Promise<any[]> {
   }
 }
 
+function getRealPilotSetupEvidenceRequiredSummary() {
+  return {
+    activation_run_id: null,
+    run_label: 'No controlled pilot activation run recorded',
+    activation_status: 'planning',
+    departments_in_scope: 0,
+    departments_missing_owners: 0,
+    departments_blocked: 0,
+    required_participants: 0,
+    confirmed_participants: 0,
+    participant_count: 0,
+    participant_gap_count: 0,
+    training_gap_count: 0,
+    pending_signoffs: 0,
+    overdue_signoffs: 0,
+    missing_signoff_owners: 0,
+    open_exception_count: 0,
+    critical_exception_count: 0,
+    high_exception_count: 0,
+    limitation_exception_count: 0,
+    launch_blocker_count: 1,
+    participant_coverage_percentage: 0,
+    setup_readiness_status: 'evidence_required',
+    next_action_required: 'Complete real department, owner, participant, role, training, and signoff setup before pilot launch.',
+  };
+}
+
+function getRealPilotSetupEvidenceRequiredBlockers() {
+  return [
+    {
+      activation_run_id: null,
+      department_name: 'Real pilot setup',
+      blocker_type: 'setup_evidence_required',
+      severity: 'high',
+      blocker_summary: 'Real department owners, participant coverage, roles, training confirmation, and signoffs must be verified before launch.',
+      evidence_reference: null,
+    },
+  ];
+}
+
+export async function getRealPilotSetupOverlay(): Promise<any> {
+  const evidenceRequired = getRealPilotSetupEvidenceRequiredSummary();
+  if (!supabase) return evidenceRequired;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch50_production_readiness_real_pilot_setup_overlay')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data || !data.activation_run_id) return evidenceRequired;
+    return data;
+  } catch (error) {
+    logApiWarning('getRealPilotSetupOverlay', error);
+    return evidenceRequired;
+  }
+}
+
+export async function getRealPilotLaunchBlockers(): Promise<any[]> {
+  const evidenceRequired = getRealPilotSetupEvidenceRequiredBlockers();
+  if (!supabase) return evidenceRequired;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch50_real_pilot_launch_blocker_register')
+      .select('*');
+    if (error) throw error;
+    if (!data || data.length === 0) return evidenceRequired;
+    return data;
+  } catch (error) {
+    logApiWarning('getRealPilotLaunchBlockers', error);
+    return evidenceRequired;
+  }
+}
+
+export async function getRealPilotSetupChecklistRegister(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch50_department_setup_checklist_register')
+      .select('*')
+      .order('checklist_area', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getRealPilotSetupChecklistRegister', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getRealPilotParticipantSetupGaps(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch50_pilot_participant_setup_gap_register')
+      .select('*')
+      .order('department_name', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getRealPilotParticipantSetupGaps', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getRealPilotTrainingGaps(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch50_pilot_training_gap_register')
+      .select('*')
+      .order('department_name', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getRealPilotTrainingGaps', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getRealPilotMasterDataExceptions(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch50_real_pilot_master_data_exception_register')
+      .select('*')
+      .order('severity', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getRealPilotMasterDataExceptions', error);
+    return emptyLiveArray();
+  }
+}
+
 export async function getProofSuiteReadinessSummary(): Promise<any[]> {
   if (!supabase) return emptyLiveArray();
   try {
