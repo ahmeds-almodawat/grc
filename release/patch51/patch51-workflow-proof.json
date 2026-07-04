@@ -1,0 +1,36 @@
+{
+  "patch": "51",
+  "checked_at": "2026-07-04T11:53:17.671Z",
+  "strict_passed": true,
+  "check_count": 19,
+  "failed_count": 0,
+  "failed": [],
+  "workflow_keys": [
+    "ovr_rca_capa",
+    "audit_finding_closure",
+    "accreditation_evidence_gate",
+    "training_completion",
+    "access_review_signoff",
+    "backup_restore_dryrun",
+    "department_go_no_go"
+  ],
+  "run_statuses": [
+    "not_started",
+    "scheduled",
+    "in_progress",
+    "passed",
+    "passed_with_limitations",
+    "failed",
+    "blocked",
+    "cancelled"
+  ],
+  "step_statuses": [
+    "pending",
+    "in_progress",
+    "passed",
+    "passed_with_limitation",
+    "failed",
+    "blocked",
+    "not_applicable"
+  ]
+}
