@@ -1,0 +1,39 @@
+{
+  "patch": "49",
+  "checked_at": "2026-07-04T08:34:04.539Z",
+  "strict_passed": true,
+  "check_count": 25,
+  "failed_count": 0,
+  "failed": [],
+  "activation_statuses": [
+    "planning",
+    "ready_for_review",
+    "approved",
+    "approved_with_limitations",
+    "blocked",
+    "paused",
+    "completed"
+  ],
+  "department_statuses": [
+    "pending",
+    "ready",
+    "ready_with_limitations",
+    "blocked",
+    "not_in_scope"
+  ],
+  "signoff_statuses": [
+    "pending",
+    "approved",
+    "approved_with_limitation",
+    "rejected",
+    "overdue",
+    "not_required"
+  ],
+  "participant_statuses": [
+    "pending",
+    "confirmed",
+    "declined",
+    "inactive",
+    "needs_training"
+  ]
+}

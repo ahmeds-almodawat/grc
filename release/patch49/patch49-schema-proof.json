@@ -1,0 +1,39 @@
+{
+  "patch": "49",
+  "checked_at": "2026-07-04T08:34:03.721Z",
+  "strict_passed": true,
+  "check_count": 46,
+  "failed_count": 0,
+  "failed": [],
+  "tables": [
+    "controlled_pilot_activation_runs",
+    "controlled_pilot_departments",
+    "controlled_pilot_department_signoffs",
+    "controlled_pilot_participants",
+    "controlled_pilot_activation_events"
+  ],
+  "views": [
+    "v_patch49_controlled_pilot_activation_register",
+    "v_patch49_department_pilot_readiness_register",
+    "v_patch49_department_signoff_register",
+    "v_patch49_missing_department_owner_register",
+    "v_patch49_overdue_department_signoff_register",
+    "v_patch49_pilot_participant_coverage",
+    "v_patch49_controlled_pilot_blockers",
+    "v_patch49_controlled_pilot_go_no_go_summary",
+    "v_patch49_production_readiness_pilot_activation_overlay"
+  ],
+  "functions": [
+    "record_controlled_pilot_activation_event",
+    "create_controlled_pilot_activation_run",
+    "update_controlled_pilot_activation_status",
+    "create_controlled_pilot_department",
+    "update_controlled_pilot_department_status",
+    "create_controlled_pilot_department_signoff",
+    "update_controlled_pilot_department_signoff_status",
+    "create_controlled_pilot_participant",
+    "update_controlled_pilot_participant_status",
+    "get_controlled_pilot_go_no_go_summary",
+    "get_production_readiness_pilot_activation_overlay"
+  ]
+}

@@ -22,6 +22,11 @@ import {
   getRuntimeAccessReviewBlockers,
   getStagingEvidenceOverlay,
   getStagingEvidenceBlockers,
+  getPilotActivationOverlay,
+  getPilotActivationBlockers,
+  getPilotDepartmentReadinessRegister,
+  getPilotDepartmentSignoffRegister,
+  getPilotParticipantCoverage,
   getProofSuiteReadinessSummary,
   getControlledPilotReadinessSummary,
   getExecutiveProductionReadinessSummary
@@ -51,6 +56,11 @@ export function ProductionReadinessCenter() {
   const runtimeAccessBlockers = useAsyncData(getRuntimeAccessReviewBlockers, []);
   const stagingEvidence = useAsyncData(getStagingEvidenceOverlay, []);
   const stagingBlockers = useAsyncData(getStagingEvidenceBlockers, []);
+  const pilotActivation = useAsyncData(getPilotActivationOverlay, []);
+  const pilotBlockers = useAsyncData(getPilotActivationBlockers, []);
+  const pilotDepartments = useAsyncData(getPilotDepartmentReadinessRegister, []);
+  const pilotSignoffs = useAsyncData(getPilotDepartmentSignoffRegister, []);
+  const pilotParticipants = useAsyncData(getPilotParticipantCoverage, []);
   const proofSummary = useAsyncData(getProofSuiteReadinessSummary, []);
   const pilotSummary = useAsyncData(getControlledPilotReadinessSummary, []);
   const execSummary = useAsyncData(getExecutiveProductionReadinessSummary, []);
@@ -121,6 +131,23 @@ export function ProductionReadinessCenter() {
     failure_count: 0,
     evidence_path: null,
     staging_evidence_readiness_status: 'evidence_required',
+    next_action_required: '-'
+  };
+
+  const pilotActivationData = pilotActivation.data || {
+    run_label: 'No controlled pilot activation run recorded',
+    activation_status: 'planning',
+    departments_in_scope: 0,
+    departments_ready: 0,
+    departments_blocked: 0,
+    missing_department_owners: 0,
+    pending_signoffs: 0,
+    overdue_signoffs: 0,
+    approved_with_limitation_signoffs: 0,
+    participant_count: 0,
+    confirmed_participants: 0,
+    training_required_participants: 0,
+    pilot_readiness_status: 'evidence_required',
     next_action_required: '-'
   };
 
@@ -263,6 +290,180 @@ export function ProductionReadinessCenter() {
                   </DataState>
                 </ModernCard>
               </div>
+
+              <ModernCard title={text.pilotActivationTitle} subtitle={text.pilotActivationSubtitle}>
+                <DataState loading={pilotActivation.loading} error={pilotActivation.error} empty={!pilotActivation.data}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '14px', marginBottom: '20px' }}>
+                    <div className="stat-card">
+                      <div className="stat-value">
+                        <StatusPill tone={
+                          pilotActivationData.pilot_readiness_status === 'ready' ? 'good' :
+                          pilotActivationData.pilot_readiness_status === 'ready_with_limitations' ? 'warning' :
+                          pilotActivationData.pilot_readiness_status === 'blocked' ? 'danger' : 'neutral'
+                        }>
+                          {pilotActivationData.pilot_readiness_status}
+                        </StatusPill>
+                      </div>
+                      <div className="stat-label">{text.pilotReadinessStatus}</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-value">{pilotActivationData.departments_in_scope}</div>
+                      <div className="stat-label">{text.departmentsInScope}</div>
+                    </div>
+                    <div className="stat-card success">
+                      <div className="stat-value">{pilotActivationData.departments_ready}</div>
+                      <div className="stat-label">{text.departmentsReady}</div>
+                    </div>
+                    <div className="stat-card danger">
+                      <div className="stat-value">{pilotActivationData.departments_blocked}</div>
+                      <div className="stat-label">{text.departmentsBlocked}</div>
+                    </div>
+                    <div className="stat-card warning">
+                      <div className="stat-value">{pilotActivationData.missing_department_owners}</div>
+                      <div className="stat-label">{text.missingDepartmentOwners}</div>
+                    </div>
+                    <div className="stat-card warning">
+                      <div className="stat-value">{pilotActivationData.pending_signoffs}</div>
+                      <div className="stat-label">{text.pendingDepartmentSignoffs}</div>
+                    </div>
+                    <div className="stat-card danger">
+                      <div className="stat-value">{pilotActivationData.overdue_signoffs}</div>
+                      <div className="stat-label">{text.overdueDepartmentSignoffs}</div>
+                    </div>
+                    <div className="stat-card warning">
+                      <div className="stat-value">{pilotActivationData.approved_with_limitation_signoffs}</div>
+                      <div className="stat-label">{text.limitedDepartmentSignoffs}</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-value">{pilotActivationData.confirmed_participants} / {pilotActivationData.participant_count}</div>
+                      <div className="stat-label">{text.participantCoverage}</div>
+                    </div>
+                    <div className="stat-card warning">
+                      <div className="stat-value">{pilotActivationData.training_required_participants}</div>
+                      <div className="stat-label">{text.trainingRequiredParticipants}</div>
+                    </div>
+                  </div>
+                  <div className="alert alert-info">
+                    <strong>{text.currentPilotActivation}: </strong>{pilotActivationData.run_label} ({pilotActivationData.activation_status})
+                    <br />
+                    <strong>{text.nextActionRequired}: </strong>{pilotActivationData.next_action_required}
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.pilotBlockersTitle} subtitle={text.pilotBlockersSubtitle}>
+                <DataState loading={pilotBlockers.loading} error={pilotBlockers.error} empty={!pilotBlockers.data?.length}>
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead>
+                        <tr>
+                          <th>{text.department}</th>
+                          <th>{text.area}</th>
+                          <th>{text.blockerReason}</th>
+                          <th>{text.evidence}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(pilotBlockers.data || []).slice(0, 60).map((row: any, index: number) => (
+                          <tr key={`${row.department_name}-${row.blocker_type}-${index}`}>
+                            <td><strong>{row.department_name}</strong></td>
+                            <td>{row.blocker_type}</td>
+                            <td>{row.blocker_reason}</td>
+                            <td><code>{row.evidence_reference || '-'}</code></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <ModernCard title={text.departmentReadinessTitle} subtitle={text.departmentReadinessSubtitle}>
+                  <DataState loading={pilotDepartments.loading} error={pilotDepartments.error} empty={!pilotDepartments.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead>
+                          <tr>
+                            <th>{text.department}</th>
+                            <th>{text.owner}</th>
+                            <th>{text.status}</th>
+                            <th>{text.participants}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(pilotDepartments.data || []).slice(0, 40).map((row: any) => (
+                            <tr key={row.id}>
+                              <td><strong>{row.department_name}</strong></td>
+                              <td>{row.owner_user_id ? text.assigned : row.missing_owner_reason || text.evidenceRequired}</td>
+                              <td><StatusPill tone={row.pilot_status === 'ready' ? 'good' : row.pilot_status === 'blocked' ? 'danger' : 'warning'}>{row.pilot_status}</StatusPill></td>
+                              <td>{row.confirmed_participant_count} / {row.required_participant_count}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+
+                <ModernCard title={text.participantCoverageTitle} subtitle={text.participantCoverageSubtitle}>
+                  <DataState loading={pilotParticipants.loading} error={pilotParticipants.error} empty={!pilotParticipants.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead>
+                          <tr>
+                            <th>{text.department}</th>
+                            <th>{text.confirmedParticipants}</th>
+                            <th>{text.pendingParticipants}</th>
+                            <th>{text.trainingRequiredParticipants}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(pilotParticipants.data || []).slice(0, 40).map((row: any, index: number) => (
+                            <tr key={`${row.department_name}-${index}`}>
+                              <td><strong>{row.department_name}</strong></td>
+                              <td>{row.confirmed_participant_count} / {row.participant_count}</td>
+                              <td>{row.pending_participant_count}</td>
+                              <td>{row.training_required_count}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+              </div>
+
+              <ModernCard title={text.departmentSignoffTitle} subtitle={text.departmentSignoffSubtitle}>
+                <DataState loading={pilotSignoffs.loading} error={pilotSignoffs.error} empty={!pilotSignoffs.data?.length}>
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead>
+                        <tr>
+                          <th>{text.department}</th>
+                          <th>{text.signoffRole}</th>
+                          <th>{text.status}</th>
+                          <th>{text.dueAt}</th>
+                          <th>{text.evidence}</th>
+                          <th>{text.limitationSummary}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(pilotSignoffs.data || []).slice(0, 60).map((row: any) => (
+                          <tr key={row.id}>
+                            <td><strong>{row.department_name}</strong></td>
+                            <td>{row.signoff_role}</td>
+                            <td><StatusPill tone={row.signoff_status === 'approved' ? 'good' : row.signoff_status === 'rejected' || row.is_overdue ? 'danger' : 'warning'}>{row.signoff_status}</StatusPill></td>
+                            <td>{row.due_at ? new Date(row.due_at).toLocaleDateString() : '-'}</td>
+                            <td><code>{row.evidence_reference || '-'}</code></td>
+                            <td>{row.limitation_summary || row.rejection_reason || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
 
               {/* Signoff Register */}
               <ModernCard title={text.signoffRegisterTitle} subtitle={text.signoffRegisterSubtitle}>
@@ -863,6 +1064,34 @@ const en = {
   readinessScore: 'Overall Readiness Score',
   pilotReadinessTitle: 'Controlled Pilot Scope Sign-off',
   pilotReadinessSubtitle: 'Readiness checks for critical frontend/backend workflows.',
+  pilotActivationTitle: 'Controlled Pilot Activation',
+  pilotActivationSubtitle: 'Department readiness, participant coverage, owner assignment, and executive go/no-go visibility for the first controlled rollout.',
+  pilotReadinessStatus: 'Pilot Readiness',
+  currentPilotActivation: 'Current pilot activation',
+  departmentsInScope: 'Departments In Scope',
+  departmentsReady: 'Departments Ready',
+  departmentsBlocked: 'Departments Blocked',
+  missingDepartmentOwners: 'Missing Department Owners',
+  pendingDepartmentSignoffs: 'Pending Signoffs',
+  overdueDepartmentSignoffs: 'Overdue Signoffs',
+  limitedDepartmentSignoffs: 'Limited Approvals',
+  participantCoverage: 'Participant Coverage',
+  trainingRequiredParticipants: 'Training Required',
+  pilotBlockersTitle: 'Controlled Pilot Blockers',
+  pilotBlockersSubtitle: 'Departments, signoffs, owner gaps, and participant readiness items that must be cleared before pilot activation.',
+  departmentReadinessTitle: 'Department Readiness',
+  departmentReadinessSubtitle: 'Owner assignment, department pilot status, and required participant coverage.',
+  participantCoverageTitle: 'Participant Coverage',
+  participantCoverageSubtitle: 'Confirmed participants, pending participants, and training confirmation by department.',
+  departmentSignoffTitle: 'Department Signoff Pack',
+  departmentSignoffSubtitle: 'Formal department, quality, internal audit, IT, and executive signoffs for controlled pilot activation.',
+  department: 'Department',
+  owner: 'Owner',
+  assigned: 'Assigned',
+  participants: 'Participants',
+  confirmedParticipants: 'Confirmed',
+  pendingParticipants: 'Pending',
+  signoffRole: 'Signoff Role',
   signoffArea: 'Sign-off Area / Scope',
   status: 'Status',
   signoffRegisterTitle: 'Formal Production Sign-off Registry',
@@ -979,6 +1208,34 @@ const ar = {
   readinessScore: 'درجة الجاهزية العامة',
   pilotReadinessTitle: 'اعتمادات النطاق التجريبي المنضبط',
   pilotReadinessSubtitle: 'الفحوصات الخاصة بمسارات العمل الأساسية في الواجهة الأمامية والخلفية.',
+  pilotActivationTitle: 'تفعيل التشغيل التجريبي المنضبط',
+  pilotActivationSubtitle: 'جاهزية الأقسام، وتغطية المشاركين، وتعيين المسؤولين، ووضوح قرار الانطلاق التنفيذي لأول تشغيل منضبط.',
+  pilotReadinessStatus: 'جاهزية التشغيل التجريبي',
+  currentPilotActivation: 'تفعيل التشغيل الحالي',
+  departmentsInScope: 'الأقسام ضمن النطاق',
+  departmentsReady: 'الأقسام الجاهزة',
+  departmentsBlocked: 'الأقسام المعطلة',
+  missingDepartmentOwners: 'مسؤولو أقسام غير محددين',
+  pendingDepartmentSignoffs: 'اعتمادات معلقة',
+  overdueDepartmentSignoffs: 'اعتمادات متأخرة',
+  limitedDepartmentSignoffs: 'اعتمادات بمحددات',
+  participantCoverage: 'تغطية المشاركين',
+  trainingRequiredParticipants: 'يتطلب تدريب',
+  pilotBlockersTitle: 'معوقات التشغيل التجريبي',
+  pilotBlockersSubtitle: 'الأقسام والاعتمادات وفجوات المسؤولين وجاهزية المشاركين التي يجب إغلاقها قبل التفعيل.',
+  departmentReadinessTitle: 'جاهزية الأقسام',
+  departmentReadinessSubtitle: 'تعيين المسؤول وحالة القسم وتغطية المشاركين المطلوبة.',
+  participantCoverageTitle: 'تغطية المشاركين',
+  participantCoverageSubtitle: 'المشاركون المؤكدون والمعلقون وتأكيد التدريب حسب القسم.',
+  departmentSignoffTitle: 'حزمة اعتمادات الأقسام',
+  departmentSignoffSubtitle: 'اعتمادات الأقسام والجودة والتدقيق الداخلي وتقنية المعلومات والتنفيذيين لتفعيل التشغيل التجريبي.',
+  department: 'القسم',
+  owner: 'المسؤول',
+  assigned: 'محدد',
+  participants: 'المشاركون',
+  confirmedParticipants: 'مؤكد',
+  pendingParticipants: 'معلق',
+  signoffRole: 'دور الاعتماد',
   signoffArea: 'مجال / نطاق الاعتماد',
   status: 'الحالة',
   signoffRegisterTitle: 'سجل اعتمادات التشغيل الإنتاجي الرسمي',
