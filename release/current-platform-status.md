@@ -2,9 +2,10 @@
 
 ## Current Level
 
-- Current patch level: Patch 56 after implementation.
-- Latest functional platform capability: Patch 55 hospital operations readiness, department launch packs, support readiness, policy/SOP attestation, and adoption readiness.
+- Current patch level: Patch 57 after implementation.
+- Patch 57 capability: Production Operator Console for the daily operating view across production readiness, hospital rollout, hypercare, access, recovery, adoption, policy/SOP, and executive action.
 - Patch 56 scope: release, proof, and script consolidation only. It adds no platform workflow capability, database migration, RLS change, or runtime behavior change.
+- Patch 55 remains the latest hospital operations readiness capability: department launch packs, support readiness, policy/SOP attestation, and adoption readiness.
 - Current validation baseline: typecheck, build, Patch 55 chain, full proof suite, and runtime security.
 
 ## Before Pull Request
@@ -14,7 +15,7 @@ Run:
 ```powershell
 npm run typecheck
 npm run build
-npm run patch55:all
+npm run patch57:all
 npm run proof:all
 npm run v700:runtime-security
 npm run release:restore-noise
@@ -27,7 +28,7 @@ Run on `main` after pulling:
 ```powershell
 npm run typecheck
 npm run build
-npm run patch55:all
+npm run patch57:all
 npm run proof:all
 npm run v700:runtime-security
 npm run release:restore-noise
@@ -36,7 +37,7 @@ git status --short --branch
 
 ## Production Caveat
 
-Real hospital deployment still requires live department launch evidence, executive and department signoffs, training adoption, policy/SOP attestations, support readiness confirmation, backup and restore evidence, and operational acceptance by Quality, Audit, IT/Admin, and executive sponsors.
+Real hospital-wide production still requires live department launch evidence, executive and department signoffs, user training adoption, policy/SOP attestations, support readiness confirmation, backup and restore evidence, DR restore evidence, and operational acceptance by Quality, Audit, IT/Admin, and executive sponsors.
 
 `proof:all` and `v700:runtime-security` remain required gates. After validation, run `npm run release:restore-noise` to remove expected generated release artifact churn unless intentionally updating release evidence.
 

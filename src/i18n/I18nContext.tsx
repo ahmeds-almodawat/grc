@@ -30,6 +30,8 @@ const translations: TranslationMap = {
   'language.current': { en: 'Language', ar: 'اللغة' },
 
   'nav.dashboard': { en: 'Executive Dashboard', ar: 'لوحة القيادة التنفيذية' },
+  'nav.productionOperatorConsole': { en: 'Production Operator Console', ar: 'لوحة تشغيل الإنتاج' },
+  'nav.productionOperatorConsole.hint': { en: 'Daily operating safety view', ar: 'عرض يومي لسلامة التشغيل' },
   'nav.analytics': { en: 'Analytics & Heatmaps', ar: 'التحليلات والخرائط الحرارية' },
   'nav.myWork': { en: 'My Work', ar: 'أعمالي' },
   'nav.projects': { en: 'Projects & Actions', ar: 'المشاريع وخطط العمل' },
