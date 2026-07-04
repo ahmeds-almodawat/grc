@@ -1,0 +1,35 @@
+{
+  "patch": "50",
+  "checked_at": "2026-07-04T09:17:16.478Z",
+  "strict_passed": true,
+  "check_count": 23,
+  "failed_count": 0,
+  "failed": [],
+  "review_statuses": [
+    "draft",
+    "in_progress",
+    "ready_for_review",
+    "approved",
+    "approved_with_limitations",
+    "blocked"
+  ],
+  "checklist_item_statuses": [
+    "pending",
+    "ready",
+    "blocked",
+    "not_applicable",
+    "evidence_required"
+  ],
+  "exception_statuses": [
+    "open",
+    "in_review",
+    "resolved",
+    "accepted_with_limitation"
+  ],
+  "severities": [
+    "low",
+    "medium",
+    "high",
+    "critical"
+  ]
+}
