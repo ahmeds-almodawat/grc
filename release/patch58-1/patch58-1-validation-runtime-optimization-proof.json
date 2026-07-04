@@ -1,0 +1,117 @@
+{
+  "generated_at": "2026-07-04T22:06:22.032Z",
+  "strict_passed": true,
+  "check_count": 26,
+  "failed_count": 0,
+  "failed": [],
+  "checks": [
+    {
+      "name": "no Patch 58.1 migration exists",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "no Patch 59 route exists",
+      "passed": true
+    },
+    {
+      "name": "no Patch 59 page key exists",
+      "passed": true
+    },
+    {
+      "name": "no Patch 59 source files exist",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "validate:fast exists",
+      "passed": true
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true
+    },
+    {
+      "name": "validate:proof exists",
+      "passed": true
+    },
+    {
+      "name": "validate:security exists",
+      "passed": true
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true
+    },
+    {
+      "name": "validate:release avoids nested patch all chains",
+      "passed": true
+    },
+    {
+      "name": "validate:profile:fast exists",
+      "passed": true
+    },
+    {
+      "name": "validate:profile:release exists",
+      "passed": true
+    },
+    {
+      "name": "validation profile helper exists",
+      "passed": true
+    },
+    {
+      "name": "patch58:proof still exists",
+      "passed": true
+    },
+    {
+      "name": "patch58:all still exists",
+      "passed": true
+    },
+    {
+      "name": "patch57:all still exists",
+      "passed": true
+    },
+    {
+      "name": "proof:all still exists",
+      "passed": true
+    },
+    {
+      "name": "v700:runtime-security still exists",
+      "passed": true
+    },
+    {
+      "name": "release:restore-noise still exists",
+      "passed": true
+    },
+    {
+      "name": "patch58-1:proof exists",
+      "passed": true
+    },
+    {
+      "name": "patch58-1:all uses release lane without duplicate proof call",
+      "passed": true
+    },
+    {
+      "name": "status doc keeps production caveat",
+      "passed": true
+    },
+    {
+      "name": "status doc mentions Patch 58.1 validation optimization only",
+      "passed": true
+    },
+    {
+      "name": "no conflict markers",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "no fake/demo evidence records added",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "proof script does not mark gates passed artificially",
+      "passed": true
+    }
+  ]
+}

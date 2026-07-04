@@ -24,6 +24,7 @@ Run:
 git status --short --branch
 git diff --stat
 git diff --name-only
+npm run validate:fast
 ```
 
 Never use `git add .`. Stage only the files intentionally changed for the patch.
@@ -41,11 +42,7 @@ Do not accidentally commit:
 Run:
 
 ```powershell
-npm run typecheck
-npm run build
-npm run patch55:all
-npm run proof:all
-npm run v700:runtime-security
+npm run validate:release
 npm run release:restore-noise
 git status --short --branch
 ```
@@ -64,11 +61,7 @@ Run on main:
 ```powershell
 git switch main
 git pull origin main
-npm run typecheck
-npm run build
-npm run patch55:all
-npm run proof:all
-npm run v700:runtime-security
+npm run validate:release
 npm run release:restore-noise
 git status --short --branch
 ```
@@ -84,8 +77,8 @@ Expected final clean status:
 Run:
 
 ```powershell
-npm run proof:all
-npm run v700:runtime-security
+npm run validate:proof
+npm run validate:security
 ```
 
 Then confirm live operational approvals:

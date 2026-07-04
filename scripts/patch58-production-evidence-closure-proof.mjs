@@ -142,7 +142,7 @@ const checks = [
   { name: 'page and API have no fake/demo/fallback records', passed: fakeRecordFindings.length === 0, findings: fakeRecordFindings },
   ...requiredApiFunctions.map(name => ({ name: `uses existing readiness/evidence API: ${name}`, passed: apiSource.includes(name) })),
   { name: 'package patch58:proof exists', passed: scripts['patch58:proof'] === 'node scripts/patch58-production-evidence-closure-proof.mjs' },
-  { name: 'package patch58:all exists', passed: typeof scripts['patch58:all'] === 'string' && scripts['patch58:all'].includes('patch57:all') && scripts['patch58:all'].includes('proof:all') && scripts['patch58:all'].includes('v700:runtime-security') },
+  { name: 'package patch58:all exists', passed: typeof scripts['patch58:all'] === 'string' && scripts['patch58:all'].includes('validate:build') && scripts['patch58:all'].includes('patch57:proof') && scripts['patch58:all'].includes('proof:all') && scripts['patch58:all'].includes('v700:runtime-security') },
   { name: 'current platform status mentions Patch 58', passed: statusDoc.includes('Patch 58') && statusDoc.includes('Production Evidence Capture & Closure Workflow') },
   { name: 'current platform status keeps production caveat', passed: statusDoc.includes('live department launch evidence') && statusDoc.includes('user training adoption') && statusDoc.includes('policy/SOP attestations') && statusDoc.includes('support readiness') && statusDoc.includes('DR restore evidence') && statusDoc.includes('executive signoff') },
   { name: 'proof:all remains present', passed: typeof scripts['proof:all'] === 'string' && scripts['proof:all'].includes('v700-proof-suite') },
