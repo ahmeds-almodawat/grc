@@ -1047,6 +1047,119 @@ export async function getProductionGoLiveDecisions(): Promise<any[]> {
   }
 }
 
+function getHypercareEvidenceRequiredSummary() {
+  return {
+    hypercare_period_total: 0,
+    active_hypercare_periods: 0,
+    at_risk_or_blocked_periods: 0,
+    days_remaining: 0,
+    open_hypercare_issues: 0,
+    overdue_hypercare_issues: 0,
+    high_critical_hypercare_issues: 0,
+    missed_cadence_events: 0,
+    departments_missing_feedback: 1,
+    low_adoption_departments: 0,
+    support_needed_feedback_count: 0,
+    training_needed_feedback_count: 0,
+    inherited_unresolved_live_pilot_issues: 0,
+    inherited_high_critical_remediation_count: 0,
+    hypercare_blocker_count: 1,
+    production_stability_status: 'evidence_required',
+    next_action_required: 'Create a production hypercare period and begin operating cadence evidence capture.',
+  };
+}
+
+function getHypercareEvidenceRequiredBlockers() {
+  return [
+    {
+      hypercare_label: 'Production hypercare operating cadence',
+      blocker_area: 'hypercare_period',
+      blocker_type: 'evidence_required',
+      blocker_summary: 'A production hypercare period, cadence, and department feedback evidence must be recorded after go-live.',
+      evidence_reference: null,
+    },
+  ];
+}
+
+export async function getProductionHypercareOverlay(): Promise<any> {
+  const evidenceRequired = getHypercareEvidenceRequiredSummary();
+  if (!supabase) return evidenceRequired;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch53_production_readiness_hypercare_overlay')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data || data.hypercare_period_total === 0) return evidenceRequired;
+    return data;
+  } catch (error) {
+    logApiWarning('getProductionHypercareOverlay', error);
+    return evidenceRequired;
+  }
+}
+
+export async function getProductionHypercareBlockers(): Promise<any[]> {
+  const evidenceRequired = getHypercareEvidenceRequiredBlockers();
+  if (!supabase) return evidenceRequired;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch53_hypercare_blocker_register')
+      .select('*');
+    if (error) throw error;
+    if (!data || data.length === 0) return evidenceRequired;
+    return data;
+  } catch (error) {
+    logApiWarning('getProductionHypercareBlockers', error);
+    return evidenceRequired;
+  }
+}
+
+export async function getProductionHypercareIssues(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch53_hypercare_issue_register')
+      .select('*')
+      .order('severity', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getProductionHypercareIssues', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getProductionOperatingCadenceEvents(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch53_operating_cadence_event_register')
+      .select('*')
+      .order('scheduled_at', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getProductionOperatingCadenceEvents', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getProductionAdoptionFeedback(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch53_department_adoption_feedback_register')
+      .select('*')
+      .order('department_name', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getProductionAdoptionFeedback', error);
+    return emptyLiveArray();
+  }
+}
+
 export async function getProofSuiteReadinessSummary(): Promise<any[]> {
   if (!supabase) return emptyLiveArray();
   try {

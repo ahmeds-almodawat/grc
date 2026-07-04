@@ -42,6 +42,11 @@ import {
   getPilotRemediationActions,
   getPilotAcceptedLimitations,
   getProductionGoLiveDecisions,
+  getProductionHypercareOverlay,
+  getProductionHypercareBlockers,
+  getProductionHypercareIssues,
+  getProductionOperatingCadenceEvents,
+  getProductionAdoptionFeedback,
   getProofSuiteReadinessSummary,
   getControlledPilotReadinessSummary,
   getExecutiveProductionReadinessSummary
@@ -91,6 +96,11 @@ export function ProductionReadinessCenter() {
   const pilotRemediations = useAsyncData(getPilotRemediationActions, []);
   const pilotLimitations = useAsyncData(getPilotAcceptedLimitations, []);
   const goliveDecisions = useAsyncData(getProductionGoLiveDecisions, []);
+  const hypercare = useAsyncData(getProductionHypercareOverlay, []);
+  const hypercareBlockers = useAsyncData(getProductionHypercareBlockers, []);
+  const hypercareIssues = useAsyncData(getProductionHypercareIssues, []);
+  const cadenceEvents = useAsyncData(getProductionOperatingCadenceEvents, []);
+  const adoptionFeedback = useAsyncData(getProductionAdoptionFeedback, []);
   const proofSummary = useAsyncData(getProofSuiteReadinessSummary, []);
   const pilotSummary = useAsyncData(getControlledPilotReadinessSummary, []);
   const execSummary = useAsyncData(getExecutiveProductionReadinessSummary, []);
@@ -240,6 +250,26 @@ export function ProductionReadinessCenter() {
     missing_workflow_evidence_count: 0,
     open_high_critical_live_issues: 0,
     production_golive_readiness_status: 'evidence_required',
+    next_action_required: '-'
+  };
+
+  const hypercareData = hypercare.data || {
+    hypercare_period_total: 0,
+    active_hypercare_periods: 0,
+    at_risk_or_blocked_periods: 0,
+    days_remaining: 0,
+    open_hypercare_issues: 0,
+    overdue_hypercare_issues: 0,
+    high_critical_hypercare_issues: 0,
+    missed_cadence_events: 0,
+    departments_missing_feedback: 0,
+    low_adoption_departments: 0,
+    support_needed_feedback_count: 0,
+    training_needed_feedback_count: 0,
+    inherited_unresolved_live_pilot_issues: 0,
+    inherited_high_critical_remediation_count: 0,
+    hypercare_blocker_count: 0,
+    production_stability_status: 'evidence_required',
     next_action_required: '-'
   };
 
@@ -968,6 +998,123 @@ export function ProductionReadinessCenter() {
                 </DataState>
               </ModernCard>
 
+              <ModernCard title={text.hypercareTitle} subtitle={text.hypercareSubtitle}>
+                <DataState loading={hypercare.loading} error={hypercare.error} empty={!hypercare.data}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '14px', marginBottom: '20px' }}>
+                    <div className="stat-card">
+                      <div className="stat-value">
+                        <StatusPill tone={
+                          hypercareData.production_stability_status === 'stable' ? 'good' :
+                          hypercareData.production_stability_status === 'stable_with_limitations' || hypercareData.production_stability_status === 'at_risk' ? 'warning' :
+                          hypercareData.production_stability_status === 'blocked' ? 'danger' : 'neutral'
+                        }>
+                          {hypercareData.production_stability_status}
+                        </StatusPill>
+                      </div>
+                      <div className="stat-label">{text.productionStability}</div>
+                    </div>
+                    <div className="stat-card"><div className="stat-value">{hypercareData.active_hypercare_periods}</div><div className="stat-label">{text.activeHypercare}</div></div>
+                    <div className="stat-card"><div className="stat-value">{hypercareData.days_remaining}</div><div className="stat-label">{text.daysRemaining}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{hypercareData.open_hypercare_issues}</div><div className="stat-label">{text.openHypercareIssues}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{hypercareData.overdue_hypercare_issues}</div><div className="stat-label">{text.overdueIssues}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{hypercareData.high_critical_hypercare_issues}</div><div className="stat-label">{text.highCriticalIssues}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{hypercareData.missed_cadence_events}</div><div className="stat-label">{text.missedCadence}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{hypercareData.departments_missing_feedback}</div><div className="stat-label">{text.missingFeedback}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{hypercareData.low_adoption_departments}</div><div className="stat-label">{text.lowAdoption}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{hypercareData.support_needed_feedback_count}</div><div className="stat-label">{text.supportNeeded}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{hypercareData.training_needed_feedback_count}</div><div className="stat-label">{text.trainingNeeded}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{hypercareData.inherited_unresolved_live_pilot_issues}</div><div className="stat-label">{text.unresolvedPilotIssues}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{hypercareData.inherited_high_critical_remediation_count}</div><div className="stat-label">{text.inheritedRemediation}</div></div>
+                  </div>
+                  <div className="alert alert-info">
+                    <strong>{text.nextActionRequired}: </strong>{hypercareData.next_action_required}
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.hypercareBlockersTitle} subtitle={text.hypercareBlockersSubtitle}>
+                <DataState loading={hypercareBlockers.loading} error={hypercareBlockers.error} empty={!hypercareBlockers.data?.length}>
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead><tr><th>{text.period}</th><th>{text.area}</th><th>{text.blockerReason}</th><th>{text.evidence}</th></tr></thead>
+                      <tbody>
+                        {(hypercareBlockers.data || []).slice(0, 60).map((row: any, index: number) => (
+                          <tr key={`${row.hypercare_label}-${row.blocker_type}-${index}`}>
+                            <td><strong>{row.hypercare_label || '-'}</strong></td>
+                            <td>{row.blocker_area || row.blocker_type}</td>
+                            <td>{row.blocker_summary}</td>
+                            <td><code>{row.evidence_reference || '-'}</code></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <ModernCard title={text.hypercareIssuesTitle} subtitle={text.hypercareIssuesSubtitle}>
+                  <DataState loading={hypercareIssues.loading} error={hypercareIssues.error} empty={!hypercareIssues.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead><tr><th>{text.issue}</th><th>{text.status}</th><th>{text.severity}</th><th>{text.dueDate}</th></tr></thead>
+                        <tbody>
+                          {(hypercareIssues.data || []).slice(0, 40).map((row: any) => (
+                            <tr key={row.id}>
+                              <td><strong>{row.issue_title}</strong></td>
+                              <td>{row.issue_status}</td>
+                              <td><StatusPill tone={row.severity === 'critical' || row.severity === 'high' ? 'danger' : row.severity === 'medium' ? 'warning' : 'neutral'}>{row.severity}</StatusPill></td>
+                              <td>{row.due_at ? new Date(row.due_at).toLocaleDateString() : '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+
+                <ModernCard title={text.operatingCadenceTitle} subtitle={text.operatingCadenceSubtitle}>
+                  <DataState loading={cadenceEvents.loading} error={cadenceEvents.error} empty={!cadenceEvents.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead><tr><th>{text.cadence}</th><th>{text.status}</th><th>{text.scheduled}</th><th>{text.evidence}</th></tr></thead>
+                        <tbody>
+                          {(cadenceEvents.data || []).slice(0, 40).map((row: any) => (
+                            <tr key={row.id}>
+                              <td><strong>{row.cadence_type}</strong></td>
+                              <td><StatusPill tone={row.event_status === 'completed' ? 'good' : row.event_status === 'missed' ? 'danger' : 'neutral'}>{row.event_status}</StatusPill></td>
+                              <td>{row.scheduled_at ? new Date(row.scheduled_at).toLocaleDateString() : '-'}</td>
+                              <td><code>{row.evidence_reference || '-'}</code></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+              </div>
+
+              <ModernCard title={text.adoptionFeedbackTitle} subtitle={text.adoptionFeedbackSubtitle}>
+                <DataState loading={adoptionFeedback.loading} error={adoptionFeedback.error} empty={!adoptionFeedback.data?.length}>
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead><tr><th>{text.department}</th><th>{text.feedback}</th><th>{text.adoption}</th><th>{text.support}</th><th>{text.training}</th></tr></thead>
+                      <tbody>
+                        {(adoptionFeedback.data || []).slice(0, 40).map((row: any) => (
+                          <tr key={row.id}>
+                            <td><strong>{row.department_name || '-'}</strong></td>
+                            <td>{row.feedback_status}</td>
+                            <td><StatusPill tone={row.adoption_status === 'adopted' ? 'good' : row.adoption_status === 'low_adoption' || row.adoption_status === 'blocked' ? 'danger' : 'warning'}>{row.adoption_status}</StatusPill></td>
+                            <td>{row.support_needed ? text.yes : text.no}</td>
+                            <td>{row.training_needed ? text.yes : text.no}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
               {/* Signoff Register */}
               <ModernCard title={text.signoffRegisterTitle} subtitle={text.signoffRegisterSubtitle}>
                 <DataState loading={signoffs.loading} error={signoffs.error} empty={!signoffs.data?.length}>
@@ -1650,6 +1797,38 @@ const en = {
   goLiveDecisionTitle: 'Production Go-Live Decision Register',
   goLiveDecisionSubtitle: 'Quality, Audit, IT/Admin, executive, and board-level launch decisions with evidence and conditions.',
   level: 'Level',
+  hypercareTitle: 'Production Hypercare & Operating Cadence',
+  hypercareSubtitle: 'First 30/60/90 day operating rhythm for stability, issue triage, department feedback, adoption, and executive escalation.',
+  productionStability: 'Production Stability',
+  activeHypercare: 'Active Hypercare',
+  daysRemaining: 'Days Remaining',
+  openHypercareIssues: 'Open Issues',
+  overdueIssues: 'Overdue Issues',
+  missedCadence: 'Missed Cadence',
+  missingFeedback: 'Missing Feedback',
+  lowAdoption: 'Low Adoption',
+  supportNeeded: 'Support Needed',
+  trainingNeeded: 'Training Needed',
+  unresolvedPilotIssues: 'Pilot Issues',
+  inheritedRemediation: 'High/Critical Remediation',
+  hypercareBlockersTitle: 'Hypercare Stability Blockers',
+  hypercareBlockersSubtitle: 'Open production issues, missed operating cadence, feedback gaps, adoption gaps, support needs, and inherited pilot blockers.',
+  period: 'Period',
+  hypercareIssuesTitle: 'Hypercare Issue Triage',
+  hypercareIssuesSubtitle: 'Production issues requiring owner action, SLA follow-up, evidence, or risk acceptance.',
+  issue: 'Issue',
+  operatingCadenceTitle: 'Operating Cadence',
+  operatingCadenceSubtitle: 'Daily huddles, weekly reviews, executive reviews, department check-ins, and closure meetings.',
+  cadence: 'Cadence',
+  scheduled: 'Scheduled',
+  adoptionFeedbackTitle: 'Department Adoption & Feedback',
+  adoptionFeedbackSubtitle: 'Department feedback, adoption status, support needs, and training follow-up during hypercare.',
+  feedback: 'Feedback',
+  adoption: 'Adoption',
+  support: 'Support',
+  training: 'Training',
+  yes: 'Yes',
+  no: 'No',
   workflow: 'Workflow',
   department: 'Department',
   owner: 'Owner',
@@ -1857,6 +2036,38 @@ const ar = {
   goLiveDecisionTitle: 'سجل قرارات الإطلاق الإنتاجي',
   goLiveDecisionSubtitle: 'قرارات الجودة والتدقيق وتقنية المعلومات والإدارة التنفيذية والمجلس مع الأدلة والاشتراطات.',
   level: 'المستوى',
+  hypercareTitle: 'دعم ما بعد الإطلاق وإيقاع التشغيل',
+  hypercareSubtitle: 'إيقاع أول 30/60/90 يوم لمتابعة الاستقرار، وفرز المشكلات، وملاحظات الأقسام، والتبني، والتصعيد التنفيذي.',
+  productionStability: 'استقرار التشغيل',
+  activeHypercare: 'دعم نشط',
+  daysRemaining: 'الأيام المتبقية',
+  openHypercareIssues: 'مشكلات مفتوحة',
+  overdueIssues: 'مشكلات متأخرة',
+  missedCadence: 'اجتماعات فائتة',
+  missingFeedback: 'ملاحظات ناقصة',
+  lowAdoption: 'تبن منخفض',
+  supportNeeded: 'يحتاج دعم',
+  trainingNeeded: 'يحتاج تدريب',
+  unresolvedPilotIssues: 'مشكلات تجريبية',
+  inheritedRemediation: 'معالجات عالية/حرجة',
+  hypercareBlockersTitle: 'معوقات استقرار ما بعد الإطلاق',
+  hypercareBlockersSubtitle: 'مشكلات التشغيل المفتوحة، والاجتماعات الفائتة، وفجوات الملاحظات، وفجوات التبني، واحتياج الدعم، ومعوقات التشغيل التجريبي الموروثة.',
+  period: 'الفترة',
+  hypercareIssuesTitle: 'فرز مشكلات ما بعد الإطلاق',
+  hypercareIssuesSubtitle: 'مشكلات الإنتاج التي تتطلب إجراء من المالك أو متابعة اتفاقية الخدمة أو دليل إغلاق أو قبول مخاطر.',
+  issue: 'المشكلة',
+  operatingCadenceTitle: 'إيقاع التشغيل',
+  operatingCadenceSubtitle: 'اجتماعات يومية، ومراجعات أسبوعية، ومراجعات تنفيذية، ومتابعات الأقسام، واجتماعات الإغلاق.',
+  cadence: 'الإيقاع',
+  scheduled: 'مجدول',
+  adoptionFeedbackTitle: 'تبني الأقسام وملاحظاتها',
+  adoptionFeedbackSubtitle: 'ملاحظات الأقسام، وحالة التبني، واحتياج الدعم، ومتابعة التدريب أثناء فترة الدعم.',
+  feedback: 'الملاحظات',
+  adoption: 'التبني',
+  support: 'الدعم',
+  training: 'التدريب',
+  yes: 'نعم',
+  no: 'لا',
   workflow: 'مسار العمل',
   department: 'القسم',
   owner: 'المسؤول',

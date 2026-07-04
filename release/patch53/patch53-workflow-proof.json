@@ -1,0 +1,49 @@
+{
+  "patch": "53",
+  "checked_at": "2026-07-04T12:59:03.515Z",
+  "strict_passed": true,
+  "check_count": 28,
+  "failed_count": 0,
+  "failed": [],
+  "hypercare_statuses": [
+    "planned",
+    "active",
+    "stable",
+    "at_risk",
+    "blocked",
+    "completed",
+    "extended",
+    "cancelled"
+  ],
+  "issue_statuses": [
+    "open",
+    "in_progress",
+    "resolved",
+    "overdue",
+    "accepted_risk",
+    "cancelled"
+  ],
+  "cadence_types": [
+    "daily_huddle",
+    "weekly_review",
+    "executive_review",
+    "department_checkin",
+    "issue_triage",
+    "stabilization_review",
+    "closure_review"
+  ],
+  "feedback_statuses": [
+    "pending",
+    "submitted",
+    "reviewed",
+    "action_required",
+    "closed"
+  ],
+  "adoption_statuses": [
+    "not_assessed",
+    "adopted",
+    "partially_adopted",
+    "low_adoption",
+    "blocked"
+  ]
+}
