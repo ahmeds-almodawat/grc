@@ -100,6 +100,8 @@ npm run dev
 
 ## Important commands
 
+Current operator command guidance lives in `release/current-proof-command-index.md` and `release/current-validation-runbook.md`.
+
 Run static checks:
 
 ```powershell
