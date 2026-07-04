@@ -18,14 +18,14 @@ export function AuditEngagementChecklist() {
           <span className="v150-eyebrow">Audit universe and plan</span>
           <h3>Risk-based audit execution workspace</h3>
           <p>
-            Sample controlled-pilot structure for audit universe, annual plan, workpaper index and evidence requests.
-            It is workflow scaffolding only; it does not claim real audit results.
+            Planning register for audit universe, annual plan, workpaper index and evidence requests.
+            Live audit execution and findings are managed in the Audit Execution workspace.
           </p>
         </div>
         <div className="v150-score-card">
           <span>Execution depth</span>
           <strong>Program-ready</strong>
-          <small>Frontend workflow layer, no new migration</small>
+          <small>Use live engagement records for production assurance</small>
         </div>
       </div>
 

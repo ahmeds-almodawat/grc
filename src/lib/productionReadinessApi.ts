@@ -518,7 +518,7 @@ function getStagingEvidenceRequiredSummary() {
     blocked_run_count: 0,
     evidence_required_run_count: 1,
     latest_run_id: null,
-    latest_run_label: 'No staging/local-clean evidence run recorded',
+    latest_run_label: 'No environment evidence run recorded',
     latest_environment_type: 'local_clean',
     latest_run_status: 'evidence_required',
     latest_migration_count: 0,
@@ -530,10 +530,10 @@ function getStagingEvidenceRequiredSummary() {
     restore_dryrun_passed: false,
     failure_count: 0,
     evidence_path: null,
-    run_notes: 'Staging or local-clean migration replay/persona SQL evidence has not been captured in the live evidence register.',
+    run_notes: 'Environment setup, role testing, access-control checks, and recovery evidence have not been captured in the live evidence register.',
     completed_at: null,
     staging_evidence_readiness_status: 'evidence_required',
-    next_action_required: 'Run local-clean or staging migration/persona SQL evidence capture before production readiness signoff.',
+    next_action_required: 'Capture environment setup, role testing, access-control, and recovery evidence before production readiness signoff.',
   };
 }
 
@@ -541,13 +541,13 @@ function getStagingEvidenceRequiredBlockers() {
   return [
     {
       id: 'patch47-evidence-required',
-      run_label: 'No staging/local-clean evidence run recorded',
+      run_label: 'No environment evidence run recorded',
       environment_type: 'local_clean',
       run_status: 'evidence_required',
       failure_count: 0,
       evidence_path: null,
-      run_notes: 'No live staging/local-clean evidence run is available.',
-      blocker_reason: 'staging migration replay and persona SQL evidence required',
+      run_notes: 'No live environment evidence run is available.',
+      blocker_reason: 'environment setup, role testing, and access-control evidence required',
     },
   ];
 }
