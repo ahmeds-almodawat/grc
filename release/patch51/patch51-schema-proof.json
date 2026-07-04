@@ -1,0 +1,40 @@
+{
+  "patch": "51",
+  "checked_at": "2026-07-04T11:53:16.937Z",
+  "strict_passed": true,
+  "check_count": 48,
+  "failed_count": 0,
+  "failed": [],
+  "tables": [
+    "live_pilot_workflow_runs",
+    "live_pilot_workflow_steps",
+    "live_pilot_evidence_captures",
+    "live_pilot_execution_issues",
+    "live_pilot_workflow_events"
+  ],
+  "views": [
+    "v_patch51_live_pilot_workflow_run_register",
+    "v_patch51_live_pilot_workflow_step_register",
+    "v_patch51_live_pilot_evidence_capture_register",
+    "v_patch51_live_pilot_execution_issue_register",
+    "v_patch51_pending_workflow_walkthrough_register",
+    "v_patch51_failed_workflow_walkthrough_register",
+    "v_patch51_missing_workflow_evidence_register",
+    "v_patch51_workflow_execution_blocker_register",
+    "v_patch51_live_pilot_workflow_summary",
+    "v_patch51_production_readiness_live_pilot_execution_overlay"
+  ],
+  "functions": [
+    "record_live_pilot_workflow_event",
+    "create_live_pilot_workflow_run",
+    "update_live_pilot_workflow_run_status",
+    "create_live_pilot_workflow_step",
+    "update_live_pilot_workflow_step_status",
+    "create_live_pilot_evidence_capture",
+    "update_live_pilot_evidence_capture_status",
+    "create_live_pilot_execution_issue",
+    "update_live_pilot_execution_issue_status",
+    "get_live_pilot_workflow_summary",
+    "get_production_readiness_live_pilot_execution_overlay"
+  ]
+}

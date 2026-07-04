@@ -33,6 +33,10 @@ import {
   getRealPilotParticipantSetupGaps,
   getRealPilotTrainingGaps,
   getRealPilotMasterDataExceptions,
+  getLivePilotExecutionOverlay,
+  getLivePilotWorkflowBlockers,
+  getLivePilotPendingWalkthroughs,
+  getLivePilotFailedWalkthroughs,
   getProofSuiteReadinessSummary,
   getControlledPilotReadinessSummary,
   getExecutiveProductionReadinessSummary
@@ -73,6 +77,10 @@ export function ProductionReadinessCenter() {
   const realPilotParticipantGaps = useAsyncData(getRealPilotParticipantSetupGaps, []);
   const realPilotTrainingGaps = useAsyncData(getRealPilotTrainingGaps, []);
   const realPilotExceptions = useAsyncData(getRealPilotMasterDataExceptions, []);
+  const livePilotExecution = useAsyncData(getLivePilotExecutionOverlay, []);
+  const livePilotBlockers = useAsyncData(getLivePilotWorkflowBlockers, []);
+  const livePilotPending = useAsyncData(getLivePilotPendingWalkthroughs, []);
+  const livePilotFailed = useAsyncData(getLivePilotFailedWalkthroughs, []);
   const proofSummary = useAsyncData(getProofSuiteReadinessSummary, []);
   const pilotSummary = useAsyncData(getControlledPilotReadinessSummary, []);
   const execSummary = useAsyncData(getExecutiveProductionReadinessSummary, []);
@@ -183,6 +191,22 @@ export function ProductionReadinessCenter() {
     launch_blocker_count: 0,
     participant_coverage_percentage: 0,
     setup_readiness_status: 'evidence_required',
+    next_action_required: '-'
+  };
+
+  const livePilotExecutionData = livePilotExecution.data || {
+    critical_workflows_total: 0,
+    workflows_completed: 0,
+    workflows_passed: 0,
+    workflows_passed_with_limitations: 0,
+    workflows_failed: 0,
+    workflows_blocked: 0,
+    workflows_pending: 0,
+    missing_evidence_count: 0,
+    open_high_critical_issues: 0,
+    evidence_needing_review: 0,
+    workflow_blocker_count: 0,
+    live_execution_readiness_status: 'evidence_required',
     next_action_required: '-'
   };
 
@@ -692,6 +716,99 @@ export function ProductionReadinessCenter() {
                               <td><strong>{row.display_name}</strong></td>
                               <td>{row.participant_role}</td>
                               <td>{row.gap_summary}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+              </div>
+
+              <ModernCard title={text.livePilotExecutionTitle} subtitle={text.livePilotExecutionSubtitle}>
+                <DataState loading={livePilotExecution.loading} error={livePilotExecution.error} empty={!livePilotExecution.data}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '14px', marginBottom: '20px' }}>
+                    <div className="stat-card">
+                      <div className="stat-value">
+                        <StatusPill tone={
+                          livePilotExecutionData.live_execution_readiness_status === 'ready' ? 'good' :
+                          livePilotExecutionData.live_execution_readiness_status === 'ready_with_limitations' ? 'warning' :
+                          livePilotExecutionData.live_execution_readiness_status === 'blocked' ? 'danger' : 'neutral'
+                        }>
+                          {livePilotExecutionData.live_execution_readiness_status}
+                        </StatusPill>
+                      </div>
+                      <div className="stat-label">{text.liveExecutionReadiness}</div>
+                    </div>
+                    <div className="stat-card"><div className="stat-value">{livePilotExecutionData.critical_workflows_total}</div><div className="stat-label">{text.criticalWorkflows}</div></div>
+                    <div className="stat-card success"><div className="stat-value">{livePilotExecutionData.workflows_passed}</div><div className="stat-label">{text.workflowsPassed}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{livePilotExecutionData.workflows_passed_with_limitations}</div><div className="stat-label">{text.workflowsLimited}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{livePilotExecutionData.workflows_failed}</div><div className="stat-label">{text.workflowsFailed}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{livePilotExecutionData.workflows_blocked}</div><div className="stat-label">{text.workflowsBlocked}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{livePilotExecutionData.workflows_pending}</div><div className="stat-label">{text.pendingWalkthroughs}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{livePilotExecutionData.missing_evidence_count}</div><div className="stat-label">{text.missingEvidence}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{livePilotExecutionData.evidence_needing_review}</div><div className="stat-label">{text.evidenceNeedingReview}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{livePilotExecutionData.open_high_critical_issues}</div><div className="stat-label">{text.highCriticalIssues}</div></div>
+                  </div>
+                  <div className="alert alert-info">
+                    <strong>{text.nextActionRequired}: </strong>{livePilotExecutionData.next_action_required}
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.livePilotBlockersTitle} subtitle={text.livePilotBlockersSubtitle}>
+                <DataState loading={livePilotBlockers.loading} error={livePilotBlockers.error} empty={!livePilotBlockers.data?.length}>
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead><tr><th>{text.workflow}</th><th>{text.area}</th><th>{text.blockerReason}</th><th>{text.evidence}</th></tr></thead>
+                      <tbody>
+                        {(livePilotBlockers.data || []).slice(0, 60).map((row: any, index: number) => (
+                          <tr key={`${row.workflow_label}-${row.blocker_type}-${index}`}>
+                            <td><strong>{row.workflow_label}</strong></td>
+                            <td>{row.blocker_area || row.blocker_type}</td>
+                            <td>{row.blocker_summary}</td>
+                            <td><code>{row.evidence_reference || '-'}</code></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <ModernCard title={text.pendingWalkthroughsTitle} subtitle={text.pendingWalkthroughsSubtitle}>
+                  <DataState loading={livePilotPending.loading} error={livePilotPending.error} empty={!livePilotPending.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead><tr><th>{text.workflow}</th><th>{text.department}</th><th>{text.status}</th><th>{text.owner}</th></tr></thead>
+                        <tbody>
+                          {(livePilotPending.data || []).slice(0, 40).map((row: any) => (
+                            <tr key={row.id}>
+                              <td><strong>{row.workflow_label}</strong></td>
+                              <td>{row.department_name || '-'}</td>
+                              <td>{row.run_status}</td>
+                              <td>{row.owner_user_id ? text.assigned : text.evidenceRequired}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+
+                <ModernCard title={text.failedWalkthroughsTitle} subtitle={text.failedWalkthroughsSubtitle}>
+                  <DataState loading={livePilotFailed.loading} error={livePilotFailed.error} empty={!livePilotFailed.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead><tr><th>{text.workflow}</th><th>{text.status}</th><th>{text.blockerReason}</th><th>{text.evidence}</th></tr></thead>
+                        <tbody>
+                          {(livePilotFailed.data || []).slice(0, 40).map((row: any) => (
+                            <tr key={row.id}>
+                              <td><strong>{row.workflow_label}</strong></td>
+                              <td><StatusPill tone="danger">{row.run_status}</StatusPill></td>
+                              <td>{row.blocker_summary || '-'}</td>
+                              <td><code>{row.evidence_summary || '-'}</code></td>
                             </tr>
                           ))}
                         </tbody>
@@ -1338,6 +1455,25 @@ const en = {
   realPilotParticipantGapsSubtitle: 'Pending, unavailable, inactive, or training-required pilot participants.',
   realPilotTrainingGapsTitle: 'Training Readiness Gaps',
   realPilotTrainingGapsSubtitle: 'Participants whose required training is not yet confirmed.',
+  livePilotExecutionTitle: 'Live Pilot Workflow Execution',
+  livePilotExecutionSubtitle: 'Recorded walkthroughs, captured evidence, participation, issues, and final readiness for critical hospital workflows.',
+  liveExecutionReadiness: 'Execution Readiness',
+  criticalWorkflows: 'Critical Workflows',
+  workflowsPassed: 'Passed',
+  workflowsLimited: 'Limited Passes',
+  workflowsFailed: 'Failed',
+  workflowsBlocked: 'Blocked',
+  pendingWalkthroughs: 'Pending Walkthroughs',
+  missingEvidence: 'Missing Evidence',
+  evidenceNeedingReview: 'Evidence Review',
+  highCriticalIssues: 'High/Critical Issues',
+  livePilotBlockersTitle: 'Live Workflow Blockers',
+  livePilotBlockersSubtitle: 'Incomplete walkthroughs, failed steps, missing evidence, rejected evidence, and high-risk execution issues.',
+  pendingWalkthroughsTitle: 'Pending Workflow Walkthroughs',
+  pendingWalkthroughsSubtitle: 'Critical workflows scheduled, not started, or still in progress.',
+  failedWalkthroughsTitle: 'Failed or Blocked Walkthroughs',
+  failedWalkthroughsSubtitle: 'Workflow runs that must be corrected before pilot approval.',
+  workflow: 'Workflow',
   department: 'Department',
   owner: 'Owner',
   assigned: 'Assigned',
@@ -1499,6 +1635,25 @@ const ar = {
   realPilotParticipantGapsSubtitle: 'المشاركون المعلقون أو غير المتاحين أو غير النشطين أو الذين يحتاجون إلى تدريب.',
   realPilotTrainingGapsTitle: 'فجوات جاهزية التدريب',
   realPilotTrainingGapsSubtitle: 'المشاركون الذين لم يتم تأكيد تدريبهم المطلوب بعد.',
+  livePilotExecutionTitle: 'تنفيذ مسارات التشغيل التجريبي الفعلي',
+  livePilotExecutionSubtitle: 'الجولات المسجلة، والأدلة الملتقطة، والمشاركة، والمشكلات، والجاهزية النهائية لمسارات العمل الحرجة.',
+  liveExecutionReadiness: 'جاهزية التنفيذ',
+  criticalWorkflows: 'مسارات حرجة',
+  workflowsPassed: 'ناجحة',
+  workflowsLimited: 'نجاح بمحددات',
+  workflowsFailed: 'فاشلة',
+  workflowsBlocked: 'معطلة',
+  pendingWalkthroughs: 'جولات معلقة',
+  missingEvidence: 'أدلة مفقودة',
+  evidenceNeedingReview: 'مراجعة الأدلة',
+  highCriticalIssues: 'مشكلات عالية/حرجة',
+  livePilotBlockersTitle: 'معوقات مسارات العمل الفعلية',
+  livePilotBlockersSubtitle: 'الجولات غير المكتملة، والخطوات الفاشلة، والأدلة المفقودة أو المرفوضة، ومشكلات التنفيذ عالية المخاطر.',
+  pendingWalkthroughsTitle: 'جولات مسارات العمل المعلقة',
+  pendingWalkthroughsSubtitle: 'مسارات العمل الحرجة المجدولة أو غير التي لم تبدأ أو ما زالت قيد التنفيذ.',
+  failedWalkthroughsTitle: 'جولات فاشلة أو معطلة',
+  failedWalkthroughsSubtitle: 'مسارات العمل التي يجب تصحيحها قبل اعتماد التشغيل التجريبي.',
+  workflow: 'مسار العمل',
   department: 'القسم',
   owner: 'المسؤول',
   assigned: 'محدد',

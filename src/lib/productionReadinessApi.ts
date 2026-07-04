@@ -835,6 +835,100 @@ export async function getRealPilotMasterDataExceptions(): Promise<any[]> {
   }
 }
 
+function getLivePilotExecutionEvidenceRequiredSummary() {
+  return {
+    critical_workflows_total: 0,
+    workflows_completed: 0,
+    workflows_passed: 0,
+    workflows_passed_with_limitations: 0,
+    workflows_failed: 0,
+    workflows_blocked: 0,
+    workflows_pending: 0,
+    missing_evidence_count: 1,
+    open_high_critical_issues: 0,
+    evidence_needing_review: 0,
+    workflow_blocker_count: 1,
+    live_execution_readiness_status: 'evidence_required',
+    next_action_required: 'Record live workflow walkthroughs and capture evidence before pilot approval.',
+  };
+}
+
+function getLivePilotExecutionEvidenceRequiredBlockers() {
+  return [
+    {
+      workflow_label: 'Live pilot workflow walkthroughs',
+      blocker_area: 'workflow_walkthrough',
+      blocker_type: 'evidence_required',
+      blocker_summary: 'Critical hospital workflows must be walked through with captured evidence before pilot approval.',
+      evidence_reference: null,
+    },
+  ];
+}
+
+export async function getLivePilotExecutionOverlay(): Promise<any> {
+  const evidenceRequired = getLivePilotExecutionEvidenceRequiredSummary();
+  if (!supabase) return evidenceRequired;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch51_production_readiness_live_pilot_execution_overlay')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data || data.critical_workflows_total === 0) return evidenceRequired;
+    return data;
+  } catch (error) {
+    logApiWarning('getLivePilotExecutionOverlay', error);
+    return evidenceRequired;
+  }
+}
+
+export async function getLivePilotWorkflowBlockers(): Promise<any[]> {
+  const evidenceRequired = getLivePilotExecutionEvidenceRequiredBlockers();
+  if (!supabase) return evidenceRequired;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch51_workflow_execution_blocker_register')
+      .select('*');
+    if (error) throw error;
+    if (!data || data.length === 0) return evidenceRequired;
+    return data;
+  } catch (error) {
+    logApiWarning('getLivePilotWorkflowBlockers', error);
+    return evidenceRequired;
+  }
+}
+
+export async function getLivePilotPendingWalkthroughs(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch51_pending_workflow_walkthrough_register')
+      .select('*')
+      .order('workflow_label', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getLivePilotPendingWalkthroughs', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getLivePilotFailedWalkthroughs(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch51_failed_workflow_walkthrough_register')
+      .select('*')
+      .order('workflow_label', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getLivePilotFailedWalkthroughs', error);
+    return emptyLiveArray();
+  }
+}
+
 export async function getProofSuiteReadinessSummary(): Promise<any[]> {
   if (!supabase) return emptyLiveArray();
   try {
