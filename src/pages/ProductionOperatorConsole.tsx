@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Activity, AlertTriangle, ArchiveRestore, Building2, ClipboardCheck, ExternalLink, KeyRound, ShieldCheck, UserCheck } from 'lucide-react';
+import { Activity, AlertTriangle, ArchiveRestore, Building2, ClipboardCheck, ExternalLink, FileCheck2, KeyRound, ShieldCheck, UserCheck } from 'lucide-react';
 import { DataState } from '../components/DataState';
 import { ModernCard, StatusPill } from '../components/ModernCard';
 import { useAsyncData } from '../hooks/useAsyncData';
@@ -75,10 +75,16 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
           <p className="subtitle">Daily operating view for production readiness, hospital rollout, hypercare, access, recovery, and executive action.</p>
         </div>
         {setPage ? (
-          <button className="secondary-action" type="button" onClick={() => setPage('productionReadiness')}>
-            <ExternalLink size={16} />
-            Open detailed readiness
-          </button>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button className="secondary-action" type="button" onClick={() => setPage('productionEvidenceClosure')}>
+              <FileCheck2 size={16} />
+              Production Evidence Closure
+            </button>
+            <button className="secondary-action" type="button" onClick={() => setPage('productionReadiness')}>
+              <ExternalLink size={16} />
+              Open detailed readiness
+            </button>
+          </div>
         ) : null}
       </div>
 

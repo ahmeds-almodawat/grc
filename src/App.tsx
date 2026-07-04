@@ -118,6 +118,7 @@ import { TrainingGovernanceCenter } from './pages/TrainingGovernanceCenter';
 import { ExecutiveTruthCenter } from './pages/ExecutiveTruthCenter';
 import { ProductionReadinessCenter } from './pages/ProductionReadinessCenter';
 import { ProductionOperatorConsole } from './pages/ProductionOperatorConsole';
+import { ProductionEvidenceClosureCenter } from './pages/ProductionEvidenceClosureCenter';
 import { ScenarioPlanningCenter } from './pages/ScenarioPlanningCenter';
 import { ExecutiveMobileCommand } from './pages/ExecutiveMobileCommand';
 import { AutomationIntelligenceCenter } from './pages/AutomationIntelligenceCenter';
@@ -139,6 +140,7 @@ import { isScenarioLabEnabled } from './lib/scenarioLab';
 
 const routeAliases: Record<string, PageKey> = {
   '/production-operator-console': 'productionOperatorConsole',
+  '/production-evidence-closure': 'productionEvidenceClosure',
 };
 
 function initialPageFromPath(): PageKey {
@@ -475,6 +477,8 @@ export default function App() {
         return <AdminMaintenanceHub setPage={setPage} />;
       case 'productionOperatorConsole':
         return <ProductionOperatorConsole setPage={setPage} />;
+      case 'productionEvidenceClosure':
+        return <ProductionEvidenceClosureCenter setPage={setPage} />;
       case 'finishFast':
         return <FinalSprintCenter />;
       case 'productionFinish':

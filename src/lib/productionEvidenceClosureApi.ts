@@ -1,0 +1,308 @@
+import {
+  getBackupRestoreOperationsDashboard,
+  getBlockingLimitations,
+  getHospitalAdoptionReadinessReviews,
+  getHospitalDepartmentLaunchPacks,
+  getHospitalOperationsLaunchBlockers,
+  getHospitalPolicyAttestationReadiness,
+  getHospitalSupportReadinessRecords,
+  getKnownLimitationsRegister,
+  getPilotAcceptedLimitations,
+  getProductionGoLiveDecisions,
+  getProductionHypercareBlockers,
+  getProductionReadinessSignoffRegister,
+  getRuntimeAccessReviewBlockers,
+} from './productionReadinessApi';
+
+export type EvidenceClosureStatus =
+  | 'open'
+  | 'under_review'
+  | 'accepted_with_limitation'
+  | 'closed'
+  | 'overdue'
+  | 'blocked'
+  | 'evidence_required';
+
+export type EvidenceClosureRecommendation =
+  | 'Ready for executive review'
+  | 'Review required'
+  | 'Blocked'
+  | 'Evidence required';
+
+export interface ProductionEvidenceClosureItem {
+  id: string;
+  category: string;
+  title: string;
+  departmentOrScope: string;
+  owner: string;
+  reviewer: string;
+  dueDate: string;
+  evidenceState: EvidenceClosureStatus;
+  reviewerState: string;
+  blockerState: string;
+  nextAction: string;
+  description: string;
+  requiredEvidence: string;
+  linkedEvidenceReferences: string[];
+  comments: string;
+  closureDecisionState: string;
+  limitationState: string;
+}
+
+export interface DepartmentEvidenceRegisterRow {
+  department: string;
+  launchReadiness: string;
+  missingEvidenceCount: number;
+  trainingEvidence: string;
+  policyEvidence: string;
+  supportEvidence: string;
+  adoptionEvidence: string;
+  owner: string;
+  nextAction: string;
+}
+
+export interface ProductionEvidenceClosureData {
+  overview: {
+    totalEvidenceGaps: number;
+    openGaps: number;
+    underReview: number;
+    acceptedWithLimitation: number;
+    closed: number;
+    overdue: number;
+    blocked: number;
+    evidenceRequired: number;
+    nextRequiredAction: string;
+    owner: string;
+  };
+  intakeQueue: ProductionEvidenceClosureItem[];
+  departmentRegister: DepartmentEvidenceRegisterRow[];
+  executivePack: {
+    unresolvedBlockers: number;
+    acceptedLimitationsRequiringReview: number;
+    missingSignoffs: number;
+    recoveryEvidenceState: string;
+    departmentReadinessGaps: number;
+    finalRecommendationState: EvidenceClosureRecommendation;
+  };
+}
+
+const evidenceMissing = 'Evidence has not been recorded.';
+const reviewRequired = 'Review required.';
+const ownerAction = 'Awaiting owner action.';
+const noBlocker = 'No blocker currently recorded.';
+
+const numberValue = (value: unknown) => Number(value ?? 0) || 0;
+
+function textValue(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) return value.trim();
+    if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  }
+  return '';
+}
+
+function normalizeStatus(value: unknown): EvidenceClosureStatus {
+  const normalized = String(value ?? '').toLowerCase();
+  if (['approved', 'accepted', 'attested', 'ready', 'complete', 'completed', 'closed', 'verified'].includes(normalized)) return 'closed';
+  if (['under_review', 'ready_for_review', 'pending_review', 'submitted'].includes(normalized)) return 'under_review';
+  if (['approved_with_limitation', 'accepted_with_limitation', 'ready_with_limitations'].includes(normalized)) return 'accepted_with_limitation';
+  if (['overdue', 'late'].includes(normalized)) return 'overdue';
+  if (['blocked', 'failed', 'rejected'].includes(normalized)) return 'blocked';
+  if (['evidence_required', 'missing', 'pending', 'planning', 'not_started', ''].includes(normalized)) return 'evidence_required';
+  return 'open';
+}
+
+function evidenceRefs(row: Record<string, any>) {
+  return [
+    row.evidence_reference,
+    row.evidence_references,
+    row.evidence_url,
+    row.file_path,
+    row.audit_note,
+  ].flatMap(value => Array.isArray(value) ? value : [value])
+    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
+}
+
+function makeItem(category: string, row: Record<string, any>, index: number, defaults: Partial<ProductionEvidenceClosureItem>): ProductionEvidenceClosureItem {
+  const status = normalizeStatus(
+    row.evidence_status
+    ?? row.review_status
+    ?? row.signoff_status
+    ?? row.launch_status
+    ?? row.support_status
+    ?? row.adoption_status
+    ?? row.attestation_status
+    ?? row.operation_status
+    ?? row.status
+    ?? row.blocker_type
+  );
+  const refs = evidenceRefs(row);
+
+  return {
+    id: textValue(row.id, row.launch_pack_id, `${category}-${index}`),
+    category,
+    title: textValue(defaults.title, row.title, row.launch_label, row.policy_title, row.operation_type, row.blocker_area, row.decision_level, category),
+    departmentOrScope: textValue(row.department_name, row.scope_name, row.pilot_scope, row.launch_label, defaults.departmentOrScope, 'Hospital-wide'),
+    owner: textValue(row.owner_name, row.owner_role, row.department_owner_name, row.department_owner_user_id, row.signoff_role, defaults.owner, ownerAction),
+    reviewer: textValue(row.reviewer_name, row.reviewer_role, row.signer_user_id, defaults.reviewer, reviewRequired),
+    dueDate: textValue(row.due_at, row.due_date, row.target_date, row.review_due_date, defaults.dueDate, reviewRequired),
+    evidenceState: status,
+    reviewerState: textValue(row.review_status, row.signoff_status, row.decision_status, defaults.reviewerState, reviewRequired),
+    blockerState: textValue(row.blocker_reason, row.blocker_summary, row.blocker_type, defaults.blockerState, noBlocker),
+    nextAction: textValue(row.next_action_required, row.action_required, row.readiness_summary, defaults.nextAction, reviewRequired),
+    description: textValue(row.description, row.readiness_summary, row.blocker_summary, row.limitation_summary, defaults.description, reviewRequired),
+    requiredEvidence: textValue(defaults.requiredEvidence, row.required_evidence, row.evidence_required, evidenceMissing),
+    linkedEvidenceReferences: refs.length ? refs : [evidenceMissing],
+    comments: textValue(row.review_notes, row.audit_note, row.limitation_summary, row.rejection_reason, defaults.comments, reviewRequired),
+    closureDecisionState: textValue(row.decision_status, row.signoff_status, row.review_status, defaults.closureDecisionState, reviewRequired),
+    limitationState: textValue(row.limitation_summary, row.limitation_status, row.severity, defaults.limitationState, reviewRequired),
+  };
+}
+
+function departmentEvidenceRow(row: Record<string, any>, support: any[], adoption: any[], policy: any[]): DepartmentEvidenceRegisterRow {
+  const department = textValue(row.department_name, row.launch_label, 'Department');
+  const supportRow = support.find(item => item.department_name === department || item.launch_pack_id === row.id);
+  const adoptionRow = adoption.find(item => item.department_name === department || item.launch_pack_id === row.id);
+  const policyRows = policy.filter(item => item.department_name === department || item.launch_pack_id === row.id);
+  const missingEvidenceCount = [
+    row.evidence_reference,
+    supportRow?.evidence_reference,
+    adoptionRow?.evidence_reference,
+    ...policyRows.map(item => item.evidence_reference),
+  ].filter(value => !value).length;
+
+  return {
+    department,
+    launchReadiness: textValue(row.launch_status, row.readiness_status, reviewRequired),
+    missingEvidenceCount,
+    trainingEvidence: textValue(row.training_status, adoptionRow?.training_status, reviewRequired),
+    policyEvidence: policyRows.some(item => normalizeStatus(item.attestation_status) === 'closed') ? 'Recorded' : reviewRequired,
+    supportEvidence: textValue(supportRow?.support_status, reviewRequired),
+    adoptionEvidence: textValue(adoptionRow?.adoption_status, reviewRequired),
+    owner: textValue(row.owner_name, row.department_owner_name, row.department_owner_user_id, ownerAction),
+    nextAction: textValue(row.next_action_required, row.readiness_summary, supportRow?.next_action_required, adoptionRow?.next_action_required, reviewRequired),
+  };
+}
+
+export async function getProductionEvidenceClosureData(): Promise<ProductionEvidenceClosureData> {
+  const [
+    departmentLaunchPacks,
+    departmentBlockers,
+    supportReadiness,
+    policyAttestations,
+    adoptionReadiness,
+    backupReadiness,
+    accessBlockers,
+    signoffs,
+    limitations,
+    blockingLimitations,
+    acceptedLimitations,
+    goLiveDecisions,
+    hypercareBlockers,
+  ] = await Promise.all([
+    getHospitalDepartmentLaunchPacks(),
+    getHospitalOperationsLaunchBlockers(),
+    getHospitalSupportReadinessRecords(),
+    getHospitalPolicyAttestationReadiness(),
+    getHospitalAdoptionReadinessReviews(),
+    getBackupRestoreOperationsDashboard(),
+    getRuntimeAccessReviewBlockers(),
+    getProductionReadinessSignoffRegister(),
+    getKnownLimitationsRegister(),
+    getBlockingLimitations(),
+    getPilotAcceptedLimitations(),
+    getProductionGoLiveDecisions(),
+    getProductionHypercareBlockers(),
+  ]);
+
+  const intakeQueue = [
+    ...departmentLaunchPacks.map((row, index) => makeItem('Department launch', row, index, {
+      requiredEvidence: 'Department owner, launch checklist, participant coverage, support path, and launch decision evidence.',
+    })),
+    ...adoptionReadiness.map((row, index) => makeItem('Training adoption', row, index, {
+      title: 'Training and adoption evidence',
+      requiredEvidence: 'Training completion, user adoption review, and follow-up evidence.',
+    })),
+    ...policyAttestations.map((row, index) => makeItem('Policy/SOP attestation', row, index, {
+      requiredEvidence: 'Policy or SOP acknowledgement evidence by required audience.',
+    })),
+    ...supportReadiness.map((row, index) => makeItem('Support readiness', row, index, {
+      requiredEvidence: 'Named support owner, escalation path, response readiness, and runbook evidence.',
+    })),
+    ...backupReadiness.map((row, index) => makeItem('Backup/Restore/DR', row, index, {
+      title: 'Recovery assurance evidence',
+      requiredEvidence: 'Backup, restore, and recovery assurance evidence.',
+    })),
+    ...accessBlockers.map((row, index) => makeItem('Access/Security review', row, index, {
+      requiredEvidence: 'Access review decision, limitation, or remediation evidence.',
+    })),
+    ...signoffs.map((row, index) => makeItem('Executive signoff', row, index, {
+      requiredEvidence: 'Named decision and signoff evidence.',
+    })),
+    ...acceptedLimitations.map((row, index) => makeItem('Accepted limitations', row, index, {
+      requiredEvidence: 'Risk acceptance, limitation owner, review date, and executive awareness evidence.',
+    })),
+    ...limitations.map((row, index) => makeItem('Other production evidence', row, index, {
+      requiredEvidence: 'Recorded limitation or readiness evidence.',
+    })),
+    ...departmentBlockers.map((row, index) => makeItem('Department launch', row, index + 1000, {
+      requiredEvidence: 'Closure evidence for the department launch blocker.',
+    })),
+    ...blockingLimitations.map((row, index) => makeItem('Accepted limitations', row, index + 1000, {
+      requiredEvidence: 'Formal blocker closure or accepted limitation evidence.',
+    })),
+    ...hypercareBlockers.map((row, index) => makeItem('Support readiness', row, index + 1000, {
+      requiredEvidence: 'Hypercare cadence, support ownership, or issue closure evidence.',
+    })),
+  ];
+
+  const uniqueItems = Array.from(new Map(intakeQueue.map(item => [`${item.category}-${item.id}-${item.title}`, item])).values());
+  const departmentRegister = departmentLaunchPacks.map(row => departmentEvidenceRow(row, supportReadiness, adoptionReadiness, policyAttestations));
+  const statusCount = (status: EvidenceClosureStatus) => uniqueItems.filter(item => item.evidenceState === status).length;
+  const unresolvedBlockers = departmentBlockers.length + accessBlockers.length + blockingLimitations.length + hypercareBlockers.length;
+  const missingSignoffs = signoffs.filter(row => ['pending', 'rejected', 'blocked', 'evidence_required', ''].includes(String(row.signoff_status ?? row.decision_status ?? '').toLowerCase())).length;
+  const recoveryEvidenceState = backupReadiness.length
+    ? backupReadiness.some(row => ['failed', 'blocked', 'evidence_required'].includes(String(row.operation_status ?? row.status ?? '').toLowerCase()))
+      ? reviewRequired
+      : 'Recorded'
+    : evidenceMissing;
+  const departmentReadinessGaps = departmentRegister.filter(row => row.missingEvidenceCount > 0 || ['blocked', 'evidence_required'].includes(String(row.launchReadiness).toLowerCase())).length;
+  const finalRecommendationState: EvidenceClosureRecommendation = unresolvedBlockers
+    ? 'Blocked'
+    : uniqueItems.length === 0 || statusCount('evidence_required') > 0
+      ? 'Evidence required'
+      : missingSignoffs || statusCount('under_review') || statusCount('open')
+        ? 'Review required'
+        : acceptedLimitations.length
+          ? 'Review required'
+          : 'Ready for executive review';
+
+  return {
+    overview: {
+      totalEvidenceGaps: uniqueItems.length,
+      openGaps: statusCount('open'),
+      underReview: statusCount('under_review'),
+      acceptedWithLimitation: statusCount('accepted_with_limitation') + acceptedLimitations.length,
+      closed: statusCount('closed'),
+      overdue: statusCount('overdue'),
+      blocked: statusCount('blocked') + unresolvedBlockers,
+      evidenceRequired: statusCount('evidence_required'),
+      nextRequiredAction: finalRecommendationState === 'Blocked'
+        ? 'Clear blockers or record approved limitations before executive review.'
+        : finalRecommendationState === 'Evidence required'
+          ? 'Record missing evidence references and assign reviewers.'
+          : 'Review pending closure items and signoffs.',
+      owner: ownerAction,
+    },
+    intakeQueue: uniqueItems,
+    departmentRegister,
+    executivePack: {
+      unresolvedBlockers,
+      acceptedLimitationsRequiringReview: acceptedLimitations.length,
+      missingSignoffs,
+      recoveryEvidenceState,
+      departmentReadinessGaps,
+      finalRecommendationState,
+    },
+  };
+}
