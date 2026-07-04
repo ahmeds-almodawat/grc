@@ -1,0 +1,280 @@
+{
+  "generated_at": "2026-07-04T16:50:32.238Z",
+  "strict_passed": true,
+  "check_count": 58,
+  "failed_count": 0,
+  "failed": [],
+  "tables": [
+    "hospital_department_launch_packs",
+    "hospital_department_launch_checklist_items",
+    "hospital_support_readiness_records",
+    "hospital_policy_attestation_readiness",
+    "hospital_adoption_readiness_reviews",
+    "hospital_operations_readiness_events"
+  ],
+  "views": [
+    "v_patch55_department_launch_pack_register",
+    "v_patch55_department_launch_checklist_register",
+    "v_patch55_incomplete_launch_checklist_register",
+    "v_patch55_department_support_readiness_register",
+    "v_patch55_support_readiness_blocker_register",
+    "v_patch55_policy_attestation_readiness_register",
+    "v_patch55_missing_policy_attestation_register",
+    "v_patch55_department_adoption_readiness_register",
+    "v_patch55_low_adoption_department_register",
+    "v_patch55_department_launch_blocker_register",
+    "v_patch55_hospital_operations_readiness_summary",
+    "v_patch55_production_readiness_hospital_operations_overlay"
+  ],
+  "functions": [
+    "create_hospital_department_launch_pack",
+    "update_hospital_department_launch_pack_status",
+    "create_hospital_department_launch_checklist_item",
+    "update_hospital_department_launch_checklist_item_status",
+    "create_hospital_support_readiness_record",
+    "update_hospital_support_readiness_status",
+    "create_hospital_policy_attestation_readiness",
+    "update_hospital_policy_attestation_status",
+    "create_hospital_adoption_readiness_review",
+    "update_hospital_adoption_readiness_status",
+    "record_hospital_operations_readiness_event",
+    "get_hospital_operations_readiness_summary",
+    "get_production_readiness_hospital_operations_overlay"
+  ],
+  "checks": [
+    {
+      "name": "migration exists",
+      "passed": true,
+      "path": "supabase/migrations/113_patch55_hospital_operations_readiness_pack.sql"
+    },
+    {
+      "name": "table exists: hospital_department_launch_packs",
+      "passed": true
+    },
+    {
+      "name": "table exists: hospital_department_launch_checklist_items",
+      "passed": true
+    },
+    {
+      "name": "table exists: hospital_support_readiness_records",
+      "passed": true
+    },
+    {
+      "name": "table exists: hospital_policy_attestation_readiness",
+      "passed": true
+    },
+    {
+      "name": "table exists: hospital_adoption_readiness_reviews",
+      "passed": true
+    },
+    {
+      "name": "table exists: hospital_operations_readiness_events",
+      "passed": true
+    },
+    {
+      "name": "rls enabled: hospital_department_launch_packs",
+      "passed": true
+    },
+    {
+      "name": "rls enabled: hospital_department_launch_checklist_items",
+      "passed": true
+    },
+    {
+      "name": "rls enabled: hospital_support_readiness_records",
+      "passed": true
+    },
+    {
+      "name": "rls enabled: hospital_policy_attestation_readiness",
+      "passed": true
+    },
+    {
+      "name": "rls enabled: hospital_adoption_readiness_reviews",
+      "passed": true
+    },
+    {
+      "name": "rls enabled: hospital_operations_readiness_events",
+      "passed": true
+    },
+    {
+      "name": "policy exists: hospital_department_launch_packs",
+      "passed": true
+    },
+    {
+      "name": "policy exists: hospital_department_launch_checklist_items",
+      "passed": true
+    },
+    {
+      "name": "policy exists: hospital_support_readiness_records",
+      "passed": true
+    },
+    {
+      "name": "policy exists: hospital_policy_attestation_readiness",
+      "passed": true
+    },
+    {
+      "name": "policy exists: hospital_adoption_readiness_reviews",
+      "passed": true
+    },
+    {
+      "name": "policy exists: hospital_operations_readiness_events",
+      "passed": true
+    },
+    {
+      "name": "view exists: v_patch55_department_launch_pack_register",
+      "passed": true
+    },
+    {
+      "name": "view exists: v_patch55_department_launch_checklist_register",
+      "passed": true
+    },
+    {
+      "name": "view exists: v_patch55_incomplete_launch_checklist_register",
+      "passed": true
+    },
+    {
+      "name": "view exists: v_patch55_department_support_readiness_register",
+      "passed": true
+    },
+    {
+      "name": "view exists: v_patch55_support_readiness_blocker_register",
+      "passed": true
+    },
+    {
+      "name": "view exists: v_patch55_policy_attestation_readiness_register",
+      "passed": true
+    },
+    {
+      "name": "view exists: v_patch55_missing_policy_attestation_register",
+      "passed": true
+    },
+    {
+      "name": "view exists: v_patch55_department_adoption_readiness_register",
+      "passed": true
+    },
+    {
+      "name": "view exists: v_patch55_low_adoption_department_register",
+      "passed": true
+    },
+    {
+      "name": "view exists: v_patch55_department_launch_blocker_register",
+      "passed": true
+    },
+    {
+      "name": "view exists: v_patch55_hospital_operations_readiness_summary",
+      "passed": true
+    },
+    {
+      "name": "view exists: v_patch55_production_readiness_hospital_operations_overlay",
+      "passed": true
+    },
+    {
+      "name": "security_invoker view: v_patch55_department_launch_pack_register",
+      "passed": true
+    },
+    {
+      "name": "security_invoker view: v_patch55_department_launch_checklist_register",
+      "passed": true
+    },
+    {
+      "name": "security_invoker view: v_patch55_incomplete_launch_checklist_register",
+      "passed": true
+    },
+    {
+      "name": "security_invoker view: v_patch55_department_support_readiness_register",
+      "passed": true
+    },
+    {
+      "name": "security_invoker view: v_patch55_support_readiness_blocker_register",
+      "passed": true
+    },
+    {
+      "name": "security_invoker view: v_patch55_policy_attestation_readiness_register",
+      "passed": true
+    },
+    {
+      "name": "security_invoker view: v_patch55_missing_policy_attestation_register",
+      "passed": true
+    },
+    {
+      "name": "security_invoker view: v_patch55_department_adoption_readiness_register",
+      "passed": true
+    },
+    {
+      "name": "security_invoker view: v_patch55_low_adoption_department_register",
+      "passed": true
+    },
+    {
+      "name": "security_invoker view: v_patch55_department_launch_blocker_register",
+      "passed": true
+    },
+    {
+      "name": "security_invoker view: v_patch55_hospital_operations_readiness_summary",
+      "passed": true
+    },
+    {
+      "name": "security_invoker view: v_patch55_production_readiness_hospital_operations_overlay",
+      "passed": true
+    },
+    {
+      "name": "function exists: create_hospital_department_launch_pack",
+      "passed": true
+    },
+    {
+      "name": "function exists: update_hospital_department_launch_pack_status",
+      "passed": true
+    },
+    {
+      "name": "function exists: create_hospital_department_launch_checklist_item",
+      "passed": true
+    },
+    {
+      "name": "function exists: update_hospital_department_launch_checklist_item_status",
+      "passed": true
+    },
+    {
+      "name": "function exists: create_hospital_support_readiness_record",
+      "passed": true
+    },
+    {
+      "name": "function exists: update_hospital_support_readiness_status",
+      "passed": true
+    },
+    {
+      "name": "function exists: create_hospital_policy_attestation_readiness",
+      "passed": true
+    },
+    {
+      "name": "function exists: update_hospital_policy_attestation_status",
+      "passed": true
+    },
+    {
+      "name": "function exists: create_hospital_adoption_readiness_review",
+      "passed": true
+    },
+    {
+      "name": "function exists: update_hospital_adoption_readiness_status",
+      "passed": true
+    },
+    {
+      "name": "function exists: record_hospital_operations_readiness_event",
+      "passed": true
+    },
+    {
+      "name": "function exists: get_hospital_operations_readiness_summary",
+      "passed": true
+    },
+    {
+      "name": "function exists: get_production_readiness_hospital_operations_overlay",
+      "passed": true
+    },
+    {
+      "name": "no broad execute grants for mutating Patch 55 functions",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "service role guard present",
+      "passed": true
+    }
+  ]
+}

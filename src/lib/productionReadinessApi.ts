@@ -1160,6 +1160,148 @@ export async function getProductionAdoptionFeedback(): Promise<any[]> {
   }
 }
 
+function getHospitalOperationsEvidenceRequiredSummary() {
+  return {
+    total_department_launch_packs: 0,
+    ready_departments: 0,
+    ready_with_limitations_departments: 0,
+    blocked_departments: 0,
+    evidence_required_departments: 0,
+    incomplete_launch_checklist_items: 0,
+    missing_owner_count: 0,
+    support_readiness_blockers: 0,
+    policy_attestation_gaps: 0,
+    low_adoption_departments: 0,
+    inactive_users: 0,
+    training_incomplete_count: 0,
+    failed_workflow_attempt_count: 0,
+    critical_support_issues: 0,
+    department_launch_blocker_count: 1,
+    hospital_operations_readiness_status: 'evidence_required',
+    next_action_required: 'Create department launch packs and record owners, checklist evidence, training, policy/SOP attestations, support readiness, and signoffs before hospital-wide rollout.',
+  };
+}
+
+function getHospitalOperationsEvidenceRequiredBlockers() {
+  return [
+    {
+      department_name: 'Hospital operations readiness',
+      blocker_type: 'evidence_required',
+      blocker_reason: 'Department launch packs, owners, checklist evidence, training, policy/SOP attestations, support readiness, and signoffs must be recorded before hospital-wide rollout.',
+      evidence_reference: null,
+    },
+  ];
+}
+
+export async function getHospitalOperationsReadinessOverlay(): Promise<any> {
+  const evidenceRequired = getHospitalOperationsEvidenceRequiredSummary();
+  if (!supabase) return evidenceRequired;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch55_production_readiness_hospital_operations_overlay')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data || Number(data.total_department_launch_packs ?? 0) === 0) return evidenceRequired;
+    return data;
+  } catch (error) {
+    logApiWarning('getHospitalOperationsReadinessOverlay', error);
+    return evidenceRequired;
+  }
+}
+
+export async function getHospitalOperationsLaunchBlockers(): Promise<any[]> {
+  const evidenceRequired = getHospitalOperationsEvidenceRequiredBlockers();
+  if (!supabase) return evidenceRequired;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch55_department_launch_blocker_register')
+      .select('*');
+    if (error) throw error;
+    if (!data || data.length === 0) return evidenceRequired;
+    return data;
+  } catch (error) {
+    logApiWarning('getHospitalOperationsLaunchBlockers', error);
+    return evidenceRequired;
+  }
+}
+
+export async function getHospitalDepartmentLaunchPacks(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch55_department_launch_pack_register')
+      .select('*')
+      .order('launch_label', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getHospitalDepartmentLaunchPacks', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getHospitalLaunchChecklistItems(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch55_department_launch_checklist_register')
+      .select('*')
+      .order('checklist_key', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getHospitalLaunchChecklistItems', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getHospitalSupportReadinessRecords(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch55_department_support_readiness_register')
+      .select('*')
+      .order('department_name', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getHospitalSupportReadinessRecords', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getHospitalPolicyAttestationReadiness(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch55_policy_attestation_readiness_register')
+      .select('*')
+      .order('policy_title', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getHospitalPolicyAttestationReadiness', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getHospitalAdoptionReadinessReviews(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch55_department_adoption_readiness_register')
+      .select('*')
+      .order('department_name', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getHospitalAdoptionReadinessReviews', error);
+    return emptyLiveArray();
+  }
+}
+
 export async function getProofSuiteReadinessSummary(): Promise<any[]> {
   if (!supabase) return emptyLiveArray();
   try {

@@ -47,6 +47,13 @@ import {
   getProductionHypercareIssues,
   getProductionOperatingCadenceEvents,
   getProductionAdoptionFeedback,
+  getHospitalOperationsReadinessOverlay,
+  getHospitalOperationsLaunchBlockers,
+  getHospitalDepartmentLaunchPacks,
+  getHospitalLaunchChecklistItems,
+  getHospitalSupportReadinessRecords,
+  getHospitalPolicyAttestationReadiness,
+  getHospitalAdoptionReadinessReviews,
   getProofSuiteReadinessSummary,
   getControlledPilotReadinessSummary,
   getExecutiveProductionReadinessSummary
@@ -101,6 +108,13 @@ export function ProductionReadinessCenter() {
   const hypercareIssues = useAsyncData(getProductionHypercareIssues, []);
   const cadenceEvents = useAsyncData(getProductionOperatingCadenceEvents, []);
   const adoptionFeedback = useAsyncData(getProductionAdoptionFeedback, []);
+  const hospitalOperations = useAsyncData(getHospitalOperationsReadinessOverlay, []);
+  const hospitalBlockers = useAsyncData(getHospitalOperationsLaunchBlockers, []);
+  const hospitalLaunchPacks = useAsyncData(getHospitalDepartmentLaunchPacks, []);
+  const hospitalChecklist = useAsyncData(getHospitalLaunchChecklistItems, []);
+  const hospitalSupport = useAsyncData(getHospitalSupportReadinessRecords, []);
+  const hospitalPolicy = useAsyncData(getHospitalPolicyAttestationReadiness, []);
+  const hospitalAdoption = useAsyncData(getHospitalAdoptionReadinessReviews, []);
   const proofSummary = useAsyncData(getProofSuiteReadinessSummary, []);
   const pilotSummary = useAsyncData(getControlledPilotReadinessSummary, []);
   const execSummary = useAsyncData(getExecutiveProductionReadinessSummary, []);
@@ -270,6 +284,26 @@ export function ProductionReadinessCenter() {
     inherited_high_critical_remediation_count: 0,
     hypercare_blocker_count: 0,
     production_stability_status: 'evidence_required',
+    next_action_required: '-'
+  };
+
+  const hospitalOperationsData = hospitalOperations.data || {
+    total_department_launch_packs: 0,
+    ready_departments: 0,
+    ready_with_limitations_departments: 0,
+    blocked_departments: 0,
+    evidence_required_departments: 0,
+    incomplete_launch_checklist_items: 0,
+    missing_owner_count: 0,
+    support_readiness_blockers: 0,
+    policy_attestation_gaps: 0,
+    low_adoption_departments: 0,
+    inactive_users: 0,
+    training_incomplete_count: 0,
+    failed_workflow_attempt_count: 0,
+    critical_support_issues: 0,
+    department_launch_blocker_count: 0,
+    hospital_operations_readiness_status: 'evidence_required',
     next_action_required: '-'
   };
 
@@ -1115,6 +1149,168 @@ export function ProductionReadinessCenter() {
                 </DataState>
               </ModernCard>
 
+              <ModernCard title={text.hospitalOperationsTitle} subtitle={text.hospitalOperationsSubtitle}>
+                <DataState loading={hospitalOperations.loading} error={hospitalOperations.error} empty={!hospitalOperations.data}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '14px', marginBottom: '20px' }}>
+                    <div className="stat-card">
+                      <div className="stat-value">
+                        <StatusPill tone={
+                          hospitalOperationsData.hospital_operations_readiness_status === 'ready' ? 'good' :
+                          hospitalOperationsData.hospital_operations_readiness_status === 'ready_with_limitations' || hospitalOperationsData.hospital_operations_readiness_status === 'in_progress' ? 'warning' :
+                          hospitalOperationsData.hospital_operations_readiness_status === 'blocked' ? 'danger' : 'neutral'
+                        }>
+                          {hospitalOperationsData.hospital_operations_readiness_status}
+                        </StatusPill>
+                      </div>
+                      <div className="stat-label">{text.hospitalReadiness}</div>
+                    </div>
+                    <div className="stat-card"><div className="stat-value">{hospitalOperationsData.total_department_launch_packs}</div><div className="stat-label">{text.departmentLaunchPacks}</div></div>
+                    <div className="stat-card success"><div className="stat-value">{hospitalOperationsData.ready_departments}</div><div className="stat-label">{text.readyDepartments}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{hospitalOperationsData.ready_with_limitations_departments}</div><div className="stat-label">{text.limitedDepartments}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{hospitalOperationsData.blocked_departments}</div><div className="stat-label">{text.blockedDepartments}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{hospitalOperationsData.evidence_required_departments}</div><div className="stat-label">{text.evidenceRequiredDepartments}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{hospitalOperationsData.incomplete_launch_checklist_items}</div><div className="stat-label">{text.incompleteChecklist}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{hospitalOperationsData.missing_owner_count}</div><div className="stat-label">{text.missingOwners}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{hospitalOperationsData.support_readiness_blockers}</div><div className="stat-label">{text.supportBlockers}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{hospitalOperationsData.policy_attestation_gaps}</div><div className="stat-label">{text.policyGaps}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{hospitalOperationsData.low_adoption_departments}</div><div className="stat-label">{text.lowAdoption}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{hospitalOperationsData.inactive_users}</div><div className="stat-label">{text.inactiveUsers}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{hospitalOperationsData.training_incomplete_count}</div><div className="stat-label">{text.trainingIncomplete}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{hospitalOperationsData.failed_workflow_attempt_count}</div><div className="stat-label">{text.failedWorkflowAttempts}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{hospitalOperationsData.critical_support_issues}</div><div className="stat-label">{text.criticalSupportIssues}</div></div>
+                  </div>
+                  <div className="alert alert-info">
+                    <strong>{text.nextActionRequired}: </strong>{hospitalOperationsData.next_action_required}
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.hospitalBlockersTitle} subtitle={text.hospitalBlockersSubtitle}>
+                <DataState loading={hospitalBlockers.loading} error={hospitalBlockers.error} empty={!hospitalBlockers.data?.length}>
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead><tr><th>{text.department}</th><th>{text.area}</th><th>{text.blockerReason}</th><th>{text.evidence}</th></tr></thead>
+                      <tbody>
+                        {(hospitalBlockers.data || []).slice(0, 60).map((row: any, index: number) => (
+                          <tr key={`${row.department_name}-${row.blocker_type}-${index}`}>
+                            <td><strong>{row.department_name || '-'}</strong></td>
+                            <td>{row.blocker_type}</td>
+                            <td>{row.blocker_reason}</td>
+                            <td><code>{row.evidence_reference || '-'}</code></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.departmentLaunchRegisterTitle} subtitle={text.departmentLaunchRegisterSubtitle}>
+                <DataState loading={hospitalLaunchPacks.loading} error={hospitalLaunchPacks.error} empty={!hospitalLaunchPacks.data?.length}>
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead><tr><th>{text.department}</th><th>{text.status}</th><th>{text.owner}</th><th>{text.support}</th><th>{text.evidence}</th></tr></thead>
+                      <tbody>
+                        {(hospitalLaunchPacks.data || []).slice(0, 60).map((row: any) => (
+                          <tr key={row.id}>
+                            <td><strong>{row.department_name || row.launch_label}</strong></td>
+                            <td><StatusPill tone={row.launch_status === 'ready' ? 'good' : row.launch_status === 'ready_with_limitations' ? 'warning' : row.launch_status === 'blocked' ? 'danger' : 'neutral'}>{row.launch_status}</StatusPill></td>
+                            <td>{row.department_owner_user_id ? text.assigned : text.evidenceRequired}</td>
+                            <td>{row.support_owner_user_id ? text.assigned : text.evidenceRequired}</td>
+                            <td><code>{row.evidence_reference || '-'}</code></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <ModernCard title={text.launchChecklistTitle} subtitle={text.launchChecklistSubtitle}>
+                  <DataState loading={hospitalChecklist.loading} error={hospitalChecklist.error} empty={!hospitalChecklist.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead><tr><th>{text.department}</th><th>{text.checklist}</th><th>{text.status}</th><th>{text.evidence}</th></tr></thead>
+                        <tbody>
+                          {(hospitalChecklist.data || []).slice(0, 40).map((row: any) => (
+                            <tr key={row.id}>
+                              <td>{row.department_name || '-'}</td>
+                              <td><strong>{row.checklist_key}</strong></td>
+                              <td><StatusPill tone={row.checklist_status === 'complete' || row.checklist_status === 'not_applicable' ? 'good' : row.checklist_status === 'blocked' ? 'danger' : 'warning'}>{row.checklist_status}</StatusPill></td>
+                              <td><code>{row.evidence_reference || '-'}</code></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+
+                <ModernCard title={text.supportReadinessTitle} subtitle={text.supportReadinessSubtitle}>
+                  <DataState loading={hospitalSupport.loading} error={hospitalSupport.error} empty={!hospitalSupport.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead><tr><th>{text.department}</th><th>{text.status}</th><th>{text.slaTier}</th><th>{text.criticalSupportIssues}</th></tr></thead>
+                        <tbody>
+                          {(hospitalSupport.data || []).slice(0, 40).map((row: any) => (
+                            <tr key={row.id}>
+                              <td>{row.department_name || '-'}</td>
+                              <td><StatusPill tone={row.support_status === 'ready' ? 'good' : row.support_status === 'blocked' || row.critical_support_issue_count > 0 ? 'danger' : 'warning'}>{row.support_status}</StatusPill></td>
+                              <td>{row.sla_tier || '-'}</td>
+                              <td>{row.critical_support_issue_count}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <ModernCard title={text.policyAttestationTitle} subtitle={text.policyAttestationSubtitle}>
+                  <DataState loading={hospitalPolicy.loading} error={hospitalPolicy.error} empty={!hospitalPolicy.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead><tr><th>{text.department}</th><th>{text.policy}</th><th>{text.status}</th><th>{text.completed}</th></tr></thead>
+                        <tbody>
+                          {(hospitalPolicy.data || []).slice(0, 40).map((row: any) => (
+                            <tr key={row.id}>
+                              <td>{row.department_name || '-'}</td>
+                              <td><strong>{row.policy_title}</strong></td>
+                              <td><StatusPill tone={row.attestation_status === 'attested' || row.attestation_status === 'waived' ? 'good' : row.attestation_status === 'blocked' || row.attestation_status === 'overdue' ? 'danger' : 'warning'}>{row.attestation_status}</StatusPill></td>
+                              <td>{row.completed_attestation_count} / {row.required_attestation_count}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+
+                <ModernCard title={text.adoptionReadinessTitle} subtitle={text.adoptionReadinessSubtitle}>
+                  <DataState loading={hospitalAdoption.loading} error={hospitalAdoption.error} empty={!hospitalAdoption.data?.length}>
+                    <div className="table-wrap">
+                      <table className="entity-table">
+                        <thead><tr><th>{text.department}</th><th>{text.adoption}</th><th>{text.inactiveUsers}</th><th>{text.trainingIncomplete}</th><th>{text.failedWorkflowAttempts}</th></tr></thead>
+                        <tbody>
+                          {(hospitalAdoption.data || []).slice(0, 40).map((row: any) => (
+                            <tr key={row.id}>
+                              <td>{row.department_name || '-'}</td>
+                              <td><StatusPill tone={row.adoption_status === 'on_track' ? 'good' : row.adoption_status === 'low_adoption' || row.adoption_status === 'blocked' ? 'danger' : 'warning'}>{row.adoption_status}</StatusPill></td>
+                              <td>{row.inactive_user_count}</td>
+                              <td>{row.training_incomplete_count}</td>
+                              <td>{row.failed_workflow_attempt_count}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </DataState>
+                </ModernCard>
+              </div>
+
               {/* Signoff Register */}
               <ModernCard title={text.signoffRegisterTitle} subtitle={text.signoffRegisterSubtitle}>
                 <DataState loading={signoffs.loading} error={signoffs.error} empty={!signoffs.data?.length}>
@@ -1827,6 +2023,38 @@ const en = {
   adoption: 'Adoption',
   support: 'Support',
   training: 'Training',
+  hospitalOperationsTitle: 'Hospital Operations Readiness Pack',
+  hospitalOperationsSubtitle: 'Department launch packs, support readiness, policy attestation, adoption health, and remaining launch blockers.',
+  hospitalReadiness: 'Hospital Readiness',
+  departmentLaunchPacks: 'Launch Packs',
+  readyDepartments: 'Ready Departments',
+  limitedDepartments: 'Limited Departments',
+  blockedDepartments: 'Blocked Departments',
+  evidenceRequiredDepartments: 'Evidence Required',
+  incompleteChecklist: 'Incomplete Checklist',
+  missingOwners: 'Missing Owners',
+  supportBlockers: 'Support Blockers',
+  policyGaps: 'Policy Gaps',
+  inactiveUsers: 'Inactive Users',
+  trainingIncomplete: 'Training Incomplete',
+  failedWorkflowAttempts: 'Workflow Attempts',
+  criticalSupportIssues: 'Critical Support',
+  hospitalBlockersTitle: 'Hospital Launch Blockers',
+  hospitalBlockersSubtitle: 'Department, support, policy, adoption, training, user, and workflow gaps that must be cleared before broader hospital launch.',
+  departmentLaunchRegisterTitle: 'Department Launch Pack Register',
+  departmentLaunchRegisterSubtitle: 'Department owner, support owner, evidence, status, and launch readiness by department.',
+  launchChecklistTitle: 'Launch Checklist',
+  launchChecklistSubtitle: 'Go-live checklist items, evidence references, ownership, and completion status.',
+  checklist: 'Checklist',
+  supportReadinessTitle: 'Support Readiness',
+  supportReadinessSubtitle: 'Department support owner, escalation path, SLA tier, and open critical support issues.',
+  slaTier: 'SLA Tier',
+  policyAttestationTitle: 'Policy and SOP Attestation',
+  policyAttestationSubtitle: 'Required policy/SOP acknowledgments and department attestation completion.',
+  policy: 'Policy / SOP',
+  completed: 'Completed',
+  adoptionReadinessTitle: 'Adoption Readiness',
+  adoptionReadinessSubtitle: 'Department adoption status, inactive users, training gaps, and failed workflow attempts.',
   yes: 'Yes',
   no: 'No',
   workflow: 'Workflow',
@@ -2066,6 +2294,38 @@ const ar = {
   adoption: 'التبني',
   support: 'الدعم',
   training: 'التدريب',
+  hospitalOperationsTitle: 'حزمة جاهزية تشغيل المستشفى',
+  hospitalOperationsSubtitle: 'حزم إطلاق الأقسام، وجاهزية الدعم، واعتمادات السياسات، وصحة التبني، ومعوقات الإطلاق المتبقية.',
+  hospitalReadiness: 'جاهزية المستشفى',
+  departmentLaunchPacks: 'حزم الإطلاق',
+  readyDepartments: 'أقسام جاهزة',
+  limitedDepartments: 'جاهزة بمحددات',
+  blockedDepartments: 'أقسام معطلة',
+  evidenceRequiredDepartments: 'الدليل مطلوب',
+  incompleteChecklist: 'قائمة غير مكتملة',
+  missingOwners: 'مسؤولون ناقصون',
+  supportBlockers: 'معوقات الدعم',
+  policyGaps: 'فجوات السياسات',
+  inactiveUsers: 'مستخدمون غير نشطين',
+  trainingIncomplete: 'تدريب غير مكتمل',
+  failedWorkflowAttempts: 'محاولات العمل',
+  criticalSupportIssues: 'دعم حرج',
+  hospitalBlockersTitle: 'معوقات إطلاق المستشفى',
+  hospitalBlockersSubtitle: 'فجوات الأقسام والدعم والسياسات والتبني والتدريب والمستخدمين ومسارات العمل التي يجب إغلاقها قبل التوسع.',
+  departmentLaunchRegisterTitle: 'سجل حزم إطلاق الأقسام',
+  departmentLaunchRegisterSubtitle: 'مسؤول القسم، ومسؤول الدعم، والأدلة، والحالة، وجاهزية الإطلاق لكل قسم.',
+  launchChecklistTitle: 'قائمة تحقق الإطلاق',
+  launchChecklistSubtitle: 'بنود التحقق قبل التشغيل، ومراجع الأدلة، والملكية، وحالة الإنجاز.',
+  checklist: 'قائمة التحقق',
+  supportReadinessTitle: 'جاهزية الدعم',
+  supportReadinessSubtitle: 'مسؤول الدعم، ومسار التصعيد، ومستوى الخدمة، ومشكلات الدعم الحرجة المفتوحة.',
+  slaTier: 'مستوى الخدمة',
+  policyAttestationTitle: 'اعتماد السياسات وإجراءات التشغيل',
+  policyAttestationSubtitle: 'إقرارات السياسات وإجراءات التشغيل المطلوبة ونسبة اكتمال الاعتماد حسب القسم.',
+  policy: 'سياسة / إجراء',
+  completed: 'مكتمل',
+  adoptionReadinessTitle: 'جاهزية التبني',
+  adoptionReadinessSubtitle: 'حالة تبني القسم، والمستخدمون غير النشطين، وفجوات التدريب، ومحاولات العمل الفاشلة.',
   yes: 'نعم',
   no: 'لا',
   workflow: 'مسار العمل',

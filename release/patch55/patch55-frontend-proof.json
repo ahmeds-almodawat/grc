@@ -1,0 +1,153 @@
+{
+  "generated_at": "2026-07-04T16:50:33.840Z",
+  "strict_passed": true,
+  "check_count": 36,
+  "failed_count": 0,
+  "failed": [],
+  "checks": [
+    {
+      "name": "ProductionReadinessCenter exists",
+      "passed": true
+    },
+    {
+      "name": "production readiness API exists",
+      "passed": true
+    },
+    {
+      "name": "api function present: getHospitalOperationsReadinessOverlay",
+      "passed": true
+    },
+    {
+      "name": "api function present: getHospitalOperationsLaunchBlockers",
+      "passed": true
+    },
+    {
+      "name": "api function present: getHospitalDepartmentLaunchPacks",
+      "passed": true
+    },
+    {
+      "name": "api function present: getHospitalLaunchChecklistItems",
+      "passed": true
+    },
+    {
+      "name": "api function present: getHospitalSupportReadinessRecords",
+      "passed": true
+    },
+    {
+      "name": "api function present: getHospitalPolicyAttestationReadiness",
+      "passed": true
+    },
+    {
+      "name": "api function present: getHospitalAdoptionReadinessReviews",
+      "passed": true
+    },
+    {
+      "name": "api view reference present: v_patch55_production_readiness_hospital_operations_overlay",
+      "passed": true
+    },
+    {
+      "name": "api view reference present: v_patch55_department_launch_blocker_register",
+      "passed": true
+    },
+    {
+      "name": "api view reference present: v_patch55_department_launch_pack_register",
+      "passed": true
+    },
+    {
+      "name": "api view reference present: v_patch55_department_launch_checklist_register",
+      "passed": true
+    },
+    {
+      "name": "api view reference present: v_patch55_department_support_readiness_register",
+      "passed": true
+    },
+    {
+      "name": "api view reference present: v_patch55_policy_attestation_readiness_register",
+      "passed": true
+    },
+    {
+      "name": "api view reference present: v_patch55_department_adoption_readiness_register",
+      "passed": true
+    },
+    {
+      "name": "page displays hospital operations term: hospitalOperationsTitle",
+      "passed": true
+    },
+    {
+      "name": "page displays hospital operations term: hospitalBlockersTitle",
+      "passed": true
+    },
+    {
+      "name": "page displays hospital operations term: departmentLaunchRegisterTitle",
+      "passed": true
+    },
+    {
+      "name": "page displays hospital operations term: launchChecklistTitle",
+      "passed": true
+    },
+    {
+      "name": "page displays hospital operations term: supportReadinessTitle",
+      "passed": true
+    },
+    {
+      "name": "page displays hospital operations term: policyAttestationTitle",
+      "passed": true
+    },
+    {
+      "name": "page displays hospital operations term: adoptionReadinessTitle",
+      "passed": true
+    },
+    {
+      "name": "page displays hospital operations term: missingOwners",
+      "passed": true
+    },
+    {
+      "name": "page displays hospital operations term: supportBlockers",
+      "passed": true
+    },
+    {
+      "name": "page displays hospital operations term: policyGaps",
+      "passed": true
+    },
+    {
+      "name": "page displays hospital operations term: trainingIncomplete",
+      "passed": true
+    },
+    {
+      "name": "page displays hospital operations term: failedWorkflowAttempts",
+      "passed": true
+    },
+    {
+      "name": "package patch55:schema-proof exists",
+      "passed": true
+    },
+    {
+      "name": "package patch55:workflow-proof exists",
+      "passed": true
+    },
+    {
+      "name": "package patch55:frontend-proof exists",
+      "passed": true
+    },
+    {
+      "name": "package patch55:all chains patch54 and runtime security",
+      "passed": true
+    },
+    {
+      "name": "no conflict markers in patched frontend files",
+      "passed": true
+    },
+    {
+      "name": "no service-role frontend exposure introduced in Patch 55 section",
+      "passed": true
+    },
+    {
+      "name": "normal Patch 55 surface avoids technical proof wording",
+      "passed": true
+    },
+    {
+      "name": "no fake/demo/fallback pilot records in Patch 55 frontend",
+      "passed": true
+    }
+  ]
+}
