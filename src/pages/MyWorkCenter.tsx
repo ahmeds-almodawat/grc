@@ -176,14 +176,14 @@ export function MyWorkCenter() {
     .filter((message, index, all) => all.indexOf(message) === index), [myWork, departmentWork, overdue, review, escalated, blocked, evidenceRequired, evidenceGateOverlay, missingOwner, summary]);
 
   return (
-    <div className="page-stack my-work-center">
-      <section className="hero-panel">
+    <section className="page-section my-work-center">
+      <div className="section-heading command-hero">
         <div>
           <p className="eyebrow">Unified Work Queue</p>
-          <h1>One daily queue for hospital governance work</h1>
+          <h3>One daily queue for hospital governance work</h3>
           <p className="section-subtitle">Assigned, overdue, department, escalated, and review work across accreditation, evidence, audit, OVR/RCA, CAPA, training, documents, and approvals.</p>
         </div>
-      </section>
+      </div>
       
       {selectedItem && (
         <div className="drawer-overlay" onClick={() => setSelectedItem(null)}>
@@ -225,6 +225,6 @@ export function MyWorkCenter() {
         <ModernCard title="Evidence Gate Overlay"><EvidenceGateOverlayTable data={evidenceGateRows} /></ModernCard>
         <ModernCard title="Missing Owner / Routing Exceptions"><WorkTable data={missingRows} label="missing owner" onSelect={setSelectedItem} /></ModernCard>
       </DataState>
-    </div>
+    </section>
   );
 }

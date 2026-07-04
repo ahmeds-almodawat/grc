@@ -24,7 +24,7 @@ const translations: TranslationMap = {
   'app.title': { en: 'Governance, Risk & Action Control Center', ar: 'مركز الحوكمة والمخاطر ومتابعة الإجراءات' },
   'app.shortTitle': { en: 'Control Center', ar: 'مركز التحكم' },
   'app.tagline': { en: 'Governance · Risk · Action', ar: 'الحوكمة · المخاطر · الإجراءات' },
-  'app.version': { en: 'v3.3 Production Proof', ar: 'إصدار v3.3 إثبات الجاهزية للإنتاج' },
+  'app.version': { en: 'v3.3 Production Readiness', ar: 'إصدار v3.3 جاهزية الإنتاج' },
   'language.switchToArabic': { en: 'العربية', ar: 'العربية' },
   'language.switchToEnglish': { en: 'English', ar: 'English' },
   'language.current': { en: 'Language', ar: 'اللغة' },
@@ -1057,7 +1057,7 @@ const translations: TranslationMap = {
   'hub.tab.realDataControls': { en: 'Real Data Import', ar: 'استيراد البيانات الفعلية' },
   'hub.tab.realDataControls.desc': { en: 'Import center, activation, real-data readiness, and UAT source handoff.', ar: 'مركز الاستيراد والتفعيل وجاهزية البيانات الفعلية وتسليم مصادر اختبار القبول.' },
   'hub.tab.productionControls': { en: 'Production Governance', ar: 'حوكمة الإنتاج' },
-  'hub.tab.productionControls.desc': { en: 'Release, assurance, go/no-go, runtime security, and launch controls.', ar: 'الإصدار والضمان وقرار الإطلاق وأمن التشغيل وضوابط التشغيل.' },
+  'hub.tab.productionControls.desc': { en: 'Release, assurance, go/no-go, access security, and launch controls.', ar: 'الإصدار والضمان وقرار الإطلاق وأمن النظام وضوابط التشغيل.' },
   'hub.tab.maintenanceControls': { en: 'Maintenance & Indicators', ar: 'الصيانة والمؤشرات' },
   'hub.tab.maintenanceControls.desc': { en: 'Security, testing, performance, indicators, backups, migration, and health controls.', ar: 'الأمن والفحص والأداء والمؤشرات والنسخ والترحيلات وضوابط الصحة.' },
   'hub.tab.uatScenarioControls': { en: 'UAT Controls', ar: 'ضوابط اختبار القبول' },
@@ -1206,8 +1206,8 @@ const translations: TranslationMap = {
   'home.rule.scope': { en: 'Access by role and scope', ar: 'صلاحيات حسب الدور والنطاق' },
 
 
-  'nav.productionProof': { en: 'Production Proof', ar: 'إثبات الإنتاج' },
-  'hub.tab.productionProof': { en: 'Production Proof', ar: 'إثبات الإنتاج' },
+  'nav.productionProof': { en: 'Production Readiness', ar: 'جاهزية الإنتاج' },
+  'hub.tab.productionProof': { en: 'Production Readiness', ar: 'جاهزية الإنتاج' },
   'hub.tab.productionProof.desc': { en: 'Final hard gates, artifacts, pilot waves and stop rules.', ar: 'البوابات الحاسمة والحزم ومراحل التشغيل وقواعد الإيقاف النهائية.' },
   'nav.releaseFactory': { en: 'Release Factory', ar: 'مصنع الإطلاق' },
   'nav.finishFast': { en: 'Finish Fast Center', ar: 'مركز الإنهاء السريع' },
