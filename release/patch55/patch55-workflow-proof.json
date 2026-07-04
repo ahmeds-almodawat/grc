@@ -1,0 +1,182 @@
+{
+  "generated_at": "2026-07-04T16:50:33.055Z",
+  "strict_passed": true,
+  "check_count": 43,
+  "failed_count": 0,
+  "failed": [],
+  "checks": [
+    {
+      "name": "migration exists",
+      "passed": true,
+      "path": "supabase/migrations/113_patch55_hospital_operations_readiness_pack.sql"
+    },
+    {
+      "name": "workflow term present: in_progress",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: ready",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: ready_with_limitations",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: evidence_required",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: blocked",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: complete",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: incomplete",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: not_applicable",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: pending",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: attested",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: overdue",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: waived",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: on_track",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: low_adoption",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: training_needed",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: failed_workflow_attempt_count",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: critical_support_issue_count",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: missing_owner",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: support_owner",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: policy_attestation",
+      "passed": true
+    },
+    {
+      "name": "workflow term present: launch_checklist",
+      "passed": true
+    },
+    {
+      "name": "blocker source present: v_patch52_pilot_closure_blocker_register",
+      "passed": true
+    },
+    {
+      "name": "blocker source present: v_patch53_hypercare_blocker_register",
+      "passed": true
+    },
+    {
+      "name": "blocker source present: v_patch55_incomplete_launch_checklist_register",
+      "passed": true
+    },
+    {
+      "name": "blocker source present: v_patch55_support_readiness_blocker_register",
+      "passed": true
+    },
+    {
+      "name": "blocker source present: v_patch55_missing_policy_attestation_register",
+      "passed": true
+    },
+    {
+      "name": "blocker source present: v_patch55_low_adoption_department_register",
+      "passed": true
+    },
+    {
+      "name": "event type present: launch_pack_created",
+      "passed": true
+    },
+    {
+      "name": "event type present: launch_pack_status_updated",
+      "passed": true
+    },
+    {
+      "name": "event type present: launch_checklist_item_created",
+      "passed": true
+    },
+    {
+      "name": "event type present: launch_checklist_item_updated",
+      "passed": true
+    },
+    {
+      "name": "event type present: support_readiness_created",
+      "passed": true
+    },
+    {
+      "name": "event type present: support_readiness_updated",
+      "passed": true
+    },
+    {
+      "name": "event type present: policy_attestation_created",
+      "passed": true
+    },
+    {
+      "name": "event type present: policy_attestation_updated",
+      "passed": true
+    },
+    {
+      "name": "event type present: adoption_readiness_created",
+      "passed": true
+    },
+    {
+      "name": "event type present: adoption_readiness_updated",
+      "passed": true
+    },
+    {
+      "name": "missing owners remain visible",
+      "passed": true
+    },
+    {
+      "name": "low adoption remains visible",
+      "passed": true
+    },
+    {
+      "name": "support blockers remain visible",
+      "passed": true
+    },
+    {
+      "name": "policy attestation gaps remain visible",
+      "passed": true
+    },
+    {
+      "name": "no fake/demo/fallback readiness records inserted",
+      "passed": true
+    }
+  ]
+}
