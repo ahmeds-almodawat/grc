@@ -929,6 +929,124 @@ export async function getLivePilotFailedWalkthroughs(): Promise<any[]> {
   }
 }
 
+function getPilotClosureEvidenceRequiredSummary() {
+  return {
+    closure_review_total: 0,
+    closure_reviews_in_review: 0,
+    closure_reviews_ready_for_decision: 0,
+    blocked_or_deferred_closures: 0,
+    closure_reviews_approved_with_limitations: 0,
+    open_remediation_actions: 0,
+    overdue_remediation_actions: 0,
+    high_critical_remediation_actions: 0,
+    accepted_limitations: 0,
+    high_critical_accepted_limitations: 0,
+    pending_limitation_reviews: 0,
+    expiring_limitations: 0,
+    pending_golive_decisions: 0,
+    rejected_or_deferred_decisions: 0,
+    approved_golive_decisions: 0,
+    approved_with_limitations_decisions: 0,
+    missing_golive_decisions: 1,
+    failed_or_blocked_workflows: 0,
+    missing_workflow_evidence_count: 0,
+    open_high_critical_live_issues: 0,
+    production_golive_readiness_status: 'evidence_required',
+    next_action_required: 'Create a pilot closure review and record executive go-live decision evidence.',
+  };
+}
+
+function getPilotClosureEvidenceRequiredBlockers() {
+  return [
+    {
+      closure_label: 'Pilot closure and go-live decision',
+      blocker_area: 'go_live_decision',
+      blocker_type: 'evidence_required',
+      blocker_summary: 'Pilot closure review and executive go-live decision evidence must be recorded before production launch.',
+      evidence_reference: null,
+    },
+  ];
+}
+
+export async function getPilotClosureGoLiveOverlay(): Promise<any> {
+  const evidenceRequired = getPilotClosureEvidenceRequiredSummary();
+  if (!supabase) return evidenceRequired;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch52_production_readiness_golive_decision_overlay')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data || data.closure_review_total === 0) return evidenceRequired;
+    return data;
+  } catch (error) {
+    logApiWarning('getPilotClosureGoLiveOverlay', error);
+    return evidenceRequired;
+  }
+}
+
+export async function getPilotClosureBlockers(): Promise<any[]> {
+  const evidenceRequired = getPilotClosureEvidenceRequiredBlockers();
+  if (!supabase) return evidenceRequired;
+  try {
+    const { data, error } = await supabase
+      .from('v_patch52_pilot_closure_blocker_register')
+      .select('*');
+    if (error) throw error;
+    if (!data || data.length === 0) return evidenceRequired;
+    return data;
+  } catch (error) {
+    logApiWarning('getPilotClosureBlockers', error);
+    return evidenceRequired;
+  }
+}
+
+export async function getPilotRemediationActions(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch52_pilot_remediation_action_register')
+      .select('*')
+      .order('severity', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getPilotRemediationActions', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getPilotAcceptedLimitations(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch52_accepted_limitation_register')
+      .select('*')
+      .order('severity', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getPilotAcceptedLimitations', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getProductionGoLiveDecisions(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('v_patch52_production_golive_decision_register')
+      .select('*')
+      .order('decision_level', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getProductionGoLiveDecisions', error);
+    return emptyLiveArray();
+  }
+}
+
 export async function getProofSuiteReadinessSummary(): Promise<any[]> {
   if (!supabase) return emptyLiveArray();
   try {

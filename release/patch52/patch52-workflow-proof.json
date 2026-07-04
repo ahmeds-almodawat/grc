@@ -1,0 +1,40 @@
+{
+  "patch": "52",
+  "checked_at": "2026-07-04T12:24:23.731Z",
+  "strict_passed": true,
+  "check_count": 26,
+  "failed_count": 0,
+  "failed": [],
+  "closure_statuses": [
+    "in_review",
+    "ready_for_decision",
+    "approved_for_golive",
+    "approved_with_limitations",
+    "blocked",
+    "deferred",
+    "cancelled"
+  ],
+  "remediation_statuses": [
+    "open",
+    "in_progress",
+    "completed",
+    "overdue",
+    "accepted_risk",
+    "cancelled"
+  ],
+  "limitation_statuses": [
+    "pending_review",
+    "accepted",
+    "rejected",
+    "expired",
+    "superseded"
+  ],
+  "decision_statuses": [
+    "pending",
+    "approved",
+    "approved_with_limitations",
+    "rejected",
+    "deferred",
+    "revoked"
+  ]
+}
