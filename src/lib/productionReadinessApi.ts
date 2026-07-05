@@ -69,6 +69,70 @@ export interface ProductionFinishData {
   pilot: PilotAcceptance[];
 }
 
+export type ControlledProductionCutoverDecisionState =
+  | 'executive_review_required'
+  | 'blocked'
+  | 'deferred'
+  | 'approved_for_controlled_pilot_cutover'
+  | 'approved_with_limitations';
+
+export interface ControlledProductionCutoverDecision {
+  id: string;
+  organization_id: string | null;
+  decision_state: ControlledProductionCutoverDecisionState;
+  decision_scope: string;
+  decision_title: string;
+  decision_summary: string | null;
+  critical_blockers_count: number;
+  limitations_count: number;
+  limitations_reviewed: boolean;
+  cutover_checklist_complete: boolean;
+  evidence_gate_snapshot: Record<string, unknown>;
+  decision_rationale: string;
+  decided_by: string | null;
+  decided_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ControlledProductionCutoverDecisionEvent {
+  id: string;
+  decision_id: string | null;
+  organization_id: string | null;
+  event_type: string;
+  event_summary: string;
+  event_payload: Record<string, unknown>;
+  actor_id: string | null;
+  created_at: string;
+}
+
+export interface ControlledProductionCutoverDecisionRequest {
+  decision_state: ControlledProductionCutoverDecisionState;
+  decision_title: string;
+  decision_summary?: string | null;
+  critical_blockers_count: number;
+  limitations_count: number;
+  limitations_reviewed: boolean;
+  cutover_checklist_complete: boolean;
+  evidence_gate_snapshot?: Record<string, unknown>;
+  decision_rationale: string;
+}
+
+export interface ControlledCutoverGateSummary {
+  current_state: ControlledProductionCutoverDecisionState;
+  critical_blockers_count: number;
+  limitations_count: number;
+  limitations_reviewed: boolean;
+  cutover_checklist_complete: boolean;
+  decision_count: number;
+  latest_decision_title: string;
+  latest_decision_at: string | null;
+  required_actions: string[];
+  next_action_required: string;
+  caveat: string;
+  live_transition_caveat: string;
+}
+
 const liveEmptyControls: FinalControl[] = emptyLiveArray<FinalControl>();
 
 const liveEmptyModules: ModuleReadiness[] = emptyLiveArray<ModuleReadiness>();
@@ -1059,6 +1123,101 @@ export async function getProductionGoLiveDecisions(): Promise<any[]> {
   } catch (error) {
     logApiWarning('getProductionGoLiveDecisions', error);
     return emptyLiveArray();
+  }
+}
+
+export async function getControlledProductionCutoverDecisions(): Promise<ControlledProductionCutoverDecision[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('controlled_production_cutover_decisions')
+      .select('*')
+      .order('decided_at', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return (data || []) as ControlledProductionCutoverDecision[];
+  } catch (error) {
+    logApiWarning('getControlledProductionCutoverDecisions', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getControlledProductionCutoverDecisionEvents(decisionId?: string | null): Promise<ControlledProductionCutoverDecisionEvent[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    let query = supabase
+      .from('controlled_production_cutover_decision_events')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (decisionId) query = query.eq('decision_id', decisionId);
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []) as ControlledProductionCutoverDecisionEvent[];
+  } catch (error) {
+    logApiWarning('getControlledProductionCutoverDecisionEvents', error);
+    return emptyLiveArray();
+  }
+}
+
+export function getControlledCutoverGateSummary(decisions: ControlledProductionCutoverDecision[] = []): ControlledCutoverGateSummary {
+  const latest = decisions[0];
+  const currentState = latest?.decision_state ?? 'executive_review_required';
+  const criticalBlockers = Number(latest?.critical_blockers_count ?? 0) || 0;
+  const limitations = Number(latest?.limitations_count ?? 0) || 0;
+  const limitationsReviewed = Boolean(latest?.limitations_reviewed);
+  const checklistComplete = Boolean(latest?.cutover_checklist_complete);
+  const requiredActions = new Set<string>();
+
+  if (!latest) requiredActions.add('Executive review required.');
+  if (criticalBlockers > 0) requiredActions.add('Critical blockers prevent approval.');
+  if (limitations > 0 && !limitationsReviewed) requiredActions.add('Limitation review required.');
+  if (!checklistComplete) requiredActions.add('Cutover checklist incomplete.');
+  if (currentState === 'blocked') requiredActions.add('Resolve blockers or record a deferred decision.');
+  if (currentState === 'deferred') requiredActions.add('Review deferred decision conditions before controlled cutover decision.');
+
+  return {
+    current_state: currentState,
+    critical_blockers_count: criticalBlockers,
+    limitations_count: limitations,
+    limitations_reviewed: limitationsReviewed,
+    cutover_checklist_complete: checklistComplete,
+    decision_count: decisions.length,
+    latest_decision_title: latest?.decision_title ?? 'Controlled cutover decision evidence has not been recorded.',
+    latest_decision_at: latest?.decided_at ?? null,
+    required_actions: requiredActions.size ? [...requiredActions] : ['Ready for controlled cutover decision review.'],
+    next_action_required: requiredActions.size
+      ? [...requiredActions][0]
+      : 'Record or review controlled production authority decision evidence.',
+    caveat: 'This decision record does not automatically launch the system.',
+    live_transition_caveat: 'Live transition requires separate operational execution.',
+  };
+}
+
+export async function createControlledProductionCutoverDecision(payload: ControlledProductionCutoverDecisionRequest): Promise<{ id: string; decision_state: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; decision_state: string; message: string }>(
+      'create_controlled_production_cutover_decision',
+      payload as unknown as Record<string, unknown>,
+    );
+  } catch (error) {
+    return throwRpcActionError(error, 'Create Controlled Cutover Decision', 'create_controlled_production_cutover_decision');
+  }
+}
+
+export async function recordControlledProductionCutoverDecisionEvent(payload: {
+  decision_id: string;
+  event_type: string;
+  event_summary: string;
+  event_payload?: Record<string, unknown>;
+}): Promise<{ id: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; message: string }>(
+      'record_controlled_production_cutover_decision_event',
+      payload,
+    );
+  } catch (error) {
+    return throwRpcActionError(error, 'Record Controlled Cutover Decision Event', 'record_controlled_production_cutover_decision_event');
   }
 }
 

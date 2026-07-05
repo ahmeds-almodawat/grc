@@ -1,0 +1,208 @@
+{
+  "patch": "76",
+  "checked_at": "2026-07-05T23:15:04.279Z",
+  "strict_passed": true,
+  "failed_count": 0,
+  "checks": [
+    {
+      "name": "Patch 76 migration exists",
+      "passed": true
+    },
+    {
+      "name": "controlled_production_cutover_decisions exists",
+      "passed": true
+    },
+    {
+      "name": "controlled_production_cutover_decision_events exists",
+      "passed": true
+    },
+    {
+      "name": "RLS enabled for new tables",
+      "passed": true
+    },
+    {
+      "name": "No broad public write policy was added",
+      "passed": true
+    },
+    {
+      "name": "SECURITY DEFINER RPCs have guarded role checks",
+      "passed": true
+    },
+    {
+      "name": "Allowed state executive_review_required exists",
+      "passed": true
+    },
+    {
+      "name": "Allowed state blocked exists",
+      "passed": true
+    },
+    {
+      "name": "Allowed state deferred exists",
+      "passed": true
+    },
+    {
+      "name": "Allowed state approved_for_controlled_pilot_cutover exists",
+      "passed": true
+    },
+    {
+      "name": "Allowed state approved_with_limitations exists",
+      "passed": true
+    },
+    {
+      "name": "Server-side guardrail blocks approval with critical blockers",
+      "passed": true
+    },
+    {
+      "name": "Server-side guardrail requires cutover checklist for approved states",
+      "passed": true
+    },
+    {
+      "name": "Server-side guardrail requires limitations reviewed for approved with limitations",
+      "passed": true
+    },
+    {
+      "name": "Frontend API uses authenticated bridge pattern for privileged calls",
+      "passed": true
+    },
+    {
+      "name": "Privileged bridge allowlist includes Patch 76 actions",
+      "passed": true
+    },
+    {
+      "name": "Runtime registry classifies Patch 76 actions",
+      "passed": true
+    },
+    {
+      "name": "UI includes Controlled production authority",
+      "passed": true
+    },
+    {
+      "name": "UI includes Controlled cutover decision",
+      "passed": true
+    },
+    {
+      "name": "UI includes Executive review required",
+      "passed": true
+    },
+    {
+      "name": "UI includes Critical blockers prevent approval",
+      "passed": true
+    },
+    {
+      "name": "UI includes Limitation review required",
+      "passed": true
+    },
+    {
+      "name": "UI includes Cutover checklist incomplete",
+      "passed": true
+    },
+    {
+      "name": "UI includes decision record caveat",
+      "passed": true
+    },
+    {
+      "name": "UI includes live transition caveat",
+      "passed": true
+    },
+    {
+      "name": "Patch 75 clinical navigation simplification remains",
+      "passed": true
+    },
+    {
+      "name": "No production launched wording exists",
+      "passed": true
+    },
+    {
+      "name": "No go-live complete wording exists",
+      "passed": true
+    },
+    {
+      "name": "No system is production ready claim exists",
+      "passed": true
+    },
+    {
+      "name": "No transition_to_live_operations action exists",
+      "passed": true
+    },
+    {
+      "name": "No automatic transition button exists",
+      "passed": true
+    },
+    {
+      "name": "No executive production signoff RPC was added",
+      "passed": true
+    },
+    {
+      "name": "No service-role frontend exposure exists",
+      "passed": true
+    },
+    {
+      "name": "No fake/demo records were added",
+      "passed": true
+    },
+    {
+      "name": "No route/component deletion for Patch 75 clinical navigation",
+      "passed": true
+    },
+    {
+      "name": "Restore-noise covers Patch 75 proof JSON",
+      "passed": true
+    },
+    {
+      "name": "package.json contains patch76:proof",
+      "passed": true
+    },
+    {
+      "name": "package.json contains patch76:all",
+      "passed": true
+    },
+    {
+      "name": "validate:fast exists",
+      "passed": true
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true
+    },
+    {
+      "name": "validate:security exists",
+      "passed": true
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true
+    },
+    {
+      "name": "proof:all exists",
+      "passed": true
+    },
+    {
+      "name": "v700:runtime-security exists",
+      "passed": true
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true
+    },
+    {
+      "name": "current platform status mentions Patch 76",
+      "passed": true
+    },
+    {
+      "name": "production caveat remains",
+      "passed": true
+    },
+    {
+      "name": "proof index mentions Patch 76",
+      "passed": true
+    },
+    {
+      "name": "runbook mentions Patch 75 proof JSON restore coverage",
+      "passed": true
+    },
+    {
+      "name": "No conflict markers",
+      "passed": true
+    }
+  ]
+}

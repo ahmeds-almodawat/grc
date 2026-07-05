@@ -329,6 +329,8 @@
     "patch74:all": "npm run validate:build && npm run validate:security && npm run patch74:proof",
     "patch75:proof": "node scripts/patch75-clinical-ux-navigation-simplification-proof.mjs",
     "patch75:all": "npm run validate:build && npm run validate:security && npm run patch75:proof",
+    "patch76:proof": "node scripts/patch76-controlled-production-authority-cutover-gate-proof.mjs",
+    "patch76:all": "npm run validate:build && npm run validate:security && npm run patch76:proof",
     "validate:fast": "npm run typecheck && npm run patch58:proof && npm run patch58-1:proof && npm run patch58-2:proof",
     "validate:build": "npm run typecheck && npm run build",
     "validate:proof": "npm run proof:all",
