@@ -128,6 +128,16 @@ export interface PolicySopAttestationReadiness {
   caveat: string;
 }
 
+export interface BackupRestoreDrEvidenceReadiness {
+  readinessState: string;
+  missingRecoveryEvidenceSummary: string;
+  ownerReviewerReadiness: string;
+  dueDateOrOverdueState: string;
+  sourceWorkflowDestination: string;
+  executiveImpact: string;
+  caveat: string;
+}
+
 export interface ProductionEvidenceClosureData {
   overview: {
     totalEvidenceGaps: number;
@@ -537,6 +547,82 @@ export function getPolicySopAttestationReadiness(source?: ProductionEvidenceClos
     sourceWorkflowDestination: getPolicySopAttestationSourceDestination(source),
     executiveImpact: getPolicySopAttestationExecutiveImpact(data),
     caveat: 'Attestation readiness depends on recorded source evidence.',
+  };
+}
+
+function isBackupRestoreDrItem(item?: Pick<ProductionEvidenceClosureItem, 'category' | 'title' | 'requiredEvidence'>) {
+  const text = `${item?.category ?? ''} ${item?.title ?? ''} ${item?.requiredEvidence ?? ''}`.toLowerCase();
+  return text.includes('backup') || text.includes('restore') || text.includes('dr') || text.includes('recovery');
+}
+
+export function getBackupRestoreDrGapSummary(source?: ProductionEvidenceClosureItem | DepartmentEvidenceRegisterRow) {
+  if (!source) return 'Backup evidence required. Restore test evidence required. DR evidence required.';
+  if ('supportEvidence' in source) {
+    return categoryMissing(source.supportEvidence)
+      ? 'Recovery support evidence required.'
+      : 'Recovery support evidence recorded.';
+  }
+  if (!isBackupRestoreDrItem(source)) return 'No backup, restore, or DR evidence gap currently recorded for this item.';
+  if (!hasRecordedEvidence(source)) return 'Backup evidence required. Restore test evidence required. DR evidence required.';
+  if (source.evidenceState === 'blocked') return 'Recovery evidence is blocked.';
+  if (source.evidenceState === 'overdue') return 'Overdue recovery evidence.';
+  if (source.evidenceState === 'closed') return 'Backup evidence recorded. Restore evidence recorded. DR evidence recorded.';
+  return 'Review required.';
+}
+
+export function getBackupRestoreDrSourceDestination(source?: ProductionEvidenceClosureItem | DepartmentEvidenceRegisterRow) {
+  if (source && !('supportEvidence' in source) && isBackupRestoreDrItem(source)) {
+    return 'Manage recovery evidence in Production Readiness Center.';
+  }
+  return 'Manage recovery evidence in Production Readiness Center.';
+}
+
+export function getBackupRestoreDrExecutiveImpact(data?: ProductionEvidenceClosureData) {
+  const missingRecoveryItems = data?.intakeQueue.filter(item => isBackupRestoreDrItem(item) && item.evidenceState !== 'closed').length ?? 0;
+  const recoveryStateMissing = String(data?.executivePack.recoveryEvidenceState ?? '').trim() === evidenceMissing;
+  const missingTotal = missingRecoveryItems + (recoveryStateMissing ? 1 : 0);
+  if (missingTotal > 0) return `Executive review required for ${missingTotal} backup, restore, or DR evidence gap${missingTotal === 1 ? '' : 's'}.`;
+  return 'No executive backup, restore, or DR evidence impact currently recorded.';
+}
+
+export function getBackupRestoreDrEvidenceReadiness(source?: ProductionEvidenceClosureItem | DepartmentEvidenceRegisterRow, data?: ProductionEvidenceClosureData): BackupRestoreDrEvidenceReadiness {
+  const isDepartmentRow = Boolean(source && 'supportEvidence' in source);
+  const recoveryRelevant = !source || isDepartmentRow || isBackupRestoreDrItem(source as ProductionEvidenceClosureItem | undefined);
+  const ownership = isDepartmentRow
+    ? { ownerState: (source as DepartmentEvidenceRegisterRow).owner === ownerAction ? 'Owner missing' : 'Owner assigned', reviewerState: 'Reviewer missing' }
+    : getEvidenceOwnershipState(source as ProductionEvidenceClosureItem | undefined);
+  const dueDate = isDepartmentRow
+    ? { dueDateState: 'Due date missing', overdueStatus: 'Due date not recorded.' }
+    : getEvidenceDueDateState(source as ProductionEvidenceClosureItem | undefined);
+  const itemState = !isDepartmentRow ? (source as ProductionEvidenceClosureItem | undefined)?.evidenceState : undefined;
+  const departmentRecoveryMissing = isDepartmentRow ? categoryMissing((source as DepartmentEvidenceRegisterRow).supportEvidence) : false;
+
+  const readinessState = !recoveryRelevant || departmentRecoveryMissing || itemState === 'evidence_required'
+    ? 'Backup evidence required'
+    : itemState === 'blocked'
+      ? 'Blocked'
+      : itemState === 'overdue'
+        ? 'Overdue'
+        : ownership.ownerState === 'Owner missing'
+          ? 'Owner action required'
+          : ownership.reviewerState === 'Reviewer missing'
+            ? 'Reviewer action required'
+            : itemState === 'closed'
+              ? 'Backup evidence recorded'
+              : 'Review required';
+
+  return {
+    readinessState,
+    missingRecoveryEvidenceSummary: getBackupRestoreDrGapSummary(source),
+    ownerReviewerReadiness: ownership.ownerState === 'Owner missing'
+      ? 'Owner action required.'
+      : ownership.reviewerState === 'Reviewer missing'
+        ? 'Reviewer action required.'
+        : 'Review required.',
+    dueDateOrOverdueState: dueDate.overdueStatus === 'Overdue.' ? 'Overdue recovery evidence.' : dueDate.overdueStatus,
+    sourceWorkflowDestination: getBackupRestoreDrSourceDestination(source),
+    executiveImpact: getBackupRestoreDrExecutiveImpact(data),
+    caveat: 'Recovery readiness depends on recorded source evidence.',
   };
 }
 

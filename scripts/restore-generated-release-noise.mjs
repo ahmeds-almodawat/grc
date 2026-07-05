@@ -36,6 +36,7 @@ const allowlistedPaths = [
   'release/patch61/patch61-evidence-ownership-due-date-readiness-proof.json',
   'release/patch62/patch62-executive-closure-recommendation-readiness-proof.json',
   'release/patch63/patch63-department-evidence-coverage-readiness-proof.json',
+  'release/patch64/patch64-policy-sop-attestation-evidence-readiness-proof.json',
 ];
 
 const existing = [];
