@@ -37,6 +37,7 @@ const allowlistedPaths = [
   'release/patch62/patch62-executive-closure-recommendation-readiness-proof.json',
   'release/patch63/patch63-department-evidence-coverage-readiness-proof.json',
   'release/patch64/patch64-policy-sop-attestation-evidence-readiness-proof.json',
+  'release/patch65/patch65-backup-restore-dr-evidence-readiness-proof.json',
 ];
 
 const existing = [];

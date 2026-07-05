@@ -138,6 +138,16 @@ export interface BackupRestoreDrEvidenceReadiness {
   caveat: string;
 }
 
+export interface AccessReviewSecurityEvidenceReadiness {
+  readinessState: string;
+  missingSecurityEvidenceSummary: string;
+  ownerReviewerReadiness: string;
+  dueDateOrOverdueState: string;
+  sourceWorkflowDestination: string;
+  executiveImpact: string;
+  caveat: string;
+}
+
 export interface ProductionEvidenceClosureData {
   overview: {
     totalEvidenceGaps: number;
@@ -623,6 +633,81 @@ export function getBackupRestoreDrEvidenceReadiness(source?: ProductionEvidenceC
     sourceWorkflowDestination: getBackupRestoreDrSourceDestination(source),
     executiveImpact: getBackupRestoreDrExecutiveImpact(data),
     caveat: 'Recovery readiness depends on recorded source evidence.',
+  };
+}
+
+function isAccessReviewSecurityItem(item?: Pick<ProductionEvidenceClosureItem, 'category' | 'title' | 'requiredEvidence'>) {
+  const text = `${item?.category ?? ''} ${item?.title ?? ''} ${item?.requiredEvidence ?? ''}`.toLowerCase();
+  return text.includes('access')
+    || text.includes('security')
+    || text.includes('permission')
+    || text.includes('role')
+    || text.includes('identity');
+}
+
+export function getAccessReviewSecurityGapSummary(source?: ProductionEvidenceClosureItem | DepartmentEvidenceRegisterRow) {
+  if (!source) return 'Access review evidence required. Security review evidence required.';
+  if ('supportEvidence' in source) return 'Security review evidence required.';
+  if (!isAccessReviewSecurityItem(source)) return 'No access review or security evidence gap currently recorded for this item.';
+  if (!hasRecordedEvidence(source)) return 'Access review evidence required. Security review evidence required.';
+  if (source.evidenceState === 'blocked') return 'Security evidence is blocked.';
+  if (source.evidenceState === 'overdue') return 'Overdue security evidence.';
+  if (source.evidenceState === 'closed') return 'Access review evidence recorded. Security evidence recorded.';
+  return 'Review required.';
+}
+
+export function getAccessReviewSecuritySourceDestination(source?: ProductionEvidenceClosureItem | DepartmentEvidenceRegisterRow) {
+  if (source && !('supportEvidence' in source) && isAccessReviewSecurityItem(source)) {
+    return 'Manage security evidence in Production Readiness Center.';
+  }
+  return 'Manage security evidence in Production Readiness Center.';
+}
+
+export function getAccessReviewSecurityExecutiveImpact(data?: ProductionEvidenceClosureData) {
+  const missingSecurityItems = data?.intakeQueue.filter(item => isAccessReviewSecurityItem(item) && item.evidenceState !== 'closed').length ?? 0;
+  if (missingSecurityItems > 0) {
+    return `Executive review required for ${missingSecurityItems} access review or security evidence gap${missingSecurityItems === 1 ? '' : 's'}.`;
+  }
+  return 'No executive access review or security evidence impact currently recorded.';
+}
+
+export function getAccessReviewSecurityEvidenceReadiness(source?: ProductionEvidenceClosureItem | DepartmentEvidenceRegisterRow, data?: ProductionEvidenceClosureData): AccessReviewSecurityEvidenceReadiness {
+  const isDepartmentRow = Boolean(source && 'supportEvidence' in source);
+  const securityRelevant = !source || isDepartmentRow || isAccessReviewSecurityItem(source as ProductionEvidenceClosureItem | undefined);
+  const ownership = isDepartmentRow
+    ? { ownerState: (source as DepartmentEvidenceRegisterRow).owner === ownerAction ? 'Owner missing' : 'Owner assigned', reviewerState: 'Reviewer missing' }
+    : getEvidenceOwnershipState(source as ProductionEvidenceClosureItem | undefined);
+  const dueDate = isDepartmentRow
+    ? { dueDateState: 'Due date missing', overdueStatus: 'Due date not recorded.' }
+    : getEvidenceDueDateState(source as ProductionEvidenceClosureItem | undefined);
+  const itemState = !isDepartmentRow ? (source as ProductionEvidenceClosureItem | undefined)?.evidenceState : undefined;
+
+  const readinessState = !securityRelevant || itemState === 'evidence_required'
+    ? 'Access review evidence required'
+    : itemState === 'blocked'
+      ? 'Blocked'
+      : itemState === 'overdue'
+        ? 'Overdue'
+        : ownership.ownerState === 'Owner missing'
+          ? 'Owner action required'
+          : ownership.reviewerState === 'Reviewer missing'
+            ? 'Reviewer action required'
+            : itemState === 'closed'
+              ? 'Access review evidence recorded'
+              : 'Review required';
+
+  return {
+    readinessState,
+    missingSecurityEvidenceSummary: getAccessReviewSecurityGapSummary(source),
+    ownerReviewerReadiness: ownership.ownerState === 'Owner missing'
+      ? 'Owner action required.'
+      : ownership.reviewerState === 'Reviewer missing'
+        ? 'Reviewer action required.'
+        : 'Review required.',
+    dueDateOrOverdueState: dueDate.overdueStatus === 'Overdue.' ? 'Overdue security evidence.' : dueDate.overdueStatus,
+    sourceWorkflowDestination: getAccessReviewSecuritySourceDestination(source),
+    executiveImpact: getAccessReviewSecurityExecutiveImpact(data),
+    caveat: 'Security readiness depends on recorded source evidence.',
   };
 }
 
