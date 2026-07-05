@@ -238,6 +238,21 @@ export async function getProductionReadinessSignoffRegister(): Promise<any[]> {
   }
 }
 
+export async function getExecutiveProductionSignoffs(): Promise<any[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('executive_production_signoffs')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    logApiWarning('getExecutiveProductionSignoffs', error);
+    return emptyLiveArray();
+  }
+}
+
 export async function getGoNoGoDashboard(): Promise<any> {
   if (!supabase) return emptyLiveObject('getGoNoGoDashboard');
   try {

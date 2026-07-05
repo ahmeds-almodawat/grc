@@ -1,0 +1,218 @@
+{
+  "patch": "Patch 68",
+  "name": "Controlled Evidence Closure Actions",
+  "passed": true,
+  "checks": [
+    {
+      "name": "migration exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "action history table exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "RLS enabled",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "direct browser inserts blocked",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "service-role bridge required",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "reason validation exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "close blocker guard exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "audit/history is append-only",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "all controlled action types in migration",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "bridge allowlist includes actions",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "bridge calls Patch 68 RPCs",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "runtime registry classifies actions",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "API exposes action availability",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "API exposes reason validation",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "API uses authenticated bridge",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no direct browser RPC added in API",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "page exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "route/page still references Production Evidence Closure",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "route exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "navigation label exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "controlled action UI exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "action history UI exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "reason required UI exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "blocker warning UI exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "limitation caveat visible",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "evidence-level caveat visible",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no production launch button",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no transition_to_live_operations",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no production-ready claim in page",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no executive launch signoff call in page/API",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "operator console link updated",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "package scripts exist",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validation scripts still exist",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "restore helper covers Patch 67 JSON",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "current status mentions Patch 68",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "production caveat remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "proof index mentions Patch 68",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "runbook mentions Patch 68 restore coverage",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "operational UI avoids banned technical wording",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no conflict markers",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no fake/demo records added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no browser service-role exposure",
+      "passed": true,
+      "details": ""
+    }
+  ],
+  "generated_at": "2026-07-05T13:50:45.577Z"
+}

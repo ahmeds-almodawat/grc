@@ -2,15 +2,15 @@
 
 ```json
 {
-  "generated_at": "2026-07-02T16:29:43.868Z",
-  "migration_files_scanned": 87,
-  "created_tables_detected": 472,
-  "tables_with_explicit_rls": 412,
-  "tables_with_detected_policies": 380,
-  "findings_total": 60,
+  "generated_at": "2026-07-05T13:09:59.603Z",
+  "migration_files_scanned": 112,
+  "created_tables_detected": 582,
+  "tables_with_explicit_rls": 526,
+  "tables_with_detected_policies": 495,
+  "findings_total": 61,
   "critical": 0,
   "high": 0,
-  "medium": 60,
+  "medium": 61,
   "strict_passed": true,
   "note": "Static audit only. Final proof requires applying migrations to staging and running supabase/tests/v64_persona_security_tests.sql."
 }
@@ -33,6 +33,7 @@
 - **medium** RLS_NOT_ENABLED on `go_live_rehearsals` (supabase/migrations/030_pilot_real_data_operations.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
 - **medium** RLS_NOT_ENABLED on `go_live_sop_steps` (supabase/migrations/031_consolidation_pilot_fix_kit.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
 - **medium** RLS_NOT_ENABLED on `i18n_translation_coverage_items` (supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
+- **medium** RLS_NOT_ENABLED on `if` (supabase/migrations/092_patch29_training_acknowledgment_governance.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
 - **medium** RLS_NOT_ENABLED on `kri_observations` (supabase/migrations/024_automation_intelligence_kri_reviews.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
 - **medium** RLS_NOT_ENABLED on `load_test_seed_batches` (supabase/migrations/025_staging_validation_consolidation.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.
 - **medium** RLS_NOT_ENABLED on `migration_runbook_entries` (supabase/migrations/025_staging_validation_consolidation.sql) — Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found.

@@ -58,6 +58,11 @@ const patch24AuditActions = new Set([
   'generate_audit_closure_pack_index',
 ]);
 
+const patch68EvidenceClosureActions = new Set([
+  'record_production_evidence_closure_action',
+  'get_production_evidence_closure_action_history',
+]);
+
 const allowedActions = new Set([
   'list_user_management_roster',
   'create_board_pack_snapshot',
@@ -83,6 +88,7 @@ const allowedActions = new Set([
   ...patch22RiskActions,
   ...patch23EvidenceActions,
   ...patch24AuditActions,
+  ...patch68EvidenceClosureActions,
 ]);
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
@@ -455,6 +461,40 @@ Deno.serve(async (request) => {
     if (error) {
       const authorizationFailure =
         /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|CROSS_ORGANIZATION|REVIEWER|VALIDATOR|APPROVER|ADMIN|BLOCKED|EVIDENCE|WAIVER|REASON/i
+          .test(error.message);
+      return jsonResponse({
+        ok: false,
+        error: error.message,
+        code: error.code,
+        action,
+      }, authorizationFailure ? 403 : 409);
+    }
+
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (patch68EvidenceClosureActions.has(action)) {
+    const rpcName = action;
+    const rpcArgs = action === 'record_production_evidence_closure_action'
+      ? {
+          p_actor_id: userData.user.id,
+          p_evidence_id: requestBody.payload?.evidence_id,
+          p_action_type: requestBody.payload?.action_type,
+          p_action_reason: requestBody.payload?.action_reason ?? null,
+          p_action_note: requestBody.payload?.action_note ?? null,
+          p_previous_state: requestBody.payload?.previous_state ?? null,
+          p_has_blocker: Boolean(requestBody.payload?.has_blocker),
+          p_metadata: requestBody.payload?.metadata ?? {},
+        }
+      : {
+          p_actor_id: userData.user.id,
+          p_evidence_id: requestBody.payload?.evidence_id,
+        };
+    const { data, error } = await serviceClient.rpc(rpcName, rpcArgs);
+
+    if (error) {
+      const authorizationFailure =
+        /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|ORGANIZATION|ROLE|REASON|BLOCKER|AUTHORIZED/i
           .test(error.message);
       return jsonResponse({
         ok: false,

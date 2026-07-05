@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-07-02T16:29:44.971Z",
-    "migration_files_scanned": 87,
-    "security_definer_functions_detected": 55,
+    "generated_at": "2026-07-05T13:10:00.386Z",
+    "migration_files_scanned": 112,
+    "security_definer_functions_detected": 346,
     "global_security_definer_lockdown_detected": true,
     "findings_total": 0,
     "critical": 0,
@@ -341,6 +341,1752 @@
       "function_name": "patch25_compliance_obligation_bridge",
       "has_search_path": true,
       "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+      "function_name": "patch26_write_document_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+      "function_name": "submit_document_for_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+      "function_name": "approve_document_version",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+      "function_name": "reject_document_version",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+      "function_name": "activate_document_version",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+      "function_name": "start_document_revision",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+      "function_name": "retire_controlled_document",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+      "function_name": "link_document_to_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+      "function_name": "record_document_acknowledgment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+      "function_name": "patch27_write_authority_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+      "function_name": "create_approval_authority_rule",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+      "function_name": "update_approval_authority_rule",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+      "function_name": "disable_approval_authority_rule",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+      "function_name": "request_workflow_approval",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+      "function_name": "record_approval_decision",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+      "function_name": "reject_approval_request",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+      "function_name": "return_approval_request_for_correction",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+      "function_name": "escalate_approval_request",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+      "function_name": "cancel_approval_request",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+      "function_name": "create_approval_delegation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+      "function_name": "revoke_approval_delegation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+      "function_name": "override_approval_request_with_reason",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "patch28_write_capa_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "create_capa_action_plan",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "assign_capa_action_plan",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "submit_capa_action_plan",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "approve_capa_action_plan",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "reject_capa_action_plan",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "create_capa_action_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "update_capa_action_item_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "submit_capa_completion",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "validate_capa_completion",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "reject_capa_completion",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "request_capa_due_date_extension",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "approve_capa_due_date_extension",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "reject_capa_due_date_extension",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "start_capa_effectiveness_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "complete_capa_effectiveness_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "request_capa_closure",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "approve_capa_closure",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "reject_capa_closure",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "escalate_capa",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "reopen_capa_with_reason",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "cancel_capa_with_reason",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "link_capa_to_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+      "function_name": "mark_repeat_capa",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+      "function_name": "log_training_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+      "function_name": "create_training_program",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+      "function_name": "assign_training_program_to_user",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+      "function_name": "assign_training_program_to_department",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+      "function_name": "start_training_assignment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+      "function_name": "complete_training_assignment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+      "function_name": "acknowledge_training_assignment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+      "function_name": "waive_training_assignment_with_reason",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+      "function_name": "cancel_training_assignment_with_reason",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+      "function_name": "record_competency_assessment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+      "function_name": "reopen_training_assignment_with_reason",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+      "function_name": "link_training_evidence",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/093_patch30_executive_dashboard_truth_layer.sql",
+      "function_name": "log_executive_truth_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/093_patch30_executive_dashboard_truth_layer.sql",
+      "function_name": "create_executive_truth_snapshot",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/093_patch30_executive_dashboard_truth_layer.sql",
+      "function_name": "refresh_executive_truth_snapshot",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/093_patch30_executive_dashboard_truth_layer.sql",
+      "function_name": "record_executive_truth_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/093_patch30_executive_dashboard_truth_layer.sql",
+      "function_name": "get_executive_truth_summary",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/093_patch30_executive_dashboard_truth_layer.sql",
+      "function_name": "get_department_grc_scorecard",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/094_patch31_runtime_rpc_classification_signoff.sql",
+      "function_name": "patch31_actor_has_security_authority",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/094_patch31_runtime_rpc_classification_signoff.sql",
+      "function_name": "record_runtime_rpc_signoff_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/094_patch31_runtime_rpc_classification_signoff.sql",
+      "function_name": "classify_runtime_rpc",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/094_patch31_runtime_rpc_classification_signoff.sql",
+      "function_name": "mark_runtime_rpc_reviewed",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/094_patch31_runtime_rpc_classification_signoff.sql",
+      "function_name": "approve_runtime_rpc_for_production",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/094_patch31_runtime_rpc_classification_signoff.sql",
+      "function_name": "reject_runtime_rpc_for_production",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/095_patch32_accreditation_traceability_matrix.sql",
+      "function_name": "patch32_actor_has_accreditation_authority",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/095_patch32_accreditation_traceability_matrix.sql",
+      "function_name": "record_accreditation_traceability_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/095_patch32_accreditation_traceability_matrix.sql",
+      "function_name": "create_accreditation_standard",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/095_patch32_accreditation_traceability_matrix.sql",
+      "function_name": "create_accreditation_clause",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/095_patch32_accreditation_traceability_matrix.sql",
+      "function_name": "link_accreditation_clause_entity",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/095_patch32_accreditation_traceability_matrix.sql",
+      "function_name": "unlink_accreditation_clause_entity",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/095_patch32_accreditation_traceability_matrix.sql",
+      "function_name": "assess_accreditation_clause",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/095_patch32_accreditation_traceability_matrix.sql",
+      "function_name": "mark_accreditation_clause_not_applicable",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/095_patch32_accreditation_traceability_matrix.sql",
+      "function_name": "reopen_accreditation_clause_assessment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/095_patch32_accreditation_traceability_matrix.sql",
+      "function_name": "get_accreditation_clause_traceability",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/095_patch32_accreditation_traceability_matrix.sql",
+      "function_name": "get_accreditation_readiness_summary",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "patch33_actor_has_evidence_bridge_authority",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "patch33_actor_can_submit_request",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "record_evidence_bridge_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "create_evidence_bridge_link",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "update_evidence_bridge_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "create_evidence_collection_request",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "submit_evidence_collection_request",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "review_evidence_bridge_submission",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "accept_evidence_bridge_submission",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "reject_evidence_bridge_submission",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "waive_evidence_collection_request",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "reopen_evidence_collection_request",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "mark_evidence_bridge_not_applicable",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "refresh_evidence_freshness_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "get_clause_evidence_bridge",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+      "function_name": "get_live_evidence_readiness_summary",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "patch35_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "patch35_actor_has_accreditation_workflow_authority",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "record_accreditation_workflow_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "assign_accreditation_clause_owner",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "transfer_accreditation_clause_owner",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "create_accreditation_review_cycle",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "start_accreditation_review_cycle",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "complete_accreditation_review_cycle",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "create_accreditation_clause_review_task",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "submit_accreditation_clause_task",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "approve_accreditation_clause_task",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "reject_accreditation_clause_task",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "reopen_accreditation_clause_task",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "signoff_accreditation_clause",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "reject_accreditation_clause_signoff",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "escalate_accreditation_clause_task",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "acknowledge_accreditation_escalation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "resolve_accreditation_escalation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "get_accreditation_operations_dashboard",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+      "function_name": "get_clause_owner_workload",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "patch37_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "patch37_actor_has_clinical_governance_authority",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "record_clinical_governance_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "create_audit_execution_engagement",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "start_audit_execution_engagement",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "close_audit_execution_engagement",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "reopen_audit_execution_engagement",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "create_audit_execution_program",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "create_audit_execution_test_step",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "update_audit_execution_test_step_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "create_audit_execution_sample",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "record_audit_execution_result",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "create_audit_execution_finding",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "link_audit_finding_to_capa",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "link_audit_finding_to_evidence_bridge",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "signoff_audit_execution_engagement",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "reject_audit_execution_signoff",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "create_ovr_rca_case",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "update_ovr_rca_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "close_ovr_rca_case",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "link_ovr_to_capa_evidence_or_clause",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "escalate_clinical_governance_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "acknowledge_clinical_governance_escalation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "resolve_clinical_governance_escalation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "get_clinical_governance_summary",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+      "function_name": "get_audit_execution_summary",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "patch38_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "patch38_actor_has_master_data_authority",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "record_unified_work_queue_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "create_hospital_location",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "update_hospital_location_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "create_hospital_service",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "update_hospital_service_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "create_hospital_clinical_area",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "update_hospital_clinical_area_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "create_hospital_committee",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "update_hospital_committee_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "create_hospital_job_title",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "update_hospital_job_title_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "create_hospital_quality_indicator",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "update_hospital_quality_indicator_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "create_hospital_ownership_mapping",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "deactivate_hospital_ownership_mapping",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "get_my_work_queue",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "get_department_work_queue",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "get_executive_workload_summary",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+      "function_name": "get_governance_operating_summary",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "patch39_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "patch39_actor_has_hospital_governance_authority",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "record_hospital_governance_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "create_infection_control_surveillance_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "update_infection_control_event_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "close_infection_control_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "record_clinical_quality_indicator_result",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "update_clinical_quality_indicator_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "create_hospital_committee_meeting",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "update_committee_meeting_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "create_hospital_committee_action",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "update_committee_action_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "complete_committee_action",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "create_clinical_credentialing_record",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "update_credentialing_record_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "mark_credentialing_record_reviewed",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "create_facility_biomedical_safety_evidence",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "update_facility_biomedical_safety_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "mark_facility_biomedical_safety_checked",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "link_hospital_governance_item_to_evidence_bridge",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "link_hospital_governance_item_to_accreditation_clause",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "get_hospital_quality_summary",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+      "function_name": "get_department_hospital_governance_scorecard",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+      "function_name": "log_production_hardening_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+      "function_name": "create_production_readiness_signoff",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+      "function_name": "update_production_readiness_signoff_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+      "function_name": "create_known_limitation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+      "function_name": "update_known_limitation_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+      "function_name": "create_backup_restore_operation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+      "function_name": "update_backup_restore_operation_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+      "function_name": "create_bilingual_readiness_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+      "function_name": "update_bilingual_readiness_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+      "function_name": "create_navigation_simplification_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+      "function_name": "update_navigation_simplification_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+      "function_name": "record_production_hardening_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+      "function_name": "get_go_no_go_dashboard",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+      "function_name": "get_production_readiness_summary",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+      "function_name": "patch43_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+      "function_name": "patch43_actor_organization",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+      "function_name": "patch43_actor_has_authority",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+      "function_name": "record_survey_readiness_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+      "function_name": "evaluate_evidence_gate",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+      "function_name": "evaluate_evidence_gate_for_entity",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+      "function_name": "request_evidence_gate_waiver",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+      "function_name": "approve_evidence_gate_waiver",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+      "function_name": "reject_evidence_gate_waiver",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+      "function_name": "revoke_evidence_gate_waiver",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+      "function_name": "create_accreditation_war_room_snapshot",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+      "function_name": "get_accreditation_war_room",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+      "function_name": "get_evidence_gate_failure_register",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+      "function_name": "get_survey_blocker_summary",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+      "function_name": "get_executive_survey_readiness_summary",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/104_patch44_production_ux_readiness_pilot_hardening.sql",
+      "function_name": "record_pilot_go_no_go_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/104_patch44_production_ux_readiness_pilot_hardening.sql",
+      "function_name": "create_pilot_go_no_go_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/104_patch44_production_ux_readiness_pilot_hardening.sql",
+      "function_name": "update_pilot_go_no_go_review_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/105_patch45_runtime_action_authorization_review.sql",
+      "function_name": "patch45_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/105_patch45_runtime_action_authorization_review.sql",
+      "function_name": "record_runtime_action_review_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/105_patch45_runtime_action_authorization_review.sql",
+      "function_name": "create_runtime_action_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/105_patch45_runtime_action_authorization_review.sql",
+      "function_name": "update_runtime_action_review_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/106_patch46_runtime_access_review_signoff_closure.sql",
+      "function_name": "patch46_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/106_patch46_runtime_access_review_signoff_closure.sql",
+      "function_name": "record_runtime_action_review_signoff_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/106_patch46_runtime_access_review_signoff_closure.sql",
+      "function_name": "create_runtime_action_review_signoff",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/106_patch46_runtime_access_review_signoff_closure.sql",
+      "function_name": "update_runtime_action_review_signoff_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/107_patch47_staging_migration_persona_evidence_closure.sql",
+      "function_name": "patch47_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/107_patch47_staging_migration_persona_evidence_closure.sql",
+      "function_name": "record_staging_migration_evidence_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/107_patch47_staging_migration_persona_evidence_closure.sql",
+      "function_name": "create_staging_migration_evidence_run",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/107_patch47_staging_migration_persona_evidence_closure.sql",
+      "function_name": "update_staging_migration_evidence_run_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/108_patch49_controlled_pilot_activation_department_signoff.sql",
+      "function_name": "patch49_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/108_patch49_controlled_pilot_activation_department_signoff.sql",
+      "function_name": "record_controlled_pilot_activation_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/108_patch49_controlled_pilot_activation_department_signoff.sql",
+      "function_name": "create_controlled_pilot_activation_run",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/108_patch49_controlled_pilot_activation_department_signoff.sql",
+      "function_name": "update_controlled_pilot_activation_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/108_patch49_controlled_pilot_activation_department_signoff.sql",
+      "function_name": "create_controlled_pilot_department",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/108_patch49_controlled_pilot_activation_department_signoff.sql",
+      "function_name": "update_controlled_pilot_department_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/108_patch49_controlled_pilot_activation_department_signoff.sql",
+      "function_name": "create_controlled_pilot_department_signoff",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/108_patch49_controlled_pilot_activation_department_signoff.sql",
+      "function_name": "update_controlled_pilot_department_signoff_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/108_patch49_controlled_pilot_activation_department_signoff.sql",
+      "function_name": "create_controlled_pilot_participant",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/108_patch49_controlled_pilot_activation_department_signoff.sql",
+      "function_name": "update_controlled_pilot_participant_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/109_patch50_real_pilot_master_data_onboarding.sql",
+      "function_name": "patch50_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/109_patch50_real_pilot_master_data_onboarding.sql",
+      "function_name": "record_real_pilot_onboarding_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/109_patch50_real_pilot_master_data_onboarding.sql",
+      "function_name": "create_real_pilot_onboarding_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/109_patch50_real_pilot_master_data_onboarding.sql",
+      "function_name": "update_real_pilot_onboarding_review_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/109_patch50_real_pilot_master_data_onboarding.sql",
+      "function_name": "create_real_pilot_setup_checklist_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/109_patch50_real_pilot_master_data_onboarding.sql",
+      "function_name": "update_real_pilot_setup_checklist_item_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/109_patch50_real_pilot_master_data_onboarding.sql",
+      "function_name": "create_real_pilot_master_data_exception",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/109_patch50_real_pilot_master_data_onboarding.sql",
+      "function_name": "update_real_pilot_master_data_exception_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/110_patch51_live_pilot_workflow_execution_evidence.sql",
+      "function_name": "patch51_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/110_patch51_live_pilot_workflow_execution_evidence.sql",
+      "function_name": "record_live_pilot_workflow_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/110_patch51_live_pilot_workflow_execution_evidence.sql",
+      "function_name": "create_live_pilot_workflow_run",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/110_patch51_live_pilot_workflow_execution_evidence.sql",
+      "function_name": "update_live_pilot_workflow_run_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/110_patch51_live_pilot_workflow_execution_evidence.sql",
+      "function_name": "create_live_pilot_workflow_step",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/110_patch51_live_pilot_workflow_execution_evidence.sql",
+      "function_name": "update_live_pilot_workflow_step_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/110_patch51_live_pilot_workflow_execution_evidence.sql",
+      "function_name": "create_live_pilot_evidence_capture",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/110_patch51_live_pilot_workflow_execution_evidence.sql",
+      "function_name": "update_live_pilot_evidence_capture_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/110_patch51_live_pilot_workflow_execution_evidence.sql",
+      "function_name": "create_live_pilot_execution_issue",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/110_patch51_live_pilot_workflow_execution_evidence.sql",
+      "function_name": "update_live_pilot_execution_issue_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/111_patch52_pilot_closure_remediation_golive_decision.sql",
+      "function_name": "patch52_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/111_patch52_pilot_closure_remediation_golive_decision.sql",
+      "function_name": "record_pilot_closure_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/111_patch52_pilot_closure_remediation_golive_decision.sql",
+      "function_name": "create_pilot_closure_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/111_patch52_pilot_closure_remediation_golive_decision.sql",
+      "function_name": "update_pilot_closure_review_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/111_patch52_pilot_closure_remediation_golive_decision.sql",
+      "function_name": "create_pilot_remediation_action",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/111_patch52_pilot_closure_remediation_golive_decision.sql",
+      "function_name": "update_pilot_remediation_action_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/111_patch52_pilot_closure_remediation_golive_decision.sql",
+      "function_name": "create_pilot_accepted_limitation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/111_patch52_pilot_closure_remediation_golive_decision.sql",
+      "function_name": "update_pilot_accepted_limitation_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/111_patch52_pilot_closure_remediation_golive_decision.sql",
+      "function_name": "create_production_golive_decision",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/111_patch52_pilot_closure_remediation_golive_decision.sql",
+      "function_name": "update_production_golive_decision_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/112_patch53_golive_hypercare_operating_cadence.sql",
+      "function_name": "patch53_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/112_patch53_golive_hypercare_operating_cadence.sql",
+      "function_name": "record_production_hypercare_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/112_patch53_golive_hypercare_operating_cadence.sql",
+      "function_name": "create_production_hypercare_period",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/112_patch53_golive_hypercare_operating_cadence.sql",
+      "function_name": "update_production_hypercare_period_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/112_patch53_golive_hypercare_operating_cadence.sql",
+      "function_name": "create_production_hypercare_issue",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/112_patch53_golive_hypercare_operating_cadence.sql",
+      "function_name": "update_production_hypercare_issue_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/112_patch53_golive_hypercare_operating_cadence.sql",
+      "function_name": "create_production_operating_cadence_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/112_patch53_golive_hypercare_operating_cadence.sql",
+      "function_name": "update_production_operating_cadence_event_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/112_patch53_golive_hypercare_operating_cadence.sql",
+      "function_name": "create_production_adoption_feedback",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/112_patch53_golive_hypercare_operating_cadence.sql",
+      "function_name": "update_production_adoption_feedback_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/113_patch55_hospital_operations_readiness_pack.sql",
+      "function_name": "patch55_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/113_patch55_hospital_operations_readiness_pack.sql",
+      "function_name": "record_hospital_operations_readiness_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/113_patch55_hospital_operations_readiness_pack.sql",
+      "function_name": "create_hospital_department_launch_pack",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/113_patch55_hospital_operations_readiness_pack.sql",
+      "function_name": "update_hospital_department_launch_pack_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/113_patch55_hospital_operations_readiness_pack.sql",
+      "function_name": "create_hospital_department_launch_checklist_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/113_patch55_hospital_operations_readiness_pack.sql",
+      "function_name": "update_hospital_department_launch_checklist_item_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/113_patch55_hospital_operations_readiness_pack.sql",
+      "function_name": "create_hospital_support_readiness_record",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/113_patch55_hospital_operations_readiness_pack.sql",
+      "function_name": "update_hospital_support_readiness_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/113_patch55_hospital_operations_readiness_pack.sql",
+      "function_name": "create_hospital_policy_attestation_readiness",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/113_patch55_hospital_operations_readiness_pack.sql",
+      "function_name": "update_hospital_policy_attestation_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/113_patch55_hospital_operations_readiness_pack.sql",
+      "function_name": "create_hospital_adoption_readiness_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/113_patch55_hospital_operations_readiness_pack.sql",
+      "function_name": "update_hospital_adoption_readiness_status",
+      "has_search_path": true,
+      "has_public_revoke": true
     }
   ],
   "globalSearchPathFixes": [
@@ -391,7 +2137,300 @@
     "patch25_compliance_closure_satisfied",
     "patch25_write_compliance_event",
     "patch25_generate_calendar_events",
-    "patch25_compliance_obligation_bridge"
+    "patch25_compliance_obligation_bridge",
+    "patch26_write_document_event",
+    "submit_document_for_review",
+    "approve_document_version",
+    "reject_document_version",
+    "activate_document_version",
+    "start_document_revision",
+    "retire_controlled_document",
+    "link_document_to_item",
+    "record_document_acknowledgment",
+    "patch27_write_authority_event",
+    "create_approval_authority_rule",
+    "update_approval_authority_rule",
+    "disable_approval_authority_rule",
+    "request_workflow_approval",
+    "record_approval_decision",
+    "reject_approval_request",
+    "return_approval_request_for_correction",
+    "escalate_approval_request",
+    "cancel_approval_request",
+    "create_approval_delegation",
+    "revoke_approval_delegation",
+    "override_approval_request_with_reason",
+    "resolve_approval_authority_rule",
+    "check_user_approval_authority",
+    "patch28_write_capa_event",
+    "create_capa_action_plan",
+    "assign_capa_action_plan",
+    "submit_capa_action_plan",
+    "approve_capa_action_plan",
+    "reject_capa_action_plan",
+    "create_capa_action_item",
+    "update_capa_action_item_status",
+    "submit_capa_completion",
+    "validate_capa_completion",
+    "reject_capa_completion",
+    "request_capa_due_date_extension",
+    "approve_capa_due_date_extension",
+    "reject_capa_due_date_extension",
+    "start_capa_effectiveness_review",
+    "complete_capa_effectiveness_review",
+    "request_capa_closure",
+    "approve_capa_closure",
+    "reject_capa_closure",
+    "escalate_capa",
+    "reopen_capa_with_reason",
+    "cancel_capa_with_reason",
+    "link_capa_to_item",
+    "mark_repeat_capa",
+    "log_training_event",
+    "create_training_program",
+    "assign_training_program_to_user",
+    "assign_training_program_to_department",
+    "start_training_assignment",
+    "complete_training_assignment",
+    "acknowledge_training_assignment",
+    "waive_training_assignment_with_reason",
+    "cancel_training_assignment_with_reason",
+    "record_competency_assessment",
+    "reopen_training_assignment_with_reason",
+    "link_training_evidence",
+    "log_executive_truth_event",
+    "create_executive_truth_snapshot",
+    "refresh_executive_truth_snapshot",
+    "record_executive_truth_event",
+    "get_executive_truth_summary",
+    "get_department_grc_scorecard",
+    "patch31_actor_has_security_authority",
+    "record_runtime_rpc_signoff_event",
+    "classify_runtime_rpc",
+    "mark_runtime_rpc_reviewed",
+    "approve_runtime_rpc_for_production",
+    "reject_runtime_rpc_for_production",
+    "patch32_actor_has_accreditation_authority",
+    "record_accreditation_traceability_event",
+    "create_accreditation_standard",
+    "create_accreditation_clause",
+    "link_accreditation_clause_entity",
+    "unlink_accreditation_clause_entity",
+    "assess_accreditation_clause",
+    "mark_accreditation_clause_not_applicable",
+    "reopen_accreditation_clause_assessment",
+    "get_accreditation_clause_traceability",
+    "get_accreditation_readiness_summary",
+    "patch33_actor_has_evidence_bridge_authority",
+    "patch33_actor_can_submit_request",
+    "record_evidence_bridge_event",
+    "create_evidence_bridge_link",
+    "update_evidence_bridge_status",
+    "create_evidence_collection_request",
+    "submit_evidence_collection_request",
+    "review_evidence_bridge_submission",
+    "accept_evidence_bridge_submission",
+    "reject_evidence_bridge_submission",
+    "waive_evidence_collection_request",
+    "reopen_evidence_collection_request",
+    "mark_evidence_bridge_not_applicable",
+    "refresh_evidence_freshness_status",
+    "get_clause_evidence_bridge",
+    "get_live_evidence_readiness_summary",
+    "patch35_service_role_required",
+    "patch35_actor_has_accreditation_workflow_authority",
+    "record_accreditation_workflow_event",
+    "assign_accreditation_clause_owner",
+    "transfer_accreditation_clause_owner",
+    "create_accreditation_review_cycle",
+    "start_accreditation_review_cycle",
+    "complete_accreditation_review_cycle",
+    "create_accreditation_clause_review_task",
+    "submit_accreditation_clause_task",
+    "approve_accreditation_clause_task",
+    "reject_accreditation_clause_task",
+    "reopen_accreditation_clause_task",
+    "signoff_accreditation_clause",
+    "reject_accreditation_clause_signoff",
+    "escalate_accreditation_clause_task",
+    "acknowledge_accreditation_escalation",
+    "resolve_accreditation_escalation",
+    "get_accreditation_operations_dashboard",
+    "get_clause_owner_workload",
+    "patch37_service_role_required",
+    "patch37_actor_has_clinical_governance_authority",
+    "record_clinical_governance_event",
+    "create_audit_execution_engagement",
+    "start_audit_execution_engagement",
+    "close_audit_execution_engagement",
+    "create_audit_execution_program",
+    "create_audit_execution_test_step",
+    "update_audit_execution_test_step_status",
+    "create_audit_execution_sample",
+    "record_audit_execution_result",
+    "create_audit_execution_finding",
+    "link_audit_finding_to_capa",
+    "link_audit_finding_to_evidence_bridge",
+    "signoff_audit_execution_engagement",
+    "reject_audit_execution_signoff",
+    "reopen_audit_execution_engagement",
+    "create_ovr_rca_case",
+    "update_ovr_rca_status",
+    "close_ovr_rca_case",
+    "link_ovr_to_capa_evidence_or_clause",
+    "escalate_clinical_governance_item",
+    "acknowledge_clinical_governance_escalation",
+    "resolve_clinical_governance_escalation",
+    "get_clinical_governance_summary",
+    "get_audit_execution_summary",
+    "patch38_service_role_required",
+    "patch38_actor_has_master_data_authority",
+    "record_unified_work_queue_event",
+    "create_hospital_location",
+    "update_hospital_location_status",
+    "create_hospital_service",
+    "update_hospital_service_status",
+    "create_hospital_clinical_area",
+    "update_hospital_clinical_area_status",
+    "create_hospital_committee",
+    "update_hospital_committee_status",
+    "create_hospital_job_title",
+    "update_hospital_job_title_status",
+    "create_hospital_quality_indicator",
+    "update_hospital_quality_indicator_status",
+    "create_hospital_ownership_mapping",
+    "deactivate_hospital_ownership_mapping",
+    "get_my_work_queue",
+    "get_department_work_queue",
+    "get_executive_workload_summary",
+    "get_governance_operating_summary",
+    "patch39_service_role_required",
+    "patch39_actor_has_hospital_governance_authority",
+    "record_hospital_governance_event",
+    "create_infection_control_surveillance_event",
+    "update_infection_control_event_status",
+    "close_infection_control_event",
+    "record_clinical_quality_indicator_result",
+    "update_clinical_quality_indicator_status",
+    "create_hospital_committee_meeting",
+    "update_committee_meeting_status",
+    "create_hospital_committee_action",
+    "update_committee_action_status",
+    "complete_committee_action",
+    "create_clinical_credentialing_record",
+    "update_credentialing_record_status",
+    "mark_credentialing_record_reviewed",
+    "create_facility_biomedical_safety_evidence",
+    "update_facility_biomedical_safety_status",
+    "mark_facility_biomedical_safety_checked",
+    "link_hospital_governance_item_to_evidence_bridge",
+    "link_hospital_governance_item_to_accreditation_clause",
+    "get_hospital_quality_summary",
+    "get_department_hospital_governance_scorecard",
+    "log_production_hardening_event",
+    "create_production_readiness_signoff",
+    "update_production_readiness_signoff_status",
+    "create_known_limitation",
+    "update_known_limitation_status",
+    "create_backup_restore_operation",
+    "update_backup_restore_operation_status",
+    "create_bilingual_readiness_item",
+    "update_bilingual_readiness_status",
+    "create_navigation_simplification_item",
+    "update_navigation_simplification_status",
+    "record_production_hardening_event",
+    "get_go_no_go_dashboard",
+    "get_production_readiness_summary",
+    "patch43_service_role_required",
+    "patch43_actor_organization",
+    "patch43_actor_has_authority",
+    "record_survey_readiness_event",
+    "evaluate_evidence_gate",
+    "evaluate_evidence_gate_for_entity",
+    "request_evidence_gate_waiver",
+    "approve_evidence_gate_waiver",
+    "reject_evidence_gate_waiver",
+    "revoke_evidence_gate_waiver",
+    "create_accreditation_war_room_snapshot",
+    "get_accreditation_war_room",
+    "get_evidence_gate_failure_register",
+    "get_survey_blocker_summary",
+    "get_executive_survey_readiness_summary",
+    "record_pilot_go_no_go_event",
+    "create_pilot_go_no_go_review",
+    "update_pilot_go_no_go_review_status",
+    "patch45_service_role_required",
+    "record_runtime_action_review_event",
+    "create_runtime_action_review",
+    "update_runtime_action_review_status",
+    "patch46_service_role_required",
+    "record_runtime_action_review_signoff_event",
+    "create_runtime_action_review_signoff",
+    "update_runtime_action_review_signoff_status",
+    "patch47_service_role_required",
+    "record_staging_migration_evidence_event",
+    "create_staging_migration_evidence_run",
+    "update_staging_migration_evidence_run_status",
+    "patch49_service_role_required",
+    "record_controlled_pilot_activation_event",
+    "create_controlled_pilot_activation_run",
+    "update_controlled_pilot_activation_status",
+    "create_controlled_pilot_department",
+    "update_controlled_pilot_department_status",
+    "create_controlled_pilot_department_signoff",
+    "update_controlled_pilot_department_signoff_status",
+    "create_controlled_pilot_participant",
+    "update_controlled_pilot_participant_status",
+    "patch50_service_role_required",
+    "record_real_pilot_onboarding_event",
+    "create_real_pilot_onboarding_review",
+    "update_real_pilot_onboarding_review_status",
+    "create_real_pilot_setup_checklist_item",
+    "update_real_pilot_setup_checklist_item_status",
+    "create_real_pilot_master_data_exception",
+    "update_real_pilot_master_data_exception_status",
+    "patch51_service_role_required",
+    "record_live_pilot_workflow_event",
+    "create_live_pilot_workflow_run",
+    "update_live_pilot_workflow_run_status",
+    "create_live_pilot_workflow_step",
+    "update_live_pilot_workflow_step_status",
+    "create_live_pilot_evidence_capture",
+    "update_live_pilot_evidence_capture_status",
+    "create_live_pilot_execution_issue",
+    "update_live_pilot_execution_issue_status",
+    "patch52_service_role_required",
+    "record_pilot_closure_event",
+    "create_pilot_closure_review",
+    "update_pilot_closure_review_status",
+    "create_pilot_remediation_action",
+    "update_pilot_remediation_action_status",
+    "create_pilot_accepted_limitation",
+    "update_pilot_accepted_limitation_status",
+    "create_production_golive_decision",
+    "update_production_golive_decision_status",
+    "patch53_service_role_required",
+    "record_production_hypercare_event",
+    "create_production_hypercare_period",
+    "update_production_hypercare_period_status",
+    "create_production_hypercare_issue",
+    "update_production_hypercare_issue_status",
+    "create_production_operating_cadence_event",
+    "update_production_operating_cadence_event_status",
+    "create_production_adoption_feedback",
+    "update_production_adoption_feedback_status",
+    "patch55_service_role_required",
+    "record_hospital_operations_readiness_event",
+    "create_hospital_department_launch_pack",
+    "update_hospital_department_launch_pack_status",
+    "create_hospital_department_launch_checklist_item",
+    "update_hospital_department_launch_checklist_item_status",
+    "create_hospital_support_readiness_record",
+    "update_hospital_support_readiness_status",
+    "create_hospital_policy_attestation_readiness",
+    "update_hospital_policy_attestation_status",
+    "create_hospital_adoption_readiness_review",
+    "update_hospital_adoption_readiness_status"
   ],
   "finalSecurityInvokerFunctions": [
     "current_user_org_id",

@@ -1,0 +1,32 @@
+{
+  "patch": "70",
+  "checked_at": "2026-07-05T13:24:28.872Z",
+  "strict_passed": true,
+  "failed_count": 0,
+  "checks": [
+    {
+      "name": "MockData deleted",
+      "passed": true
+    },
+    {
+      "name": "NoMockAutoTestCenter deleted",
+      "passed": true
+    },
+    {
+      "name": "v59 script deleted",
+      "passed": true
+    },
+    {
+      "name": "v60 script deleted",
+      "passed": true
+    },
+    {
+      "name": "LIVE_HANDOVER.md exists",
+      "passed": true
+    },
+    {
+      "name": "Freeze migration exists",
+      "passed": true
+    }
+  ]
+}

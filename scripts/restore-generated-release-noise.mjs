@@ -33,12 +33,14 @@ const allowlistedPaths = [
   'release/patch57/patch57-production-operator-console-proof.json',
   'release/patch58/patch58-production-evidence-closure-proof.json',
   'release/patch58-1/patch58-1-validation-runtime-optimization-proof.json',
+  'release/patch58-2/patch58-2-repo-hygiene-release-noise-proof.json',
   'release/patch61/patch61-evidence-ownership-due-date-readiness-proof.json',
   'release/patch62/patch62-executive-closure-recommendation-readiness-proof.json',
   'release/patch63/patch63-department-evidence-coverage-readiness-proof.json',
   'release/patch64/patch64-policy-sop-attestation-evidence-readiness-proof.json',
   'release/patch65/patch65-backup-restore-dr-evidence-readiness-proof.json',
   'release/patch66/patch66-access-review-security-evidence-readiness-proof.json',
+  'release/patch67/patch67-training-adoption-support-evidence-readiness-proof.json',
 ];
 
 const existing = [];
