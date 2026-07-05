@@ -9,6 +9,7 @@ import {
   getEvidenceOwnershipDueDateReadiness,
   getDepartmentEvidenceCoverage,
   getExecutiveClosureRecommendation,
+  getPolicySopAttestationReadiness,
   getProductionEvidenceClosureData,
   getReviewerDecisionReadiness,
   type EvidenceClosureStatus,
@@ -80,6 +81,8 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
   const dueDateMissingCount = ownershipStates.filter(item => item.dueDateState === 'Due date missing').length;
   const escalationReadyCount = ownershipStates.filter(item => item.escalationReadinessState === 'Escalation may be required.').length;
   const executiveRecommendation = getExecutiveClosureRecommendation(data ?? undefined, { ownerMissingCount, reviewerMissingCount });
+  const policySopReadiness = getPolicySopAttestationReadiness(selectedItem, data ?? undefined);
+  const executivePolicySopImpact = getPolicySopAttestationReadiness(undefined, data ?? undefined).executiveImpact;
 
   return (
     <section className="page-section production-readiness-page">
@@ -139,6 +142,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                       <th>Due date</th>
                       <th>Due date state</th>
                       <th>Evidence state</th>
+                      <th>Policy/SOP attestation evidence</th>
                       <th>Owner state</th>
                       <th>Reviewer state</th>
                       <th>Blocker state</th>
@@ -149,6 +153,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                   <tbody>
                     {items.slice(0, 40).map(item => {
                       const ownership = getEvidenceOwnershipDueDateReadiness(item);
+                      const policySop = getPolicySopAttestationReadiness(item, data ?? undefined);
                       return (
                         <tr key={`${item.category}-${item.id}-${item.title}`}>
                           <td>{item.category}</td>
@@ -158,6 +163,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                           <td>{item.dueDate}</td>
                           <td>{ownership.dueDateState}</td>
                           <td><StatusPill tone={statusTone(item.evidenceState)}>{evidenceStateLabel(item.evidenceState)}</StatusPill></td>
+                          <td>{policySop.readinessState}</td>
                           <td>{ownership.ownerState}</td>
                           <td>{ownership.reviewerState}</td>
                           <td>{ownership.blockedStatus}</td>
@@ -219,6 +225,16 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <strong>Next accountable party: </strong>{ownershipReadiness.nextAccountableParty}<br />
               <strong>Missing assignment warnings: </strong>{ownershipReadiness.missingWarnings.length ? ownershipReadiness.missingWarnings.join(' ') : noBlocker}
             </div>
+            <div className="alert alert-warning" style={{ marginTop: '14px' }}>
+              <strong>Policy/SOP attestation evidence: </strong>{policySopReadiness.readinessState}<br />
+              <strong>Missing attestation evidence summary: </strong>{policySopReadiness.missingAttestationEvidenceSummary}<br />
+              <strong>Owner/reviewer readiness: </strong>{policySopReadiness.ownerReviewerReadiness}<br />
+              <strong>Due date or overdue state: </strong>{policySopReadiness.dueDateOrOverdueState}<br />
+              <strong>Source workflow destination: </strong>{policySopReadiness.sourceWorkflowDestination}<br />
+              <strong>Executive impact: </strong>{policySopReadiness.executiveImpact}<br />
+              <strong>Missing evidence rule: </strong>Attestation evidence required when source evidence is not recorded.<br />
+              <strong>Attestation caveat: </strong>{policySopReadiness.caveat}
+            </div>
             <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
               {setPage ? (
                 <ActionButton onClick={() => setPage(selectedHandoff.destinationPage)}>
@@ -242,6 +258,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                       <th>Launch readiness</th>
                       <th>Training evidence</th>
                       <th>Policy/SOP evidence</th>
+                      <th>Policy/SOP attestation evidence</th>
                       <th>Support evidence</th>
                       <th>Adoption evidence</th>
                       <th>Owner</th>
@@ -255,6 +272,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                   <tbody>
                     {(data?.departmentRegister ?? []).slice(0, 40).map(row => {
                       const coverage = getDepartmentEvidenceCoverage(row);
+                      const policySop = getPolicySopAttestationReadiness(row, data ?? undefined);
                       return (
                         <tr key={row.department}>
                           <td><strong>{row.department}</strong></td>
@@ -263,6 +281,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                           <td><StatusPill tone={statusTone(row.launchReadiness)}>{row.launchReadiness}</StatusPill></td>
                           <td>{row.trainingEvidence}</td>
                           <td>{row.policyEvidence}</td>
+                          <td>{policySop.readinessState}<br />{policySop.missingAttestationEvidenceSummary}</td>
                           <td>{row.supportEvidence}</td>
                           <td>{row.adoptionEvidence}</td>
                           <td>{row.owner}</td>
@@ -278,6 +297,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                 </table>
                 <div className="alert alert-info" style={{ marginTop: '14px' }}>
                   <strong>Department evidence coverage: </strong>Coverage depends on recorded source evidence. Manage source evidence in Production Readiness Center.
+                  <br /><strong>Policy/SOP attestation evidence: </strong>Attestation readiness depends on recorded source evidence. Manage attestation evidence in Production Readiness Center.
                 </div>
               </div>
             ) : <EmptyState />}
@@ -298,6 +318,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <MetricTile label="Evidence required" value={executiveRecommendation.evidenceRequiredCount} tone={executiveRecommendation.evidenceRequiredCount ? 'warning' : 'good'} />
               <MetricTile label="Review required" value={executiveRecommendation.reviewRequiredCount} tone={executiveRecommendation.reviewRequiredCount ? 'warning' : 'good'} />
               <MetricTile label="Overdue evidence" value={executiveRecommendation.overdueEvidenceCount} tone={executiveRecommendation.overdueEvidenceCount ? 'danger' : 'good'} />
+              <MetricTile label="Policy/SOP impact" value={executivePolicySopImpact} tone={executivePolicySopImpact.includes('Executive review required') ? 'warning' : 'good'} />
             </div>
             <div className="alert alert-info" style={{ marginTop: '14px' }}>
               <ShieldAlert size={16} />
@@ -305,6 +326,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <strong>Reason for recommendation: </strong>{executiveRecommendation.recommendationReason}<br />
               <strong>Missing owner/reviewer warning: </strong>{executiveRecommendation.missingAssignmentCount ? `${executiveRecommendation.missingAssignmentCount} assignment warnings require follow-up.` : noBlocker}<br />
               <strong>Required executive actions: </strong>{executiveRecommendation.requiredExecutiveActions.join(' ')}<br />
+              <strong>Policy/SOP attestation evidence: </strong>{executivePolicySopImpact}<br />
               <strong>Decision caveat: </strong>{executiveRecommendation.caveat}
             </div>
           </ModernCard>
