@@ -295,6 +295,8 @@
     "patch58-1:all": "npm run validate:release",
     "patch58-2:proof": "node scripts/patch58-2-repo-hygiene-release-noise-proof.mjs",
     "patch58-2:all": "npm run validate:build && npm run patch58-2:proof",
+    "patch59:proof": "node scripts/patch59-evidence-action-routing-proof.mjs",
+    "patch59:all": "npm run validate:build && npm run patch59:proof",
     "validate:fast": "npm run typecheck && npm run patch58:proof && npm run patch58-1:proof && npm run patch58-2:proof",
     "validate:build": "npm run typecheck && npm run build",
     "validate:proof": "npm run proof:all",

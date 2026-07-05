@@ -5,6 +5,7 @@ import { ModernCard, StatusPill } from '../components/ModernCard';
 import { useAsyncData } from '../hooks/useAsyncData';
 import type { PageKey } from '../components/Layout';
 import {
+  getEvidenceClosureHandoff,
   getProductionEvidenceClosureData,
   type EvidenceClosureStatus,
   type ProductionEvidenceClosureItem,
@@ -66,6 +67,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
   const data = closure.data;
   const items = [...(data?.intakeQueue ?? [])].sort((a, b) => itemSortScore(a) - itemSortScore(b));
   const selectedItem = items[0];
+  const selectedHandoff = getEvidenceClosureHandoff(selectedItem);
 
   return (
     <section className="page-section production-readiness-page">
@@ -165,9 +167,17 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                 </div>
               </div>
             ) : <EmptyState message={reviewRequired} />}
+            <div className="alert alert-info" style={{ marginTop: '14px' }}>
+              <strong>Recommended next action: </strong>{selectedHandoff.recommendedNextAction}<br />
+              <strong>Safe management destination: </strong>{selectedHandoff.safeManagementDestination}<br />
+              <strong>Closure availability: </strong>{selectedHandoff.directClosureAvailability}<br />
+              <strong>Required evidence before closure: </strong>{selectedHandoff.requiredEvidenceBeforeClosure}<br />
+              <strong>Reviewer decision: </strong>{selectedHandoff.reviewerDecisionNeeded}<br />
+              <strong>Limitation / exception decision: </strong>{selectedHandoff.limitationDecisionNeeded}
+            </div>
             <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
               {setPage ? (
-                <ActionButton onClick={() => setPage('productionReadiness')}>
+                <ActionButton onClick={() => setPage(selectedHandoff.destinationPage)}>
                   <ClipboardCheck size={16} />
                   Manage this evidence in Production Readiness Center
                 </ActionButton>

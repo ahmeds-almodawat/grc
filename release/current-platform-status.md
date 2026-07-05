@@ -2,7 +2,8 @@
 
 ## Current Level
 
-- Current patch level: Patch 58 after implementation.
+- Current patch level: Patch 59 after implementation.
+- Patch 59 scope: evidence action routing and closure handoff guidance only. It clarifies safe management destinations and next actions without adding direct closure writes.
 - Patch 58 capability: Production Evidence Capture & Closure Workflow for live hospital evidence gaps, owner follow-up, review state, limitations, recovery assurance, and executive closure readiness.
 - Patch 58.1 scope: validation/runtime command structure only. It reduces duplicate nested validation work and adds fast, build, proof, security, release, and profiling lanes.
 - Patch 58.2 scope: repository hygiene and release noise restore coverage only. It archives legacy root patch helper files and extends generated proof JSON cleanup coverage.
@@ -41,7 +42,7 @@ Use `npm run validate:fast` for the local development loop, `npm run validate:bu
 ## Evidence Locations
 
 - Technical validation artifacts: `release/v700/`, `release/v64/`, `release/v66/`, `release/v672/`, `release/v673/`, and `release/v674/`.
-- Patch release evidence: `release/patch43/` through `release/patch58/`.
+- Patch release evidence: `release/patch43/` through `release/patch59/`.
 - Current production readiness, pilot/hypercare, hospital operations evidence, and closure follow-up are surfaced in the Production Readiness Center, Production Operator Console, and Production Evidence Closure page.
 - Current proof command index: `release/current-proof-command-index.md`.
 - Current validation runbook: `release/current-validation-runbook.md`.

@@ -78,7 +78,7 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button className="secondary-action" type="button" onClick={() => setPage('productionEvidenceClosure')}>
               <FileCheck2 size={16} />
-              Production Evidence Closure
+              Route evidence closure
             </button>
             <button className="secondary-action" type="button" onClick={() => setPage('productionReadiness')}>
               <ExternalLink size={16} />

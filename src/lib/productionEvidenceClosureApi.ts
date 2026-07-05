@@ -49,6 +49,16 @@ export interface ProductionEvidenceClosureItem {
   limitationState: string;
 }
 
+export interface EvidenceClosureHandoff {
+  recommendedNextAction: string;
+  safeManagementDestination: string;
+  destinationPage: 'productionReadiness';
+  directClosureAvailability: string;
+  requiredEvidenceBeforeClosure: string;
+  reviewerDecisionNeeded: string;
+  limitationDecisionNeeded: string;
+}
+
 export interface DepartmentEvidenceRegisterRow {
   department: string;
   launchReadiness: string;
@@ -90,6 +100,19 @@ const evidenceMissing = 'Evidence has not been recorded.';
 const reviewRequired = 'Review required.';
 const ownerAction = 'Awaiting owner action.';
 const noBlocker = 'No blocker currently recorded.';
+const sourceWorkflowClosure = 'Closure must be completed in the source workflow.';
+
+const categoryRequiredEvidence: Record<string, string> = {
+  'Department launch': 'Department owner, launch checklist, participant coverage, support path, and launch decision evidence.',
+  'Training adoption': 'Training completion, adoption review, and follow-up evidence.',
+  'Policy/SOP attestation': 'Policy or SOP acknowledgement evidence by required audience.',
+  'Support readiness': 'Named support owner, escalation path, response readiness, and runbook evidence.',
+  'Backup/Restore/DR': 'Backup, restore, and recovery assurance evidence.',
+  'Access/Security review': 'Access review decision, limitation, or remediation evidence.',
+  'Executive signoff': 'Named executive decision and signoff evidence.',
+  'Accepted limitations': 'Risk acceptance, limitation owner, review date, and executive awareness evidence.',
+  'Other production evidence': 'Recorded readiness, limitation, or closure evidence.',
+};
 
 const numberValue = (value: unknown) => Number(value ?? 0) || 0;
 
@@ -110,6 +133,35 @@ function normalizeStatus(value: unknown): EvidenceClosureStatus {
   if (['blocked', 'failed', 'rejected'].includes(normalized)) return 'blocked';
   if (['evidence_required', 'missing', 'pending', 'planning', 'not_started', ''].includes(normalized)) return 'evidence_required';
   return 'open';
+}
+
+export function getEvidenceClosureHandoff(item?: Pick<ProductionEvidenceClosureItem, 'category' | 'evidenceState' | 'reviewerState' | 'limitationState' | 'requiredEvidence'>): EvidenceClosureHandoff {
+  const state = item?.evidenceState ?? 'evidence_required';
+  const requiresReviewerDecision = ['under_review', 'open', 'evidence_required', 'overdue', 'blocked'].includes(state);
+  const limitationText = String(item?.limitationState ?? '').toLowerCase();
+  const requiresLimitationDecision = state === 'accepted_with_limitation'
+    || limitationText.includes('limitation')
+    || limitationText.includes('exception');
+
+  return {
+    recommendedNextAction: state === 'closed'
+      ? 'Keep evidence available for executive review.'
+      : state === 'under_review'
+        ? 'Reviewer decision required.'
+        : state === 'accepted_with_limitation'
+          ? 'Limitation or exception decision required before closure.'
+          : state === 'blocked'
+            ? 'Resolve the blocker or record an accepted limitation in the source register.'
+            : state === 'overdue'
+              ? 'Record evidence in the source register and send for review.'
+              : 'Record evidence in the source register.',
+    safeManagementDestination: 'Production Readiness Center',
+    destinationPage: 'productionReadiness',
+    directClosureAvailability: 'No closure action is available from this screen.',
+    requiredEvidenceBeforeClosure: item?.requiredEvidence || categoryRequiredEvidence[item?.category ?? ''] || evidenceMissing,
+    reviewerDecisionNeeded: requiresReviewerDecision ? 'Reviewer decision required.' : 'Reviewer decision recorded.',
+    limitationDecisionNeeded: requiresLimitationDecision ? 'Limitation or exception decision required.' : 'No limitation decision currently recorded.',
+  };
 }
 
 function evidenceRefs(row: Record<string, any>) {

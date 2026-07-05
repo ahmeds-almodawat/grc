@@ -77,6 +77,7 @@ npm run patch57:all
 npm run patch58:all
 npm run patch58-1:all
 npm run patch58-2:all
+npm run patch59:all
 ```
 
 Patch 58.1 adds validation lanes that avoid nested duplicate full chains:
@@ -95,6 +96,12 @@ Patch 58.2 adds repository hygiene and restore-noise coverage proof:
 
 ```powershell
 npm run patch58-2:proof
+```
+
+Patch 59 adds evidence action routing and closure handoff proof:
+
+```powershell
+npm run patch59:proof
 ```
 
 ## G. Generated Release Artifacts
