@@ -1,0 +1,60 @@
+{
+  "patch": "69",
+  "checked_at": "2026-07-05T13:21:12.286Z",
+  "strict_passed": true,
+  "failed_count": 0,
+  "checks": [
+    {
+      "name": "migration exists",
+      "passed": true
+    },
+    {
+      "name": "lock function exists",
+      "passed": true
+    },
+    {
+      "name": "lock trigger defined: employee_import_staging",
+      "passed": true
+    },
+    {
+      "name": "lock trigger defined: staging_validation_cycles",
+      "passed": true
+    },
+    {
+      "name": "lock trigger defined: staging_validation_check_results",
+      "passed": true
+    },
+    {
+      "name": "lock trigger defined: patch13_sql_proof_runs",
+      "passed": true
+    },
+    {
+      "name": "lock trigger defined: patch14_staging_persona_sql_runs",
+      "passed": true
+    },
+    {
+      "name": "lock trigger defined: patch14_backup_restore_proof_runs",
+      "passed": true
+    },
+    {
+      "name": "lock trigger defined: production_go_no_go_staging_persona_runs",
+      "passed": true
+    },
+    {
+      "name": "lock trigger defined: staging_migration_evidence_runs",
+      "passed": true
+    },
+    {
+      "name": "lock trigger defined: staging_migration_evidence_events",
+      "passed": true
+    },
+    {
+      "name": "trigger iterates correctly",
+      "passed": true
+    },
+    {
+      "name": "no destructive data operations",
+      "passed": true
+    }
+  ]
+}
