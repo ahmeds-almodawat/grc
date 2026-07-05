@@ -148,6 +148,16 @@ export interface AccessReviewSecurityEvidenceReadiness {
   caveat: string;
 }
 
+export interface TrainingAdoptionSupportEvidenceReadiness {
+  readinessState: string;
+  missingAdoptionEvidenceSummary: string;
+  ownerReviewerReadiness: string;
+  dueDateOrOverdueState: string;
+  sourceWorkflowDestination: string;
+  executiveImpact: string;
+  caveat: string;
+}
+
 export interface ProductionEvidenceClosureData {
   overview: {
     totalEvidenceGaps: number;
@@ -708,6 +718,101 @@ export function getAccessReviewSecurityEvidenceReadiness(source?: ProductionEvid
     sourceWorkflowDestination: getAccessReviewSecuritySourceDestination(source),
     executiveImpact: getAccessReviewSecurityExecutiveImpact(data),
     caveat: 'Security readiness depends on recorded source evidence.',
+  };
+}
+
+function isTrainingAdoptionSupportItem(item?: Pick<ProductionEvidenceClosureItem, 'category' | 'title' | 'requiredEvidence'>) {
+  const text = `${item?.category ?? ''} ${item?.title ?? ''} ${item?.requiredEvidence ?? ''}`.toLowerCase();
+  return text.includes('training')
+    || text.includes('adoption')
+    || text.includes('support')
+    || text.includes('onboarding')
+    || text.includes('user readiness');
+}
+
+export function getTrainingAdoptionSupportGapSummary(source?: ProductionEvidenceClosureItem | DepartmentEvidenceRegisterRow) {
+  if (!source) return 'Training evidence required. Adoption evidence required. Support readiness evidence required.';
+  if ('trainingEvidence' in source) {
+    const missing = [
+      categoryMissing(source.trainingEvidence) ? 'Training evidence required.' : '',
+      categoryMissing(source.adoptionEvidence) ? 'Adoption evidence required.' : '',
+      categoryMissing(source.supportEvidence) ? 'Support readiness evidence required.' : '',
+    ].filter(Boolean);
+    return missing.length ? missing.join(' ') : 'Training evidence recorded. Adoption evidence recorded. Support evidence recorded.';
+  }
+  if (!isTrainingAdoptionSupportItem(source)) return 'No training, adoption, or support evidence gap currently recorded for this item.';
+  if (!hasRecordedEvidence(source)) return 'Training evidence required. Adoption evidence required. Support readiness evidence required.';
+  if (source.evidenceState === 'blocked') return 'Training, adoption, or support evidence is blocked.';
+  if (source.evidenceState === 'overdue') return 'Overdue adoption evidence.';
+  if (source.evidenceState === 'closed') return 'Training evidence recorded. Adoption evidence recorded. Support evidence recorded.';
+  return 'Review required.';
+}
+
+export function getTrainingAdoptionSupportSourceDestination(source?: ProductionEvidenceClosureItem | DepartmentEvidenceRegisterRow) {
+  if (source && 'trainingEvidence' in source) {
+    if (categoryMissing(source.supportEvidence)) return 'Manage support readiness in Production Readiness Center.';
+    return 'Manage adoption evidence in Production Readiness Center.';
+  }
+  if (source && !('trainingEvidence' in source) && isTrainingAdoptionSupportItem(source)) {
+    return 'Manage adoption evidence in Production Readiness Center.';
+  }
+  return 'Manage adoption evidence in Production Readiness Center.';
+}
+
+export function getTrainingAdoptionSupportExecutiveImpact(data?: ProductionEvidenceClosureData) {
+  const missingDepartmentEvidence = data?.departmentRegister.filter(row =>
+    categoryMissing(row.trainingEvidence) || categoryMissing(row.adoptionEvidence) || categoryMissing(row.supportEvidence)
+  ).length ?? 0;
+  const missingItems = data?.intakeQueue.filter(item => isTrainingAdoptionSupportItem(item) && item.evidenceState !== 'closed').length ?? 0;
+  const missingTotal = missingDepartmentEvidence + missingItems;
+  if (missingTotal > 0) return `Executive review required for ${missingTotal} training, adoption, or support evidence gap${missingTotal === 1 ? '' : 's'}.`;
+  return 'No executive training, adoption, or support evidence impact currently recorded.';
+}
+
+export function getTrainingAdoptionSupportEvidenceReadiness(source?: ProductionEvidenceClosureItem | DepartmentEvidenceRegisterRow, data?: ProductionEvidenceClosureData): TrainingAdoptionSupportEvidenceReadiness {
+  const isDepartmentRow = Boolean(source && 'trainingEvidence' in source);
+  const operationalRelevant = !source || isDepartmentRow || isTrainingAdoptionSupportItem(source as ProductionEvidenceClosureItem | undefined);
+  const ownership = isDepartmentRow
+    ? { ownerState: (source as DepartmentEvidenceRegisterRow).owner === ownerAction ? 'Owner missing' : 'Owner assigned', reviewerState: 'Reviewer missing' }
+    : getEvidenceOwnershipState(source as ProductionEvidenceClosureItem | undefined);
+  const dueDate = isDepartmentRow
+    ? { dueDateState: 'Due date missing', overdueStatus: 'Due date not recorded.' }
+    : getEvidenceDueDateState(source as ProductionEvidenceClosureItem | undefined);
+  const itemState = !isDepartmentRow ? (source as ProductionEvidenceClosureItem | undefined)?.evidenceState : undefined;
+  const departmentTrainingMissing = isDepartmentRow ? categoryMissing((source as DepartmentEvidenceRegisterRow).trainingEvidence) : false;
+  const departmentAdoptionMissing = isDepartmentRow ? categoryMissing((source as DepartmentEvidenceRegisterRow).adoptionEvidence) : false;
+  const departmentSupportMissing = isDepartmentRow ? categoryMissing((source as DepartmentEvidenceRegisterRow).supportEvidence) : false;
+
+  const readinessState = !operationalRelevant || departmentTrainingMissing || itemState === 'evidence_required'
+    ? 'Training evidence required'
+    : departmentAdoptionMissing
+      ? 'Adoption evidence required'
+      : departmentSupportMissing
+        ? 'Support readiness evidence required'
+        : itemState === 'blocked'
+          ? 'Blocked'
+          : itemState === 'overdue'
+            ? 'Overdue'
+            : ownership.ownerState === 'Owner missing'
+              ? 'Owner action required'
+              : ownership.reviewerState === 'Reviewer missing'
+                ? 'Reviewer action required'
+                : itemState === 'closed'
+                  ? 'Training evidence recorded'
+                  : 'Review required';
+
+  return {
+    readinessState,
+    missingAdoptionEvidenceSummary: getTrainingAdoptionSupportGapSummary(source),
+    ownerReviewerReadiness: ownership.ownerState === 'Owner missing'
+      ? 'Owner action required.'
+      : ownership.reviewerState === 'Reviewer missing'
+        ? 'Reviewer action required.'
+        : 'Review required.',
+    dueDateOrOverdueState: dueDate.overdueStatus === 'Overdue.' ? 'Overdue adoption evidence.' : dueDate.overdueStatus,
+    sourceWorkflowDestination: getTrainingAdoptionSupportSourceDestination(source),
+    executiveImpact: getTrainingAdoptionSupportExecutiveImpact(data),
+    caveat: 'Operational adoption readiness depends on recorded source evidence.',
   };
 }
 

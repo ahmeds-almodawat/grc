@@ -311,6 +311,8 @@
     "patch65:all": "npm run validate:build && npm run patch65:proof",
     "patch66:proof": "node scripts/patch66-access-review-security-evidence-readiness-proof.mjs",
     "patch66:all": "npm run validate:build && npm run patch66:proof",
+    "patch67:proof": "node scripts/patch67-training-adoption-support-evidence-readiness-proof.mjs",
+    "patch67:all": "npm run validate:build && npm run patch67:proof",
     "validate:fast": "npm run typecheck && npm run patch58:proof && npm run patch58-1:proof && npm run patch58-2:proof",
     "validate:build": "npm run typecheck && npm run build",
     "validate:proof": "npm run proof:all",
