@@ -9,6 +9,7 @@ import {
   getEvidenceOwnershipDueDateReadiness,
   getDepartmentEvidenceCoverage,
   getExecutiveClosureRecommendation,
+  getExecutiveGoNoGoDecisionPack,
   getAccessReviewSecurityEvidenceReadiness,
   getBackupRestoreDrEvidenceReadiness,
   getPolicySopAttestationReadiness,
@@ -34,8 +35,8 @@ const noAction = 'No closure action is available from this screen.';
 
 function statusTone(status?: string) {
   const normalized = String(status ?? '').toLowerCase();
-  if (['closed', 'ready', 'recorded', 'ready for executive review', 'coverage complete in source data', 'monitor'].includes(normalized)) return 'good';
-  if (['blocked', 'overdue', 'rejected'].includes(normalized)) return 'danger';
+  if (['closed', 'ready', 'recorded', 'ready for executive review', 'ready for executive decision review', 'coverage complete in source data', 'monitor'].includes(normalized)) return 'good';
+  if (['blocked', 'overdue', 'rejected', 'no-go: blockers unresolved'].includes(normalized)) return 'danger';
   return 'warning';
 }
 
@@ -107,6 +108,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
   const executiveAdoptionImpact = getTrainingAdoptionSupportEvidenceReadiness(undefined, data ?? undefined).executiveImpact;
   const availableActions = getAvailableControlledEvidenceClosureActions(selectedItem);
   const selectedActionAvailability = getControlledEvidenceClosureActionAvailability(selectedItem, selectedAction);
+  const executiveGoNoGoDecisionPack = getExecutiveGoNoGoDecisionPack(data ?? undefined, { ownerMissingCount, reviewerMissingCount }, recentActions);
 
   async function submitControlledAction() {
     if (!selectedItem) return;
@@ -527,6 +529,22 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <strong>Access review evidence: </strong>{executiveSecurityImpact}<br />
               <strong>Training evidence: </strong>{executiveAdoptionImpact}<br />
               <strong>Decision caveat: </strong>{executiveRecommendation.caveat}
+            </div>
+            <div className="alert alert-warning" style={{ marginTop: '14px' }}>
+              <strong>Executive go/no-go decision pack. </strong>{executiveGoNoGoDecisionPack.decisionPackState}<br />
+              <strong>Decision states: </strong>No-go: blockers unresolved. Conditional go review. Review required. Ready for executive decision review.<br />
+              <strong>Recommendation reason: </strong>{executiveGoNoGoDecisionPack.recommendationReason}<br />
+              <strong>Unresolved blocker summary: </strong>{executiveGoNoGoDecisionPack.unresolvedBlockerSummary}<br />
+              <strong>Accepted limitation summary: </strong>{executiveGoNoGoDecisionPack.acceptedLimitationSummary}<br />
+              <strong>Controlled evidence action history: </strong>{executiveGoNoGoDecisionPack.controlledClosureActionSummary}<br />
+              <strong>Verified evidence count: </strong>{executiveGoNoGoDecisionPack.evidenceClosureSummary.verifiedEvidenceCount}<br />
+              <strong>Ready for review count: </strong>{executiveGoNoGoDecisionPack.evidenceClosureSummary.readyForReviewCount}<br />
+              <strong>Request more evidence count: </strong>{executiveGoNoGoDecisionPack.evidenceClosureSummary.requiringMoreEvidenceCount}<br />
+              <strong>Reopened evidence count: </strong>{executiveGoNoGoDecisionPack.evidenceClosureSummary.reopenedEvidenceCount}<br />
+              <strong>Required executive review items: </strong>{executiveGoNoGoDecisionPack.requiredExecutiveReviewItems.join(' ')}<br />
+              <strong>Required actions before executive decision: </strong>{executiveGoNoGoDecisionPack.requiredOperationalActionsBeforeDecision.join(' ')}<br />
+              <strong>Decision pack caveat: </strong>Evidence-level closure does not approve production launch.<br />
+              <strong>Authority caveat: </strong>Production launch requires separate executive authority.
             </div>
             <div className="alert alert-warning" style={{ marginTop: '14px' }}>
               <strong>Executive review caveat: </strong>Evidence-level closure actions do not approve production launch. Executive review remains separate and must follow the source governance process.

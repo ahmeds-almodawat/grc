@@ -87,6 +87,7 @@ npm run patch65:all
 npm run patch66:all
 npm run patch67:all
 npm run patch68:all
+npm run patch69:all
 ```
 
 Patch 58.1 adds validation lanes that avoid nested duplicate full chains:
@@ -165,6 +166,12 @@ Patch 68 adds controlled evidence closure action proof:
 
 ```powershell
 npm run patch68:proof
+```
+
+Patch 69 adds executive go/no-go decision pack proof:
+
+```powershell
+npm run patch69:proof
 ```
 
 ## G. Generated Release Artifacts

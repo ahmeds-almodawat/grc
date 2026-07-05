@@ -1,0 +1,218 @@
+{
+  "patch": "Patch 69",
+  "name": "Executive Go/No-Go Decision Pack",
+  "passed": true,
+  "checks": [
+    {
+      "name": "Patch 69 executive decision pack helper exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "blocker summary helper exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "limitation summary helper exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "required actions helper exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "controlled evidence closure summary helper exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "executive go/no-go decision pack wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "safe state exists: No-go: blockers unresolved",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "safe state exists: Conditional go review",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "safe state exists: Review required",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "safe state exists: Ready for executive decision review",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "controlled evidence action history wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "accepted limitations require executive review wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "required actions before executive decision wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "evidence-level closure caveat remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "production launch separate authority wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no production launch action added to page",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no transition_to_live_operations in active files",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no executive production signoff RPC in active page/API/bridge call path",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no production-ready claim in operational UI",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no browser service-role exposure exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "/production-evidence-closure still exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Production Evidence Closure page exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Production Readiness Center link remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Production Operator Console link remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "operator console mentions decision pack readiness",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no fake/demo records added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "operational UI avoids banned technical wording",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "restore-noise covers Patch 68 generated proof JSON",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "package patch69:proof exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "package patch69:all exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:fast exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:security exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "proof:all exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "v700:runtime-security exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "current platform status mentions Patch 69",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "production caveat remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "proof index mentions Patch 69",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "runbook mentions Patch 68 proof JSON restore coverage",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no conflict markers",
+      "passed": true,
+      "details": ""
+    }
+  ],
+  "generated_at": "2026-07-05T14:21:46.844Z"
+}
