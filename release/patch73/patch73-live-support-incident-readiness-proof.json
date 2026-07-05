@@ -1,0 +1,192 @@
+{
+  "patch": "73",
+  "checked_at": "2026-07-05T20:51:31.413Z",
+  "strict_passed": true,
+  "failed_count": 0,
+  "checks": [
+    {
+      "name": "Patch 73 live support readiness helper exists",
+      "passed": true
+    },
+    {
+      "name": "Patch 73 incident readiness helper exists",
+      "passed": true
+    },
+    {
+      "name": "Live support and incident readiness wording exists",
+      "passed": true
+    },
+    {
+      "name": "Safe state exists: Support blocked",
+      "passed": true
+    },
+    {
+      "name": "Safe state exists: Incident readiness blocked",
+      "passed": true
+    },
+    {
+      "name": "Safe state exists: Support evidence required",
+      "passed": true
+    },
+    {
+      "name": "Safe state exists: Escalation review required",
+      "passed": true
+    },
+    {
+      "name": "Safe state exists: Ready for support readiness review",
+      "passed": true
+    },
+    {
+      "name": "Required actions before support readiness review wording exists",
+      "passed": true
+    },
+    {
+      "name": "Support desk readiness required wording exists",
+      "passed": true
+    },
+    {
+      "name": "Escalation owner review required wording exists",
+      "passed": true
+    },
+    {
+      "name": "Known issue register review required wording exists",
+      "passed": true
+    },
+    {
+      "name": "Downtime fallback readiness required wording exists",
+      "passed": true
+    },
+    {
+      "name": "Support readiness caveat exists",
+      "passed": true
+    },
+    {
+      "name": "Production launch separate authority wording exists",
+      "passed": true
+    },
+    {
+      "name": "Patch 69 executive decision pack wording remains",
+      "passed": true
+    },
+    {
+      "name": "Patch 70 department launch final readiness wording remains",
+      "passed": true
+    },
+    {
+      "name": "Patch 71 live data quality and role integrity wording remains",
+      "passed": true
+    },
+    {
+      "name": "Patch 72 UAT pack and hospital pilot acceptance wording remains",
+      "passed": true
+    },
+    {
+      "name": "No production launch action added",
+      "passed": true
+    },
+    {
+      "name": "No transition_to_live_operations wording/action exists",
+      "passed": true
+    },
+    {
+      "name": "No Authorize Production Launch wording exists",
+      "passed": true
+    },
+    {
+      "name": "No executive production signoff RPC added",
+      "passed": true
+    },
+    {
+      "name": "No production-ready claim added",
+      "passed": true
+    },
+    {
+      "name": "No browser service-role exposure exists",
+      "passed": true
+    },
+    {
+      "name": "/production-evidence-closure still exists",
+      "passed": true
+    },
+    {
+      "name": "Production Evidence Closure page exists",
+      "passed": true
+    },
+    {
+      "name": "Production Readiness Center link remains",
+      "passed": true
+    },
+    {
+      "name": "Production Operator Console link remains",
+      "passed": true
+    },
+    {
+      "name": "No fake/demo records added",
+      "passed": true
+    },
+    {
+      "name": "Operational UI avoids banned technical wording",
+      "passed": true
+    },
+    {
+      "name": "Restore-noise covers Patch 72 generated proof JSON",
+      "passed": true
+    },
+    {
+      "name": "package.json contains patch73:proof",
+      "passed": true
+    },
+    {
+      "name": "package.json contains patch73:all",
+      "passed": true
+    },
+    {
+      "name": "validate:fast exists",
+      "passed": true
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true
+    },
+    {
+      "name": "validate:security exists",
+      "passed": true
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true
+    },
+    {
+      "name": "proof:all exists",
+      "passed": true
+    },
+    {
+      "name": "v700:runtime-security exists",
+      "passed": true
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true
+    },
+    {
+      "name": "current platform status mentions Patch 73",
+      "passed": true
+    },
+    {
+      "name": "production caveat remains",
+      "passed": true
+    },
+    {
+      "name": "proof index mentions Patch 73",
+      "passed": true
+    },
+    {
+      "name": "runbook mentions Patch 72 proof JSON restore coverage",
+      "passed": true
+    },
+    {
+      "name": "No conflict markers",
+      "passed": true
+    }
+  ]
+}

@@ -45,6 +45,7 @@ const allowlistedPaths = [
   'release/patch69/patch69-executive-go-no-go-decision-pack-proof.json',
   'release/patch70/patch70-department-launch-final-readiness-workflow-proof.json',
   'release/patch71/patch71-live-data-quality-role-integrity-proof.json',
+  'release/patch72/patch72-uat-pack-hospital-pilot-acceptance-proof.json',
 ];
 
 const existing = [];
