@@ -83,6 +83,7 @@ npm run patch61:all
 npm run patch62:all
 npm run patch63:all
 npm run patch64:all
+npm run patch65:all
 ```
 
 Patch 58.1 adds validation lanes that avoid nested duplicate full chains:
@@ -137,6 +138,12 @@ Patch 64 adds policy/SOP attestation evidence readiness proof:
 
 ```powershell
 npm run patch64:proof
+```
+
+Patch 65 adds backup, restore, and DR evidence readiness proof:
+
+```powershell
+npm run patch65:proof
 ```
 
 ## G. Generated Release Artifacts

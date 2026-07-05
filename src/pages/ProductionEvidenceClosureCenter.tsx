@@ -9,6 +9,7 @@ import {
   getEvidenceOwnershipDueDateReadiness,
   getDepartmentEvidenceCoverage,
   getExecutiveClosureRecommendation,
+  getBackupRestoreDrEvidenceReadiness,
   getPolicySopAttestationReadiness,
   getProductionEvidenceClosureData,
   getReviewerDecisionReadiness,
@@ -83,6 +84,8 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
   const executiveRecommendation = getExecutiveClosureRecommendation(data ?? undefined, { ownerMissingCount, reviewerMissingCount });
   const policySopReadiness = getPolicySopAttestationReadiness(selectedItem, data ?? undefined);
   const executivePolicySopImpact = getPolicySopAttestationReadiness(undefined, data ?? undefined).executiveImpact;
+  const recoveryReadiness = getBackupRestoreDrEvidenceReadiness(selectedItem, data ?? undefined);
+  const executiveRecoveryImpact = getBackupRestoreDrEvidenceReadiness(undefined, data ?? undefined).executiveImpact;
 
   return (
     <section className="page-section production-readiness-page">
@@ -142,6 +145,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                       <th>Due date</th>
                       <th>Due date state</th>
                       <th>Evidence state</th>
+                      <th>Backup and restore evidence</th>
                       <th>Policy/SOP attestation evidence</th>
                       <th>Owner state</th>
                       <th>Reviewer state</th>
@@ -154,6 +158,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                     {items.slice(0, 40).map(item => {
                       const ownership = getEvidenceOwnershipDueDateReadiness(item);
                       const policySop = getPolicySopAttestationReadiness(item, data ?? undefined);
+                      const recovery = getBackupRestoreDrEvidenceReadiness(item, data ?? undefined);
                       return (
                         <tr key={`${item.category}-${item.id}-${item.title}`}>
                           <td>{item.category}</td>
@@ -163,6 +168,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                           <td>{item.dueDate}</td>
                           <td>{ownership.dueDateState}</td>
                           <td><StatusPill tone={statusTone(item.evidenceState)}>{evidenceStateLabel(item.evidenceState)}</StatusPill></td>
+                          <td>{recovery.readinessState}</td>
                           <td>{policySop.readinessState}</td>
                           <td>{ownership.ownerState}</td>
                           <td>{ownership.reviewerState}</td>
@@ -226,6 +232,16 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <strong>Missing assignment warnings: </strong>{ownershipReadiness.missingWarnings.length ? ownershipReadiness.missingWarnings.join(' ') : noBlocker}
             </div>
             <div className="alert alert-warning" style={{ marginTop: '14px' }}>
+              <strong>Backup and restore evidence: </strong>{recoveryReadiness.readinessState}<br />
+              <strong>Missing recovery evidence summary: </strong>{recoveryReadiness.missingRecoveryEvidenceSummary}<br />
+              <strong>Owner/reviewer readiness: </strong>{recoveryReadiness.ownerReviewerReadiness}<br />
+              <strong>Due date or overdue state: </strong>{recoveryReadiness.dueDateOrOverdueState}<br />
+              <strong>Source workflow destination: </strong>{recoveryReadiness.sourceWorkflowDestination}<br />
+              <strong>Executive impact: </strong>{recoveryReadiness.executiveImpact}<br />
+              <strong>Recovery evidence rule: </strong>Backup evidence required. Restore test evidence required. DR evidence required.<br />
+              <strong>Recovery caveat: </strong>{recoveryReadiness.caveat}
+            </div>
+            <div className="alert alert-warning" style={{ marginTop: '14px' }}>
               <strong>Policy/SOP attestation evidence: </strong>{policySopReadiness.readinessState}<br />
               <strong>Missing attestation evidence summary: </strong>{policySopReadiness.missingAttestationEvidenceSummary}<br />
               <strong>Owner/reviewer readiness: </strong>{policySopReadiness.ownerReviewerReadiness}<br />
@@ -260,6 +276,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                       <th>Policy/SOP evidence</th>
                       <th>Policy/SOP attestation evidence</th>
                       <th>Support evidence</th>
+                      <th>Backup/restore/DR evidence</th>
                       <th>Adoption evidence</th>
                       <th>Owner</th>
                       <th>Owner/reviewer readiness</th>
@@ -273,6 +290,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                     {(data?.departmentRegister ?? []).slice(0, 40).map(row => {
                       const coverage = getDepartmentEvidenceCoverage(row);
                       const policySop = getPolicySopAttestationReadiness(row, data ?? undefined);
+                      const recovery = getBackupRestoreDrEvidenceReadiness(row, data ?? undefined);
                       return (
                         <tr key={row.department}>
                           <td><strong>{row.department}</strong></td>
@@ -283,6 +301,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                           <td>{row.policyEvidence}</td>
                           <td>{policySop.readinessState}<br />{policySop.missingAttestationEvidenceSummary}</td>
                           <td>{row.supportEvidence}</td>
+                          <td>{recovery.readinessState}<br />{recovery.missingRecoveryEvidenceSummary}</td>
                           <td>{row.adoptionEvidence}</td>
                           <td>{row.owner}</td>
                           <td>{coverage.ownerReviewerReadinessSummary}</td>
@@ -297,6 +316,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                 </table>
                 <div className="alert alert-info" style={{ marginTop: '14px' }}>
                   <strong>Department evidence coverage: </strong>Coverage depends on recorded source evidence. Manage source evidence in Production Readiness Center.
+                  <br /><strong>Backup and restore evidence: </strong>Recovery readiness depends on recorded source evidence. Manage recovery evidence in Production Readiness Center.
                   <br /><strong>Policy/SOP attestation evidence: </strong>Attestation readiness depends on recorded source evidence. Manage attestation evidence in Production Readiness Center.
                 </div>
               </div>
@@ -318,6 +338,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <MetricTile label="Evidence required" value={executiveRecommendation.evidenceRequiredCount} tone={executiveRecommendation.evidenceRequiredCount ? 'warning' : 'good'} />
               <MetricTile label="Review required" value={executiveRecommendation.reviewRequiredCount} tone={executiveRecommendation.reviewRequiredCount ? 'warning' : 'good'} />
               <MetricTile label="Overdue evidence" value={executiveRecommendation.overdueEvidenceCount} tone={executiveRecommendation.overdueEvidenceCount ? 'danger' : 'good'} />
+              <MetricTile label="DR evidence impact" value={executiveRecoveryImpact} tone={executiveRecoveryImpact.includes('Executive review required') ? 'warning' : 'good'} />
               <MetricTile label="Policy/SOP impact" value={executivePolicySopImpact} tone={executivePolicySopImpact.includes('Executive review required') ? 'warning' : 'good'} />
             </div>
             <div className="alert alert-info" style={{ marginTop: '14px' }}>
@@ -326,6 +347,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <strong>Reason for recommendation: </strong>{executiveRecommendation.recommendationReason}<br />
               <strong>Missing owner/reviewer warning: </strong>{executiveRecommendation.missingAssignmentCount ? `${executiveRecommendation.missingAssignmentCount} assignment warnings require follow-up.` : noBlocker}<br />
               <strong>Required executive actions: </strong>{executiveRecommendation.requiredExecutiveActions.join(' ')}<br />
+              <strong>Backup and restore evidence: </strong>{executiveRecoveryImpact}<br />
               <strong>Policy/SOP attestation evidence: </strong>{executivePolicySopImpact}<br />
               <strong>Decision caveat: </strong>{executiveRecommendation.caveat}
             </div>

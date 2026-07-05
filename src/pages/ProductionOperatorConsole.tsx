@@ -76,7 +76,7 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
         </div>
         {setPage ? (
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <button className="secondary-action" type="button" aria-label="Route evidence closure, reviewer readiness, ownership and due date readiness, executive recommendation readiness, department evidence coverage readiness, and policy/SOP attestation evidence readiness in Production Evidence Closure" onClick={() => setPage('productionEvidenceClosure')}>
+            <button className="secondary-action" type="button" aria-label="Route evidence closure, reviewer readiness, ownership and due date readiness, executive recommendation readiness, department evidence coverage readiness, policy/SOP attestation evidence readiness, and backup, restore, and DR evidence readiness in Production Evidence Closure" onClick={() => setPage('productionEvidenceClosure')}>
               <FileCheck2 size={16} />
               Production Evidence Closure review readiness
             </button>

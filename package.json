@@ -307,6 +307,8 @@
     "patch63:all": "npm run validate:build && npm run patch63:proof",
     "patch64:proof": "node scripts/patch64-policy-sop-attestation-evidence-readiness-proof.mjs",
     "patch64:all": "npm run validate:build && npm run patch64:proof",
+    "patch65:proof": "node scripts/patch65-backup-restore-dr-evidence-readiness-proof.mjs",
+    "patch65:all": "npm run validate:build && npm run patch65:proof",
     "validate:fast": "npm run typecheck && npm run patch58:proof && npm run patch58-1:proof && npm run patch58-2:proof",
     "validate:build": "npm run typecheck && npm run build",
     "validate:proof": "npm run proof:all",
