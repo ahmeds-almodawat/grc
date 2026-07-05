@@ -11,6 +11,7 @@ import {
   getDepartmentLaunchFinalReadinessWorkflow,
   getExecutiveClosureRecommendation,
   getExecutiveGoNoGoDecisionPack,
+  getFinalSecurityAccessReviewPack,
   getLiveDataQualityRoleIntegrityReadiness,
   getLiveSupportIncidentReadiness,
   getUatPackHospitalPilotAcceptanceReadiness,
@@ -40,7 +41,7 @@ const noAction = 'No closure action is available from this screen.';
 function statusTone(status?: string) {
   const normalized = String(status ?? '').toLowerCase();
   if (['closed', 'ready', 'recorded', 'ready for executive review', 'ready for executive decision review', 'coverage complete in source data', 'monitor'].includes(normalized)) return 'good';
-  if (['blocked', 'launch blocked', 'data blocked', 'uat blocked', 'support blocked', 'incident readiness blocked', 'overdue', 'rejected', 'no-go: blockers unresolved'].includes(normalized)) return 'danger';
+  if (['blocked', 'launch blocked', 'data blocked', 'uat blocked', 'support blocked', 'incident readiness blocked', 'security review blocked', 'access review blocked', 'overdue', 'rejected', 'no-go: blockers unresolved'].includes(normalized)) return 'danger';
   return 'warning';
 }
 
@@ -106,6 +107,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
   const liveDataQualityRoleIntegrity = getLiveDataQualityRoleIntegrityReadiness(data ?? undefined, recentActions);
   const uatPilotAcceptance = getUatPackHospitalPilotAcceptanceReadiness(data ?? undefined, recentActions);
   const liveSupportIncidentReadiness = getLiveSupportIncidentReadiness(data ?? undefined, recentActions);
+  const finalSecurityAccessReview = getFinalSecurityAccessReviewPack(data ?? undefined, recentActions);
   const policySopReadiness = getPolicySopAttestationReadiness(selectedItem, data ?? undefined);
   const executivePolicySopImpact = getPolicySopAttestationReadiness(undefined, data ?? undefined).executiveImpact;
   const recoveryReadiness = getBackupRestoreDrEvidenceReadiness(selectedItem, data ?? undefined);
@@ -666,6 +668,40 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <strong>Ready state: </strong>Ready for support readiness review means support and incident records are ready for review, not production launch.<br />
               <strong>Support caveat: </strong>{liveSupportIncidentReadiness.caveat}<br />
               <strong>Authority caveat: </strong>{liveSupportIncidentReadiness.productionLaunchAuthorityCaveat}
+            </div>
+          </ModernCard>
+
+          <ModernCard title="Final Security and Access Review Pack" subtitle="Read-only security, access, accountability, and privileged exposure readiness before launch decision review.">
+            <div className="alert alert-warning" style={{ marginBottom: '14px' }}>
+              <strong>Final security and access review. </strong>
+              Security and access review does not approve production launch. Production launch requires separate executive authority.
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '12px', marginBottom: '14px' }}>
+              <MetricTile label="Security review state" value={finalSecurityAccessReview.securityReviewState} tone={statusTone(finalSecurityAccessReview.securityReviewState)} />
+              <MetricTile label="Access review state" value={finalSecurityAccessReview.accessReviewState} tone={statusTone(finalSecurityAccessReview.accessReviewState)} />
+              <MetricTile label="Security actions" value={finalSecurityAccessReview.finalSecurityRequiredActions.length} tone="warning" />
+              <MetricTile label="Access actions" value={finalSecurityAccessReview.finalAccessRequiredActions.length} tone="warning" />
+              <MetricTile label="Final review actions" value={finalSecurityAccessReview.requiredActionsBeforeFinalSecurityReview.length} tone="warning" />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div className="alert alert-info" style={{ margin: 0 }}>
+                <strong>Security review blocked: </strong>{finalSecurityAccessReview.securityReviewState === 'Security review blocked' ? 'Security review blocked.' : noBlocker}<br />
+                <strong>Privileged access review required: </strong>{finalSecurityAccessReview.privilegedAccessReviewSummary}<br />
+                <strong>RLS / bridge / privileged service exposure confirmation summary: </strong>{finalSecurityAccessReview.rlsBridgeSecuritySummary}<br />
+                <strong>Department/station access accountability: </strong>{finalSecurityAccessReview.departmentStationAccessAccountabilitySummary}
+              </div>
+              <div className="alert alert-warning" style={{ margin: 0 }}>
+                <strong>Access review blocked: </strong>{finalSecurityAccessReview.accessReviewState === 'Access review blocked' ? 'Access review blocked.' : noBlocker}<br />
+                <strong>Account cleanup required: </strong>{finalSecurityAccessReview.accessReviewState === 'Account cleanup required' ? 'Account cleanup required.' : noBlocker}<br />
+                <strong>Dormant or inactive accounts require review: </strong>{finalSecurityAccessReview.dormantInactiveAccountSummary}<br />
+                <strong>Archived user access requires review: </strong>{finalSecurityAccessReview.archivedUserAccessSummary}
+              </div>
+            </div>
+            <div className="alert alert-info" style={{ marginTop: '14px' }}>
+              <strong>Ready state: </strong>Ready for final security review means security and access evidence are ready for review, not production launch.<br />
+              <strong>Required actions before final security review: </strong>{finalSecurityAccessReview.requiredActionsBeforeFinalSecurityReview.join(' ')}<br />
+              <strong>Security/access caveat: </strong>{finalSecurityAccessReview.caveat}<br />
+              <strong>Authority caveat: </strong>{finalSecurityAccessReview.productionLaunchAuthorityCaveat}
             </div>
           </ModernCard>
 

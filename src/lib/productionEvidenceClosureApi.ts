@@ -333,6 +333,28 @@ export interface LiveSupportIncidentReadiness {
   productionLaunchAuthorityCaveat: string;
 }
 
+export type FinalSecurityAccessReviewState =
+  | 'Security review blocked'
+  | 'Access review blocked'
+  | 'Privileged access review required'
+  | 'Account cleanup required'
+  | 'Ready for final security review';
+
+export interface FinalSecurityAccessReviewPack {
+  securityReviewState: FinalSecurityAccessReviewState;
+  accessReviewState: FinalSecurityAccessReviewState;
+  privilegedAccessReviewSummary: string;
+  dormantInactiveAccountSummary: string;
+  archivedUserAccessSummary: string;
+  rlsBridgeSecuritySummary: string;
+  departmentStationAccessAccountabilitySummary: string;
+  requiredActionsBeforeFinalSecurityReview: string[];
+  finalSecurityRequiredActions: string[];
+  finalAccessRequiredActions: string[];
+  caveat: string;
+  productionLaunchAuthorityCaveat: string;
+}
+
 export interface ProductionEvidenceClosureData {
   overview: {
     totalEvidenceGaps: number;
@@ -1826,6 +1848,120 @@ export function getLiveSupportIncidentReadiness(
     supportReadinessRequiredActions: getSupportReadinessRequiredActions(data, recentActions),
     incidentReadinessRequiredActions: getIncidentReadinessRequiredActions(data, recentActions),
     caveat: 'Support readiness does not approve production launch.',
+    productionLaunchAuthorityCaveat: 'Production launch requires separate executive authority.',
+  };
+}
+
+export function getPrivilegedAccessReviewSummary(data?: ProductionEvidenceClosureData) {
+  const securityReadiness = getAccessReviewSecurityEvidenceReadiness(undefined, data);
+  const roleIntegrity = getLiveDataQualityRoleIntegrityReadiness(data);
+  if (securityReadiness.readinessState !== 'Review required' || roleIntegrity.roleIntegrityState !== 'Ready for UAT data review') {
+    return `Privileged access review required. ${securityReadiness.missingSecurityEvidenceSummary} ${roleIntegrity.missingOwnerReviewerSummary}`;
+  }
+  return 'Privileged access review required where final access review evidence is not yet visible.';
+}
+
+export function getDormantInactiveAccountSummary(data?: ProductionEvidenceClosureData) {
+  const roleIntegrity = getLiveDataQualityRoleIntegrityReadiness(data);
+  const inactiveWarnings = roleIntegrity.inactiveArchivedOwnerReviewerWarnings.filter(warning =>
+    warning.toLowerCase().includes('inactive') || warning.toLowerCase().includes('deactivated') || warning.toLowerCase().includes('disabled') || warning.toLowerCase().includes('locked')
+  );
+  return inactiveWarnings.length
+    ? `Dormant or inactive accounts require review: ${inactiveWarnings.join(' ')}`
+    : 'Dormant or inactive accounts require review where account status evidence is not yet visible.';
+}
+
+export function getArchivedUserAccessSummary(data?: ProductionEvidenceClosureData) {
+  const roleIntegrity = getLiveDataQualityRoleIntegrityReadiness(data);
+  const archivedWarnings = roleIntegrity.inactiveArchivedOwnerReviewerWarnings.filter(warning => warning.toLowerCase().includes('archived'));
+  return archivedWarnings.length
+    ? `Archived user access requires review: ${archivedWarnings.join(' ')}`
+    : 'Archived user access requires review where archived-account evidence is not yet visible.';
+}
+
+export function getRlsBridgeSecuritySummary(data?: ProductionEvidenceClosureData) {
+  const securityReadiness = getAccessReviewSecurityEvidenceReadiness(undefined, data);
+  return `RLS / bridge / privileged service exposure confirmation summary: ${securityReadiness.missingSecurityEvidenceSummary} Frontend privileged service exposure remains blocked by runtime security review.`;
+}
+
+export function getDepartmentStationAccessAccountabilitySummary(data?: ProductionEvidenceClosureData) {
+  const dataQuality = getLiveDataQualityRoleIntegrityReadiness(data);
+  const departmentLaunch = getDepartmentLaunchFinalReadinessWorkflow(data);
+  const gapCount = departmentLaunch.evidenceRequiredCount + departmentLaunch.reviewRequiredCount + departmentLaunch.blockedCount;
+  if (gapCount > 0 || dataQuality.departmentAccountabilityGaps !== 'No department accountability gap currently recorded.') {
+    return `Department/station access accountability requires review: ${gapCount} department readiness item${gapCount === 1 ? '' : 's'}. ${dataQuality.departmentAccountabilityGaps}`;
+  }
+  return 'Department/station access accountability requires review where station-level access evidence is not yet visible.';
+}
+
+export function getFinalSecurityRequiredActions(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+) {
+  const actions = new Set<string>();
+  const support = getLiveSupportIncidentReadiness(data, recentActions);
+  const uat = getUatPackHospitalPilotAcceptanceReadiness(data, recentActions);
+  const executivePack = getExecutiveGoNoGoDecisionPack(data, undefined, recentActions);
+  const securityReadiness = getAccessReviewSecurityEvidenceReadiness(undefined, data);
+
+  if (numberValue(data?.overview.blocked) > 0 || support.incidentReadinessState === 'Incident readiness blocked') actions.add('Resolve security blockers before final security review.');
+  if (securityReadiness.missingSecurityEvidenceSummary.includes('required')) actions.add('Privileged access review required.');
+  if (uat.pilotAcceptanceState !== 'Ready for pilot acceptance review') actions.add('Complete UAT and pilot acceptance review before final security review.');
+  if (executivePack.decisionPackState !== 'Ready for executive decision review') actions.add('Complete executive decision pack readiness before final security review.');
+  if (numberValue(data?.executivePack.acceptedLimitationsRequiringReview) > 0 || numberValue(data?.overview.acceptedWithLimitation) > 0) {
+    actions.add('Review accepted limitations before final security review.');
+  }
+  return actions.size ? [...actions] : ['Prepare final security evidence for review.'];
+}
+
+export function getFinalAccessRequiredActions(data?: ProductionEvidenceClosureData) {
+  const actions = new Set<string>();
+  const dataQuality = getLiveDataQualityRoleIntegrityReadiness(data);
+  if (getPrivilegedAccessReviewSummary(data).includes('required')) actions.add('Privileged access review required.');
+  if (getDormantInactiveAccountSummary(data).includes('require review')) actions.add('Dormant or inactive accounts require review.');
+  if (getArchivedUserAccessSummary(data).includes('require review')) actions.add('Archived user access requires review.');
+  if (dataQuality.roleIntegrityState !== 'Ready for UAT data review') actions.add('Resolve account ownership and reviewer assignments before final access review.');
+  return actions.size ? [...actions] : ['Prepare final access evidence for review.'];
+}
+
+export function getSecurityReviewState(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+): FinalSecurityAccessReviewState {
+  const support = getLiveSupportIncidentReadiness(data, recentActions);
+  const securityReadiness = getAccessReviewSecurityEvidenceReadiness(undefined, data);
+  if (numberValue(data?.overview.blocked) > 0 || support.incidentReadinessState === 'Incident readiness blocked') return 'Security review blocked';
+  if (securityReadiness.missingSecurityEvidenceSummary.includes('required')) return 'Privileged access review required';
+  if (getFinalSecurityRequiredActions(data, recentActions).length > 1) return 'Privileged access review required';
+  return 'Ready for final security review';
+}
+
+export function getAccessReviewState(data?: ProductionEvidenceClosureData): FinalSecurityAccessReviewState {
+  const dataQuality = getLiveDataQualityRoleIntegrityReadiness(data);
+  if (dataQuality.dataQualityState === 'Data blocked') return 'Access review blocked';
+  if (dataQuality.roleIntegrityState === 'Role review required') return 'Account cleanup required';
+  if (dataQuality.roleIntegrityState !== 'Ready for UAT data review') return 'Privileged access review required';
+  return 'Ready for final security review';
+}
+
+export function getFinalSecurityAccessReviewPack(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+): FinalSecurityAccessReviewPack {
+  const finalSecurityRequiredActions = getFinalSecurityRequiredActions(data, recentActions);
+  const finalAccessRequiredActions = getFinalAccessRequiredActions(data);
+  return {
+    securityReviewState: getSecurityReviewState(data, recentActions),
+    accessReviewState: getAccessReviewState(data),
+    privilegedAccessReviewSummary: getPrivilegedAccessReviewSummary(data),
+    dormantInactiveAccountSummary: getDormantInactiveAccountSummary(data),
+    archivedUserAccessSummary: getArchivedUserAccessSummary(data),
+    rlsBridgeSecuritySummary: getRlsBridgeSecuritySummary(data),
+    departmentStationAccessAccountabilitySummary: getDepartmentStationAccessAccountabilitySummary(data),
+    requiredActionsBeforeFinalSecurityReview: [...new Set([...finalSecurityRequiredActions, ...finalAccessRequiredActions])],
+    finalSecurityRequiredActions,
+    finalAccessRequiredActions,
+    caveat: 'Security and access review does not approve production launch.',
     productionLaunchAuthorityCaveat: 'Production launch requires separate executive authority.',
   };
 }

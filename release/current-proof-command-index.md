@@ -198,6 +198,12 @@ Patch 73 adds live support and incident readiness proof:
 npm run patch73:proof
 ```
 
+Patch 74 adds final security and access review readiness proof:
+
+```powershell
+npm run patch74:proof
+```
+
 ## G. Generated Release Artifacts
 
 Many proof commands regenerate JSON and text evidence under `release/v*` and older `release/patch*` folders. That churn is expected after validation.
