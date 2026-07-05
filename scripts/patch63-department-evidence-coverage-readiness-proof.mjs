@@ -1,0 +1,116 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+
+const root = process.cwd();
+const reportDir = path.join(root, 'release', 'patch63');
+const reportPath = path.join(reportDir, 'patch63-department-evidence-coverage-readiness-proof.json');
+
+const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
+const exists = (rel) => fs.existsSync(path.join(root, rel));
+const packageJson = JSON.parse(read('package.json'));
+const scripts = packageJson.scripts ?? {};
+
+const pageSource = read('src/pages/ProductionEvidenceClosureCenter.tsx');
+const apiSource = read('src/lib/productionEvidenceClosureApi.ts');
+const operatorSource = read('src/pages/ProductionOperatorConsole.tsx');
+const appSource = read('src/App.tsx');
+const statusSource = read('release/current-platform-status.md');
+const restoreSource = read('scripts/restore-generated-release-noise.mjs');
+
+const migrationDir = path.join(root, 'supabase', 'migrations');
+const patch63Migrations = fs.existsSync(migrationDir)
+  ? fs.readdirSync(migrationDir).filter((name) => /patch63|119_patch63/i.test(name))
+  : [];
+
+const mutatingExportPattern = /export\s+async\s+function\s+(create|update|record|close|reopen|accept|request|mark|submit)[A-Za-z0-9_]*\s*\(/;
+const directClosureButtonPattern = />\s*(Close evidence|Close as verified|Mark verified|Mark production ready|Accept evidence|Approve evidence|Reject evidence)\s*</i;
+const productionReadyClaimPattern = /\b(Production ready|Fully ready|Marked verified|Marked production ready)\b/i;
+const bannedOperationalTerms = [
+  'patch',
+  'proof',
+  'rpc',
+  'schema',
+  'migration',
+  'scaffold',
+  'mock',
+  'demo',
+  'fake',
+  'unknown_requires_review',
+];
+
+function containsBannedOperationalTerm(source) {
+  const normalized = source.toLowerCase();
+  return bannedOperationalTerms.filter((term) => normalized.includes(term));
+}
+
+function gitTrackedFiles() {
+  const result = spawnSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' });
+  if (result.status !== 0) return [];
+  return result.stdout.split(/\r?\n/).filter(Boolean);
+}
+
+function conflictMarkerFindings() {
+  return gitTrackedFiles()
+    .filter((file) => !file.startsWith('node_modules/') && !file.startsWith('dist/') && !file.startsWith('build/'))
+    .filter((file) => {
+      const abs = path.join(root, file);
+      if (!fs.existsSync(abs) || fs.statSync(abs).isDirectory()) return false;
+      return /^(<<<<<<<|=======|>>>>>>>)$/m.test(fs.readFileSync(abs, 'utf8'));
+    });
+}
+
+const pageBannedTerms = containsBannedOperationalTerm(pageSource);
+const operatorBannedTerms = containsBannedOperationalTerm(operatorSource);
+const operationalSource = `${pageSource}\n${operatorSource}`;
+const conflictMarkers = conflictMarkerFindings();
+
+const checks = [
+  { name: 'no Patch 63 migration exists', passed: patch63Migrations.length === 0, findings: patch63Migrations },
+  { name: 'no new backend write endpoint was added', passed: !mutatingExportPattern.test(apiSource) },
+  { name: 'no direct closure button wording exists', passed: !directClosureButtonPattern.test(pageSource) },
+  { name: 'no production-ready claim was added', passed: !productionReadyClaimPattern.test(operationalSource) },
+  { name: 'route /production-evidence-closure still exists', passed: appSource.includes("'/production-evidence-closure'") },
+  { name: 'Production Evidence Closure page exists', passed: exists('src/pages/ProductionEvidenceClosureCenter.tsx') },
+  { name: 'department evidence coverage helper exists', passed: apiSource.includes('getDepartmentEvidenceCoverage') && apiSource.includes('getDepartmentEvidenceCoverageState') },
+  { name: 'missing evidence categories helper exists', passed: apiSource.includes('getDepartmentMissingEvidenceCategories') && pageSource.includes('Missing evidence categories') },
+  { name: 'priority helper exists', passed: apiSource.includes('getDepartmentEvidencePriority') && pageSource.includes('Priority state') },
+  { name: 'next source workflow helper exists', passed: apiSource.includes('getDepartmentEvidenceNextSourceWorkflow') && pageSource.includes('Next source workflow destination') },
+  { name: 'department evidence coverage wording exists', passed: pageSource.includes('Department evidence coverage') },
+  { name: 'missing evidence categories wording exists', passed: pageSource.includes('Missing evidence categories') },
+  { name: 'priority state wording exists', passed: pageSource.includes('Priority state') },
+  { name: 'source workflow destination wording remains', passed: pageSource.includes('Next source workflow destination') && pageSource.includes('Manage source evidence in Production Readiness Center') },
+  { name: 'coverage caveat wording exists', passed: apiSource.includes('Coverage depends on recorded source evidence.') && pageSource.includes('Coverage depends on recorded source evidence') },
+  { name: 'Production Readiness Center link remains', passed: pageSource.includes('Production Readiness Center') && pageSource.includes('productionReadiness') },
+  { name: 'Production Operator Console link remains', passed: pageSource.includes("setPage('productionOperatorConsole')") && pageSource.includes('Production Operator Console') },
+  { name: 'operator console mentions department evidence coverage readiness', passed: operatorSource.includes('department evidence coverage readiness') },
+  { name: 'no fake/demo records were added', passed: !/\b(fake|demo|mock)\b/i.test(pageSource) && !/\b(fake|demo|mock)\b/i.test(apiSource) },
+  { name: 'operational UI avoids banned technical wording', passed: pageBannedTerms.length === 0 && operatorBannedTerms.length === 0, findings: { page: pageBannedTerms, operator: operatorBannedTerms } },
+  { name: 'restore-noise covers Patch 62 generated proof JSON', passed: restoreSource.includes('release/patch62/patch62-executive-closure-recommendation-readiness-proof.json') },
+  { name: 'package patch63:proof exists', passed: scripts['patch63:proof'] === 'node scripts/patch63-department-evidence-coverage-readiness-proof.mjs' },
+  { name: 'package patch63:all exists', passed: scripts['patch63:all'] === 'npm run validate:build && npm run patch63:proof' },
+  { name: 'validate:fast exists', passed: typeof scripts['validate:fast'] === 'string' },
+  { name: 'validate:build exists', passed: scripts['validate:build'] === 'npm run typecheck && npm run build' },
+  { name: 'validate:release exists', passed: typeof scripts['validate:release'] === 'string' },
+  { name: 'proof:all exists', passed: scripts['proof:all'] === 'node scripts/v700-proof-suite.mjs all' },
+  { name: 'v700:runtime-security exists', passed: scripts['v700:runtime-security'] === 'node scripts/v700-runtime-security-bridge-audit.mjs' },
+  { name: 'release:restore-noise exists', passed: scripts['release:restore-noise'] === 'node scripts/restore-generated-release-noise.mjs' },
+  { name: 'status doc mentions Patch 63', passed: statusSource.includes('Patch 63') && statusSource.includes('department evidence coverage readiness') },
+  { name: 'production caveat remains', passed: statusSource.includes('Real hospital-wide production still requires live department launch evidence') },
+  { name: 'no conflict markers', passed: conflictMarkers.length === 0, findings: conflictMarkers },
+];
+
+const failed = checks.filter((check) => !check.passed);
+const report = {
+  generated_at: new Date().toISOString(),
+  strict_passed: failed.length === 0,
+  check_count: checks.length,
+  failed_count: failed.length,
+  failed,
+  checks,
+};
+
+fs.mkdirSync(reportDir, { recursive: true });
+fs.writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+console.log(JSON.stringify(report, null, 2));
+if (failed.length) process.exit(1);

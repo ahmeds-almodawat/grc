@@ -2,7 +2,8 @@
 
 ## Current Level
 
-- Current patch level: Patch 62 after implementation.
+- Current patch level: Patch 63 after implementation.
+- Patch 63 scope: department evidence coverage readiness in Production Evidence Closure. It shows department coverage state, missing evidence categories, owner/reviewer readiness, due-date and overdue summary, blocker/escalation summary, priority state, and next source workflow destination without adding direct write actions.
 - Patch 62 scope: executive closure recommendation readiness in Production Evidence Closure. It shows a read-only executive recommendation state, reason, blocker/evidence/review counts, required executive actions, and source-workflow caveat without claiming production readiness.
 - Patch 61 scope: evidence ownership and due-date readiness in Production Evidence Closure. It shows owner, reviewer, due date, overdue, blocked, escalation-readiness, and next-accountable-party signals without adding direct write actions.
 - Patch 60 scope: reviewer decision readiness in Production Evidence Closure. It shows review readiness, required reviewer action, blocker reason, evidence needed before review, limitation decision need, and source workflow destination without adding direct write actions.
@@ -45,7 +46,7 @@ Use `npm run validate:fast` for the local development loop, `npm run validate:bu
 ## Evidence Locations
 
 - Technical validation artifacts: `release/v700/`, `release/v64/`, `release/v66/`, `release/v672/`, `release/v673/`, and `release/v674/`.
-- Patch release evidence: `release/patch43/` through `release/patch62/`.
+- Patch release evidence: `release/patch43/` through `release/patch63/`.
 - Current production readiness, pilot/hypercare, hospital operations evidence, and closure follow-up are surfaced in the Production Readiness Center, Production Operator Console, and Production Evidence Closure page.
 - Current proof command index: `release/current-proof-command-index.md`.
 - Current validation runbook: `release/current-validation-runbook.md`.

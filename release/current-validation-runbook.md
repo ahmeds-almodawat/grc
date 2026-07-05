@@ -104,4 +104,4 @@ git status --short --branch
 
 The restore helper only targets known allowlisted release evidence folders and does not stage or commit anything.
 
-Patch 58.2 extends restore coverage to generated proof JSON noise for Patch 56, Patch 57, Patch 58, and Patch 58.1. Patch 62 extends restore coverage to the Patch 61 generated proof JSON. Keep implementation summaries, validation reports, and current status docs intentional when they are part of the active patch.
+Patch 58.2 extends restore coverage to generated proof JSON noise for Patch 56, Patch 57, Patch 58, and Patch 58.1. Patch 62 extends restore coverage to the Patch 61 generated proof JSON. Patch 63 extends restore coverage to the Patch 62 generated proof JSON. Keep implementation summaries, validation reports, and current status docs intentional when they are part of the active patch.
