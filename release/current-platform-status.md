@@ -2,7 +2,8 @@
 
 ## Current Level
 
-- Current patch level: Patch 59 after implementation.
+- Current patch level: Patch 60 after implementation.
+- Patch 60 scope: reviewer decision readiness in Production Evidence Closure. It shows review readiness, required reviewer action, blocker reason, evidence needed before review, limitation decision need, and source workflow destination without adding direct write actions.
 - Patch 59 scope: evidence action routing and closure handoff guidance only. It clarifies safe management destinations and next actions without adding direct closure writes.
 - Patch 58 capability: Production Evidence Capture & Closure Workflow for live hospital evidence gaps, owner follow-up, review state, limitations, recovery assurance, and executive closure readiness.
 - Patch 58.1 scope: validation/runtime command structure only. It reduces duplicate nested validation work and adds fast, build, proof, security, release, and profiling lanes.

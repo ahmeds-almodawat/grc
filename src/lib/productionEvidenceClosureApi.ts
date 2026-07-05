@@ -59,6 +59,17 @@ export interface EvidenceClosureHandoff {
   limitationDecisionNeeded: string;
 }
 
+export interface EvidenceReviewerDecisionReadiness {
+  readiness: string;
+  requiredReviewerAction: string;
+  closureDecisionState: string;
+  closureBlockerReason: string;
+  evidenceNeededBeforeReview: string;
+  limitationDecisionNeeded: string;
+  sourceWorkflowDestination: string;
+  closureAvailability: string;
+}
+
 export interface DepartmentEvidenceRegisterRow {
   department: string;
   launchReadiness: string;
@@ -161,6 +172,71 @@ export function getEvidenceClosureHandoff(item?: Pick<ProductionEvidenceClosureI
     requiredEvidenceBeforeClosure: item?.requiredEvidence || categoryRequiredEvidence[item?.category ?? ''] || evidenceMissing,
     reviewerDecisionNeeded: requiresReviewerDecision ? 'Reviewer decision required.' : 'Reviewer decision recorded.',
     limitationDecisionNeeded: requiresLimitationDecision ? 'Limitation or exception decision required.' : 'No limitation decision currently recorded.',
+  };
+}
+
+function hasRecordedEvidence(item?: Pick<ProductionEvidenceClosureItem, 'linkedEvidenceReferences'>) {
+  return Boolean(item?.linkedEvidenceReferences.some(reference => reference && reference !== evidenceMissing));
+}
+
+export function getClosureDecisionState(item?: Pick<ProductionEvidenceClosureItem, 'evidenceState' | 'closureDecisionState'>) {
+  if (!item) return reviewRequired;
+  if (item.evidenceState === 'closed') return 'Closed in source workflow';
+  if (item.evidenceState === 'accepted_with_limitation') return 'Limitation decision required.';
+  return item.closureDecisionState || reviewRequired;
+}
+
+export function getClosureBlockerReason(item?: Pick<ProductionEvidenceClosureItem, 'evidenceState' | 'blockerState' | 'linkedEvidenceReferences'>) {
+  if (!item) return 'Evidence required before review.';
+  if (item.evidenceState === 'blocked') return item.blockerState || 'Blocked.';
+  if (!hasRecordedEvidence(item)) return 'Evidence required before review.';
+  if (item.evidenceState === 'overdue') return 'Owner action required.';
+  return 'Closure unavailable from this screen';
+}
+
+export function getReviewerDecisionReadiness(item?: ProductionEvidenceClosureItem): EvidenceReviewerDecisionReadiness {
+  const handoff = getEvidenceClosureHandoff(item);
+  const evidenceRecorded = hasRecordedEvidence(item);
+  const state = item?.evidenceState ?? 'evidence_required';
+  const limitationText = String(item?.limitationState ?? '').toLowerCase();
+  const limitationNeeded = state === 'accepted_with_limitation'
+    || limitationText.includes('limitation')
+    || limitationText.includes('exception');
+  const readiness = state === 'closed'
+    ? 'Closed in source workflow'
+    : state === 'blocked'
+      ? 'Blocked'
+      : limitationNeeded
+        ? 'Limitation decision required'
+        : !evidenceRecorded || state === 'evidence_required'
+          ? 'Evidence required'
+          : state === 'open' || state === 'overdue'
+            ? 'Owner action required'
+            : state === 'under_review'
+              ? 'Reviewer decision required'
+              : 'Ready for review';
+
+  return {
+    readiness,
+    requiredReviewerAction: readiness === 'Reviewer decision required'
+      ? 'Reviewer decision required.'
+      : readiness === 'Ready for review'
+        ? 'Ready for review.'
+        : readiness === 'Evidence required'
+          ? 'Evidence required before review.'
+          : readiness === 'Owner action required'
+            ? 'Owner action required.'
+            : readiness === 'Limitation decision required'
+              ? 'Limitation decision required.'
+              : readiness === 'Blocked'
+                ? 'Blocked.'
+                : reviewRequired,
+    closureDecisionState: getClosureDecisionState(item),
+    closureBlockerReason: getClosureBlockerReason(item),
+    evidenceNeededBeforeReview: handoff.requiredEvidenceBeforeClosure,
+    limitationDecisionNeeded: limitationNeeded ? 'Limitation decision required.' : 'No limitation decision currently recorded.',
+    sourceWorkflowDestination: handoff.safeManagementDestination,
+    closureAvailability: sourceWorkflowClosure,
   };
 }
 

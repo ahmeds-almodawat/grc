@@ -1,17 +1,21 @@
 {
-  "generated_at": "2026-07-05T06:58:44.348Z",
+  "generated_at": "2026-07-05T07:14:18.259Z",
   "strict_passed": true,
-  "check_count": 26,
+  "check_count": 30,
   "failed_count": 0,
   "failed": [],
   "checks": [
     {
-      "name": "no Patch 59 migration exists",
+      "name": "no Patch 60 migration exists",
       "passed": true,
       "findings": []
     },
     {
       "name": "no new backend write endpoint was added",
+      "passed": true
+    },
+    {
+      "name": "no direct closure button wording exists",
       "passed": true
     },
     {
@@ -23,23 +27,31 @@
       "passed": true
     },
     {
-      "name": "action routing helper exists",
+      "name": "reviewer decision readiness helper exists",
       "passed": true
     },
     {
-      "name": "action routing handoff wording exists",
+      "name": "closure decision state helper exists",
       "passed": true
     },
     {
-      "name": "closure availability wording exists",
+      "name": "closure blocker reason helper exists",
       "passed": true
     },
     {
-      "name": "required evidence before closure wording exists",
+      "name": "reviewer decision readiness wording exists",
       "passed": true
     },
     {
-      "name": "reviewer decision wording exists",
+      "name": "closure blocker reason wording exists",
+      "passed": true
+    },
+    {
+      "name": "source workflow destination wording exists",
+      "passed": true
+    },
+    {
+      "name": "evidence needed before review wording exists",
       "passed": true
     },
     {
@@ -47,15 +59,19 @@
       "passed": true
     },
     {
-      "name": "Production Readiness Center link exists",
+      "name": "closure unavailable statement remains",
       "passed": true
     },
     {
-      "name": "Production Operator Console link exists",
+      "name": "Production Readiness Center link remains",
       "passed": true
     },
     {
-      "name": "operator console routes to evidence closure",
+      "name": "Production Operator Console link remains",
+      "passed": true
+    },
+    {
+      "name": "operator console mentions evidence routing and review",
       "passed": true
     },
     {
@@ -71,11 +87,11 @@
       }
     },
     {
-      "name": "package patch59:proof exists",
+      "name": "package patch60:proof exists",
       "passed": true
     },
     {
-      "name": "package patch59:all exists",
+      "name": "package patch60:all exists",
       "passed": true
     },
     {
@@ -103,7 +119,7 @@
       "passed": true
     },
     {
-      "name": "status doc mentions Patch 59",
+      "name": "status doc mentions Patch 60",
       "passed": true
     },
     {
