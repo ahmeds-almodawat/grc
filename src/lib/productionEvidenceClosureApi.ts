@@ -288,6 +288,28 @@ export interface LiveDataQualityRoleIntegrityReadiness {
   productionLaunchAuthorityCaveat: string;
 }
 
+export type UatPilotAcceptanceReadinessState =
+  | 'UAT blocked'
+  | 'UAT evidence required'
+  | 'Pilot acceptance review required'
+  | 'Limitation review required'
+  | 'Ready for pilot acceptance review';
+
+export interface UatPackHospitalPilotAcceptanceReadiness {
+  uatReadinessState: UatPilotAcceptanceReadinessState;
+  pilotAcceptanceState: UatPilotAcceptanceReadinessState;
+  uatBlockerSummary: string;
+  pilotIssueRegisterSummary: string;
+  userTestingEvidenceSummary: string;
+  departmentPilotAcceptanceSummary: string;
+  acceptedLimitationsSummary: string;
+  requiredActionsBeforePilotAcceptance: string[];
+  uatChecklistSummary: string;
+  uatEvidenceReadinessSummary: string;
+  caveat: string;
+  productionLaunchAuthorityCaveat: string;
+}
+
 export interface ProductionEvidenceClosureData {
   overview: {
     totalEvidenceGaps: number;
@@ -1479,6 +1501,161 @@ export function getLiveDataQualityRoleIntegrityReadiness(
     dataQualityFindings,
     roleIntegrityFindings,
     caveat: 'Data quality readiness does not approve production launch.',
+    productionLaunchAuthorityCaveat: 'Production launch requires separate executive authority.',
+  };
+}
+
+function isUatOrUserTestingItem(item?: Pick<ProductionEvidenceClosureItem, 'category' | 'title' | 'requiredEvidence'>) {
+  const text = `${item?.category ?? ''} ${item?.title ?? ''} ${item?.requiredEvidence ?? ''}`.toLowerCase();
+  return text.includes('uat')
+    || text.includes('user test')
+    || text.includes('user acceptance')
+    || text.includes('pilot acceptance')
+    || text.includes('testing evidence');
+}
+
+export function getUatChecklistSummary(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+) {
+  const blocked = numberValue(data?.overview.blocked) + numberValue(data?.executivePack.unresolvedBlockers);
+  const evidenceRequired = numberValue(data?.overview.evidenceRequired)
+    + recentActions.filter(action => action.action_type === 'request_more_evidence').length;
+  const reopened = recentActions.filter(action => action.action_type === 'reopen_with_reason').length;
+  if (blocked > 0) return `${blocked} UAT blocker${blocked === 1 ? '' : 's'} require closure or limitation review.`;
+  if (evidenceRequired > 0 || reopened > 0) return `UAT checklist requires evidence follow-up: ${evidenceRequired} evidence gap${evidenceRequired === 1 ? '' : 's'}, ${reopened} reopened item${reopened === 1 ? '' : 's'}.`;
+  return 'UAT checklist has no blocker currently recorded.';
+}
+
+export function getPilotIssueRegisterSummary(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+) {
+  const overdue = numberValue(data?.overview.overdue);
+  const blocked = numberValue(data?.overview.blocked);
+  const reopened = recentActions.filter(action => action.action_type === 'reopen_with_reason').length;
+  const limitationCount = numberValue(data?.executivePack.acceptedLimitationsRequiringReview)
+    + numberValue(data?.overview.acceptedWithLimitation);
+  const parts = [
+    blocked > 0 ? `${blocked} blocked pilot issue${blocked === 1 ? '' : 's'}.` : '',
+    overdue > 0 ? `${overdue} overdue pilot issue${overdue === 1 ? '' : 's'}.` : '',
+    reopened > 0 ? `${reopened} reopened pilot issue${reopened === 1 ? '' : 's'}.` : '',
+    limitationCount > 0 ? `${limitationCount} accepted limitation${limitationCount === 1 ? '' : 's'} requiring review.` : '',
+  ].filter(Boolean);
+  return parts.length ? parts.join(' ') : 'No pilot issue register blocker currently recorded.';
+}
+
+export function getUatEvidenceReadinessSummary(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+) {
+  const uatItems = data?.intakeQueue.filter(isUatOrUserTestingItem) ?? [];
+  const openUatItems = uatItems.filter(item => item.evidenceState !== 'closed').length;
+  const requiringMoreEvidence = recentActions.filter(action => action.action_type === 'request_more_evidence').length;
+  if (openUatItems > 0 || requiringMoreEvidence > 0) {
+    return `User testing evidence required: ${openUatItems} UAT item${openUatItems === 1 ? '' : 's'} open and ${requiringMoreEvidence} item${requiringMoreEvidence === 1 ? '' : 's'} requiring more evidence.`;
+  }
+  if (!uatItems.length) return 'User testing evidence required where source UAT records are not yet visible.';
+  return 'User testing evidence has no open item currently recorded.';
+}
+
+export function getUatBlockerSummary(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+) {
+  const blockerSummary = getExecutiveGoNoGoBlockerSummary(data);
+  const dataQuality = getLiveDataQualityRoleIntegrityReadiness(data, recentActions);
+  const departmentLaunch = getDepartmentLaunchFinalReadinessWorkflow(data, recentActions);
+  const parts = [
+    blockerSummary !== noBlocker ? blockerSummary : '',
+    dataQuality.dataQualityState === 'Data blocked' ? 'Data blocked.' : '',
+    dataQuality.roleIntegrityState !== 'Ready for UAT data review' ? dataQuality.missingOwnerReviewerSummary : '',
+    departmentLaunch.blockedCount > 0 ? `${departmentLaunch.blockedCount} department launch blocker${departmentLaunch.blockedCount === 1 ? '' : 's'}.` : '',
+  ].filter(Boolean);
+  return parts.length ? parts.join(' ') : noBlocker;
+}
+
+export function getPilotAcceptanceRequiredActions(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+) {
+  const actions = new Set<string>();
+  const dataQuality = getLiveDataQualityRoleIntegrityReadiness(data, recentActions);
+  const departmentLaunch = getDepartmentLaunchFinalReadinessWorkflow(data, recentActions);
+  const executivePack = getExecutiveGoNoGoDecisionPack(data, undefined, recentActions);
+
+  if (getUatBlockerSummary(data, recentActions) !== noBlocker) actions.add('Resolve UAT blockers before pilot acceptance.');
+  if (getUatEvidenceReadinessSummary(data, recentActions).includes('required')) actions.add('User testing evidence required.');
+  if (departmentLaunch.evidenceRequiredCount > 0 || departmentLaunch.reviewRequiredCount > 0 || departmentLaunch.blockedCount > 0) {
+    actions.add('Department pilot acceptance required.');
+  }
+  if (dataQuality.dataQualityState !== 'Ready for UAT data review' || dataQuality.roleIntegrityState !== 'Ready for UAT data review') {
+    actions.add('Complete live data quality and role integrity review before pilot acceptance.');
+  }
+  if (executivePack.decisionPackState !== 'Ready for executive decision review') {
+    actions.add('Complete executive decision pack readiness before pilot acceptance.');
+  }
+  if (numberValue(data?.executivePack.acceptedLimitationsRequiringReview) > 0 || numberValue(data?.overview.acceptedWithLimitation) > 0) {
+    actions.add('Review accepted limitations before pilot acceptance.');
+  }
+  return actions.size ? [...actions] : ['Prepare UAT pack for hospital pilot acceptance review.'];
+}
+
+export function getUatReadinessState(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+): UatPilotAcceptanceReadinessState {
+  const blockerSummary = getUatBlockerSummary(data, recentActions);
+  const evidenceSummary = getUatEvidenceReadinessSummary(data, recentActions);
+  const dataQuality = getLiveDataQualityRoleIntegrityReadiness(data, recentActions);
+  if (blockerSummary !== noBlocker || dataQuality.dataQualityState === 'Data blocked') return 'UAT blocked';
+  if (evidenceSummary.includes('required') || dataQuality.dataQualityState === 'Data review required') return 'UAT evidence required';
+  if (dataQuality.roleIntegrityState !== 'Ready for UAT data review') return 'Pilot acceptance review required';
+  return 'Ready for pilot acceptance review';
+}
+
+export function getPilotAcceptanceState(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+): UatPilotAcceptanceReadinessState {
+  const departmentLaunch = getDepartmentLaunchFinalReadinessWorkflow(data, recentActions);
+  const executivePack = getExecutiveGoNoGoDecisionPack(data, undefined, recentActions);
+  const limitationCount = numberValue(data?.executivePack.acceptedLimitationsRequiringReview)
+    + numberValue(data?.overview.acceptedWithLimitation);
+  if (getUatReadinessState(data, recentActions) === 'UAT blocked' || departmentLaunch.blockedCount > 0) return 'UAT blocked';
+  if (limitationCount > 0 || executivePack.decisionPackState === 'Conditional go review') return 'Limitation review required';
+  if (
+    departmentLaunch.evidenceRequiredCount > 0
+    || departmentLaunch.reviewRequiredCount > 0
+    || executivePack.decisionPackState !== 'Ready for executive decision review'
+  ) return 'Pilot acceptance review required';
+  if (getUatReadinessState(data, recentActions) === 'UAT evidence required') return 'UAT evidence required';
+  return 'Ready for pilot acceptance review';
+}
+
+export function getUatPackHospitalPilotAcceptanceReadiness(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+): UatPackHospitalPilotAcceptanceReadiness {
+  const departmentLaunch = getDepartmentLaunchFinalReadinessWorkflow(data, recentActions);
+  const limitationCount = numberValue(data?.executivePack.acceptedLimitationsRequiringReview)
+    + numberValue(data?.overview.acceptedWithLimitation);
+  return {
+    uatReadinessState: getUatReadinessState(data, recentActions),
+    pilotAcceptanceState: getPilotAcceptanceState(data, recentActions),
+    uatBlockerSummary: getUatBlockerSummary(data, recentActions),
+    pilotIssueRegisterSummary: getPilotIssueRegisterSummary(data, recentActions),
+    userTestingEvidenceSummary: getUatEvidenceReadinessSummary(data, recentActions),
+    departmentPilotAcceptanceSummary: departmentLaunch.totalDepartments
+      ? `Department pilot acceptance required for ${departmentLaunch.evidenceRequiredCount + departmentLaunch.reviewRequiredCount + departmentLaunch.blockedCount} department readiness item${departmentLaunch.evidenceRequiredCount + departmentLaunch.reviewRequiredCount + departmentLaunch.blockedCount === 1 ? '' : 's'}.`
+      : 'Department pilot acceptance required where department readiness records are not yet visible.',
+    acceptedLimitationsSummary: limitationCount > 0
+      ? `${limitationCount} accepted limitation${limitationCount === 1 ? '' : 's'} requiring review.`
+      : 'No accepted limitation requiring review currently recorded.',
+    requiredActionsBeforePilotAcceptance: getPilotAcceptanceRequiredActions(data, recentActions),
+    uatChecklistSummary: getUatChecklistSummary(data, recentActions),
+    uatEvidenceReadinessSummary: getUatEvidenceReadinessSummary(data, recentActions),
+    caveat: 'UAT acceptance does not approve production launch.',
     productionLaunchAuthorityCaveat: 'Production launch requires separate executive authority.',
   };
 }

@@ -321,6 +321,8 @@
     "patch70:all": "npm run validate:build && npm run validate:security && npm run patch70:proof",
     "patch71:proof": "node scripts/patch71-live-data-quality-role-integrity-proof.mjs",
     "patch71:all": "npm run validate:build && npm run validate:security && npm run patch71:proof",
+    "patch72:proof": "node scripts/patch72-uat-pack-hospital-pilot-acceptance-proof.mjs",
+    "patch72:all": "npm run validate:build && npm run validate:security && npm run patch72:proof",
     "validate:fast": "npm run typecheck && npm run patch58:proof && npm run patch58-1:proof && npm run patch58-2:proof",
     "validate:build": "npm run typecheck && npm run build",
     "validate:proof": "npm run proof:all",
