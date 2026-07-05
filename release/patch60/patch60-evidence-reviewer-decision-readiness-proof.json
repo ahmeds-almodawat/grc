@@ -1,0 +1,135 @@
+{
+  "generated_at": "2026-07-05T07:14:18.259Z",
+  "strict_passed": true,
+  "check_count": 30,
+  "failed_count": 0,
+  "failed": [],
+  "checks": [
+    {
+      "name": "no Patch 60 migration exists",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "no new backend write endpoint was added",
+      "passed": true
+    },
+    {
+      "name": "no direct closure button wording exists",
+      "passed": true
+    },
+    {
+      "name": "route /production-evidence-closure still exists",
+      "passed": true
+    },
+    {
+      "name": "Production Evidence Closure page exists",
+      "passed": true
+    },
+    {
+      "name": "reviewer decision readiness helper exists",
+      "passed": true
+    },
+    {
+      "name": "closure decision state helper exists",
+      "passed": true
+    },
+    {
+      "name": "closure blocker reason helper exists",
+      "passed": true
+    },
+    {
+      "name": "reviewer decision readiness wording exists",
+      "passed": true
+    },
+    {
+      "name": "closure blocker reason wording exists",
+      "passed": true
+    },
+    {
+      "name": "source workflow destination wording exists",
+      "passed": true
+    },
+    {
+      "name": "evidence needed before review wording exists",
+      "passed": true
+    },
+    {
+      "name": "limitation decision wording exists",
+      "passed": true
+    },
+    {
+      "name": "closure unavailable statement remains",
+      "passed": true
+    },
+    {
+      "name": "Production Readiness Center link remains",
+      "passed": true
+    },
+    {
+      "name": "Production Operator Console link remains",
+      "passed": true
+    },
+    {
+      "name": "operator console mentions evidence routing and review",
+      "passed": true
+    },
+    {
+      "name": "no fake/demo records were added",
+      "passed": true
+    },
+    {
+      "name": "operational UI avoids banned technical wording",
+      "passed": true,
+      "findings": {
+        "page": [],
+        "operator": []
+      }
+    },
+    {
+      "name": "package patch60:proof exists",
+      "passed": true
+    },
+    {
+      "name": "package patch60:all exists",
+      "passed": true
+    },
+    {
+      "name": "validate:fast exists",
+      "passed": true
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true
+    },
+    {
+      "name": "proof:all exists",
+      "passed": true
+    },
+    {
+      "name": "v700:runtime-security exists",
+      "passed": true
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true
+    },
+    {
+      "name": "status doc mentions Patch 60",
+      "passed": true
+    },
+    {
+      "name": "production caveat remains",
+      "passed": true
+    },
+    {
+      "name": "no conflict markers",
+      "passed": true,
+      "findings": []
+    }
+  ]
+}

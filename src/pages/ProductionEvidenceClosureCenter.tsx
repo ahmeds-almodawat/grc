@@ -7,6 +7,7 @@ import type { PageKey } from '../components/Layout';
 import {
   getEvidenceClosureHandoff,
   getProductionEvidenceClosureData,
+  getReviewerDecisionReadiness,
   type EvidenceClosureStatus,
   type ProductionEvidenceClosureItem,
 } from '../lib/productionEvidenceClosureApi';
@@ -68,6 +69,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
   const items = [...(data?.intakeQueue ?? [])].sort((a, b) => itemSortScore(a) - itemSortScore(b));
   const selectedItem = items[0];
   const selectedHandoff = getEvidenceClosureHandoff(selectedItem);
+  const reviewerReadiness = getReviewerDecisionReadiness(selectedItem);
 
   return (
     <section className="page-section production-readiness-page">
@@ -174,6 +176,15 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <strong>Required evidence before closure: </strong>{selectedHandoff.requiredEvidenceBeforeClosure}<br />
               <strong>Reviewer decision: </strong>{selectedHandoff.reviewerDecisionNeeded}<br />
               <strong>Limitation / exception decision: </strong>{selectedHandoff.limitationDecisionNeeded}
+            </div>
+            <div className="alert alert-warning" style={{ marginTop: '14px' }}>
+              <strong>Reviewer decision readiness: </strong>{reviewerReadiness.readiness}<br />
+              <strong>Required reviewer action: </strong>{reviewerReadiness.requiredReviewerAction}<br />
+              <strong>Closure blocker reason: </strong>{reviewerReadiness.closureBlockerReason}<br />
+              <strong>Evidence needed before review: </strong>{reviewerReadiness.evidenceNeededBeforeReview}<br />
+              <strong>Limitation / exception decision needed: </strong>{reviewerReadiness.limitationDecisionNeeded}<br />
+              <strong>Safe source workflow destination: </strong>{reviewerReadiness.sourceWorkflowDestination}<br />
+              <strong>Closure instruction: </strong>{reviewerReadiness.closureAvailability}
             </div>
             <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
               {setPage ? (
