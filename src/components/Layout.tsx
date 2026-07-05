@@ -133,14 +133,12 @@ interface NavItem {
 
 const primaryNav: NavItem[] = [
   { key: 'home', labelKey: 'nav.home', hintKey: 'nav.home.hint', icon: <Home size={18} /> },
-  { key: 'productionOperatorConsole', labelKey: 'nav.productionOperatorConsole', hintKey: 'nav.productionOperatorConsole.hint', icon: <Activity size={18} /> },
-  { key: 'productionEvidenceClosure', labelKey: 'nav.productionEvidenceClosure', hintKey: 'nav.productionEvidenceClosure.hint', icon: <FileCheck2 size={18} /> },
-  { key: 'dailyOperationsHub', labelKey: 'nav.dailyOperationsHub', hintKey: 'nav.dailyOperationsHub.hint', icon: <GanttChartSquare size={18} /> },
-  { key: 'qualityHub', labelKey: 'nav.qualityHub', hintKey: 'nav.qualityHub.hint', icon: <Hospital size={18} /> },
-  { key: 'accreditationHub', labelKey: 'nav.accreditationHub', hintKey: 'nav.accreditationHub.hint', icon: <ClipboardCheck size={18} /> },
-  { key: 'evidenceHub', labelKey: 'nav.evidenceHub', hintKey: 'nav.evidenceHub.hint', icon: <FileCheck2 size={18} /> },
-  { key: 'reportsHub', labelKey: 'nav.reportsHub', hintKey: 'nav.reportsHub.hint', icon: <FolderKanban size={18} /> },
-  { key: 'adminHub', labelKey: 'nav.adminHub', hintKey: 'nav.adminHub.hint', icon: <LockKeyhole size={18} /> },
+  { key: 'dailyOperationsHub', labelKey: 'nav.workspace', hintKey: 'nav.workspace.hint', icon: <GanttChartSquare size={18} /> },
+  { key: 'qualityHub', labelKey: 'nav.qualitySafety', hintKey: 'nav.qualitySafety.hint', icon: <Hospital size={18} /> },
+  { key: 'accreditationHub', labelKey: 'nav.accreditation', hintKey: 'nav.accreditation.hint', icon: <ClipboardCheck size={18} /> },
+  { key: 'evidenceHub', labelKey: 'nav.policies', hintKey: 'nav.policies.hint', icon: <FolderKanban size={18} /> },
+  { key: 'reportsHub', labelKey: 'nav.dashboards', hintKey: 'nav.dashboards.hint', icon: <Activity size={18} /> },
+  { key: 'adminHub', labelKey: 'nav.admin', hintKey: 'nav.admin.hint', icon: <LockKeyhole size={18} /> },
 ];
 
 const quickLinks: NavItem[] = [

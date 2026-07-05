@@ -156,7 +156,7 @@ function ExecutiveHub() {
       title={t('hub.executive.title')}
       subtitle={t('hub.executive.subtitle')}
       tabs={[
-        { id: 'command', label: t('hub.tab.command'), description: t('hub.tab.command.desc'), icon: <Command size={17} />, content: <ExecutiveCommandCenter /> },
+        { id: 'command', label: t('hub.tab.command', 'Executive Actions'), description: t('hub.tab.command.desc'), icon: <Command size={17} />, content: <ExecutiveCommandCenter /> },
         { id: 'dashboard', label: t('hub.tab.dashboard'), description: t('hub.tab.dashboard.desc'), icon: <BarChart3 size={17} />, content: <Dashboard /> },
         { id: 'analytics', label: t('hub.tab.analytics'), description: t('hub.tab.analytics.desc'), icon: <Activity size={17} />, content: <Analytics /> },
         { id: 'board', label: t('hub.tab.board'), description: t('hub.tab.board.desc'), icon: <BookCopy size={17} />, content: <BoardPackCenter /> },
@@ -174,7 +174,7 @@ function DailyOperationsHub() {
       title={t('hub.dailyOperations.title', 'Daily Operations')}
       subtitle={t('hub.dailyOperations.subtitle', 'Unified queue across all active tasks.')}
       tabs={[
-        { id: 'unifiedMyWork', label: t('hub.tab.unifiedMyWork', 'Unified My Work'), description: t('hub.tab.unifiedMyWork.desc', 'One daily queue across accreditation, evidence, audit, OVR/RCA, CAPA, training, documents, approvals, and escalations.'), icon: <ClipboardList size={17} />, content: <MyWorkCenter /> },
+        { id: 'unifiedMyWork', label: t('hub.tab.unifiedMyWork', 'Team Work Queue'), description: t('hub.tab.unifiedMyWork.desc', 'One daily queue across accreditation, evidence, audit, OVR/RCA, CAPA, training, documents, approvals, and escalations.'), icon: <ClipboardList size={17} />, content: <MyWorkCenter /> },
         { id: 'my', label: t('hub.tab.myWork'), description: t('hub.tab.myWork.desc'), icon: <UserCheck size={17} />, content: <MyWork /> },
         { id: 'ovr', label: t('hub.tab.ovr'), description: t('hub.tab.ovr.desc'), icon: <Hospital size={17} />, content: <OVR /> },
         { id: 'evidence', label: t('hub.tab.evidence'), description: t('hub.tab.evidence.desc'), icon: <FileCheck2 size={17} />, content: <Evidence /> },
@@ -195,17 +195,11 @@ function GrcHub() {
     && !auth.roles.some(role => role.role === 'super_admin' || role.role === 'governance_admin');
   const tabs = [
     { id: 'risks', label: t('hub.tab.risks'), description: t('hub.tab.risks.desc'), icon: <ShieldAlert size={17} />, content: <Risks /> },
-    { id: 'operatingCore', label: t('hub.tab.operatingCore', 'Operating Core'), description: t('hub.tab.operatingCore.desc', 'Risk, controls, tests, evidence, CAPA, and obligations.'), icon: <Network size={17} />, content: <LiveGrcOperatingCore /> },
-    { id: 'workflowKernel', label: t('hub.tab.workflowKernel', 'Workflow Kernel'), description: t('hub.tab.workflowKernel.desc', 'Cross-module workflow routing, approvals, SLA, and escalation control.'), icon: <ClipboardList size={17} />, content: <WorkflowKernelCenter /> },
-    { id: 'professionalWorkbenches', label: t('hub.tab.professionalWorkbenches', 'Professional Workbenches'), description: t('hub.tab.professionalWorkbenches.desc', 'Audit, risk, compliance, issue, response, and CAPA operating queues.'), icon: <FileSearch size={17} />, content: <ProfessionalWorkbenchesCenter /> },
-    { id: 'realWorkflowExecution', label: t('hub.tab.realWorkflowExecution', 'Real Workflow Execution'), description: t('hub.tab.realWorkflowExecution.desc', 'Submit, review, approve, evidence, close, escalate, issue CAPA, approve exceptions, and record management responses.'), icon: <ClipboardCheck size={17} />, content: <RealWorkflowExecutionCenter /> },
-    { id: 'runtimeWorkflowActions', label: t('hub.tab.runtimeWorkflowActions', 'System Actions'), description: t('hub.tab.runtimeWorkflowActions.desc', 'Action requests, transitions, notifications, escalation rules, integration outbox, and system exceptions.'), icon: <BellRing size={17} />, content: <RuntimeWorkflowActionsCenter /> },
     { id: 'kri', label: t('hub.tab.kri'), description: t('hub.tab.kri.desc'), icon: <Gauge size={17} />, content: <RiskAppetiteKriCenter /> },
     { id: 'compliance', label: t('hub.tab.compliance'), description: t('hub.tab.compliance.desc'), icon: <ClipboardCheck size={17} />, content: <Compliance /> },
     { id: 'audit', label: t('hub.tab.audit'), description: t('hub.tab.audit.desc'), icon: <FileSearch size={17} />, content: <Audit /> },
     { id: 'governance', label: t('hub.tab.governance'), description: t('hub.tab.governance.desc'), icon: <Landmark size={17} />, content: <Governance /> },
-    { id: 'committee', label: t('hub.tab.committee'), description: t('hub.tab.committee.desc'), icon: <Users size={17} />, content: <CommitteeActionAutomationCenter /> },
-    { id: 'automation', label: t('hub.tab.automation'), description: t('hub.tab.automation.desc'), icon: <BrainCircuit size={17} />, content: <AutomationIntelligenceCenter /> },
+    { id: 'committee', label: t('hub.tab.committee', 'Committees'), description: t('hub.tab.committee.desc'), icon: <Users size={17} />, content: <CommitteeActionAutomationCenter /> },
     { id: 'reviews', label: t('hub.tab.reviews'), description: t('hub.tab.reviews.desc'), icon: <CalendarClock size={17} />, content: <SmartReviewCalendar /> },
   ];
   return (
@@ -226,10 +220,9 @@ function QualitySafetyHub() {
       title={t('hub.quality.title', 'Quality & Safety')}
       subtitle={t('hub.quality.subtitle', 'Clinical governance, indicators, and risk management.')}
       tabs={[
-        { id: 'clinicalGovernance', label: t('hub.tab.clinicalGovernance', 'Clinical Governance'), description: t('hub.tab.clinicalGovernance.desc', 'Audit execution, OVR RCA, CAPA, evidence, accreditation links, and clinical escalations.'), icon: <FileSearch size={17} />, content: <ClinicalGovernanceCenter /> },
-        { id: 'hospitalGovernancePack', label: t('hub.tab.hospitalGovernancePack', 'Hospital Governance Pack'), description: t('hub.tab.hospitalGovernancePack.desc', 'Infection control, clinical quality indicators, committees, credentialing, facility safety, evidence gaps, and accreditation blockers.'), icon: <Hospital size={17} />, content: <HospitalGovernanceCenter /> },
+        { id: 'clinicalGovernance', label: t('hub.tab.clinicalGovernance', 'Clinical Quality'), description: t('hub.tab.clinicalGovernance.desc', 'Audit execution, OVR RCA, CAPA, evidence, accreditation links, and clinical escalations.'), icon: <FileSearch size={17} />, content: <ClinicalGovernanceCenter /> },
+        { id: 'hospitalGovernancePack', label: t('hub.tab.hospitalGovernancePack', 'Hospital Safety'), description: t('hub.tab.hospitalGovernancePack.desc', 'Infection control, clinical quality indicators, committees, credentialing, facility safety, evidence gaps, and accreditation blockers.'), icon: <Hospital size={17} />, content: <HospitalGovernanceCenter /> },
         { id: 'ovrRisk', label: t('hub.tab.ovrRisk'), description: t('hub.tab.ovrRisk.desc'), icon: <Activity size={17} />, content: <OvrRiskIndicators /> },
-        { id: 'qualityAccreditationOperating', label: t('hub.tab.qualityAccreditationOperating', 'Quality Operating Layer'), description: t('hub.tab.qualityAccreditationOperating.desc', 'Tracer rounds, indicators, RCA/CAPA, evidence packs, and requirement readiness work.'), icon: <ClipboardCheck size={17} />, content: <QualityAccreditationOperatingCenter /> },
         { id: 'relationships', label: t('hub.tab.relationships'), description: t('hub.tab.relationships.desc'), icon: <Network size={17} />, content: <RelationshipMap /> },
       ]}
     />
@@ -244,10 +237,8 @@ function AccreditationHub() {
       title={t('hub.accreditation.title', 'Accreditation & Readiness')}
       subtitle={t('hub.accreditation.subtitle', 'Standards, workflows, war room, and evidence.')}
       tabs={[
-        { id: 'accreditationWarRoom', label: t('hub.tab.accreditationWarRoom', 'Accreditation War Room'), description: t('hub.tab.accreditationWarRoom.desc', 'Survey readiness, evidence gates, waivers, blockers, queue overlays, and traceability chains.'), icon: <Radar size={17} />, content: <AccreditationWarRoomCenter /> },
+        { id: 'accreditationWarRoom', label: t('hub.tab.accreditationWarRoom', 'Survey Readiness'), description: t('hub.tab.accreditationWarRoom.desc', 'Survey readiness, evidence gates, waivers, blockers, queue overlays, and traceability chains.'), icon: <Radar size={17} />, content: <AccreditationWarRoomCenter /> },
         { id: 'accreditation', label: t('hub.tab.accreditation', 'Accreditation'), description: t('hub.tab.accreditation.desc', 'CBAHI and international accreditation readiness engine.'), icon: <ClipboardCheck size={17} />, content: <AccreditationCenter /> },
-        { id: 'accreditationWorkflow', label: t('hub.tab.accreditationWorkflow', 'Accreditation Workflow'), description: t('hub.tab.accreditationWorkflow.desc', 'Clause owners, review cycles, task queues, blockers, signoffs, escalations, and survey readiness.'), icon: <ClipboardList size={17} />, content: <AccreditationWorkflowCenter /> },
-        { id: 'realStandardsMasterData', label: t('hub.tab.realStandardsMasterData', 'Standards & Master Data'), description: t('hub.tab.realStandardsMasterData.desc', 'Licensed standards metadata, departments, committees, evidence taxonomy, controls, indicators, tracers, and document ownership.'), icon: <ClipboardList size={17} />, content: <RealStandardsMasterDataCenter /> },
       ]}
     />
   );
@@ -261,9 +252,8 @@ function EvidenceDocumentsHub() {
       title={t('hub.evidenceDocuments.title', 'Evidence & Documents')}
       subtitle={t('hub.evidenceDocuments.subtitle', 'Manage policies, documents, and vault.')}
       tabs={[
-        { id: 'documents', label: t('hub.tab.documents'), description: t('hub.tab.documents.desc'), icon: <FolderKanban size={17} />, content: <PolicyDocumentCenter /> },
+        { id: 'documents', label: t('hub.tab.documents', 'Policies'), description: t('hub.tab.documents.desc'), icon: <FolderKanban size={17} />, content: <PolicyDocumentCenter /> },
         { id: 'evidenceVault', label: t('hub.tab.evidenceVault'), description: t('hub.tab.evidenceVault.desc'), icon: <FileStack size={17} />, content: <EvidenceVault /> },
-        { id: 'evidenceBridge', label: t('hub.tab.evidenceBridge', 'Evidence Bridge'), description: t('hub.tab.evidenceBridge.desc', 'Live clause-to-control-to-evidence operations, gaps, collection queues, reviews, freshness, and readiness.'), icon: <Network size={17} />, content: <EvidenceBridgeCenter /> },
         { id: 'importExport', label: t('hub.tab.importExport'), description: t('hub.tab.importExport.desc'), icon: <UploadCloud size={17} />, content: <ImportExport /> },
       ]}
     />
@@ -279,7 +269,6 @@ function ReportsHub() {
     { id: 'executiveTruth', label: t('hub.tab.executiveTruth', 'Executive Summary'), description: t('hub.tab.executiveTruth.desc', 'Executive Truth Center.'), icon: <BarChart3 size={17} />, content: <ExecutiveTruthCenter /> },
     { id: 'reportBuilder', label: t('hub.tab.reportBuilder'), description: t('hub.tab.reportBuilder.desc'), icon: <BookCopy size={17} />, content: <AdvancedReportBuilder /> },
     { id: 'customReports', label: t('hub.tab.customReports'), description: t('hub.tab.customReports.desc'), icon: <ClipboardList size={17} />, content: <CustomReports /> },
-    { id: 'backupScheduler', label: t('hub.tab.backupScheduler'), description: t('hub.tab.backupScheduler.desc'), icon: <DatabaseBackup size={17} />, content: <BackupSchedulerCenter /> },
   ];
   return (
     <TabbedHub
@@ -302,7 +291,7 @@ function AdminSystemControls() {
       tabs={[
         { id: 'admin', label: t('hub.tab.admin'), description: t('hub.tab.admin.desc'), icon: <Users size={17} />, content: <Admin /> },
         { id: 'userManagement', label: t('hub.tab.userManagement', 'User Management'), description: t('hub.tab.userManagement.desc', 'Professional user lifecycle, status, department, role, CSV import/export, and audit controls.'), icon: <Users size={17} />, content: <UserManagementCenter /> },
-        { id: 'hospitalMasterData', label: t('hub.tab.hospitalMasterData', 'Hospital Master Data'), description: t('hub.tab.hospitalMasterData.desc', 'Governed locations, services, clinical areas, committees, job titles, indicators, and ownership mappings.'), icon: <Building2 size={17} />, content: <HospitalMasterDataCenter /> },
+        { id: 'hospitalMasterData', label: t('hub.tab.hospitalMasterData', 'Organization Setup'), description: t('hub.tab.hospitalMasterData.desc', 'Governed locations, services, clinical areas, committees, job titles, indicators, and ownership mappings.'), icon: <Building2 size={17} />, content: <HospitalMasterDataCenter /> },
         { id: 'access', label: t('hub.tab.access'), description: t('hub.tab.access.desc'), icon: <KeyRound size={17} />, content: <AccessControl /> },
         { id: 'setup', label: t('hub.tab.setup'), description: t('hub.tab.setup.desc'), icon: <Rocket size={17} />, content: <SetupCenter /> },
         { id: 'adminSafety', label: t('hub.tab.adminSafety'), description: t('hub.tab.adminSafety.desc'), icon: <LockKeyhole size={17} />, content: <AdminSafetyConsole /> },

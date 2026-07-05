@@ -203,12 +203,12 @@ export function firstAllowedPage(roles: AuthRoleAssignment[], organizationName?:
 
   const has = (r: AuthRole[]) => hasRole(roles, r);
 
-  if (has(['super_admin', 'governance_admin']) && canAccessPageForUser('adminHub', roles, organizationName)) {
-    return 'adminHub';
-  }
-  
   if (has(['executive']) && canAccessPageForUser('reportsHub', roles, organizationName)) {
     return 'reportsHub'; // Has Executive Summary / Go-No-Go
+  }
+
+  if (has(['super_admin', 'governance_admin']) && canAccessPageForUser('dailyOperationsHub', roles, organizationName)) {
+    return 'dailyOperationsHub';
   }
   
   if (has(['auditor']) && canAccessPageForUser('grcHub', roles, organizationName)) {
