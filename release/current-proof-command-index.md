@@ -180,6 +180,12 @@ Patch 70 adds department launch final readiness workflow proof:
 npm run patch70:proof
 ```
 
+Patch 71 adds live data quality and role integrity readiness proof:
+
+```powershell
+npm run patch71:proof
+```
+
 ## G. Generated Release Artifacts
 
 Many proof commands regenerate JSON and text evidence under `release/v*` and older `release/patch*` folders. That churn is expected after validation.
