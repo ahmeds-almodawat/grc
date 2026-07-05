@@ -27,6 +27,8 @@ git diff --name-only
 npm run validate:fast
 ```
 
+For small targeted patches, use `npm run validate:fast` while working, then run `npm run validate:build` plus the patch-specific proof before opening a PR. `npm run validate:release` remains the full release gate.
+
 Never use `git add .`. Stage only the files intentionally changed for the patch.
 
 Do not accidentally commit:
