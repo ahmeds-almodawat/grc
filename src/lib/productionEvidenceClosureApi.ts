@@ -118,6 +118,16 @@ export interface DepartmentEvidenceCoverageReadiness {
   caveat: string;
 }
 
+export interface PolicySopAttestationReadiness {
+  readinessState: string;
+  missingAttestationEvidenceSummary: string;
+  ownerReviewerReadiness: string;
+  dueDateOrOverdueState: string;
+  sourceWorkflowDestination: string;
+  executiveImpact: string;
+  caveat: string;
+}
+
 export interface ProductionEvidenceClosureData {
   overview: {
     totalEvidenceGaps: number;
@@ -451,6 +461,82 @@ export function getDepartmentEvidenceCoverage(row?: DepartmentEvidenceRegisterRo
     nextSourceWorkflowDestination: getDepartmentEvidenceNextSourceWorkflow(row),
     priorityState: getDepartmentEvidencePriority(row),
     caveat: 'Coverage depends on recorded source evidence.',
+  };
+}
+
+function isPolicySopAttestationItem(item?: Pick<ProductionEvidenceClosureItem, 'category' | 'title' | 'requiredEvidence'>) {
+  const text = `${item?.category ?? ''} ${item?.title ?? ''} ${item?.requiredEvidence ?? ''}`.toLowerCase();
+  return text.includes('policy') || text.includes('sop') || text.includes('attestation') || text.includes('acknowledgement');
+}
+
+export function getPolicySopAttestationGapSummary(source?: ProductionEvidenceClosureItem | DepartmentEvidenceRegisterRow) {
+  if (!source) return 'Attestation evidence required.';
+  if ('policyEvidence' in source) {
+    return categoryMissing(source.policyEvidence) ? 'Missing policy/SOP attestation evidence.' : 'Policy/SOP attestation evidence recorded.';
+  }
+  if (!isPolicySopAttestationItem(source)) return 'No policy/SOP attestation gap currently recorded for this item.';
+  if (!hasRecordedEvidence(source)) return 'Attestation evidence required.';
+  if (source.evidenceState === 'blocked') return 'Policy/SOP attestation evidence is blocked.';
+  if (source.evidenceState === 'overdue') return 'Overdue attestation evidence.';
+  return source.evidenceState === 'closed' ? 'Policy/SOP attestation evidence recorded.' : 'Review required.';
+}
+
+export function getPolicySopAttestationSourceDestination(source?: ProductionEvidenceClosureItem | DepartmentEvidenceRegisterRow) {
+  if (source && 'policyEvidence' in source && categoryMissing(source.policyEvidence)) {
+    return 'Manage attestation evidence in Production Readiness Center.';
+  }
+  if (source && !('policyEvidence' in source) && isPolicySopAttestationItem(source)) {
+    return 'Manage attestation evidence in Production Readiness Center.';
+  }
+  return 'Manage source evidence in Production Readiness Center.';
+}
+
+export function getPolicySopAttestationExecutiveImpact(data?: ProductionEvidenceClosureData) {
+  const missingDepartmentPolicyEvidence = data?.departmentRegister.filter(row => categoryMissing(row.policyEvidence)).length ?? 0;
+  const missingPolicyItems = data?.intakeQueue.filter(item => isPolicySopAttestationItem(item) && item.evidenceState !== 'closed').length ?? 0;
+  const missingTotal = missingDepartmentPolicyEvidence + missingPolicyItems;
+  if (missingTotal > 0) return `Executive review required for ${missingTotal} policy/SOP attestation evidence gap${missingTotal === 1 ? '' : 's'}.`;
+  return 'No executive policy/SOP attestation evidence impact currently recorded.';
+}
+
+export function getPolicySopAttestationReadiness(source?: ProductionEvidenceClosureItem | DepartmentEvidenceRegisterRow, data?: ProductionEvidenceClosureData): PolicySopAttestationReadiness {
+  const isDepartmentRow = Boolean(source && 'policyEvidence' in source);
+  const policyRelevant = isDepartmentRow || isPolicySopAttestationItem(source as ProductionEvidenceClosureItem | undefined);
+  const ownership = isDepartmentRow
+    ? { ownerState: (source as DepartmentEvidenceRegisterRow).owner === ownerAction ? 'Owner missing' : 'Owner assigned', reviewerState: 'Reviewer missing' }
+    : getEvidenceOwnershipState(source as ProductionEvidenceClosureItem | undefined);
+  const dueDate = isDepartmentRow
+    ? { dueDateState: 'Due date missing', overdueStatus: 'Due date not recorded.' }
+    : getEvidenceDueDateState(source as ProductionEvidenceClosureItem | undefined);
+  const itemState = !isDepartmentRow ? (source as ProductionEvidenceClosureItem | undefined)?.evidenceState : undefined;
+  const departmentPolicyMissing = isDepartmentRow ? categoryMissing((source as DepartmentEvidenceRegisterRow).policyEvidence) : false;
+
+  const readinessState = !policyRelevant || departmentPolicyMissing || itemState === 'evidence_required'
+    ? 'Attestation evidence required'
+    : itemState === 'blocked'
+      ? 'Blocked'
+      : itemState === 'overdue'
+        ? 'Overdue'
+        : ownership.ownerState === 'Owner missing'
+          ? 'Owner action required'
+          : ownership.reviewerState === 'Reviewer missing'
+            ? 'Reviewer action required'
+            : itemState === 'closed'
+              ? 'Attestation evidence recorded'
+              : 'Review required';
+
+  return {
+    readinessState,
+    missingAttestationEvidenceSummary: getPolicySopAttestationGapSummary(source),
+    ownerReviewerReadiness: ownership.ownerState === 'Owner missing'
+      ? 'Owner action required.'
+      : ownership.reviewerState === 'Reviewer missing'
+        ? 'Reviewer action required.'
+        : 'Review required.',
+    dueDateOrOverdueState: dueDate.overdueStatus === 'Overdue.' ? 'Overdue attestation evidence.' : dueDate.overdueStatus,
+    sourceWorkflowDestination: getPolicySopAttestationSourceDestination(source),
+    executiveImpact: getPolicySopAttestationExecutiveImpact(data),
+    caveat: 'Attestation readiness depends on recorded source evidence.',
   };
 }
 
