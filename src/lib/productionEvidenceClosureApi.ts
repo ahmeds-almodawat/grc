@@ -70,6 +70,19 @@ export interface EvidenceReviewerDecisionReadiness {
   closureAvailability: string;
 }
 
+export interface EvidenceOwnershipDueDateReadiness {
+  ownerState: string;
+  reviewerState: string;
+  dueDateState: string;
+  overdueStatus: string;
+  blockedStatus: string;
+  escalationReadinessState: string;
+  nextAccountableParty: string;
+  ownerDisplay: string;
+  reviewerDisplay: string;
+  missingWarnings: string[];
+}
+
 export interface DepartmentEvidenceRegisterRow {
   department: string;
   launchReadiness: string;
@@ -177,6 +190,107 @@ export function getEvidenceClosureHandoff(item?: Pick<ProductionEvidenceClosureI
 
 function hasRecordedEvidence(item?: Pick<ProductionEvidenceClosureItem, 'linkedEvidenceReferences'>) {
   return Boolean(item?.linkedEvidenceReferences.some(reference => reference && reference !== evidenceMissing));
+}
+
+function isMissingValue(value?: string) {
+  const normalized = String(value ?? '').trim().toLowerCase();
+  return !normalized
+    || normalized === evidenceMissing.toLowerCase()
+    || normalized === reviewRequired.toLowerCase()
+    || normalized === ownerAction.toLowerCase()
+    || normalized === noBlocker.toLowerCase()
+    || normalized === 'not assigned'
+    || normalized === 'none';
+}
+
+function parseDueDate(value?: string) {
+  if (isMissingValue(value)) return null;
+  const parsed = Date.parse(String(value));
+  return Number.isNaN(parsed) ? null : new Date(parsed);
+}
+
+export function getEvidenceOwnerDisplay(value?: string) {
+  return isMissingValue(value) ? 'Owner not assigned.' : String(value);
+}
+
+export function getEvidenceOwnershipState(item?: Pick<ProductionEvidenceClosureItem, 'owner' | 'reviewer'>) {
+  const ownerMissing = isMissingValue(item?.owner);
+  const reviewerMissing = isMissingValue(item?.reviewer);
+  return {
+    ownerState: ownerMissing ? 'Owner missing' : 'Owner assigned',
+    reviewerState: reviewerMissing ? 'Reviewer missing' : 'Reviewer assigned',
+    nextAccountableParty: ownerMissing
+      ? 'Owner action required.'
+      : reviewerMissing
+        ? 'Reviewer action required.'
+        : 'Awaiting reviewer action.',
+    ownerDisplay: getEvidenceOwnerDisplay(item?.owner),
+    reviewerDisplay: reviewerMissing ? 'Reviewer not assigned.' : String(item?.reviewer),
+    missingWarnings: [
+      ownerMissing ? 'Owner not assigned.' : '',
+      reviewerMissing ? 'Reviewer not assigned.' : '',
+    ].filter(Boolean),
+  };
+}
+
+export function getEvidenceDueDateState(item?: Pick<ProductionEvidenceClosureItem, 'dueDate' | 'evidenceState'>) {
+  const dueDate = parseDueDate(item?.dueDate);
+  if (!dueDate) {
+    return {
+      dueDateState: 'Due date missing',
+      overdueStatus: item?.evidenceState === 'overdue' ? 'Overdue.' : 'Due date not recorded.',
+    };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diffMs = dueDate.getTime() - today.getTime();
+  const dueSoonMs = 7 * 24 * 60 * 60 * 1000;
+
+  if (diffMs < 0 || item?.evidenceState === 'overdue') {
+    return { dueDateState: 'Due date recorded', overdueStatus: 'Overdue.' };
+  }
+  if (diffMs <= dueSoonMs) {
+    return { dueDateState: 'Due date recorded', overdueStatus: 'Due soon.' };
+  }
+  return { dueDateState: 'Due date recorded', overdueStatus: 'No overdue status recorded.' };
+}
+
+export function getEvidenceEscalationReadiness(item?: Pick<ProductionEvidenceClosureItem, 'evidenceState' | 'blockerState' | 'owner' | 'reviewer' | 'dueDate'>) {
+  const ownership = getEvidenceOwnershipState(item);
+  const dueDate = getEvidenceDueDateState(item);
+  const blocked = item?.evidenceState === 'blocked' || !isMissingValue(item?.blockerState);
+  const escalationNeeded = blocked
+    || dueDate.overdueStatus === 'Overdue.'
+    || ownership.ownerState === 'Owner missing'
+    || ownership.reviewerState === 'Reviewer missing';
+
+  return {
+    blockedStatus: blocked ? 'Blocked.' : noBlocker,
+    escalationReadinessState: escalationNeeded ? 'Escalation may be required.' : 'No escalation currently indicated.',
+  };
+}
+
+export function getEvidenceOwnershipDueDateReadiness(item?: ProductionEvidenceClosureItem): EvidenceOwnershipDueDateReadiness {
+  const ownership = getEvidenceOwnershipState(item);
+  const dueDate = getEvidenceDueDateState(item);
+  const escalation = getEvidenceEscalationReadiness(item);
+  const missingWarnings = [
+    ...ownership.missingWarnings,
+    dueDate.dueDateState === 'Due date missing' ? 'Due date not recorded.' : '',
+  ].filter(Boolean);
+
+  return {
+    ...ownership,
+    ...dueDate,
+    ...escalation,
+    nextAccountableParty: escalation.blockedStatus === 'Blocked.'
+      ? 'Owner action required.'
+      : dueDate.overdueStatus === 'Overdue.'
+        ? 'Owner action required.'
+        : ownership.nextAccountableParty,
+    missingWarnings,
+  };
 }
 
 export function getClosureDecisionState(item?: Pick<ProductionEvidenceClosureItem, 'evidenceState' | 'closureDecisionState'>) {

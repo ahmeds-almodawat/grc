@@ -79,6 +79,7 @@ npm run patch58-1:all
 npm run patch58-2:all
 npm run patch59:all
 npm run patch60:all
+npm run patch61:all
 ```
 
 Patch 58.1 adds validation lanes that avoid nested duplicate full chains:
@@ -109,6 +110,12 @@ Patch 60 adds evidence reviewer decision readiness proof:
 
 ```powershell
 npm run patch60:proof
+```
+
+Patch 61 adds evidence ownership and due-date readiness proof:
+
+```powershell
+npm run patch61:proof
 ```
 
 ## G. Generated Release Artifacts
