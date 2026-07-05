@@ -11,6 +11,7 @@ import {
   getDepartmentLaunchFinalReadinessWorkflow,
   getExecutiveClosureRecommendation,
   getExecutiveGoNoGoDecisionPack,
+  getLiveDataQualityRoleIntegrityReadiness,
   getAccessReviewSecurityEvidenceReadiness,
   getBackupRestoreDrEvidenceReadiness,
   getPolicySopAttestationReadiness,
@@ -37,7 +38,7 @@ const noAction = 'No closure action is available from this screen.';
 function statusTone(status?: string) {
   const normalized = String(status ?? '').toLowerCase();
   if (['closed', 'ready', 'recorded', 'ready for executive review', 'ready for executive decision review', 'coverage complete in source data', 'monitor'].includes(normalized)) return 'good';
-  if (['blocked', 'launch blocked', 'overdue', 'rejected', 'no-go: blockers unresolved'].includes(normalized)) return 'danger';
+  if (['blocked', 'launch blocked', 'data blocked', 'overdue', 'rejected', 'no-go: blockers unresolved'].includes(normalized)) return 'danger';
   return 'warning';
 }
 
@@ -100,6 +101,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
   const escalationReadyCount = ownershipStates.filter(item => item.escalationReadinessState === 'Escalation may be required.').length;
   const executiveRecommendation = getExecutiveClosureRecommendation(data ?? undefined, { ownerMissingCount, reviewerMissingCount });
   const departmentLaunchWorkflow = getDepartmentLaunchFinalReadinessWorkflow(data ?? undefined, recentActions);
+  const liveDataQualityRoleIntegrity = getLiveDataQualityRoleIntegrityReadiness(data ?? undefined, recentActions);
   const policySopReadiness = getPolicySopAttestationReadiness(selectedItem, data ?? undefined);
   const executivePolicySopImpact = getPolicySopAttestationReadiness(undefined, data ?? undefined).executiveImpact;
   const recoveryReadiness = getBackupRestoreDrEvidenceReadiness(selectedItem, data ?? undefined);
@@ -554,6 +556,41 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                 </div>
               </div>
             ) : <EmptyState message="Evidence has not been recorded." />}
+          </ModernCard>
+
+          <ModernCard title="Live Data Quality and Role Integrity" subtitle="Read-only readiness review before UAT data review.">
+            <div className="alert alert-warning" style={{ marginBottom: '14px' }}>
+              <strong>Live data quality and role integrity. </strong>
+              Data quality readiness does not approve production launch. Production launch requires separate executive authority.
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '12px', marginBottom: '14px' }}>
+              <MetricTile label="Data quality state" value={liveDataQualityRoleIntegrity.dataQualityState} tone={statusTone(liveDataQualityRoleIntegrity.dataQualityState)} />
+              <MetricTile label="Role integrity state" value={liveDataQualityRoleIntegrity.roleIntegrityState} tone={statusTone(liveDataQualityRoleIntegrity.roleIntegrityState)} />
+              <MetricTile label="Data findings" value={liveDataQualityRoleIntegrity.dataQualityFindings.length} tone={liveDataQualityRoleIntegrity.dataQualityState === 'Ready for UAT data review' ? 'good' : 'warning'} />
+              <MetricTile label="Role findings" value={liveDataQualityRoleIntegrity.roleIntegrityFindings.length} tone={liveDataQualityRoleIntegrity.roleIntegrityState === 'Ready for UAT data review' ? 'good' : 'warning'} />
+              <MetricTile label="Required actions before UAT" value={liveDataQualityRoleIntegrity.requiredActionsBeforeUat.length} tone="warning" />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div className="alert alert-info" style={{ margin: 0 }}>
+                <strong>Data blocked: </strong>{liveDataQualityRoleIntegrity.dataQualityState === 'Data blocked' ? 'Data blocked.' : noBlocker}<br />
+                <strong>Data review required: </strong>{liveDataQualityRoleIntegrity.dataQualityState === 'Data review required' ? 'Data review required.' : noBlocker}<br />
+                <strong>Evidence state summary: </strong>{liveDataQualityRoleIntegrity.evidenceStateSummary}<br />
+                <strong>Required actions before UAT: </strong>{liveDataQualityRoleIntegrity.requiredActionsBeforeUat.join(' ')}
+              </div>
+              <div className="alert alert-warning" style={{ margin: 0 }}>
+                <strong>Role review required: </strong>{liveDataQualityRoleIntegrity.roleIntegrityState === 'Role review required' ? 'Role review required.' : noBlocker}<br />
+                <strong>Accountability review required: </strong>{liveDataQualityRoleIntegrity.roleIntegrityState === 'Accountability review required' ? 'Accountability review required.' : noBlocker}<br />
+                <strong>Inactive or archived users require reassignment: </strong>{liveDataQualityRoleIntegrity.inactiveArchivedOwnerReviewerWarnings.join(' ')}<br />
+                <strong>Missing owner or reviewer requires assignment: </strong>{liveDataQualityRoleIntegrity.missingOwnerReviewerSummary}
+              </div>
+            </div>
+            <div className="alert alert-info" style={{ marginTop: '14px' }}>
+              <strong>Department accountability gaps: </strong>{liveDataQualityRoleIntegrity.departmentAccountabilityGaps}<br />
+              <strong>Role/access review required actions: </strong>{liveDataQualityRoleIntegrity.roleAccessReviewRequiredActions.join(' ')}<br />
+              <strong>UAT readiness state: </strong>Ready for UAT data review means data and role signals are ready for review, not production launch.<br />
+              <strong>Data quality caveat: </strong>{liveDataQualityRoleIntegrity.caveat}<br />
+              <strong>Authority caveat: </strong>{liveDataQualityRoleIntegrity.productionLaunchAuthorityCaveat}
+            </div>
           </ModernCard>
 
           <ModernCard title="Executive Closure Pack" subtitle="Final evidence closure view for executive review and decision readiness.">

@@ -1,0 +1,184 @@
+{
+  "patch": "71",
+  "checked_at": "2026-07-05T20:07:32.997Z",
+  "strict_passed": true,
+  "failed_count": 0,
+  "checks": [
+    {
+      "name": "Patch 71 live data quality helper exists",
+      "passed": true
+    },
+    {
+      "name": "Patch 71 role integrity helper exists",
+      "passed": true
+    },
+    {
+      "name": "Live data quality findings helper exists",
+      "passed": true
+    },
+    {
+      "name": "Role integrity required actions helper exists",
+      "passed": true
+    },
+    {
+      "name": "Live data quality and role integrity wording exists",
+      "passed": true
+    },
+    {
+      "name": "Safe state exists: Data blocked",
+      "passed": true
+    },
+    {
+      "name": "Safe state exists: Role review required",
+      "passed": true
+    },
+    {
+      "name": "Safe state exists: Data review required",
+      "passed": true
+    },
+    {
+      "name": "Safe state exists: Accountability review required",
+      "passed": true
+    },
+    {
+      "name": "Safe state exists: Ready for UAT data review",
+      "passed": true
+    },
+    {
+      "name": "Required actions before UAT wording exists",
+      "passed": true
+    },
+    {
+      "name": "Inactive or archived users require reassignment wording exists",
+      "passed": true
+    },
+    {
+      "name": "Missing owner or reviewer requires assignment wording exists",
+      "passed": true
+    },
+    {
+      "name": "Data quality readiness caveat exists",
+      "passed": true
+    },
+    {
+      "name": "Production launch separate authority wording exists",
+      "passed": true
+    },
+    {
+      "name": "Patch 69 executive decision pack wording remains",
+      "passed": true
+    },
+    {
+      "name": "Patch 70 department launch final readiness wording remains",
+      "passed": true
+    },
+    {
+      "name": "No production launch action added",
+      "passed": true
+    },
+    {
+      "name": "No transition_to_live_operations wording/action exists",
+      "passed": true
+    },
+    {
+      "name": "No Authorize Production Launch wording exists",
+      "passed": true
+    },
+    {
+      "name": "No executive production signoff RPC added",
+      "passed": true
+    },
+    {
+      "name": "No production-ready claim added",
+      "passed": true
+    },
+    {
+      "name": "No browser service-role exposure exists",
+      "passed": true
+    },
+    {
+      "name": "/production-evidence-closure still exists",
+      "passed": true
+    },
+    {
+      "name": "Production Evidence Closure page exists",
+      "passed": true
+    },
+    {
+      "name": "Production Readiness Center link remains",
+      "passed": true
+    },
+    {
+      "name": "Production Operator Console link remains",
+      "passed": true
+    },
+    {
+      "name": "No fake/demo records added",
+      "passed": true
+    },
+    {
+      "name": "Operational UI avoids banned technical wording",
+      "passed": true
+    },
+    {
+      "name": "Restore-noise covers Patch 70 generated proof JSON",
+      "passed": true
+    },
+    {
+      "name": "package.json contains patch71:proof",
+      "passed": true
+    },
+    {
+      "name": "package.json contains patch71:all",
+      "passed": true
+    },
+    {
+      "name": "validate:fast exists",
+      "passed": true
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true
+    },
+    {
+      "name": "validate:security exists",
+      "passed": true
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true
+    },
+    {
+      "name": "proof:all exists",
+      "passed": true
+    },
+    {
+      "name": "v700:runtime-security exists",
+      "passed": true
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true
+    },
+    {
+      "name": "current platform status mentions Patch 71",
+      "passed": true
+    },
+    {
+      "name": "production caveat remains",
+      "passed": true
+    },
+    {
+      "name": "proof index mentions Patch 71",
+      "passed": true
+    },
+    {
+      "name": "runbook mentions Patch 70 proof JSON restore coverage",
+      "passed": true
+    },
+    {
+      "name": "No conflict markers",
+      "passed": true
+    }
+  ]
+}

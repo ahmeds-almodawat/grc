@@ -266,6 +266,28 @@ export interface DepartmentLaunchFinalReadinessWorkflow {
   readyForExecutiveDecisionReviewCount: number;
 }
 
+export type LiveDataQualityReadinessState =
+  | 'Data blocked'
+  | 'Role review required'
+  | 'Data review required'
+  | 'Accountability review required'
+  | 'Ready for UAT data review';
+
+export interface LiveDataQualityRoleIntegrityReadiness {
+  dataQualityState: LiveDataQualityReadinessState;
+  roleIntegrityState: LiveDataQualityReadinessState;
+  inactiveArchivedOwnerReviewerWarnings: string[];
+  missingOwnerReviewerSummary: string;
+  evidenceStateSummary: string;
+  departmentAccountabilityGaps: string;
+  roleAccessReviewRequiredActions: string[];
+  requiredActionsBeforeUat: string[];
+  dataQualityFindings: string[];
+  roleIntegrityFindings: string[];
+  caveat: string;
+  productionLaunchAuthorityCaveat: string;
+}
+
 export interface ProductionEvidenceClosureData {
   overview: {
     totalEvidenceGaps: number;
@@ -1333,6 +1355,131 @@ export function getDepartmentLaunchFinalReadinessWorkflow(
     reviewRequiredCount: rows.filter(row => row.launchReadinessState === 'Review required').length,
     limitationReviewRequiredCount: rows.filter(row => row.launchReadinessState === 'Limitation review required').length,
     readyForExecutiveDecisionReviewCount: rows.filter(row => row.launchReadinessState === 'Ready for executive decision review').length,
+  };
+}
+
+function referencesInactiveOrArchivedUser(value?: string) {
+  const normalized = String(value ?? '').toLowerCase();
+  return ['inactive', 'archived', 'deactivated', 'disabled', 'locked', 'suspended'].some(token => normalized.includes(token));
+}
+
+export function getLiveDataQualityFindings(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+) {
+  const findings = [
+    numberValue(data?.overview.blocked) > 0 ? `${numberValue(data?.overview.blocked)} blocked evidence item${numberValue(data?.overview.blocked) === 1 ? '' : 's'}.` : '',
+    numberValue(data?.overview.overdue) > 0 ? `${numberValue(data?.overview.overdue)} overdue evidence item${numberValue(data?.overview.overdue) === 1 ? '' : 's'}.` : '',
+    numberValue(data?.overview.evidenceRequired) > 0 ? `${numberValue(data?.overview.evidenceRequired)} evidence requirement${numberValue(data?.overview.evidenceRequired) === 1 ? '' : 's'} still open.` : '',
+    recentActions.filter(action => action.action_type === 'request_more_evidence').length > 0 ? `${recentActions.filter(action => action.action_type === 'request_more_evidence').length} evidence item${recentActions.filter(action => action.action_type === 'request_more_evidence').length === 1 ? '' : 's'} requiring more evidence.` : '',
+    recentActions.filter(action => action.action_type === 'reopen_with_reason').length > 0 ? `${recentActions.filter(action => action.action_type === 'reopen_with_reason').length} reopened evidence item${recentActions.filter(action => action.action_type === 'reopen_with_reason').length === 1 ? '' : 's'}.` : '',
+    numberValue(data?.executivePack.departmentReadinessGaps) > 0 ? `${numberValue(data?.executivePack.departmentReadinessGaps)} department readiness gap${numberValue(data?.executivePack.departmentReadinessGaps) === 1 ? '' : 's'}.` : '',
+  ].filter(Boolean);
+
+  return findings.length ? findings : ['No data quality blocker currently recorded.'];
+}
+
+export function getRoleIntegrityFindings(data?: ProductionEvidenceClosureData) {
+  const items = data?.intakeQueue ?? [];
+  const departments = data?.departmentRegister ?? [];
+  const ownerMissingCount = items.filter(item => getEvidenceOwnershipState(item).ownerState === 'Owner missing').length
+    + departments.filter(row => row.owner === ownerAction).length;
+  const reviewerMissingCount = items.filter(item => getEvidenceOwnershipState(item).reviewerState === 'Reviewer missing').length;
+  const inactiveArchived = [
+    ...items.flatMap(item => [
+      referencesInactiveOrArchivedUser(item.owner) ? `${item.title}: owner appears inactive or archived.` : '',
+      referencesInactiveOrArchivedUser(item.reviewer) ? `${item.title}: reviewer appears inactive or archived.` : '',
+    ]),
+    ...departments.map(row => referencesInactiveOrArchivedUser(row.owner) ? `${row.department}: department owner appears inactive or archived.` : ''),
+  ].filter(Boolean);
+  const missingDepartmentCount = items.filter(item => isMissingValue(item.departmentOrScope)).length;
+  const findings = [
+    ownerMissingCount > 0 ? `${ownerMissingCount} missing owner assignment${ownerMissingCount === 1 ? '' : 's'}.` : '',
+    reviewerMissingCount > 0 ? `${reviewerMissingCount} missing reviewer assignment${reviewerMissingCount === 1 ? '' : 's'}.` : '',
+    missingDepartmentCount > 0 ? `${missingDepartmentCount} item${missingDepartmentCount === 1 ? '' : 's'} missing department or scope.` : '',
+    ...inactiveArchived,
+  ].filter(Boolean);
+
+  return findings.length ? findings : ['No role integrity finding currently recorded.'];
+}
+
+export function getLiveDataQualityState(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+): LiveDataQualityReadinessState {
+  if (numberValue(data?.overview.blocked) > 0) return 'Data blocked';
+  if (numberValue(data?.overview.overdue) > 0 || recentActions.some(action => action.action_type === 'reopen_with_reason')) return 'Data review required';
+  if (numberValue(data?.overview.evidenceRequired) > 0 || recentActions.some(action => action.action_type === 'request_more_evidence')) return 'Data review required';
+  if (numberValue(data?.executivePack.departmentReadinessGaps) > 0) return 'Data review required';
+  return 'Ready for UAT data review';
+}
+
+export function getRoleIntegrityState(data?: ProductionEvidenceClosureData): LiveDataQualityReadinessState {
+  const findings = getRoleIntegrityFindings(data);
+  if (findings.some(finding => finding.toLowerCase().includes('inactive') || finding.toLowerCase().includes('archived'))) return 'Role review required';
+  if (findings.some(finding => finding.toLowerCase().includes('missing owner') || finding.toLowerCase().includes('missing reviewer') || finding.toLowerCase().includes('missing department'))) {
+    return 'Accountability review required';
+  }
+  return 'Ready for UAT data review';
+}
+
+export function getLiveDataQualityRequiredActions(data?: ProductionEvidenceClosureData, recentActions: ControlledEvidenceClosureActionResult[] = []) {
+  const actions = new Set<string>();
+  const findings = getLiveDataQualityFindings(data, recentActions);
+  if (findings.some(finding => finding.toLowerCase().includes('blocked'))) actions.add('Resolve blocked evidence before UAT.');
+  if (findings.some(finding => finding.toLowerCase().includes('overdue'))) actions.add('Clear overdue evidence follow-up before UAT.');
+  if (findings.some(finding => finding.toLowerCase().includes('requiring more evidence') || finding.toLowerCase().includes('requirement'))) actions.add('Complete evidence requiring more evidence.');
+  if (findings.some(finding => finding.toLowerCase().includes('reopened'))) actions.add('Review reopened evidence before UAT.');
+  if (findings.some(finding => finding.toLowerCase().includes('department readiness'))) actions.add('Close department coverage gaps before UAT.');
+  return actions.size ? [...actions] : ['Prepare data quality set for UAT review.'];
+}
+
+export function getRoleIntegrityRequiredActions(data?: ProductionEvidenceClosureData) {
+  const actions = new Set<string>();
+  const findings = getRoleIntegrityFindings(data);
+  if (findings.some(finding => finding.toLowerCase().includes('inactive') || finding.toLowerCase().includes('archived'))) {
+    actions.add('Inactive or archived users require reassignment.');
+  }
+  if (findings.some(finding => finding.toLowerCase().includes('missing owner') || finding.toLowerCase().includes('missing reviewer'))) {
+    actions.add('Missing owner or reviewer requires assignment.');
+  }
+  if (findings.some(finding => finding.toLowerCase().includes('missing department'))) {
+    actions.add('Assign missing department or scope before UAT.');
+  }
+  return actions.size ? [...actions] : ['Review role and accountability integrity before UAT.'];
+}
+
+export function getLiveDataQualityRoleIntegrityReadiness(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+): LiveDataQualityRoleIntegrityReadiness {
+  const dataQualityFindings = getLiveDataQualityFindings(data, recentActions);
+  const roleIntegrityFindings = getRoleIntegrityFindings(data);
+  const roleActions = getRoleIntegrityRequiredActions(data);
+  const dataActions = getLiveDataQualityRequiredActions(data, recentActions);
+  const inactiveArchivedOwnerReviewerWarnings = roleIntegrityFindings.filter(finding =>
+    finding.toLowerCase().includes('inactive') || finding.toLowerCase().includes('archived')
+  );
+
+  return {
+    dataQualityState: getLiveDataQualityState(data, recentActions),
+    roleIntegrityState: getRoleIntegrityState(data),
+    inactiveArchivedOwnerReviewerWarnings: inactiveArchivedOwnerReviewerWarnings.length
+      ? inactiveArchivedOwnerReviewerWarnings
+      : ['No inactive or archived owner/reviewer reference currently recorded.'],
+    missingOwnerReviewerSummary: roleIntegrityFindings.filter(finding =>
+      finding.toLowerCase().includes('missing owner') || finding.toLowerCase().includes('missing reviewer')
+    ).join(' ') || 'No missing owner or reviewer currently recorded.',
+    evidenceStateSummary: dataQualityFindings.join(' '),
+    departmentAccountabilityGaps: roleIntegrityFindings.filter(finding =>
+      finding.toLowerCase().includes('department') || finding.toLowerCase().includes('scope')
+    ).join(' ') || 'No department accountability gap currently recorded.',
+    roleAccessReviewRequiredActions: roleActions,
+    requiredActionsBeforeUat: [...new Set([...dataActions, ...roleActions])],
+    dataQualityFindings,
+    roleIntegrityFindings,
+    caveat: 'Data quality readiness does not approve production launch.',
+    productionLaunchAuthorityCaveat: 'Production launch requires separate executive authority.',
   };
 }
 
