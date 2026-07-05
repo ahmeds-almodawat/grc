@@ -167,6 +167,12 @@ Patch 68 adds controlled evidence closure action proof:
 npm run patch68:proof
 ```
 
+Patch 70 adds department launch final readiness workflow proof:
+
+```powershell
+npm run patch70:proof
+```
+
 ## G. Generated Release Artifacts
 
 Many proof commands regenerate JSON and text evidence under `release/v*` and older `release/patch*` folders. That churn is expected after validation.
