@@ -1,0 +1,172 @@
+{
+  "patch": "70",
+  "checked_at": "2026-07-05T18:15:38.147Z",
+  "strict_passed": true,
+  "failed_count": 0,
+  "checks": [
+    {
+      "name": "No new Patch 70 department readiness migration exists",
+      "passed": true
+    },
+    {
+      "name": "Production Evidence Closure page exists",
+      "passed": true
+    },
+    {
+      "name": "Production Evidence Closure route remains available",
+      "passed": true
+    },
+    {
+      "name": "Production Evidence Closure navigation remains available",
+      "passed": true
+    },
+    {
+      "name": "Department launch readiness helper exists",
+      "passed": true
+    },
+    {
+      "name": "Department launch state helper exists",
+      "passed": true
+    },
+    {
+      "name": "Department launch blocker helper exists",
+      "passed": true
+    },
+    {
+      "name": "Department launch required actions helper exists",
+      "passed": true
+    },
+    {
+      "name": "Department launch evidence closure summary helper exists",
+      "passed": true
+    },
+    {
+      "name": "Safe department launch states are present",
+      "passed": true
+    },
+    {
+      "name": "Department launch final readiness section exists",
+      "passed": true
+    },
+    {
+      "name": "Required actions before executive decision visible",
+      "passed": true
+    },
+    {
+      "name": "Controlled evidence closure action summary visible",
+      "passed": true
+    },
+    {
+      "name": "Training/adoption/support summary visible",
+      "passed": true
+    },
+    {
+      "name": "Policy/SOP attestation summary visible",
+      "passed": true
+    },
+    {
+      "name": "Backup/restore/DR summary visible",
+      "passed": true
+    },
+    {
+      "name": "Access/security summary visible",
+      "passed": true
+    },
+    {
+      "name": "Department readiness caveat visible",
+      "passed": true
+    },
+    {
+      "name": "Separate executive authority caveat visible",
+      "passed": true
+    },
+    {
+      "name": "Operator console links to department launch readiness workflow",
+      "passed": true
+    },
+    {
+      "name": "Production Readiness Center link remains",
+      "passed": true
+    },
+    {
+      "name": "Production Operator Console link remains",
+      "passed": true
+    },
+    {
+      "name": "No production launch action added",
+      "passed": true
+    },
+    {
+      "name": "No live operations transition added",
+      "passed": true
+    },
+    {
+      "name": "No executive production signoff RPC added",
+      "passed": true
+    },
+    {
+      "name": "No production-ready claim added",
+      "passed": true
+    },
+    {
+      "name": "No browser service-role exposure added",
+      "passed": true
+    },
+    {
+      "name": "No fake/demo/fallback records in operational UI",
+      "passed": true
+    },
+    {
+      "name": "Operational UI avoids banned technical wording",
+      "passed": true
+    },
+    {
+      "name": "Package contains patch70 proof script",
+      "passed": true
+    },
+    {
+      "name": "Package contains patch70 all script",
+      "passed": true
+    },
+    {
+      "name": "validate:fast remains present",
+      "passed": true
+    },
+    {
+      "name": "validate:build remains present",
+      "passed": true
+    },
+    {
+      "name": "validate:security remains present",
+      "passed": true
+    },
+    {
+      "name": "release:restore-noise remains present",
+      "passed": true
+    },
+    {
+      "name": "Restore-noise covers Patch 69 generated proof JSON",
+      "passed": true
+    },
+    {
+      "name": "Current platform status mentions Patch 70",
+      "passed": true
+    },
+    {
+      "name": "Current platform status keeps production caveat",
+      "passed": true
+    },
+    {
+      "name": "Proof command index mentions Patch 70 proof",
+      "passed": true
+    },
+    {
+      "name": "Validation runbook mentions validate:security for security-adjacent patches",
+      "passed": true
+    },
+    {
+      "name": "No conflict markers",
+      "passed": true
+    }
+  ]
+}

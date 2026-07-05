@@ -234,6 +234,38 @@ export interface ExecutiveGoNoGoDecisionPack {
   productionLaunchAuthorityCaveat: string;
 }
 
+export type DepartmentLaunchFinalReadinessState =
+  | 'Launch blocked'
+  | 'Evidence required'
+  | 'Review required'
+  | 'Limitation review required'
+  | 'Ready for executive decision review';
+
+export interface DepartmentLaunchFinalReadinessRow {
+  departmentOrScope: string;
+  launchReadinessState: DepartmentLaunchFinalReadinessState;
+  blockerSummary: string;
+  missingEvidenceSummary: string;
+  controlledClosureActionSummary: string;
+  trainingAdoptionSupportSummary: string;
+  policySopAttestationSummary: string;
+  backupRestoreDrSummary: string;
+  accessSecuritySummary: string;
+  requiredActionsBeforeExecutiveDecision: string[];
+  caveat: string;
+  productionLaunchAuthorityCaveat: string;
+}
+
+export interface DepartmentLaunchFinalReadinessWorkflow {
+  rows: DepartmentLaunchFinalReadinessRow[];
+  totalDepartments: number;
+  blockedCount: number;
+  evidenceRequiredCount: number;
+  reviewRequiredCount: number;
+  limitationReviewRequiredCount: number;
+  readyForExecutiveDecisionReviewCount: number;
+}
+
 export interface ProductionEvidenceClosureData {
   overview: {
     totalEvidenceGaps: number;
@@ -1158,6 +1190,149 @@ export function getExecutiveGoNoGoDecisionPack(
     requiredOperationalActionsBeforeDecision,
     caveat: 'Evidence-level closure does not approve production launch.',
     productionLaunchAuthorityCaveat: 'Production launch requires separate executive authority.',
+  };
+}
+
+function hasReadinessIssue(value?: string) {
+  const normalized = normalizeStatus(value);
+  return [
+    'blocked',
+    'evidence_required',
+    'owner_action_required',
+    'reviewer_action_required',
+    'overdue',
+    'missing',
+  ].some(token => normalized.includes(token));
+}
+
+function hasLimitationSignal(value?: string) {
+  const normalized = normalizeStatus(value);
+  return normalized.includes('limitation') || normalized.includes('exception');
+}
+
+export function getDepartmentLaunchEvidenceClosureSummary(
+  row?: DepartmentEvidenceRegisterRow,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+) {
+  if (!row) return 'Controlled evidence action summary has not been recorded for this department.';
+  const closed = recentActions.filter(action => action.action_type === 'close_as_verified').length;
+  const moreEvidence = recentActions.filter(action => action.action_type === 'request_more_evidence').length;
+  const limitations = recentActions.filter(action => action.action_type === 'accept_with_limitation').length;
+  const reopened = recentActions.filter(action => action.action_type === 'reopen_with_reason').length;
+
+  if (!recentActions.length) return 'Controlled evidence action summary has not been recorded for this department.';
+  return `Controlled evidence action summary: ${closed} verified, ${moreEvidence} requiring more evidence, ${limitations} accepted with limitation, ${reopened} reopened.`;
+}
+
+export function getDepartmentLaunchBlockerSummary(row?: DepartmentEvidenceRegisterRow, data?: ProductionEvidenceClosureData) {
+  if (!row) return 'Evidence required.';
+  const coverage = getDepartmentEvidenceCoverage(row);
+  if (coverage.coverageState === 'Blocked') return 'Launch blocked.';
+  if (coverage.blockerEscalationSummary !== noBlocker) return coverage.blockerEscalationSummary;
+  if ((data?.executivePack.unresolvedBlockers ?? 0) > 0) return 'Unresolved blocker requires executive review.';
+  return noBlocker;
+}
+
+export function getDepartmentLaunchRequiredActions(
+  row?: DepartmentEvidenceRegisterRow,
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+) {
+  const actions = new Set<string>();
+  if (!row) {
+    actions.add('Record department evidence before executive decision review.');
+    return [...actions];
+  }
+
+  const coverage = getDepartmentEvidenceCoverage(row);
+  const policySop = getPolicySopAttestationReadiness(row, data);
+  const recovery = getBackupRestoreDrEvidenceReadiness(row, data);
+  const security = getAccessReviewSecurityEvidenceReadiness(row, data);
+  const adoption = getTrainingAdoptionSupportEvidenceReadiness(row, data);
+  const missing = getDepartmentMissingEvidenceCategories(row);
+
+  if (coverage.coverageState === 'Blocked') actions.add('Resolve recorded department blocker.');
+  if (row.owner === ownerAction) actions.add('Assign department owner.');
+  if (missing.length > 0) actions.add(`Record missing evidence: ${missing.join(', ')}.`);
+  if (hasReadinessIssue(adoption.readinessState)) actions.add('Complete training, adoption, or support evidence.');
+  if (hasReadinessIssue(policySop.readinessState)) actions.add('Complete policy/SOP attestation evidence.');
+  if (hasReadinessIssue(recovery.readinessState)) actions.add('Complete backup, restore, or DR evidence.');
+  if (hasReadinessIssue(security.readinessState)) actions.add('Complete access review or security evidence.');
+  if ((data?.executivePack.acceptedLimitationsRequiringReview ?? 0) > 0 || recentActions.some(action => action.action_type === 'accept_with_limitation')) {
+    actions.add('Review accepted limitations before executive decision.');
+  }
+  if (coverage.coverageState === 'Review required') actions.add('Complete reviewer decision in the source workflow.');
+
+  return actions.size ? [...actions] : ['Prepare department for executive decision review.'];
+}
+
+export function getDepartmentLaunchReadinessState(
+  row?: DepartmentEvidenceRegisterRow,
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+): DepartmentLaunchFinalReadinessState {
+  if (!row) return 'Evidence required';
+  const coverage = getDepartmentEvidenceCoverage(row);
+  const policySop = getPolicySopAttestationReadiness(row, data);
+  const recovery = getBackupRestoreDrEvidenceReadiness(row, data);
+  const security = getAccessReviewSecurityEvidenceReadiness(row, data);
+  const adoption = getTrainingAdoptionSupportEvidenceReadiness(row, data);
+  const readinessSignals = [
+    coverage.coverageState,
+    policySop.readinessState,
+    recovery.readinessState,
+    security.readinessState,
+    adoption.readinessState,
+    row.launchReadiness,
+  ];
+
+  if (readinessSignals.some(signal => normalizeStatus(signal).includes('blocked'))) return 'Launch blocked';
+  if ((data?.executivePack.acceptedLimitationsRequiringReview ?? 0) > 0 || readinessSignals.some(hasLimitationSignal) || recentActions.some(action => action.action_type === 'accept_with_limitation')) {
+    return 'Limitation review required';
+  }
+  if (getDepartmentMissingEvidenceCategories(row).length > 0 || readinessSignals.some(hasReadinessIssue)) return 'Evidence required';
+  if (readinessSignals.some(signal => normalizeStatus(signal).includes('review'))) return 'Review required';
+  return 'Ready for executive decision review';
+}
+
+export function getDepartmentLaunchFinalReadinessWorkflow(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+): DepartmentLaunchFinalReadinessWorkflow {
+  const rows = (data?.departmentRegister ?? []).map(row => {
+    const coverage = getDepartmentEvidenceCoverage(row);
+    const policySop = getPolicySopAttestationReadiness(row, data);
+    const recovery = getBackupRestoreDrEvidenceReadiness(row, data);
+    const security = getAccessReviewSecurityEvidenceReadiness(row, data);
+    const adoption = getTrainingAdoptionSupportEvidenceReadiness(row, data);
+    const missing = getDepartmentMissingEvidenceCategories(row);
+    const launchReadinessState = getDepartmentLaunchReadinessState(row, data, recentActions);
+
+    return {
+      departmentOrScope: row.department,
+      launchReadinessState,
+      blockerSummary: getDepartmentLaunchBlockerSummary(row, data),
+      missingEvidenceSummary: missing.length ? missing.join(', ') : 'No missing evidence category currently recorded.',
+      controlledClosureActionSummary: getDepartmentLaunchEvidenceClosureSummary(row, recentActions),
+      trainingAdoptionSupportSummary: `${adoption.readinessState}. ${adoption.missingAdoptionEvidenceSummary}`,
+      policySopAttestationSummary: `${policySop.readinessState}. ${policySop.missingAttestationEvidenceSummary}`,
+      backupRestoreDrSummary: `${recovery.readinessState}. ${recovery.missingRecoveryEvidenceSummary}`,
+      accessSecuritySummary: `${security.readinessState}. ${security.missingSecurityEvidenceSummary}`,
+      requiredActionsBeforeExecutiveDecision: getDepartmentLaunchRequiredActions(row, data, recentActions),
+      caveat: 'Department readiness does not approve production launch.',
+      productionLaunchAuthorityCaveat: 'Production launch requires separate executive authority.',
+      coverage,
+    };
+  });
+
+  return {
+    rows,
+    totalDepartments: rows.length,
+    blockedCount: rows.filter(row => row.launchReadinessState === 'Launch blocked').length,
+    evidenceRequiredCount: rows.filter(row => row.launchReadinessState === 'Evidence required').length,
+    reviewRequiredCount: rows.filter(row => row.launchReadinessState === 'Review required').length,
+    limitationReviewRequiredCount: rows.filter(row => row.launchReadinessState === 'Limitation review required').length,
+    readyForExecutiveDecisionReviewCount: rows.filter(row => row.launchReadinessState === 'Ready for executive decision review').length,
   };
 }
 

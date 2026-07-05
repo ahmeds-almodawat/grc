@@ -174,6 +174,12 @@ Patch 69 adds executive go/no-go decision pack proof:
 npm run patch69:proof
 ```
 
+Patch 70 adds department launch final readiness workflow proof:
+
+```powershell
+npm run patch70:proof
+```
+
 ## G. Generated Release Artifacts
 
 Many proof commands regenerate JSON and text evidence under `release/v*` and older `release/patch*` folders. That churn is expected after validation.

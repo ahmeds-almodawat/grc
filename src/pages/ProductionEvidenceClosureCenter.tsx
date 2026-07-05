@@ -8,6 +8,7 @@ import {
   getEvidenceClosureHandoff,
   getEvidenceOwnershipDueDateReadiness,
   getDepartmentEvidenceCoverage,
+  getDepartmentLaunchFinalReadinessWorkflow,
   getExecutiveClosureRecommendation,
   getExecutiveGoNoGoDecisionPack,
   getAccessReviewSecurityEvidenceReadiness,
@@ -36,7 +37,7 @@ const noAction = 'No closure action is available from this screen.';
 function statusTone(status?: string) {
   const normalized = String(status ?? '').toLowerCase();
   if (['closed', 'ready', 'recorded', 'ready for executive review', 'ready for executive decision review', 'coverage complete in source data', 'monitor'].includes(normalized)) return 'good';
-  if (['blocked', 'overdue', 'rejected', 'no-go: blockers unresolved'].includes(normalized)) return 'danger';
+  if (['blocked', 'launch blocked', 'overdue', 'rejected', 'no-go: blockers unresolved'].includes(normalized)) return 'danger';
   return 'warning';
 }
 
@@ -98,6 +99,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
   const dueDateMissingCount = ownershipStates.filter(item => item.dueDateState === 'Due date missing').length;
   const escalationReadyCount = ownershipStates.filter(item => item.escalationReadinessState === 'Escalation may be required.').length;
   const executiveRecommendation = getExecutiveClosureRecommendation(data ?? undefined, { ownerMissingCount, reviewerMissingCount });
+  const departmentLaunchWorkflow = getDepartmentLaunchFinalReadinessWorkflow(data ?? undefined, recentActions);
   const policySopReadiness = getPolicySopAttestationReadiness(selectedItem, data ?? undefined);
   const executivePolicySopImpact = getPolicySopAttestationReadiness(undefined, data ?? undefined).executiveImpact;
   const recoveryReadiness = getBackupRestoreDrEvidenceReadiness(selectedItem, data ?? undefined);
@@ -496,6 +498,62 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                 </div>
               </div>
             ) : <EmptyState />}
+          </ModernCard>
+
+          <ModernCard title="Department Launch Final Readiness" subtitle="Department-level readiness before executive decision review.">
+            <div className="alert alert-warning" style={{ marginBottom: '14px' }}>
+              <strong>Department launch final readiness. </strong>
+              Department readiness does not approve production launch. Production launch requires separate executive authority.
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '12px', marginBottom: '14px' }}>
+              <MetricTile label="Departments" value={departmentLaunchWorkflow.totalDepartments} />
+              <MetricTile label="Launch blocked" value={departmentLaunchWorkflow.blockedCount} tone={departmentLaunchWorkflow.blockedCount ? 'danger' : 'good'} />
+              <MetricTile label="Evidence required" value={departmentLaunchWorkflow.evidenceRequiredCount} tone={departmentLaunchWorkflow.evidenceRequiredCount ? 'warning' : 'good'} />
+              <MetricTile label="Review required" value={departmentLaunchWorkflow.reviewRequiredCount} tone={departmentLaunchWorkflow.reviewRequiredCount ? 'warning' : 'good'} />
+              <MetricTile label="Limitation review" value={departmentLaunchWorkflow.limitationReviewRequiredCount} tone={departmentLaunchWorkflow.limitationReviewRequiredCount ? 'warning' : 'good'} />
+            </div>
+            {departmentLaunchWorkflow.rows.length ? (
+              <div className="table-wrap">
+                <table className="entity-table">
+                  <thead>
+                    <tr>
+                      <th>Department / scope</th>
+                      <th>Launch readiness state</th>
+                      <th>Blocker summary</th>
+                      <th>Missing evidence summary</th>
+                      <th>Controlled closure action summary</th>
+                      <th>Training/adoption/support summary</th>
+                      <th>Policy/SOP attestation summary</th>
+                      <th>Backup/restore/DR summary</th>
+                      <th>Access/security summary</th>
+                      <th>Required actions before executive decision</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {departmentLaunchWorkflow.rows.slice(0, 40).map(row => (
+                      <tr key={row.departmentOrScope}>
+                        <td><strong>{row.departmentOrScope}</strong></td>
+                        <td><StatusPill tone={statusTone(row.launchReadinessState)}>{row.launchReadinessState}</StatusPill></td>
+                        <td>{row.blockerSummary}</td>
+                        <td>{row.missingEvidenceSummary}</td>
+                        <td>{row.controlledClosureActionSummary}</td>
+                        <td>{row.trainingAdoptionSupportSummary}</td>
+                        <td>{row.policySopAttestationSummary}</td>
+                        <td>{row.backupRestoreDrSummary}</td>
+                        <td>{row.accessSecuritySummary}</td>
+                        <td>{row.requiredActionsBeforeExecutiveDecision.join(' ')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="alert alert-info" style={{ marginTop: '14px' }}>
+                  <strong>Decision states: </strong>Launch blocked. Evidence required. Review required. Limitation review required. Ready for executive decision review.
+                  <br /><strong>Required actions before executive decision: </strong>Resolve blockers, complete missing evidence, review limitations, and finish source workflow review before an executive decision is prepared.
+                  <br /><strong>Department readiness caveat: </strong>Department readiness does not approve production launch.
+                  <br /><strong>Authority caveat: </strong>Production launch requires separate executive authority.
+                </div>
+              </div>
+            ) : <EmptyState message="Evidence has not been recorded." />}
           </ModernCard>
 
           <ModernCard title="Executive Closure Pack" subtitle="Final evidence closure view for executive review and decision readiness.">
