@@ -12,7 +12,9 @@ import {
   getProductionHypercareBlockers,
   getProductionReadinessSignoffRegister,
   getRuntimeAccessReviewBlockers,
+  getExecutiveProductionSignoffs,
 } from './productionReadinessApi';
+import { invokePrivilegedAction } from './privilegedAction';
 
 export type EvidenceClosureStatus =
   | 'open'
@@ -93,6 +95,7 @@ export interface ExecutiveClosureRecommendationReadiness {
   missingAssignmentCount: number;
   requiredExecutiveActions: string[];
   caveat: string;
+  currentSignoffState: string;
 }
 
 export interface DepartmentEvidenceRegisterRow {
@@ -180,6 +183,7 @@ export interface ProductionEvidenceClosureData {
     recoveryEvidenceState: string;
     departmentReadinessGaps: number;
     finalRecommendationState: EvidenceClosureRecommendation;
+    formalSignoffs?: any[];
   };
 }
 
@@ -408,7 +412,8 @@ export function getExecutiveRequiredActions(data?: ProductionEvidenceClosureData
 export function getExecutiveClosureRecommendation(data?: ProductionEvidenceClosureData, signals?: { ownerMissingCount?: number; reviewerMissingCount?: number }): ExecutiveClosureRecommendationReadiness {
   const blockers = getExecutiveClosureBlockers(data, signals);
   const hasNoEvidenceItems = !data || numberValue(data.overview.totalEvidenceGaps) === 0;
-  const recommendationState: EvidenceClosureRecommendation = blockers.blockingIssuesCount > 0
+  
+  let recommendationState: EvidenceClosureRecommendation = blockers.blockingIssuesCount > 0
     ? 'Blocked'
     : hasNoEvidenceItems || blockers.evidenceRequiredCount > 0
       ? 'Evidence required'
@@ -416,13 +421,30 @@ export function getExecutiveClosureRecommendation(data?: ProductionEvidenceClosu
         ? 'Review required'
         : 'Ready for executive review';
 
+  let currentSignoffState = 'Pending';
+  if (data?.executivePack?.formalSignoffs && data.executivePack.formalSignoffs.length > 0) {
+    if (data.executivePack.formalSignoffs[0].decision === 'approved') {
+      currentSignoffState = 'Approved';
+      recommendationState = 'Ready for executive review'; // Override to prevent regression of UI state
+    }
+  }
+
   return {
     recommendationState,
     recommendationReason: getExecutiveClosureReadinessReason(blockers),
     ...blockers,
     requiredExecutiveActions: getExecutiveRequiredActions(data, signals),
     caveat: 'Executive review depends on recorded evidence and source workflow status.',
+    currentSignoffState,
   };
+}
+
+export async function recordExecutiveProductionSignoff(decision: string, notes: string): Promise<void> {
+  const payload = {
+    decision,
+    notes,
+  };
+  await invokePrivilegedAction<any>('record_executive_production_signoff', payload);
 }
 
 function categoryMissing(value?: string) {
@@ -964,6 +986,7 @@ export async function getProductionEvidenceClosureData(): Promise<ProductionEvid
     acceptedLimitations,
     goLiveDecisions,
     hypercareBlockers,
+    formalSignoffs,
   ] = await Promise.all([
     getHospitalDepartmentLaunchPacks(),
     getHospitalOperationsLaunchBlockers(),
@@ -978,6 +1001,7 @@ export async function getProductionEvidenceClosureData(): Promise<ProductionEvid
     getPilotAcceptedLimitations(),
     getProductionGoLiveDecisions(),
     getProductionHypercareBlockers(),
+    getExecutiveProductionSignoffs(),
   ]);
 
   const intakeQueue = [
@@ -1068,6 +1092,7 @@ export async function getProductionEvidenceClosureData(): Promise<ProductionEvid
       recoveryEvidenceState,
       departmentReadinessGaps,
       finalRecommendationState,
+      formalSignoffs,
     },
   };
 }

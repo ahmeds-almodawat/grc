@@ -1,6 +1,6 @@
 {
   "patch": "47",
-  "generated_at": "2026-07-03T23:08:10.026Z",
+  "generated_at": "2026-07-05T13:06:11.863Z",
   "status": "passed",
   "execution_mode": "verified_existing_local_evidence",
   "local_supabase_container_reachable": true,

@@ -1,0 +1,36 @@
+{
+  "patch": "68",
+  "checked_at": "2026-07-05T13:18:02.683Z",
+  "strict_passed": true,
+  "failed_count": 0,
+  "checks": [
+    {
+      "name": "migration exists",
+      "passed": true
+    },
+    {
+      "name": "table exists: executive_production_signoffs",
+      "passed": true
+    },
+    {
+      "name": "RLS enabled: executive_production_signoffs",
+      "passed": true
+    },
+    {
+      "name": "read policies exist",
+      "passed": true
+    },
+    {
+      "name": "function exists: record_executive_production_signoff",
+      "passed": true
+    },
+    {
+      "name": "execute grant exists for authenticated",
+      "passed": true
+    },
+    {
+      "name": "no destructive data operations",
+      "passed": true
+    }
+  ]
+}

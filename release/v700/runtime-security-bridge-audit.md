@@ -4,12 +4,12 @@
 
 ```json
 {
-  "generated_at": "2026-07-02T16:30:37.660Z",
+  "generated_at": "2026-07-05T13:10:07.273Z",
   "db_container": "supabase_db_grc-control-center",
   "db_query_status": "passed",
   "db_query_error": null,
   "frontend_rpc_total": 1,
-  "authenticated_edge_bridge_call_total": 23,
+  "authenticated_edge_bridge_call_total": 58,
   "unique_frontend_rpc_total": 1,
   "database_function_total": 213,
   "database_security_definer_functions": 58,

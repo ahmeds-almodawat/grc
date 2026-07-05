@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ArrowLeft, ClipboardCheck, ExternalLink, FileCheck2, ShieldAlert } from 'lucide-react';
 import { DataState } from '../components/DataState';
 import { ModernCard, StatusPill } from '../components/ModernCard';
@@ -15,6 +15,7 @@ import {
   getTrainingAdoptionSupportEvidenceReadiness,
   getProductionEvidenceClosureData,
   getReviewerDecisionReadiness,
+  recordExecutiveProductionSignoff,
   type EvidenceClosureStatus,
   type ProductionEvidenceClosureItem,
 } from '../lib/productionEvidenceClosureApi';
@@ -71,8 +72,11 @@ function itemSortScore(item: ProductionEvidenceClosureItem) {
 }
 
 export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: PageKey) => void }) {
-  const closure = useAsyncData(getProductionEvidenceClosureData, []);
+  const closure = useAsyncData(getProductionEvidenceClosureData);
   const data = closure.data;
+  const [signoffNotes, setSignoffNotes] = useState('');
+  const [isSigningOff, setIsSigningOff] = useState(false);
+  const [signoffError, setSignoffError] = useState('');
   const items = [...(data?.intakeQueue ?? [])].sort((a, b) => itemSortScore(a) - itemSortScore(b));
   const selectedItem = items[0];
   const selectedHandoff = getEvidenceClosureHandoff(selectedItem);
@@ -395,6 +399,61 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <strong>Training evidence: </strong>{executiveAdoptionImpact}<br />
               <strong>Decision caveat: </strong>{executiveRecommendation.caveat}
             </div>
+
+            {executiveRecommendation.currentSignoffState === 'Approved' ? (
+              <div className="alert alert-success" style={{ marginTop: '14px', border: '1px solid #c3e6cb', backgroundColor: '#d4edda', color: '#155724' }}>
+                <ShieldAlert size={16} />
+                <strong>Production Launch Authorized: </strong> Executive signoff has been formally recorded. The system is permanently authorized for live operations.
+              </div>
+            ) : executiveRecommendation.recommendationState === 'Ready for executive review' && executiveRecommendation.blockingIssuesCount === 0 ? (
+              <div style={{ marginTop: '20px', padding: '16px', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: 'var(--surface-color)' }}>
+                <h3 style={{ margin: '0 0 12px 0', color: 'var(--text-color)' }}>Executive Signoff Gateway</h3>
+                <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--text-muted)' }}>
+                  All blocking issues have been resolved and required evidence is recorded. Please provide your final authorization notes below to permanently lock the evidence ledger and approve the hospital-wide production launch.
+                </p>
+                {signoffError && (
+                  <div className="alert alert-danger" style={{ marginBottom: '16px' }}>{signoffError}</div>
+                )}
+                <textarea
+                  style={{ width: '100%', minHeight: '80px', marginBottom: '16px', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                  placeholder="Enter executive authorization notes..."
+                  value={signoffNotes}
+                  onChange={(e) => setSignoffNotes(e.target.value)}
+                  disabled={isSigningOff}
+                />
+                <button
+                  style={{
+                    backgroundColor: 'var(--primary-color)',
+                    color: 'white',
+                    padding: '10px 20px',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontWeight: 600,
+                    cursor: isSigningOff ? 'not-allowed' : 'pointer',
+                    opacity: isSigningOff ? 0.7 : 1,
+                  }}
+                  disabled={isSigningOff}
+                  onClick={async () => {
+                    if (!signoffNotes.trim()) {
+                      setSignoffError('Authorization notes are required for executive signoff.');
+                      return;
+                    }
+                    setSignoffError('');
+                    setIsSigningOff(true);
+                    try {
+                      await recordExecutiveProductionSignoff('approved', signoffNotes);
+                      await closure.refresh();
+                    } catch (e: any) {
+                      setSignoffError(e.message || 'Failed to record executive signoff.');
+                    } finally {
+                      setIsSigningOff(false);
+                    }
+                  }}
+                >
+                  {isSigningOff ? 'Authorizing...' : 'Authorize Production Launch'}
+                </button>
+              </div>
+            ) : null}
           </ModernCard>
 
           <ModernCard title="Links" subtitle="Continue closure work in the existing readiness workspaces.">

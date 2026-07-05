@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-02T16:30:05.672Z",
+  "generated_at": "2026-07-05T13:10:20.692Z",
   "environment": "Local Supabase Docker staging",
   "synthetic_data_only": true,
   "no_real_patient_identifiers": true,
@@ -41,7 +41,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "8a7080be-f70e-4448-83cc-70e1ba5ba340",
+      "actual": "36e47fe7-a2dc-4205-9ed4-f4b093f8bc88",
       "details": null
     },
     {
@@ -61,7 +61,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "1ee60eae-9009-4607-b6c4-eb14708c923b",
+      "actual": "58f2810f-1c73-4ae0-bcbd-618c33bf522e",
       "details": null
     },
     {
@@ -81,7 +81,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "9bbce9b4-6adc-43d7-94c9-c494c57237bf",
+      "actual": "0782aef6-c807-48a5-be6e-86fbb47a5781",
       "details": null
     },
     {
@@ -101,7 +101,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "cb08d717-2537-40e7-9f7e-651aeb59615b",
+      "actual": "f4adcda9-c3d5-4a5a-b53a-f00eb683ed3c",
       "details": null
     },
     {
@@ -121,7 +121,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "d610410b-b501-4939-a733-3a42b900b5ac",
+      "actual": "e55f4a06-0091-433d-8f52-617a334fa96d",
       "details": null
     },
     {
@@ -141,7 +141,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "985b8c38-c869-49cf-aaf5-7db43aba8c23",
+      "actual": "44261724-1c60-4de9-bfab-17e8f54aef01",
       "details": null
     },
     {
@@ -161,7 +161,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "d67d3870-85c1-4ca2-8311-4945bc0476a4",
+      "actual": "b394f932-023f-4168-abb1-a4b1d1b72b46",
       "details": null
     },
     {
@@ -181,7 +181,7 @@
       ],
       "passed": true,
       "expected": "valid Supabase authenticated session",
-      "actual": "093587b8-7dde-44ed-9fee-814f171dad75",
+      "actual": "ed2c8744-bc61-49a9-bdb3-c17d7cc8f332",
       "details": null
     },
     {
@@ -275,7 +275,7 @@
           "ok": true,
           "action": "assign_user_role",
           "result": {
-            "id": "1e68dc31-ac52-42c0-a957-ce0200534c5d"
+            "id": "102b0808-17f7-464a-ab1f-90a0f73a2516"
           }
         },
         "admin_deactivate": {
@@ -326,7 +326,7 @@
           "ok": true,
           "action": "create_board_pack_snapshot",
           "result": {
-            "id": "b89790d7-e821-49c2-962d-9af267cdeed7"
+            "id": "94f89b3d-f1a4-43bf-833d-e30f5e72c194"
           }
         },
         "acknowledge_escalation_event": {
@@ -347,7 +347,7 @@
           "ok": true,
           "action": "assign_user_role",
           "result": {
-            "id": "1e68dc31-ac52-42c0-a957-ce0200534c5d"
+            "id": "102b0808-17f7-464a-ab1f-90a0f73a2516"
           }
         },
         "deactivate_user_role": {
@@ -361,12 +361,12 @@
           "ok": true,
           "action": "update_ovr_workflow",
           "result": {
-            "id": "0bd3c7db-b384-4f40-a2eb-28af61ed96fc",
+            "id": "0ac53240-186c-4eee-8a3b-497d6a707db1",
             "status": "manager_review",
             "closed_at": null,
             "final_verdict": null,
             "reporter_response": null,
-            "supervisor_due_date": "2026-07-03",
+            "supervisor_due_date": "2026-07-06",
             "quality_validated_at": null,
             "cross_department_notified_at": null
           }
@@ -375,7 +375,7 @@
           "ok": true,
           "action": "create_ovr_corrective_action_project",
           "result": {
-            "id": "df05883d-91bc-4b97-a4be-949a3c816c23"
+            "id": "c717d9e6-07e3-40e6-ae89-1e61183732d5"
           }
         },
         "unauthorized_assign_user_role": "V72_ROLE_ADMIN_NOT_AUTHORIZED"

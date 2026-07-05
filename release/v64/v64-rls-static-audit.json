@@ -1,14 +1,14 @@
 {
   "summary": {
-    "generated_at": "2026-07-02T16:29:43.868Z",
-    "migration_files_scanned": 87,
-    "created_tables_detected": 472,
-    "tables_with_explicit_rls": 412,
-    "tables_with_detected_policies": 380,
-    "findings_total": 60,
+    "generated_at": "2026-07-05T13:09:59.603Z",
+    "migration_files_scanned": 112,
+    "created_tables_detected": 582,
+    "tables_with_explicit_rls": 526,
+    "tables_with_detected_policies": 495,
+    "findings_total": 61,
     "critical": 0,
     "high": 0,
-    "medium": 60,
+    "medium": 61,
     "strict_passed": true,
     "note": "Static audit only. Final proof requires applying migrations to staging and running supabase/tests/v64_persona_security_tests.sql."
   },
@@ -116,6 +116,13 @@
       "code": "RLS_NOT_ENABLED",
       "table": "i18n_translation_coverage_items",
       "created_in": "supabase/migrations/034_v46_ovr_bilingual_rtl_production_hardening.sql",
+      "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
+    },
+    {
+      "severity": "medium",
+      "code": "RLS_NOT_ENABLED",
+      "table": "if",
+      "created_in": "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
       "message": "Table is created in migrations but no explicit ALTER TABLE ... ENABLE ROW LEVEL SECURITY was found."
     },
     {
@@ -521,6 +528,31 @@
     "supabase/migrations/085_patch23_evidence_bridge_governance.sql",
     "supabase/migrations/086_patch24_audit_findings_workflow_hardening.sql",
     "supabase/migrations/087_patch25_compliance_obligation_calendar.sql",
-    "supabase/migrations/088_platform_security_definer_post_patch_lockdown.sql"
+    "supabase/migrations/088_platform_security_definer_post_patch_lockdown.sql",
+    "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+    "supabase/migrations/090_patch27_approval_authority_matrix.sql",
+    "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
+    "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+    "supabase/migrations/093_patch30_executive_dashboard_truth_layer.sql",
+    "supabase/migrations/094_patch31_runtime_rpc_classification_signoff.sql",
+    "supabase/migrations/095_patch32_accreditation_traceability_matrix.sql",
+    "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
+    "supabase/migrations/097_patch35_accreditation_clause_owner_workflow.sql",
+    "supabase/migrations/098_patch37_audit_ovr_clinical_governance_engine.sql",
+    "supabase/migrations/099_patch38_unified_work_queue_hospital_master_data.sql",
+    "supabase/migrations/100_patch39_hospital_quality_infection_governance_pack.sql",
+    "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+    "supabase/migrations/102_patch42_unified_operations_spine.sql",
+    "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql",
+    "supabase/migrations/104_patch44_production_ux_readiness_pilot_hardening.sql",
+    "supabase/migrations/105_patch45_runtime_action_authorization_review.sql",
+    "supabase/migrations/106_patch46_runtime_access_review_signoff_closure.sql",
+    "supabase/migrations/107_patch47_staging_migration_persona_evidence_closure.sql",
+    "supabase/migrations/108_patch49_controlled_pilot_activation_department_signoff.sql",
+    "supabase/migrations/109_patch50_real_pilot_master_data_onboarding.sql",
+    "supabase/migrations/110_patch51_live_pilot_workflow_execution_evidence.sql",
+    "supabase/migrations/111_patch52_pilot_closure_remediation_golive_decision.sql",
+    "supabase/migrations/112_patch53_golive_hypercare_operating_cadence.sql",
+    "supabase/migrations/113_patch55_hospital_operations_readiness_pack.sql"
   ]
 }
