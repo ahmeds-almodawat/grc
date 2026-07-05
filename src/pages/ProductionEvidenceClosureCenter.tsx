@@ -7,6 +7,7 @@ import type { PageKey } from '../components/Layout';
 import {
   getEvidenceClosureHandoff,
   getEvidenceOwnershipDueDateReadiness,
+  getExecutiveClosureRecommendation,
   getProductionEvidenceClosureData,
   getReviewerDecisionReadiness,
   type EvidenceClosureStatus,
@@ -77,6 +78,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
   const reviewerMissingCount = ownershipStates.filter(item => item.reviewerState === 'Reviewer missing').length;
   const dueDateMissingCount = ownershipStates.filter(item => item.dueDateState === 'Due date missing').length;
   const escalationReadyCount = ownershipStates.filter(item => item.escalationReadinessState === 'Escalation may be required.').length;
+  const executiveRecommendation = getExecutiveClosureRecommendation(data ?? undefined, { ownerMissingCount, reviewerMissingCount });
 
   return (
     <section className="page-section production-readiness-page">
@@ -275,11 +277,20 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <MetricTile label="Department readiness gaps" value={data?.executivePack.departmentReadinessGaps ?? 0} tone={(data?.executivePack.departmentReadinessGaps ?? 0) ? 'warning' : 'good'} />
               <MetricTile label="Final recommendation" value={data?.executivePack.finalRecommendationState ?? reviewRequired} tone={statusTone(data?.executivePack.finalRecommendationState)} />
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '12px', marginTop: '14px' }}>
+              <MetricTile label="Executive recommendation" value={executiveRecommendation.recommendationState} tone={statusTone(executiveRecommendation.recommendationState)} />
+              <MetricTile label="Blocking issues" value={executiveRecommendation.blockingIssuesCount} tone={executiveRecommendation.blockingIssuesCount ? 'danger' : 'good'} />
+              <MetricTile label="Evidence required" value={executiveRecommendation.evidenceRequiredCount} tone={executiveRecommendation.evidenceRequiredCount ? 'warning' : 'good'} />
+              <MetricTile label="Review required" value={executiveRecommendation.reviewRequiredCount} tone={executiveRecommendation.reviewRequiredCount ? 'warning' : 'good'} />
+              <MetricTile label="Overdue evidence" value={executiveRecommendation.overdueEvidenceCount} tone={executiveRecommendation.overdueEvidenceCount ? 'danger' : 'good'} />
+            </div>
             <div className="alert alert-info" style={{ marginTop: '14px' }}>
               <ShieldAlert size={16} />
-              {data?.executivePack.finalRecommendationState === 'Ready for executive review'
-                ? 'Ready for executive review'
-                : data?.executivePack.finalRecommendationState ?? reviewRequired}
+              <strong>Executive recommendation state: </strong>{executiveRecommendation.recommendationState}<br />
+              <strong>Reason for recommendation: </strong>{executiveRecommendation.recommendationReason}<br />
+              <strong>Missing owner/reviewer warning: </strong>{executiveRecommendation.missingAssignmentCount ? `${executiveRecommendation.missingAssignmentCount} assignment warnings require follow-up.` : noBlocker}<br />
+              <strong>Required executive actions: </strong>{executiveRecommendation.requiredExecutiveActions.join(' ')}<br />
+              <strong>Decision caveat: </strong>{executiveRecommendation.caveat}
             </div>
           </ModernCard>
 

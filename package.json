@@ -301,6 +301,8 @@
     "patch60:all": "npm run validate:build && npm run patch60:proof",
     "patch61:proof": "node scripts/patch61-evidence-ownership-due-date-readiness-proof.mjs",
     "patch61:all": "npm run validate:build && npm run patch61:proof",
+    "patch62:proof": "node scripts/patch62-executive-closure-recommendation-readiness-proof.mjs",
+    "patch62:all": "npm run validate:build && npm run patch62:proof",
     "validate:fast": "npm run typecheck && npm run patch58:proof && npm run patch58-1:proof && npm run patch58-2:proof",
     "validate:build": "npm run typecheck && npm run build",
     "validate:proof": "npm run proof:all",

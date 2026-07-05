@@ -83,6 +83,18 @@ export interface EvidenceOwnershipDueDateReadiness {
   missingWarnings: string[];
 }
 
+export interface ExecutiveClosureRecommendationReadiness {
+  recommendationState: EvidenceClosureRecommendation;
+  recommendationReason: string;
+  blockingIssuesCount: number;
+  evidenceRequiredCount: number;
+  reviewRequiredCount: number;
+  overdueEvidenceCount: number;
+  missingAssignmentCount: number;
+  requiredExecutiveActions: string[];
+  caveat: string;
+}
+
 export interface DepartmentEvidenceRegisterRow {
   department: string;
   launchReadiness: string;
@@ -290,6 +302,75 @@ export function getEvidenceOwnershipDueDateReadiness(item?: ProductionEvidenceCl
         ? 'Owner action required.'
         : ownership.nextAccountableParty,
     missingWarnings,
+  };
+}
+
+export function getExecutiveClosureBlockers(data?: ProductionEvidenceClosureData, signals?: { ownerMissingCount?: number; reviewerMissingCount?: number }) {
+  const pack = data?.executivePack;
+  const overview = data?.overview;
+  const blockingIssuesCount = numberValue(pack?.unresolvedBlockers) + numberValue(overview?.blocked);
+  const recoveryEvidenceMissing = String(pack?.recoveryEvidenceState ?? '').trim() === evidenceMissing;
+  const evidenceRequiredCount = numberValue(overview?.evidenceRequired)
+    + numberValue(pack?.departmentReadinessGaps)
+    + (recoveryEvidenceMissing ? 1 : 0);
+  const reviewRequiredCount = numberValue(overview?.underReview)
+    + numberValue(overview?.openGaps)
+    + numberValue(pack?.missingSignoffs)
+    + numberValue(pack?.acceptedLimitationsRequiringReview);
+  const overdueEvidenceCount = numberValue(overview?.overdue);
+  const missingAssignmentCount = numberValue(signals?.ownerMissingCount) + numberValue(signals?.reviewerMissingCount);
+
+  return {
+    blockingIssuesCount,
+    evidenceRequiredCount,
+    reviewRequiredCount,
+    overdueEvidenceCount,
+    missingAssignmentCount,
+  };
+}
+
+export function getExecutiveClosureReadinessReason(blockers: ReturnType<typeof getExecutiveClosureBlockers>) {
+  if (blockers.blockingIssuesCount > 0) return 'Blocking issues must be resolved or formally accepted before executive review.';
+  if (blockers.evidenceRequiredCount > 0) return 'Recorded evidence is required before closure.';
+  if (blockers.overdueEvidenceCount > 0) return 'Overdue evidence requires owner follow-up before executive review.';
+  if (blockers.missingAssignmentCount > 0) return 'Missing owner or reviewer assignments require follow-up before executive review.';
+  if (blockers.reviewRequiredCount > 0) return 'Reviewer decisions, limitations, or executive signoffs remain open.';
+  return 'Recorded evidence and source workflow status support executive review.';
+}
+
+export function getExecutiveRequiredActions(data?: ProductionEvidenceClosureData, signals?: { ownerMissingCount?: number; reviewerMissingCount?: number }) {
+  const pack = data?.executivePack;
+  const blockers = getExecutiveClosureBlockers(data, signals);
+  const actions = [
+    blockers.blockingIssuesCount > 0 ? 'Resolve blockers or record accepted limitations in the source workflow.' : '',
+    blockers.evidenceRequiredCount > 0 ? 'Recorded evidence is required before closure.' : '',
+    blockers.overdueEvidenceCount > 0 ? 'Assign overdue evidence follow-up.' : '',
+    blockers.missingAssignmentCount > 0 ? 'Assign missing owners and reviewers.' : '',
+    numberValue(pack?.missingSignoffs) > 0 ? 'Executive signoff required.' : '',
+    numberValue(pack?.acceptedLimitationsRequiringReview) > 0 ? 'Open limitations require executive review.' : '',
+    'Closure depends on source workflow status.',
+  ].filter(Boolean);
+
+  return actions.length ? actions : ['Ready for executive review.'];
+}
+
+export function getExecutiveClosureRecommendation(data?: ProductionEvidenceClosureData, signals?: { ownerMissingCount?: number; reviewerMissingCount?: number }): ExecutiveClosureRecommendationReadiness {
+  const blockers = getExecutiveClosureBlockers(data, signals);
+  const hasNoEvidenceItems = !data || numberValue(data.overview.totalEvidenceGaps) === 0;
+  const recommendationState: EvidenceClosureRecommendation = blockers.blockingIssuesCount > 0
+    ? 'Blocked'
+    : hasNoEvidenceItems || blockers.evidenceRequiredCount > 0
+      ? 'Evidence required'
+      : blockers.overdueEvidenceCount > 0 || blockers.missingAssignmentCount > 0 || blockers.reviewRequiredCount > 0
+        ? 'Review required'
+        : 'Ready for executive review';
+
+  return {
+    recommendationState,
+    recommendationReason: getExecutiveClosureReadinessReason(blockers),
+    ...blockers,
+    requiredExecutiveActions: getExecutiveRequiredActions(data, signals),
+    caveat: 'Executive review depends on recorded evidence and source workflow status.',
   };
 }
 
