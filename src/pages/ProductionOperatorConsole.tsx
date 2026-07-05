@@ -80,9 +80,9 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
               <FileCheck2 size={16} />
               Evidence, UAT, security readiness
             </button>
-            <button className="secondary-action" type="button" onClick={() => setPage('productionReadiness')}>
+            <button className="secondary-action" type="button" aria-label="Open controlled production authority and controlled cutover decision gate in Production Readiness" onClick={() => setPage('productionReadiness')}>
               <ExternalLink size={16} />
-              Open detailed readiness
+              Controlled cutover decision
             </button>
           </div>
         ) : null}

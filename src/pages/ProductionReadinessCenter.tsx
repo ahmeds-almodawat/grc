@@ -56,7 +56,12 @@ import {
   getHospitalAdoptionReadinessReviews,
   getProofSuiteReadinessSummary,
   getControlledPilotReadinessSummary,
-  getExecutiveProductionReadinessSummary
+  getExecutiveProductionReadinessSummary,
+  getControlledProductionCutoverDecisions,
+  getControlledProductionCutoverDecisionEvents,
+  getControlledCutoverGateSummary,
+  createControlledProductionCutoverDecision,
+  type ControlledProductionCutoverDecisionState
 } from '../lib/productionReadinessApi';
 import { ShieldCheck, BarChart3, AlertTriangle, FileCheck, RefreshCw, Smartphone, Award, ClipboardList, Database, Languages } from 'lucide-react';
 
@@ -64,6 +69,9 @@ export function ProductionReadinessCenter() {
   const auth = useAuth();
   const { language } = useI18n();
   const [activeTab, setActiveTab] = useState<'status' | 'limitations' | 'operations' | 'rpc_nav'>('status');
+  const [cutoverRationale, setCutoverRationale] = useState('');
+  const [cutoverMessage, setCutoverMessage] = useState<string | null>(null);
+  const [cutoverBusy, setCutoverBusy] = useState(false);
 
   // Load Data
   const signoffs = useAsyncData(getProductionReadinessSignoffRegister, []);
@@ -118,6 +126,8 @@ export function ProductionReadinessCenter() {
   const proofSummary = useAsyncData(getProofSuiteReadinessSummary, []);
   const pilotSummary = useAsyncData(getControlledPilotReadinessSummary, []);
   const execSummary = useAsyncData(getExecutiveProductionReadinessSummary, []);
+  const cutoverDecisions = useAsyncData(getControlledProductionCutoverDecisions, []);
+  const cutoverEvents = useAsyncData(() => getControlledProductionCutoverDecisionEvents(), []);
 
   // Bilingual dictionary
   const text = language === 'ar' ? ar : en;
@@ -306,6 +316,68 @@ export function ProductionReadinessCenter() {
     hospital_operations_readiness_status: 'evidence_required',
     next_action_required: '-'
   };
+
+  const currentCutoverCriticalBlockers =
+    Number(pilotClosureData.blocked_or_deferred_closures ?? 0)
+    + Number(pilotClosureData.failed_or_blocked_workflows ?? 0)
+    + Number(pilotClosureData.open_high_critical_live_issues ?? 0)
+    + Number(livePilotExecutionData.workflow_blocker_count ?? 0)
+    + Number(hospitalOperationsData.department_launch_blocker_count ?? 0);
+  const currentCutoverLimitations =
+    Number(pilotClosureData.accepted_limitations ?? 0)
+    + Number(hospitalOperationsData.ready_with_limitations_departments ?? 0);
+  const currentLimitationsReviewed =
+    currentCutoverLimitations > 0
+    && Number(pilotClosureData.pending_limitation_reviews ?? 0) === 0;
+  const currentCutoverChecklistComplete =
+    currentCutoverCriticalBlockers === 0
+    && Number(pilotClosureData.missing_golive_decisions ?? 0) === 0
+    && Number(livePilotExecutionData.missing_evidence_count ?? 0) === 0
+    && Number(hospitalOperationsData.incomplete_launch_checklist_items ?? 0) === 0;
+  const cutoverGateSummary = getControlledCutoverGateSummary(cutoverDecisions.data || []);
+  const approvedGateAvailable = currentCutoverCriticalBlockers === 0 && currentCutoverChecklistComplete;
+  const limitationGateAvailable = approvedGateAvailable && currentCutoverLimitations > 0 && currentLimitationsReviewed;
+
+  async function recordCutoverDecision(decisionState: ControlledProductionCutoverDecisionState) {
+    setCutoverBusy(true);
+    setCutoverMessage(null);
+    try {
+      const title = decisionState === 'approved_for_controlled_pilot_cutover'
+        ? 'Approved for controlled pilot cutover'
+        : decisionState === 'approved_with_limitations'
+          ? 'Approved with limitations'
+          : decisionState === 'blocked'
+            ? 'Blocked'
+            : decisionState === 'deferred'
+              ? 'Deferred'
+              : 'Executive review required';
+      const result = await createControlledProductionCutoverDecision({
+        decision_state: decisionState,
+        decision_title: title,
+        decision_summary: `${title}. This decision record does not automatically launch the system.`,
+        critical_blockers_count: currentCutoverCriticalBlockers,
+        limitations_count: currentCutoverLimitations,
+        limitations_reviewed: currentLimitationsReviewed,
+        cutover_checklist_complete: currentCutoverChecklistComplete,
+        evidence_gate_snapshot: {
+          critical_blockers_count: currentCutoverCriticalBlockers,
+          limitations_count: currentCutoverLimitations,
+          limitations_reviewed: currentLimitationsReviewed,
+          cutover_checklist_complete: currentCutoverChecklistComplete,
+          pilot_closure_status: pilotClosureData.production_golive_readiness_status,
+          hospital_operations_status: hospitalOperationsData.hospital_operations_readiness_status,
+        },
+        decision_rationale: cutoverRationale || 'Executive review required before controlled cutover decision can be closed.',
+      });
+      setCutoverMessage(result.message);
+      setCutoverRationale('');
+      await Promise.all([cutoverDecisions.refresh(), cutoverEvents.refresh()]);
+    } catch (error) {
+      setCutoverMessage(error instanceof Error ? error.message : 'Controlled cutover decision could not be recorded.');
+    } finally {
+      setCutoverBusy(false);
+    }
+  }
 
   const bilingualSummary = bilingual.data || {
     total_items: 0,
@@ -1028,6 +1100,90 @@ export function ProductionReadinessCenter() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.controlledProductionAuthorityTitle} subtitle={text.controlledProductionAuthoritySubtitle}>
+                <DataState loading={cutoverDecisions.loading || cutoverEvents.loading} error={cutoverDecisions.error || cutoverEvents.error} empty={false}>
+                  <div className="alert alert-warning">
+                    <strong>{text.controlledProductionAuthority}: </strong>{text.controlledCutoverDecision}<br />
+                    <strong>{text.caveat}: </strong>This decision record does not automatically launch the system.<br />
+                    <strong>{text.caveat}: </strong>Live transition requires separate operational execution.
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '14px', marginBottom: '18px' }}>
+                    <div className="stat-card">
+                      <div className="stat-value">
+                        <StatusPill tone={
+                          cutoverGateSummary.current_state === 'approved_for_controlled_pilot_cutover' ? 'good' :
+                          cutoverGateSummary.current_state === 'approved_with_limitations' ? 'warning' :
+                          cutoverGateSummary.current_state === 'blocked' ? 'danger' : 'neutral'
+                        }>
+                          {cutoverGateSummary.current_state}
+                        </StatusPill>
+                      </div>
+                      <div className="stat-label">{text.controlledCutoverDecision}</div>
+                    </div>
+                    <div className="stat-card danger"><div className="stat-value">{currentCutoverCriticalBlockers}</div><div className="stat-label">{text.criticalBlockers}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{currentCutoverLimitations}</div><div className="stat-label">{text.limitations}</div></div>
+                    <div className="stat-card"><div className="stat-value">{currentLimitationsReviewed ? text.yes : text.no}</div><div className="stat-label">{text.limitationsReviewed}</div></div>
+                    <div className="stat-card"><div className="stat-value">{currentCutoverChecklistComplete ? text.yes : text.no}</div><div className="stat-label">{text.cutoverChecklistComplete}</div></div>
+                  </div>
+                  <div className="alert alert-info">
+                    <strong>{text.requiredActionsBeforeControlledCutover}: </strong>{cutoverGateSummary.required_actions.join(' ')}<br />
+                    <strong>{text.evidenceGateSnapshot}: </strong>
+                    {currentCutoverCriticalBlockers > 0 ? 'Critical blockers prevent approval. ' : ''}
+                    {currentCutoverLimitations > 0 && !currentLimitationsReviewed ? 'Limitation review required. ' : ''}
+                    {!currentCutoverChecklistComplete ? 'Cutover checklist incomplete.' : 'Checklist gate is ready for review.'}
+                  </div>
+                  <label style={{ display: 'grid', gap: '6px', marginBottom: '12px' }}>
+                    <span style={{ fontWeight: 700 }}>{text.decisionRationale}</span>
+                    <textarea
+                      className="text-input"
+                      value={cutoverRationale}
+                      onChange={event => setCutoverRationale(event.target.value)}
+                      rows={3}
+                      placeholder={text.decisionRationalePlaceholder}
+                    />
+                  </label>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
+                    <button className="secondary-action" type="button" disabled={cutoverBusy} onClick={() => void recordCutoverDecision('executive_review_required')}>
+                      {text.recordExecutiveReviewRequired}
+                    </button>
+                    <button className="secondary-action" type="button" disabled={cutoverBusy} onClick={() => void recordCutoverDecision('blocked')}>
+                      {text.recordBlockedDecision}
+                    </button>
+                    <button className="secondary-action" type="button" disabled={cutoverBusy} onClick={() => void recordCutoverDecision('deferred')}>
+                      {text.recordDeferredDecision}
+                    </button>
+                    <button className="secondary-action" type="button" disabled={cutoverBusy || !approvedGateAvailable} onClick={() => void recordCutoverDecision('approved_for_controlled_pilot_cutover')}>
+                      {text.recordApprovedControlledPilotCutover}
+                    </button>
+                    <button className="secondary-action" type="button" disabled={cutoverBusy || !limitationGateAvailable} onClick={() => void recordCutoverDecision('approved_with_limitations')}>
+                      {text.recordApprovedWithLimitations}
+                    </button>
+                  </div>
+                  {cutoverMessage ? <div className="alert alert-info">{cutoverMessage}</div> : null}
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead><tr><th>{text.review}</th><th>{text.status}</th><th>{text.notes}</th><th>{text.decidedAt}</th></tr></thead>
+                      <tbody>
+                        {(cutoverDecisions.data || []).slice(0, 10).map((row: any) => (
+                          <tr key={row.id}>
+                            <td><strong>{row.decision_title}</strong></td>
+                            <td><StatusPill tone={row.decision_state === 'approved_for_controlled_pilot_cutover' ? 'good' : row.decision_state === 'approved_with_limitations' ? 'warning' : row.decision_state === 'blocked' ? 'danger' : 'neutral'}>{row.decision_state}</StatusPill></td>
+                            <td>{row.decision_summary || row.decision_rationale}</td>
+                            <td>{row.decided_at ? new Date(row.decided_at).toLocaleString() : '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="alert alert-info" style={{ marginTop: '14px' }}>
+                    <strong>{text.decisionHistory}: </strong>
+                    {(cutoverEvents.data || []).length
+                      ? (cutoverEvents.data || []).slice(0, 5).map((event: any) => event.event_summary).join(' ')
+                      : text.noDecisionHistory}
                   </div>
                 </DataState>
               </ModernCard>
@@ -1992,6 +2148,27 @@ const en = {
   expires: 'Expires',
   goLiveDecisionTitle: 'Production Go-Live Decision Register',
   goLiveDecisionSubtitle: 'Quality, Audit, IT/Admin, executive, and board-level launch decisions with evidence and conditions.',
+  controlledProductionAuthorityTitle: 'Controlled Production Authority',
+  controlledProductionAuthoritySubtitle: 'Controlled cutover decision record with executive review, blocker checks, limitation review, and checklist gates.',
+  controlledProductionAuthority: 'Controlled production authority',
+  controlledCutoverDecision: 'Controlled cutover decision',
+  criticalBlockers: 'Critical blockers',
+  limitations: 'Limitations',
+  limitationsReviewed: 'Limitations reviewed',
+  cutoverChecklistComplete: 'Cutover checklist complete',
+  requiredActionsBeforeControlledCutover: 'Required actions before controlled cutover decision',
+  evidenceGateSnapshot: 'Evidence gate snapshot',
+  decisionRationale: 'Decision rationale',
+  decisionRationalePlaceholder: 'Record the rationale for this controlled decision.',
+  recordExecutiveReviewRequired: 'Record executive review required decision',
+  recordBlockedDecision: 'Record blocked decision',
+  recordDeferredDecision: 'Record deferred decision',
+  recordApprovedControlledPilotCutover: 'Record approved for controlled pilot cutover decision',
+  recordApprovedWithLimitations: 'Record approved with limitations',
+  decisionHistory: 'Decision history',
+  noDecisionHistory: 'No decision history has been recorded.',
+  decidedAt: 'Decided at',
+  caveat: 'Caveat',
   level: 'Level',
   hypercareTitle: 'Production Hypercare & Operating Cadence',
   hypercareSubtitle: 'First 30/60/90 day operating rhythm for stability, issue triage, department feedback, adoption, and executive escalation.',
@@ -2263,6 +2440,27 @@ const ar = {
   expires: 'ينتهي',
   goLiveDecisionTitle: 'سجل قرارات الإطلاق الإنتاجي',
   goLiveDecisionSubtitle: 'قرارات الجودة والتدقيق وتقنية المعلومات والإدارة التنفيذية والمجلس مع الأدلة والاشتراطات.',
+  controlledProductionAuthorityTitle: 'صلاحية القرار الإنتاجي المنضبط',
+  controlledProductionAuthoritySubtitle: 'سجل قرار التحويل المنضبط مع المراجعة التنفيذية، وفحوصات المعوقات، ومراجعة المحددات، وبوابات قائمة التحقق.',
+  controlledProductionAuthority: 'صلاحية القرار الإنتاجي المنضبط',
+  controlledCutoverDecision: 'قرار التحويل المنضبط',
+  criticalBlockers: 'معوقات حرجة',
+  limitations: 'محددات',
+  limitationsReviewed: 'تمت مراجعة المحددات',
+  cutoverChecklistComplete: 'قائمة التحويل مكتملة',
+  requiredActionsBeforeControlledCutover: 'الإجراءات المطلوبة قبل قرار التحويل المنضبط',
+  evidenceGateSnapshot: 'ملخص بوابة الأدلة',
+  decisionRationale: 'مبرر القرار',
+  decisionRationalePlaceholder: 'سجل مبرر هذا القرار المنضبط.',
+  recordExecutiveReviewRequired: 'تسجيل قرار يتطلب مراجعة تنفيذية',
+  recordBlockedDecision: 'تسجيل قرار معطل',
+  recordDeferredDecision: 'تسجيل قرار مؤجل',
+  recordApprovedControlledPilotCutover: 'تسجيل قرار موافق عليه للتحويل التجريبي المنضبط',
+  recordApprovedWithLimitations: 'تسجيل قرار موافق عليه مع محددات',
+  decisionHistory: 'سجل القرار',
+  noDecisionHistory: 'لم يتم تسجيل سجل قرار بعد.',
+  decidedAt: 'تاريخ القرار',
+  caveat: 'تنبيه',
   level: 'المستوى',
   hypercareTitle: 'دعم ما بعد الإطلاق وإيقاع التشغيل',
   hypercareSubtitle: 'إيقاع أول 30/60/90 يوم لمتابعة الاستقرار، وفرز المشكلات، وملاحظات الأقسام، والتبني، والتصعيد التنفيذي.',

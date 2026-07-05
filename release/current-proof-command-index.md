@@ -204,6 +204,12 @@ Patch 74 adds final security and access review readiness proof:
 npm run patch74:proof
 ```
 
+Patch 76 adds controlled production authority and cutover gate proof:
+
+```powershell
+npm run patch76:proof
+```
+
 ## G. Generated Release Artifacts
 
 Many proof commands regenerate JSON and text evidence under `release/v*` and older `release/patch*` folders. That churn is expected after validation.

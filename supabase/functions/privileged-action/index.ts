@@ -63,6 +63,11 @@ const patch68EvidenceClosureActions = new Set([
   'get_production_evidence_closure_action_history',
 ]);
 
+const patch76CutoverDecisionActions = new Set([
+  'create_controlled_production_cutover_decision',
+  'record_controlled_production_cutover_decision_event',
+]);
+
 const allowedActions = new Set([
   'list_user_management_roster',
   'create_board_pack_snapshot',
@@ -89,6 +94,7 @@ const allowedActions = new Set([
   ...patch23EvidenceActions,
   ...patch24AuditActions,
   ...patch68EvidenceClosureActions,
+  ...patch76CutoverDecisionActions,
 ]);
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
@@ -495,6 +501,45 @@ Deno.serve(async (request) => {
     if (error) {
       const authorizationFailure =
         /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|ORGANIZATION|ROLE|REASON|BLOCKER|AUTHORIZED/i
+          .test(error.message);
+      return jsonResponse({
+        ok: false,
+        error: error.message,
+        code: error.code,
+        action,
+      }, authorizationFailure ? 403 : 409);
+    }
+
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (patch76CutoverDecisionActions.has(action)) {
+    const rpcName = action;
+    const rpcArgs = action === 'create_controlled_production_cutover_decision'
+      ? {
+          p_actor_id: userData.user.id,
+          p_decision_state: requestBody.payload?.decision_state,
+          p_decision_title: requestBody.payload?.decision_title,
+          p_decision_summary: requestBody.payload?.decision_summary ?? null,
+          p_critical_blockers_count: requestBody.payload?.critical_blockers_count ?? 0,
+          p_limitations_count: requestBody.payload?.limitations_count ?? 0,
+          p_limitations_reviewed: Boolean(requestBody.payload?.limitations_reviewed),
+          p_cutover_checklist_complete: Boolean(requestBody.payload?.cutover_checklist_complete),
+          p_evidence_gate_snapshot: requestBody.payload?.evidence_gate_snapshot ?? {},
+          p_decision_rationale: requestBody.payload?.decision_rationale,
+        }
+      : {
+          p_actor_id: userData.user.id,
+          p_decision_id: requestBody.payload?.decision_id,
+          p_event_type: requestBody.payload?.event_type,
+          p_event_summary: requestBody.payload?.event_summary,
+          p_event_payload: requestBody.payload?.event_payload ?? {},
+        };
+    const { data, error } = await serviceClient.rpc(rpcName, rpcArgs);
+
+    if (error) {
+      const authorizationFailure =
+        /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|ORGANIZATION|ROLE|AUTHORIZED|BLOCKERS|CHECKLIST|LIMITATION|RATIONALE/i
           .test(error.message);
       return jsonResponse({
         ok: false,
