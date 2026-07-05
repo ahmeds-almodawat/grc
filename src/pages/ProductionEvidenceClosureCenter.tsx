@@ -6,6 +6,7 @@ import { useAsyncData } from '../hooks/useAsyncData';
 import type { PageKey } from '../components/Layout';
 import {
   getEvidenceClosureHandoff,
+  getEvidenceOwnershipDueDateReadiness,
   getProductionEvidenceClosureData,
   getReviewerDecisionReadiness,
   type EvidenceClosureStatus,
@@ -70,6 +71,12 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
   const selectedItem = items[0];
   const selectedHandoff = getEvidenceClosureHandoff(selectedItem);
   const reviewerReadiness = getReviewerDecisionReadiness(selectedItem);
+  const ownershipReadiness = getEvidenceOwnershipDueDateReadiness(selectedItem);
+  const ownershipStates = items.map(getEvidenceOwnershipDueDateReadiness);
+  const ownerMissingCount = ownershipStates.filter(item => item.ownerState === 'Owner missing').length;
+  const reviewerMissingCount = ownershipStates.filter(item => item.reviewerState === 'Reviewer missing').length;
+  const dueDateMissingCount = ownershipStates.filter(item => item.dueDateState === 'Due date missing').length;
+  const escalationReadyCount = ownershipStates.filter(item => item.escalationReadinessState === 'Escalation may be required.').length;
 
   return (
     <section className="page-section production-readiness-page">
@@ -108,7 +115,11 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
             </div>
             <div className="alert alert-info" style={{ marginTop: '14px' }}>
               <strong>Next required action: </strong>{data?.overview.nextRequiredAction ?? reviewRequired}<br />
-              <strong>Owner: </strong>{data?.overview.owner ?? ownerAction}
+              <strong>Owner: </strong>{data?.overview.owner ?? ownerAction}<br />
+              <strong>Owner not assigned: </strong>{ownerMissingCount}<br />
+              <strong>Reviewer not assigned: </strong>{reviewerMissingCount}<br />
+              <strong>Due date not recorded: </strong>{dueDateMissingCount}<br />
+              <strong>Escalation may be required: </strong>{escalationReadyCount}
             </div>
           </ModernCard>
 
@@ -123,26 +134,35 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                       <th>Department or scope</th>
                       <th>Owner</th>
                       <th>Due date</th>
+                      <th>Due date state</th>
                       <th>Evidence state</th>
+                      <th>Owner state</th>
                       <th>Reviewer state</th>
                       <th>Blocker state</th>
+                      <th>Escalation readiness</th>
                       <th>Next action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {items.slice(0, 40).map(item => (
-                      <tr key={`${item.category}-${item.id}-${item.title}`}>
-                        <td>{item.category}</td>
-                        <td><strong>{item.title}</strong></td>
-                        <td>{item.departmentOrScope}</td>
-                        <td>{item.owner}</td>
-                        <td>{item.dueDate}</td>
-                        <td><StatusPill tone={statusTone(item.evidenceState)}>{evidenceStateLabel(item.evidenceState)}</StatusPill></td>
-                        <td>{item.reviewerState}</td>
-                        <td>{item.blockerState}</td>
-                        <td>{item.nextAction}</td>
-                      </tr>
-                    ))}
+                    {items.slice(0, 40).map(item => {
+                      const ownership = getEvidenceOwnershipDueDateReadiness(item);
+                      return (
+                        <tr key={`${item.category}-${item.id}-${item.title}`}>
+                          <td>{item.category}</td>
+                          <td><strong>{item.title}</strong></td>
+                          <td>{item.departmentOrScope}</td>
+                          <td>{ownership.ownerDisplay}</td>
+                          <td>{item.dueDate}</td>
+                          <td>{ownership.dueDateState}</td>
+                          <td><StatusPill tone={statusTone(item.evidenceState)}>{evidenceStateLabel(item.evidenceState)}</StatusPill></td>
+                          <td>{ownership.ownerState}</td>
+                          <td>{ownership.reviewerState}</td>
+                          <td>{ownership.blockedStatus}</td>
+                          <td>{ownership.escalationReadinessState}</td>
+                          <td>{ownership.nextAccountableParty || item.nextAction}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -186,6 +206,16 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <strong>Safe source workflow destination: </strong>{reviewerReadiness.sourceWorkflowDestination}<br />
               <strong>Closure instruction: </strong>{reviewerReadiness.closureAvailability}
             </div>
+            <div className="alert alert-info" style={{ marginTop: '14px' }}>
+              <strong>Owner state: </strong>{ownershipReadiness.ownerState}<br />
+              <strong>Reviewer state: </strong>{ownershipReadiness.reviewerState}<br />
+              <strong>Due date state: </strong>{ownershipReadiness.dueDateState}<br />
+              <strong>Overdue status: </strong>{ownershipReadiness.overdueStatus}<br />
+              <strong>Blocked status: </strong>{ownershipReadiness.blockedStatus}<br />
+              <strong>Escalation readiness: </strong>{ownershipReadiness.escalationReadinessState}<br />
+              <strong>Next accountable party: </strong>{ownershipReadiness.nextAccountableParty}<br />
+              <strong>Missing assignment warnings: </strong>{ownershipReadiness.missingWarnings.length ? ownershipReadiness.missingWarnings.join(' ') : noBlocker}
+            </div>
             <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
               {setPage ? (
                 <ActionButton onClick={() => setPage(selectedHandoff.destinationPage)}>
@@ -211,6 +241,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                       <th>Support evidence</th>
                       <th>Adoption evidence</th>
                       <th>Owner</th>
+                      <th>Owner state</th>
                       <th>Next action</th>
                     </tr>
                   </thead>
@@ -225,6 +256,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                         <td>{row.supportEvidence}</td>
                         <td>{row.adoptionEvidence}</td>
                         <td>{row.owner}</td>
+                        <td>{row.owner === ownerAction ? 'Owner not assigned.' : 'Owner assigned'}</td>
                         <td>{row.nextAction}</td>
                       </tr>
                     ))}
