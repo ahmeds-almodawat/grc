@@ -12,6 +12,7 @@ import {
   getAccessReviewSecurityEvidenceReadiness,
   getBackupRestoreDrEvidenceReadiness,
   getPolicySopAttestationReadiness,
+  getTrainingAdoptionSupportEvidenceReadiness,
   getProductionEvidenceClosureData,
   getReviewerDecisionReadiness,
   type EvidenceClosureStatus,
@@ -89,6 +90,8 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
   const executiveRecoveryImpact = getBackupRestoreDrEvidenceReadiness(undefined, data ?? undefined).executiveImpact;
   const securityReadiness = getAccessReviewSecurityEvidenceReadiness(selectedItem, data ?? undefined);
   const executiveSecurityImpact = getAccessReviewSecurityEvidenceReadiness(undefined, data ?? undefined).executiveImpact;
+  const adoptionReadiness = getTrainingAdoptionSupportEvidenceReadiness(selectedItem, data ?? undefined);
+  const executiveAdoptionImpact = getTrainingAdoptionSupportEvidenceReadiness(undefined, data ?? undefined).executiveImpact;
 
   return (
     <section className="page-section production-readiness-page">
@@ -148,6 +151,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                       <th>Due date</th>
                       <th>Due date state</th>
                       <th>Evidence state</th>
+                      <th>Training/adoption/support evidence</th>
                       <th>Backup and restore evidence</th>
                       <th>Policy/SOP attestation evidence</th>
                       <th>Access review evidence</th>
@@ -164,6 +168,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                       const policySop = getPolicySopAttestationReadiness(item, data ?? undefined);
                       const recovery = getBackupRestoreDrEvidenceReadiness(item, data ?? undefined);
                       const security = getAccessReviewSecurityEvidenceReadiness(item, data ?? undefined);
+                      const adoption = getTrainingAdoptionSupportEvidenceReadiness(item, data ?? undefined);
                       return (
                         <tr key={`${item.category}-${item.id}-${item.title}`}>
                           <td>{item.category}</td>
@@ -173,6 +178,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                           <td>{item.dueDate}</td>
                           <td>{ownership.dueDateState}</td>
                           <td><StatusPill tone={statusTone(item.evidenceState)}>{evidenceStateLabel(item.evidenceState)}</StatusPill></td>
+                          <td>{adoption.readinessState}</td>
                           <td>{recovery.readinessState}</td>
                           <td>{policySop.readinessState}</td>
                           <td>{security.readinessState}</td>
@@ -238,6 +244,16 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <strong>Missing assignment warnings: </strong>{ownershipReadiness.missingWarnings.length ? ownershipReadiness.missingWarnings.join(' ') : noBlocker}
             </div>
             <div className="alert alert-warning" style={{ marginTop: '14px' }}>
+              <strong>Training evidence: </strong>{adoptionReadiness.readinessState}<br />
+              <strong>Missing training/adoption/support evidence summary: </strong>{adoptionReadiness.missingAdoptionEvidenceSummary}<br />
+              <strong>Owner/reviewer readiness: </strong>{adoptionReadiness.ownerReviewerReadiness}<br />
+              <strong>Due date or overdue state: </strong>{adoptionReadiness.dueDateOrOverdueState}<br />
+              <strong>Source workflow destination: </strong>{adoptionReadiness.sourceWorkflowDestination}<br />
+              <strong>Executive impact: </strong>{adoptionReadiness.executiveImpact}<br />
+              <strong>Adoption evidence rule: </strong>Training evidence required. Adoption evidence required. Support readiness evidence required.<br />
+              <strong>Adoption caveat: </strong>{adoptionReadiness.caveat}
+            </div>
+            <div className="alert alert-warning" style={{ marginTop: '14px' }}>
               <strong>Backup and restore evidence: </strong>{recoveryReadiness.readinessState}<br />
               <strong>Missing recovery evidence summary: </strong>{recoveryReadiness.missingRecoveryEvidenceSummary}<br />
               <strong>Owner/reviewer readiness: </strong>{recoveryReadiness.ownerReviewerReadiness}<br />
@@ -289,6 +305,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                       <th>Missing evidence categories</th>
                       <th>Launch readiness</th>
                       <th>Training evidence</th>
+                      <th>Training/adoption/support readiness</th>
                       <th>Policy/SOP evidence</th>
                       <th>Policy/SOP attestation evidence</th>
                       <th>Support evidence</th>
@@ -309,6 +326,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                       const policySop = getPolicySopAttestationReadiness(row, data ?? undefined);
                       const recovery = getBackupRestoreDrEvidenceReadiness(row, data ?? undefined);
                       const security = getAccessReviewSecurityEvidenceReadiness(row, data ?? undefined);
+                      const adoption = getTrainingAdoptionSupportEvidenceReadiness(row, data ?? undefined);
                       return (
                         <tr key={row.department}>
                           <td><strong>{row.department}</strong></td>
@@ -316,6 +334,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                           <td>{coverage.missingEvidenceCategories.join(', ')}</td>
                           <td><StatusPill tone={statusTone(row.launchReadiness)}>{row.launchReadiness}</StatusPill></td>
                           <td>{row.trainingEvidence}</td>
+                          <td>{adoption.readinessState}<br />{adoption.missingAdoptionEvidenceSummary}</td>
                           <td>{row.policyEvidence}</td>
                           <td>{policySop.readinessState}<br />{policySop.missingAttestationEvidenceSummary}</td>
                           <td>{row.supportEvidence}</td>
@@ -335,6 +354,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                 </table>
                 <div className="alert alert-info" style={{ marginTop: '14px' }}>
                   <strong>Department evidence coverage: </strong>Coverage depends on recorded source evidence. Manage source evidence in Production Readiness Center.
+                  <br /><strong>Training evidence: </strong>Operational adoption readiness depends on recorded source evidence. Manage adoption evidence in Production Readiness Center.
                   <br /><strong>Backup and restore evidence: </strong>Recovery readiness depends on recorded source evidence. Manage recovery evidence in Production Readiness Center.
                   <br /><strong>Policy/SOP attestation evidence: </strong>Attestation readiness depends on recorded source evidence. Manage attestation evidence in Production Readiness Center.
                   <br /><strong>Access review evidence: </strong>Security readiness depends on recorded source evidence. Manage security evidence in Production Readiness Center.
@@ -361,6 +381,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <MetricTile label="DR evidence impact" value={executiveRecoveryImpact} tone={executiveRecoveryImpact.includes('Executive review required') ? 'warning' : 'good'} />
               <MetricTile label="Policy/SOP impact" value={executivePolicySopImpact} tone={executivePolicySopImpact.includes('Executive review required') ? 'warning' : 'good'} />
               <MetricTile label="Security impact" value={executiveSecurityImpact} tone={executiveSecurityImpact.includes('Executive review required') ? 'warning' : 'good'} />
+              <MetricTile label="Adoption impact" value={executiveAdoptionImpact} tone={executiveAdoptionImpact.includes('Executive review required') ? 'warning' : 'good'} />
             </div>
             <div className="alert alert-info" style={{ marginTop: '14px' }}>
               <ShieldAlert size={16} />
@@ -371,6 +392,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <strong>Backup and restore evidence: </strong>{executiveRecoveryImpact}<br />
               <strong>Policy/SOP attestation evidence: </strong>{executivePolicySopImpact}<br />
               <strong>Access review evidence: </strong>{executiveSecurityImpact}<br />
+              <strong>Training evidence: </strong>{executiveAdoptionImpact}<br />
               <strong>Decision caveat: </strong>{executiveRecommendation.caveat}
             </div>
           </ModernCard>
