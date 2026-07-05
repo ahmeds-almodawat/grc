@@ -12,6 +12,7 @@ import {
   getExecutiveClosureRecommendation,
   getExecutiveGoNoGoDecisionPack,
   getLiveDataQualityRoleIntegrityReadiness,
+  getUatPackHospitalPilotAcceptanceReadiness,
   getAccessReviewSecurityEvidenceReadiness,
   getBackupRestoreDrEvidenceReadiness,
   getPolicySopAttestationReadiness,
@@ -38,7 +39,7 @@ const noAction = 'No closure action is available from this screen.';
 function statusTone(status?: string) {
   const normalized = String(status ?? '').toLowerCase();
   if (['closed', 'ready', 'recorded', 'ready for executive review', 'ready for executive decision review', 'coverage complete in source data', 'monitor'].includes(normalized)) return 'good';
-  if (['blocked', 'launch blocked', 'data blocked', 'overdue', 'rejected', 'no-go: blockers unresolved'].includes(normalized)) return 'danger';
+  if (['blocked', 'launch blocked', 'data blocked', 'uat blocked', 'overdue', 'rejected', 'no-go: blockers unresolved'].includes(normalized)) return 'danger';
   return 'warning';
 }
 
@@ -102,6 +103,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
   const executiveRecommendation = getExecutiveClosureRecommendation(data ?? undefined, { ownerMissingCount, reviewerMissingCount });
   const departmentLaunchWorkflow = getDepartmentLaunchFinalReadinessWorkflow(data ?? undefined, recentActions);
   const liveDataQualityRoleIntegrity = getLiveDataQualityRoleIntegrityReadiness(data ?? undefined, recentActions);
+  const uatPilotAcceptance = getUatPackHospitalPilotAcceptanceReadiness(data ?? undefined, recentActions);
   const policySopReadiness = getPolicySopAttestationReadiness(selectedItem, data ?? undefined);
   const executivePolicySopImpact = getPolicySopAttestationReadiness(undefined, data ?? undefined).executiveImpact;
   const recoveryReadiness = getBackupRestoreDrEvidenceReadiness(selectedItem, data ?? undefined);
@@ -590,6 +592,42 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <strong>UAT readiness state: </strong>Ready for UAT data review means data and role signals are ready for review, not production launch.<br />
               <strong>Data quality caveat: </strong>{liveDataQualityRoleIntegrity.caveat}<br />
               <strong>Authority caveat: </strong>{liveDataQualityRoleIntegrity.productionLaunchAuthorityCaveat}
+            </div>
+          </ModernCard>
+
+          <ModernCard title="UAT Pack and Hospital Pilot Acceptance" subtitle="Read-only UAT pack and hospital pilot acceptance readiness before any production launch decision.">
+            <div className="alert alert-warning" style={{ marginBottom: '14px' }}>
+              <strong>UAT pack and hospital pilot acceptance. </strong>
+              UAT acceptance does not approve production launch. Production launch requires separate executive authority.
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '12px', marginBottom: '14px' }}>
+              <MetricTile label="UAT readiness state" value={uatPilotAcceptance.uatReadinessState} tone={statusTone(uatPilotAcceptance.uatReadinessState)} />
+              <MetricTile label="Pilot acceptance state" value={uatPilotAcceptance.pilotAcceptanceState} tone={statusTone(uatPilotAcceptance.pilotAcceptanceState)} />
+              <MetricTile label="Accepted limitations" value={data?.executivePack.acceptedLimitationsRequiringReview ?? 0} tone={(data?.executivePack.acceptedLimitationsRequiringReview ?? 0) ? 'warning' : 'good'} />
+              <MetricTile label="Required actions before pilot acceptance" value={uatPilotAcceptance.requiredActionsBeforePilotAcceptance.length} tone="warning" />
+              <MetricTile label="Review state" value={uatPilotAcceptance.pilotAcceptanceState === 'Ready for pilot acceptance review' ? 'Ready for pilot acceptance review' : 'Pilot acceptance review required'} tone={statusTone(uatPilotAcceptance.pilotAcceptanceState)} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div className="alert alert-info" style={{ margin: 0 }}>
+                <strong>UAT blocked: </strong>{uatPilotAcceptance.uatReadinessState === 'UAT blocked' ? 'UAT blocked.' : noBlocker}<br />
+                <strong>UAT evidence required: </strong>{uatPilotAcceptance.uatReadinessState === 'UAT evidence required' ? 'UAT evidence required.' : noBlocker}<br />
+                <strong>UAT blocker summary: </strong>{uatPilotAcceptance.uatBlockerSummary}<br />
+                <strong>UAT checklist summary: </strong>{uatPilotAcceptance.uatChecklistSummary}<br />
+                <strong>User testing evidence required: </strong>{uatPilotAcceptance.userTestingEvidenceSummary}
+              </div>
+              <div className="alert alert-warning" style={{ margin: 0 }}>
+                <strong>Pilot acceptance review required: </strong>{uatPilotAcceptance.pilotAcceptanceState === 'Pilot acceptance review required' ? 'Pilot acceptance review required.' : noBlocker}<br />
+                <strong>Limitation review required: </strong>{uatPilotAcceptance.pilotAcceptanceState === 'Limitation review required' ? 'Limitation review required.' : noBlocker}<br />
+                <strong>Department pilot acceptance required: </strong>{uatPilotAcceptance.departmentPilotAcceptanceSummary}<br />
+                <strong>Pilot issue register summary: </strong>{uatPilotAcceptance.pilotIssueRegisterSummary}<br />
+                <strong>Accepted limitations requiring review: </strong>{uatPilotAcceptance.acceptedLimitationsSummary}
+              </div>
+            </div>
+            <div className="alert alert-info" style={{ marginTop: '14px' }}>
+              <strong>Required actions before pilot acceptance: </strong>{uatPilotAcceptance.requiredActionsBeforePilotAcceptance.join(' ')}<br />
+              <strong>UAT evidence readiness summary: </strong>{uatPilotAcceptance.uatEvidenceReadinessSummary}<br />
+              <strong>Acceptance caveat: </strong>{uatPilotAcceptance.caveat}<br />
+              <strong>Authority caveat: </strong>{uatPilotAcceptance.productionLaunchAuthorityCaveat}
             </div>
           </ModernCard>
 

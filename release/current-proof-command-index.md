@@ -186,6 +186,12 @@ Patch 71 adds live data quality and role integrity readiness proof:
 npm run patch71:proof
 ```
 
+Patch 72 adds UAT pack and hospital pilot acceptance readiness proof:
+
+```powershell
+npm run patch72:proof
+```
+
 ## G. Generated Release Artifacts
 
 Many proof commands regenerate JSON and text evidence under `release/v*` and older `release/patch*` folders. That churn is expected after validation.

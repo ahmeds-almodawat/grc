@@ -2,7 +2,8 @@
 
 ## Current Level
 
-- Current patch level: Patch 71 after implementation.
+- Current patch level: Patch 72 after implementation.
+- Patch 72 scope: UAT pack and hospital pilot acceptance readiness in Production Evidence Closure. It summarizes UAT blockers, user testing evidence, pilot issue register signals, department pilot acceptance, accepted limitations requiring review, and required actions before pilot acceptance. UAT/pilot acceptance does not approve production launch.
 - Patch 71 scope: live data quality and role integrity readiness in Production Evidence Closure. It summarizes data blockers, missing owner/reviewer assignments, inactive or archived owner/reviewer references where visible, department accountability gaps, evidence requiring more evidence, reopened evidence, and required actions before UAT. Data quality readiness does not approve production launch.
 - Patch 70 scope: department launch final readiness workflow in Production Evidence Closure. It summarizes department/scope readiness, blockers, missing evidence, controlled closure actions, training/adoption/support, policy/SOP attestation, backup/restore/DR, access/security, and required actions before executive decision. Department readiness does not approve production launch; production launch and live transition remain future work requiring separate executive authority.
 - Patch 69 scope: executive go/no-go decision pack readiness in Production Evidence Closure. It summarizes blockers, accepted limitations, controlled evidence action history, evidence-level closure status, and required actions before executive decision review without authorizing production launch.
@@ -47,7 +48,7 @@ git status --short --branch
 
 ## Production Caveat
 
-Real hospital-wide production still requires live department launch evidence, user training adoption, policy/SOP attestations, support readiness, backup and restore evidence, DR restore evidence, and executive signoff. Data quality readiness and department readiness do not approve production launch, and production launch/live transition remain future work requiring separate executive authority.
+Real hospital-wide production still requires live department launch evidence, user training adoption, policy/SOP attestations, support readiness, backup and restore evidence, DR restore evidence, and executive signoff. UAT/pilot acceptance, data quality readiness, and department readiness do not approve production launch, and production launch/live transition remain future work requiring separate executive authority.
 
 `proof:all` and `v700:runtime-security` remain required gates. After validation, run `npm run release:restore-noise` to remove expected generated release artifact churn unless intentionally updating release evidence.
 
@@ -56,7 +57,7 @@ Use `npm run validate:fast` for the local development loop, `npm run validate:bu
 ## Evidence Locations
 
 - Technical validation artifacts: `release/v700/`, `release/v64/`, `release/v66/`, `release/v672/`, `release/v673/`, and `release/v674/`.
-- Patch release evidence: `release/patch43/` through `release/patch71/`.
+- Patch release evidence: `release/patch43/` through `release/patch72/`.
 - Current production readiness, pilot/hypercare, hospital operations evidence, and closure follow-up are surfaced in the Production Readiness Center, Production Operator Console, and Production Evidence Closure page.
 - Current proof command index: `release/current-proof-command-index.md`.
 - Current validation runbook: `release/current-validation-runbook.md`.
