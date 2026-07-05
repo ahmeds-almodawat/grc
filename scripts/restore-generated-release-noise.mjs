@@ -41,6 +41,7 @@ const allowlistedPaths = [
   'release/patch65/patch65-backup-restore-dr-evidence-readiness-proof.json',
   'release/patch66/patch66-access-review-security-evidence-readiness-proof.json',
   'release/patch67/patch67-training-adoption-support-evidence-readiness-proof.json',
+  'release/patch68/patch68-controlled-evidence-closure-actions-proof.json',
   'release/patch69/patch69-executive-go-no-go-decision-pack-proof.json',
 ];
 

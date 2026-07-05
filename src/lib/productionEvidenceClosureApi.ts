@@ -210,6 +210,30 @@ export interface TrainingAdoptionSupportEvidenceReadiness {
   caveat: string;
 }
 
+export type ExecutiveGoNoGoDecisionState =
+  | 'No-go: blockers unresolved'
+  | 'Conditional go review'
+  | 'Review required'
+  | 'Ready for executive decision review';
+
+export interface ExecutiveGoNoGoDecisionPack {
+  decisionPackState: ExecutiveGoNoGoDecisionState;
+  recommendationReason: string;
+  unresolvedBlockerSummary: string;
+  acceptedLimitationSummary: string;
+  controlledClosureActionSummary: string;
+  evidenceClosureSummary: {
+    verifiedEvidenceCount: number;
+    readyForReviewCount: number;
+    requiringMoreEvidenceCount: number;
+    reopenedEvidenceCount: number;
+  };
+  requiredExecutiveReviewItems: string[];
+  requiredOperationalActionsBeforeDecision: string[];
+  caveat: string;
+  productionLaunchAuthorityCaveat: string;
+}
+
 export type DepartmentLaunchFinalReadinessState =
   | 'Launch blocked'
   | 'Evidence required'
@@ -1051,6 +1075,121 @@ export function getTrainingAdoptionSupportEvidenceReadiness(source?: ProductionE
     sourceWorkflowDestination: getTrainingAdoptionSupportSourceDestination(source),
     executiveImpact: getTrainingAdoptionSupportExecutiveImpact(data),
     caveat: 'Operational adoption readiness depends on recorded source evidence.',
+  };
+}
+
+export function getExecutiveGoNoGoEvidenceClosureSummary(
+  recentActions: Array<ControlledEvidenceClosureActionHistoryRow | ControlledEvidenceClosureActionResult> = [],
+) {
+  const count = (actionType: ControlledEvidenceClosureActionType) =>
+    recentActions.filter(action => action.action_type === actionType).length;
+
+  return {
+    verifiedEvidenceCount: count('close_as_verified'),
+    readyForReviewCount: count('ready_for_review'),
+    requiringMoreEvidenceCount: count('request_more_evidence'),
+    reopenedEvidenceCount: count('reopen_with_reason'),
+  };
+}
+
+export function getExecutiveGoNoGoBlockerSummary(
+  data?: ProductionEvidenceClosureData,
+  signals?: { ownerMissingCount?: number; reviewerMissingCount?: number },
+) {
+  const blockers = getExecutiveClosureBlockers(data, signals);
+  const parts = [
+    blockers.blockingIssuesCount > 0 ? `${blockers.blockingIssuesCount} unresolved blocker${blockers.blockingIssuesCount === 1 ? '' : 's'}.` : '',
+    blockers.overdueEvidenceCount > 0 ? `${blockers.overdueEvidenceCount} overdue evidence item${blockers.overdueEvidenceCount === 1 ? '' : 's'}.` : '',
+    blockers.missingAssignmentCount > 0 ? `${blockers.missingAssignmentCount} missing owner or reviewer assignment${blockers.missingAssignmentCount === 1 ? '' : 's'}.` : '',
+    blockers.evidenceRequiredCount > 0 ? `${blockers.evidenceRequiredCount} evidence requirement${blockers.evidenceRequiredCount === 1 ? '' : 's'} still open.` : '',
+  ].filter(Boolean);
+  return parts.length ? parts.join(' ') : noBlocker;
+}
+
+export function getExecutiveGoNoGoLimitationSummary(data?: ProductionEvidenceClosureData) {
+  const limitationCount = numberValue(data?.executivePack.acceptedLimitationsRequiringReview)
+    + numberValue(data?.overview.acceptedWithLimitation);
+  return limitationCount > 0
+    ? `Accepted limitations require executive review: ${limitationCount}.`
+    : 'No accepted limitation requiring executive review is currently recorded.';
+}
+
+export function getExecutiveGoNoGoRequiredActions(
+  data?: ProductionEvidenceClosureData,
+  signals?: { ownerMissingCount?: number; reviewerMissingCount?: number },
+  recentActions: Array<ControlledEvidenceClosureActionHistoryRow | ControlledEvidenceClosureActionResult> = [],
+) {
+  const blockers = getExecutiveClosureBlockers(data, signals);
+  const evidenceSummary = getExecutiveGoNoGoEvidenceClosureSummary(recentActions);
+  const actions = [
+    blockers.blockingIssuesCount > 0 ? 'Resolve unresolved blockers or document accepted limitations before decision review.' : '',
+    blockers.evidenceRequiredCount > 0 || evidenceSummary.requiringMoreEvidenceCount > 0 ? 'Complete requested evidence before executive decision.' : '',
+    blockers.overdueEvidenceCount > 0 ? 'Clear overdue evidence owner follow-up.' : '',
+    blockers.missingAssignmentCount > 0 ? 'Assign missing owners and reviewers.' : '',
+    numberValue(data?.executivePack.acceptedLimitationsRequiringReview) > 0 || evidenceSummary.reopenedEvidenceCount > 0 ? 'Review accepted limitations and reopened evidence.' : '',
+    numberValue(data?.executivePack.missingSignoffs) > 0 ? 'Complete required executive review items.' : '',
+  ].filter(Boolean);
+  return actions.length ? actions : ['Prepare executive decision review pack.'];
+}
+
+export function getExecutiveGoNoGoRecommendation(
+  data?: ProductionEvidenceClosureData,
+  signals?: { ownerMissingCount?: number; reviewerMissingCount?: number },
+  recentActions: Array<ControlledEvidenceClosureActionHistoryRow | ControlledEvidenceClosureActionResult> = [],
+): ExecutiveGoNoGoDecisionState {
+  const blockers = getExecutiveClosureBlockers(data, signals);
+  const evidenceSummary = getExecutiveGoNoGoEvidenceClosureSummary(recentActions);
+  const limitationCount = numberValue(data?.executivePack.acceptedLimitationsRequiringReview)
+    + numberValue(data?.overview.acceptedWithLimitation);
+
+  if (blockers.blockingIssuesCount > 0 || blockers.overdueEvidenceCount > 0) return 'No-go: blockers unresolved';
+  if (limitationCount > 0) return 'Conditional go review';
+  if (
+    blockers.evidenceRequiredCount > 0
+    || blockers.reviewRequiredCount > 0
+    || blockers.missingAssignmentCount > 0
+    || evidenceSummary.readyForReviewCount > 0
+    || evidenceSummary.requiringMoreEvidenceCount > 0
+    || evidenceSummary.reopenedEvidenceCount > 0
+  ) return 'Review required';
+  return 'Ready for executive decision review';
+}
+
+export function getExecutiveGoNoGoDecisionPack(
+  data?: ProductionEvidenceClosureData,
+  signals?: { ownerMissingCount?: number; reviewerMissingCount?: number },
+  recentActions: Array<ControlledEvidenceClosureActionHistoryRow | ControlledEvidenceClosureActionResult> = [],
+): ExecutiveGoNoGoDecisionPack {
+  const decisionPackState = getExecutiveGoNoGoRecommendation(data, signals, recentActions);
+  const evidenceClosureSummary = getExecutiveGoNoGoEvidenceClosureSummary(recentActions);
+  const controlledActionCount = recentActions.length;
+  const requiredOperationalActionsBeforeDecision = getExecutiveGoNoGoRequiredActions(data, signals, recentActions);
+  const requiredExecutiveReviewItems = [
+    numberValue(data?.executivePack.acceptedLimitationsRequiringReview) > 0 ? 'Accepted limitations require executive review.' : '',
+    numberValue(data?.executivePack.missingSignoffs) > 0 ? 'Missing executive review items remain open.' : '',
+    decisionPackState === 'Conditional go review' ? 'Conditional go review requires limitation owner and executive review.' : '',
+    decisionPackState === 'Ready for executive decision review' ? 'Ready for executive decision review.' : '',
+  ].filter(Boolean);
+
+  return {
+    decisionPackState,
+    recommendationReason: decisionPackState === 'No-go: blockers unresolved'
+      ? getExecutiveGoNoGoBlockerSummary(data, signals)
+      : decisionPackState === 'Conditional go review'
+        ? getExecutiveGoNoGoLimitationSummary(data)
+        : decisionPackState === 'Review required'
+          ? 'Evidence, reviewer decisions, assignments, or required executive review items remain open.'
+          : 'Evidence closure signals support executive decision review.',
+    unresolvedBlockerSummary: getExecutiveGoNoGoBlockerSummary(data, signals),
+    acceptedLimitationSummary: getExecutiveGoNoGoLimitationSummary(data),
+    controlledClosureActionSummary: controlledActionCount
+      ? `Controlled evidence action history includes ${controlledActionCount} recorded action${controlledActionCount === 1 ? '' : 's'}.`
+      : 'Controlled evidence action history has not been recorded for this session.',
+    evidenceClosureSummary,
+    requiredExecutiveReviewItems: requiredExecutiveReviewItems.length ? requiredExecutiveReviewItems : ['No additional executive review item currently recorded.'],
+    requiredOperationalActionsBeforeDecision,
+    caveat: 'Evidence-level closure does not approve production launch.',
+    productionLaunchAuthorityCaveat: 'Production launch requires separate executive authority.',
   };
 }
 
