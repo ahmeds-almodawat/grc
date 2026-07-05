@@ -12,6 +12,7 @@ import {
   getExecutiveClosureRecommendation,
   getExecutiveGoNoGoDecisionPack,
   getLiveDataQualityRoleIntegrityReadiness,
+  getLiveSupportIncidentReadiness,
   getUatPackHospitalPilotAcceptanceReadiness,
   getAccessReviewSecurityEvidenceReadiness,
   getBackupRestoreDrEvidenceReadiness,
@@ -39,7 +40,7 @@ const noAction = 'No closure action is available from this screen.';
 function statusTone(status?: string) {
   const normalized = String(status ?? '').toLowerCase();
   if (['closed', 'ready', 'recorded', 'ready for executive review', 'ready for executive decision review', 'coverage complete in source data', 'monitor'].includes(normalized)) return 'good';
-  if (['blocked', 'launch blocked', 'data blocked', 'uat blocked', 'overdue', 'rejected', 'no-go: blockers unresolved'].includes(normalized)) return 'danger';
+  if (['blocked', 'launch blocked', 'data blocked', 'uat blocked', 'support blocked', 'incident readiness blocked', 'overdue', 'rejected', 'no-go: blockers unresolved'].includes(normalized)) return 'danger';
   return 'warning';
 }
 
@@ -104,6 +105,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
   const departmentLaunchWorkflow = getDepartmentLaunchFinalReadinessWorkflow(data ?? undefined, recentActions);
   const liveDataQualityRoleIntegrity = getLiveDataQualityRoleIntegrityReadiness(data ?? undefined, recentActions);
   const uatPilotAcceptance = getUatPackHospitalPilotAcceptanceReadiness(data ?? undefined, recentActions);
+  const liveSupportIncidentReadiness = getLiveSupportIncidentReadiness(data ?? undefined, recentActions);
   const policySopReadiness = getPolicySopAttestationReadiness(selectedItem, data ?? undefined);
   const executivePolicySopImpact = getPolicySopAttestationReadiness(undefined, data ?? undefined).executiveImpact;
   const recoveryReadiness = getBackupRestoreDrEvidenceReadiness(selectedItem, data ?? undefined);
@@ -628,6 +630,42 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <strong>UAT evidence readiness summary: </strong>{uatPilotAcceptance.uatEvidenceReadinessSummary}<br />
               <strong>Acceptance caveat: </strong>{uatPilotAcceptance.caveat}<br />
               <strong>Authority caveat: </strong>{uatPilotAcceptance.productionLaunchAuthorityCaveat}
+            </div>
+          </ModernCard>
+
+          <ModernCard title="Live Support and Incident Readiness" subtitle="Read-only support desk, escalation, issue register, and downtime fallback readiness before launch decision review.">
+            <div className="alert alert-warning" style={{ marginBottom: '14px' }}>
+              <strong>Live support and incident readiness. </strong>
+              Support readiness does not approve production launch. Production launch requires separate executive authority.
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '12px', marginBottom: '14px' }}>
+              <MetricTile label="Support readiness state" value={liveSupportIncidentReadiness.supportReadinessState} tone={statusTone(liveSupportIncidentReadiness.supportReadinessState)} />
+              <MetricTile label="Incident readiness state" value={liveSupportIncidentReadiness.incidentReadinessState} tone={statusTone(liveSupportIncidentReadiness.incidentReadinessState)} />
+              <MetricTile label="Support actions" value={liveSupportIncidentReadiness.supportReadinessRequiredActions.length} tone="warning" />
+              <MetricTile label="Incident actions" value={liveSupportIncidentReadiness.incidentReadinessRequiredActions.length} tone="warning" />
+              <MetricTile label="Accepted limitations" value={data?.executivePack.acceptedLimitationsRequiringReview ?? 0} tone={(data?.executivePack.acceptedLimitationsRequiringReview ?? 0) ? 'warning' : 'good'} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div className="alert alert-info" style={{ margin: 0 }}>
+                <strong>Support blocked: </strong>{liveSupportIncidentReadiness.supportReadinessState === 'Support blocked' ? 'Support blocked.' : noBlocker}<br />
+                <strong>Support evidence required: </strong>{liveSupportIncidentReadiness.supportReadinessState === 'Support evidence required' ? 'Support evidence required.' : noBlocker}<br />
+                <strong>Support desk readiness required: </strong>{liveSupportIncidentReadiness.supportDeskReadinessSummary}<br />
+                <strong>Downtime fallback readiness required: </strong>{liveSupportIncidentReadiness.downtimeFallbackSummary}<br />
+                <strong>Required actions before support readiness review: </strong>{liveSupportIncidentReadiness.requiredActionsBeforeSupportReadinessReview.join(' ')}
+              </div>
+              <div className="alert alert-warning" style={{ margin: 0 }}>
+                <strong>Incident readiness blocked: </strong>{liveSupportIncidentReadiness.incidentReadinessState === 'Incident readiness blocked' ? 'Incident readiness blocked.' : noBlocker}<br />
+                <strong>Escalation review required: </strong>{liveSupportIncidentReadiness.incidentReadinessState === 'Escalation review required' ? 'Escalation review required.' : noBlocker}<br />
+                <strong>Escalation owner review required: </strong>{liveSupportIncidentReadiness.escalationOwnerSummary}<br />
+                <strong>Known issue register review required: </strong>{liveSupportIncidentReadiness.knownIssueRegisterSummary}<br />
+                <strong>Incident intake/follow-up readiness: </strong>{liveSupportIncidentReadiness.incidentIntakeFollowUpSummary}
+              </div>
+            </div>
+            <div className="alert alert-info" style={{ marginTop: '14px' }}>
+              <strong>Accepted limitations requiring review: </strong>{liveSupportIncidentReadiness.acceptedLimitationsSummary}<br />
+              <strong>Ready state: </strong>Ready for support readiness review means support and incident records are ready for review, not production launch.<br />
+              <strong>Support caveat: </strong>{liveSupportIncidentReadiness.caveat}<br />
+              <strong>Authority caveat: </strong>{liveSupportIncidentReadiness.productionLaunchAuthorityCaveat}
             </div>
           </ModernCard>
 

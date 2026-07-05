@@ -192,6 +192,12 @@ Patch 72 adds UAT pack and hospital pilot acceptance readiness proof:
 npm run patch72:proof
 ```
 
+Patch 73 adds live support and incident readiness proof:
+
+```powershell
+npm run patch73:proof
+```
+
 ## G. Generated Release Artifacts
 
 Many proof commands regenerate JSON and text evidence under `release/v*` and older `release/patch*` folders. That churn is expected after validation.

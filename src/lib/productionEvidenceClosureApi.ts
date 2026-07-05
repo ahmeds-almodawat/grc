@@ -310,6 +310,29 @@ export interface UatPackHospitalPilotAcceptanceReadiness {
   productionLaunchAuthorityCaveat: string;
 }
 
+export type LiveSupportIncidentReadinessState =
+  | 'Support blocked'
+  | 'Incident readiness blocked'
+  | 'Support evidence required'
+  | 'Escalation review required'
+  | 'Ready for support readiness review';
+
+export interface LiveSupportIncidentReadiness {
+  supportReadinessState: LiveSupportIncidentReadinessState;
+  incidentReadinessState: LiveSupportIncidentReadinessState;
+  supportDeskReadinessSummary: string;
+  escalationOwnerSummary: string;
+  knownIssueRegisterSummary: string;
+  downtimeFallbackSummary: string;
+  incidentIntakeFollowUpSummary: string;
+  acceptedLimitationsSummary: string;
+  requiredActionsBeforeSupportReadinessReview: string[];
+  supportReadinessRequiredActions: string[];
+  incidentReadinessRequiredActions: string[];
+  caveat: string;
+  productionLaunchAuthorityCaveat: string;
+}
+
 export interface ProductionEvidenceClosureData {
   overview: {
     totalEvidenceGaps: number;
@@ -1656,6 +1679,153 @@ export function getUatPackHospitalPilotAcceptanceReadiness(
     uatChecklistSummary: getUatChecklistSummary(data, recentActions),
     uatEvidenceReadinessSummary: getUatEvidenceReadinessSummary(data, recentActions),
     caveat: 'UAT acceptance does not approve production launch.',
+    productionLaunchAuthorityCaveat: 'Production launch requires separate executive authority.',
+  };
+}
+
+function isSupportIncidentItem(item?: Pick<ProductionEvidenceClosureItem, 'category' | 'title' | 'requiredEvidence'>) {
+  const text = `${item?.category ?? ''} ${item?.title ?? ''} ${item?.requiredEvidence ?? ''}`.toLowerCase();
+  return text.includes('support')
+    || text.includes('incident')
+    || text.includes('hypercare')
+    || text.includes('escalation')
+    || text.includes('known issue')
+    || text.includes('downtime')
+    || text.includes('manual fallback')
+    || text.includes('runbook');
+}
+
+function supportIncidentItems(data?: ProductionEvidenceClosureData) {
+  return data?.intakeQueue.filter(isSupportIncidentItem) ?? [];
+}
+
+export function getSupportDeskReadinessSummary(data?: ProductionEvidenceClosureData) {
+  const supportItems = supportIncidentItems(data);
+  const openSupportItems = supportItems.filter(item => item.evidenceState !== 'closed').length;
+  const missingOwners = supportItems.filter(item => getEvidenceOwnershipState(item).ownerState === 'Owner missing').length;
+  if (openSupportItems > 0 || missingOwners > 0) {
+    return `Support desk readiness required: ${openSupportItems} support item${openSupportItems === 1 ? '' : 's'} open and ${missingOwners} missing support owner assignment${missingOwners === 1 ? '' : 's'}.`;
+  }
+  if (!supportItems.length) return 'Support desk readiness required where support records are not yet visible.';
+  return 'Support desk readiness has no open item currently recorded.';
+}
+
+export function getEscalationOwnerSummary(data?: ProductionEvidenceClosureData) {
+  const escalationItems = (data?.intakeQueue ?? []).filter(item => {
+    const text = `${item.category} ${item.title} ${item.requiredEvidence}`.toLowerCase();
+    return text.includes('escalation') || text.includes('owner') || text.includes('incident');
+  });
+  const missingOwners = escalationItems.filter(item => getEvidenceOwnershipState(item).ownerState === 'Owner missing').length;
+  const missingReviewers = escalationItems.filter(item => getEvidenceOwnershipState(item).reviewerState === 'Reviewer missing').length;
+  if (missingOwners > 0 || missingReviewers > 0) {
+    return `Escalation owner review required: ${missingOwners} missing owner assignment${missingOwners === 1 ? '' : 's'} and ${missingReviewers} missing reviewer assignment${missingReviewers === 1 ? '' : 's'}.`;
+  }
+  if (!escalationItems.length) return 'Escalation owner review required where escalation records are not yet visible.';
+  return 'Escalation owner review has no assignment gap currently recorded.';
+}
+
+export function getKnownIssueRegisterSummary(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+) {
+  const blocked = numberValue(data?.overview.blocked);
+  const overdue = numberValue(data?.overview.overdue);
+  const reopened = recentActions.filter(action => action.action_type === 'reopen_with_reason').length;
+  const moreEvidence = recentActions.filter(action => action.action_type === 'request_more_evidence').length;
+  if (blocked > 0 || overdue > 0 || reopened > 0 || moreEvidence > 0) {
+    return `Known issue register review required: ${blocked} blocked, ${overdue} overdue, ${reopened} reopened, ${moreEvidence} requiring more evidence.`;
+  }
+  return 'Known issue register review required where open support issues are not yet visible.';
+}
+
+export function getDowntimeFallbackSummary(data?: ProductionEvidenceClosureData) {
+  const recovery = getBackupRestoreDrEvidenceReadiness(undefined, data);
+  const supportGaps = data?.departmentRegister.filter(row => categoryMissing(row.supportEvidence)).length ?? 0;
+  if (supportGaps > 0 || recovery.readinessState !== 'Review required') {
+    return `Downtime fallback readiness required: ${supportGaps} department support evidence gap${supportGaps === 1 ? '' : 's'}. ${recovery.missingRecoveryEvidenceSummary}`;
+  }
+  return 'Downtime fallback readiness required where downtime or manual fallback records are not yet visible.';
+}
+
+export function getIncidentReadinessRequiredActions(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+) {
+  const actions = new Set<string>();
+  const uat = getUatPackHospitalPilotAcceptanceReadiness(data, recentActions);
+  const dataQuality = getLiveDataQualityRoleIntegrityReadiness(data, recentActions);
+  const executivePack = getExecutiveGoNoGoDecisionPack(data, undefined, recentActions);
+
+  if (numberValue(data?.overview.blocked) > 0 || numberValue(data?.overview.overdue) > 0) actions.add('Known issue register review required.');
+  if (getEscalationOwnerSummary(data).includes('required')) actions.add('Escalation owner review required.');
+  if (dataQuality.roleIntegrityState !== 'Ready for UAT data review') actions.add('Assign incident owners and reviewers before support readiness review.');
+  if (uat.pilotAcceptanceState !== 'Ready for pilot acceptance review') actions.add('Resolve UAT and pilot acceptance risks before support readiness review.');
+  if (executivePack.decisionPackState !== 'Ready for executive decision review') actions.add('Complete executive decision pack readiness before support readiness review.');
+  return actions.size ? [...actions] : ['Prepare incident process for support readiness review.'];
+}
+
+export function getSupportReadinessRequiredActions(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+) {
+  const actions = new Set<string>();
+  if (getSupportDeskReadinessSummary(data).includes('required')) actions.add('Support desk readiness required.');
+  if (getKnownIssueRegisterSummary(data, recentActions).includes('required')) actions.add('Known issue register review required.');
+  if (getDowntimeFallbackSummary(data).includes('required')) actions.add('Downtime fallback readiness required.');
+  if (numberValue(data?.executivePack.acceptedLimitationsRequiringReview) > 0 || numberValue(data?.overview.acceptedWithLimitation) > 0) {
+    actions.add('Review accepted limitations before support readiness review.');
+  }
+  return actions.size ? [...actions] : ['Prepare support desk evidence for support readiness review.'];
+}
+
+export function getSupportReadinessState(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+): LiveSupportIncidentReadinessState {
+  const uat = getUatPackHospitalPilotAcceptanceReadiness(data, recentActions);
+  if (numberValue(data?.overview.blocked) > 0 || uat.uatReadinessState === 'UAT blocked') return 'Support blocked';
+  if (getSupportDeskReadinessSummary(data).includes('required') || getDowntimeFallbackSummary(data).includes('required')) return 'Support evidence required';
+  if (getEscalationOwnerSummary(data).includes('required')) return 'Escalation review required';
+  return 'Ready for support readiness review';
+}
+
+export function getIncidentReadinessState(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+): LiveSupportIncidentReadinessState {
+  const knownIssueSummary = getKnownIssueRegisterSummary(data, recentActions);
+  if (numberValue(data?.overview.blocked) > 0 || knownIssueSummary.includes('blocked')) return 'Incident readiness blocked';
+  if (knownIssueSummary.includes('requiring more evidence') || knownIssueSummary.includes('overdue') || knownIssueSummary.includes('reopened')) return 'Support evidence required';
+  if (getEscalationOwnerSummary(data).includes('required')) return 'Escalation review required';
+  return 'Ready for support readiness review';
+}
+
+export function getLiveSupportIncidentReadiness(
+  data?: ProductionEvidenceClosureData,
+  recentActions: ControlledEvidenceClosureActionResult[] = []
+): LiveSupportIncidentReadiness {
+  const limitationCount = numberValue(data?.executivePack.acceptedLimitationsRequiringReview)
+    + numberValue(data?.overview.acceptedWithLimitation);
+  return {
+    supportReadinessState: getSupportReadinessState(data, recentActions),
+    incidentReadinessState: getIncidentReadinessState(data, recentActions),
+    supportDeskReadinessSummary: getSupportDeskReadinessSummary(data),
+    escalationOwnerSummary: getEscalationOwnerSummary(data),
+    knownIssueRegisterSummary: getKnownIssueRegisterSummary(data, recentActions),
+    downtimeFallbackSummary: getDowntimeFallbackSummary(data),
+    incidentIntakeFollowUpSummary: getIncidentReadinessRequiredActions(data, recentActions).join(' '),
+    acceptedLimitationsSummary: limitationCount > 0
+      ? `${limitationCount} accepted limitation${limitationCount === 1 ? '' : 's'} requiring review.`
+      : 'No accepted limitation requiring review currently recorded.',
+    requiredActionsBeforeSupportReadinessReview: [
+      ...new Set([
+        ...getSupportReadinessRequiredActions(data, recentActions),
+        ...getIncidentReadinessRequiredActions(data, recentActions),
+      ]),
+    ],
+    supportReadinessRequiredActions: getSupportReadinessRequiredActions(data, recentActions),
+    incidentReadinessRequiredActions: getIncidentReadinessRequiredActions(data, recentActions),
+    caveat: 'Support readiness does not approve production launch.',
     productionLaunchAuthorityCaveat: 'Production launch requires separate executive authority.',
   };
 }
