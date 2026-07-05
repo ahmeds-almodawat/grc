@@ -1,0 +1,143 @@
+{
+  "generated_at": "2026-07-05T07:39:36.687Z",
+  "strict_passed": true,
+  "check_count": 32,
+  "failed_count": 0,
+  "failed": [],
+  "checks": [
+    {
+      "name": "no Patch 62 migration exists",
+      "passed": true,
+      "findings": []
+    },
+    {
+      "name": "no new backend write endpoint was added",
+      "passed": true
+    },
+    {
+      "name": "no direct closure button wording exists",
+      "passed": true
+    },
+    {
+      "name": "no production-ready claim was added",
+      "passed": true
+    },
+    {
+      "name": "route /production-evidence-closure still exists",
+      "passed": true
+    },
+    {
+      "name": "Production Evidence Closure page exists",
+      "passed": true
+    },
+    {
+      "name": "executive recommendation helper exists",
+      "passed": true
+    },
+    {
+      "name": "executive recommendation wording exists",
+      "passed": true
+    },
+    {
+      "name": "state Blocked exists",
+      "passed": true
+    },
+    {
+      "name": "state Evidence required exists",
+      "passed": true
+    },
+    {
+      "name": "state Review required exists",
+      "passed": true
+    },
+    {
+      "name": "state Ready for executive review exists",
+      "passed": true
+    },
+    {
+      "name": "executive signoff required wording exists",
+      "passed": true
+    },
+    {
+      "name": "recorded evidence required wording exists",
+      "passed": true
+    },
+    {
+      "name": "source workflow dependency wording exists",
+      "passed": true
+    },
+    {
+      "name": "Production Readiness Center link remains",
+      "passed": true
+    },
+    {
+      "name": "Production Operator Console link remains",
+      "passed": true
+    },
+    {
+      "name": "operator console mentions executive recommendation readiness",
+      "passed": true
+    },
+    {
+      "name": "no fake/demo records were added",
+      "passed": true
+    },
+    {
+      "name": "operational UI avoids banned technical wording",
+      "passed": true,
+      "findings": {
+        "page": [],
+        "operator": []
+      }
+    },
+    {
+      "name": "restore-noise covers Patch 61 generated proof JSON",
+      "passed": true
+    },
+    {
+      "name": "package patch62:proof exists",
+      "passed": true
+    },
+    {
+      "name": "package patch62:all exists",
+      "passed": true
+    },
+    {
+      "name": "validate:fast exists",
+      "passed": true
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true
+    },
+    {
+      "name": "proof:all exists",
+      "passed": true
+    },
+    {
+      "name": "v700:runtime-security exists",
+      "passed": true
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true
+    },
+    {
+      "name": "status doc mentions Patch 62",
+      "passed": true
+    },
+    {
+      "name": "production caveat remains",
+      "passed": true
+    },
+    {
+      "name": "no conflict markers",
+      "passed": true,
+      "findings": []
+    }
+  ]
+}
