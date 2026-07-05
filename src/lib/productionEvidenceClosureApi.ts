@@ -107,6 +107,17 @@ export interface DepartmentEvidenceRegisterRow {
   nextAction: string;
 }
 
+export interface DepartmentEvidenceCoverageReadiness {
+  coverageState: string;
+  missingEvidenceCategories: string[];
+  ownerReviewerReadinessSummary: string;
+  dueDateOverdueSummary: string;
+  blockerEscalationSummary: string;
+  nextSourceWorkflowDestination: string;
+  priorityState: string;
+  caveat: string;
+}
+
 export interface ProductionEvidenceClosureData {
   overview: {
     totalEvidenceGaps: number;
@@ -371,6 +382,75 @@ export function getExecutiveClosureRecommendation(data?: ProductionEvidenceClosu
     ...blockers,
     requiredExecutiveActions: getExecutiveRequiredActions(data, signals),
     caveat: 'Executive review depends on recorded evidence and source workflow status.',
+  };
+}
+
+function categoryMissing(value?: string) {
+  return isMissingValue(value) || normalizeStatus(value) === 'evidence_required';
+}
+
+export function getDepartmentMissingEvidenceCategories(row?: DepartmentEvidenceRegisterRow) {
+  if (!row) return ['Department launch'];
+  return [
+    row.missingEvidenceCount > 0 || categoryMissing(row.launchReadiness) ? 'Department launch' : '',
+    categoryMissing(row.trainingEvidence) ? 'Training adoption' : '',
+    categoryMissing(row.policyEvidence) ? 'Policy/SOP attestation' : '',
+    categoryMissing(row.supportEvidence) ? 'Support readiness' : '',
+    categoryMissing(row.adoptionEvidence) ? 'Adoption evidence' : '',
+  ].filter(Boolean);
+}
+
+export function getDepartmentEvidenceCoverageState(row?: DepartmentEvidenceRegisterRow) {
+  if (!row) return 'Evidence required';
+  const status = normalizeStatus(row.launchReadiness);
+  if (status === 'blocked') return 'Blocked';
+  if (row.owner === ownerAction) return 'Owner action required';
+  if (getDepartmentMissingEvidenceCategories(row).length > 0) return 'Evidence required';
+  if (status === 'under_review' || row.nextAction === reviewRequired) return 'Review required';
+  return 'Coverage complete in source data';
+}
+
+export function getDepartmentEvidencePriority(row?: DepartmentEvidenceRegisterRow) {
+  const coverageState = getDepartmentEvidenceCoverageState(row);
+  if (coverageState === 'Blocked') return 'High priority';
+  if (coverageState === 'Owner action required' || coverageState === 'Evidence required') return 'Priority follow-up';
+  if (coverageState === 'Review required') return 'Review priority';
+  return 'Monitor';
+}
+
+export function getDepartmentEvidenceNextSourceWorkflow(row?: DepartmentEvidenceRegisterRow) {
+  if (!row) return 'Manage source evidence in Production Readiness Center.';
+  const missing = getDepartmentMissingEvidenceCategories(row);
+  if (row.owner === ownerAction) return 'Assign department owner in Production Readiness Center.';
+  if (missing.includes('Support readiness')) return 'Manage support readiness in Production Readiness Center.';
+  if (missing.includes('Policy/SOP attestation')) return 'Manage policy/SOP evidence in Production Readiness Center.';
+  if (missing.includes('Training adoption') || missing.includes('Adoption evidence')) return 'Manage training and adoption evidence in Production Readiness Center.';
+  return 'Manage source evidence in Production Readiness Center.';
+}
+
+export function getDepartmentEvidenceCoverage(row?: DepartmentEvidenceRegisterRow): DepartmentEvidenceCoverageReadiness {
+  const coverageState = getDepartmentEvidenceCoverageState(row);
+  const missingEvidenceCategories = getDepartmentMissingEvidenceCategories(row);
+  const blocked = coverageState === 'Blocked';
+  const ownerMissing = row?.owner === ownerAction;
+
+  return {
+    coverageState,
+    missingEvidenceCategories: missingEvidenceCategories.length ? missingEvidenceCategories : ['No missing category currently recorded.'],
+    ownerReviewerReadinessSummary: ownerMissing
+      ? 'Owner action required.'
+      : coverageState === 'Review required'
+        ? 'Reviewer action required.'
+        : 'Review required.',
+    dueDateOverdueSummary: 'Due date not recorded.',
+    blockerEscalationSummary: blocked
+      ? 'Blocked.'
+      : ownerMissing || missingEvidenceCategories.length > 0
+        ? 'Escalation may be required.'
+        : noBlocker,
+    nextSourceWorkflowDestination: getDepartmentEvidenceNextSourceWorkflow(row),
+    priorityState: getDepartmentEvidencePriority(row),
+    caveat: 'Coverage depends on recorded source evidence.',
   };
 }
 

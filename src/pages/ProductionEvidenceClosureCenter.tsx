@@ -7,6 +7,7 @@ import type { PageKey } from '../components/Layout';
 import {
   getEvidenceClosureHandoff,
   getEvidenceOwnershipDueDateReadiness,
+  getDepartmentEvidenceCoverage,
   getExecutiveClosureRecommendation,
   getProductionEvidenceClosureData,
   getReviewerDecisionReadiness,
@@ -22,7 +23,7 @@ const noAction = 'No closure action is available from this screen.';
 
 function statusTone(status?: string) {
   const normalized = String(status ?? '').toLowerCase();
-  if (['closed', 'ready', 'recorded', 'ready for executive review'].includes(normalized)) return 'good';
+  if (['closed', 'ready', 'recorded', 'ready for executive review', 'coverage complete in source data', 'monitor'].includes(normalized)) return 'good';
   if (['blocked', 'overdue', 'rejected'].includes(normalized)) return 'danger';
   return 'warning';
 }
@@ -229,41 +230,55 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
             </div>
           </ModernCard>
 
-          <ModernCard title="Department Evidence Register" subtitle="Department launch evidence, adoption, support, and policy readiness.">
+          <ModernCard title="Department Evidence Register" subtitle="Department evidence coverage, missing categories, source readiness, and priority follow-up.">
             {(data?.departmentRegister ?? []).length ? (
               <div className="table-wrap">
                 <table className="entity-table">
                   <thead>
                     <tr>
                       <th>Department</th>
+                      <th>Coverage state</th>
+                      <th>Missing evidence categories</th>
                       <th>Launch readiness</th>
-                      <th>Missing evidence count</th>
                       <th>Training evidence</th>
                       <th>Policy/SOP evidence</th>
                       <th>Support evidence</th>
                       <th>Adoption evidence</th>
                       <th>Owner</th>
-                      <th>Owner state</th>
-                      <th>Next action</th>
+                      <th>Owner/reviewer readiness</th>
+                      <th>Due date / overdue</th>
+                      <th>Blocker / escalation</th>
+                      <th>Priority state</th>
+                      <th>Next source workflow destination</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(data?.departmentRegister ?? []).slice(0, 40).map(row => (
-                      <tr key={row.department}>
-                        <td><strong>{row.department}</strong></td>
-                        <td><StatusPill tone={statusTone(row.launchReadiness)}>{row.launchReadiness}</StatusPill></td>
-                        <td>{row.missingEvidenceCount}</td>
-                        <td>{row.trainingEvidence}</td>
-                        <td>{row.policyEvidence}</td>
-                        <td>{row.supportEvidence}</td>
-                        <td>{row.adoptionEvidence}</td>
-                        <td>{row.owner}</td>
-                        <td>{row.owner === ownerAction ? 'Owner not assigned.' : 'Owner assigned'}</td>
-                        <td>{row.nextAction}</td>
-                      </tr>
-                    ))}
+                    {(data?.departmentRegister ?? []).slice(0, 40).map(row => {
+                      const coverage = getDepartmentEvidenceCoverage(row);
+                      return (
+                        <tr key={row.department}>
+                          <td><strong>{row.department}</strong></td>
+                          <td><StatusPill tone={statusTone(coverage.coverageState)}>{coverage.coverageState}</StatusPill></td>
+                          <td>{coverage.missingEvidenceCategories.join(', ')}</td>
+                          <td><StatusPill tone={statusTone(row.launchReadiness)}>{row.launchReadiness}</StatusPill></td>
+                          <td>{row.trainingEvidence}</td>
+                          <td>{row.policyEvidence}</td>
+                          <td>{row.supportEvidence}</td>
+                          <td>{row.adoptionEvidence}</td>
+                          <td>{row.owner}</td>
+                          <td>{coverage.ownerReviewerReadinessSummary}</td>
+                          <td>{coverage.dueDateOverdueSummary}</td>
+                          <td>{coverage.blockerEscalationSummary}</td>
+                          <td>{coverage.priorityState}</td>
+                          <td>{coverage.nextSourceWorkflowDestination}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
+                <div className="alert alert-info" style={{ marginTop: '14px' }}>
+                  <strong>Department evidence coverage: </strong>Coverage depends on recorded source evidence. Manage source evidence in Production Readiness Center.
+                </div>
               </div>
             ) : <EmptyState />}
           </ModernCard>
