@@ -27,7 +27,7 @@ git diff --name-only
 npm run validate:fast
 ```
 
-For small targeted patches, use `npm run validate:fast` while working, then run `npm run validate:build` plus the patch-specific proof as the before-PR gate. `npm run validate:release` remains the full release gate and should be run only when needed for final release confidence.
+For small targeted patches, use `npm run validate:fast` while working, then run `npm run validate:build` plus the patch-specific proof as the before-PR gate. For security-adjacent patches, also run `npm run validate:security` before PR. `npm run validate:release` remains the full release gate and should be run only when needed for final release confidence.
 
 Never use `git add .`. Stage only the files intentionally changed for the patch.
 
@@ -104,4 +104,4 @@ git status --short --branch
 
 The restore helper only targets known allowlisted release evidence folders and does not stage or commit anything.
 
-Patch 58.2 extends restore coverage to generated proof JSON noise for Patch 56, Patch 57, Patch 58, and Patch 58.1. Patch 62 extends restore coverage to the Patch 61 generated proof JSON. Patch 63 extends restore coverage to the Patch 62 generated proof JSON. Patch 64 extends restore coverage to the Patch 63 generated proof JSON. Patch 65 extends restore coverage to the Patch 64 generated proof JSON. Patch 66 extends restore coverage to the Patch 65 generated proof JSON. Patch 67 extends restore coverage to the Patch 66 generated proof JSON. Patch 68 extends restore coverage to the Patch 67 generated proof JSON. Keep implementation summaries, validation reports, and current status docs intentional when they are part of the active patch.
+Patch 58.2 extends restore coverage to generated proof JSON noise for Patch 56, Patch 57, Patch 58, and Patch 58.1. Patch 62 extends restore coverage to the Patch 61 generated proof JSON. Patch 63 extends restore coverage to the Patch 62 generated proof JSON. Patch 64 extends restore coverage to the Patch 63 generated proof JSON. Patch 65 extends restore coverage to the Patch 64 generated proof JSON. Patch 66 extends restore coverage to the Patch 65 generated proof JSON. Patch 67 extends restore coverage to the Patch 66 generated proof JSON. Patch 68 extends restore coverage to the Patch 67 generated proof JSON. Patch 70 extends restore coverage to the Patch 69 generated proof JSON. Keep implementation summaries, validation reports, and current status docs intentional when they are part of the active patch.
