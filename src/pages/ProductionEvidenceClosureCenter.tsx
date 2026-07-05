@@ -15,7 +15,13 @@ import {
   getTrainingAdoptionSupportEvidenceReadiness,
   getProductionEvidenceClosureData,
   getReviewerDecisionReadiness,
-  recordExecutiveProductionSignoff,
+  getAvailableControlledEvidenceClosureActions,
+  getControlledEvidenceClosureActionAvailability,
+  getControlledEvidenceClosureHistoryDisplay,
+  recordControlledEvidenceClosureAction,
+  validateControlledEvidenceClosureActionRequest,
+  type ControlledEvidenceClosureActionResult,
+  type ControlledEvidenceClosureActionType,
   type EvidenceClosureStatus,
   type ProductionEvidenceClosureItem,
 } from '../lib/productionEvidenceClosureApi';
@@ -74,9 +80,12 @@ function itemSortScore(item: ProductionEvidenceClosureItem) {
 export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: PageKey) => void }) {
   const closure = useAsyncData(getProductionEvidenceClosureData);
   const data = closure.data;
-  const [signoffNotes, setSignoffNotes] = useState('');
-  const [isSigningOff, setIsSigningOff] = useState(false);
-  const [signoffError, setSignoffError] = useState('');
+  const [selectedAction, setSelectedAction] = useState<ControlledEvidenceClosureActionType>('add_note');
+  const [actionReason, setActionReason] = useState('');
+  const [actionNote, setActionNote] = useState('');
+  const [isSubmittingAction, setIsSubmittingAction] = useState(false);
+  const [actionError, setActionError] = useState('');
+  const [recentActions, setRecentActions] = useState<ControlledEvidenceClosureActionResult[]>([]);
   const items = [...(data?.intakeQueue ?? [])].sort((a, b) => itemSortScore(a) - itemSortScore(b));
   const selectedItem = items[0];
   const selectedHandoff = getEvidenceClosureHandoff(selectedItem);
@@ -96,6 +105,49 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
   const executiveSecurityImpact = getAccessReviewSecurityEvidenceReadiness(undefined, data ?? undefined).executiveImpact;
   const adoptionReadiness = getTrainingAdoptionSupportEvidenceReadiness(selectedItem, data ?? undefined);
   const executiveAdoptionImpact = getTrainingAdoptionSupportEvidenceReadiness(undefined, data ?? undefined).executiveImpact;
+  const availableActions = getAvailableControlledEvidenceClosureActions(selectedItem);
+  const selectedActionAvailability = getControlledEvidenceClosureActionAvailability(selectedItem, selectedAction);
+
+  async function submitControlledAction() {
+    if (!selectedItem) return;
+    const validationError = validateControlledEvidenceClosureActionRequest({
+      evidenceId: selectedItem.id,
+      actionType: selectedAction,
+      actionReason,
+      actionNote,
+      previousState: selectedItem.evidenceState,
+      hasBlocker: selectedItem.evidenceState === 'blocked' || selectedItem.blockerState !== noBlocker,
+    }, selectedItem);
+    if (validationError) {
+      setActionError(validationError);
+      return;
+    }
+    setActionError('');
+    setIsSubmittingAction(true);
+    try {
+      const result = await recordControlledEvidenceClosureAction({
+        evidenceId: selectedItem.id,
+        actionType: selectedAction,
+        actionReason,
+        actionNote,
+        previousState: selectedItem.evidenceState,
+        hasBlocker: selectedItem.evidenceState === 'blocked' || selectedItem.blockerState !== noBlocker,
+        metadata: {
+          category: selectedItem.category,
+          title: selectedItem.title,
+          department_or_scope: selectedItem.departmentOrScope,
+        },
+      });
+      setRecentActions(previous => [result, ...previous].slice(0, 5));
+      setActionReason('');
+      setActionNote('');
+      await closure.refresh();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Controlled evidence action could not be recorded.');
+    } finally {
+      setIsSubmittingAction(false);
+    }
+  }
 
   return (
     <section className="page-section production-readiness-page">
@@ -216,7 +268,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                   <strong>Comments / notes: </strong>{selectedItem.comments}<br />
                   <strong>Closure decision state: </strong>{selectedItem.closureDecisionState}<br />
                   <strong>Limitation / exception state: </strong>{selectedItem.limitationState}<br />
-                  <strong>Available action: </strong>{noAction}
+                  <strong>Available action: </strong>Controlled evidence action.
                 </div>
               </div>
             ) : <EmptyState message={reviewRequired} />}
@@ -237,6 +289,83 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <strong>Safe source workflow destination: </strong>{reviewerReadiness.sourceWorkflowDestination}<br />
               <strong>Closure instruction: </strong>{reviewerReadiness.closureAvailability}
             </div>
+            <div className="alert alert-info" style={{ marginTop: '14px' }}>
+              <strong>Controlled evidence action: </strong>Evidence-level closure.<br />
+              <strong>Safety caveat: </strong>Evidence closure does not approve production launch.<br />
+              <strong>Limitation caveat: </strong>Executive review is still required for accepted limitations.
+            </div>
+            {selectedItem ? (
+              <div style={{ marginTop: '14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div className="alert alert-warning" style={{ margin: 0 }}>
+                  <strong>Action options</strong>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
+                    {availableActions.map(action => (
+                      <button
+                        key={action.actionType}
+                        className={selectedAction === action.actionType ? 'primary-action' : 'secondary-action'}
+                        type="button"
+                        onClick={() => setSelectedAction(action.actionType)}
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: '10px' }}>
+                    <strong>Selected action: </strong>{selectedActionAvailability.label}<br />
+                    <strong>Next state: </strong>{selectedActionAvailability.nextStateLabel}<br />
+                    <strong>Reason required: </strong>{selectedActionAvailability.reasonRequired ? 'Reason required.' : 'Optional.'}<br />
+                    <strong>Blocker warning: </strong>{selectedAction === 'close_as_verified' ? reviewerReadiness.closureBlockerReason : noBlocker}<br />
+                    <strong>Action warning: </strong>{selectedActionAvailability.warning || noBlocker}
+                  </div>
+                </div>
+                <div className="alert alert-info" style={{ margin: 0 }}>
+                  <strong>Action history</strong>
+                  {recentActions.length ? (
+                    <ul style={{ margin: '10px 0 0 18px' }}>
+                      {recentActions.map(action => (
+                        <li key={action.id}>{getControlledEvidenceClosureHistoryDisplay(action)}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p style={{ margin: '10px 0 0 0' }}>Action history has not been recorded.</p>
+                  )}
+                </div>
+                <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontWeight: 700 }}>
+                    Reason
+                    <textarea
+                      value={actionReason}
+                      onChange={(event) => setActionReason(event.target.value)}
+                      placeholder={selectedActionAvailability.reasonRequired ? 'Reason required.' : 'Optional reason.'}
+                      style={{ minHeight: '74px', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}
+                      disabled={isSubmittingAction}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontWeight: 700 }}>
+                    Note
+                    <textarea
+                      value={actionNote}
+                      onChange={(event) => setActionNote(event.target.value)}
+                      placeholder="Add operational note."
+                      style={{ minHeight: '74px', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}
+                      disabled={isSubmittingAction}
+                    />
+                  </label>
+                </div>
+                <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    className="primary-action"
+                    type="button"
+                    onClick={submitControlledAction}
+                    disabled={isSubmittingAction || !selectedActionAvailability.available}
+                  >
+                    {isSubmittingAction ? 'Recording action...' : 'Record controlled evidence action'}
+                  </button>
+                  <span className="alert alert-info" style={{ margin: 0 }}>Evidence-level closure only.</span>
+                  {actionError ? <span className="alert alert-danger" style={{ margin: 0 }}>{actionError}</span> : null}
+                </div>
+              </div>
+            ) : null}
             <div className="alert alert-info" style={{ marginTop: '14px' }}>
               <strong>Owner state: </strong>{ownershipReadiness.ownerState}<br />
               <strong>Reviewer state: </strong>{ownershipReadiness.reviewerState}<br />
@@ -399,61 +528,9 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
               <strong>Training evidence: </strong>{executiveAdoptionImpact}<br />
               <strong>Decision caveat: </strong>{executiveRecommendation.caveat}
             </div>
-
-            {executiveRecommendation.currentSignoffState === 'Approved' ? (
-              <div className="alert alert-success" style={{ marginTop: '14px', border: '1px solid #c3e6cb', backgroundColor: '#d4edda', color: '#155724' }}>
-                <ShieldAlert size={16} />
-                <strong>Production Launch Authorized: </strong> Executive signoff has been formally recorded. The system is permanently authorized for live operations.
-              </div>
-            ) : executiveRecommendation.recommendationState === 'Ready for executive review' && executiveRecommendation.blockingIssuesCount === 0 ? (
-              <div style={{ marginTop: '20px', padding: '16px', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: 'var(--surface-color)' }}>
-                <h3 style={{ margin: '0 0 12px 0', color: 'var(--text-color)' }}>Executive Signoff Gateway</h3>
-                <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--text-muted)' }}>
-                  All blocking issues have been resolved and required evidence is recorded. Please provide your final authorization notes below to permanently lock the evidence ledger and approve the hospital-wide production launch.
-                </p>
-                {signoffError && (
-                  <div className="alert alert-danger" style={{ marginBottom: '16px' }}>{signoffError}</div>
-                )}
-                <textarea
-                  style={{ width: '100%', minHeight: '80px', marginBottom: '16px', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-color)' }}
-                  placeholder="Enter executive authorization notes..."
-                  value={signoffNotes}
-                  onChange={(e) => setSignoffNotes(e.target.value)}
-                  disabled={isSigningOff}
-                />
-                <button
-                  style={{
-                    backgroundColor: 'var(--primary-color)',
-                    color: 'white',
-                    padding: '10px 20px',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontWeight: 600,
-                    cursor: isSigningOff ? 'not-allowed' : 'pointer',
-                    opacity: isSigningOff ? 0.7 : 1,
-                  }}
-                  disabled={isSigningOff}
-                  onClick={async () => {
-                    if (!signoffNotes.trim()) {
-                      setSignoffError('Authorization notes are required for executive signoff.');
-                      return;
-                    }
-                    setSignoffError('');
-                    setIsSigningOff(true);
-                    try {
-                      await recordExecutiveProductionSignoff('approved', signoffNotes);
-                      await closure.refresh();
-                    } catch (e: any) {
-                      setSignoffError(e.message || 'Failed to record executive signoff.');
-                    } finally {
-                      setIsSigningOff(false);
-                    }
-                  }}
-                >
-                  {isSigningOff ? 'Authorizing...' : 'Authorize Production Launch'}
-                </button>
-              </div>
-            ) : null}
+            <div className="alert alert-warning" style={{ marginTop: '14px' }}>
+              <strong>Executive review caveat: </strong>Evidence-level closure actions do not approve production launch. Executive review remains separate and must follow the source governance process.
+            </div>
           </ModernCard>
 
           <ModernCard title="Links" subtitle="Continue closure work in the existing readiness workspaces.">

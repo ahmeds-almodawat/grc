@@ -12,7 +12,6 @@ import {
   getProductionHypercareBlockers,
   getProductionReadinessSignoffRegister,
   getRuntimeAccessReviewBlockers,
-  getExecutiveProductionSignoffs,
 } from './productionReadinessApi';
 import { invokePrivilegedAction } from './privilegedAction';
 
@@ -49,6 +48,57 @@ export interface ProductionEvidenceClosureItem {
   comments: string;
   closureDecisionState: string;
   limitationState: string;
+}
+
+export type ControlledEvidenceClosureActionType =
+  | 'add_note'
+  | 'ready_for_review'
+  | 'request_more_evidence'
+  | 'accept_with_limitation'
+  | 'close_as_verified'
+  | 'reopen_with_reason';
+
+export interface ControlledEvidenceClosureActionRequest {
+  evidenceId: string;
+  actionType: ControlledEvidenceClosureActionType;
+  actionReason?: string;
+  actionNote?: string;
+  previousState?: EvidenceClosureStatus | string;
+  hasBlocker?: boolean;
+  metadata?: Record<string, unknown>;
+}
+
+export interface ControlledEvidenceClosureActionResult {
+  id: string;
+  evidence_id: string;
+  action_type: ControlledEvidenceClosureActionType;
+  previous_state: string | null;
+  next_state: string;
+  created_at: string;
+  message: string;
+}
+
+export interface ControlledEvidenceClosureActionHistoryRow {
+  id: string;
+  evidence_id: string;
+  action_type: ControlledEvidenceClosureActionType;
+  action_reason: string | null;
+  action_note: string | null;
+  previous_state: string | null;
+  next_state: string;
+  actor_id: string | null;
+  created_at: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface ControlledEvidenceClosureActionAvailability {
+  actionType: ControlledEvidenceClosureActionType;
+  label: string;
+  available: boolean;
+  reasonRequired: boolean;
+  disabledReason: string;
+  nextStateLabel: string;
+  warning: string;
 }
 
 export interface EvidenceClosureHandoff {
@@ -95,7 +145,6 @@ export interface ExecutiveClosureRecommendationReadiness {
   missingAssignmentCount: number;
   requiredExecutiveActions: string[];
   caveat: string;
-  currentSignoffState: string;
 }
 
 export interface DepartmentEvidenceRegisterRow {
@@ -183,7 +232,6 @@ export interface ProductionEvidenceClosureData {
     recoveryEvidenceState: string;
     departmentReadinessGaps: number;
     finalRecommendationState: EvidenceClosureRecommendation;
-    formalSignoffs?: any[];
   };
 }
 
@@ -192,6 +240,16 @@ const reviewRequired = 'Review required.';
 const ownerAction = 'Awaiting owner action.';
 const noBlocker = 'No blocker currently recorded.';
 const sourceWorkflowClosure = 'Closure must be completed in the source workflow.';
+const evidenceLevelCaveat = 'Evidence closure does not approve production launch.';
+
+export const controlledEvidenceClosureActionTypes: ControlledEvidenceClosureActionType[] = [
+  'add_note',
+  'ready_for_review',
+  'request_more_evidence',
+  'accept_with_limitation',
+  'close_as_verified',
+  'reopen_with_reason',
+];
 
 const categoryRequiredEvidence: Record<string, string> = {
   'Department launch': 'Department owner, launch checklist, participant coverage, support path, and launch decision evidence.',
@@ -203,6 +261,24 @@ const categoryRequiredEvidence: Record<string, string> = {
   'Executive signoff': 'Named executive decision and signoff evidence.',
   'Accepted limitations': 'Risk acceptance, limitation owner, review date, and executive awareness evidence.',
   'Other production evidence': 'Recorded readiness, limitation, or closure evidence.',
+};
+
+const actionLabels: Record<ControlledEvidenceClosureActionType, string> = {
+  add_note: 'Add note',
+  ready_for_review: 'Ready for review',
+  request_more_evidence: 'Request more evidence',
+  accept_with_limitation: 'Accept with limitation',
+  close_as_verified: 'Close as verified',
+  reopen_with_reason: 'Reopen with reason',
+};
+
+const actionNextStateLabels: Record<ControlledEvidenceClosureActionType, string> = {
+  add_note: 'No state change',
+  ready_for_review: 'Under review',
+  request_more_evidence: 'Evidence required',
+  accept_with_limitation: 'Accepted with limitation',
+  close_as_verified: 'Closed as verified',
+  reopen_with_reason: 'Open',
 };
 
 const numberValue = (value: unknown) => Number(value ?? 0) || 0;
@@ -257,6 +333,106 @@ export function getEvidenceClosureHandoff(item?: Pick<ProductionEvidenceClosureI
 
 function hasRecordedEvidence(item?: Pick<ProductionEvidenceClosureItem, 'linkedEvidenceReferences'>) {
   return Boolean(item?.linkedEvidenceReferences.some(reference => reference && reference !== evidenceMissing));
+}
+
+export function getControlledEvidenceClosureActionLabel(actionType: ControlledEvidenceClosureActionType) {
+  return actionLabels[actionType];
+}
+
+export function getControlledEvidenceClosureNextStateLabel(actionType: ControlledEvidenceClosureActionType) {
+  return actionNextStateLabels[actionType];
+}
+
+export function requiresControlledEvidenceClosureReason(actionType: ControlledEvidenceClosureActionType) {
+  return ['request_more_evidence', 'accept_with_limitation', 'reopen_with_reason'].includes(actionType);
+}
+
+export function getControlledEvidenceClosureActionAvailability(
+  item: ProductionEvidenceClosureItem | undefined,
+  actionType: ControlledEvidenceClosureActionType,
+): ControlledEvidenceClosureActionAvailability {
+  const reasonRequired = requiresControlledEvidenceClosureReason(actionType);
+  const state = item?.evidenceState ?? 'evidence_required';
+  const evidenceRecorded = hasRecordedEvidence(item);
+  const blocked = item?.evidenceState === 'blocked' || !isMissingValue(item?.blockerState);
+  const closed = state === 'closed';
+  let available = Boolean(item);
+  let disabledReason = item ? '' : 'Evidence item required.';
+  let warning = '';
+
+  if (actionType === 'ready_for_review' && (!evidenceRecorded || closed || blocked)) {
+    available = false;
+    disabledReason = !evidenceRecorded
+      ? 'Evidence required before review.'
+      : blocked
+        ? 'Blocked.'
+        : 'Closed in source workflow.';
+  }
+  if (actionType === 'request_more_evidence' && closed) {
+    available = false;
+    disabledReason = 'Closed in source workflow.';
+  }
+  if (actionType === 'accept_with_limitation') {
+    warning = 'Executive review is still required for accepted limitations.';
+    if (closed) {
+      available = false;
+      disabledReason = 'Closed in source workflow.';
+    }
+  }
+  if (actionType === 'close_as_verified') {
+    warning = evidenceLevelCaveat;
+    if (!evidenceRecorded || blocked || state === 'evidence_required' || state === 'overdue') {
+      available = false;
+      disabledReason = blocked
+        ? 'Blocked.'
+        : !evidenceRecorded || state === 'evidence_required'
+          ? 'Evidence required before review.'
+          : 'Owner action required.';
+    }
+  }
+  if (actionType === 'reopen_with_reason' && !['closed', 'accepted_with_limitation'].includes(state)) {
+    available = false;
+    disabledReason = 'Reopen is available after closure or limitation acceptance.';
+  }
+
+  return {
+    actionType,
+    label: actionLabels[actionType],
+    available,
+    reasonRequired,
+    disabledReason,
+    nextStateLabel: actionNextStateLabels[actionType],
+    warning,
+  };
+}
+
+export function getAvailableControlledEvidenceClosureActions(item?: ProductionEvidenceClosureItem) {
+  return controlledEvidenceClosureActionTypes
+    .map(actionType => getControlledEvidenceClosureActionAvailability(item, actionType))
+    .filter(action => action.available);
+}
+
+export function validateControlledEvidenceClosureActionRequest(
+  request: ControlledEvidenceClosureActionRequest,
+  item?: ProductionEvidenceClosureItem,
+) {
+  if (!request.evidenceId.trim()) return 'Evidence identifier is required.';
+  if (requiresControlledEvidenceClosureReason(request.actionType) && !request.actionReason?.trim()) {
+    return 'Reason required.';
+  }
+  const availability = getControlledEvidenceClosureActionAvailability(item, request.actionType);
+  if (!availability.available) return availability.disabledReason || 'Controlled evidence action is not available.';
+  if (request.actionType === 'close_as_verified' && (request.hasBlocker || item?.evidenceState === 'blocked' || !isMissingValue(item?.blockerState))) {
+    return 'Blocked.';
+  }
+  return '';
+}
+
+export function getControlledEvidenceClosureHistoryDisplay(row?: ControlledEvidenceClosureActionHistoryRow | ControlledEvidenceClosureActionResult) {
+  if (!row) return 'Action history has not been recorded.';
+  const actionType = 'action_type' in row ? row.action_type : 'add_note';
+  const nextState = 'next_state' in row ? row.next_state : '';
+  return `${getControlledEvidenceClosureActionLabel(actionType)} recorded. Next state: ${nextState || 'No state change'}.`;
 }
 
 function isMissingValue(value?: string) {
@@ -421,30 +597,38 @@ export function getExecutiveClosureRecommendation(data?: ProductionEvidenceClosu
         ? 'Review required'
         : 'Ready for executive review';
 
-  let currentSignoffState = 'Pending';
-  if (data?.executivePack?.formalSignoffs && data.executivePack.formalSignoffs.length > 0) {
-    if (data.executivePack.formalSignoffs[0].decision === 'approved') {
-      currentSignoffState = 'Approved';
-      recommendationState = 'Ready for executive review'; // Override to prevent regression of UI state
-    }
-  }
-
   return {
     recommendationState,
     recommendationReason: getExecutiveClosureReadinessReason(blockers),
     ...blockers,
     requiredExecutiveActions: getExecutiveRequiredActions(data, signals),
     caveat: 'Executive review depends on recorded evidence and source workflow status.',
-    currentSignoffState,
   };
 }
 
-export async function recordExecutiveProductionSignoff(decision: string, notes: string): Promise<void> {
-  const payload = {
-    decision,
-    notes,
-  };
-  await invokePrivilegedAction<any>('record_executive_production_signoff', payload);
+export async function recordControlledEvidenceClosureAction(
+  request: ControlledEvidenceClosureActionRequest,
+): Promise<ControlledEvidenceClosureActionResult> {
+  return invokePrivilegedAction<ControlledEvidenceClosureActionResult>('record_production_evidence_closure_action', {
+    evidence_id: request.evidenceId,
+    action_type: request.actionType,
+    action_reason: request.actionReason ?? null,
+    action_note: request.actionNote ?? null,
+    previous_state: request.previousState ?? null,
+    has_blocker: Boolean(request.hasBlocker),
+    metadata: {
+      ...(request.metadata ?? {}),
+      evidence_level_closure_only: true,
+    },
+  });
+}
+
+export async function getControlledEvidenceClosureActionHistory(
+  evidenceId: string,
+): Promise<ControlledEvidenceClosureActionHistoryRow[]> {
+  return invokePrivilegedAction<ControlledEvidenceClosureActionHistoryRow[]>('get_production_evidence_closure_action_history', {
+    evidence_id: evidenceId,
+  });
 }
 
 function categoryMissing(value?: string) {
@@ -986,7 +1170,6 @@ export async function getProductionEvidenceClosureData(): Promise<ProductionEvid
     acceptedLimitations,
     goLiveDecisions,
     hypercareBlockers,
-    formalSignoffs,
   ] = await Promise.all([
     getHospitalDepartmentLaunchPacks(),
     getHospitalOperationsLaunchBlockers(),
@@ -1001,7 +1184,6 @@ export async function getProductionEvidenceClosureData(): Promise<ProductionEvid
     getPilotAcceptedLimitations(),
     getProductionGoLiveDecisions(),
     getProductionHypercareBlockers(),
-    getExecutiveProductionSignoffs(),
   ]);
 
   const intakeQueue = [
@@ -1030,6 +1212,10 @@ export async function getProductionEvidenceClosureData(): Promise<ProductionEvid
     })),
     ...acceptedLimitations.map((row, index) => makeItem('Accepted limitations', row, index, {
       requiredEvidence: 'Risk acceptance, limitation owner, review date, and executive awareness evidence.',
+    })),
+    ...goLiveDecisions.map((row, index) => makeItem('Executive signoff', row, index + 1000, {
+      title: 'Executive decision evidence',
+      requiredEvidence: 'Named decision and signoff evidence.',
     })),
     ...limitations.map((row, index) => makeItem('Other production evidence', row, index, {
       requiredEvidence: 'Recorded limitation or readiness evidence.',
@@ -1092,7 +1278,6 @@ export async function getProductionEvidenceClosureData(): Promise<ProductionEvid
       recoveryEvidenceState,
       departmentReadinessGaps,
       finalRecommendationState,
-      formalSignoffs,
     },
   };
 }
