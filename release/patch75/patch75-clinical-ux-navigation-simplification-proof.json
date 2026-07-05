@@ -1,0 +1,31 @@
+{
+  "patch": 75,
+  "name": "Clinical UX and Navigation Simplification",
+  "checks": [
+    {
+      "name": "Layout primaryNav cleanup",
+      "passed": true,
+      "details": {
+        "noOperatorConsole": true,
+        "noEvidenceClosure": true
+      }
+    },
+    {
+      "name": "App.tsx Hub tabs cleanup",
+      "passed": true,
+      "details": {
+        "grcHubClean": true,
+        "qsHubClean": true
+      }
+    },
+    {
+      "name": "authAccess.ts admin default routing",
+      "passed": true,
+      "details": {
+        "noAdminHubDefault": true,
+        "dailyOpsDefault": true
+      }
+    }
+  ],
+  "passed": true
+}

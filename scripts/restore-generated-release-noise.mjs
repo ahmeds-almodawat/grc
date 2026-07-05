@@ -47,6 +47,7 @@ const allowlistedPaths = [
   'release/patch71/patch71-live-data-quality-role-integrity-proof.json',
   'release/patch72/patch72-uat-pack-hospital-pilot-acceptance-proof.json',
   'release/patch73/patch73-live-support-incident-readiness-proof.json',
+  'release/patch74/patch74-final-security-access-review-pack-proof.json',
 ];
 
 const existing = [];
