@@ -97,6 +97,7 @@ npm run patch75:all
 npm run patch76:all
 npm run patch77:all
 npm run patch78:all
+npm run patch79:all
 ```
 
 Patch 58.1 adds validation lanes that avoid nested duplicate full chains:
@@ -229,6 +230,12 @@ Patch 78 adds identity, role, and data integrity hardening proof:
 
 ```powershell
 npm run patch78:proof
+```
+
+Patch 79 adds production operations governance, hypercare, and board pack closure proof:
+
+```powershell
+npm run patch79:proof
 ```
 
 ## G. Generated Release Artifacts

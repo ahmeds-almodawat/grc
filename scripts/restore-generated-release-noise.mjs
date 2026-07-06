@@ -51,6 +51,7 @@ const allowlistedPaths = [
   'release/patch75/patch75-clinical-ux-navigation-simplification-proof.json',
   'release/patch76/patch76-controlled-production-authority-cutover-gate-proof.json',
   'release/patch77/patch77-live-pilot-execution-issue-burndown-proof.json',
+  'release/patch78/patch78-identity-role-data-integrity-hardening-proof.json',
 ];
 
 const existing = [];

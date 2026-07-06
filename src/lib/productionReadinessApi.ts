@@ -165,6 +165,22 @@ export type IdentityRoleFindingStatus = 'open' | 'in_progress' | 'resolved' | 'a
 export type PrivilegedRoleRecertificationStatus = 'pending' | 'recertified' | 'revocation_required' | 'deferred' | 'blocked';
 export type SsoMfaReadinessStatus = 'review_required' | 'ready_for_it_review' | 'blocked' | 'not_applicable';
 export type AccessExportStatus = 'not_ready' | 'ready_for_export' | 'exported_for_review' | 'blocked';
+export type ProductionHypercareStatus = 'planned' | 'active' | 'monitoring' | 'exit_review_required' | 'blocked' | 'deferred' | 'closed_with_limitations';
+export type ProductionOperatingDayStatus = 'not_started' | 'in_progress' | 'review_required' | 'accepted' | 'blocked' | 'deferred';
+export type ProductionEvidencePackStatus = 'incomplete' | 'collecting' | 'ready_for_review' | 'accepted_with_limitations' | 'blocked';
+export type ExecutiveBoardPackStatus = 'draft' | 'review_required' | 'ready_for_board_review' | 'accepted_with_limitations' | 'blocked' | 'deferred';
+export type ProductionHypercareItemType =
+  | 'support_issue'
+  | 'incident_trend'
+  | 'department_launch_health'
+  | 'known_limitation'
+  | 'corrective_action'
+  | 'evidence_pack_gap'
+  | 'board_pack_gap'
+  | 'training_gap'
+  | 'dr_restore_gap'
+  | 'access_review_gap';
+export type ProductionHypercareItemStatus = 'open' | 'in_progress' | 'evidence_required' | 'review_required' | 'closed' | 'accepted_limitation' | 'deferred' | 'blocked';
 
 export interface LivePilotSession {
   id: string;
@@ -306,6 +322,99 @@ export interface IdentityRoleIntegrityDashboardSummary {
   next_action_required: string;
   caveat: string;
   controlled_authority_caveat: string;
+}
+
+export interface ProductionHypercareWindow {
+  id: string;
+  organization_id: string | null;
+  hypercare_title: string;
+  hypercare_scope: string;
+  hypercare_status: ProductionHypercareStatus;
+  day_30_status: ProductionOperatingDayStatus;
+  day_60_status: ProductionOperatingDayStatus;
+  day_90_status: ProductionOperatingDayStatus;
+  open_support_issue_count: number;
+  critical_incident_count: number;
+  unresolved_limitation_count: number;
+  corrective_action_open_count: number;
+  department_launch_gap_count: number;
+  evidence_pack_status: ProductionEvidencePackStatus;
+  board_pack_status: ExecutiveBoardPackStatus;
+  hypercare_exit_ready: boolean;
+  exit_review_notes: string | null;
+  created_by: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProductionHypercareItem {
+  id: string;
+  organization_id: string | null;
+  hypercare_window_id: string;
+  item_type: ProductionHypercareItemType;
+  severity: IdentityRoleFindingSeverity;
+  item_status: ProductionHypercareItemStatus;
+  department_id: string | null;
+  owner_id: string | null;
+  item_title: string;
+  item_summary: string | null;
+  due_date: string | null;
+  evidence_summary: string | null;
+  closure_summary: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExecutiveGovernanceBoardPack {
+  id: string;
+  organization_id: string | null;
+  hypercare_window_id: string | null;
+  pack_title: string;
+  reporting_period: string;
+  pack_status: ExecutiveBoardPackStatus;
+  executive_summary: string | null;
+  support_trend_summary: string | null;
+  incident_trend_summary: string | null;
+  department_health_summary: string | null;
+  limitation_summary: string | null;
+  corrective_action_summary: string | null;
+  accreditation_evidence_summary: string | null;
+  dr_support_access_training_summary: string | null;
+  board_review_notes: string | null;
+  prepared_by: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProductionOperationsDashboardSummary {
+  hypercare_window_count: number;
+  latest_hypercare_title: string;
+  hypercare_command_center_status: ProductionHypercareStatus | 'review_required';
+  day_30_status: ProductionOperatingDayStatus;
+  day_60_status: ProductionOperatingDayStatus;
+  day_90_status: ProductionOperatingDayStatus;
+  open_support_issue_count: number;
+  critical_incident_count: number;
+  department_launch_gap_count: number;
+  unresolved_limitation_count: number;
+  corrective_action_open_count: number;
+  evidence_pack_status: ProductionEvidencePackStatus;
+  board_pack_status: ExecutiveBoardPackStatus;
+  executive_monthly_governance_report_status: ExecutiveBoardPackStatus | 'draft';
+  accreditation_evidence_pack_gap_count: number;
+  dr_support_access_training_gap_count: number;
+  required_actions_before_hypercare_exit: string[];
+  required_actions_before_board_review: string[];
+  next_action_required: string;
+  caveat: string;
+  controlled_authority_caveat: string;
+  live_transition_caveat: string;
+  real_execution_caveat: string;
 }
 
 export interface LivePilotIssueBurndownSummary {
@@ -1787,6 +1896,205 @@ export async function recordPrivilegedRoleRecertification(payload: {
     return await invokePrivilegedAction<{ id: string; recertification_status: string; message: string }>('record_privileged_role_recertification', payload);
   } catch (error) {
     return throwRpcActionError(error, 'Record Privileged Role Recertification', 'record_privileged_role_recertification');
+  }
+}
+
+export async function getProductionHypercareWindows(): Promise<ProductionHypercareWindow[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('production_hypercare_windows')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return (data || []) as ProductionHypercareWindow[];
+  } catch (error) {
+    logApiWarning('getProductionHypercareWindows', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getProductionHypercareItems(): Promise<ProductionHypercareItem[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('production_hypercare_items')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(250);
+    if (error) throw error;
+    return (data || []) as ProductionHypercareItem[];
+  } catch (error) {
+    logApiWarning('getProductionHypercareItems', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getExecutiveGovernanceBoardPacks(): Promise<ExecutiveGovernanceBoardPack[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('executive_governance_board_packs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return (data || []) as ExecutiveGovernanceBoardPack[];
+  } catch (error) {
+    logApiWarning('getExecutiveGovernanceBoardPacks', error);
+    return emptyLiveArray();
+  }
+}
+
+export function getBoardClosureRequiredActions(
+  windows: ProductionHypercareWindow[] = [],
+  items: ProductionHypercareItem[] = [],
+  boardPacks: ExecutiveGovernanceBoardPack[] = [],
+): { hypercare: string[]; board: string[] } {
+  const latestWindow = windows[0];
+  const latestPack = boardPacks[0];
+  const highCriticalOpen = items.filter(item => ['high', 'critical'].includes(item.severity) && ['open', 'in_progress', 'evidence_required', 'review_required', 'blocked'].includes(item.item_status)).length;
+  const evidencePackGaps = items.filter(item => item.item_type === 'evidence_pack_gap' && item.item_status !== 'closed').length;
+  const supportIssues = items.filter(item => item.item_type === 'support_issue' && ['open', 'in_progress', 'evidence_required', 'review_required', 'blocked'].includes(item.item_status)).length;
+  const criticalIncidents = items.filter(item => item.item_type === 'incident_trend' && item.severity === 'critical' && item.item_status !== 'closed').length;
+  const hypercare = new Set<string>();
+  const board = new Set<string>();
+
+  if (!windows.length) hypercare.add('Create hypercare command center.');
+  if (criticalIncidents > 0 || (latestWindow?.critical_incident_count ?? 0) > 0) hypercare.add('Critical incidents block hypercare exit review.');
+  if (supportIssues > 0 || (latestWindow?.open_support_issue_count ?? 0) > 0) hypercare.add('Open support issues require limitation review or closure.');
+  if (evidencePackGaps > 0 || latestWindow?.evidence_pack_status === 'incomplete' || latestWindow?.evidence_pack_status === 'blocked') hypercare.add('Accreditation/evidence pack tracking requires review.');
+  if (!latestWindow || ['draft', 'blocked'].includes(latestWindow.board_pack_status)) hypercare.add('Board closure pack requires review.');
+
+  if (!boardPacks.length) board.add('Create executive monthly governance report.');
+  if (highCriticalOpen > 0) board.add('High/critical operations items require closure or limitation review.');
+  if (latestPack?.pack_status === 'draft' || !latestPack) board.add('Board review required.');
+
+  return {
+    hypercare: hypercare.size ? [...hypercare] : ['Hypercare exit review required.'],
+    board: board.size ? [...board] : ['Ready for board review.'],
+  };
+}
+
+export function getProductionOperationsDashboardSummary(
+  windows: ProductionHypercareWindow[] = [],
+  items: ProductionHypercareItem[] = [],
+  boardPacks: ExecutiveGovernanceBoardPack[] = [],
+): ProductionOperationsDashboardSummary {
+  const latestWindow = windows[0];
+  const latestPack = boardPacks[0];
+  const actions = getBoardClosureRequiredActions(windows, items, boardPacks);
+  const itemCount = (type: ProductionHypercareItemType) =>
+    items.filter(item => item.item_type === type && ['open', 'in_progress', 'evidence_required', 'review_required', 'blocked'].includes(item.item_status)).length;
+
+  return {
+    hypercare_window_count: windows.length,
+    latest_hypercare_title: latestWindow?.hypercare_title ?? 'Hypercare command center has not been recorded.',
+    hypercare_command_center_status: latestWindow?.hypercare_status ?? 'review_required',
+    day_30_status: latestWindow?.day_30_status ?? 'not_started',
+    day_60_status: latestWindow?.day_60_status ?? 'not_started',
+    day_90_status: latestWindow?.day_90_status ?? 'not_started',
+    open_support_issue_count: latestWindow?.open_support_issue_count ?? itemCount('support_issue'),
+    critical_incident_count: latestWindow?.critical_incident_count ?? items.filter(item => item.item_type === 'incident_trend' && item.severity === 'critical' && item.item_status !== 'closed').length,
+    department_launch_gap_count: latestWindow?.department_launch_gap_count ?? itemCount('department_launch_health'),
+    unresolved_limitation_count: latestWindow?.unresolved_limitation_count ?? itemCount('known_limitation'),
+    corrective_action_open_count: latestWindow?.corrective_action_open_count ?? itemCount('corrective_action'),
+    evidence_pack_status: latestWindow?.evidence_pack_status ?? 'incomplete',
+    board_pack_status: latestWindow?.board_pack_status ?? latestPack?.pack_status ?? 'draft',
+    executive_monthly_governance_report_status: latestPack?.pack_status ?? 'draft',
+    accreditation_evidence_pack_gap_count: itemCount('evidence_pack_gap'),
+    dr_support_access_training_gap_count: itemCount('dr_restore_gap') + itemCount('access_review_gap') + itemCount('training_gap'),
+    required_actions_before_hypercare_exit: actions.hypercare,
+    required_actions_before_board_review: actions.board,
+    next_action_required: actions.hypercare[0] ?? actions.board[0] ?? 'Board review required.',
+    caveat: 'Board closure does not approve production launch.',
+    controlled_authority_caveat: 'Controlled production authority remains separate.',
+    live_transition_caveat: 'Live transition requires separate operational execution.',
+    real_execution_caveat: 'Real hospital execution evidence is still required.',
+  };
+}
+
+export async function createProductionHypercareWindow(payload: {
+  hypercare_title: string;
+  exit_review_notes?: string | null;
+}): Promise<{ id: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; message: string }>('create_production_hypercare_window', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Create Production Hypercare Window', 'create_production_hypercare_window');
+  }
+}
+
+export async function updateProductionHypercareWindowStatus(payload: {
+  hypercare_window_id: string;
+  hypercare_status: ProductionHypercareStatus;
+  day_30_status?: ProductionOperatingDayStatus | null;
+  day_60_status?: ProductionOperatingDayStatus | null;
+  day_90_status?: ProductionOperatingDayStatus | null;
+  evidence_pack_status?: ProductionEvidencePackStatus | null;
+  board_pack_status?: ExecutiveBoardPackStatus | null;
+  exit_review_notes?: string | null;
+}): Promise<{ id: string; hypercare_status: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; hypercare_status: string; message: string }>('update_production_hypercare_window_status', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Update Production Hypercare Window', 'update_production_hypercare_window_status');
+  }
+}
+
+export async function recordProductionHypercareItem(payload: {
+  hypercare_window_id: string;
+  item_type: ProductionHypercareItemType;
+  item_title: string;
+  severity?: IdentityRoleFindingSeverity;
+  item_summary?: string | null;
+  department_id?: string | null;
+  owner_id?: string | null;
+  due_date?: string | null;
+}): Promise<{ id: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; message: string }>('record_production_hypercare_item', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Record Production Hypercare Item', 'record_production_hypercare_item');
+  }
+}
+
+export async function updateProductionHypercareItemStatus(payload: {
+  item_id: string;
+  item_status: ProductionHypercareItemStatus;
+  evidence_summary?: string | null;
+  closure_summary?: string | null;
+}): Promise<{ id: string; item_status: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; item_status: string; message: string }>('update_production_hypercare_item_status', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Update Production Hypercare Item', 'update_production_hypercare_item_status');
+  }
+}
+
+export async function createExecutiveGovernanceBoardPack(payload: {
+  pack_title: string;
+  reporting_period: string;
+  hypercare_window_id?: string | null;
+  executive_summary?: string | null;
+}): Promise<{ id: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; message: string }>('create_executive_governance_board_pack', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Create Executive Governance Board Pack', 'create_executive_governance_board_pack');
+  }
+}
+
+export async function updateExecutiveGovernanceBoardPackStatus(payload: {
+  board_pack_id: string;
+  pack_status: ExecutiveBoardPackStatus;
+  board_review_notes?: string | null;
+}): Promise<{ id: string; pack_status: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; pack_status: string; message: string }>('update_executive_governance_board_pack_status', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Update Executive Governance Board Pack', 'update_executive_governance_board_pack_status');
   }
 }
 
