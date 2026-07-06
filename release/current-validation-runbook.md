@@ -37,6 +37,8 @@ Patch 82B frontend-only UI polish changes should run `npm run validate:build`, `
 
 Patch 82C frontend-only interactivity changes should run `npm run validate:build`, `npm run validate:security`, `npm run patch82c:proof`, and `npm run release:restore-noise`. Card filters, search, and drilldowns must not change backend workflow behavior.
 
+Patch 82E frontend-only drilldown changes should run `npm run validate:build`, `npm run validate:security`, `npm run patch82e:proof`, and `npm run release:restore-noise`. Metric drilldowns must stay local to already loaded department control indicators and must not trigger backend writes.
+
 Never use `git add .`. Stage only the files intentionally changed for the patch.
 
 Do not accidentally commit:

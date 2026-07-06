@@ -1,0 +1,203 @@
+{
+  "patch": "82E",
+  "checked_at": "2026-07-06T13:27:46.591Z",
+  "strict_passed": true,
+  "failed_count": 0,
+  "checks": [
+    {
+      "name": "package.json contains patch82e:proof",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "package.json contains patch82e:all",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no Patch 82E migration was added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no Supabase migration files modified",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Departments page still exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Department Control Room title remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "non-zero metric drilldown/clickable implementation exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "zero cells are guarded/non-clickable",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "selected department drilldown exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "drawer/modal/detail wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Critical risks drilldown exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Next action drilldown exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "related workspace buttons or route actions exist",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "sidebar raw nav keys are not visible as labels",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "top bar cleanup exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 82E release summary exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 82E audit exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 82E validation report exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "current-platform-status mentions Patch 82E",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "proof command index mentions Patch 82E",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validation runbook mentions Patch 82E",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "docs say frontend-only",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "docs say no Supabase migration applied",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "docs say staging rehearsal remains pending",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no production launched wording added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no go-live complete wording added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no system is production ready claim added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no transition_to_live_operations exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no service-role frontend exposure exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no fake/demo success data added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "restore-noise covers Patch 82C proof JSON",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:fast exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:security exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "proof:all exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "v700:runtime-security exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no conflict markers",
+      "passed": true,
+      "details": ""
+    }
+  ]
+}

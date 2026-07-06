@@ -318,7 +318,6 @@ export function Layout({ page, setPage, children }: LayoutProps) {
               <LogOut size={16} />
               {language === 'ar' ? 'خروج' : 'Sign out'}
             </button>
-            <div className="topbar-pill">{t('app.version')}</div>
           </div>
         </header>
         {children}

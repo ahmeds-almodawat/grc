@@ -2,7 +2,9 @@
 
 ## Current Level
 
-- Current patch level: Patch 82C-1 after implementation.
+- Current patch level: Patch 82E after implementation.
+- Patch 82E scope: frontend-only record-level/actionable drilldown for Department Control Room metric counts. It makes non-zero metric cells actionable, keeps zero cells non-clickable, opens critical-risk and next-action drilldowns, cleans navigation labels, simplifies the top bar, and adds proof coverage. No Supabase migration was applied, staging rehearsal remains pending, and production caveat remains unchanged.
+- Patch 82C-1 scope: tiny proof/wording alignment fix for Patch 82C operational dashboard interactivity. It updates validation evidence so the existing interactive UI is detected after merge. No behavior, security, schema, Supabase, or production launch change was made.
 - Patch 82C-1 scope: tiny proof/wording alignment fix for Patch 82C operational dashboard interactivity. It updates validation evidence so the existing interactive UI is detected after merge. No behavior, security, schema, Supabase, or production launch change was made.
 - Patch 82C scope: frontend-only operational dashboard interactivity for OVR / Incident Management, OVR Risk Indicators, Department Control Room, Operations & Notifications Center, Escalations / governance follow-up, and Approvals. It adds local card filters, search, reset controls, selected-record detail panels, and clearer empty-state guidance using already loaded data. No Supabase migration was applied, staging rehearsal remains pending, and production caveat remains unchanged.
 - Patch 82B scope: frontend-only interactive dashboard and UI polish for Production Readiness Center and Production Operator Console. It adds local focus cards, filters, search, and drilldown-style details using already loaded data. No Supabase migration was applied, staging rehearsal remains pending, and production caveat remains unchanged.

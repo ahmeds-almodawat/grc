@@ -5947,3 +5947,92 @@ tbody tr:hover,
     grid-template-columns: 1fr !important;
   }
 }
+
+/* --- V260 Global UI Polish --- */
+
+.stat-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(31, 42, 68, 0.1) !important;
+}
+
+.panel {
+  padding: 28px !important;
+  border-radius: 24px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 12px 28px rgba(31, 42, 68, 0.05) !important;
+}
+
+table th {
+  background: #f8fafc !important;
+  text-transform: uppercase !important;
+  font-size: 12px !important;
+  letter-spacing: 0.05em !important;
+  color: #64748b !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+  padding: 14px 16px !important;
+}
+
+table td {
+  padding: 16px 14px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+table tbody tr {
+  transition: background-color 0.15s ease !important;
+}
+
+table tbody tr:hover {
+  background: #f8fafc !important;
+}
+
+.primary-button, .ghost-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.primary-button:hover {
+  filter: brightness(1.2);
+}
+
+.ghost-button:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.status-badge, .risk-pill {
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  border-radius: 9999px !important;
+  padding: 4px 12px !important;
+}
+
+.empty-state {
+  border: 2px dashed #cbd5e1 !important;
+  background: #f8fafc !important;
+  color: #64748b !important;
+  border-radius: 16px !important;
+  padding: 48px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+}
+
+.detail-panel {
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  border-left: 1px solid #e2e8f0 !important;
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}

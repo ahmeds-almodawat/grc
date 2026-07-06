@@ -272,6 +272,12 @@ Patch 82C adds operational dashboard interactivity proof:
 npm run patch82c:proof
 ```
 
+Patch 82E adds record-level department drilldown proof:
+
+```powershell
+npm run patch82e:proof
+```
+
 ## G. Generated Release Artifacts
 
 Many proof commands regenerate JSON and text evidence under `release/v*` and older `release/patch*` folders. That churn is expected after validation.

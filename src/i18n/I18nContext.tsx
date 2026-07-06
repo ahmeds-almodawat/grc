@@ -29,6 +29,18 @@ const translations: TranslationMap = {
   'language.switchToEnglish': { en: 'English', ar: 'English' },
   'language.current': { en: 'Language', ar: 'اللغة' },
 
+  'nav.workspace': { en: 'Workspace', ar: 'مساحة العمل' },
+  'nav.workspace.hint': { en: 'Daily work queues and follow-up', ar: 'قوائم العمل والمتابعة اليومية' },
+  'nav.qualitySafety': { en: 'Quality & Safety', ar: 'الجودة والسلامة' },
+  'nav.qualitySafety.hint': { en: 'OVR, quality, safety and risk', ar: 'الجودة والسلامة والمخاطر' },
+  'nav.accreditation': { en: 'Accreditation', ar: 'الاعتماد' },
+  'nav.accreditation.hint': { en: 'Survey readiness and standards', ar: 'جاهزية التقييم والمعايير' },
+  'nav.policies': { en: 'Policies & SOPs', ar: 'السياسات والإجراءات' },
+  'nav.policies.hint': { en: 'Policies, SOPs and attestations', ar: 'السياسات وإقرارات الاستلام' },
+  'nav.dashboards': { en: 'Dashboards', ar: 'لوحات القيادة' },
+  'nav.dashboards.hint': { en: 'Executive and operational dashboards', ar: 'لوحات القيادة التنفيذية والتشغيلية' },
+  'nav.admin.hint': { en: 'Users, departments and setup', ar: 'المستخدمون والإدارات والإعدادات' },
+
   'nav.dashboard': { en: 'Executive Dashboard', ar: 'لوحة القيادة التنفيذية' },
   'nav.productionOperatorConsole': { en: 'Production Operator Console', ar: 'لوحة تشغيل الإنتاج' },
   'nav.productionOperatorConsole.hint': { en: 'Daily operating safety view', ar: 'عرض يومي لسلامة التشغيل' },
@@ -1117,7 +1129,7 @@ const translations: TranslationMap = {
 
 
   'nav.home': { en: 'Home', ar: 'الرئيسية' },
-  'nav.home.hint': { en: 'workspaces overview', ar: 'نظرة على المساحات' },
+  'nav.home.hint': { en: 'Workspaces overview', ar: 'نظرة على المساحات' },
   'nav.trainingGovernance': { en: 'Training Governance', ar: 'حوكمة التدريب' },
   'nav.executiveTruth': { en: 'Executive GRC Truth', ar: 'الحقيقة التنفيذية GRC' },
   'nav.productionReadiness': { en: 'Production Readiness', ar: 'جاهزية الإطلاق والتشغيل' },
