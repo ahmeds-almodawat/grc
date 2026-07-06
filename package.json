@@ -347,6 +347,8 @@
     "patch82b:all": "npm run validate:build && npm run validate:security && npm run patch82b:proof",
     "patch82c:proof": "node scripts/patch82c-operational-dashboard-interactivity-proof.mjs",
     "patch82c:all": "npm run validate:build && npm run validate:security && npm run patch82c:proof",
+    "patch82e:proof": "node scripts/patch82e-record-level-dashboard-drilldown-proof.mjs",
+    "patch82e:all": "npm run validate:build && npm run validate:security && npm run patch82e:proof",
     "validate:fast": "npm run typecheck && npm run patch58:proof && npm run patch58-1:proof && npm run patch58-2:proof",
     "validate:build": "npm run typecheck && npm run build",
     "validate:proof": "npm run proof:all",

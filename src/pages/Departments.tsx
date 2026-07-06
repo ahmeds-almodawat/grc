@@ -10,8 +10,9 @@ import { createDepartment, getDepartmentExecutionSummary } from '../lib/grcApi';
 import type { DepartmentExecutionSummary } from '../types/domain';
 
 type DepartmentFilter = 'all' | 'active' | 'overdueProjects' | 'overdueTasks' | 'criticalRisks';
+type DrilldownFilter = DepartmentFilter | 'compliance' | 'audit' | 'nextAction';
 
-export function Departments() {
+export function Departments({ setPage }: { setPage?: (page: string) => void }) {
   const auth = useAuth();
   const [formOpen, setFormOpen] = useState(false);
   const [nameEn, setNameEn] = useState('');
@@ -23,6 +24,7 @@ export function Departments() {
   const [activeFilter, setActiveFilter] = useState<DepartmentFilter>('all');
   const [departmentSearch, setDepartmentSearch] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState<DepartmentExecutionSummary | null>(null);
+  const [drilldownContext, setDrilldownContext] = useState<{ filter: DrilldownFilter, department: DepartmentExecutionSummary } | null>(null);
   const departments = useAsyncData(getDepartmentExecutionSummary, []);
   const rows = departments.data || [];
   const filteredRows = useMemo(() => {
@@ -62,6 +64,16 @@ export function Departments() {
     setActiveFilter('all');
     setDepartmentSearch('');
     setSelectedDepartment(null);
+    setDrilldownContext(null);
+  };
+
+  const handleMetricClick = (filter: DrilldownFilter, row: DepartmentExecutionSummary) => {
+    if (['all', 'active', 'overdueProjects', 'overdueTasks', 'criticalRisks'].includes(filter)) {
+      setActiveFilter(filter as DepartmentFilter);
+    }
+    setDepartmentSearch(row.department_name);
+    setSelectedDepartment(row);
+    setDrilldownContext({ filter, department: row });
   };
 
   const submitDepartment = async () => {
@@ -170,14 +182,14 @@ export function Departments() {
             rows={filteredRows}
             getRowKey={row => row.department_id}
             columns={[
-              { key: 'department', header: 'Department', render: row => <button className="link-button" type="button" onClick={() => setSelectedDepartment(row)}><strong>{row.department_name}</strong></button> },
+              { key: 'department', header: 'Department', render: row => <strong>{row.department_name}</strong> },
               { key: 'active', header: 'Active projects', render: row => row.active_projects },
-              { key: 'overdueProjects', header: 'Overdue projects', render: row => row.overdue_projects ? <span className="danger-text">{row.overdue_projects}</span> : '0' },
+              { key: 'overdueProjects', header: 'Overdue projects', render: row => row.overdue_projects ? <button type="button" className="ghost-button small danger-text" aria-label={`Open ${row.overdue_projects} overdue projects for ${row.department_name}`} onClick={() => handleMetricClick('overdueProjects', row)}>{row.overdue_projects}</button> : '0' },
               { key: 'overdueMilestones', header: 'Overdue milestones', render: row => row.overdue_milestones },
-              { key: 'overdueTasks', header: 'Overdue tasks', render: row => row.overdue_tasks ? <span className="warning-text">{row.overdue_tasks}</span> : '0' },
-              { key: 'risks', header: 'Critical risks', render: row => row.critical_risks ? <span className="risk-pill critical">{row.critical_risks}</span> : '0' },
-              { key: 'audit', header: 'Overdue audit', render: row => row.overdue_audit_findings },
-              { key: 'compliance', header: 'Compliance expiring', render: row => row.compliance_expiring_30_days }
+              { key: 'overdueTasks', header: 'Overdue tasks', render: row => row.overdue_tasks ? <button type="button" className="ghost-button small warning-text" aria-label={`Open ${row.overdue_tasks} overdue tasks for ${row.department_name}`} onClick={() => handleMetricClick('overdueTasks', row)}>{row.overdue_tasks}</button> : '0' },
+              { key: 'risks', header: 'Critical risks', render: row => row.critical_risks ? <button type="button" className="risk-pill critical" aria-label={`Open ${row.critical_risks} critical risks for ${row.department_name}`} onClick={() => handleMetricClick('criticalRisks', row)}>{row.critical_risks}</button> : '0' },
+              { key: 'audit', header: 'Overdue audit', render: row => row.overdue_audit_findings ? <button type="button" className="ghost-button small warning-text" aria-label={`Open ${row.overdue_audit_findings} overdue audit findings for ${row.department_name}`} onClick={() => handleMetricClick('audit', row)}>{row.overdue_audit_findings}</button> : '0' },
+              { key: 'compliance', header: 'Compliance expiring', render: row => row.compliance_expiring_30_days ? <button type="button" className="ghost-button small warning-text" aria-label={`Open ${row.compliance_expiring_30_days} compliance items for ${row.department_name}`} onClick={() => handleMetricClick('compliance', row)}>{row.compliance_expiring_30_days}</button> : '0' }
             ]}
           />
         </DataState>
@@ -186,23 +198,60 @@ export function Departments() {
             <div className="split-header">
               <div>
                 <h4>Selected department drilldown</h4>
-                <p>{selectedDepartment.department_name}</p>
+                <p>Showing result(s) for {selectedDepartment.department_name} {activeFilter !== 'all' ? `/ ${activeFilter.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}` : ''}</p>
               </div>
               <button className="ghost-button small" type="button" onClick={() => setSelectedDepartment(null)}>Clear selection</button>
             </div>
-            <div className="detail-grid">
-              <div><span>Active projects</span><strong>{selectedDepartment.active_projects}</strong></div>
-              <div><span>Overdue projects</span><strong>{selectedDepartment.overdue_projects}</strong></div>
-              <div><span>Overdue milestones</span><strong>{selectedDepartment.overdue_milestones}</strong></div>
-              <div><span>Overdue tasks</span><strong>{selectedDepartment.overdue_tasks}</strong></div>
-              <div><span>Critical risks</span><strong>{selectedDepartment.critical_risks}</strong></div>
-              <div><span>Overdue audit</span><strong>{selectedDepartment.overdue_audit_findings}</strong></div>
-              <div><span>Compliance expiring</span><strong>{selectedDepartment.compliance_expiring_30_days}</strong></div>
-              <div><span>Next action</span><strong>{Number(selectedDepartment.overdue_projects || 0) + Number(selectedDepartment.overdue_tasks || 0) + Number(selectedDepartment.critical_risks || 0) > 0 ? 'Management follow-up required.' : 'No dashboard blocker currently recorded.'}</strong></div>
+            <div className="stats-grid mt-4">
+              <div className="panel muted-panel">
+                <div className="stat-label">Active projects</div>
+                <div className="stat-value">{selectedDepartment.active_projects}</div>
+              </div>
+              <button type="button" className="stat-card danger" disabled={!selectedDepartment.overdue_projects} onClick={() => handleMetricClick('overdueProjects', selectedDepartment)}>
+                <div className="stat-value">{selectedDepartment.overdue_projects}</div><div className="stat-label">Overdue projects</div>
+              </button>
+              <div className="panel muted-panel">
+                <div className="stat-label">Overdue milestones</div>
+                <div className="stat-value">{selectedDepartment.overdue_milestones}</div>
+              </div>
+              <button type="button" className="stat-card warning" disabled={!selectedDepartment.overdue_tasks} onClick={() => handleMetricClick('overdueTasks', selectedDepartment)}>
+                <div className="stat-value">{selectedDepartment.overdue_tasks}</div><div className="stat-label">Overdue tasks</div>
+              </button>
+              <button type="button" className="stat-card danger" disabled={!selectedDepartment.critical_risks} onClick={() => handleMetricClick('criticalRisks', selectedDepartment)}>
+                <div className="stat-value">{selectedDepartment.critical_risks}</div><div className="stat-label">Critical risks</div>
+              </button>
+              <button type="button" className="stat-card warning" disabled={!selectedDepartment.overdue_audit_findings} onClick={() => handleMetricClick('audit', selectedDepartment)}>
+                <div className="stat-value">{selectedDepartment.overdue_audit_findings}</div><div className="stat-label">Overdue audit</div>
+              </button>
+              <button type="button" className="stat-card warning" disabled={!selectedDepartment.compliance_expiring_30_days} onClick={() => handleMetricClick('compliance', selectedDepartment)}>
+                <div className="stat-value">{selectedDepartment.compliance_expiring_30_days}</div><div className="stat-label">Compliance expiring</div>
+              </button>
+              <button type="button" className="stat-card primary" onClick={() => handleMetricClick('nextAction', selectedDepartment)}>
+                <div className="stat-value">{Number(selectedDepartment.overdue_projects || 0) + Number(selectedDepartment.overdue_tasks || 0) + Number(selectedDepartment.critical_risks || 0) > 0 ? 'Follow-up' : 'Clear'}</div><div className="stat-label">Next action</div>
+              </button>
             </div>
           </div>
         ) : null}
       </div>
+
+      <Modal open={!!drilldownContext} title={drilldownContext ? `${drilldownContext.filter.replace(/([A-Z])/g, ' $1').trim().toLowerCase()} — ${drilldownContext.department.department_name}` : ''} onClose={() => setDrilldownContext(null)}>
+        <div className="page-section">
+          <div className="notice-banner">
+            The count is calculated from department control indicators, but linked issue records are not loaded in this view.
+          </div>
+          <div className="panel">
+            <div className="panel-header">
+              <h4>Recommended next action</h4>
+              <p>{drilldownContext?.department && (Number(drilldownContext.department.overdue_projects || 0) + Number(drilldownContext.department.overdue_tasks || 0) + Number(drilldownContext.department.critical_risks || 0) > 0) ? 'Management follow-up required in operational workspaces.' : 'No dashboard blocker currently recorded.'}</p>
+            </div>
+            <div className="workflow-actions mt-4" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button className="primary-button" type="button" onClick={() => { setDrilldownContext(null); setPage?.('operations'); }}>Open Operations Center</button>
+              <button className="ghost-button" type="button" onClick={() => { setDrilldownContext(null); setPage?.('escalations'); }}>Open Escalations</button>
+              <button className="ghost-button" type="button" onClick={() => { setDrilldownContext(null); setPage?.('ovrRisk'); }}>Open OVR Risk Indicators</button>
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       <Modal open={formOpen} title="Create department" onClose={() => {
         if (!saving) {

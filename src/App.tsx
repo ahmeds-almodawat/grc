@@ -166,7 +166,7 @@ function ExecutiveHub() {
     />
   );
 }
-function DailyOperationsHub() {
+function DailyOperationsHub({ setPage }: { setPage: (page: PageKey) => void }) {
   const { t } = useI18n();
   return (
     <TabbedHub
@@ -179,7 +179,7 @@ function DailyOperationsHub() {
         { id: 'ovr', label: t('hub.tab.ovr'), description: t('hub.tab.ovr.desc'), icon: <Hospital size={17} />, content: <OVR /> },
         { id: 'evidence', label: t('hub.tab.evidence'), description: t('hub.tab.evidence.desc'), icon: <FileCheck2 size={17} />, content: <Evidence /> },
         { id: 'projects', label: t('hub.tab.projects'), description: t('hub.tab.projects.desc'), icon: <GanttChartSquare size={17} />, content: <Projects /> },
-        { id: 'departments', label: t('hub.tab.departments'), description: t('hub.tab.departments.desc'), icon: <Building2 size={17} />, content: <Departments /> },
+        { id: 'departments', label: t('hub.tab.departments'), description: t('hub.tab.departments.desc'), icon: <Building2 size={17} />, content: <Departments setPage={(page) => setPage(page as PageKey)} /> },
         { id: 'operations', label: t('hub.tab.operations'), description: t('hub.tab.operations.desc'), icon: <BellRing size={17} />, content: <OperationsCenter /> },
         { id: 'escalations', label: t('hub.tab.escalations'), description: t('hub.tab.escalations.desc'), icon: <Siren size={17} />, content: <Escalations /> },
         { id: 'approvals', label: t('hub.tab.approvals'), description: t('hub.tab.approvals.desc'), icon: <ClipboardCheck size={17} />, content: <Approvals /> },
@@ -451,7 +451,7 @@ export default function App() {
         return <ExecutiveHub />;
       case 'workHub':
       case 'dailyOperationsHub' as any:
-        return <DailyOperationsHub />;
+        return <DailyOperationsHub setPage={setPage} />;
       case 'grcHub':
         return <GrcHub />;
       case 'qualityHub':
@@ -485,7 +485,7 @@ export default function App() {
       case 'projects':
         return <Projects />;
       case 'departments':
-        return <Departments />;
+        return <Departments setPage={(page) => setPage(page as PageKey)} />;
       case 'risks':
         return <Risks />;
       case 'compliance':
