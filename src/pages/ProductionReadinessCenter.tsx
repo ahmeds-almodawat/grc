@@ -71,12 +71,26 @@ import {
   createLivePilotIssue,
   updateLivePilotIssueStatus,
   recordLivePilotDepartmentAcceptance,
+  getIdentityRoleIntegrityReviews,
+  getIdentityRoleIntegrityFindings,
+  getPrivilegedRoleRecertifications,
+  getIdentityRoleIntegrityDashboardSummary,
+  createIdentityRoleIntegrityReview,
+  updateIdentityRoleIntegrityReviewStatus,
+  recordIdentityRoleIntegrityFinding,
+  updateIdentityRoleIntegrityFindingStatus,
+  recordPrivilegedRoleRecertification,
   type ControlledProductionCutoverDecisionState,
   type LivePilotSessionStatus,
   type LivePilotIssueStatus,
   type LivePilotIssueSeverity,
   type LivePilotRetestStatus,
-  type LivePilotDepartmentAcceptanceStatus
+  type LivePilotDepartmentAcceptanceStatus,
+  type IdentityRoleIntegrityReviewStatus,
+  type IdentityRoleFindingType,
+  type IdentityRoleFindingSeverity,
+  type IdentityRoleFindingStatus,
+  type PrivilegedRoleRecertificationStatus
 } from '../lib/productionReadinessApi';
 import { ShieldCheck, BarChart3, AlertTriangle, FileCheck, RefreshCw, Smartphone, Award, ClipboardList, Database, Languages } from 'lucide-react';
 
@@ -92,6 +106,14 @@ export function ProductionReadinessCenter() {
   const [pilotIssueSeverity, setPilotIssueSeverity] = useState<LivePilotIssueSeverity>('medium');
   const [pilotMessage, setPilotMessage] = useState<string | null>(null);
   const [pilotBusy, setPilotBusy] = useState(false);
+  const [identityReviewTitle, setIdentityReviewTitle] = useState('');
+  const [identityFindingTitle, setIdentityFindingTitle] = useState('');
+  const [identityFindingType, setIdentityFindingType] = useState<IdentityRoleFindingType>('missing_owner');
+  const [identityFindingSeverity, setIdentityFindingSeverity] = useState<IdentityRoleFindingSeverity>('medium');
+  const [identityRoleName, setIdentityRoleName] = useState('');
+  const [identityUserId, setIdentityUserId] = useState('');
+  const [identityMessage, setIdentityMessage] = useState<string | null>(null);
+  const [identityBusy, setIdentityBusy] = useState(false);
 
   // Load Data
   const signoffs = useAsyncData(getProductionReadinessSignoffRegister, []);
@@ -151,6 +173,9 @@ export function ProductionReadinessCenter() {
   const livePilotSessions = useAsyncData(getLivePilotSessions, []);
   const livePilotIssues = useAsyncData(getLivePilotIssues, []);
   const livePilotAcceptances = useAsyncData(getLivePilotDepartmentAcceptances, []);
+  const identityReviews = useAsyncData(getIdentityRoleIntegrityReviews, []);
+  const identityFindings = useAsyncData(getIdentityRoleIntegrityFindings, []);
+  const privilegedRecertifications = useAsyncData(getPrivilegedRoleRecertifications, []);
 
   // Bilingual dictionary
   const text = language === 'ar' ? ar : en;
@@ -367,6 +392,13 @@ export function ProductionReadinessCenter() {
     livePilotAcceptances.data || [],
   );
   const selectedPilotSession = (livePilotSessions.data || [])[0];
+  const identityIntegritySummary = getIdentityRoleIntegrityDashboardSummary(
+    identityReviews.data || [],
+    identityFindings.data || [],
+    privilegedRecertifications.data || [],
+  );
+  const selectedIdentityReview = (identityReviews.data || [])[0];
+  const selectedIdentityFinding = (identityFindings.data || [])[0];
 
   async function refreshLivePilotData() {
     await Promise.all([
@@ -477,6 +509,126 @@ export function ProductionReadinessCenter() {
       }),
       text.pilotAcceptanceRecorded,
     );
+  }
+
+  async function refreshIdentityIntegrityData() {
+    await Promise.all([
+      identityReviews.refresh(),
+      identityFindings.refresh(),
+      privilegedRecertifications.refresh(),
+    ]);
+  }
+
+  async function runIdentityAction(action: () => Promise<{ message?: string }>, fallbackMessage: string) {
+    setIdentityBusy(true);
+    setIdentityMessage(null);
+    try {
+      const result = await action();
+      setIdentityMessage(result.message || fallbackMessage);
+      await refreshIdentityIntegrityData();
+    } catch (error) {
+      setIdentityMessage(error instanceof Error ? error.message : fallbackMessage);
+    } finally {
+      setIdentityBusy(false);
+    }
+  }
+
+  async function handleCreateIdentityReview() {
+    const reviewTitle = identityReviewTitle.trim();
+    if (!reviewTitle) {
+      setIdentityMessage(text.identityReviewTitleRequired);
+      return;
+    }
+    await runIdentityAction(
+      () => createIdentityRoleIntegrityReview({
+        review_title: reviewTitle,
+        review_notes: text.identityReviewDefaultNote,
+        sso_mfa_readiness_status: 'review_required',
+        access_export_status: 'not_ready',
+      }),
+      text.identityReviewCreated,
+    );
+    setIdentityReviewTitle('');
+  }
+
+  async function handleIdentityReviewStatus(reviewStatus: IdentityRoleIntegrityReviewStatus) {
+    if (!selectedIdentityReview?.id) {
+      setIdentityMessage(text.identityReviewRequired);
+      return;
+    }
+    await runIdentityAction(
+      () => updateIdentityRoleIntegrityReviewStatus({
+        review_id: selectedIdentityReview.id,
+        review_status: reviewStatus,
+        review_notes: `${reviewStatus}. ${text.accessIntegrityCaveat}`,
+        access_export_status: reviewStatus === 'ready_for_access_integrity_review' ? 'ready_for_export' : null,
+      }),
+      text.identityReviewUpdated,
+    );
+  }
+
+  async function handleRecordIdentityFinding() {
+    const findingTitle = identityFindingTitle.trim();
+    if (!selectedIdentityReview?.id) {
+      setIdentityMessage(text.identityReviewRequired);
+      return;
+    }
+    if (!findingTitle) {
+      setIdentityMessage(text.identityFindingTitleRequired);
+      return;
+    }
+    await runIdentityAction(
+      () => recordIdentityRoleIntegrityFinding({
+        review_id: selectedIdentityReview.id,
+        finding_type: identityFindingType,
+        severity: identityFindingSeverity,
+        entity_type: identityFindingType.includes('account') || identityFindingType.includes('role') ? 'user' : 'department',
+        finding_title: findingTitle,
+        finding_summary: text.identityFindingDefaultSummary,
+      }),
+      text.identityFindingRecorded,
+    );
+    setIdentityFindingTitle('');
+  }
+
+  async function handleIdentityFindingStatus(findingStatus: IdentityRoleFindingStatus) {
+    if (!selectedIdentityFinding?.id) {
+      setIdentityMessage(text.identityFindingRequired);
+      return;
+    }
+    await runIdentityAction(
+      () => updateIdentityRoleIntegrityFindingStatus({
+        finding_id: selectedIdentityFinding.id,
+        finding_status: findingStatus,
+        resolution_summary: `${findingStatus}. ${text.integrityFindingsRemainOpen}`,
+      }),
+      text.identityFindingUpdated,
+    );
+  }
+
+  async function handlePrivilegedRoleRecertification(recertificationStatus: PrivilegedRoleRecertificationStatus) {
+    if (!selectedIdentityReview?.id) {
+      setIdentityMessage(text.identityReviewRequired);
+      return;
+    }
+    if (!identityUserId.trim() || !identityRoleName.trim()) {
+      setIdentityMessage(text.identityRecertificationRequired);
+      return;
+    }
+    await runIdentityAction(
+      () => recordPrivilegedRoleRecertification({
+        review_id: selectedIdentityReview.id,
+        user_id: identityUserId.trim(),
+        role_name: identityRoleName.trim(),
+        recertification_status: recertificationStatus,
+        recertification_rationale: recertificationStatus === 'recertified'
+          ? text.privilegedRoleRecertificationRationale
+          : text.privilegedRoleRecertificationNote,
+      }),
+      text.identityRecertificationRecorded,
+    );
+    setIdentityUserId('');
+    setIdentityRoleName('');
   }
 
   async function recordCutoverDecision(decisionState: ControlledProductionCutoverDecisionState) {
@@ -1239,6 +1391,128 @@ export function ProductionReadinessCenter() {
                             <td><code>{row.evidence_reference || '-'}</code></td>
                           </tr>
                         ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.identityIntegrityTitle} subtitle={text.identityIntegritySubtitle}>
+                <DataState
+                  loading={identityReviews.loading || identityFindings.loading || privilegedRecertifications.loading}
+                  error={identityReviews.error || identityFindings.error || privilegedRecertifications.error}
+                  empty={false}
+                >
+                  <div className="alert alert-warning">
+                    <strong>{text.accessIntegrityReview}: </strong>{identityIntegritySummary.access_integrity_review_state}
+                    <br />
+                    <strong>{text.caveat}: </strong>{text.accessIntegrityCaveat}
+                    <br />
+                    <strong>{text.caveat}: </strong>{text.controlledAuthorityCaveat}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '14px', marginBottom: '18px' }}>
+                    <div className="stat-card">
+                      <div className="stat-value"><StatusPill tone={identityIntegritySummary.access_integrity_review_state === 'ready_for_access_integrity_review' ? 'good' : identityIntegritySummary.access_integrity_review_state === 'blocked' ? 'danger' : 'warning'}>{identityIntegritySummary.access_integrity_review_state}</StatusPill></div>
+                      <div className="stat-label">{text.accessIntegrityReview}</div>
+                    </div>
+                    <div className="stat-card warning"><div className="stat-value">{identityIntegritySummary.privileged_role_recertification_pending}</div><div className="stat-label">{text.privilegedRoleRecertification}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{identityIntegritySummary.dormant_account_review_count}</div><div className="stat-label">{text.dormantAccountReview}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{identityIntegritySummary.inactive_account_review_count}</div><div className="stat-label">{text.inactiveAccountReview}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{identityIntegritySummary.archived_user_access_review_count}</div><div className="stat-label">{text.archivedUserAccessReview}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{identityIntegritySummary.role_duplication_review_count}</div><div className="stat-label">{text.roleDuplicationReview}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{identityIntegritySummary.department_accountability_gap_count}</div><div className="stat-label">{text.departmentOwnerAccountability}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{identityIntegritySummary.station_accountability_gap_count}</div><div className="stat-label">{text.stationAccountability}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{identityIntegritySummary.missing_owner_reviewer_count}</div><div className="stat-label">{text.missingOwnerReviewerRepair}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{identityIntegritySummary.open_high_risk_finding_count}</div><div className="stat-label">{text.openHighRiskFindings}</div></div>
+                    <div className="stat-card"><div className="stat-value"><StatusPill tone={identityIntegritySummary.sso_mfa_readiness_status === 'ready_for_it_review' ? 'good' : identityIntegritySummary.sso_mfa_readiness_status === 'blocked' ? 'danger' : 'warning'}>{identityIntegritySummary.sso_mfa_readiness_status}</StatusPill></div><div className="stat-label">{text.ssoMfaReadinessChecklist}</div></div>
+                    <div className="stat-card"><div className="stat-value"><StatusPill tone={identityIntegritySummary.access_export_status === 'ready_for_export' || identityIntegritySummary.access_export_status === 'exported_for_review' ? 'good' : identityIntegritySummary.access_export_status === 'blocked' ? 'danger' : 'warning'}>{identityIntegritySummary.access_export_status}</StatusPill></div><div className="stat-label">{text.accessExportItSecurityReview}</div></div>
+                  </div>
+                  <div className="alert alert-info">
+                    <strong>{text.requiredActionsBeforeAccessIntegrityReview}: </strong>{identityIntegritySummary.required_actions.join(' ')}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '14px', margin: '14px 0' }}>
+                    <label style={{ display: 'grid', gap: '6px' }}>
+                      <span style={{ fontWeight: 700 }}>{text.identityReviewTitleLabel}</span>
+                      <input className="text-input" value={identityReviewTitle} onChange={event => setIdentityReviewTitle(event.target.value)} placeholder={text.identityReviewTitlePlaceholder} />
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'end', gap: '10px', flexWrap: 'wrap' }}>
+                      <button className="secondary-action" type="button" disabled={identityBusy} onClick={() => void handleCreateIdentityReview()}>{text.createAccessIntegrityReview}</button>
+                      <button className="secondary-action" type="button" disabled={identityBusy || !selectedIdentityReview} onClick={() => void handleIdentityReviewStatus('remediation_required')}>{text.markReviewRemediationRequired}</button>
+                      <button className="secondary-action" type="button" disabled={identityBusy || !selectedIdentityReview} onClick={() => void handleIdentityReviewStatus('blocked')}>{text.markReviewBlocked}</button>
+                      <button className="secondary-action" type="button" disabled={identityBusy || !selectedIdentityReview || identityIntegritySummary.required_actions.length > 1 || identityIntegritySummary.required_actions[0] !== 'Ready for access integrity review.'} onClick={() => void handleIdentityReviewStatus('ready_for_access_integrity_review')}>{text.markReadyForAccessIntegrityReview}</button>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px 160px auto', gap: '14px', marginBottom: '14px' }}>
+                    <label style={{ display: 'grid', gap: '6px' }}>
+                      <span style={{ fontWeight: 700 }}>{text.identityFindingTitleLabel}</span>
+                      <input className="text-input" value={identityFindingTitle} onChange={event => setIdentityFindingTitle(event.target.value)} placeholder={text.identityFindingTitlePlaceholder} />
+                    </label>
+                    <label style={{ display: 'grid', gap: '6px' }}>
+                      <span style={{ fontWeight: 700 }}>{text.findingType}</span>
+                      <select className="text-input" value={identityFindingType} onChange={event => setIdentityFindingType(event.target.value as IdentityRoleFindingType)}>
+                        <option value="duplicate_role">{text.duplicateRole}</option>
+                        <option value="privileged_role_review">{text.privilegedRoleReview}</option>
+                        <option value="dormant_account">{text.dormantAccountReview}</option>
+                        <option value="inactive_account">{text.inactiveAccountReview}</option>
+                        <option value="archived_user_access">{text.archivedUserAccessReview}</option>
+                        <option value="missing_owner">{text.missingOwner}</option>
+                        <option value="missing_reviewer">{text.missingReviewer}</option>
+                        <option value="department_accountability_gap">{text.departmentOwnerAccountability}</option>
+                        <option value="station_accountability_gap">{text.stationAccountability}</option>
+                        <option value="sso_mfa_readiness_gap">{text.ssoMfaReadinessChecklist}</option>
+                        <option value="access_export_required">{text.accessExportItSecurityReview}</option>
+                        <option value="data_integrity_gap">{text.dataIntegrityGap}</option>
+                      </select>
+                    </label>
+                    <label style={{ display: 'grid', gap: '6px' }}>
+                      <span style={{ fontWeight: 700 }}>{text.severity}</span>
+                      <select className="text-input" value={identityFindingSeverity} onChange={event => setIdentityFindingSeverity(event.target.value as IdentityRoleFindingSeverity)}>
+                        <option value="low">low</option>
+                        <option value="medium">medium</option>
+                        <option value="high">high</option>
+                        <option value="critical">critical</option>
+                      </select>
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'end' }}>
+                      <button className="secondary-action" type="button" disabled={identityBusy || !selectedIdentityReview} onClick={() => void handleRecordIdentityFinding()}>{text.recordIdentityFinding}</button>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '14px', marginBottom: '14px' }}>
+                    <label style={{ display: 'grid', gap: '6px' }}>
+                      <span style={{ fontWeight: 700 }}>{text.userIdForReview}</span>
+                      <input className="text-input" value={identityUserId} onChange={event => setIdentityUserId(event.target.value)} placeholder={text.userIdForReviewPlaceholder} />
+                    </label>
+                    <label style={{ display: 'grid', gap: '6px' }}>
+                      <span style={{ fontWeight: 700 }}>{text.roleNameForReview}</span>
+                      <input className="text-input" value={identityRoleName} onChange={event => setIdentityRoleName(event.target.value)} placeholder={text.roleNameForReviewPlaceholder} />
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'end', gap: '10px', flexWrap: 'wrap' }}>
+                      <button className="secondary-action" type="button" disabled={identityBusy || !selectedIdentityReview} onClick={() => void handlePrivilegedRoleRecertification('pending')}>{text.recordRecertificationPending}</button>
+                      <button className="secondary-action" type="button" disabled={identityBusy || !selectedIdentityReview} onClick={() => void handlePrivilegedRoleRecertification('recertified')}>{text.recordRecertified}</button>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
+                    <button className="secondary-action" type="button" disabled={identityBusy || !selectedIdentityFinding} onClick={() => void handleIdentityFindingStatus('in_progress')}>{text.markFindingInProgress}</button>
+                    <button className="secondary-action" type="button" disabled={identityBusy || !selectedIdentityFinding} onClick={() => void handleIdentityFindingStatus('resolved')}>{text.markFindingResolved}</button>
+                    <button className="secondary-action" type="button" disabled={identityBusy || !selectedIdentityFinding} onClick={() => void handleIdentityFindingStatus('accepted_limitation')}>{text.markFindingAcceptedLimitation}</button>
+                  </div>
+                  {identityMessage ? <div className="alert alert-info">{identityMessage}</div> : null}
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead><tr><th>{text.finding}</th><th>{text.findingType}</th><th>{text.severity}</th><th>{text.status}</th><th>{text.owner}</th></tr></thead>
+                      <tbody>
+                        {(identityFindings.data || []).slice(0, 20).map(finding => (
+                          <tr key={finding.id}>
+                            <td><strong>{finding.finding_title}</strong></td>
+                            <td>{finding.finding_type}</td>
+                            <td><StatusPill tone={finding.severity === 'critical' || finding.severity === 'high' ? 'danger' : finding.severity === 'medium' ? 'warning' : 'neutral'}>{finding.severity}</StatusPill></td>
+                            <td><StatusPill tone={finding.finding_status === 'resolved' ? 'good' : finding.finding_status === 'blocked' ? 'danger' : 'warning'}>{finding.finding_status}</StatusPill></td>
+                            <td>{finding.owner_id || text.missingOwnerReviewerRepair}</td>
+                          </tr>
+                        ))}
+                        {!(identityFindings.data || []).length ? (
+                          <tr><td colSpan={5}>{text.noIdentityFindingsRecorded}</td></tr>
+                        ) : null}
                       </tbody>
                     </table>
                   </div>
@@ -2428,6 +2702,63 @@ const en = {
   expires: 'Expires',
   goLiveDecisionTitle: 'Production Go-Live Decision Register',
   goLiveDecisionSubtitle: 'Quality, Audit, IT/Admin, executive, and board-level launch decisions with evidence and conditions.',
+  identityIntegrityTitle: 'Identity, Role, and Data Integrity',
+  identityIntegritySubtitle: 'Access integrity review, privileged role recertification, dormant/inactive account review, department accountability, and IT/security export readiness.',
+  accessIntegrityReview: 'Access integrity review',
+  privilegedRoleRecertification: 'Privileged role recertification',
+  dormantAccountReview: 'Dormant account review',
+  inactiveAccountReview: 'Inactive account review',
+  archivedUserAccessReview: 'Archived user access review',
+  roleDuplicationReview: 'Role duplication review required',
+  departmentOwnerAccountability: 'Department owner accountability',
+  stationAccountability: 'Station accountability',
+  missingOwnerReviewerRepair: 'Missing owner/reviewer repair required',
+  ssoMfaReadinessChecklist: 'SSO/MFA readiness checklist',
+  accessExportItSecurityReview: 'Access export for IT/security review',
+  openHighRiskFindings: 'Open high-risk findings',
+  requiredActionsBeforeAccessIntegrityReview: 'Required actions before access integrity review',
+  accessIntegrityCaveat: 'Access integrity review does not approve production launch.',
+  identityReviewTitleLabel: 'Access integrity review title',
+  identityReviewTitlePlaceholder: 'Record the access integrity review title',
+  createAccessIntegrityReview: 'Create access integrity review',
+  markReviewRemediationRequired: 'Mark remediation required',
+  markReviewBlocked: 'Mark review blocked',
+  markReadyForAccessIntegrityReview: 'Mark ready for access integrity review',
+  identityFindingTitleLabel: 'Identity, role, or data finding',
+  identityFindingTitlePlaceholder: 'Record the access or data integrity finding',
+  findingType: 'Finding type',
+  duplicateRole: 'Duplicate role',
+  privilegedRoleReview: 'Privileged role review',
+  missingOwner: 'Missing owner',
+  missingReviewer: 'Missing reviewer',
+  dataIntegrityGap: 'Data integrity gap',
+  recordIdentityFinding: 'Record identity finding',
+  userIdForReview: 'User ID for review',
+  userIdForReviewPlaceholder: 'Paste user ID for recertification evidence',
+  roleNameForReview: 'Role name for review',
+  roleNameForReviewPlaceholder: 'Example: governance_admin',
+  recordRecertificationPending: 'Record recertification pending',
+  recordRecertified: 'Record recertified',
+  markFindingInProgress: 'Mark finding in progress',
+  markFindingResolved: 'Mark finding resolved',
+  markFindingAcceptedLimitation: 'Mark finding accepted limitation',
+  finding: 'Finding',
+  noIdentityFindingsRecorded: 'No identity, role, or data integrity findings have been recorded.',
+  identityReviewTitleRequired: 'Access integrity review title is required.',
+  identityReviewDefaultNote: 'Access integrity review opened for governance, IT, and security follow-up.',
+  identityReviewCreated: 'Access integrity review recorded.',
+  identityReviewRequired: 'Create or select an access integrity review first.',
+  identityReviewUpdated: 'Access integrity review status updated.',
+  identityFindingTitleRequired: 'Finding title is required.',
+  identityFindingDefaultSummary: 'Integrity finding remains open for governance review.',
+  identityFindingRecorded: 'Identity, role, or data integrity finding recorded.',
+  identityFindingRequired: 'Record or select an integrity finding first.',
+  identityFindingUpdated: 'Identity integrity finding status updated.',
+  identityRecertificationRequired: 'User ID and role name are required for privileged role recertification.',
+  privilegedRoleRecertificationRationale: 'Privileged role recertification reviewed and rationale recorded.',
+  privilegedRoleRecertificationNote: 'Privileged role recertification evidence recorded for review.',
+  identityRecertificationRecorded: 'Privileged role recertification evidence recorded.',
+  integrityFindingsRemainOpen: 'Integrity findings remain open until evidence is reviewed.',
   controlledProductionAuthorityTitle: 'Controlled Production Authority',
   controlledProductionAuthoritySubtitle: 'Controlled cutover decision record with executive review, blocker checks, limitation review, and checklist gates.',
   controlledProductionAuthority: 'Controlled production authority',
@@ -2762,6 +3093,63 @@ const ar = {
   expires: 'ينتهي',
   goLiveDecisionTitle: 'سجل قرارات الإطلاق الإنتاجي',
   goLiveDecisionSubtitle: 'قرارات الجودة والتدقيق وتقنية المعلومات والإدارة التنفيذية والمجلس مع الأدلة والاشتراطات.',
+  identityIntegrityTitle: 'سلامة الهوية والأدوار والبيانات',
+  identityIntegritySubtitle: 'مراجعة سلامة الوصول، وإعادة اعتماد الأدوار الحساسة، ومراجعة الحسابات الخاملة وغير النشطة، ومساءلة الأقسام، وجاهزية التصدير لتقنية المعلومات والأمن.',
+  accessIntegrityReview: 'مراجعة سلامة الوصول',
+  privilegedRoleRecertification: 'إعادة اعتماد الدور الحساس',
+  dormantAccountReview: 'مراجعة الحسابات الخاملة',
+  inactiveAccountReview: 'مراجعة الحسابات غير النشطة',
+  archivedUserAccessReview: 'مراجعة وصول المستخدم المؤرشف',
+  roleDuplicationReview: 'مراجعة تكرار الأدوار مطلوبة',
+  departmentOwnerAccountability: 'مساءلة مالك القسم',
+  stationAccountability: 'مساءلة المحطة',
+  missingOwnerReviewerRepair: 'إصلاح المالك/المراجع المفقود مطلوب',
+  ssoMfaReadinessChecklist: 'قائمة جاهزية الدخول الموحد والمصادقة المتعددة',
+  accessExportItSecurityReview: 'تصدير الوصول لمراجعة تقنية المعلومات والأمن',
+  openHighRiskFindings: 'نتائج عالية المخاطر مفتوحة',
+  requiredActionsBeforeAccessIntegrityReview: 'الإجراءات المطلوبة قبل مراجعة سلامة الوصول',
+  accessIntegrityCaveat: 'مراجعة سلامة الوصول لا تعتمد الإطلاق الإنتاجي.',
+  identityReviewTitleLabel: 'عنوان مراجعة سلامة الوصول',
+  identityReviewTitlePlaceholder: 'سجل عنوان مراجعة سلامة الوصول',
+  createAccessIntegrityReview: 'إنشاء مراجعة سلامة الوصول',
+  markReviewRemediationRequired: 'تحديد أن المعالجة مطلوبة',
+  markReviewBlocked: 'تحديد المراجعة كمعطلة',
+  markReadyForAccessIntegrityReview: 'تحديد الجاهزية لمراجعة سلامة الوصول',
+  identityFindingTitleLabel: 'نتيجة هوية أو دور أو بيانات',
+  identityFindingTitlePlaceholder: 'سجل نتيجة سلامة الوصول أو البيانات',
+  findingType: 'نوع النتيجة',
+  duplicateRole: 'دور مكرر',
+  privilegedRoleReview: 'مراجعة دور حساس',
+  missingOwner: 'مالك مفقود',
+  missingReviewer: 'مراجع مفقود',
+  dataIntegrityGap: 'فجوة سلامة البيانات',
+  recordIdentityFinding: 'تسجيل نتيجة هوية',
+  userIdForReview: 'معرف المستخدم للمراجعة',
+  userIdForReviewPlaceholder: 'ألصق معرف المستخدم لدليل إعادة الاعتماد',
+  roleNameForReview: 'اسم الدور للمراجعة',
+  roleNameForReviewPlaceholder: 'مثال: governance_admin',
+  recordRecertificationPending: 'تسجيل إعادة اعتماد معلقة',
+  recordRecertified: 'تسجيل إعادة الاعتماد',
+  markFindingInProgress: 'تحديد النتيجة قيد المعالجة',
+  markFindingResolved: 'تحديد النتيجة محلولة',
+  markFindingAcceptedLimitation: 'تحديد النتيجة كمحدد مقبول',
+  finding: 'النتيجة',
+  noIdentityFindingsRecorded: 'لم يتم تسجيل نتائج سلامة الهوية أو الأدوار أو البيانات.',
+  identityReviewTitleRequired: 'عنوان مراجعة سلامة الوصول مطلوب.',
+  identityReviewDefaultNote: 'تم فتح مراجعة سلامة الوصول لمتابعة الحوكمة وتقنية المعلومات والأمن.',
+  identityReviewCreated: 'تم تسجيل مراجعة سلامة الوصول.',
+  identityReviewRequired: 'أنشئ أو اختر مراجعة سلامة الوصول أولا.',
+  identityReviewUpdated: 'تم تحديث حالة مراجعة سلامة الوصول.',
+  identityFindingTitleRequired: 'عنوان النتيجة مطلوب.',
+  identityFindingDefaultSummary: 'نتيجة السلامة تبقى مفتوحة لمراجعة الحوكمة.',
+  identityFindingRecorded: 'تم تسجيل نتيجة سلامة الهوية أو الدور أو البيانات.',
+  identityFindingRequired: 'سجل أو اختر نتيجة سلامة أولا.',
+  identityFindingUpdated: 'تم تحديث حالة نتيجة سلامة الهوية.',
+  identityRecertificationRequired: 'معرف المستخدم واسم الدور مطلوبان لإعادة اعتماد الدور الحساس.',
+  privilegedRoleRecertificationRationale: 'تمت مراجعة إعادة اعتماد الدور الحساس وتسجيل المبرر.',
+  privilegedRoleRecertificationNote: 'تم تسجيل دليل إعادة اعتماد الدور الحساس للمراجعة.',
+  identityRecertificationRecorded: 'تم تسجيل دليل إعادة اعتماد الدور الحساس.',
+  integrityFindingsRemainOpen: 'تبقى نتائج السلامة مفتوحة حتى تتم مراجعة الأدلة.',
   controlledProductionAuthorityTitle: 'صلاحية القرار الإنتاجي المنضبط',
   controlledProductionAuthoritySubtitle: 'سجل قرار التحويل المنضبط مع المراجعة التنفيذية، وفحوصات المعوقات، ومراجعة المحددات، وبوابات قائمة التحقق.',
   controlledProductionAuthority: 'صلاحية القرار الإنتاجي المنضبط',

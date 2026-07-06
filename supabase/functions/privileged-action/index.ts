@@ -76,6 +76,14 @@ const patch77LivePilotActions = new Set([
   'record_live_pilot_department_acceptance',
 ]);
 
+const patch78IdentityIntegrityActions = new Set([
+  'create_identity_role_integrity_review',
+  'update_identity_role_integrity_review_status',
+  'record_identity_role_integrity_finding',
+  'update_identity_role_integrity_finding_status',
+  'record_privileged_role_recertification',
+]);
+
 const allowedActions = new Set([
   'list_user_management_roster',
   'create_board_pack_snapshot',
@@ -104,6 +112,7 @@ const allowedActions = new Set([
   ...patch68EvidenceClosureActions,
   ...patch76CutoverDecisionActions,
   ...patch77LivePilotActions,
+  ...patch78IdentityIntegrityActions,
 ]);
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
@@ -615,6 +624,73 @@ Deno.serve(async (request) => {
     if (error) {
       const authorizationFailure =
         /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|ORGANIZATION|ROLE|AUTHORIZED|RETEST|BLOCKERS|TRAINING|BURN-DOWN|CRITERIA|ACCEPTANCE/i
+          .test(error.message);
+      return jsonResponse({
+        ok: false,
+        error: error.message,
+        code: error.code,
+        action,
+      }, authorizationFailure ? 403 : 409);
+    }
+
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (patch78IdentityIntegrityActions.has(action)) {
+    const rpcName = action;
+    const payload = requestBody.payload ?? {};
+    const rpcArgs = action === 'create_identity_role_integrity_review'
+      ? {
+          p_actor_id: userData.user.id,
+          p_review_title: payload.review_title,
+          p_review_notes: payload.review_notes ?? null,
+          p_sso_mfa_readiness_status: payload.sso_mfa_readiness_status ?? 'review_required',
+          p_access_export_status: payload.access_export_status ?? 'not_ready',
+        }
+      : action === 'update_identity_role_integrity_review_status'
+        ? {
+            p_actor_id: userData.user.id,
+            p_review_id: payload.review_id,
+            p_review_status: payload.review_status,
+            p_review_notes: payload.review_notes ?? null,
+            p_sso_mfa_readiness_status: payload.sso_mfa_readiness_status ?? null,
+            p_access_export_status: payload.access_export_status ?? null,
+          }
+        : action === 'record_identity_role_integrity_finding'
+          ? {
+              p_actor_id: userData.user.id,
+              p_review_id: payload.review_id,
+              p_finding_type: payload.finding_type,
+              p_severity: payload.severity ?? 'medium',
+              p_entity_type: payload.entity_type ?? 'user',
+              p_finding_title: payload.finding_title,
+              p_finding_summary: payload.finding_summary ?? null,
+              p_entity_id: payload.entity_id ?? null,
+              p_department_id: payload.department_id ?? null,
+              p_owner_id: payload.owner_id ?? null,
+              p_due_date: payload.due_date ?? null,
+            }
+          : action === 'update_identity_role_integrity_finding_status'
+            ? {
+                p_actor_id: userData.user.id,
+                p_finding_id: payload.finding_id,
+                p_finding_status: payload.finding_status,
+                p_resolution_summary: payload.resolution_summary ?? null,
+              }
+            : {
+                p_actor_id: userData.user.id,
+                p_review_id: payload.review_id,
+                p_user_id: payload.user_id,
+                p_role_name: payload.role_name,
+                p_recertification_status: payload.recertification_status,
+                p_recertification_rationale: payload.recertification_rationale ?? null,
+                p_department_id: payload.department_id ?? null,
+              };
+    const { data, error } = await serviceClient.rpc(rpcName, rpcArgs);
+
+    if (error) {
+      const authorizationFailure =
+        /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|ORGANIZATION|ROLE|AUTHORIZED|HIGH-RISK|RECERTIFICATION|OWNER|REVIEWER|EXPORT|RATIONALE|LIMITATION/i
           .test(error.message);
       return jsonResponse({
         ok: false,
