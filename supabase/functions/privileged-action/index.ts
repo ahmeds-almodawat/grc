@@ -84,6 +84,15 @@ const patch78IdentityIntegrityActions = new Set([
   'record_privileged_role_recertification',
 ]);
 
+const patch79OperationsGovernanceActions = new Set([
+  'create_production_hypercare_window',
+  'update_production_hypercare_window_status',
+  'record_production_hypercare_item',
+  'update_production_hypercare_item_status',
+  'create_executive_governance_board_pack',
+  'update_executive_governance_board_pack_status',
+]);
+
 const allowedActions = new Set([
   'list_user_management_roster',
   'create_board_pack_snapshot',
@@ -113,6 +122,7 @@ const allowedActions = new Set([
   ...patch76CutoverDecisionActions,
   ...patch77LivePilotActions,
   ...patch78IdentityIntegrityActions,
+  ...patch79OperationsGovernanceActions,
 ]);
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
@@ -691,6 +701,78 @@ Deno.serve(async (request) => {
     if (error) {
       const authorizationFailure =
         /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|ORGANIZATION|ROLE|AUTHORIZED|HIGH-RISK|RECERTIFICATION|OWNER|REVIEWER|EXPORT|RATIONALE|LIMITATION/i
+          .test(error.message);
+      return jsonResponse({
+        ok: false,
+        error: error.message,
+        code: error.code,
+        action,
+      }, authorizationFailure ? 403 : 409);
+    }
+
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (patch79OperationsGovernanceActions.has(action)) {
+    const rpcName = action;
+    const payload = requestBody.payload ?? {};
+    const rpcArgs = action === 'create_production_hypercare_window'
+      ? {
+          p_actor_id: userData.user.id,
+          p_hypercare_title: payload.hypercare_title,
+          p_exit_review_notes: payload.exit_review_notes ?? null,
+        }
+      : action === 'update_production_hypercare_window_status'
+        ? {
+            p_actor_id: userData.user.id,
+            p_hypercare_window_id: payload.hypercare_window_id,
+            p_hypercare_status: payload.hypercare_status,
+            p_day_30_status: payload.day_30_status ?? null,
+            p_day_60_status: payload.day_60_status ?? null,
+            p_day_90_status: payload.day_90_status ?? null,
+            p_evidence_pack_status: payload.evidence_pack_status ?? null,
+            p_board_pack_status: payload.board_pack_status ?? null,
+            p_exit_review_notes: payload.exit_review_notes ?? null,
+          }
+        : action === 'record_production_hypercare_item'
+          ? {
+              p_actor_id: userData.user.id,
+              p_hypercare_window_id: payload.hypercare_window_id,
+              p_item_type: payload.item_type,
+              p_item_title: payload.item_title,
+              p_severity: payload.severity ?? 'medium',
+              p_item_summary: payload.item_summary ?? null,
+              p_department_id: payload.department_id ?? null,
+              p_owner_id: payload.owner_id ?? null,
+              p_due_date: payload.due_date ?? null,
+            }
+          : action === 'update_production_hypercare_item_status'
+            ? {
+                p_actor_id: userData.user.id,
+                p_item_id: payload.item_id,
+                p_item_status: payload.item_status,
+                p_evidence_summary: payload.evidence_summary ?? null,
+                p_closure_summary: payload.closure_summary ?? null,
+              }
+            : action === 'create_executive_governance_board_pack'
+              ? {
+                  p_actor_id: userData.user.id,
+                  p_pack_title: payload.pack_title,
+                  p_reporting_period: payload.reporting_period,
+                  p_hypercare_window_id: payload.hypercare_window_id ?? null,
+                  p_executive_summary: payload.executive_summary ?? null,
+                }
+              : {
+                  p_actor_id: userData.user.id,
+                  p_board_pack_id: payload.board_pack_id,
+                  p_pack_status: payload.pack_status,
+                  p_board_review_notes: payload.board_review_notes ?? null,
+                };
+    const { data, error } = await serviceClient.rpc(rpcName, rpcArgs);
+
+    if (error) {
+      const authorizationFailure =
+        /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|ORGANIZATION|ROLE|AUTHORIZED|HYPERCARE|BOARD|CRITICAL|SUPPORT|EVIDENCE|CLOSURE|LIMITATION/i
           .test(error.message);
       return jsonResponse({
         ok: false,

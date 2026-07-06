@@ -1,0 +1,256 @@
+{
+  "patch": "79",
+  "checked_at": "2026-07-06T06:09:19.668Z",
+  "strict_passed": true,
+  "failed_count": 0,
+  "checks": [
+    {
+      "name": "Patch 79 migration exists",
+      "passed": true
+    },
+    {
+      "name": "production_hypercare_windows exists",
+      "passed": true
+    },
+    {
+      "name": "production_hypercare_items exists",
+      "passed": true
+    },
+    {
+      "name": "executive_governance_board_packs exists",
+      "passed": true
+    },
+    {
+      "name": "RLS enabled for new tables",
+      "passed": true
+    },
+    {
+      "name": "No broad public write policy was added",
+      "passed": true
+    },
+    {
+      "name": "Guarded role checks exist for privileged writes",
+      "passed": true
+    },
+    {
+      "name": "Allowed hypercare statuses exist",
+      "passed": true
+    },
+    {
+      "name": "Allowed hypercare item types exist",
+      "passed": true
+    },
+    {
+      "name": "Allowed board pack statuses exist",
+      "passed": true
+    },
+    {
+      "name": "Critical incidents block hypercare exit review",
+      "passed": true
+    },
+    {
+      "name": "Open support issues block hypercare exit review unless limitations accepted",
+      "passed": true
+    },
+    {
+      "name": "Incomplete/blocked evidence pack blocks hypercare exit review",
+      "passed": true
+    },
+    {
+      "name": "Board pack draft/blocked blocks hypercare exit review",
+      "passed": true
+    },
+    {
+      "name": "High/critical items cannot close without closure summary",
+      "passed": true
+    },
+    {
+      "name": "Evidence gaps cannot close without evidence summary",
+      "passed": true
+    },
+    {
+      "name": "Board pack ready_for_board_review requires blocker checks",
+      "passed": true
+    },
+    {
+      "name": "Frontend API uses authenticated bridge pattern for privileged calls",
+      "passed": true
+    },
+    {
+      "name": "Privileged bridge allowlist includes Patch 79 actions",
+      "passed": true
+    },
+    {
+      "name": "Runtime registry classifies Patch 79 actions",
+      "passed": true
+    },
+    {
+      "name": "UI includes Production operations governance",
+      "passed": true
+    },
+    {
+      "name": "UI includes Hypercare command center",
+      "passed": true
+    },
+    {
+      "name": "UI includes 30/60/90 operating view",
+      "passed": true
+    },
+    {
+      "name": "UI includes Support and incident trend summary",
+      "passed": true
+    },
+    {
+      "name": "UI includes Department launch health",
+      "passed": true
+    },
+    {
+      "name": "UI includes Known limitations register",
+      "passed": true
+    },
+    {
+      "name": "UI includes Post-cutover corrective action queue",
+      "passed": true
+    },
+    {
+      "name": "UI includes Executive monthly governance report",
+      "passed": true
+    },
+    {
+      "name": "UI includes Accreditation/evidence pack tracking",
+      "passed": true
+    },
+    {
+      "name": "UI includes Board closure pack",
+      "passed": true
+    },
+    {
+      "name": "UI includes board closure caveat",
+      "passed": true
+    },
+    {
+      "name": "UI includes controlled authority caveat",
+      "passed": true
+    },
+    {
+      "name": "UI includes live transition caveat",
+      "passed": true
+    },
+    {
+      "name": "UI includes real execution caveat",
+      "passed": true
+    },
+    {
+      "name": "Patch 78 identity/role/data integrity wording remains",
+      "passed": true
+    },
+    {
+      "name": "Patch 77 live pilot execution wording remains",
+      "passed": true
+    },
+    {
+      "name": "Patch 76 controlled production authority wording remains",
+      "passed": true
+    },
+    {
+      "name": "Patch 75 clinical navigation simplification remains",
+      "passed": true
+    },
+    {
+      "name": "No production launched wording exists",
+      "passed": true
+    },
+    {
+      "name": "No go-live complete wording exists",
+      "passed": true
+    },
+    {
+      "name": "No system is production ready claim exists",
+      "passed": true
+    },
+    {
+      "name": "No full production achieved claim exists",
+      "passed": true
+    },
+    {
+      "name": "No transition_to_live_operations action exists",
+      "passed": true
+    },
+    {
+      "name": "No forbidden automatic closure wording exists",
+      "passed": true
+    },
+    {
+      "name": "No service-role frontend exposure exists",
+      "passed": true
+    },
+    {
+      "name": "No fake/demo records were added",
+      "passed": true
+    },
+    {
+      "name": "Patch does not add automatic launch/transition logic",
+      "passed": true
+    },
+    {
+      "name": "Restore-noise covers Patch 78 proof JSON",
+      "passed": true
+    },
+    {
+      "name": "package.json contains patch79:proof",
+      "passed": true
+    },
+    {
+      "name": "package.json contains patch79:all",
+      "passed": true
+    },
+    {
+      "name": "validate:fast exists",
+      "passed": true
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true
+    },
+    {
+      "name": "validate:security exists",
+      "passed": true
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true
+    },
+    {
+      "name": "proof:all exists",
+      "passed": true
+    },
+    {
+      "name": "v700:runtime-security exists",
+      "passed": true
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true
+    },
+    {
+      "name": "current platform status mentions Patch 79",
+      "passed": true
+    },
+    {
+      "name": "production caveat remains",
+      "passed": true
+    },
+    {
+      "name": "proof index mentions Patch 79",
+      "passed": true
+    },
+    {
+      "name": "runbook mentions Patch 78 proof JSON restore coverage",
+      "passed": true
+    },
+    {
+      "name": "No conflict markers",
+      "passed": true
+    }
+  ]
+}

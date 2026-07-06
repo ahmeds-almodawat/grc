@@ -80,6 +80,16 @@ import {
   recordIdentityRoleIntegrityFinding,
   updateIdentityRoleIntegrityFindingStatus,
   recordPrivilegedRoleRecertification,
+  getProductionHypercareWindows,
+  getProductionHypercareItems,
+  getExecutiveGovernanceBoardPacks,
+  getProductionOperationsDashboardSummary,
+  createProductionHypercareWindow,
+  updateProductionHypercareWindowStatus,
+  recordProductionHypercareItem,
+  updateProductionHypercareItemStatus,
+  createExecutiveGovernanceBoardPack,
+  updateExecutiveGovernanceBoardPackStatus,
   type ControlledProductionCutoverDecisionState,
   type LivePilotSessionStatus,
   type LivePilotIssueStatus,
@@ -90,7 +100,11 @@ import {
   type IdentityRoleFindingType,
   type IdentityRoleFindingSeverity,
   type IdentityRoleFindingStatus,
-  type PrivilegedRoleRecertificationStatus
+  type PrivilegedRoleRecertificationStatus,
+  type ProductionHypercareStatus,
+  type ProductionHypercareItemType,
+  type ProductionHypercareItemStatus,
+  type ExecutiveBoardPackStatus
 } from '../lib/productionReadinessApi';
 import { ShieldCheck, BarChart3, AlertTriangle, FileCheck, RefreshCw, Smartphone, Award, ClipboardList, Database, Languages } from 'lucide-react';
 
@@ -114,6 +128,13 @@ export function ProductionReadinessCenter() {
   const [identityUserId, setIdentityUserId] = useState('');
   const [identityMessage, setIdentityMessage] = useState<string | null>(null);
   const [identityBusy, setIdentityBusy] = useState(false);
+  const [operationsHypercareTitle, setOperationsHypercareTitle] = useState('');
+  const [operationsItemTitle, setOperationsItemTitle] = useState('');
+  const [operationsItemType, setOperationsItemType] = useState<ProductionHypercareItemType>('support_issue');
+  const [operationsBoardPackTitle, setOperationsBoardPackTitle] = useState('');
+  const [operationsReportingPeriod, setOperationsReportingPeriod] = useState('');
+  const [operationsMessage, setOperationsMessage] = useState<string | null>(null);
+  const [operationsBusy, setOperationsBusy] = useState(false);
 
   // Load Data
   const signoffs = useAsyncData(getProductionReadinessSignoffRegister, []);
@@ -176,6 +197,9 @@ export function ProductionReadinessCenter() {
   const identityReviews = useAsyncData(getIdentityRoleIntegrityReviews, []);
   const identityFindings = useAsyncData(getIdentityRoleIntegrityFindings, []);
   const privilegedRecertifications = useAsyncData(getPrivilegedRoleRecertifications, []);
+  const operationsWindows = useAsyncData(getProductionHypercareWindows, []);
+  const operationsItems = useAsyncData(getProductionHypercareItems, []);
+  const boardPacks = useAsyncData(getExecutiveGovernanceBoardPacks, []);
 
   // Bilingual dictionary
   const text = language === 'ar' ? ar : en;
@@ -399,6 +423,14 @@ export function ProductionReadinessCenter() {
   );
   const selectedIdentityReview = (identityReviews.data || [])[0];
   const selectedIdentityFinding = (identityFindings.data || [])[0];
+  const operationsGovernanceSummary = getProductionOperationsDashboardSummary(
+    operationsWindows.data || [],
+    operationsItems.data || [],
+    boardPacks.data || [],
+  );
+  const selectedOperationsWindow = (operationsWindows.data || [])[0];
+  const selectedOperationsItem = (operationsItems.data || [])[0];
+  const selectedBoardPack = (boardPacks.data || [])[0];
 
   async function refreshLivePilotData() {
     await Promise.all([
@@ -629,6 +661,138 @@ export function ProductionReadinessCenter() {
     );
     setIdentityUserId('');
     setIdentityRoleName('');
+  }
+
+  async function refreshOperationsGovernanceData() {
+    await Promise.all([
+      operationsWindows.refresh(),
+      operationsItems.refresh(),
+      boardPacks.refresh(),
+    ]);
+  }
+
+  async function runOperationsAction(action: () => Promise<{ message?: string }>, fallbackMessage: string) {
+    setOperationsBusy(true);
+    setOperationsMessage(null);
+    try {
+      const result = await action();
+      setOperationsMessage(result.message || fallbackMessage);
+      await refreshOperationsGovernanceData();
+    } catch (error) {
+      setOperationsMessage(error instanceof Error ? error.message : fallbackMessage);
+    } finally {
+      setOperationsBusy(false);
+    }
+  }
+
+  async function handleCreateOperationsWindow() {
+    const title = operationsHypercareTitle.trim();
+    if (!title) {
+      setOperationsMessage(text.hypercareTitleRequired);
+      return;
+    }
+    await runOperationsAction(
+      () => createProductionHypercareWindow({
+        hypercare_title: title,
+        exit_review_notes: text.operationsDefaultNote,
+      }),
+      text.hypercareWindowCreated,
+    );
+    setOperationsHypercareTitle('');
+  }
+
+  async function handleOperationsWindowStatus(hypercareStatus: ProductionHypercareStatus) {
+    if (!selectedOperationsWindow?.id) {
+      setOperationsMessage(text.hypercareWindowRequired);
+      return;
+    }
+    await runOperationsAction(
+      () => updateProductionHypercareWindowStatus({
+        hypercare_window_id: selectedOperationsWindow.id,
+        hypercare_status: hypercareStatus,
+        day_30_status: hypercareStatus === 'exit_review_required' ? 'review_required' : null,
+        day_60_status: hypercareStatus === 'exit_review_required' ? 'review_required' : null,
+        day_90_status: hypercareStatus === 'exit_review_required' ? 'review_required' : null,
+        evidence_pack_status: hypercareStatus === 'exit_review_required' ? 'ready_for_review' : null,
+        board_pack_status: hypercareStatus === 'exit_review_required' ? 'review_required' : null,
+        exit_review_notes: `${hypercareStatus}. ${text.boardClosureCaveat}`,
+      }),
+      text.hypercareWindowUpdated,
+    );
+  }
+
+  async function handleRecordOperationsItem() {
+    const title = operationsItemTitle.trim();
+    if (!selectedOperationsWindow?.id) {
+      setOperationsMessage(text.hypercareWindowRequired);
+      return;
+    }
+    if (!title) {
+      setOperationsMessage(text.operationsItemTitleRequired);
+      return;
+    }
+    await runOperationsAction(
+      () => recordProductionHypercareItem({
+        hypercare_window_id: selectedOperationsWindow.id,
+        item_type: operationsItemType,
+        item_title: title,
+        severity: operationsItemType === 'incident_trend' ? 'high' : 'medium',
+        item_summary: text.operationsItemDefaultSummary,
+      }),
+      text.operationsItemRecorded,
+    );
+    setOperationsItemTitle('');
+  }
+
+  async function handleOperationsItemStatus(itemStatus: ProductionHypercareItemStatus) {
+    if (!selectedOperationsItem?.id) {
+      setOperationsMessage(text.operationsItemRequired);
+      return;
+    }
+    await runOperationsAction(
+      () => updateProductionHypercareItemStatus({
+        item_id: selectedOperationsItem.id,
+        item_status: itemStatus,
+        evidence_summary: `${text.realExecutionEvidenceRequired}`,
+        closure_summary: `${itemStatus}. ${text.operationsItemClosureSummary}`,
+      }),
+      text.operationsItemUpdated,
+    );
+  }
+
+  async function handleCreateBoardPack() {
+    const title = operationsBoardPackTitle.trim();
+    const period = operationsReportingPeriod.trim();
+    if (!title || !period) {
+      setOperationsMessage(text.boardPackRequired);
+      return;
+    }
+    await runOperationsAction(
+      () => createExecutiveGovernanceBoardPack({
+        pack_title: title,
+        reporting_period: period,
+        hypercare_window_id: selectedOperationsWindow?.id ?? null,
+        executive_summary: text.executiveMonthlyGovernanceReport,
+      }),
+      text.boardPackCreated,
+    );
+    setOperationsBoardPackTitle('');
+    setOperationsReportingPeriod('');
+  }
+
+  async function handleBoardPackStatus(packStatus: ExecutiveBoardPackStatus) {
+    if (!selectedBoardPack?.id) {
+      setOperationsMessage(text.boardPackSelectRequired);
+      return;
+    }
+    await runOperationsAction(
+      () => updateExecutiveGovernanceBoardPackStatus({
+        board_pack_id: selectedBoardPack.id,
+        pack_status: packStatus,
+        board_review_notes: `${packStatus}. ${text.boardClosureCaveat}`,
+      }),
+      text.boardPackUpdated,
+    );
   }
 
   async function recordCutoverDecision(decisionState: ControlledProductionCutoverDecisionState) {
@@ -1512,6 +1676,123 @@ export function ProductionReadinessCenter() {
                         ))}
                         {!(identityFindings.data || []).length ? (
                           <tr><td colSpan={5}>{text.noIdentityFindingsRecorded}</td></tr>
+                        ) : null}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.productionOperationsGovernanceTitle} subtitle={text.productionOperationsGovernanceSubtitle}>
+                <DataState
+                  loading={operationsWindows.loading || operationsItems.loading || boardPacks.loading}
+                  error={operationsWindows.error || operationsItems.error || boardPacks.error}
+                  empty={false}
+                >
+                  <div className="alert alert-warning">
+                    <strong>{text.hypercareCommandCenter}: </strong>{operationsGovernanceSummary.hypercare_command_center_status}
+                    <br />
+                    <strong>{text.boardClosurePack}: </strong>{operationsGovernanceSummary.board_pack_status}
+                    <br />
+                    <strong>{text.caveat}: </strong>{text.boardClosureCaveat}
+                    <br />
+                    <strong>{text.caveat}: </strong>{text.controlledAuthorityCaveat}
+                    <br />
+                    <strong>{text.caveat}: </strong>{text.liveTransitionCaveat}
+                    <br />
+                    <strong>{text.caveat}: </strong>{text.realExecutionEvidenceRequired}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '14px', marginBottom: '18px' }}>
+                    <div className="stat-card"><div className="stat-value"><StatusPill tone={operationsGovernanceSummary.hypercare_command_center_status === 'exit_review_required' ? 'good' : operationsGovernanceSummary.hypercare_command_center_status === 'blocked' ? 'danger' : 'warning'}>{operationsGovernanceSummary.hypercare_command_center_status}</StatusPill></div><div className="stat-label">{text.hypercareCommandCenter}</div></div>
+                    <div className="stat-card"><div className="stat-value">{operationsGovernanceSummary.day_30_status}</div><div className="stat-label">{text.day30OperatingView}</div></div>
+                    <div className="stat-card"><div className="stat-value">{operationsGovernanceSummary.day_60_status}</div><div className="stat-label">{text.day60OperatingView}</div></div>
+                    <div className="stat-card"><div className="stat-value">{operationsGovernanceSummary.day_90_status}</div><div className="stat-label">{text.day90OperatingView}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{operationsGovernanceSummary.critical_incident_count}</div><div className="stat-label">{text.supportIncidentTrendSummary}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{operationsGovernanceSummary.open_support_issue_count}</div><div className="stat-label">{text.openSupportIssues}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{operationsGovernanceSummary.department_launch_gap_count}</div><div className="stat-label">{text.departmentLaunchHealth}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{operationsGovernanceSummary.unresolved_limitation_count}</div><div className="stat-label">{text.knownLimitationsRegister}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{operationsGovernanceSummary.corrective_action_open_count}</div><div className="stat-label">{text.postCutoverCorrectiveActionQueue}</div></div>
+                    <div className="stat-card"><div className="stat-value"><StatusPill tone={operationsGovernanceSummary.executive_monthly_governance_report_status === 'ready_for_board_review' ? 'good' : operationsGovernanceSummary.executive_monthly_governance_report_status === 'blocked' ? 'danger' : 'warning'}>{operationsGovernanceSummary.executive_monthly_governance_report_status}</StatusPill></div><div className="stat-label">{text.executiveMonthlyGovernanceReport}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{operationsGovernanceSummary.accreditation_evidence_pack_gap_count}</div><div className="stat-label">{text.accreditationEvidencePackTracking}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{operationsGovernanceSummary.dr_support_access_training_gap_count}</div><div className="stat-label">{text.drSupportAccessTrainingEvidence}</div></div>
+                  </div>
+                  <div className="alert alert-info">
+                    <strong>{text.requiredActionsBeforeHypercareExitReview}: </strong>{operationsGovernanceSummary.required_actions_before_hypercare_exit.join(' ')}
+                    <br />
+                    <strong>{text.requiredActionsBeforeBoardReview}: </strong>{operationsGovernanceSummary.required_actions_before_board_review.join(' ')}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '14px', margin: '14px 0' }}>
+                    <label style={{ display: 'grid', gap: '6px' }}>
+                      <span style={{ fontWeight: 700 }}>{text.hypercareWindowTitleLabel}</span>
+                      <input className="text-input" value={operationsHypercareTitle} onChange={event => setOperationsHypercareTitle(event.target.value)} placeholder={text.hypercareWindowTitlePlaceholder} />
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'end', gap: '10px', flexWrap: 'wrap' }}>
+                      <button className="secondary-action" type="button" disabled={operationsBusy} onClick={() => void handleCreateOperationsWindow()}>{text.createHypercareWindow}</button>
+                      <button className="secondary-action" type="button" disabled={operationsBusy || !selectedOperationsWindow} onClick={() => void handleOperationsWindowStatus('blocked')}>{text.markHypercareBlocked}</button>
+                      <button className="secondary-action" type="button" disabled={operationsBusy || !selectedOperationsWindow} onClick={() => void handleOperationsWindowStatus('deferred')}>{text.markHypercareDeferred}</button>
+                      <button className="secondary-action" type="button" disabled={operationsBusy || !selectedOperationsWindow || operationsGovernanceSummary.required_actions_before_hypercare_exit.length > 1 || operationsGovernanceSummary.required_actions_before_hypercare_exit[0] !== 'Hypercare exit review required.'} onClick={() => void handleOperationsWindowStatus('exit_review_required')}>{text.markHypercareExitReviewRequired}</button>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 240px auto', gap: '14px', marginBottom: '14px' }}>
+                    <label style={{ display: 'grid', gap: '6px' }}>
+                      <span style={{ fontWeight: 700 }}>{text.operationsItemTitleLabel}</span>
+                      <input className="text-input" value={operationsItemTitle} onChange={event => setOperationsItemTitle(event.target.value)} placeholder={text.operationsItemTitlePlaceholder} />
+                    </label>
+                    <label style={{ display: 'grid', gap: '6px' }}>
+                      <span style={{ fontWeight: 700 }}>{text.itemType}</span>
+                      <select className="text-input" value={operationsItemType} onChange={event => setOperationsItemType(event.target.value as ProductionHypercareItemType)}>
+                        <option value="support_issue">{text.supportIssue}</option>
+                        <option value="incident_trend">{text.incidentTrend}</option>
+                        <option value="department_launch_health">{text.departmentLaunchHealth}</option>
+                        <option value="known_limitation">{text.knownLimitationsRegister}</option>
+                        <option value="corrective_action">{text.postCutoverCorrectiveActionQueue}</option>
+                        <option value="evidence_pack_gap">{text.accreditationEvidencePackTracking}</option>
+                        <option value="board_pack_gap">{text.boardClosurePack}</option>
+                        <option value="training_gap">{text.trainingGap}</option>
+                        <option value="dr_restore_gap">{text.drRestoreGap}</option>
+                        <option value="access_review_gap">{text.accessReviewGap}</option>
+                      </select>
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'end' }}>
+                      <button className="secondary-action" type="button" disabled={operationsBusy || !selectedOperationsWindow} onClick={() => void handleRecordOperationsItem()}>{text.recordHypercareItem}</button>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 180px auto', gap: '14px', marginBottom: '14px' }}>
+                    <label style={{ display: 'grid', gap: '6px' }}>
+                      <span style={{ fontWeight: 700 }}>{text.boardPackTitleLabel}</span>
+                      <input className="text-input" value={operationsBoardPackTitle} onChange={event => setOperationsBoardPackTitle(event.target.value)} placeholder={text.boardPackTitlePlaceholder} />
+                    </label>
+                    <label style={{ display: 'grid', gap: '6px' }}>
+                      <span style={{ fontWeight: 700 }}>{text.reportingPeriod}</span>
+                      <input className="text-input" value={operationsReportingPeriod} onChange={event => setOperationsReportingPeriod(event.target.value)} placeholder={text.reportingPeriodPlaceholder} />
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'end', gap: '10px', flexWrap: 'wrap' }}>
+                      <button className="secondary-action" type="button" disabled={operationsBusy} onClick={() => void handleCreateBoardPack()}>{text.createBoardPack}</button>
+                      <button className="secondary-action" type="button" disabled={operationsBusy || !selectedBoardPack} onClick={() => void handleBoardPackStatus('review_required')}>{text.markBoardReviewRequired}</button>
+                      <button className="secondary-action" type="button" disabled={operationsBusy || !selectedBoardPack || operationsGovernanceSummary.required_actions_before_board_review.length > 1 || operationsGovernanceSummary.required_actions_before_board_review[0] !== 'Ready for board review.'} onClick={() => void handleBoardPackStatus('ready_for_board_review')}>{text.markReadyForBoardReview}</button>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
+                    <button className="secondary-action" type="button" disabled={operationsBusy || !selectedOperationsItem} onClick={() => void handleOperationsItemStatus('in_progress')}>{text.markItemInProgress}</button>
+                    <button className="secondary-action" type="button" disabled={operationsBusy || !selectedOperationsItem} onClick={() => void handleOperationsItemStatus('review_required')}>{text.markItemReviewRequired}</button>
+                    <button className="secondary-action" type="button" disabled={operationsBusy || !selectedOperationsItem} onClick={() => void handleOperationsItemStatus('closed')}>{text.markItemClosed}</button>
+                  </div>
+                  {operationsMessage ? <div className="alert alert-info">{operationsMessage}</div> : null}
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead><tr><th>{text.item}</th><th>{text.itemType}</th><th>{text.severity}</th><th>{text.status}</th><th>{text.evidence}</th></tr></thead>
+                      <tbody>
+                        {(operationsItems.data || []).slice(0, 20).map(item => (
+                          <tr key={item.id}>
+                            <td><strong>{item.item_title}</strong></td>
+                            <td>{item.item_type}</td>
+                            <td><StatusPill tone={item.severity === 'critical' || item.severity === 'high' ? 'danger' : item.severity === 'medium' ? 'warning' : 'neutral'}>{item.severity}</StatusPill></td>
+                            <td><StatusPill tone={item.item_status === 'closed' ? 'good' : item.item_status === 'blocked' ? 'danger' : 'warning'}>{item.item_status}</StatusPill></td>
+                            <td>{item.evidence_summary || text.operationalReadinessEvidenceIncomplete}</td>
+                          </tr>
+                        ))}
+                        {!(operationsItems.data || []).length ? (
+                          <tr><td colSpan={5}>{text.noOperationsItemsRecorded}</td></tr>
                         ) : null}
                       </tbody>
                     </table>
@@ -2759,6 +3040,69 @@ const en = {
   privilegedRoleRecertificationNote: 'Privileged role recertification evidence recorded for review.',
   identityRecertificationRecorded: 'Privileged role recertification evidence recorded.',
   integrityFindingsRemainOpen: 'Integrity findings remain open until evidence is reviewed.',
+  productionOperationsGovernanceTitle: 'Production Operations Governance',
+  productionOperationsGovernanceSubtitle: 'Hypercare command center, 30/60/90 operating view, executive monthly governance report, accreditation/evidence pack tracking, and board closure pack readiness.',
+  hypercareCommandCenter: 'Hypercare command center',
+  day30OperatingView: '30/60/90 operating view - day 30',
+  day60OperatingView: '30/60/90 operating view - day 60',
+  day90OperatingView: '30/60/90 operating view - day 90',
+  supportIncidentTrendSummary: 'Support and incident trend summary',
+  openSupportIssues: 'Open support issues',
+  departmentLaunchHealth: 'Department launch health',
+  knownLimitationsRegister: 'Known limitations register',
+  postCutoverCorrectiveActionQueue: 'Post-cutover corrective action queue',
+  executiveMonthlyGovernanceReport: 'Executive monthly governance report',
+  accreditationEvidencePackTracking: 'Accreditation/evidence pack tracking',
+  drSupportAccessTrainingEvidence: 'DR/support/access/training evidence summary',
+  boardClosurePack: 'Board closure pack',
+  requiredActionsBeforeHypercareExitReview: 'Required actions before hypercare exit review',
+  requiredActionsBeforeBoardReview: 'Required actions before board review',
+  boardClosureCaveat: 'Board closure does not approve production launch.',
+  liveTransitionCaveat: 'Live transition requires separate operational execution.',
+  realExecutionEvidenceRequired: 'Real hospital execution evidence is still required.',
+  operationalReadinessEvidenceIncomplete: 'Operational readiness evidence incomplete.',
+  hypercareWindowTitleLabel: 'Hypercare command center title',
+  hypercareWindowTitlePlaceholder: 'Record the hypercare command center title',
+  createHypercareWindow: 'Create hypercare window',
+  markHypercareBlocked: 'Mark hypercare blocked',
+  markHypercareDeferred: 'Mark hypercare deferred',
+  markHypercareExitReviewRequired: 'Mark hypercare exit review required',
+  operationsItemTitleLabel: 'Operations governance item',
+  operationsItemTitlePlaceholder: 'Record support, incident, evidence, or board pack item',
+  itemType: 'Item type',
+  supportIssue: 'Support issue',
+  incidentTrend: 'Incident trend',
+  trainingGap: 'Training gap',
+  drRestoreGap: 'DR restore gap',
+  accessReviewGap: 'Access review gap',
+  recordHypercareItem: 'Record hypercare item',
+  boardPackTitleLabel: 'Board closure pack title',
+  boardPackTitlePlaceholder: 'Record the board closure pack title',
+  reportingPeriod: 'Reporting period',
+  reportingPeriodPlaceholder: 'Example: 2026-07',
+  createBoardPack: 'Create board pack',
+  markBoardReviewRequired: 'Mark board review required',
+  markReadyForBoardReview: 'Mark ready for board review',
+  markItemInProgress: 'Mark item in progress',
+  markItemReviewRequired: 'Mark item review required',
+  markItemClosed: 'Mark item closed',
+  item: 'Item',
+  noOperationsItemsRecorded: 'No production operations governance items have been recorded.',
+  hypercareTitleRequired: 'Hypercare command center title is required.',
+  operationsDefaultNote: 'Production operations governance opened for hypercare and board review tracking.',
+  hypercareWindowCreated: 'Hypercare command center recorded.',
+  hypercareWindowRequired: 'Create or select a hypercare command center first.',
+  hypercareWindowUpdated: 'Hypercare command center status updated.',
+  operationsItemTitleRequired: 'Operations governance item title is required.',
+  operationsItemDefaultSummary: 'Operational governance item remains open for review.',
+  operationsItemRecorded: 'Production operations governance item recorded.',
+  operationsItemRequired: 'Record or select a production operations governance item first.',
+  operationsItemClosureSummary: 'Operations governance item reviewed for hypercare and board pack readiness.',
+  operationsItemUpdated: 'Production operations governance item status updated.',
+  boardPackRequired: 'Board closure pack title and reporting period are required.',
+  boardPackCreated: 'Executive monthly governance report and board closure pack recorded.',
+  boardPackSelectRequired: 'Create or select a board closure pack first.',
+  boardPackUpdated: 'Board closure pack status updated.',
   controlledProductionAuthorityTitle: 'Controlled Production Authority',
   controlledProductionAuthoritySubtitle: 'Controlled cutover decision record with executive review, blocker checks, limitation review, and checklist gates.',
   controlledProductionAuthority: 'Controlled production authority',
@@ -3150,6 +3494,69 @@ const ar = {
   privilegedRoleRecertificationNote: 'تم تسجيل دليل إعادة اعتماد الدور الحساس للمراجعة.',
   identityRecertificationRecorded: 'تم تسجيل دليل إعادة اعتماد الدور الحساس.',
   integrityFindingsRemainOpen: 'تبقى نتائج السلامة مفتوحة حتى تتم مراجعة الأدلة.',
+  productionOperationsGovernanceTitle: 'حوكمة عمليات التشغيل',
+  productionOperationsGovernanceSubtitle: 'مركز قيادة المتابعة، وعرض تشغيل 30/60/90، والتقرير التنفيذي الشهري، وتتبع حزمة الاعتماد/الأدلة، وجاهزية حزمة إغلاق المجلس.',
+  hypercareCommandCenter: 'مركز قيادة المتابعة',
+  day30OperatingView: 'عرض تشغيل 30/60/90 - يوم 30',
+  day60OperatingView: 'عرض تشغيل 30/60/90 - يوم 60',
+  day90OperatingView: 'عرض تشغيل 30/60/90 - يوم 90',
+  supportIncidentTrendSummary: 'ملخص اتجاهات الدعم والحوادث',
+  openSupportIssues: 'مشكلات دعم مفتوحة',
+  departmentLaunchHealth: 'صحة إطلاق القسم',
+  knownLimitationsRegister: 'سجل المحددات المعروفة',
+  postCutoverCorrectiveActionQueue: 'قائمة إجراءات المعالجة بعد التحويل',
+  executiveMonthlyGovernanceReport: 'تقرير الحوكمة التنفيذي الشهري',
+  accreditationEvidencePackTracking: 'تتبع حزمة الاعتماد/الأدلة',
+  drSupportAccessTrainingEvidence: 'ملخص أدلة الاستعادة والدعم والوصول والتدريب',
+  boardClosurePack: 'حزمة إغلاق المجلس',
+  requiredActionsBeforeHypercareExitReview: 'الإجراءات المطلوبة قبل مراجعة خروج المتابعة',
+  requiredActionsBeforeBoardReview: 'الإجراءات المطلوبة قبل مراجعة المجلس',
+  boardClosureCaveat: 'إغلاق المجلس لا يعتمد الإطلاق الإنتاجي.',
+  liveTransitionCaveat: 'الانتقال للتشغيل الفعلي يتطلب تنفيذا تشغيليا منفصلا.',
+  realExecutionEvidenceRequired: 'دليل التنفيذ الفعلي في المستشفى ما زال مطلوبا.',
+  operationalReadinessEvidenceIncomplete: 'دليل الجاهزية التشغيلية غير مكتمل.',
+  hypercareWindowTitleLabel: 'عنوان مركز قيادة المتابعة',
+  hypercareWindowTitlePlaceholder: 'سجل عنوان مركز قيادة المتابعة',
+  createHypercareWindow: 'إنشاء نافذة متابعة',
+  markHypercareBlocked: 'تحديد المتابعة كمعطلة',
+  markHypercareDeferred: 'تحديد المتابعة كمؤجلة',
+  markHypercareExitReviewRequired: 'تحديد أن مراجعة خروج المتابعة مطلوبة',
+  operationsItemTitleLabel: 'بند حوكمة العمليات',
+  operationsItemTitlePlaceholder: 'سجل بند دعم أو حادث أو دليل أو حزمة مجلس',
+  itemType: 'نوع البند',
+  supportIssue: 'مشكلة دعم',
+  incidentTrend: 'اتجاه حادث',
+  trainingGap: 'فجوة تدريب',
+  drRestoreGap: 'فجوة استعادة كوارث',
+  accessReviewGap: 'فجوة مراجعة وصول',
+  recordHypercareItem: 'تسجيل بند متابعة',
+  boardPackTitleLabel: 'عنوان حزمة إغلاق المجلس',
+  boardPackTitlePlaceholder: 'سجل عنوان حزمة إغلاق المجلس',
+  reportingPeriod: 'فترة التقرير',
+  reportingPeriodPlaceholder: 'مثال: 2026-07',
+  createBoardPack: 'إنشاء حزمة مجلس',
+  markBoardReviewRequired: 'تحديد أن مراجعة المجلس مطلوبة',
+  markReadyForBoardReview: 'تحديد الجاهزية لمراجعة المجلس',
+  markItemInProgress: 'تحديد البند قيد المعالجة',
+  markItemReviewRequired: 'تحديد أن مراجعة البند مطلوبة',
+  markItemClosed: 'تحديد البند مغلق',
+  item: 'البند',
+  noOperationsItemsRecorded: 'لم يتم تسجيل بنود حوكمة عمليات التشغيل.',
+  hypercareTitleRequired: 'عنوان مركز قيادة المتابعة مطلوب.',
+  operationsDefaultNote: 'تم فتح حوكمة عمليات التشغيل لتتبع المتابعة ومراجعة المجلس.',
+  hypercareWindowCreated: 'تم تسجيل مركز قيادة المتابعة.',
+  hypercareWindowRequired: 'أنشئ أو اختر مركز قيادة متابعة أولا.',
+  hypercareWindowUpdated: 'تم تحديث حالة مركز قيادة المتابعة.',
+  operationsItemTitleRequired: 'عنوان بند حوكمة العمليات مطلوب.',
+  operationsItemDefaultSummary: 'يبقى بند حوكمة العمليات مفتوحا للمراجعة.',
+  operationsItemRecorded: 'تم تسجيل بند حوكمة عمليات التشغيل.',
+  operationsItemRequired: 'سجل أو اختر بند حوكمة عمليات تشغيل أولا.',
+  operationsItemClosureSummary: 'تمت مراجعة بند حوكمة العمليات لجاهزية المتابعة وحزمة المجلس.',
+  operationsItemUpdated: 'تم تحديث حالة بند حوكمة عمليات التشغيل.',
+  boardPackRequired: 'عنوان حزمة إغلاق المجلس وفترة التقرير مطلوبان.',
+  boardPackCreated: 'تم تسجيل تقرير الحوكمة التنفيذي الشهري وحزمة إغلاق المجلس.',
+  boardPackSelectRequired: 'أنشئ أو اختر حزمة إغلاق مجلس أولا.',
+  boardPackUpdated: 'تم تحديث حالة حزمة إغلاق المجلس.',
   controlledProductionAuthorityTitle: 'صلاحية القرار الإنتاجي المنضبط',
   controlledProductionAuthoritySubtitle: 'سجل قرار التحويل المنضبط مع المراجعة التنفيذية، وفحوصات المعوقات، ومراجعة المحددات، وبوابات قائمة التحقق.',
   controlledProductionAuthority: 'صلاحية القرار الإنتاجي المنضبط',
