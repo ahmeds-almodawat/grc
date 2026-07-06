@@ -35,6 +35,8 @@ Patch 82 staging migration rehearsal evidence changes should run `npm run valida
 
 Patch 82B frontend-only UI polish changes should run `npm run validate:build`, `npm run validate:security`, `npm run patch82b:proof`, and `npm run release:restore-noise`. Staging rehearsal remains separate.
 
+Patch 82C frontend-only interactivity changes should run `npm run validate:build`, `npm run validate:security`, `npm run patch82c:proof`, and `npm run release:restore-noise`. Card filters, search, and drilldowns must not change backend workflow behavior.
+
 Never use `git add .`. Stage only the files intentionally changed for the patch.
 
 Do not accidentally commit:

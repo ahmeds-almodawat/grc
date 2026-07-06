@@ -1,9 +1,9 @@
+import { useMemo, useState } from 'react';
 import { AlertTriangle, Activity, Repeat2, ShieldAlert } from 'lucide-react';
 import { DataState } from '../components/DataState';
 import { EmptySupabaseNotice } from '../components/EmptySupabaseNotice';
 import { EntityTable } from '../components/EntityTable';
 import { ModuleHeader } from '../components/ModuleHeader';
-import { StatCard } from '../components/StatCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { getOvrRepeatedCategoryAlerts, getOvrRiskIndicatorsByDepartment, getOvrRiskIndicatorSummary } from '../lib/grcApi';
@@ -11,6 +11,9 @@ import { humanize } from '../lib/format';
 import { useI18n } from '../i18n/I18nContext';
 import type { OvrRepeatedCategoryAlert, OvrRiskDepartmentIndicator } from '../types/domain';
 import { OvrRcaCenter } from './OvrRcaCenter';
+
+type RiskSignalFilter = 'all' | 'low' | 'medium' | 'high' | 'critical';
+type RiskSortKey = 'score' | 'major' | 'overdue' | 'ovrs';
 
 function signalTone(level: string): 'normal' | 'warning' | 'danger' | 'success' {
   if (level === 'critical' || level === 'high') return 'danger';
@@ -24,7 +27,41 @@ export function OvrRiskIndicators() {
   const summary = useAsyncData(getOvrRiskIndicatorSummary, []);
   const departments = useAsyncData(getOvrRiskIndicatorsByDepartment, []);
   const repeated = useAsyncData(getOvrRepeatedCategoryAlerts, []);
+  const [activeSignal, setActiveSignal] = useState<RiskSignalFilter>('all');
+  const [departmentSearch, setDepartmentSearch] = useState('');
+  const [sortKey, setSortKey] = useState<RiskSortKey>('score');
+  const [selectedDepartment, setSelectedDepartment] = useState<OvrRiskDepartmentIndicator | null>(null);
   const summaryRow = summary.data;
+  const filteredDepartments = useMemo(() => {
+    const query = departmentSearch.trim().toLowerCase();
+    const rows = (departments.data || []).filter(row => {
+      const matchesSignal = activeSignal === 'all' || row.risk_signal_level === activeSignal;
+      const matchesQuery = !query || [row.department_name, row.repeated_categories, row.risk_signal_level]
+        .some(value => value?.toLowerCase().includes(query));
+      return matchesSignal && matchesQuery;
+    });
+    return [...rows].sort((a, b) => {
+      if (sortKey === 'major') return Number(b.major_or_sentinel_ovrs_90d || 0) - Number(a.major_or_sentinel_ovrs_90d || 0);
+      if (sortKey === 'overdue') return Number(b.overdue_corrective_actions || 0) - Number(a.overdue_corrective_actions || 0);
+      if (sortKey === 'ovrs') return Number(b.ovr_count_30d || 0) - Number(a.ovr_count_30d || 0);
+      return Number(b.weighted_score_30d || 0) - Number(a.weighted_score_30d || 0);
+    });
+  }, [activeSignal, departmentSearch, departments.data, sortKey]);
+  const resetRiskFilters = () => {
+    setActiveSignal('all');
+    setDepartmentSearch('');
+    setSortKey('score');
+    setSelectedDepartment(null);
+  };
+  const selectedSignalExplanation = activeSignal === 'critical'
+    ? 'Critical signals need immediate Quality leadership review.'
+    : activeSignal === 'high'
+      ? 'High signals show departments with concentrated safety exposure.'
+      : activeSignal === 'medium'
+        ? 'Medium signals should be monitored for recurrence or delayed action.'
+        : activeSignal === 'low'
+          ? 'Low signals are stable but remain visible for trend monitoring.'
+          : 'All department risk signals are visible.';
 
   return (
     <section className="page-section">
@@ -38,15 +75,44 @@ export function OvrRiskIndicators() {
       <DataState loading={summary.loading} error={summary.error} empty={!summaryRow}>
         {summaryRow ? (
           <div className="stats-grid">
-            <StatCard label={t('ovrRisk.total30')} value={summaryRow.total_ovrs_30d} />
-            <StatCard label={t('ovrRisk.weighted30')} value={summaryRow.weighted_score_30d} tone={signalTone(summaryRow.overall_signal_level)} />
-            <StatCard label={t('ovrRisk.major90')} value={summaryRow.major_or_sentinel_ovrs_90d} tone="danger" />
-            <StatCard label={t('ovrRisk.repeated30')} value={summaryRow.repeated_category_alerts_30d} tone="warning" />
-            <StatCard label={t('ovrRisk.overdueActions')} value={summaryRow.overdue_corrective_actions} tone="danger" />
-            <StatCard label={t('ovrRisk.openOvr')} value={summaryRow.open_ovrs} tone="warning" />
+            {[
+              { label: t('ovrRisk.total30'), value: summaryRow.total_ovrs_30d, filter: 'all' as RiskSignalFilter, tone: 'normal' as const },
+              { label: t('ovrRisk.weighted30'), value: summaryRow.weighted_score_30d, filter: summaryRow.overall_signal_level as RiskSignalFilter, tone: signalTone(summaryRow.overall_signal_level) },
+              { label: t('ovrRisk.major90'), value: summaryRow.major_or_sentinel_ovrs_90d, filter: 'critical' as RiskSignalFilter, tone: 'danger' as const },
+              { label: t('ovrRisk.repeated30'), value: summaryRow.repeated_category_alerts_30d, filter: 'high' as RiskSignalFilter, tone: 'warning' as const },
+              { label: t('ovrRisk.overdueActions'), value: summaryRow.overdue_corrective_actions, filter: 'high' as RiskSignalFilter, tone: 'danger' as const },
+              { label: t('ovrRisk.openOvr'), value: summaryRow.open_ovrs, filter: 'medium' as RiskSignalFilter, tone: 'warning' as const }
+            ].map(card => (
+              <button key={card.label} type="button" className={`stat-card ${card.tone} ${activeSignal === card.filter ? 'active' : ''}`} onClick={() => setActiveSignal(card.filter)}>
+                <div className="stat-value">{card.value}</div>
+                <div className="stat-label">{card.label}</div>
+              </button>
+            ))}
           </div>
         ) : null}
       </DataState>
+
+      <div className="panel">
+        <div className="split-header">
+          <div className="panel-header">
+            <h4>Risk signal filters</h4>
+            <p>{selectedSignalExplanation} Showing {filteredDepartments.length} of {(departments.data || []).length} departments.</p>
+          </div>
+          <button className="ghost-button" type="button" onClick={resetRiskFilters}>Reset filters</button>
+        </div>
+        <div className="toolbar">
+          {(['all', 'low', 'medium', 'high', 'critical'] as RiskSignalFilter[]).map(signal => (
+            <button key={signal} type="button" className={`ghost-button small ${activeSignal === signal ? 'active' : ''}`} onClick={() => setActiveSignal(signal)}>{humanize(signal)}</button>
+          ))}
+          <input value={departmentSearch} onChange={event => setDepartmentSearch(event.target.value)} placeholder="Search department or repeated category" />
+          <select value={sortKey} onChange={event => setSortKey(event.target.value as RiskSortKey)}>
+            <option value="score">Sort by score</option>
+            <option value="major">Sort by major count</option>
+            <option value="overdue">Sort by overdue CA</option>
+            <option value="ovrs">Sort by OVRs 30D</option>
+          </select>
+        </div>
+      </div>
 
       <div className="panel ovr-risk-explainer">
         <div className="panel-header">
@@ -66,12 +132,12 @@ export function OvrRiskIndicators() {
           <h4>{t('ovrRisk.departmentTable')}</h4>
           <p>{t('ovrRisk.departmentHint')}</p>
         </div>
-        <DataState loading={departments.loading} error={departments.error} empty={!departments.data?.length}>
+        <DataState loading={departments.loading} error={departments.error} empty={!filteredDepartments.length} emptyTitle="No department risk records match the selected filter" emptyMessage="Reset filters or broaden the search to review all department risk signals.">
           <EntityTable<OvrRiskDepartmentIndicator>
-            rows={departments.data || []}
+            rows={filteredDepartments}
             getRowKey={row => row.department_id || 'company-wide'}
             columns={[
-              { key: 'department', header: t('common.department'), render: row => <strong>{row.department_name}</strong> },
+              { key: 'department', header: t('common.department'), render: row => <button className="link-button" type="button" onClick={() => setSelectedDepartment(row)}><strong>{row.department_name}</strong></button> },
               { key: 'count30', header: t('ovrRisk.ovrs30'), render: row => row.ovr_count_30d },
               { key: 'score30', header: t('ovrRisk.score30'), render: row => row.weighted_score_30d },
               { key: 'major90', header: t('ovrRisk.major90Short'), render: row => row.major_or_sentinel_ovrs_90d || '0' },
@@ -82,6 +148,25 @@ export function OvrRiskIndicators() {
             ]}
           />
         </DataState>
+        {selectedDepartment ? (
+          <div className="detail-panel">
+            <div className="split-header">
+              <div>
+                <h4>Selected department risk details</h4>
+                <p>{selectedDepartment.department_name} · {humanize(selectedDepartment.risk_signal_level)}</p>
+              </div>
+              <button className="ghost-button small" type="button" onClick={() => setSelectedDepartment(null)}>Clear selection</button>
+            </div>
+            <div className="detail-grid">
+              <div><span>{t('ovrRisk.ovrs30')}</span><strong>{selectedDepartment.ovr_count_30d}</strong></div>
+              <div><span>{t('ovrRisk.score30')}</span><strong>{selectedDepartment.weighted_score_30d}</strong></div>
+              <div><span>{t('ovrRisk.major90Short')}</span><strong>{selectedDepartment.major_or_sentinel_ovrs_90d || 0}</strong></div>
+              <div><span>{t('ovrRisk.overdueActionsShort')}</span><strong>{selectedDepartment.overdue_corrective_actions || 0}</strong></div>
+              <div><span>{t('ovrRisk.repeatedCategories')}</span><strong>{selectedDepartment.repeated_categories || 'No repeated category currently recorded.'}</strong></div>
+              <div><span>Why this matters</span><strong>{selectedSignalExplanation}</strong></div>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="panel">

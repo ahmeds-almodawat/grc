@@ -2,7 +2,8 @@
 
 ## Current Level
 
-- Current patch level: Patch 82B after implementation.
+- Current patch level: Patch 82C after implementation.
+- Patch 82C scope: frontend-only operational dashboard interactivity for OVR / Incident Management, OVR Risk Indicators, Department Control Room, Operations & Notifications Center, Escalations / governance follow-up, and Approvals. It adds local card filters, search, reset controls, selected-record detail panels, and clearer empty-state guidance using already loaded data. No Supabase migration was applied, staging rehearsal remains pending, and production caveat remains unchanged.
 - Patch 82B scope: frontend-only interactive dashboard and UI polish for Production Readiness Center and Production Operator Console. It adds local focus cards, filters, search, and drilldown-style details using already loaded data. No Supabase migration was applied, staging rehearsal remains pending, and production caveat remains unchanged.
 - Patch 82 scope: staging migration rehearsal evidence for migrations 118 through 121. It is staging-only, does not apply production migrations, does not approve production launch, and requires blocker review before production deployment planning.
 - Patch 81 scope: controlled Supabase migration and deployment runbook for migrations 118 through 121. It covers preflight, backup, staging-first validation, production apply planning, post-apply verification, rollback/containment, and evidence capture. Applying migrations does not equal production launch, and controlled production authority plus real hospital execution remain separate.
@@ -68,7 +69,7 @@ Use `npm run validate:fast` for the local development loop, `npm run validate:bu
 ## Evidence Locations
 
 - Technical validation artifacts: `release/v700/`, `release/v64/`, `release/v66/`, `release/v672/`, `release/v673/`, and `release/v674/`.
-- Patch release evidence: `release/patch43/` through `release/patch82b/`.
+- Patch release evidence: `release/patch43/` through `release/patch82c/`.
 - Current production readiness, pilot/hypercare, hospital operations evidence, and closure follow-up are surfaced in the Production Readiness Center, Production Operator Console, and Production Evidence Closure page.
 - Current proof command index: `release/current-proof-command-index.md`.
 - Current validation runbook: `release/current-validation-runbook.md`.

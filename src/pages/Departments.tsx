@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Building2, Plus } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { EntityTable } from '../components/EntityTable';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
-import { StatCard } from '../components/StatCard';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { createDepartment, getDepartmentExecutionSummary } from '../lib/grcApi';
 import type { DepartmentExecutionSummary } from '../types/domain';
+
+type DepartmentFilter = 'all' | 'active' | 'overdueProjects' | 'overdueTasks' | 'criticalRisks';
 
 export function Departments() {
   const auth = useAuth();
@@ -19,8 +20,24 @@ export function Departments() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<DepartmentFilter>('all');
+  const [departmentSearch, setDepartmentSearch] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState<DepartmentExecutionSummary | null>(null);
   const departments = useAsyncData(getDepartmentExecutionSummary, []);
   const rows = departments.data || [];
+  const filteredRows = useMemo(() => {
+    const query = departmentSearch.trim().toLowerCase();
+    return rows.filter(row => {
+      const matchesFilter =
+        activeFilter === 'all'
+        || (activeFilter === 'active' && Number(row.active_projects || 0) > 0)
+        || (activeFilter === 'overdueProjects' && Number(row.overdue_projects || 0) > 0)
+        || (activeFilter === 'overdueTasks' && Number(row.overdue_tasks || 0) > 0)
+        || (activeFilter === 'criticalRisks' && Number(row.critical_risks || 0) > 0);
+      const matchesQuery = !query || [row.department_name].some(value => value?.toLowerCase().includes(query));
+      return matchesFilter && matchesQuery;
+    });
+  }, [activeFilter, departmentSearch, rows]);
   const canManageDepartments = !auth.isLocalBypass && auth.roles.some(
     assignment => assignment.role === 'super_admin' || assignment.role === 'governance_admin'
   );
@@ -40,6 +57,11 @@ export function Departments() {
     setNameAr('');
     setCode('');
     setActionError(null);
+  };
+  const resetDashboardFilters = () => {
+    setActiveFilter('all');
+    setDepartmentSearch('');
+    setSelectedDepartment(null);
   };
 
   const submitDepartment = async () => {
@@ -97,13 +119,34 @@ export function Departments() {
 
       {rows.length ? (
         <div className="stats-grid">
-          <StatCard label="Departments tracked" value={rows.length} />
-          <StatCard label="Active projects" value={totals.activeProjects} />
-          <StatCard label="Overdue projects" value={totals.overdueProjects} tone="danger" />
-          <StatCard label="Overdue tasks" value={totals.overdueTasks} tone="warning" />
-          <StatCard label="Critical risks" value={totals.criticalRisks} tone="danger" />
+          {[
+            { key: 'all' as const, label: 'Departments tracked', value: rows.length, tone: 'normal' as const },
+            { key: 'active' as const, label: 'Active projects', value: totals.activeProjects, tone: 'normal' as const },
+            { key: 'overdueProjects' as const, label: 'Overdue projects', value: totals.overdueProjects, tone: 'danger' as const },
+            { key: 'overdueTasks' as const, label: 'Overdue tasks', value: totals.overdueTasks, tone: 'warning' as const },
+            { key: 'criticalRisks' as const, label: 'Critical risks', value: totals.criticalRisks, tone: 'danger' as const }
+          ].map(card => (
+            <button key={card.key} type="button" className={`stat-card ${card.tone} ${activeFilter === card.key ? 'active' : ''}`} onClick={() => setActiveFilter(card.key)}>
+              <div className="stat-value">{card.value}</div>
+              <div className="stat-label">{card.label}</div>
+            </button>
+          ))}
         </div>
       ) : null}
+
+      <div className="panel">
+        <div className="split-header">
+          <div className="panel-header">
+            <h4>Department dashboard filters</h4>
+            <p>Showing {filteredRows.length} of {rows.length} departments. Click a department name for execution details.</p>
+          </div>
+          <button className="ghost-button" type="button" onClick={resetDashboardFilters}>Reset filters</button>
+        </div>
+        <div className="toolbar">
+          <span className="status-badge status-info">Active filter: {activeFilter === 'all' ? 'All departments' : activeFilter.replace(/([A-Z])/g, ' $1')}</span>
+          <input value={departmentSearch} onChange={event => setDepartmentSearch(event.target.value)} placeholder="Search department" />
+        </div>
+      </div>
 
       <div className="panel">
         <div className="panel-header">
@@ -113,19 +156,21 @@ export function Departments() {
         <DataState
           loading={departments.loading}
           error={departments.error}
-          empty={!rows.length}
+          empty={!filteredRows.length}
           emptyTitle="No department execution data"
           emptyMessage={
-            canManageDepartments
+            activeFilter !== 'all' || departmentSearch
+              ? 'No departments match the selected filter. Reset filters or broaden the search.'
+              : canManageDepartments
               ? 'Create or activate departments, then add controlled work to populate this summary.'
               : 'No department summary is available for your current role and scope.'
           }
         >
           <EntityTable<DepartmentExecutionSummary>
-            rows={rows}
+            rows={filteredRows}
             getRowKey={row => row.department_id}
             columns={[
-              { key: 'department', header: 'Department', render: row => <strong>{row.department_name}</strong> },
+              { key: 'department', header: 'Department', render: row => <button className="link-button" type="button" onClick={() => setSelectedDepartment(row)}><strong>{row.department_name}</strong></button> },
               { key: 'active', header: 'Active projects', render: row => row.active_projects },
               { key: 'overdueProjects', header: 'Overdue projects', render: row => row.overdue_projects ? <span className="danger-text">{row.overdue_projects}</span> : '0' },
               { key: 'overdueMilestones', header: 'Overdue milestones', render: row => row.overdue_milestones },
@@ -136,6 +181,27 @@ export function Departments() {
             ]}
           />
         </DataState>
+        {selectedDepartment ? (
+          <div className="detail-panel">
+            <div className="split-header">
+              <div>
+                <h4>Selected department drilldown</h4>
+                <p>{selectedDepartment.department_name}</p>
+              </div>
+              <button className="ghost-button small" type="button" onClick={() => setSelectedDepartment(null)}>Clear selection</button>
+            </div>
+            <div className="detail-grid">
+              <div><span>Active projects</span><strong>{selectedDepartment.active_projects}</strong></div>
+              <div><span>Overdue projects</span><strong>{selectedDepartment.overdue_projects}</strong></div>
+              <div><span>Overdue milestones</span><strong>{selectedDepartment.overdue_milestones}</strong></div>
+              <div><span>Overdue tasks</span><strong>{selectedDepartment.overdue_tasks}</strong></div>
+              <div><span>Critical risks</span><strong>{selectedDepartment.critical_risks}</strong></div>
+              <div><span>Overdue audit</span><strong>{selectedDepartment.overdue_audit_findings}</strong></div>
+              <div><span>Compliance expiring</span><strong>{selectedDepartment.compliance_expiring_30_days}</strong></div>
+              <div><span>Next action</span><strong>{Number(selectedDepartment.overdue_projects || 0) + Number(selectedDepartment.overdue_tasks || 0) + Number(selectedDepartment.critical_risks || 0) > 0 ? 'Management follow-up required.' : 'No dashboard blocker currently recorded.'}</strong></div>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <Modal open={formOpen} title="Create department" onClose={() => {

@@ -1,0 +1,223 @@
+{
+  "patch": "82C",
+  "checked_at": "2026-07-06T12:16:36.601Z",
+  "strict_passed": true,
+  "failed_count": 0,
+  "checks": [
+    {
+      "name": "package.json contains patch82c:proof",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "package.json contains patch82c:all",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no Patch 82C migration was added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no Supabase migration file was modified for Patch 82C",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "OVR / Incident Management page still exists or equivalent title remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "OVR Risk Indicators page still exists or equivalent title remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Department Control Room title remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Operations & Notifications Center page remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Escalations governance follow-up title remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Approvals page remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "at least three target pages contain local interactivity primitives",
+      "passed": true,
+      "details": "5 pages"
+    },
+    {
+      "name": "clickable KPI/filter wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "reset filter wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "selected/detail panel wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 82C summary exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 82C audit exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 82C validation report exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "current-platform-status mentions Patch 82C",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "proof command index mentions Patch 82C",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validation runbook mentions Patch 82C",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "docs say frontend-only",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "docs say no Supabase migration applied",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "docs say staging rehearsal remains pending",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "production caveat remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no production launched wording added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no go-live complete wording added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no system is production ready claim added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no transition_to_live_operations exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no service-role frontend exposure exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no fake/demo success data added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 82B dashboard UI polish wording remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 82 staging rehearsal evidence wording remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 81 controlled migration deployment runbook wording remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 80A performance optimization wording remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "restore-noise covers Patch 82B proof JSON",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:fast exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:security exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "proof:all exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "v700:runtime-security exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no conflict markers",
+      "passed": true,
+      "details": ""
+    }
+  ]
+}

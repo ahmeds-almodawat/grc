@@ -266,6 +266,12 @@ Patch 82B adds interactive dashboard UI polish proof:
 npm run patch82b:proof
 ```
 
+Patch 82C adds operational dashboard interactivity proof:
+
+```powershell
+npm run patch82c:proof
+```
+
 ## G. Generated Release Artifacts
 
 Many proof commands regenerate JSON and text evidence under `release/v*` and older `release/patch*` folders. That churn is expected after validation.
