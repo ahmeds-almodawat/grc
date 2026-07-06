@@ -6,7 +6,6 @@ import { EmptySupabaseNotice } from '../components/EmptySupabaseNotice';
 import { EntityTable } from '../components/EntityTable';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
-import { StatCard } from '../components/StatCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { ScenarioFillButton } from '../components/ScenarioFillButton';
 import { useAsyncData } from '../hooks/useAsyncData';
@@ -48,6 +47,7 @@ const occurrenceCategories = [
 
 const preOccurrenceFlags = ['bedridden', 'active', 'post_op_procedure', 'intra_procedure', 'alert', 'sedated', 'anesthetized', 'disoriented', 'unconscious'];
 const majorLevels: Array<OvrSeverityLevel | null> = ['level_4', 'sentinel'];
+type OvrDashboardFilter = 'all' | 'open' | 'quality' | 'corrective' | 'sentinel' | 'nearMiss';
 
 function cleanLabel(value: string) {
   return humanize(value.replaceAll('_', ' '));
@@ -139,6 +139,11 @@ export function OVR() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [selectedReport, setSelectedReport] = useState<OvrReportRow | null>(null);
+  const [selectedDashboardReport, setSelectedDashboardReport] = useState<OvrReportRow | null>(null);
+  const [activeFilter, setActiveFilter] = useState<OvrDashboardFilter>('all');
+  const [reportSearch, setReportSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | OvrStatus>('all');
+  const [severityFilter, setSeverityFilter] = useState<'all' | OvrSeverityLevel>('all');
   const [workflowSaving, setWorkflowSaving] = useState(false);
   const [workflowMessage, setWorkflowMessage] = useState<string | null>(null);
   const [workflowForm, setWorkflowForm] = useState({
@@ -176,7 +181,31 @@ export function OVR() {
   });
 
   const organizationId = organizations.data?.[0]?.id || '';
-  const filteredReports = useMemo(() => reports.data || [], [reports.data]);
+  const filteredReports = useMemo(() => {
+    const query = reportSearch.trim().toLowerCase();
+    return (reports.data || []).filter(row => {
+      const matchesCard =
+        activeFilter === 'all'
+        || (activeFilter === 'open' && !['closed', 'cancelled', 'rejected'].includes(row.status))
+        || (activeFilter === 'quality' && ['quality_validation', 'under_quality_review', 'quality_final_review', 'quality_closure_review'].includes(row.status))
+        || (activeFilter === 'corrective' && ['action_plan_required', 'corrective_action_in_progress'].includes(row.status))
+        || (activeFilter === 'sentinel' && row.severity_level === 'sentinel')
+        || (activeFilter === 'nearMiss' && row.severity_level === 'level_1');
+      const matchesStatus = statusFilter === 'all' || row.status === statusFilter;
+      const matchesSeverity = severityFilter === 'all' || row.severity_level === severityFilter;
+      const matchesQuery = !query || [
+        row.ovr_number,
+        row.logging_number,
+        row.departments?.name_en,
+        row.departments?.name_ar,
+        row.occurrence_category,
+        row.owner?.full_name_en,
+        row.owner?.full_name_ar,
+        row.status
+      ].some(value => value?.toLowerCase().includes(query));
+      return matchesCard && matchesStatus && matchesSeverity && matchesQuery;
+    });
+  }, [activeFilter, reportSearch, reports.data, severityFilter, statusFilter]);
   const isQuality = auth.roles.some(role => ['super_admin', 'governance_admin', 'compliance_officer'].includes(role.role));
   const isAuditorOnly = auth.roles.some(role => role.role === 'auditor') && !isQuality;
   const isViewerOnly = auth.roles.some(role => role.role === 'viewer')
@@ -405,6 +434,32 @@ export function OVR() {
     !workflowForm.referred_department_id
     || profile.department_id === workflowForm.referred_department_id
   );
+  const resetOvrFilters = () => {
+    setActiveFilter('all');
+    setReportSearch('');
+    setStatusFilter('all');
+    setSeverityFilter('all');
+    setSelectedDashboardReport(null);
+  };
+  const ovrFilterLabel = activeFilter === 'all'
+    ? 'All reports'
+    : activeFilter === 'open'
+      ? 'Open reports'
+      : activeFilter === 'quality'
+        ? 'Quality review'
+        : activeFilter === 'corrective'
+          ? 'Corrective actions'
+          : activeFilter === 'sentinel'
+            ? 'Sentinel events'
+            : 'Near miss';
+  const ovrDashboardCards = summaryData ? [
+    { key: 'all' as const, label: t('ovr.totalReports'), value: summaryData.total_reports, tone: 'normal' as const },
+    { key: 'open' as const, label: t('ovr.openReports'), value: summaryData.open_reports, tone: 'warning' as const },
+    { key: 'quality' as const, label: t('ovr.qualityReview'), value: summaryData.under_quality_review, tone: 'normal' as const },
+    { key: 'corrective' as const, label: t('ovr.correctiveActions'), value: summaryData.corrective_actions_required, tone: 'warning' as const },
+    { key: 'sentinel' as const, label: t('ovr.sentinelEvents'), value: summaryData.sentinel_events, tone: 'danger' as const },
+    { key: 'nearMiss' as const, label: t('ovr.nearMiss'), value: summaryData.near_miss_level_1, tone: 'success' as const }
+  ] : [];
 
   return (
     <section className="page-section">
@@ -438,15 +493,42 @@ export function OVR() {
       >
         {summaryData ? (
           <div className="stats-grid">
-            <StatCard label={t('ovr.totalReports')} value={summaryData.total_reports} />
-            <StatCard label={t('ovr.openReports')} value={summaryData.open_reports} tone="warning" />
-            <StatCard label={t('ovr.qualityReview')} value={summaryData.under_quality_review} />
-            <StatCard label={t('ovr.correctiveActions')} value={summaryData.corrective_actions_required} tone="warning" />
-            <StatCard label={t('ovr.sentinelEvents')} value={summaryData.sentinel_events} tone="danger" />
-            <StatCard label={t('ovr.nearMiss')} value={summaryData.near_miss_level_1} tone="success" />
+            {ovrDashboardCards.map(card => (
+              <button
+                key={card.key}
+                type="button"
+                className={`stat-card ${card.tone} ${activeFilter === card.key ? 'active' : ''}`}
+                onClick={() => setActiveFilter(card.key)}
+              >
+                <div className="stat-value">{card.value}</div>
+                <div className="stat-label">{card.label}</div>
+              </button>
+            ))}
           </div>
         ) : null}
       </DataState>
+
+      <div className="panel">
+        <div className="split-header">
+          <div className="panel-header">
+            <h4>OVR dashboard filters</h4>
+            <p>Click a KPI card or search the visible incident list. Showing {filteredReports.length} of {(reports.data || []).length} records.</p>
+          </div>
+          <button className="ghost-button" type="button" onClick={resetOvrFilters}>Reset filters</button>
+        </div>
+        <div className="toolbar">
+          <span className="status-badge status-info">Active filter: {ovrFilterLabel}</span>
+          <input value={reportSearch} onChange={event => setReportSearch(event.target.value)} placeholder="Search OVR number, department, category, owner, status" />
+          <select value={statusFilter} onChange={event => setStatusFilter(event.target.value as typeof statusFilter)}>
+            <option value="all">All statuses</option>
+            {Array.from(new Set((reports.data || []).map(row => row.status))).map(status => <option key={status} value={status}>{cleanLabel(status)}</option>)}
+          </select>
+          <select value={severityFilter} onChange={event => setSeverityFilter(event.target.value as typeof severityFilter)}>
+            <option value="all">All severity</option>
+            {(['level_1', 'level_2', 'level_3', 'level_4', 'sentinel'] as OvrSeverityLevel[]).map(level => <option key={level} value={level}>{t(`ovr.severity.${level}`)}</option>)}
+          </select>
+        </div>
+      </div>
 
       <DataState
         loading={workflowSummary.loading}
@@ -571,7 +653,9 @@ export function OVR() {
           empty={!filteredReports.length}
           emptyTitle="No OVR reports in your scope"
           emptyMessage={
-            isReadOnly
+            activeFilter !== 'all' || reportSearch || statusFilter !== 'all' || severityFilter !== 'all'
+              ? `No OVR records match ${ovrFilterLabel}. Reset filters or broaden the search.`
+              : isReadOnly
               ? 'No readable OVR records are available for this account.'
               : 'Create a controlled-pilot OVR when authorized. Administrators can also use Scenario Lab for synthetic UAT records.'
           }
@@ -580,7 +664,7 @@ export function OVR() {
             rows={filteredReports}
             getRowKey={row => row.id}
             columns={[
-              { key: 'no', header: t('ovr.loggingNumber'), render: row => row.ovr_number || row.logging_number || '—' },
+              { key: 'no', header: t('ovr.loggingNumber'), render: row => <button className="link-button" type="button" onClick={() => setSelectedDashboardReport(row)}>{row.ovr_number || row.logging_number || '—'}</button> },
               { key: 'date', header: t('ovr.occurrenceDate'), render: row => formatDate(row.occurrence_date) },
               { key: 'type', header: t('ovr.type'), render: row => t(`ovr.category.${row.occurrence_category}`, cleanLabel(row.occurrence_category)) },
               { key: 'severity', header: t('ovr.severity'), render: row => row.severity_level ? t(`ovr.severity.${row.severity_level}`) : '—' },
@@ -591,6 +675,24 @@ export function OVR() {
             ]}
           />
         </DataState>
+        {selectedDashboardReport ? (
+          <div className="detail-panel">
+            <div className="split-header">
+              <div>
+                <h4>Selected OVR detail</h4>
+                <p>{selectedDashboardReport.ovr_number || selectedDashboardReport.logging_number || 'OVR record'} · {cleanLabel(selectedDashboardReport.status)}</p>
+              </div>
+              <button className="ghost-button small" type="button" onClick={() => setSelectedDashboardReport(null)}>Clear selection</button>
+            </div>
+            <div className="detail-grid">
+              <div><span>Department</span><strong>{language === 'ar' && selectedDashboardReport.departments?.name_ar ? selectedDashboardReport.departments.name_ar : selectedDashboardReport.departments?.name_en || '—'}</strong></div>
+              <div><span>Owner</span><strong>{language === 'ar' && selectedDashboardReport.owner?.full_name_ar ? selectedDashboardReport.owner.full_name_ar : selectedDashboardReport.owner?.full_name_en || '—'}</strong></div>
+              <div><span>Category</span><strong>{t(`ovr.category.${selectedDashboardReport.occurrence_category}`, cleanLabel(selectedDashboardReport.occurrence_category))}</strong></div>
+              <div><span>Severity</span><strong>{selectedDashboardReport.severity_level ? t(`ovr.severity.${selectedDashboardReport.severity_level}`) : '—'}</strong></div>
+              <div><span>Next action</span><strong>{['closed', 'cancelled', 'rejected'].includes(selectedDashboardReport.status) ? 'No active dashboard action.' : 'Review the source workflow before taking action.'}</strong></div>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <Modal title={selectedReport?.ovr_number || selectedReport?.logging_number || t('ovr.detailTitle')} open={Boolean(selectedReport)} onClose={() => setSelectedReport(null)}>
