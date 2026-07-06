@@ -2,7 +2,8 @@
 
 ## Current Level
 
-- Current patch level: Patch 80A after implementation.
+- Current patch level: Patch 81 after implementation.
+- Patch 81 scope: controlled Supabase migration and deployment runbook for migrations 118 through 121. It covers preflight, backup, staging-first validation, production apply planning, post-apply verification, rollback/containment, and evidence capture. Applying migrations does not equal production launch, and controlled production authority plus real hospital execution remain separate.
 - Patch 80A scope: safe performance and smoothness optimization for heavy production readiness and operator pages. It adds memoized derived summaries, reduces repeated render-time scans, updates release proof coverage, and does not change schema, RLS, security behavior, governance logic, or production readiness decisions.
 - Patch 79 scope: production operations governance, hypercare command center, 30/60/90 operating view, executive monthly governance reporting, accreditation/evidence pack tracking, and board closure pack readiness. Board closure does not approve production launch, controlled production authority remains separate, live transition requires separate operational execution, and real hospital execution evidence is still required.
 - Patch 78 scope: identity, role, and data integrity hardening in Production Readiness. It adds access integrity review records, privileged role recertification evidence, dormant/inactive account review visibility, archived user access review, role duplication review, missing owner/reviewer repair tracking, department/station accountability, SSO/MFA readiness checklist status, and access export for IT/security review. Access integrity review does not approve production launch, and controlled production authority remains separate.
@@ -56,7 +57,7 @@ git status --short --branch
 
 ## Production Caveat
 
-Real hospital-wide production still requires live department launch evidence, user training adoption, policy/SOP attestations, support readiness, backup and restore evidence, DR restore evidence, live pilot issue burn-down, retest evidence, department pilot acceptance, identity/access integrity review, privileged role recertification, production operations governance, hypercare evidence, board closure review, and executive signoff. Controlled production authority records, board closure, access integrity review, pilot readiness, security/access review, support readiness, UAT/pilot acceptance, data quality readiness, and department readiness do not automatically launch the system, and live transition requires separate operational execution.
+Real hospital-wide production still requires live department launch evidence, user training adoption, policy/SOP attestations, support readiness, backup and restore evidence, DR restore evidence, live pilot issue burn-down, retest evidence, department pilot acceptance, identity/access integrity review, privileged role recertification, production operations governance, hypercare evidence, board closure review, controlled migration deployment evidence, and executive signoff. Controlled production authority records, board closure, migration deployment evidence, access integrity review, pilot readiness, security/access review, support readiness, UAT/pilot acceptance, data quality readiness, and department readiness do not automatically launch the system, and live transition requires separate operational execution.
 
 `proof:all` and `v700:runtime-security` remain required gates. After validation, run `npm run release:restore-noise` to remove expected generated release artifact churn unless intentionally updating release evidence.
 
@@ -65,7 +66,7 @@ Use `npm run validate:fast` for the local development loop, `npm run validate:bu
 ## Evidence Locations
 
 - Technical validation artifacts: `release/v700/`, `release/v64/`, `release/v66/`, `release/v672/`, `release/v673/`, and `release/v674/`.
-- Patch release evidence: `release/patch43/` through `release/patch80a/`.
+- Patch release evidence: `release/patch43/` through `release/patch81/`.
 - Current production readiness, pilot/hypercare, hospital operations evidence, and closure follow-up are surfaced in the Production Readiness Center, Production Operator Console, and Production Evidence Closure page.
 - Current proof command index: `release/current-proof-command-index.md`.
 - Current validation runbook: `release/current-validation-runbook.md`.

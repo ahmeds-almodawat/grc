@@ -99,6 +99,7 @@ npm run patch77:all
 npm run patch78:all
 npm run patch79:all
 npm run patch80a:all
+npm run patch81:all
 ```
 
 Patch 58.1 adds validation lanes that avoid nested duplicate full chains:
@@ -243,6 +244,12 @@ Patch 80A adds performance smoothness optimization proof:
 
 ```powershell
 npm run patch80a:proof
+```
+
+Patch 81 adds controlled migration deployment runbook proof:
+
+```powershell
+npm run patch81:proof
 ```
 
 ## G. Generated Release Artifacts

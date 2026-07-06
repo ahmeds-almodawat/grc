@@ -1,0 +1,198 @@
+{
+  "patch": "81",
+  "checked_at": "2026-07-06T07:12:03.183Z",
+  "strict_passed": true,
+  "failed_count": 0,
+  "checks": [
+    {
+      "name": "package.json contains patch81:proof",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "package.json contains patch81:all",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no Patch 81 migration was added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "migration 118 exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "migration 119 exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "migration 120 exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "migration 121 exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "runbook file exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "preflight checklist exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "post-apply verification checklist exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "rollback containment plan exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "evidence capture template exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validation report exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "summary exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "migration order mentions 118, 119, 120, 121",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "staging-first plan exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "backup requirement exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "post-apply verification includes RLS checks",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "post-apply verification includes privileged bridge checks",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "rollback plan avoids destructive automatic drops",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "evidence template states deployment evidence does not equal production launch approval",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "current platform status mentions Patch 81",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "current validation runbook mentions Patch 81",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "proof command index mentions Patch 81",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "restore-noise covers Patch 80A proof JSON",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no transition_to_live_operations exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no production launched wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no go-live complete wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no system is production ready claim exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no service-role frontend exposure exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no fake/demo records were added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:security exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "proof:all exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "patch81:all does not run validate:release",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no conflict markers",
+      "passed": true,
+      "details": ""
+    }
+  ]
+}
