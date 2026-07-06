@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { useI18n } from '../i18n/I18nContext';
 import { useAsyncData } from '../hooks/useAsyncData';
@@ -406,31 +406,46 @@ export function ProductionReadinessCenter() {
     && Number(pilotClosureData.missing_golive_decisions ?? 0) === 0
     && Number(livePilotExecutionData.missing_evidence_count ?? 0) === 0
     && Number(hospitalOperationsData.incomplete_launch_checklist_items ?? 0) === 0;
-  const cutoverGateSummary = getControlledCutoverGateSummary(cutoverDecisions.data || []);
+  const cutoverGateSummary = useMemo(
+    () => getControlledCutoverGateSummary(cutoverDecisions.data || []),
+    [cutoverDecisions.data],
+  );
   const approvedGateAvailable = currentCutoverCriticalBlockers === 0 && currentCutoverChecklistComplete;
   const limitationGateAvailable = approvedGateAvailable && currentCutoverLimitations > 0 && currentLimitationsReviewed;
-  const livePilotIssueBurndown = getLivePilotIssueBurndownSummary(livePilotIssues.data || []);
-  const livePilotExitReadiness = getLivePilotExitReadinessSummary(
-    livePilotSessions.data || [],
-    livePilotIssues.data || [],
-    livePilotAcceptances.data || [],
+  const livePilotIssueBurndown = useMemo(
+    () => getLivePilotIssueBurndownSummary(livePilotIssues.data || []),
+    [livePilotIssues.data],
   );
-  const selectedPilotSession = (livePilotSessions.data || [])[0];
-  const identityIntegritySummary = getIdentityRoleIntegrityDashboardSummary(
-    identityReviews.data || [],
-    identityFindings.data || [],
-    privilegedRecertifications.data || [],
+  const livePilotExitReadiness = useMemo(
+    () => getLivePilotExitReadinessSummary(
+      livePilotSessions.data || [],
+      livePilotIssues.data || [],
+      livePilotAcceptances.data || [],
+    ),
+    [livePilotSessions.data, livePilotIssues.data, livePilotAcceptances.data],
   );
-  const selectedIdentityReview = (identityReviews.data || [])[0];
-  const selectedIdentityFinding = (identityFindings.data || [])[0];
-  const operationsGovernanceSummary = getProductionOperationsDashboardSummary(
-    operationsWindows.data || [],
-    operationsItems.data || [],
-    boardPacks.data || [],
+  const selectedPilotSession = useMemo(() => (livePilotSessions.data || [])[0], [livePilotSessions.data]);
+  const identityIntegritySummary = useMemo(
+    () => getIdentityRoleIntegrityDashboardSummary(
+      identityReviews.data || [],
+      identityFindings.data || [],
+      privilegedRecertifications.data || [],
+    ),
+    [identityReviews.data, identityFindings.data, privilegedRecertifications.data],
   );
-  const selectedOperationsWindow = (operationsWindows.data || [])[0];
-  const selectedOperationsItem = (operationsItems.data || [])[0];
-  const selectedBoardPack = (boardPacks.data || [])[0];
+  const selectedIdentityReview = useMemo(() => (identityReviews.data || [])[0], [identityReviews.data]);
+  const selectedIdentityFinding = useMemo(() => (identityFindings.data || [])[0], [identityFindings.data]);
+  const operationsGovernanceSummary = useMemo(
+    () => getProductionOperationsDashboardSummary(
+      operationsWindows.data || [],
+      operationsItems.data || [],
+      boardPacks.data || [],
+    ),
+    [operationsWindows.data, operationsItems.data, boardPacks.data],
+  );
+  const selectedOperationsWindow = useMemo(() => (operationsWindows.data || [])[0], [operationsWindows.data]);
+  const selectedOperationsItem = useMemo(() => (operationsItems.data || [])[0], [operationsItems.data]);
+  const selectedBoardPack = useMemo(() => (boardPacks.data || [])[0], [boardPacks.data]);
 
   async function refreshLivePilotData() {
     await Promise.all([

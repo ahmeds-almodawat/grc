@@ -52,6 +52,7 @@ const allowlistedPaths = [
   'release/patch76/patch76-controlled-production-authority-cutover-gate-proof.json',
   'release/patch77/patch77-live-pilot-execution-issue-burndown-proof.json',
   'release/patch78/patch78-identity-role-data-integrity-hardening-proof.json',
+  'release/patch79/patch79-production-operations-hypercare-board-pack-proof.json',
 ];
 
 const existing = [];

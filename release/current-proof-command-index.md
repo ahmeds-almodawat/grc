@@ -98,6 +98,7 @@ npm run patch76:all
 npm run patch77:all
 npm run patch78:all
 npm run patch79:all
+npm run patch80a:all
 ```
 
 Patch 58.1 adds validation lanes that avoid nested duplicate full chains:
@@ -236,6 +237,12 @@ Patch 79 adds production operations governance, hypercare, and board pack closur
 
 ```powershell
 npm run patch79:proof
+```
+
+Patch 80A adds performance smoothness optimization proof:
+
+```powershell
+npm run patch80a:proof
 ```
 
 ## G. Generated Release Artifacts
