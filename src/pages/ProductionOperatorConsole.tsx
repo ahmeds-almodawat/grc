@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Activity, AlertTriangle, ArchiveRestore, Building2, ClipboardCheck, ExternalLink, FileCheck2, KeyRound, ShieldCheck, UserCheck } from 'lucide-react';
 import { DataState } from '../components/DataState';
 import { ModernCard, StatusPill } from '../components/ModernCard';
@@ -28,11 +28,31 @@ function numberValue(value: unknown) {
   return Number(value ?? 0) || 0;
 }
 
-function MetricTile({ label, value, tone = 'neutral' }: { label: string; value: string | number; tone?: 'good' | 'warning' | 'danger' | 'neutral' }) {
-  return (
-    <div className={`stat-card ${tone === 'good' ? 'success' : tone === 'danger' ? 'danger' : tone === 'warning' ? 'warning' : ''}`}>
+type ConsoleFocus = 'all' | 'blockers' | 'departments' | 'hypercare' | 'security';
+
+function MetricTile({ label, value, tone = 'neutral', active = false, onClick }: { label: string; value: string | number; tone?: 'good' | 'warning' | 'danger' | 'neutral'; active?: boolean; onClick?: () => void }) {
+  const className = `stat-card ${tone === 'good' ? 'success' : tone === 'danger' ? 'danger' : tone === 'warning' ? 'warning' : ''}`;
+  const content = (
+    <>
       <div className="stat-value">{value}</div>
       <div className="stat-label">{label}</div>
+    </>
+  );
+  if (onClick) {
+    return (
+      <button
+        className={`${className} ${active ? 'active' : ''}`}
+        type="button"
+        onClick={onClick}
+        style={{ textAlign: 'left', cursor: 'pointer', borderColor: active ? 'var(--accent)' : undefined }}
+      >
+        {content}
+      </button>
+    );
+  }
+  return (
+    <div className={className}>
+      {content}
     </div>
   );
 }
@@ -47,6 +67,9 @@ function CompactList({ rows, render }: { rows: any[]; render: (row: any, index: 
 }
 
 export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKey) => void }) {
+  const [activeFocus, setActiveFocus] = useState<ConsoleFocus>('all');
+  const [departmentSearch, setDepartmentSearch] = useState('');
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<string | null>(null);
   const consoleData = useAsyncData(getProductionOperatorConsoleData, []);
   const data = consoleData.data;
   const topStatus = data?.status ?? 'Evidence required';
@@ -106,6 +129,50 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
     }
     return map;
   }, [data?.departmentBlockers]);
+  const filteredCriticalRows = useMemo(() => {
+    if (activeFocus === 'all' || activeFocus === 'blockers') return criticalRows;
+    if (activeFocus === 'departments') return data?.departmentBlockers ?? [];
+    if (activeFocus === 'hypercare') return data?.hypercareBlockers ?? [];
+    if (activeFocus === 'security') return data?.accessBlockers ?? [];
+    return criticalRows;
+  }, [activeFocus, criticalRows, data?.accessBlockers, data?.departmentBlockers, data?.hypercareBlockers]);
+  const filteredDepartmentRows = useMemo(() => {
+    const query = departmentSearch.trim().toLowerCase();
+    return departmentLaunchRows.filter(row => {
+      const blocker = blockerByDepartment.get(`id:${row.id}`) ?? blockerByDepartment.get(`name:${row.department_name}`);
+      const values = [
+        row.department_name,
+        row.launch_label,
+        row.launch_status,
+        row.readiness_summary,
+        blocker?.blocker_reason,
+        blocker?.blocker_summary,
+      ].map(value => String(value ?? '').toLowerCase());
+      const matchesSearch = !query || values.some(value => value.includes(query));
+      const matchesFocus = activeFocus !== 'blockers' || Boolean(blocker);
+      return matchesSearch && matchesFocus;
+    });
+  }, [activeFocus, blockerByDepartment, departmentLaunchRows, departmentSearch]);
+  const selectedDepartment = useMemo(
+    () => filteredDepartmentRows.find(row => String(row.id ?? row.launch_label ?? row.department_name) === selectedDepartmentId) ?? filteredDepartmentRows[0],
+    [filteredDepartmentRows, selectedDepartmentId],
+  );
+  const selectedDepartmentAdoption = selectedDepartment
+    ? adoptionByDepartment.get(`id:${selectedDepartment.id}`) ?? adoptionByDepartment.get(`name:${selectedDepartment.department_name}`)
+    : null;
+  const selectedDepartmentSupport = selectedDepartment
+    ? supportByDepartment.get(`id:${selectedDepartment.id}`) ?? supportByDepartment.get(`name:${selectedDepartment.department_name}`)
+    : null;
+  const selectedDepartmentBlocker = selectedDepartment
+    ? blockerByDepartment.get(`id:${selectedDepartment.id}`) ?? blockerByDepartment.get(`name:${selectedDepartment.department_name}`)
+    : null;
+  const focusChips: Array<{ key: ConsoleFocus; label: string }> = [
+    { key: 'all', label: 'All signals' },
+    { key: 'blockers', label: 'Blockers' },
+    { key: 'departments', label: 'Departments' },
+    { key: 'hypercare', label: 'Hypercare' },
+    { key: 'security', label: 'Security' },
+  ];
 
   return (
     <section className="page-section production-readiness-page">
@@ -131,6 +198,39 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
 
       <DataState loading={consoleData.loading} error={consoleData.error} empty={!data}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <ModernCard title="Console Filters" subtitle="Focus the operating view without changing source data.">
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+              {focusChips.map(chip => (
+                <button
+                  className={`secondary-action ${activeFocus === chip.key ? 'active' : ''}`}
+                  key={chip.key}
+                  type="button"
+                  onClick={() => setActiveFocus(chip.key)}
+                >
+                  {chip.label}
+                </button>
+              ))}
+              <input
+                className="text-input"
+                value={departmentSearch}
+                onChange={event => setDepartmentSearch(event.target.value)}
+                placeholder="Search department, owner, blocker, or status"
+                style={{ minWidth: '280px', flex: '1 1 280px' }}
+              />
+              <button
+                className="secondary-action"
+                type="button"
+                onClick={() => {
+                  setActiveFocus('all');
+                  setDepartmentSearch('');
+                  setSelectedDepartmentId(null);
+                }}
+              >
+                Reset filters
+              </button>
+            </div>
+          </ModernCard>
+
           <ModernCard title="Today’s Operating Status" subtitle="Single daily operating signal for safe production use.">
             <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 2fr', gap: '18px', alignItems: 'stretch' }}>
               <div className="stat-card">
@@ -150,7 +250,7 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
 
           <ModernCard title="Critical Blockers" subtitle="Items that can block production use or continued safe operation.">
             <CompactList
-              rows={criticalRows}
+              rows={filteredCriticalRows}
               render={(row, index) => (
                 <div className="alert alert-warning" key={`${row.blocker_type ?? row.blocker_area ?? 'blocker'}-${index}`} style={{ margin: 0 }}>
                   <strong>{row.department_name || row.blocker_area || row.blocker_type || 'Operational blocker'}: </strong>
@@ -163,9 +263,9 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
           <ModernCard title="Department Rollout Readiness" subtitle="Department launch packs, owners, checklists, adoption, training, and attestation gaps.">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: '12px' }}>
               <MetricTile label="Launch packs" value={numberValue(hospital.total_department_launch_packs)} />
-              <MetricTile label="Ready" value={numberValue(hospital.ready_departments)} tone="good" />
-              <MetricTile label="Limited" value={numberValue(hospital.ready_with_limitations_departments)} tone="warning" />
-              <MetricTile label="Blocked" value={numberValue(hospital.blocked_departments)} tone="danger" />
+              <MetricTile label="Ready" value={numberValue(hospital.ready_departments)} tone="good" active={activeFocus === 'departments'} onClick={() => setActiveFocus('departments')} />
+              <MetricTile label="Limited" value={numberValue(hospital.ready_with_limitations_departments)} tone="warning" active={activeFocus === 'departments'} onClick={() => setActiveFocus('departments')} />
+              <MetricTile label="Blocked" value={numberValue(hospital.blocked_departments)} tone="danger" active={activeFocus === 'blockers'} onClick={() => setActiveFocus('blockers')} />
               <MetricTile label="Evidence required" value={numberValue(hospital.evidence_required_departments)} tone="warning" />
               <MetricTile label="Missing owners" value={numberValue(hospital.missing_owner_count)} tone="danger" />
               <MetricTile label="Checklist gaps" value={numberValue(hospital.incomplete_launch_checklist_items)} tone="warning" />
@@ -180,8 +280,8 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             <ModernCard title="Hypercare and Support" subtitle="Production stability, cadence, high-risk issues, and support readiness.">
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
-                <MetricTile label="High/Critical issues" value={numberValue(hypercare.high_critical_hypercare_issues)} tone="danger" />
-                <MetricTile label="Overdue issues" value={numberValue(hypercare.overdue_hypercare_issues)} tone="danger" />
+                <MetricTile label="High/Critical issues" value={numberValue(hypercare.high_critical_hypercare_issues)} tone="danger" active={activeFocus === 'hypercare'} onClick={() => setActiveFocus('hypercare')} />
+                <MetricTile label="Overdue issues" value={numberValue(hypercare.overdue_hypercare_issues)} tone="danger" active={activeFocus === 'hypercare'} onClick={() => setActiveFocus('hypercare')} />
                 <MetricTile label="Missed cadence" value={numberValue(hypercare.missed_cadence_events)} tone="warning" />
                 <MetricTile label="Critical support" value={numberValue(hospital.critical_support_issues)} tone="danger" />
               </div>
@@ -200,7 +300,7 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
             <ModernCard title="Access, Security, and Governance" subtitle="Access review closure, limitations, signoffs, and governance action.">
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
                 <MetricTile label="Access status" value={access.access_review_readiness_status || access.final_access_review_readiness_status || reviewRequired} tone={itemTone(access.access_review_readiness_status || access.final_access_review_readiness_status)} />
-                <MetricTile label="Access blockers" value={data?.accessBlockers.length ?? 0} tone={(data?.accessBlockers.length ?? 0) ? 'danger' : 'good'} />
+                <MetricTile label="Access blockers" value={data?.accessBlockers.length ?? 0} tone={(data?.accessBlockers.length ?? 0) ? 'danger' : 'good'} active={activeFocus === 'security'} onClick={() => setActiveFocus('security')} />
                 <MetricTile label="Known limitations" value={data?.limitations.length ?? 0} tone={(data?.limitations.length ?? 0) ? 'warning' : 'good'} />
                 <MetricTile label="Pending signoffs" value={pendingSignoffCount} tone="warning" />
               </div>
@@ -250,7 +350,7 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
           </ModernCard>
 
           <ModernCard title="Department-Level Register" subtitle="Concise department status for daily follow-up.">
-            {(data?.departmentLaunchPacks ?? []).length ? (
+            {filteredDepartmentRows.length ? (
               <div className="table-wrap">
                 <table className="entity-table">
                   <thead>
@@ -265,12 +365,17 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
                     </tr>
                   </thead>
                   <tbody>
-                    {departmentLaunchRows.map((row, index) => {
+                    {filteredDepartmentRows.map((row, index) => {
                       const adoption = adoptionByDepartment.get(`id:${row.id}`) ?? adoptionByDepartment.get(`name:${row.department_name}`);
                       const support = supportByDepartment.get(`id:${row.id}`) ?? supportByDepartment.get(`name:${row.department_name}`);
                       const blocker = blockerByDepartment.get(`id:${row.id}`) ?? blockerByDepartment.get(`name:${row.department_name}`);
+                      const rowKey = String(row.id ?? row.launch_label ?? row.department_name ?? index);
                       return (
-                        <tr key={`${row.id ?? row.launch_label}-${index}`}>
+                        <tr
+                          key={`${row.id ?? row.launch_label}-${index}`}
+                          onClick={() => setSelectedDepartmentId(rowKey)}
+                          style={{ cursor: 'pointer' }}
+                        >
                           <td><strong>{row.department_name || row.launch_label || 'Department'}</strong></td>
                           <td><StatusPill tone={itemTone(row.launch_status)}>{row.launch_status || reviewRequired}</StatusPill></td>
                           <td>{row.department_owner_user_id ? 'Assigned' : ownerAction}</td>
@@ -285,6 +390,16 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
                 </table>
               </div>
             ) : <EmptyState message={evidenceMissing} />}
+            {selectedDepartment ? (
+              <div className="alert alert-info" style={{ marginTop: '14px' }}>
+                <strong>Selected department: </strong>{selectedDepartment.department_name || selectedDepartment.launch_label || 'Department'}<br />
+                <strong>Readiness: </strong>{selectedDepartment.launch_status || reviewRequired}<br />
+                <strong>Owner: </strong>{selectedDepartment.department_owner_user_id ? 'Assigned' : ownerAction}<br />
+                <strong>Blocker: </strong>{selectedDepartmentBlocker?.blocker_reason || selectedDepartmentBlocker?.blocker_summary || noBlocker}<br />
+                <strong>Adoption: </strong>{selectedDepartmentAdoption?.adoption_status || reviewRequired}<br />
+                <strong>Support: </strong>{selectedDepartmentSupport?.support_status || reviewRequired}
+              </div>
+            ) : null}
           </ModernCard>
         </div>
       </DataState>
