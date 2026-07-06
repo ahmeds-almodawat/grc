@@ -1,0 +1,213 @@
+{
+  "patch": "82",
+  "checked_at": "2026-07-06T09:38:41.402Z",
+  "strict_passed": true,
+  "failed_count": 0,
+  "checks": [
+    {
+      "name": "package.json contains patch82:proof",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "package.json contains patch82:all",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no Patch 82 migration was added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "migration 118 still exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "migration 119 still exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "migration 120 still exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "migration 121 still exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "migrations 118-121 were not modified",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "patch82 summary exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "staging checklist exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "staging results template exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "SQL verification snippets exist",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "rollback/containment doc exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validation report exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "all Patch 82 docs use staging-only wording",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "production deployment is explicitly out of scope",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no fake success wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no staging passed claim exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no production launched wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no go-live complete wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no system is production ready claim exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no transition_to_live_operations exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no service-role frontend exposure exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no RLS weakening wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 81 controlled migration deployment runbook wording remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 80A performance optimization wording remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 79 production operations/hypercare wording remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "restore-noise covers Patch 80A proof JSON",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "current platform status mentions Patch 82",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "production caveat remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:fast exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:security exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "proof:all exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "v700:runtime-security exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "proof command index mentions Patch 82",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validation runbook mentions staging migration rehearsal evidence",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "patch82:all does not run validate:release",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no conflict markers",
+      "passed": true,
+      "details": ""
+    }
+  ]
+}
