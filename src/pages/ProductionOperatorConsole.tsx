@@ -76,9 +76,9 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
         </div>
         {setPage ? (
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <button className="secondary-action" type="button" aria-label="Open controlled evidence closure actions, executive go/no-go decision pack readiness, department launch final readiness, live data quality, role integrity, UAT pack, hospital pilot acceptance, live support, incident readiness, and final security access review in Production Evidence Closure" onClick={() => setPage('productionEvidenceClosure')}>
+            <button className="secondary-action" type="button" aria-label="Open controlled evidence closure actions, executive go/no-go decision pack readiness, department launch final readiness, live data quality, role integrity, UAT pack, hospital pilot acceptance, live support, incident readiness, pilot issue burn-down, and final security access review in Production Evidence Closure" onClick={() => setPage('productionEvidenceClosure')}>
               <FileCheck2 size={16} />
-              Evidence, UAT, security readiness
+              Evidence, pilot issues, security readiness
             </button>
             <button className="secondary-action" type="button" aria-label="Open controlled production authority and controlled cutover decision gate in Production Readiness" onClick={() => setPage('productionReadiness')}>
               <ExternalLink size={16} />

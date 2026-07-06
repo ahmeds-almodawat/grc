@@ -1,0 +1,232 @@
+{
+  "patch": "77",
+  "checked_at": "2026-07-05T23:34:28.046Z",
+  "strict_passed": true,
+  "failed_count": 0,
+  "checks": [
+    {
+      "name": "Patch 77 migration exists",
+      "passed": true
+    },
+    {
+      "name": "live_pilot_sessions table exists",
+      "passed": true
+    },
+    {
+      "name": "live_pilot_issues table exists",
+      "passed": true
+    },
+    {
+      "name": "live_pilot_department_acceptances table exists",
+      "passed": true
+    },
+    {
+      "name": "RLS enabled for Patch 77 tables",
+      "passed": true
+    },
+    {
+      "name": "No broad public write policy was added",
+      "passed": true
+    },
+    {
+      "name": "Guarded role checks exist",
+      "passed": true
+    },
+    {
+      "name": "Allowed session states exist",
+      "passed": true
+    },
+    {
+      "name": "Allowed issue severities exist",
+      "passed": true
+    },
+    {
+      "name": "Allowed issue statuses exist",
+      "passed": true
+    },
+    {
+      "name": "Retest closure guard exists",
+      "passed": true
+    },
+    {
+      "name": "Session acceptance guard exists",
+      "passed": true
+    },
+    {
+      "name": "Department acceptance guard exists",
+      "passed": true
+    },
+    {
+      "name": "Frontend API has Patch 77 read helpers",
+      "passed": true
+    },
+    {
+      "name": "Frontend API has Patch 77 summary helpers",
+      "passed": true
+    },
+    {
+      "name": "Frontend API uses authenticated bridge pattern for privileged calls",
+      "passed": true
+    },
+    {
+      "name": "Privileged bridge allowlist includes Patch 77 actions",
+      "passed": true
+    },
+    {
+      "name": "Runtime registry classifies Patch 77 actions",
+      "passed": true
+    },
+    {
+      "name": "UI includes Live pilot execution",
+      "passed": true
+    },
+    {
+      "name": "UI includes Pilot issue burn-down",
+      "passed": true
+    },
+    {
+      "name": "UI includes Department pilot participation",
+      "passed": true
+    },
+    {
+      "name": "UI includes Retest evidence required",
+      "passed": true
+    },
+    {
+      "name": "UI includes Department pilot acceptance",
+      "passed": true
+    },
+    {
+      "name": "UI includes Pilot exit criteria",
+      "passed": true
+    },
+    {
+      "name": "UI includes Pilot exit review required",
+      "passed": true
+    },
+    {
+      "name": "UI includes Pilot blockers remain",
+      "passed": true
+    },
+    {
+      "name": "UI includes Ready for pilot exit review",
+      "passed": true
+    },
+    {
+      "name": "UI includes pilot readiness caveat",
+      "passed": true
+    },
+    {
+      "name": "UI includes controlled authority caveat",
+      "passed": true
+    },
+    {
+      "name": "Operator console mentions pilot issue burn-down",
+      "passed": true
+    },
+    {
+      "name": "Patch 76 controlled production authority remains",
+      "passed": true
+    },
+    {
+      "name": "Patch 75 clinical navigation simplification remains",
+      "passed": true
+    },
+    {
+      "name": "No production launched wording exists",
+      "passed": true
+    },
+    {
+      "name": "No go-live complete wording exists",
+      "passed": true
+    },
+    {
+      "name": "No system is production ready claim exists",
+      "passed": true
+    },
+    {
+      "name": "No transition_to_live_operations action exists",
+      "passed": true
+    },
+    {
+      "name": "No automatic launch or approval wording exists",
+      "passed": true
+    },
+    {
+      "name": "No executive production signoff RPC was added",
+      "passed": true
+    },
+    {
+      "name": "No service-role frontend exposure exists",
+      "passed": true
+    },
+    {
+      "name": "No fake/demo records were added",
+      "passed": true
+    },
+    {
+      "name": "No route/component deletion for production surfaces",
+      "passed": true
+    },
+    {
+      "name": "Restore-noise covers Patch 76 proof JSON",
+      "passed": true
+    },
+    {
+      "name": "package.json contains patch77:proof",
+      "passed": true
+    },
+    {
+      "name": "package.json contains patch77:all",
+      "passed": true
+    },
+    {
+      "name": "validate:fast exists",
+      "passed": true
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true
+    },
+    {
+      "name": "validate:security exists",
+      "passed": true
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true
+    },
+    {
+      "name": "proof:all exists",
+      "passed": true
+    },
+    {
+      "name": "v700:runtime-security exists",
+      "passed": true
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true
+    },
+    {
+      "name": "current platform status mentions Patch 77",
+      "passed": true
+    },
+    {
+      "name": "production caveat remains",
+      "passed": true
+    },
+    {
+      "name": "proof index mentions Patch 77",
+      "passed": true
+    },
+    {
+      "name": "runbook mentions Patch 76 proof JSON restore coverage",
+      "passed": true
+    },
+    {
+      "name": "No conflict markers",
+      "passed": true
+    }
+  ]
+}

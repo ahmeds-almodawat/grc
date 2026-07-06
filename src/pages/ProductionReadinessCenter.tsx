@@ -61,7 +61,22 @@ import {
   getControlledProductionCutoverDecisionEvents,
   getControlledCutoverGateSummary,
   createControlledProductionCutoverDecision,
-  type ControlledProductionCutoverDecisionState
+  getLivePilotSessions,
+  getLivePilotIssues,
+  getLivePilotDepartmentAcceptances,
+  getLivePilotIssueBurndownSummary,
+  getLivePilotExitReadinessSummary,
+  createLivePilotSession,
+  updateLivePilotSessionStatus,
+  createLivePilotIssue,
+  updateLivePilotIssueStatus,
+  recordLivePilotDepartmentAcceptance,
+  type ControlledProductionCutoverDecisionState,
+  type LivePilotSessionStatus,
+  type LivePilotIssueStatus,
+  type LivePilotIssueSeverity,
+  type LivePilotRetestStatus,
+  type LivePilotDepartmentAcceptanceStatus
 } from '../lib/productionReadinessApi';
 import { ShieldCheck, BarChart3, AlertTriangle, FileCheck, RefreshCw, Smartphone, Award, ClipboardList, Database, Languages } from 'lucide-react';
 
@@ -72,6 +87,11 @@ export function ProductionReadinessCenter() {
   const [cutoverRationale, setCutoverRationale] = useState('');
   const [cutoverMessage, setCutoverMessage] = useState<string | null>(null);
   const [cutoverBusy, setCutoverBusy] = useState(false);
+  const [pilotSessionTitle, setPilotSessionTitle] = useState('');
+  const [pilotIssueTitle, setPilotIssueTitle] = useState('');
+  const [pilotIssueSeverity, setPilotIssueSeverity] = useState<LivePilotIssueSeverity>('medium');
+  const [pilotMessage, setPilotMessage] = useState<string | null>(null);
+  const [pilotBusy, setPilotBusy] = useState(false);
 
   // Load Data
   const signoffs = useAsyncData(getProductionReadinessSignoffRegister, []);
@@ -128,6 +148,9 @@ export function ProductionReadinessCenter() {
   const execSummary = useAsyncData(getExecutiveProductionReadinessSummary, []);
   const cutoverDecisions = useAsyncData(getControlledProductionCutoverDecisions, []);
   const cutoverEvents = useAsyncData(() => getControlledProductionCutoverDecisionEvents(), []);
+  const livePilotSessions = useAsyncData(getLivePilotSessions, []);
+  const livePilotIssues = useAsyncData(getLivePilotIssues, []);
+  const livePilotAcceptances = useAsyncData(getLivePilotDepartmentAcceptances, []);
 
   // Bilingual dictionary
   const text = language === 'ar' ? ar : en;
@@ -337,6 +360,124 @@ export function ProductionReadinessCenter() {
   const cutoverGateSummary = getControlledCutoverGateSummary(cutoverDecisions.data || []);
   const approvedGateAvailable = currentCutoverCriticalBlockers === 0 && currentCutoverChecklistComplete;
   const limitationGateAvailable = approvedGateAvailable && currentCutoverLimitations > 0 && currentLimitationsReviewed;
+  const livePilotIssueBurndown = getLivePilotIssueBurndownSummary(livePilotIssues.data || []);
+  const livePilotExitReadiness = getLivePilotExitReadinessSummary(
+    livePilotSessions.data || [],
+    livePilotIssues.data || [],
+    livePilotAcceptances.data || [],
+  );
+  const selectedPilotSession = (livePilotSessions.data || [])[0];
+
+  async function refreshLivePilotData() {
+    await Promise.all([
+      livePilotSessions.refresh(),
+      livePilotIssues.refresh(),
+      livePilotAcceptances.refresh(),
+    ]);
+  }
+
+  async function runPilotAction(action: () => Promise<{ message?: string }>, fallbackMessage: string) {
+    setPilotBusy(true);
+    setPilotMessage(null);
+    try {
+      const result = await action();
+      setPilotMessage(result.message || fallbackMessage);
+      await refreshLivePilotData();
+    } catch (error) {
+      setPilotMessage(error instanceof Error ? error.message : fallbackMessage);
+    } finally {
+      setPilotBusy(false);
+    }
+  }
+
+  async function handleCreatePilotSession() {
+    const sessionTitle = pilotSessionTitle.trim();
+    if (!sessionTitle) {
+      setPilotMessage(text.pilotSessionTitleRequired);
+      return;
+    }
+    await runPilotAction(
+      () => createLivePilotSession({ session_title: sessionTitle }),
+      text.pilotSessionCreated,
+    );
+    setPilotSessionTitle('');
+  }
+
+  async function handleCreatePilotIssue() {
+    const issueTitle = pilotIssueTitle.trim();
+    if (!selectedPilotSession?.id) {
+      setPilotMessage(text.pilotSessionRequired);
+      return;
+    }
+    if (!issueTitle) {
+      setPilotMessage(text.pilotIssueTitleRequired);
+      return;
+    }
+    await runPilotAction(
+      () => createLivePilotIssue({
+        pilot_session_id: selectedPilotSession.id,
+        issue_title: issueTitle,
+        severity: pilotIssueSeverity,
+        department_id: selectedPilotSession.department_id,
+        retest_required: true,
+      }),
+      text.pilotIssueRecorded,
+    );
+    setPilotIssueTitle('');
+  }
+
+  async function handlePilotSessionStatus(sessionStatus: LivePilotSessionStatus) {
+    if (!selectedPilotSession?.id) {
+      setPilotMessage(text.pilotSessionRequired);
+      return;
+    }
+    await runPilotAction(
+      () => updateLivePilotSessionStatus({
+        session_id: selectedPilotSession.id,
+        session_status: sessionStatus,
+        exit_review_notes: `${sessionStatus}. ${text.pilotReadinessCaveat}`,
+        exit_criteria_met: sessionStatus === 'exit_review_required' && livePilotIssueBurndown.issue_burndown_state === 'Ready for pilot exit review',
+      }),
+      text.pilotSessionUpdated,
+    );
+  }
+
+  async function handlePilotIssueStatus(issueId: string, issueStatus: LivePilotIssueStatus, retestStatus?: LivePilotRetestStatus) {
+    await runPilotAction(
+      () => updateLivePilotIssueStatus({
+        issue_id: issueId,
+        issue_status: issueStatus,
+        retest_status: retestStatus,
+        retest_evidence_summary: retestStatus ? `${text.retestEvidenceRequired}: ${retestStatus}` : null,
+        closure_summary: issueStatus === 'closed' ? text.pilotIssueClosureSummary : null,
+      }),
+      text.pilotIssueUpdated,
+    );
+  }
+
+  async function handleDepartmentAcceptance(acceptanceStatus: LivePilotDepartmentAcceptanceStatus) {
+    if (!selectedPilotSession?.id || !selectedPilotSession.department_id) {
+      setPilotMessage(text.pilotDepartmentRequired);
+      return;
+    }
+    const canAccept = acceptanceStatus !== 'accepted'
+      || (
+        livePilotIssueBurndown.issue_burndown_state === 'Ready for pilot exit review'
+        && livePilotIssueBurndown.retest_evidence_required === 0
+      );
+    await runPilotAction(
+      () => recordLivePilotDepartmentAcceptance({
+        pilot_session_id: selectedPilotSession.id,
+        department_id: selectedPilotSession.department_id as string,
+        acceptance_status: acceptanceStatus,
+        acceptance_notes: `${acceptanceStatus}. ${text.pilotReadinessCaveat}`,
+        open_blockers_count: canAccept ? 0 : livePilotIssueBurndown.high_critical_open_issues + livePilotIssueBurndown.open_issues,
+        training_confirmed: canAccept,
+        issue_burndown_confirmed: livePilotIssueBurndown.issue_burndown_state === 'Ready for pilot exit review',
+      }),
+      text.pilotAcceptanceRecorded,
+    );
+  }
 
   async function recordCutoverDecision(decisionState: ControlledProductionCutoverDecisionState) {
     setCutoverBusy(true);
@@ -1098,6 +1239,103 @@ export function ProductionReadinessCenter() {
                             <td><code>{row.evidence_reference || '-'}</code></td>
                           </tr>
                         ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </DataState>
+              </ModernCard>
+
+              <ModernCard title={text.livePilotBurndownTitle} subtitle={text.livePilotBurndownSubtitle}>
+                <DataState
+                  loading={livePilotSessions.loading || livePilotIssues.loading || livePilotAcceptances.loading}
+                  error={livePilotSessions.error || livePilotIssues.error || livePilotAcceptances.error}
+                  empty={false}
+                >
+                  <div className="alert alert-warning">
+                    <strong>{text.livePilotExecution}: </strong>{text.livePilotExecutionSummary}
+                    <br />
+                    <strong>{text.pilotIssueBurndown}: </strong>{livePilotIssueBurndown.issue_burndown_state}
+                    <br />
+                    <strong>{text.caveat}: </strong>{text.pilotReadinessCaveat}
+                    <br />
+                    <strong>{text.caveat}: </strong>{text.controlledAuthorityCaveat}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '14px', marginBottom: '18px' }}>
+                    <div className="stat-card">
+                      <div className="stat-value"><StatusPill tone={livePilotExitReadiness.pilot_exit_state === 'Ready for pilot exit review' ? 'good' : livePilotExitReadiness.pilot_exit_state === 'Pilot blockers remain' ? 'danger' : 'warning'}>{livePilotExitReadiness.pilot_exit_state}</StatusPill></div>
+                      <div className="stat-label">{text.pilotExitCriteria}</div>
+                    </div>
+                    <div className="stat-card"><div className="stat-value">{livePilotExitReadiness.session_count}</div><div className="stat-label">{text.pilotSessions}</div></div>
+                    <div className="stat-card"><div className="stat-value">{livePilotExitReadiness.department_participation_count}</div><div className="stat-label">{text.departmentPilotParticipation}</div></div>
+                    <div className="stat-card danger"><div className="stat-value">{livePilotIssueBurndown.high_critical_open_issues}</div><div className="stat-label">{text.highCriticalIssues}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{livePilotIssueBurndown.retest_evidence_required}</div><div className="stat-label">{text.retestEvidenceRequired}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{livePilotIssueBurndown.open_issues}</div><div className="stat-label">{text.openIssues}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{livePilotIssueBurndown.retest_required_issues}</div><div className="stat-label">{text.retestRequiredIssues}</div></div>
+                    <div className="stat-card success"><div className="stat-value">{livePilotIssueBurndown.closed_issues}</div><div className="stat-label">{text.closedIssues}</div></div>
+                    <div className="stat-card success"><div className="stat-value">{livePilotExitReadiness.department_acceptance_accepted}</div><div className="stat-label">{text.departmentPilotAcceptance}</div></div>
+                    <div className="stat-card warning"><div className="stat-value">{livePilotExitReadiness.department_acceptance_pending}</div><div className="stat-label">{text.pendingDepartmentSignoffs}</div></div>
+                  </div>
+                  <div className="alert alert-info">
+                    <strong>{text.requiredActionsBeforePilotExit}: </strong>{livePilotExitReadiness.required_actions.join(' ')}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', margin: '14px 0' }}>
+                    <label style={{ display: 'grid', gap: '6px' }}>
+                      <span style={{ fontWeight: 700 }}>{text.pilotSessionTitle}</span>
+                      <input className="text-input" value={pilotSessionTitle} onChange={event => setPilotSessionTitle(event.target.value)} placeholder={text.pilotSessionTitlePlaceholder} />
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'end', gap: '10px', flexWrap: 'wrap' }}>
+                      <button className="secondary-action" type="button" disabled={pilotBusy} onClick={() => void handleCreatePilotSession()}>{text.createPilotSession}</button>
+                      <button className="secondary-action" type="button" disabled={pilotBusy || !selectedPilotSession} onClick={() => void handlePilotSessionStatus('issue_burndown')}>{text.markIssueBurndown}</button>
+                      <button className="secondary-action" type="button" disabled={pilotBusy || !selectedPilotSession} onClick={() => void handlePilotSessionStatus('exit_review_required')}>{text.markPilotExitReviewRequired}</button>
+                      <button className="secondary-action" type="button" disabled={pilotBusy || !selectedPilotSession} onClick={() => void handlePilotSessionStatus('blocked')}>{text.markPilotBlocked}</button>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 180px auto', gap: '14px', marginBottom: '14px' }}>
+                    <label style={{ display: 'grid', gap: '6px' }}>
+                      <span style={{ fontWeight: 700 }}>{text.pilotIssueTitle}</span>
+                      <input className="text-input" value={pilotIssueTitle} onChange={event => setPilotIssueTitle(event.target.value)} placeholder={text.pilotIssueTitlePlaceholder} />
+                    </label>
+                    <label style={{ display: 'grid', gap: '6px' }}>
+                      <span style={{ fontWeight: 700 }}>{text.severity}</span>
+                      <select className="text-input" value={pilotIssueSeverity} onChange={event => setPilotIssueSeverity(event.target.value as LivePilotIssueSeverity)}>
+                        <option value="low">low</option>
+                        <option value="medium">medium</option>
+                        <option value="high">high</option>
+                        <option value="critical">critical</option>
+                      </select>
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'end' }}>
+                      <button className="secondary-action" type="button" disabled={pilotBusy || !selectedPilotSession} onClick={() => void handleCreatePilotIssue()}>{text.recordPilotIssue}</button>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
+                    <button className="secondary-action" type="button" disabled={pilotBusy || !selectedPilotSession?.department_id} onClick={() => void handleDepartmentAcceptance('accepted_with_limitations')}>{text.recordDepartmentAcceptedWithLimitations}</button>
+                    <button className="secondary-action" type="button" disabled={pilotBusy || !selectedPilotSession?.department_id || livePilotIssueBurndown.issue_burndown_state !== 'Ready for pilot exit review'} onClick={() => void handleDepartmentAcceptance('accepted')}>{text.recordDepartmentAccepted}</button>
+                    <button className="secondary-action" type="button" disabled={pilotBusy || !selectedPilotSession?.department_id} onClick={() => void handleDepartmentAcceptance('blocked')}>{text.recordDepartmentBlocked}</button>
+                  </div>
+                  {pilotMessage ? <div className="alert alert-info">{pilotMessage}</div> : null}
+                  <div className="table-wrap">
+                    <table className="entity-table">
+                      <thead><tr><th>{text.issue}</th><th>{text.severity}</th><th>{text.status}</th><th>{text.retestEvidenceRequired}</th><th>{text.action}</th></tr></thead>
+                      <tbody>
+                        {(livePilotIssues.data || []).slice(0, 20).map(issue => (
+                          <tr key={issue.id}>
+                            <td><strong>{issue.issue_title}</strong></td>
+                            <td><StatusPill tone={issue.severity === 'critical' || issue.severity === 'high' ? 'danger' : issue.severity === 'medium' ? 'warning' : 'neutral'}>{issue.severity}</StatusPill></td>
+                            <td><StatusPill tone={issue.issue_status === 'closed' ? 'good' : issue.issue_status === 'accepted_limitation' ? 'warning' : issue.severity === 'critical' || issue.severity === 'high' ? 'danger' : 'neutral'}>{issue.issue_status}</StatusPill></td>
+                            <td>{issue.retest_required ? `${text.yes} (${issue.retest_status})` : text.no}</td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                <button className="secondary-action" type="button" disabled={pilotBusy} onClick={() => void handlePilotIssueStatus(issue.id, 'retest_required', 'pending')}>{text.requestRetest}</button>
+                                <button className="secondary-action" type="button" disabled={pilotBusy} onClick={() => void handlePilotIssueStatus(issue.id, 'closed', 'passed')}>{text.closeAfterRetest}</button>
+                                <button className="secondary-action" type="button" disabled={pilotBusy} onClick={() => void handlePilotIssueStatus(issue.id, 'accepted_limitation', 'not_required')}>{text.acceptAsLimitation}</button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {!(livePilotIssues.data || []).length ? (
+                          <tr><td colSpan={5}>{text.noPilotIssuesRecorded}</td></tr>
+                        ) : null}
                       </tbody>
                     </table>
                   </div>
@@ -2106,6 +2344,48 @@ const en = {
   realPilotTrainingGapsSubtitle: 'Participants whose required training is not yet confirmed.',
   livePilotExecutionTitle: 'Live Pilot Workflow Execution',
   livePilotExecutionSubtitle: 'Recorded walkthroughs, captured evidence, participation, issues, and final readiness for critical hospital workflows.',
+  livePilotBurndownTitle: 'Live Pilot Execution and Issue Burn-Down',
+  livePilotBurndownSubtitle: 'Pilot session, department pilot participation, issue burn-down, retest evidence, department pilot acceptance, and pilot exit criteria.',
+  livePilotExecution: 'Live pilot execution',
+  livePilotExecutionSummary: 'Operate pilot sessions, capture issues, review retest evidence, and prepare department acceptance without approving production launch.',
+  pilotIssueBurndown: 'Pilot issue burn-down',
+  pilotReadinessCaveat: 'Pilot readiness does not approve production launch.',
+  controlledAuthorityCaveat: 'Controlled production authority remains separate.',
+  pilotExitCriteria: 'Pilot exit criteria',
+  pilotSessions: 'Pilot sessions',
+  departmentPilotParticipation: 'Department pilot participation',
+  retestEvidenceRequired: 'Retest evidence required',
+  openIssues: 'Open issues',
+  retestRequiredIssues: 'Retest required',
+  closedIssues: 'Closed issues',
+  departmentPilotAcceptance: 'Department pilot acceptance',
+  requiredActionsBeforePilotExit: 'Required actions before pilot exit review',
+  pilotSessionTitle: 'Pilot session title',
+  pilotSessionTitlePlaceholder: 'Enter the live pilot session title',
+  createPilotSession: 'Create pilot session',
+  markIssueBurndown: 'Mark issue burn-down',
+  markPilotExitReviewRequired: 'Pilot exit review required',
+  markPilotBlocked: 'Mark pilot blocked',
+  pilotIssueTitle: 'Pilot issue title',
+  pilotIssueTitlePlaceholder: 'Record the live pilot issue',
+  recordPilotIssue: 'Record pilot issue',
+  recordDepartmentAcceptedWithLimitations: 'Record department accepted with limitations',
+  recordDepartmentAccepted: 'Record department accepted',
+  recordDepartmentBlocked: 'Record department blocked',
+  requestRetest: 'Request retest',
+  closeAfterRetest: 'Close after retest',
+  acceptAsLimitation: 'Accept as limitation',
+  noPilotIssuesRecorded: 'No pilot issues have been recorded.',
+  pilotSessionTitleRequired: 'Pilot session title is required.',
+  pilotSessionCreated: 'Pilot session recorded.',
+  pilotSessionRequired: 'Create or select a pilot session first.',
+  pilotIssueTitleRequired: 'Pilot issue title is required.',
+  pilotIssueRecorded: 'Pilot issue recorded.',
+  pilotSessionUpdated: 'Pilot session status updated.',
+  pilotIssueClosureSummary: 'Issue closed after retest evidence review.',
+  pilotIssueUpdated: 'Pilot issue status updated.',
+  pilotDepartmentRequired: 'Pilot department is required before recording department acceptance.',
+  pilotAcceptanceRecorded: 'Department pilot acceptance recorded.',
   liveExecutionReadiness: 'Execution Readiness',
   criticalWorkflows: 'Critical Workflows',
   workflowsPassed: 'Passed',
@@ -2398,6 +2678,48 @@ const ar = {
   realPilotTrainingGapsSubtitle: 'المشاركون الذين لم يتم تأكيد تدريبهم المطلوب بعد.',
   livePilotExecutionTitle: 'تنفيذ مسارات التشغيل التجريبي الفعلي',
   livePilotExecutionSubtitle: 'الجولات المسجلة، والأدلة الملتقطة، والمشاركة، والمشكلات، والجاهزية النهائية لمسارات العمل الحرجة.',
+  livePilotBurndownTitle: 'تنفيذ التشغيل التجريبي وحرق المشكلات',
+  livePilotBurndownSubtitle: 'جلسة التشغيل التجريبي، ومشاركة الأقسام، وحرق المشكلات، وأدلة إعادة الاختبار، وقبول القسم، ومعايير الخروج.',
+  livePilotExecution: 'تنفيذ التشغيل التجريبي الفعلي',
+  livePilotExecutionSummary: 'تشغيل جلسات التجربة، وتسجيل المشكلات، ومراجعة أدلة إعادة الاختبار، وتجهيز قبول الأقسام دون اعتماد الإطلاق الإنتاجي.',
+  pilotIssueBurndown: 'حرق مشكلات التشغيل التجريبي',
+  pilotReadinessCaveat: 'جاهزية التشغيل التجريبي لا تعتمد الإطلاق الإنتاجي.',
+  controlledAuthorityCaveat: 'صلاحية القرار الإنتاجي المنضبط منفصلة.',
+  pilotExitCriteria: 'معايير خروج التشغيل التجريبي',
+  pilotSessions: 'جلسات التشغيل التجريبي',
+  departmentPilotParticipation: 'مشاركة القسم في التشغيل التجريبي',
+  retestEvidenceRequired: 'دليل إعادة الاختبار مطلوب',
+  openIssues: 'مشكلات مفتوحة',
+  retestRequiredIssues: 'إعادة اختبار مطلوبة',
+  closedIssues: 'مشكلات مغلقة',
+  departmentPilotAcceptance: 'قبول القسم للتشغيل التجريبي',
+  requiredActionsBeforePilotExit: 'الإجراءات المطلوبة قبل مراجعة خروج التشغيل التجريبي',
+  pilotSessionTitle: 'عنوان جلسة التشغيل التجريبي',
+  pilotSessionTitlePlaceholder: 'أدخل عنوان جلسة التشغيل التجريبي الفعلية',
+  createPilotSession: 'إنشاء جلسة تشغيل تجريبي',
+  markIssueBurndown: 'تحديد حرق المشكلات',
+  markPilotExitReviewRequired: 'تحديد أن مراجعة الخروج مطلوبة',
+  markPilotBlocked: 'تحديد التشغيل التجريبي كمعطل',
+  pilotIssueTitle: 'عنوان مشكلة التشغيل التجريبي',
+  pilotIssueTitlePlaceholder: 'سجل مشكلة التشغيل التجريبي الفعلية',
+  recordPilotIssue: 'تسجيل مشكلة تشغيل تجريبي',
+  recordDepartmentAcceptedWithLimitations: 'تسجيل قبول القسم مع محددات',
+  recordDepartmentAccepted: 'تسجيل قبول القسم',
+  recordDepartmentBlocked: 'تسجيل تعطل القسم',
+  requestRetest: 'طلب إعادة اختبار',
+  closeAfterRetest: 'إغلاق بعد إعادة الاختبار',
+  acceptAsLimitation: 'قبول كمحدد',
+  noPilotIssuesRecorded: 'لم يتم تسجيل مشكلات تشغيل تجريبي.',
+  pilotSessionTitleRequired: 'عنوان جلسة التشغيل التجريبي مطلوب.',
+  pilotSessionCreated: 'تم تسجيل جلسة التشغيل التجريبي.',
+  pilotSessionRequired: 'أنشئ أو اختر جلسة تشغيل تجريبي أولا.',
+  pilotIssueTitleRequired: 'عنوان مشكلة التشغيل التجريبي مطلوب.',
+  pilotIssueRecorded: 'تم تسجيل مشكلة التشغيل التجريبي.',
+  pilotSessionUpdated: 'تم تحديث حالة جلسة التشغيل التجريبي.',
+  pilotIssueClosureSummary: 'تم إغلاق المشكلة بعد مراجعة دليل إعادة الاختبار.',
+  pilotIssueUpdated: 'تم تحديث حالة مشكلة التشغيل التجريبي.',
+  pilotDepartmentRequired: 'القسم مطلوب قبل تسجيل قبول القسم.',
+  pilotAcceptanceRecorded: 'تم تسجيل قبول القسم للتشغيل التجريبي.',
   liveExecutionReadiness: 'جاهزية التنفيذ',
   criticalWorkflows: 'مسارات حرجة',
   workflowsPassed: 'ناجحة',

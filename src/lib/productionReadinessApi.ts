@@ -133,6 +133,104 @@ export interface ControlledCutoverGateSummary {
   live_transition_caveat: string;
 }
 
+export type LivePilotSessionStatus =
+  | 'planned'
+  | 'active'
+  | 'issue_burndown'
+  | 'exit_review_required'
+  | 'accepted'
+  | 'blocked'
+  | 'deferred';
+
+export type LivePilotIssueSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type LivePilotIssueStatus = 'open' | 'in_progress' | 'retest_required' | 'closed' | 'deferred' | 'accepted_limitation';
+export type LivePilotRetestStatus = 'not_started' | 'pending' | 'passed' | 'failed' | 'not_required';
+export type LivePilotDepartmentAcceptanceStatus = 'pending' | 'accepted' | 'accepted_with_limitations' | 'blocked' | 'deferred';
+
+export interface LivePilotSession {
+  id: string;
+  organization_id: string | null;
+  session_title: string;
+  session_scope: string;
+  department_id: string | null;
+  owner_id: string;
+  session_status: LivePilotSessionStatus;
+  started_at: string | null;
+  completed_at: string | null;
+  participant_count: number;
+  completed_participant_count: number;
+  critical_issue_count: number;
+  open_issue_count: number;
+  retest_required_count: number;
+  acceptance_required: boolean;
+  exit_criteria_met: boolean;
+  exit_review_notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LivePilotIssue {
+  id: string;
+  organization_id: string | null;
+  pilot_session_id: string;
+  issue_title: string;
+  issue_description: string | null;
+  severity: LivePilotIssueSeverity;
+  issue_status: LivePilotIssueStatus;
+  owner_id: string | null;
+  department_id: string | null;
+  due_date: string | null;
+  retest_required: boolean;
+  retest_status: LivePilotRetestStatus;
+  retest_evidence_summary: string | null;
+  closure_summary: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LivePilotDepartmentAcceptance {
+  id: string;
+  organization_id: string | null;
+  pilot_session_id: string;
+  department_id: string;
+  acceptance_status: LivePilotDepartmentAcceptanceStatus;
+  accepted_by: string | null;
+  accepted_at: string | null;
+  acceptance_notes: string | null;
+  open_blockers_count: number;
+  training_confirmed: boolean;
+  issue_burndown_confirmed: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LivePilotIssueBurndownSummary {
+  total_issues: number;
+  open_issues: number;
+  in_progress_issues: number;
+  retest_required_issues: number;
+  closed_issues: number;
+  accepted_limitation_issues: number;
+  high_critical_open_issues: number;
+  retest_evidence_required: number;
+  issue_burndown_state: 'Pilot blockers remain' | 'Retest evidence required' | 'Ready for pilot exit review';
+}
+
+export interface LivePilotExitReadinessSummary {
+  session_count: number;
+  active_sessions: number;
+  blocked_or_deferred_sessions: number;
+  department_participation_count: number;
+  department_acceptance_pending: number;
+  department_acceptance_blocked: number;
+  department_acceptance_accepted: number;
+  pilot_exit_state: 'Pilot exit review required' | 'Pilot blockers remain' | 'Ready for pilot exit review';
+  required_actions: string[];
+  caveat: string;
+  controlled_authority_caveat: string;
+}
+
 const liveEmptyControls: FinalControl[] = emptyLiveArray<FinalControl>();
 
 const liveEmptyModules: ModuleReadiness[] = emptyLiveArray<ModuleReadiness>();
@@ -1218,6 +1316,197 @@ export async function recordControlledProductionCutoverDecisionEvent(payload: {
     );
   } catch (error) {
     return throwRpcActionError(error, 'Record Controlled Cutover Decision Event', 'record_controlled_production_cutover_decision_event');
+  }
+}
+
+export async function getLivePilotSessions(): Promise<LivePilotSession[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('live_pilot_sessions')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return (data || []) as LivePilotSession[];
+  } catch (error) {
+    logApiWarning('getLivePilotSessions', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getLivePilotIssues(): Promise<LivePilotIssue[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('live_pilot_issues')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    return (data || []) as LivePilotIssue[];
+  } catch (error) {
+    logApiWarning('getLivePilotIssues', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getLivePilotDepartmentAcceptances(): Promise<LivePilotDepartmentAcceptance[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('live_pilot_department_acceptances')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    return (data || []) as LivePilotDepartmentAcceptance[];
+  } catch (error) {
+    logApiWarning('getLivePilotDepartmentAcceptances', error);
+    return emptyLiveArray();
+  }
+}
+
+export function getLivePilotIssueBurndownSummary(issues: LivePilotIssue[] = []): LivePilotIssueBurndownSummary {
+  const openIssues = issues.filter(issue => issue.issue_status === 'open').length;
+  const inProgressIssues = issues.filter(issue => issue.issue_status === 'in_progress').length;
+  const retestRequiredIssues = issues.filter(issue => issue.issue_status === 'retest_required').length;
+  const closedIssues = issues.filter(issue => issue.issue_status === 'closed').length;
+  const acceptedLimitationIssues = issues.filter(issue => issue.issue_status === 'accepted_limitation').length;
+  const highCriticalOpenIssues = issues.filter(issue =>
+    ['high', 'critical'].includes(issue.severity)
+    && ['open', 'in_progress', 'retest_required'].includes(issue.issue_status)
+  ).length;
+  const retestEvidenceRequired = issues.filter(issue =>
+    issue.retest_required
+    && issue.issue_status !== 'closed'
+    && !['passed', 'not_required'].includes(issue.retest_status)
+  ).length;
+
+  return {
+    total_issues: issues.length,
+    open_issues: openIssues,
+    in_progress_issues: inProgressIssues,
+    retest_required_issues: retestRequiredIssues,
+    closed_issues: closedIssues,
+    accepted_limitation_issues: acceptedLimitationIssues,
+    high_critical_open_issues: highCriticalOpenIssues,
+    retest_evidence_required: retestEvidenceRequired,
+    issue_burndown_state: highCriticalOpenIssues || openIssues || inProgressIssues
+      ? 'Pilot blockers remain'
+      : retestEvidenceRequired || retestRequiredIssues
+        ? 'Retest evidence required'
+        : 'Ready for pilot exit review',
+  };
+}
+
+export function getLivePilotExitReadinessSummary(
+  sessions: LivePilotSession[] = [],
+  issues: LivePilotIssue[] = [],
+  acceptances: LivePilotDepartmentAcceptance[] = [],
+): LivePilotExitReadinessSummary {
+  const burndown = getLivePilotIssueBurndownSummary(issues);
+  const blockedOrDeferredSessions = sessions.filter(session => ['blocked', 'deferred'].includes(session.session_status)).length;
+  const activeSessions = sessions.filter(session => ['active', 'issue_burndown', 'exit_review_required'].includes(session.session_status)).length;
+  const departmentAcceptancePending = acceptances.filter(row => row.acceptance_status === 'pending').length;
+  const departmentAcceptanceBlocked = acceptances.filter(row => row.acceptance_status === 'blocked').length;
+  const departmentAcceptanceAccepted = acceptances.filter(row => ['accepted', 'accepted_with_limitations'].includes(row.acceptance_status)).length;
+  const requiredActions = new Set<string>();
+
+  if (!sessions.length) requiredActions.add('Create a pilot session.');
+  if (blockedOrDeferredSessions > 0 || burndown.high_critical_open_issues > 0) requiredActions.add('Pilot blockers remain.');
+  if (burndown.retest_evidence_required > 0) requiredActions.add('Retest evidence required.');
+  if (departmentAcceptancePending > 0 || departmentAcceptanceBlocked > 0 || !acceptances.length) requiredActions.add('Department pilot acceptance required.');
+  if (sessions.some(session => !session.exit_criteria_met)) requiredActions.add('Pilot exit criteria must be reviewed.');
+
+  return {
+    session_count: sessions.length,
+    active_sessions: activeSessions,
+    blocked_or_deferred_sessions: blockedOrDeferredSessions,
+    department_participation_count: acceptances.length,
+    department_acceptance_pending: departmentAcceptancePending,
+    department_acceptance_blocked: departmentAcceptanceBlocked,
+    department_acceptance_accepted: departmentAcceptanceAccepted,
+    pilot_exit_state: blockedOrDeferredSessions || burndown.issue_burndown_state === 'Pilot blockers remain'
+      ? 'Pilot blockers remain'
+      : requiredActions.size
+        ? 'Pilot exit review required'
+        : 'Ready for pilot exit review',
+    required_actions: requiredActions.size ? [...requiredActions] : ['Ready for pilot exit review.'],
+    caveat: 'Pilot readiness does not approve production launch.',
+    controlled_authority_caveat: 'Controlled production authority remains separate.',
+  };
+}
+
+export async function createLivePilotSession(payload: {
+  session_title: string;
+  department_id?: string | null;
+  participant_count?: number;
+}): Promise<{ id: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; message: string }>('create_live_pilot_session', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Create Live Pilot Session', 'create_live_pilot_session');
+  }
+}
+
+export async function updateLivePilotSessionStatus(payload: {
+  session_id: string;
+  session_status: LivePilotSessionStatus;
+  exit_review_notes?: string | null;
+  exit_criteria_met?: boolean;
+}): Promise<{ id: string; session_status: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; session_status: string; message: string }>('update_live_pilot_session_status', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Update Live Pilot Session Status', 'update_live_pilot_session_status');
+  }
+}
+
+export async function createLivePilotIssue(payload: {
+  pilot_session_id: string;
+  issue_title: string;
+  issue_description?: string | null;
+  severity?: LivePilotIssueSeverity;
+  owner_id?: string | null;
+  department_id?: string | null;
+  due_date?: string | null;
+  retest_required?: boolean;
+}): Promise<{ id: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; message: string }>('create_live_pilot_issue', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Create Live Pilot Issue', 'create_live_pilot_issue');
+  }
+}
+
+export async function updateLivePilotIssueStatus(payload: {
+  issue_id: string;
+  issue_status: LivePilotIssueStatus;
+  retest_status?: LivePilotRetestStatus | null;
+  retest_evidence_summary?: string | null;
+  closure_summary?: string | null;
+}): Promise<{ id: string; issue_status: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; issue_status: string; message: string }>('update_live_pilot_issue_status', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Update Live Pilot Issue Status', 'update_live_pilot_issue_status');
+  }
+}
+
+export async function recordLivePilotDepartmentAcceptance(payload: {
+  pilot_session_id: string;
+  department_id: string;
+  acceptance_status: LivePilotDepartmentAcceptanceStatus;
+  acceptance_notes?: string | null;
+  open_blockers_count?: number;
+  training_confirmed?: boolean;
+  issue_burndown_confirmed?: boolean;
+}): Promise<{ id: string; acceptance_status: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; acceptance_status: string; message: string }>('record_live_pilot_department_acceptance', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Record Department Pilot Acceptance', 'record_live_pilot_department_acceptance');
   }
 }
 

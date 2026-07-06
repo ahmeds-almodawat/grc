@@ -88,6 +88,14 @@ npm run patch66:all
 npm run patch67:all
 npm run patch68:all
 npm run patch69:all
+npm run patch70:all
+npm run patch71:all
+npm run patch72:all
+npm run patch73:all
+npm run patch74:all
+npm run patch75:all
+npm run patch76:all
+npm run patch77:all
 ```
 
 Patch 58.1 adds validation lanes that avoid nested duplicate full chains:
@@ -208,6 +216,12 @@ Patch 76 adds controlled production authority and cutover gate proof:
 
 ```powershell
 npm run patch76:proof
+```
+
+Patch 77 adds live pilot execution and issue burn-down proof:
+
+```powershell
+npm run patch77:proof
 ```
 
 ## G. Generated Release Artifacts

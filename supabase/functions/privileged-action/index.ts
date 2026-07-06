@@ -68,6 +68,14 @@ const patch76CutoverDecisionActions = new Set([
   'record_controlled_production_cutover_decision_event',
 ]);
 
+const patch77LivePilotActions = new Set([
+  'create_live_pilot_session',
+  'update_live_pilot_session_status',
+  'create_live_pilot_issue',
+  'update_live_pilot_issue_status',
+  'record_live_pilot_department_acceptance',
+]);
+
 const allowedActions = new Set([
   'list_user_management_roster',
   'create_board_pack_snapshot',
@@ -95,6 +103,7 @@ const allowedActions = new Set([
   ...patch24AuditActions,
   ...patch68EvidenceClosureActions,
   ...patch76CutoverDecisionActions,
+  ...patch77LivePilotActions,
 ]);
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
@@ -540,6 +549,72 @@ Deno.serve(async (request) => {
     if (error) {
       const authorizationFailure =
         /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|ORGANIZATION|ROLE|AUTHORIZED|BLOCKERS|CHECKLIST|LIMITATION|RATIONALE/i
+          .test(error.message);
+      return jsonResponse({
+        ok: false,
+        error: error.message,
+        code: error.code,
+        action,
+      }, authorizationFailure ? 403 : 409);
+    }
+
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (patch77LivePilotActions.has(action)) {
+    const rpcName = action;
+    const payload = requestBody.payload ?? {};
+    const rpcArgs = action === 'create_live_pilot_session'
+      ? {
+          p_actor_id: userData.user.id,
+          p_session_title: payload.session_title,
+          p_department_id: payload.department_id ?? null,
+          p_participant_count: payload.participant_count ?? 0,
+        }
+      : action === 'update_live_pilot_session_status'
+        ? {
+            p_actor_id: userData.user.id,
+            p_session_id: payload.session_id,
+            p_session_status: payload.session_status,
+            p_exit_review_notes: payload.exit_review_notes ?? null,
+            p_exit_criteria_met: Boolean(payload.exit_criteria_met),
+          }
+        : action === 'create_live_pilot_issue'
+          ? {
+              p_actor_id: userData.user.id,
+              p_pilot_session_id: payload.pilot_session_id,
+              p_issue_title: payload.issue_title,
+              p_issue_description: payload.issue_description ?? null,
+              p_severity: payload.severity ?? 'medium',
+              p_owner_id: payload.owner_id ?? null,
+              p_department_id: payload.department_id ?? null,
+              p_due_date: payload.due_date ?? null,
+              p_retest_required: payload.retest_required ?? true,
+            }
+          : action === 'update_live_pilot_issue_status'
+            ? {
+                p_actor_id: userData.user.id,
+                p_issue_id: payload.issue_id,
+                p_issue_status: payload.issue_status,
+                p_retest_status: payload.retest_status ?? null,
+                p_retest_evidence_summary: payload.retest_evidence_summary ?? null,
+                p_closure_summary: payload.closure_summary ?? null,
+              }
+            : {
+                p_actor_id: userData.user.id,
+                p_pilot_session_id: payload.pilot_session_id,
+                p_department_id: payload.department_id,
+                p_acceptance_status: payload.acceptance_status,
+                p_acceptance_notes: payload.acceptance_notes ?? null,
+                p_open_blockers_count: payload.open_blockers_count ?? 0,
+                p_training_confirmed: Boolean(payload.training_confirmed),
+                p_issue_burndown_confirmed: Boolean(payload.issue_burndown_confirmed),
+              };
+    const { data, error } = await serviceClient.rpc(rpcName, rpcArgs);
+
+    if (error) {
+      const authorizationFailure =
+        /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|ORGANIZATION|ROLE|AUTHORIZED|RETEST|BLOCKERS|TRAINING|BURN-DOWN|CRITERIA|ACCEPTANCE/i
           .test(error.message);
       return jsonResponse({
         ok: false,
