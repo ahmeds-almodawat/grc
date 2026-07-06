@@ -31,6 +31,8 @@ For small targeted patches, use `npm run validate:fast` while working, then run 
 
 Patch 81 deployment/runbook changes should run `npm run validate:build`, `npm run validate:security`, `npm run patch81:proof`, and `npm run release:restore-noise`. Patch 81 does not apply migrations; it documents controlled migration deployment for migrations 118 through 121.
 
+Patch 82 staging migration rehearsal evidence changes should run `npm run validate:build`, `npm run validate:security`, `npm run patch82:proof`, and `npm run release:restore-noise`. Patch 82 is staging-only evidence and does not apply production migrations.
+
 Never use `git add .`. Stage only the files intentionally changed for the patch.
 
 Do not accidentally commit:
