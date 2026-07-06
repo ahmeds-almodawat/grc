@@ -1,0 +1,240 @@
+{
+  "patch": "78",
+  "checked_at": "2026-07-06T05:33:06.491Z",
+  "strict_passed": true,
+  "failed_count": 0,
+  "checks": [
+    {
+      "name": "Patch 78 migration exists",
+      "passed": true
+    },
+    {
+      "name": "identity_role_integrity_reviews exists",
+      "passed": true
+    },
+    {
+      "name": "identity_role_integrity_findings exists",
+      "passed": true
+    },
+    {
+      "name": "privileged_role_recertifications exists",
+      "passed": true
+    },
+    {
+      "name": "RLS enabled for new tables",
+      "passed": true
+    },
+    {
+      "name": "No broad public write policy was added",
+      "passed": true
+    },
+    {
+      "name": "Guarded role checks exist for privileged writes",
+      "passed": true
+    },
+    {
+      "name": "Allowed review statuses exist",
+      "passed": true
+    },
+    {
+      "name": "Allowed finding types exist",
+      "passed": true
+    },
+    {
+      "name": "Allowed finding severities exist",
+      "passed": true
+    },
+    {
+      "name": "Allowed recertification statuses exist",
+      "passed": true
+    },
+    {
+      "name": "High-risk findings block ready review",
+      "passed": true
+    },
+    {
+      "name": "Pending privileged recertification blocks ready review",
+      "passed": true
+    },
+    {
+      "name": "Missing owner/reviewer blocks ready review",
+      "passed": true
+    },
+    {
+      "name": "Recertified privileged role requires rationale",
+      "passed": true
+    },
+    {
+      "name": "Patch does not add automatic role assignment/removal logic",
+      "passed": true
+    },
+    {
+      "name": "Patch does not add automatic user deactivation/archive/reactivation logic",
+      "passed": true
+    },
+    {
+      "name": "Frontend API uses authenticated bridge pattern for privileged calls",
+      "passed": true
+    },
+    {
+      "name": "Privileged bridge allowlist includes Patch 78 actions",
+      "passed": true
+    },
+    {
+      "name": "Runtime registry classifies Patch 78 actions",
+      "passed": true
+    },
+    {
+      "name": "UI includes Identity, role, and data integrity",
+      "passed": true
+    },
+    {
+      "name": "UI includes Access integrity review",
+      "passed": true
+    },
+    {
+      "name": "UI includes Privileged role recertification",
+      "passed": true
+    },
+    {
+      "name": "UI includes Dormant account review",
+      "passed": true
+    },
+    {
+      "name": "UI includes Inactive account review",
+      "passed": true
+    },
+    {
+      "name": "UI includes Archived user access review",
+      "passed": true
+    },
+    {
+      "name": "UI includes Department owner accountability",
+      "passed": true
+    },
+    {
+      "name": "UI includes Missing owner/reviewer repair required",
+      "passed": true
+    },
+    {
+      "name": "UI includes SSO/MFA readiness checklist",
+      "passed": true
+    },
+    {
+      "name": "UI includes Access export for IT/security review",
+      "passed": true
+    },
+    {
+      "name": "UI includes access integrity caveat",
+      "passed": true
+    },
+    {
+      "name": "UI includes controlled authority caveat",
+      "passed": true
+    },
+    {
+      "name": "Patch 77 live pilot execution wording remains",
+      "passed": true
+    },
+    {
+      "name": "Patch 76 controlled production authority wording remains",
+      "passed": true
+    },
+    {
+      "name": "Patch 75 clinical navigation simplification remains",
+      "passed": true
+    },
+    {
+      "name": "No production launched wording exists",
+      "passed": true
+    },
+    {
+      "name": "No go-live complete wording exists",
+      "passed": true
+    },
+    {
+      "name": "No system is production ready claim exists",
+      "passed": true
+    },
+    {
+      "name": "No transition_to_live_operations action exists",
+      "passed": true
+    },
+    {
+      "name": "No forbidden automatic approval wording exists",
+      "passed": true
+    },
+    {
+      "name": "No service-role frontend exposure exists",
+      "passed": true
+    },
+    {
+      "name": "No fake/demo records were added",
+      "passed": true
+    },
+    {
+      "name": "No route/component deletion",
+      "passed": true
+    },
+    {
+      "name": "Restore-noise covers Patch 77 proof JSON",
+      "passed": true
+    },
+    {
+      "name": "package.json contains patch78:proof",
+      "passed": true
+    },
+    {
+      "name": "package.json contains patch78:all",
+      "passed": true
+    },
+    {
+      "name": "validate:fast exists",
+      "passed": true
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true
+    },
+    {
+      "name": "validate:security exists",
+      "passed": true
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true
+    },
+    {
+      "name": "proof:all exists",
+      "passed": true
+    },
+    {
+      "name": "v700:runtime-security exists",
+      "passed": true
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true
+    },
+    {
+      "name": "current platform status mentions Patch 78",
+      "passed": true
+    },
+    {
+      "name": "production caveat remains",
+      "passed": true
+    },
+    {
+      "name": "proof index mentions Patch 78",
+      "passed": true
+    },
+    {
+      "name": "runbook mentions Patch 77 proof JSON restore coverage",
+      "passed": true
+    },
+    {
+      "name": "No conflict markers",
+      "passed": true
+    }
+  ]
+}

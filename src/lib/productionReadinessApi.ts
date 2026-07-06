@@ -146,6 +146,25 @@ export type LivePilotIssueSeverity = 'low' | 'medium' | 'high' | 'critical';
 export type LivePilotIssueStatus = 'open' | 'in_progress' | 'retest_required' | 'closed' | 'deferred' | 'accepted_limitation';
 export type LivePilotRetestStatus = 'not_started' | 'pending' | 'passed' | 'failed' | 'not_required';
 export type LivePilotDepartmentAcceptanceStatus = 'pending' | 'accepted' | 'accepted_with_limitations' | 'blocked' | 'deferred';
+export type IdentityRoleIntegrityReviewStatus = 'in_review' | 'remediation_required' | 'ready_for_access_integrity_review' | 'accepted_with_limitations' | 'blocked' | 'deferred';
+export type IdentityRoleFindingType =
+  | 'duplicate_role'
+  | 'privileged_role_review'
+  | 'dormant_account'
+  | 'inactive_account'
+  | 'archived_user_access'
+  | 'missing_owner'
+  | 'missing_reviewer'
+  | 'department_accountability_gap'
+  | 'station_accountability_gap'
+  | 'sso_mfa_readiness_gap'
+  | 'access_export_required'
+  | 'data_integrity_gap';
+export type IdentityRoleFindingSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type IdentityRoleFindingStatus = 'open' | 'in_progress' | 'resolved' | 'accepted_limitation' | 'deferred' | 'blocked';
+export type PrivilegedRoleRecertificationStatus = 'pending' | 'recertified' | 'revocation_required' | 'deferred' | 'blocked';
+export type SsoMfaReadinessStatus = 'review_required' | 'ready_for_it_review' | 'blocked' | 'not_applicable';
+export type AccessExportStatus = 'not_ready' | 'ready_for_export' | 'exported_for_review' | 'blocked';
 
 export interface LivePilotSession {
   id: string;
@@ -203,6 +222,90 @@ export interface LivePilotDepartmentAcceptance {
   issue_burndown_confirmed: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface IdentityRoleIntegrityReview {
+  id: string;
+  organization_id: string | null;
+  review_title: string;
+  review_scope: string;
+  review_status: IdentityRoleIntegrityReviewStatus;
+  duplicate_role_count: number;
+  privileged_user_count: number;
+  privileged_pending_recertification_count: number;
+  dormant_account_count: number;
+  inactive_account_count: number;
+  archived_user_access_count: number;
+  missing_owner_count: number;
+  missing_reviewer_count: number;
+  department_accountability_gap_count: number;
+  station_accountability_gap_count: number;
+  open_high_risk_finding_count: number;
+  sso_mfa_readiness_status: SsoMfaReadinessStatus;
+  access_export_status: AccessExportStatus;
+  review_notes: string | null;
+  created_by: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IdentityRoleIntegrityFinding {
+  id: string;
+  organization_id: string | null;
+  review_id: string;
+  finding_type: IdentityRoleFindingType;
+  severity: IdentityRoleFindingSeverity;
+  entity_type: string;
+  entity_id: string | null;
+  department_id: string | null;
+  finding_title: string;
+  finding_summary: string | null;
+  owner_id: string | null;
+  due_date: string | null;
+  finding_status: IdentityRoleFindingStatus;
+  resolution_summary: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PrivilegedRoleRecertification {
+  id: string;
+  organization_id: string | null;
+  review_id: string;
+  user_id: string;
+  role_name: string;
+  department_id: string | null;
+  recertification_status: PrivilegedRoleRecertificationStatus;
+  recertification_rationale: string | null;
+  recertified_by: string | null;
+  recertified_at: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IdentityRoleIntegrityDashboardSummary {
+  review_count: number;
+  latest_review_title: string;
+  access_integrity_review_state: IdentityRoleIntegrityReviewStatus | 'review_required';
+  privileged_role_recertification_pending: number;
+  dormant_account_review_count: number;
+  inactive_account_review_count: number;
+  archived_user_access_review_count: number;
+  role_duplication_review_count: number;
+  department_accountability_gap_count: number;
+  station_accountability_gap_count: number;
+  missing_owner_reviewer_count: number;
+  sso_mfa_readiness_status: SsoMfaReadinessStatus;
+  access_export_status: AccessExportStatus;
+  open_high_risk_finding_count: number;
+  required_actions: string[];
+  next_action_required: string;
+  caveat: string;
+  controlled_authority_caveat: string;
 }
 
 export interface LivePilotIssueBurndownSummary {
@@ -1507,6 +1610,183 @@ export async function recordLivePilotDepartmentAcceptance(payload: {
     return await invokePrivilegedAction<{ id: string; acceptance_status: string; message: string }>('record_live_pilot_department_acceptance', payload);
   } catch (error) {
     return throwRpcActionError(error, 'Record Department Pilot Acceptance', 'record_live_pilot_department_acceptance');
+  }
+}
+
+export async function getIdentityRoleIntegrityReviews(): Promise<IdentityRoleIntegrityReview[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('identity_role_integrity_reviews')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return (data || []) as IdentityRoleIntegrityReview[];
+  } catch (error) {
+    logApiWarning('getIdentityRoleIntegrityReviews', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getIdentityRoleIntegrityFindings(): Promise<IdentityRoleIntegrityFinding[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('identity_role_integrity_findings')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    return (data || []) as IdentityRoleIntegrityFinding[];
+  } catch (error) {
+    logApiWarning('getIdentityRoleIntegrityFindings', error);
+    return emptyLiveArray();
+  }
+}
+
+export async function getPrivilegedRoleRecertifications(): Promise<PrivilegedRoleRecertification[]> {
+  if (!supabase) return emptyLiveArray();
+  try {
+    const { data, error } = await supabase
+      .from('privileged_role_recertifications')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    return (data || []) as PrivilegedRoleRecertification[];
+  } catch (error) {
+    logApiWarning('getPrivilegedRoleRecertifications', error);
+    return emptyLiveArray();
+  }
+}
+
+export function getAccessIntegrityRequiredActions(
+  reviews: IdentityRoleIntegrityReview[] = [],
+  findings: IdentityRoleIntegrityFinding[] = [],
+  recertifications: PrivilegedRoleRecertification[] = [],
+): string[] {
+  const latest = reviews[0];
+  const requiredActions = new Set<string>();
+  const highRiskFindings = findings.filter(finding => ['high', 'critical'].includes(finding.severity) && ['open', 'in_progress', 'blocked'].includes(finding.finding_status)).length;
+  const missingOwnerReviewer = findings.filter(finding => ['missing_owner', 'missing_reviewer'].includes(finding.finding_type) && ['open', 'in_progress', 'blocked'].includes(finding.finding_status)).length;
+  const pendingRecertifications = recertifications.filter(row => ['pending', 'blocked'].includes(row.recertification_status)).length;
+
+  if (!reviews.length) requiredActions.add('Create access integrity review.');
+  if (highRiskFindings > 0) requiredActions.add('Integrity findings remain open.');
+  if (pendingRecertifications > 0) requiredActions.add('Privileged role recertification required.');
+  if (missingOwnerReviewer > 0) requiredActions.add('Missing owner/reviewer repair required.');
+  if (latest && !['ready_for_export', 'exported_for_review'].includes(latest.access_export_status)) requiredActions.add('Access export for IT/security review required.');
+  if (latest && latest.sso_mfa_readiness_status === 'review_required') requiredActions.add('SSO/MFA readiness checklist requires review.');
+
+  return requiredActions.size ? [...requiredActions] : ['Ready for access integrity review.'];
+}
+
+export function getIdentityRoleIntegrityDashboardSummary(
+  reviews: IdentityRoleIntegrityReview[] = [],
+  findings: IdentityRoleIntegrityFinding[] = [],
+  recertifications: PrivilegedRoleRecertification[] = [],
+): IdentityRoleIntegrityDashboardSummary {
+  const latest = reviews[0];
+  const requiredActions = getAccessIntegrityRequiredActions(reviews, findings, recertifications);
+  const highRiskFindings = findings.filter(finding => ['high', 'critical'].includes(finding.severity) && ['open', 'in_progress', 'blocked'].includes(finding.finding_status)).length;
+  const findingCount = (type: IdentityRoleFindingType) =>
+    findings.filter(finding => finding.finding_type === type && ['open', 'in_progress', 'blocked'].includes(finding.finding_status)).length;
+  const pendingRecertifications = recertifications.filter(row => ['pending', 'blocked'].includes(row.recertification_status)).length;
+  const missingOwnerReviewer = findingCount('missing_owner') + findingCount('missing_reviewer');
+
+  return {
+    review_count: reviews.length,
+    latest_review_title: latest?.review_title ?? 'Identity, role, and data integrity review has not been recorded.',
+    access_integrity_review_state: latest?.review_status ?? 'review_required',
+    privileged_role_recertification_pending: latest?.privileged_pending_recertification_count ?? pendingRecertifications,
+    dormant_account_review_count: latest?.dormant_account_count ?? findingCount('dormant_account'),
+    inactive_account_review_count: latest?.inactive_account_count ?? findingCount('inactive_account'),
+    archived_user_access_review_count: latest?.archived_user_access_count ?? findingCount('archived_user_access'),
+    role_duplication_review_count: latest?.duplicate_role_count ?? findingCount('duplicate_role'),
+    department_accountability_gap_count: latest?.department_accountability_gap_count ?? findingCount('department_accountability_gap'),
+    station_accountability_gap_count: latest?.station_accountability_gap_count ?? findingCount('station_accountability_gap'),
+    missing_owner_reviewer_count: (latest?.missing_owner_count ?? findingCount('missing_owner')) + (latest?.missing_reviewer_count ?? findingCount('missing_reviewer')),
+    sso_mfa_readiness_status: latest?.sso_mfa_readiness_status ?? 'review_required',
+    access_export_status: latest?.access_export_status ?? 'not_ready',
+    open_high_risk_finding_count: latest?.open_high_risk_finding_count ?? highRiskFindings,
+    required_actions: requiredActions,
+    next_action_required: requiredActions[0] ?? 'Ready for access integrity review.',
+    caveat: 'Access integrity review does not approve production launch.',
+    controlled_authority_caveat: 'Controlled production authority remains separate.',
+  };
+}
+
+export async function createIdentityRoleIntegrityReview(payload: {
+  review_title: string;
+  review_notes?: string | null;
+  sso_mfa_readiness_status?: SsoMfaReadinessStatus;
+  access_export_status?: AccessExportStatus;
+}): Promise<{ id: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; message: string }>('create_identity_role_integrity_review', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Create Access Integrity Review', 'create_identity_role_integrity_review');
+  }
+}
+
+export async function updateIdentityRoleIntegrityReviewStatus(payload: {
+  review_id: string;
+  review_status: IdentityRoleIntegrityReviewStatus;
+  review_notes?: string | null;
+  sso_mfa_readiness_status?: SsoMfaReadinessStatus | null;
+  access_export_status?: AccessExportStatus | null;
+}): Promise<{ id: string; review_status: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; review_status: string; message: string }>('update_identity_role_integrity_review_status', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Update Access Integrity Review', 'update_identity_role_integrity_review_status');
+  }
+}
+
+export async function recordIdentityRoleIntegrityFinding(payload: {
+  review_id: string;
+  finding_type: IdentityRoleFindingType;
+  severity?: IdentityRoleFindingSeverity;
+  entity_type?: string;
+  finding_title: string;
+  finding_summary?: string | null;
+  entity_id?: string | null;
+  department_id?: string | null;
+  owner_id?: string | null;
+  due_date?: string | null;
+}): Promise<{ id: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; message: string }>('record_identity_role_integrity_finding', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Record Identity Integrity Finding', 'record_identity_role_integrity_finding');
+  }
+}
+
+export async function updateIdentityRoleIntegrityFindingStatus(payload: {
+  finding_id: string;
+  finding_status: IdentityRoleFindingStatus;
+  resolution_summary?: string | null;
+}): Promise<{ id: string; finding_status: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; finding_status: string; message: string }>('update_identity_role_integrity_finding_status', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Update Identity Integrity Finding', 'update_identity_role_integrity_finding_status');
+  }
+}
+
+export async function recordPrivilegedRoleRecertification(payload: {
+  review_id: string;
+  user_id: string;
+  role_name: string;
+  recertification_status: PrivilegedRoleRecertificationStatus;
+  recertification_rationale?: string | null;
+  department_id?: string | null;
+}): Promise<{ id: string; recertification_status: string; message: string }> {
+  try {
+    return await invokePrivilegedAction<{ id: string; recertification_status: string; message: string }>('record_privileged_role_recertification', payload);
+  } catch (error) {
+    return throwRpcActionError(error, 'Record Privileged Role Recertification', 'record_privileged_role_recertification');
   }
 }
 
