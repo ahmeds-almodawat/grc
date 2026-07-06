@@ -101,6 +101,7 @@ npm run patch79:all
 npm run patch80a:all
 npm run patch81:all
 npm run patch82:all
+npm run patch82b:all
 ```
 
 Patch 58.1 adds validation lanes that avoid nested duplicate full chains:
@@ -257,6 +258,12 @@ Patch 82 adds staging migration rehearsal evidence proof:
 
 ```powershell
 npm run patch82:proof
+```
+
+Patch 82B adds interactive dashboard UI polish proof:
+
+```powershell
+npm run patch82b:proof
 ```
 
 ## G. Generated Release Artifacts

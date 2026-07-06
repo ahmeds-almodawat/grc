@@ -343,6 +343,8 @@
     "patch81:all": "npm run validate:build && npm run validate:security && npm run patch81:proof",
     "patch82:proof": "node scripts/patch82-staging-migration-rehearsal-evidence-proof.mjs",
     "patch82:all": "npm run validate:build && npm run validate:security && npm run patch82:proof",
+    "patch82b:proof": "node scripts/patch82b-interactive-dashboard-ui-polish-proof.mjs",
+    "patch82b:all": "npm run validate:build && npm run validate:security && npm run patch82b:proof",
     "validate:fast": "npm run typecheck && npm run patch58:proof && npm run patch58-1:proof && npm run patch58-2:proof",
     "validate:build": "npm run typecheck && npm run build",
     "validate:proof": "npm run proof:all",

@@ -112,6 +112,7 @@ export function ProductionReadinessCenter() {
   const auth = useAuth();
   const { language } = useI18n();
   const [activeTab, setActiveTab] = useState<'status' | 'limitations' | 'operations' | 'rpc_nav'>('status');
+  const [activeDashboardFocus, setActiveDashboardFocus] = useState('overview');
   const [cutoverRationale, setCutoverRationale] = useState('');
   const [cutoverMessage, setCutoverMessage] = useState<string | null>(null);
   const [cutoverBusy, setCutoverBusy] = useState(false);
@@ -857,6 +858,50 @@ export function ProductionReadinessCenter() {
     incomplete_items: 0,
     review_items: 0
   };
+  const dashboardFocusCards = useMemo(() => [
+    {
+      key: 'overview',
+      label: text.overallStatus,
+      value: summary.overall_status,
+      tab: 'status' as const,
+      tone: summary.overall_status === 'ready' ? 'good' : summary.overall_status === 'blocked' ? 'danger' : 'warning',
+    },
+    {
+      key: 'pilot',
+      label: text.pilotActivationTitle,
+      value: pilotActivationData.pilot_readiness_status,
+      tab: 'status' as const,
+      tone: pilotActivationData.pilot_readiness_status === 'ready' ? 'good' : pilotActivationData.pilot_readiness_status === 'blocked' ? 'danger' : 'warning',
+    },
+    {
+      key: 'limitations',
+      label: text.limitations,
+      value: String((limitations.data || []).length),
+      tab: 'limitations' as const,
+      tone: (limitations.data || []).length ? 'warning' : 'good',
+    },
+    {
+      key: 'operations',
+      label: text.productionOperationsGovernanceTitle,
+      value: operationsGovernanceSummary.hypercare_command_center_status,
+      tab: 'operations' as const,
+      tone: operationsGovernanceSummary.hypercare_command_center_status === 'exit_review_required' ? 'good' : operationsGovernanceSummary.hypercare_command_center_status === 'blocked' ? 'danger' : 'warning',
+    },
+    {
+      key: 'access',
+      label: text.runtimeAccessReviewTitle,
+      value: runtimeAccessData.access_review_readiness_status,
+      tab: 'rpc_nav' as const,
+      tone: runtimeAccessData.access_review_readiness_status === 'ready' ? 'good' : runtimeAccessData.access_review_readiness_status === 'blocked' ? 'danger' : 'warning',
+    },
+  ], [
+    limitations.data,
+    operationsGovernanceSummary.hypercare_command_center_status,
+    pilotActivationData.pilot_readiness_status,
+    runtimeAccessData.access_review_readiness_status,
+    summary.overall_status,
+    text,
+  ]);
 
   return (
     <section className="page-section production-readiness-page">
@@ -899,6 +944,26 @@ export function ProductionReadinessCenter() {
           <div className="stat-label">{text.overallStatus}</div>
         </div>
       </div>
+
+      <ModernCard title={text.dashboardFocusTitle} subtitle={text.dashboardFocusSubtitle}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '12px' }}>
+          {dashboardFocusCards.map(card => (
+            <button
+              className={`stat-card ${card.tone === 'good' ? 'success' : card.tone === 'danger' ? 'danger' : 'warning'} ${activeDashboardFocus === card.key ? 'active' : ''}`}
+              key={card.key}
+              type="button"
+              onClick={() => {
+                setActiveDashboardFocus(card.key);
+                setActiveTab(card.tab);
+              }}
+              style={{ textAlign: 'left', cursor: 'pointer', borderColor: activeDashboardFocus === card.key ? 'var(--accent)' : undefined }}
+            >
+              <div className="stat-value" style={{ fontSize: '1rem' }}>{card.value}</div>
+              <div className="stat-label">{card.label}</div>
+            </button>
+          ))}
+        </div>
+      </ModernCard>
 
       {/* Tab Navigation */}
       <div className="hub-tab-layout">
@@ -2869,6 +2934,8 @@ const en = {
   tabLimitations: 'Limitations Registry',
   tabOperations: 'Operations & Translation',
   tabRpcNav: 'Access & System Actions',
+  dashboardFocusTitle: 'Interactive Readiness Focus',
+  dashboardFocusSubtitle: 'Click a signal to focus the relevant readiness section using the data already loaded on this page.',
   goNoGoTitle: 'Overall GRC Readiness Gate',
   goNoGoSubtitle: 'Calculated score indicating readiness for pilot system deployment.',
   readinessScore: 'Overall Readiness Score',
@@ -3323,6 +3390,8 @@ const ar = {
   tabLimitations: 'سجل محددات النظام',
   tabOperations: 'الصيانة والترجمة',
   tabRpcNav: 'الصلاحيات وإجراءات النظام',
+  dashboardFocusTitle: 'تركيز تفاعلي للجاهزية',
+  dashboardFocusSubtitle: 'اختر مؤشرا للانتقال إلى قسم الجاهزية المرتبط باستخدام البيانات المحملة في هذه الصفحة.',
   goNoGoTitle: 'بوابة جاهزية النظام العامة',
   goNoGoSubtitle: 'المعدل المحسوب الذي يشير إلى جاهزية إطلاق النظام التجريبي.',
   readinessScore: 'درجة الجاهزية العامة',

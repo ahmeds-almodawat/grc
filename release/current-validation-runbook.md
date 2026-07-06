@@ -33,6 +33,8 @@ Patch 81 deployment/runbook changes should run `npm run validate:build`, `npm ru
 
 Patch 82 staging migration rehearsal evidence changes should run `npm run validate:build`, `npm run validate:security`, `npm run patch82:proof`, and `npm run release:restore-noise`. Patch 82 is staging-only evidence and does not apply production migrations.
 
+Patch 82B frontend-only UI polish changes should run `npm run validate:build`, `npm run validate:security`, `npm run patch82b:proof`, and `npm run release:restore-noise`. Staging rehearsal remains separate.
+
 Never use `git add .`. Stage only the files intentionally changed for the patch.
 
 Do not accidentally commit:

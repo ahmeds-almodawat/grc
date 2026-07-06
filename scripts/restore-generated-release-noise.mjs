@@ -54,6 +54,7 @@ const allowlistedPaths = [
   'release/patch78/patch78-identity-role-data-integrity-hardening-proof.json',
   'release/patch79/patch79-production-operations-hypercare-board-pack-proof.json',
   'release/patch80a/patch80a-performance-smoothness-optimization-proof.json',
+  'release/patch82/patch82-staging-migration-rehearsal-evidence-proof.json',
 ];
 
 const existing = [];
