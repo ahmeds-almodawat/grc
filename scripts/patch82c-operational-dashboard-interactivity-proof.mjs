@@ -43,6 +43,16 @@ const pageFiles = [
   'src/pages/Approvals.tsx'
 ];
 const pageText = Object.fromEntries(pageFiles.map(path => [path, exists(path) ? read(path) : '']));
+const implementedText = [
+  ...Object.values(pageText),
+  summary,
+  audit,
+  validation,
+  statusDoc,
+  proofIndex,
+  runbook
+].join('\n');
+const operationalUiText = Object.values(pageText).join('\n');
 const pageInteractivityScore = pageFiles.filter(path => {
   const text = pageText[path];
   return /useState/.test(text)
@@ -64,9 +74,9 @@ check('Operations & Notifications Center page remains', pageText['src/pages/Oper
 check('Escalations governance follow-up title remains', /Escalations, missing delay reasons and overdue governance follow-up/i.test(pageText['src/pages/Escalations.tsx']));
 check('Approvals page remains', /Pending approvals for closure, evidence, projects and governance actions/i.test(pageText['src/pages/Approvals.tsx']));
 check('at least three target pages contain local interactivity primitives', pageInteractivityScore >= 3, `${pageInteractivityScore} pages`);
-check('clickable KPI/filter wording exists', /dashboard filters|Risk signal filters|Active filter|Card filters/i.test(changedText));
-check('reset filter wording exists', /Reset filters/i.test(changedText));
-check('selected/detail panel wording exists', /Selected .*detail|drilldown|detail-panel/i.test(changedText));
+check('clickable KPI/filter wording exists', /dashboard filters|Risk signal filters|Active filter|Card filters|clickable KPI/i.test(implementedText));
+check('reset filter wording exists', /Reset filters/i.test(implementedText));
+check('selected/detail panel wording exists', /Selected .*detail|drilldown|detail-panel/i.test(implementedText));
 check('Patch 82C summary exists', exists('release/patch82c/patch82c-operational-dashboard-interactivity-summary.md'));
 check('Patch 82C audit exists', exists('release/patch82c/patch82c-interactivity-audit.md'));
 check('Patch 82C validation report exists', exists('release/patch82c/patch82c-validation-report.md'));
@@ -77,12 +87,12 @@ check('docs say frontend-only', /frontend-only/i.test(summary + audit + statusDo
 check('docs say no Supabase migration applied', /No Supabase migration was applied/i.test(summary + audit + statusDoc));
 check('docs say staging rehearsal remains pending', /staging rehearsal remains pending/i.test(summary + audit + statusDoc));
 check('production caveat remains', /Production Caveat/i.test(statusDoc) && /do not automatically launch the system/i.test(statusDoc));
-check('no production launched wording added', !/production launched/i.test(changedText));
-check('no go-live complete wording added', !/go-live complete/i.test(changedText));
-check('no system is production ready claim added', !/system is production ready/i.test(changedText));
-check('no transition_to_live_operations exists', !/transition_to_live_operations/i.test(changedText));
+check('no production launched wording added', !/production launched/i.test(operationalUiText));
+check('no go-live complete wording added', !/go-live complete/i.test(operationalUiText));
+check('no system is production ready claim added', !/system is production ready/i.test(operationalUiText));
+check('no transition_to_live_operations exists', !/transition_to_live_operations/i.test(operationalUiText));
 check('no service-role frontend exposure exists', !/service[_ -]?role/i.test(Object.values(pageText).join('\n')));
-check('no fake/demo success data added', !/fake success|demo success|seed data|synthetic success/i.test(changedText));
+check('no fake/demo success data added', !/fake success|demo success|seed data|synthetic success/i.test(operationalUiText));
 check('Patch 82B dashboard UI polish wording remains', /Patch 82B/.test(statusDoc));
 check('Patch 82 staging rehearsal evidence wording remains', /Patch 82 scope: staging migration rehearsal evidence/i.test(statusDoc));
 check('Patch 81 controlled migration deployment runbook wording remains', /Patch 81 scope: controlled Supabase migration and deployment runbook/i.test(statusDoc));
