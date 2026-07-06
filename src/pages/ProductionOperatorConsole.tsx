@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Activity, AlertTriangle, ArchiveRestore, Building2, ClipboardCheck, ExternalLink, FileCheck2, KeyRound, ShieldCheck, UserCheck } from 'lucide-react';
 import { DataState } from '../components/DataState';
 import { ModernCard, StatusPill } from '../components/ModernCard';
@@ -57,14 +57,55 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
   const realPilot = data?.realPilot ?? {};
   const livePilot = data?.livePilot ?? {};
 
-  const criticalRows = [
+  const criticalRows = useMemo(() => [
     ...(data?.departmentBlockers ?? []),
     ...(data?.hypercareBlockers ?? []),
     ...(data?.closureBlockers ?? []),
     ...(data?.accessBlockers ?? []),
     ...(data?.realPilotBlockers ?? []),
     ...(data?.liveWorkflowBlockers ?? []),
-  ];
+  ], [
+    data?.departmentBlockers,
+    data?.hypercareBlockers,
+    data?.closureBlockers,
+    data?.accessBlockers,
+    data?.realPilotBlockers,
+    data?.liveWorkflowBlockers,
+  ]);
+
+  const pendingSignoffCount = useMemo(
+    () => (data?.signoffs ?? []).filter(row => ['pending', 'blocked', 'ready_with_limitations'].includes(String(row.signoff_status ?? '').toLowerCase())).length,
+    [data?.signoffs],
+  );
+  const feedbackRequiredCount = useMemo(
+    () => (data?.adoptionReadiness ?? []).filter(row => numberValue(row.feedback_required_count) > 0).length,
+    [data?.adoptionReadiness],
+  );
+  const departmentLaunchRows = useMemo(() => (data?.departmentLaunchPacks ?? []).slice(0, 30), [data?.departmentLaunchPacks]);
+  const adoptionByDepartment = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const item of data?.adoptionReadiness ?? []) {
+      if (item.launch_pack_id) map.set(`id:${item.launch_pack_id}`, item);
+      if (item.department_name) map.set(`name:${item.department_name}`, item);
+    }
+    return map;
+  }, [data?.adoptionReadiness]);
+  const supportByDepartment = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const item of data?.supportReadiness ?? []) {
+      if (item.launch_pack_id) map.set(`id:${item.launch_pack_id}`, item);
+      if (item.department_name) map.set(`name:${item.department_name}`, item);
+    }
+    return map;
+  }, [data?.supportReadiness]);
+  const blockerByDepartment = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const item of data?.departmentBlockers ?? []) {
+      if (item.launch_pack_id) map.set(`id:${item.launch_pack_id}`, item);
+      if (item.department_name) map.set(`name:${item.department_name}`, item);
+    }
+    return map;
+  }, [data?.departmentBlockers]);
 
   return (
     <section className="page-section production-readiness-page">
@@ -161,7 +202,7 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
                 <MetricTile label="Access status" value={access.access_review_readiness_status || access.final_access_review_readiness_status || reviewRequired} tone={itemTone(access.access_review_readiness_status || access.final_access_review_readiness_status)} />
                 <MetricTile label="Access blockers" value={data?.accessBlockers.length ?? 0} tone={(data?.accessBlockers.length ?? 0) ? 'danger' : 'good'} />
                 <MetricTile label="Known limitations" value={data?.limitations.length ?? 0} tone={(data?.limitations.length ?? 0) ? 'warning' : 'good'} />
-                <MetricTile label="Pending signoffs" value={(data?.signoffs ?? []).filter(row => ['pending', 'blocked', 'ready_with_limitations'].includes(String(row.signoff_status ?? '').toLowerCase())).length} tone="warning" />
+                <MetricTile label="Pending signoffs" value={pendingSignoffCount} tone="warning" />
               </div>
             </ModernCard>
           </div>
@@ -191,7 +232,7 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
                 <MetricTile label="Inactive users" value={numberValue(hospital.inactive_users)} tone="warning" />
                 <MetricTile label="Training incomplete" value={numberValue(hospital.training_incomplete_count)} tone="warning" />
                 <MetricTile label="Policy gaps" value={numberValue(hospital.policy_attestation_gaps)} tone="warning" />
-                <MetricTile label="Feedback required" value={(data?.adoptionReadiness ?? []).filter(row => numberValue(row.feedback_required_count) > 0).length} tone="warning" />
+                <MetricTile label="Feedback required" value={feedbackRequiredCount} tone="warning" />
               </div>
             </ModernCard>
           </div>
@@ -224,10 +265,10 @@ export function ProductionOperatorConsole({ setPage }: { setPage?: (page: PageKe
                     </tr>
                   </thead>
                   <tbody>
-                    {(data?.departmentLaunchPacks ?? []).slice(0, 30).map((row, index) => {
-                      const adoption = (data?.adoptionReadiness ?? []).find(item => item.launch_pack_id === row.id || item.department_name === row.department_name);
-                      const support = (data?.supportReadiness ?? []).find(item => item.launch_pack_id === row.id || item.department_name === row.department_name);
-                      const blocker = (data?.departmentBlockers ?? []).find(item => item.launch_pack_id === row.id || item.department_name === row.department_name);
+                    {departmentLaunchRows.map((row, index) => {
+                      const adoption = adoptionByDepartment.get(`id:${row.id}`) ?? adoptionByDepartment.get(`name:${row.department_name}`);
+                      const support = supportByDepartment.get(`id:${row.id}`) ?? supportByDepartment.get(`name:${row.department_name}`);
+                      const blocker = blockerByDepartment.get(`id:${row.id}`) ?? blockerByDepartment.get(`name:${row.department_name}`);
                       return (
                         <tr key={`${row.id ?? row.launch_label}-${index}`}>
                           <td><strong>{row.department_name || row.launch_label || 'Department'}</strong></td>

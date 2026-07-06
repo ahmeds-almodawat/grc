@@ -2,7 +2,8 @@
 
 ## Current Level
 
-- Current patch level: Patch 79 after implementation.
+- Current patch level: Patch 80A after implementation.
+- Patch 80A scope: safe performance and smoothness optimization for heavy production readiness and operator pages. It adds memoized derived summaries, reduces repeated render-time scans, updates release proof coverage, and does not change schema, RLS, security behavior, governance logic, or production readiness decisions.
 - Patch 79 scope: production operations governance, hypercare command center, 30/60/90 operating view, executive monthly governance reporting, accreditation/evidence pack tracking, and board closure pack readiness. Board closure does not approve production launch, controlled production authority remains separate, live transition requires separate operational execution, and real hospital execution evidence is still required.
 - Patch 78 scope: identity, role, and data integrity hardening in Production Readiness. It adds access integrity review records, privileged role recertification evidence, dormant/inactive account review visibility, archived user access review, role duplication review, missing owner/reviewer repair tracking, department/station accountability, SSO/MFA readiness checklist status, and access export for IT/security review. Access integrity review does not approve production launch, and controlled production authority remains separate.
 - Patch 77 scope: live pilot execution and issue burn-down in Production Readiness. It adds controlled live pilot sessions, pilot issue capture, retest evidence state, department pilot acceptance, pilot exit criteria, and issue burn-down visibility. Pilot readiness does not approve production launch, and controlled production authority remains separate.
@@ -64,7 +65,7 @@ Use `npm run validate:fast` for the local development loop, `npm run validate:bu
 ## Evidence Locations
 
 - Technical validation artifacts: `release/v700/`, `release/v64/`, `release/v66/`, `release/v672/`, `release/v673/`, and `release/v674/`.
-- Patch release evidence: `release/patch43/` through `release/patch79/`.
+- Patch release evidence: `release/patch43/` through `release/patch80a/`.
 - Current production readiness, pilot/hypercare, hospital operations evidence, and closure follow-up are surfaced in the Production Readiness Center, Production Operator Console, and Production Evidence Closure page.
 - Current proof command index: `release/current-proof-command-index.md`.
 - Current validation runbook: `release/current-validation-runbook.md`.

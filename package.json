@@ -337,6 +337,8 @@
     "patch78:all": "npm run validate:build && npm run validate:security && npm run patch78:proof",
     "patch79:proof": "node scripts/patch79-production-operations-hypercare-board-pack-proof.mjs",
     "patch79:all": "npm run validate:build && npm run validate:security && npm run patch79:proof",
+    "patch80a:proof": "node scripts/patch80a-performance-smoothness-optimization-proof.mjs",
+    "patch80a:all": "npm run validate:build && npm run validate:security && npm run patch80a:proof",
     "validate:fast": "npm run typecheck && npm run patch58:proof && npm run patch58-1:proof && npm run patch58-2:proof",
     "validate:build": "npm run typecheck && npm run build",
     "validate:proof": "npm run proof:all",

@@ -1,0 +1,188 @@
+{
+  "patch": "80A",
+  "checked_at": "2026-07-06T06:31:19.240Z",
+  "strict_passed": true,
+  "failed_count": 0,
+  "checks": [
+    {
+      "name": "package.json contains patch80a:proof",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "package.json contains patch80a:all",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no migration file with patch80a was added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no new Supabase migration was added for Patch 80A",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no RLS wording weakened",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no service-role frontend exposure exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no transition_to_live_operations exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no production launched wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no go-live complete wording exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no system is production ready claim exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 79 production operations wording remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 78 identity/role/data integrity wording remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 77 live pilot execution wording remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 76 controlled production authority wording remains",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "restore-noise covers Patch 79 proof JSON",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "current platform status mentions Patch 80A",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "performance audit file exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "summary file exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validation report exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "safe React performance primitive exists in optimized files",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "operator console uses memoized department lookup maps",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "production readiness summaries are memoized",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 79 operations API uses single-pass item summary",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no fake/demo records were added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "operational UI diff avoids banned technical wording",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:fast exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:security exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:release exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "proof:all exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "v700:runtime-security exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "proof index mentions Patch 80A",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validation runbook mentions performance patch validation",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "patch80a:all does not run validate:release",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no conflict markers",
+      "passed": true,
+      "details": ""
+    }
+  ]
+}

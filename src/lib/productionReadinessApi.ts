@@ -1947,28 +1947,69 @@ export async function getExecutiveGovernanceBoardPacks(): Promise<ExecutiveGover
   }
 }
 
+const openProductionOperationItemStatuses = new Set<ProductionHypercareItemStatus>([
+  'open',
+  'in_progress',
+  'evidence_required',
+  'review_required',
+  'blocked',
+]);
+
+function summarizeProductionHypercareItems(items: ProductionHypercareItem[] = []) {
+  const openByType: Record<ProductionHypercareItemType, number> = {
+    support_issue: 0,
+    incident_trend: 0,
+    department_launch_health: 0,
+    known_limitation: 0,
+    corrective_action: 0,
+    evidence_pack_gap: 0,
+    board_pack_gap: 0,
+    training_gap: 0,
+    dr_restore_gap: 0,
+    access_review_gap: 0,
+  };
+  let highCriticalOpen = 0;
+  let evidencePackGaps = 0;
+  let supportIssues = 0;
+  let criticalIncidents = 0;
+
+  for (const item of items) {
+    const isOpen = openProductionOperationItemStatuses.has(item.item_status);
+    if (isOpen) openByType[item.item_type] += 1;
+    if (['high', 'critical'].includes(item.severity) && isOpen) highCriticalOpen += 1;
+    if (item.item_type === 'evidence_pack_gap' && item.item_status !== 'closed') evidencePackGaps += 1;
+    if (item.item_type === 'support_issue' && isOpen) supportIssues += 1;
+    if (item.item_type === 'incident_trend' && item.severity === 'critical' && item.item_status !== 'closed') criticalIncidents += 1;
+  }
+
+  return {
+    openByType,
+    highCriticalOpen,
+    evidencePackGaps,
+    supportIssues,
+    criticalIncidents,
+  };
+}
+
 export function getBoardClosureRequiredActions(
   windows: ProductionHypercareWindow[] = [],
   items: ProductionHypercareItem[] = [],
   boardPacks: ExecutiveGovernanceBoardPack[] = [],
+  itemSummary = summarizeProductionHypercareItems(items),
 ): { hypercare: string[]; board: string[] } {
   const latestWindow = windows[0];
   const latestPack = boardPacks[0];
-  const highCriticalOpen = items.filter(item => ['high', 'critical'].includes(item.severity) && ['open', 'in_progress', 'evidence_required', 'review_required', 'blocked'].includes(item.item_status)).length;
-  const evidencePackGaps = items.filter(item => item.item_type === 'evidence_pack_gap' && item.item_status !== 'closed').length;
-  const supportIssues = items.filter(item => item.item_type === 'support_issue' && ['open', 'in_progress', 'evidence_required', 'review_required', 'blocked'].includes(item.item_status)).length;
-  const criticalIncidents = items.filter(item => item.item_type === 'incident_trend' && item.severity === 'critical' && item.item_status !== 'closed').length;
   const hypercare = new Set<string>();
   const board = new Set<string>();
 
   if (!windows.length) hypercare.add('Create hypercare command center.');
-  if (criticalIncidents > 0 || (latestWindow?.critical_incident_count ?? 0) > 0) hypercare.add('Critical incidents block hypercare exit review.');
-  if (supportIssues > 0 || (latestWindow?.open_support_issue_count ?? 0) > 0) hypercare.add('Open support issues require limitation review or closure.');
-  if (evidencePackGaps > 0 || latestWindow?.evidence_pack_status === 'incomplete' || latestWindow?.evidence_pack_status === 'blocked') hypercare.add('Accreditation/evidence pack tracking requires review.');
+  if (itemSummary.criticalIncidents > 0 || (latestWindow?.critical_incident_count ?? 0) > 0) hypercare.add('Critical incidents block hypercare exit review.');
+  if (itemSummary.supportIssues > 0 || (latestWindow?.open_support_issue_count ?? 0) > 0) hypercare.add('Open support issues require limitation review or closure.');
+  if (itemSummary.evidencePackGaps > 0 || latestWindow?.evidence_pack_status === 'incomplete' || latestWindow?.evidence_pack_status === 'blocked') hypercare.add('Accreditation/evidence pack tracking requires review.');
   if (!latestWindow || ['draft', 'blocked'].includes(latestWindow.board_pack_status)) hypercare.add('Board closure pack requires review.');
 
   if (!boardPacks.length) board.add('Create executive monthly governance report.');
-  if (highCriticalOpen > 0) board.add('High/critical operations items require closure or limitation review.');
+  if (itemSummary.highCriticalOpen > 0) board.add('High/critical operations items require closure or limitation review.');
   if (latestPack?.pack_status === 'draft' || !latestPack) board.add('Board review required.');
 
   return {
@@ -1984,9 +2025,9 @@ export function getProductionOperationsDashboardSummary(
 ): ProductionOperationsDashboardSummary {
   const latestWindow = windows[0];
   const latestPack = boardPacks[0];
-  const actions = getBoardClosureRequiredActions(windows, items, boardPacks);
-  const itemCount = (type: ProductionHypercareItemType) =>
-    items.filter(item => item.item_type === type && ['open', 'in_progress', 'evidence_required', 'review_required', 'blocked'].includes(item.item_status)).length;
+  const itemSummary = summarizeProductionHypercareItems(items);
+  const actions = getBoardClosureRequiredActions(windows, items, boardPacks, itemSummary);
+  const itemCount = (type: ProductionHypercareItemType) => itemSummary.openByType[type];
 
   return {
     hypercare_window_count: windows.length,
@@ -1996,7 +2037,7 @@ export function getProductionOperationsDashboardSummary(
     day_60_status: latestWindow?.day_60_status ?? 'not_started',
     day_90_status: latestWindow?.day_90_status ?? 'not_started',
     open_support_issue_count: latestWindow?.open_support_issue_count ?? itemCount('support_issue'),
-    critical_incident_count: latestWindow?.critical_incident_count ?? items.filter(item => item.item_type === 'incident_trend' && item.severity === 'critical' && item.item_status !== 'closed').length,
+    critical_incident_count: latestWindow?.critical_incident_count ?? itemSummary.criticalIncidents,
     department_launch_gap_count: latestWindow?.department_launch_gap_count ?? itemCount('department_launch_health'),
     unresolved_limitation_count: latestWindow?.unresolved_limitation_count ?? itemCount('known_limitation'),
     corrective_action_open_count: latestWindow?.corrective_action_open_count ?? itemCount('corrective_action'),
