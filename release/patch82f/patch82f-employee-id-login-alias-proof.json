@@ -1,0 +1,143 @@
+{
+  "patch": "82F",
+  "name": "Employee ID Login Alias",
+  "generated_at": "2026-07-07T06:28:54.071Z",
+  "passed": true,
+  "results": [
+    {
+      "name": "package.json contains patch82f:proof",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "package.json contains patch82f:all",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no Patch 82F migration was added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no Supabase migration files modified",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "login UI supports Email or Employee ID wording",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "login UI includes employee ID helper text",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "login logic converts non-email identifier to @almodawat.sa",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "login logic trims identifier",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "login logic lowercases identifier before auth",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "existing email login path is preserved",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "password remains required",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "password is still sent to existing auth.signIn call",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no auth bypass wording or implementation in login UI",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no service-role frontend exposure in login UI",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no production launched wording in changed operational docs",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no go-live complete wording in changed operational docs",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no system is production ready claim in changed operational docs",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 82F summary doc exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 82F validation report exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "current-platform-status mentions Patch 82F",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "proof command index mentions Patch 82F",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validation runbook mentions Patch 82F",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:security exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "restore-noise covers Patch 82E proof JSON",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no conflict markers",
+      "passed": true,
+      "details": ""
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "patch": "82G",
+  "name": "Privileged Action JWT Compatibility and Error Visibility",
+  "generated_at": "2026-07-07T13:58:50.950Z",
+  "passed": true,
+  "results": [
+    {
+      "name": "package.json contains patch82g:proof",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "package.json contains patch82g:all",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no Patch 82G migration was added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no Supabase migration files modified",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "privileged-action no longer uses jose jwtVerify with TextEncoder raw secret for caller auth",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "privileged-action validates bearer token through Supabase auth.getUser",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "missing bearer token is rejected",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "invalid caller token is rejected",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "client-provided user_id is not trusted for authentication",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "service-role key is used only server-side Edge Function",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "frontend error handling surfaces safe JSON error when available",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "structured JSON error includes error code and detail fields",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no auth bypass wording or implementation in operational files",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no production launched wording",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no go-live complete wording",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no system is production ready claim",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 82G summary doc exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Patch 82G validation report exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "current-platform-status mentions Patch 82G",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "proof command index mentions Patch 82G",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validation runbook mentions Patch 82G",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:build exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "validate:security exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "release:restore-noise exists",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "restore-noise covers Patch 82F proof JSON",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "no conflict markers",
+      "passed": true,
+      "details": ""
+    }
+  ]
+}

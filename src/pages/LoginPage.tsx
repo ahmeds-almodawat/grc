@@ -4,10 +4,18 @@ import { useAuth } from '../auth/AuthProvider';
 import { useI18n } from '../i18n/I18nContext';
 import { isSupabaseConfigured } from '../lib/supabase';
 
+const EMPLOYEE_ID_LOGIN_DOMAIN = 'almodawat.sa';
+
+export function normalizeLoginIdentifier(identifier: string): string {
+  const trimmed = identifier.trim();
+  if (!trimmed) return '';
+  return (trimmed.includes('@') ? trimmed : `${trimmed}@${EMPLOYEE_ID_LOGIN_DOMAIN}`).toLowerCase();
+}
+
 export function LoginPage() {
   const { language, direction, toggleLanguage } = useI18n();
   const auth = useAuth();
-  const [email, setEmail] = useState('');
+  const [loginIdentifier, setLoginIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -22,7 +30,7 @@ export function LoginPage() {
     event.preventDefault();
     setError(null);
     setIsSubmitting(true);
-    const result = await auth.signIn(email.trim(), password);
+    const result = await auth.signIn(normalizeLoginIdentifier(loginIdentifier), password);
     setIsSubmitting(false);
     if (!result.ok) setError(result.message ?? 'Login failed.');
   };
@@ -60,15 +68,18 @@ export function LoginPage() {
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>
-            <span>{isArabic ? 'البريد الإلكتروني' : 'Email'}</span>
+            <span>{isArabic ? 'البريد الإلكتروني أو رقم الموظف' : 'Email or Employee ID'}</span>
             <input
-              autoComplete="email"
-              type="email"
-              value={email}
-              onChange={event => setEmail(event.target.value)}
-              placeholder="name@company.com"
+              autoComplete="username"
+              type="text"
+              value={loginIdentifier}
+              onChange={event => setLoginIdentifier(event.target.value)}
+              placeholder={isArabic ? '12345 أو name@almodawat.sa' : '12345 or name@almodawat.sa'}
               required
             />
+            <small className="muted">
+              {isArabic ? 'استخدم رقم الموظف أو البريد الإلكتروني الكامل.' : 'Use your employee ID or full email address.'}
+            </small>
           </label>
           <label>
             <span>{isArabic ? 'كلمة المرور' : 'Password'}</span>
