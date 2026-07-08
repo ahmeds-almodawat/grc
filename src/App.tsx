@@ -587,7 +587,7 @@ export default function App() {
       case 'productionReadiness':
         return <ProductionReadinessCenter />;
       case 'admin':
-        return <Admin />;
+        return <UserManagementCenter />;
       default:
         return <ExecutiveHub />;
     }

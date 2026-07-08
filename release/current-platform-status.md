@@ -2,7 +2,16 @@
 
 ## Current Level
 
+<<<<<<< Updated upstream
 - Current patch level: Patch 82E after implementation.
+=======
+- Current patch level: Patch 82H-2 after implementation.
+- Patch 82H-2 scope: removes the redundant in-page subsidiary navigation from User Management by sending the Admin & Organization sidebar parent directly to User Management, keeping the old hub route available, expanding the User Management content area, widening the roster and filters, and increasing KPI readability without changing auth, roles, route guards, RLS, backend contracts, Supabase migrations, or pilot data.
+- Patch 82H-1 scope: fixes compact navigation styling and removes the old Control Pages hub from the direct User Management route. It uses the actually loaded `src/styles.css`, keeps nested sidebar navigation styled inside the frozen dark sidebar, expands the main content area, and keeps User Management compact with KPI cards, filters, visible View/Edit row actions, and secondary actions inside More without changing auth, roles, RLS, backend contracts, Supabase migrations, or production readiness state.
+- Patch 82H scope: sidebar nested navigation and compact control pages. It keeps the left sidebar visible and scrollable, moves subsidiary page navigation into expandable sidebar groups, expands the main content area, and compacts User Management KPIs, filters, and roster actions without changing auth, roles, RLS, backend contracts, Supabase migrations, or production readiness state.
+- Patch 82G scope: privileged admin action JWT compatibility and safe error visibility. The privileged Edge Function validates caller bearer tokens through Supabase Auth, rejects missing or invalid tokens with structured JSON errors, keeps service-role usage server-side only, preserves existing role checks, and does not change Supabase migrations, RLS, backend contracts, Patch 20 import logic, or production launch status.
+- Patch 82F scope: employee ID login alias for pilot usability. The sign-in screen accepts either a full email address or an employee ID, normalizes employee IDs to the Almodawat email domain for the existing password sign-in flow, keeps password requirements unchanged, and does not change Supabase Auth, RLS, backend contracts, or production launch status.
+>>>>>>> Stashed changes
 - Patch 82E scope: frontend-only record-level/actionable drilldown for Department Control Room metric counts. It makes non-zero metric cells actionable, keeps zero cells non-clickable, opens critical-risk and next-action drilldowns, cleans navigation labels, simplifies the top bar, and adds proof coverage. No Supabase migration was applied, staging rehearsal remains pending, and production caveat remains unchanged.
 - Patch 82C-1 scope: tiny proof/wording alignment fix for Patch 82C operational dashboard interactivity. It updates validation evidence so the existing interactive UI is detected after merge. No behavior, security, schema, Supabase, or production launch change was made.
 - Patch 82C-1 scope: tiny proof/wording alignment fix for Patch 82C operational dashboard interactivity. It updates validation evidence so the existing interactive UI is detected after merge. No behavior, security, schema, Supabase, or production launch change was made.
@@ -72,7 +81,11 @@ Use `npm run validate:fast` for the local development loop, `npm run validate:bu
 ## Evidence Locations
 
 - Technical validation artifacts: `release/v700/`, `release/v64/`, `release/v66/`, `release/v672/`, `release/v673/`, and `release/v674/`.
+<<<<<<< Updated upstream
 - Patch release evidence: `release/patch43/` through `release/patch82c/`.
+=======
+- Patch release evidence: `release/patch43/` through `release/patch82h/`.
+>>>>>>> Stashed changes
 - Current production readiness, pilot/hypercare, hospital operations evidence, and closure follow-up are surfaced in the Production Readiness Center, Production Operator Console, and Production Evidence Closure page.
 - Current proof command index: `release/current-proof-command-index.md`.
 - Current validation runbook: `release/current-validation-runbook.md`.

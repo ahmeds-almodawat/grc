@@ -1,0 +1,239 @@
+{
+  "patch": "82H",
+  "title": "Sidebar Nested Navigation and Compact Control Pages",
+  "generated_at": "2026-07-08T20:23:17.126Z",
+  "passed": 46,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "package.json contains patch82h:proof",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "package.json contains patch82h:all",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "validate:build exists",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "validate:security exists",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "release:restore-noise exists",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "no Patch 82H migration was added",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "no Supabase migrations added or modified",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "authAccess.ts is not modified",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "forbidden auth/backend files are not modified",
+      "pass": true,
+      "detail": "package.json, release/current-platform-status.md, release/current-proof-command-index.md, release/current-validation-runbook.md, release/v700/FRONTEND_RPC_INVENTORY.md, release/v700/frontend-rpc-inventory.csv, release/v700/frontend-rpc-inventory.json, release/v700/runtime-security-bridge-audit.json, release/v700/runtime-security-bridge-audit.md, scripts/restore-generated-release-noise.mjs, src/App.tsx, src/components/Layout.tsx, src/pages/UserManagementCenter.tsx, src/styles.css"
+    },
+    {
+      "name": "no auth/backend/RLS diff present",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Layout has nested sidebar navigation tree",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Layout uses direct clean sidebar labels",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Layout no longer renders old primary/quick link sections in sidebar",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Layout keeps role gating through canAccessPageForUser",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Admin sidebar parent opens User Management directly",
+      "pass": true,
+      "detail": "id: 'admin',\n    label: 'Admin & Organization',\n    hint: 'Users, access, setup',\n    page: 'admin',\n    icon: <LockKeyhole size={18} />,\n    children: [\n      { key: 'admin', label: 'User Management', icon: <Users size={16} /> },\n      { key: 'accessControl', label: 'Access Control', icon: <KeyRound size={16} /> },\n      { key: 'setupCenter', label: 'Organization Setup', icon: <Rocket size={16} /> },\n      { key: 'importExport', label: 'Real Data Import', icon: <UploadCloud size={16} /> },\n    "
+    },
+    {
+      "name": "User Management direct route no longer renders old Control Pages hub wrapper",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "User Management has compact control page header",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "User Management has compact KPI row",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "User Management has collapsible compact filters",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "User roster keeps View and Edit visible",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "User roster moves secondary actions into More menu",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "User Management does not render old Control Pages hub elements",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "User Management has expanded full-width treatment",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "User Management KPI readability was increased",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "User Management table and filters use expanded width",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "loaded CSS file is imported by app entry",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "loaded CSS file contains Patch 82H marker",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "sidebar nested classes exist in loaded CSS",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "default white-button sidebar styling is overridden",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "unused Patch 82H root CSS drop-in removed",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Patch 82H docs exist",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "current platform status mentions Patch 82H",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "proof command index mentions Patch 82H",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "validation runbook mentions Patch 82H",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "restore-noise covers previous Patch 82G proof JSON",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "forbidden phrase absent: system is production ready",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "forbidden phrase absent: go-live complete",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "forbidden phrase absent: production launched",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "forbidden phrase absent: transition_to_live_operations",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "no conflict markers in src/components/Layout.tsx",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "no conflict markers in src/pages/UserManagementCenter.tsx",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "no conflict markers in src/styles.css",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "no conflict markers in package.json",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "no conflict markers in release/current-platform-status.md",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "no conflict markers in release/current-proof-command-index.md",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "no conflict markers in release/current-validation-runbook.md",
+      "pass": true,
+      "detail": ""
+    }
+  ]
+}

@@ -57,6 +57,12 @@ const allowlistedPaths = [
   'release/patch82/patch82-staging-migration-rehearsal-evidence-proof.json',
   'release/patch82b/patch82b-interactive-dashboard-ui-polish-proof.json',
   'release/patch82c/patch82c-operational-dashboard-interactivity-proof.json',
+<<<<<<< Updated upstream
+=======
+  'release/patch82e/patch82e-record-level-dashboard-drilldown-proof.json',
+  'release/patch82f/patch82f-employee-id-login-alias-proof.json',
+  'release/patch82g/patch82g-privileged-action-jwt-compatibility-proof.json',
+>>>>>>> Stashed changes
 ];
 
 const existing = [];

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Archive, Building2, Download, Eye, FileDown, FileUp, KeyRound, RefreshCw, RotateCcw, ShieldOff, UploadCloud, UserCog } from 'lucide-react';
+import { AlertTriangle, Archive, Building2, CheckCircle2, Download, Eye, FileDown, FileUp, KeyRound, MoreHorizontal, RefreshCw, RotateCcw, ShieldCheck, ShieldOff, UploadCloud, UserCog, Users } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { Modal } from '../components/Modal';
@@ -120,6 +120,8 @@ export function UserManagementCenter() {
   const [missingDepartment, setMissingDepartment] = useState(false);
   const [missingRole, setMissingRole] = useState(false);
   const [neverLoggedIn, setNeverLoggedIn] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [moreActionsUserId, setMoreActionsUserId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [detailUser, setDetailUser] = useState<UserManagementUserRow | null>(null);
   const [editUser, setEditUser] = useState<UserManagementUserRow | null>(null);
@@ -392,17 +394,16 @@ export function UserManagementCenter() {
   };
 
   return (
-    <section className="page-stack user-management-center">
-      <section className="hero-panel">
-        <div>
-          <p className="eyebrow">Patch 19 · Professional user administration</p>
+    <section className="page-stack user-management-center compact-control-page">
+      <section className="compact-page-header user-management-compact-header">
+        <div className="compact-page-heading">
+          <p className="compact-breadcrumb">Admin & Organization / User Management</p>
           <h1>User Management Center</h1>
           <p className="section-subtitle">
-            Manage hospital rollout users with app-level deactivation, archive controls, preview-first CSV import,
-            role/department assignment, and lifecycle audit history. User records are never hard-deleted here.
+            Manage users, departments, role assignments, and controlled import/export without wasting page space.
           </p>
         </div>
-        <div className="inline-actions">
+        <div className="inline-actions compact-header-actions">
           <button className="ghost-button" onClick={() => void load()} disabled={loading}><RefreshCw size={16} /> Refresh</button>
           <button className="ghost-button" onClick={() => downloadCsv('user-management-import-template.csv', exportUserImportTemplate())}><FileDown size={16} /> Export template</button>
           <button className="primary-button" onClick={() => setImportOpen(true)} disabled={writeDisabled}><UploadCloud size={16} /> Import CSV</button>
@@ -431,61 +432,93 @@ export function UserManagementCenter() {
         emptyTitle="User management summary is not available"
         emptyMessage={getLiveResultMessage(summary)}
       >
-        <div className="kpi-grid">
-          <KpiTile label="Total users" value={summaryData?.total_users ?? 0} />
-          <KpiTile label="Active users" value={summaryData?.active_users ?? 0} tone="good" />
-          <KpiTile label="Inactive users" value={summaryData?.inactive_users ?? 0} tone={summaryData?.inactive_users ? 'warning' : 'neutral'} />
-          <KpiTile label="Archived users" value={summaryData?.archived_users ?? 0} tone={summaryData?.archived_users ? 'danger' : 'neutral'} />
-          <KpiTile label="Missing department" value={summaryData?.missing_department_users ?? 0} tone={summaryData?.missing_department_users ? 'warning' : 'good'} />
-          <KpiTile label="Missing role" value={summaryData?.missing_role_users ?? 0} tone={summaryData?.missing_role_users ? 'warning' : 'good'} />
-          <KpiTile label="Pending setup" value={summaryData?.pending_setup_users ?? 0} tone={summaryData?.pending_setup_users ? 'warning' : 'good'} />
+        <div className="compact-kpi-row user-management-kpis">
+          <article className="reference-kpi-card kpi-blue">
+            <span className="reference-kpi-icon"><Users size={19} /></span>
+            <span className="reference-kpi-label">Total Users</span>
+            <strong>{summaryData?.total_users ?? 0}</strong>
+            <small>All imported accounts</small>
+          </article>
+          <article className="reference-kpi-card kpi-green">
+            <span className="reference-kpi-icon"><CheckCircle2 size={19} /></span>
+            <span className="reference-kpi-label">Active Users</span>
+            <strong>{summaryData?.active_users ?? 0}</strong>
+            <small>Can participate in workflows</small>
+          </article>
+          <article className="reference-kpi-card kpi-orange">
+            <span className="reference-kpi-icon"><AlertTriangle size={19} /></span>
+            <span className="reference-kpi-label">Inactive Users</span>
+            <strong>{summaryData?.inactive_users ?? 0}</strong>
+            <small>Review before reactivation</small>
+          </article>
+          <article className="reference-kpi-card kpi-purple">
+            <span className="reference-kpi-icon"><Building2 size={19} /></span>
+            <span className="reference-kpi-label">Users Without Dept.</span>
+            <strong>{summaryData?.missing_department_users ?? 0}</strong>
+            <small>Needs assignment</small>
+          </article>
+          <article className="reference-kpi-card kpi-red">
+            <span className="reference-kpi-icon"><ShieldCheck size={19} /></span>
+            <span className="reference-kpi-label">Users Without Role</span>
+            <strong>{summaryData?.missing_role_users ?? 0}</strong>
+            <small>Access incomplete</small>
+          </article>
         </div>
       </DataState>
 
-      <ModernCard title="Advanced filters" subtitle="Filter by identity, department, role, status, type, setup gaps, and login availability.">
-        <div className="form-grid">
-          <label className="field">
-            Search
-            <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Name, email, employee ID, department, role" />
-          </label>
-          <label className="field">
-            Department
-            <select value={departmentFilter} onChange={event => setDepartmentFilter(event.target.value)}>
-              <option value="">All departments</option>
-              {departmentRows.map(department => (
-                <option key={department.id} value={department.id}>{department.name_en}</option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            Role
-            <select value={roleFilter} onChange={event => setRoleFilter(event.target.value as AppRole | 'all' | 'missing')}>
-              <option value="all">All roles</option>
-              <option value="missing">Missing role</option>
-              {userRoleOptions.map(role => <option key={role} value={role}>{humanize(role)}</option>)}
-            </select>
-          </label>
-          <label className="field">
-            Status
-            <select value={statusFilter} onChange={event => setStatusFilter(event.target.value as UserStatus | 'all')}>
-              <option value="all">All statuses</option>
-              {userStatusOptions.map(status => <option key={status} value={status}>{humanize(status)}</option>)}
-            </select>
-          </label>
-          <label className="field">
-            User type
-            <select value={typeFilter} onChange={event => setTypeFilter(event.target.value as UserType | 'all')}>
-              <option value="all">All types</option>
-              {userTypeOptions.map(type => <option key={type} value={type}>{humanize(type)}</option>)}
-            </select>
-          </label>
-          <div className="field checkbox-field">
-            <label><input type="checkbox" checked={missingDepartment} onChange={event => setMissingDepartment(event.target.checked)} /> Missing department</label>
-            <label><input type="checkbox" checked={missingRole} onChange={event => setMissingRole(event.target.checked)} /> Missing role</label>
-            <label><input type="checkbox" checked={neverLoggedIn} onChange={event => setNeverLoggedIn(event.target.checked)} /> Never logged in</label>
+      <section className="compact-filters-container" aria-label="User filters">
+        <button className="compact-filters-toggle" type="button" onClick={() => setFiltersOpen(open => !open)} aria-expanded={filtersOpen}>
+          <span>
+            <strong>Advanced filters</strong>
+            <small>Search, department, role, status, setup gaps, and login availability.</small>
+          </span>
+          <span className="compact-filter-count">{visibleUsers.length} shown</span>
+        </button>
+        {filtersOpen ? (
+          <div className="compact-filters-grid">
+            <label className="field">
+              Search
+              <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Name, email, employee ID, department, role" />
+            </label>
+            <label className="field">
+              Department
+              <select value={departmentFilter} onChange={event => setDepartmentFilter(event.target.value)}>
+                <option value="">All departments</option>
+                {departmentRows.map(department => (
+                  <option key={department.id} value={department.id}>{department.name_en}</option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              Role
+              <select value={roleFilter} onChange={event => setRoleFilter(event.target.value as AppRole | 'all' | 'missing')}>
+                <option value="all">All roles</option>
+                <option value="missing">Missing role</option>
+                {userRoleOptions.map(role => <option key={role} value={role}>{humanize(role)}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              Status
+              <select value={statusFilter} onChange={event => setStatusFilter(event.target.value as UserStatus | 'all')}>
+                <option value="all">All statuses</option>
+                {userStatusOptions.map(status => <option key={status} value={status}>{humanize(status)}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              User type
+              <select value={typeFilter} onChange={event => setTypeFilter(event.target.value as UserType | 'all')}>
+                <option value="all">All types</option>
+                {userTypeOptions.map(type => <option key={type} value={type}>{humanize(type)}</option>)}
+              </select>
+            </label>
+            <div className="field checkbox-field compact-checkboxes">
+              <label><input type="checkbox" checked={missingDepartment} onChange={event => setMissingDepartment(event.target.checked)} /> Missing department</label>
+              <label><input type="checkbox" checked={missingRole} onChange={event => setMissingRole(event.target.checked)} /> Missing role</label>
+              <label><input type="checkbox" checked={neverLoggedIn} onChange={event => setNeverLoggedIn(event.target.checked)} /> Never logged in</label>
+            </div>
           </div>
-        </div>
-      </ModernCard>
+        ) : null}
+      </section>
 
       <ModernCard title="Bulk actions" subtitle="Selected users can be exported or updated through safe app-level actions." className="user-management-bulk-card">
         <div className="bulk-actions-toolbar">
@@ -595,34 +628,54 @@ export function UserManagementCenter() {
                     <td>{user.last_login_at ?? 'Never / unavailable'}</td>
                     <td>{user.created_at?.slice(0, 10)}</td>
                     <td className="user-roster-actions-cell">
-                      <div className="user-row-actions">
-                        <button className="ghost-button compact-button icon-button" title="View details" aria-label={`View ${user.full_name_en}`} onClick={() => void openDetails(user)}><Eye size={14} /></button>
-                        <button className="ghost-button compact-button icon-button" title="Edit profile" aria-label={`Edit ${user.full_name_en}`} disabled={writeDisabled} onClick={() => openEdit(user)}><UserCog size={14} /></button>
-                        <button className="ghost-button compact-button icon-button" title="Assign role" aria-label={`Assign role to ${user.full_name_en}`} disabled={writeDisabled} onClick={() => openRole(user)}><KeyRound size={14} /></button>
-                        <button className="ghost-button compact-button icon-button" title="Assign department" aria-label={`Assign department to ${user.full_name_en}`} disabled={writeDisabled} onClick={() => openDepartment(user)}><Building2 size={14} /></button>
-                        {user.user_status === 'active' || user.user_status === 'invited' ? (
-                          <button className="ghost-button compact-button icon-button" title="Deactivate user" aria-label={`Deactivate ${user.full_name_en}`} disabled={writeDisabled} onClick={() => {
-                            setReason('');
-                            setLifecycle({ action: 'deactivate', users: [user] });
-                          }}><ShieldOff size={14} /></button>
-                        ) : (
-                          <button className="ghost-button compact-button icon-button" title="Reactivate user" aria-label={`Reactivate ${user.full_name_en}`} disabled={writeDisabled} onClick={() => {
-                            setReason('Reactivation after admin review');
-                            setLifecycle({ action: 'reactivate', users: [user] });
-                          }}><RotateCcw size={14} /></button>
-                        )}
-                        {user.user_status === 'archived' ? (
-                          <button className="ghost-button compact-button icon-button" title="Unarchive user" aria-label={`Unarchive ${user.full_name_en}`} disabled={writeDisabled} onClick={() => {
-                            setReason('Unarchive after admin review');
-                            setLifecycle({ action: 'unarchive', users: [user] });
-                          }}><RotateCcw size={14} /></button>
-                        ) : (
-                          <button className="ghost-button compact-button icon-button" title="Archive user" aria-label={`Archive ${user.full_name_en}`} disabled={writeDisabled} onClick={() => {
-                            setReason('');
-                            setLifecycle({ action: 'archive', users: [user] });
-                          }}><Archive size={14} /></button>
-                        )}
-                        <button className="ghost-button compact-button icon-button" title="Export user" aria-label={`Export ${user.full_name_en}`} onClick={() => exportSelected([user])}><Download size={14} /></button>
+                      <div className="user-row-actions user-row-actions--compact">
+                        <button className="ghost-button compact-button row-primary-action" title="View details" aria-label={`View ${user.full_name_en}`} onClick={() => void openDetails(user)}><Eye size={14} /> View</button>
+                        <button className="ghost-button compact-button row-primary-action" title="Edit profile" aria-label={`Edit ${user.full_name_en}`} disabled={writeDisabled} onClick={() => openEdit(user)}><UserCog size={14} /> Edit</button>
+                        <div className="row-more-actions-wrap">
+                          <button
+                            className="ghost-button compact-button icon-button"
+                            title="More actions"
+                            aria-label={`More actions for ${user.full_name_en}`}
+                            aria-expanded={moreActionsUserId === user.user_id}
+                            onClick={() => setMoreActionsUserId(current => current === user.user_id ? null : user.user_id)}
+                            type="button"
+                          >
+                            <MoreHorizontal size={15} />
+                          </button>
+                          {moreActionsUserId === user.user_id ? (
+                            <div className="row-more-actions-menu" role="menu">
+                              <button type="button" role="menuitem" disabled={writeDisabled} onClick={() => { setMoreActionsUserId(null); openRole(user); }}><KeyRound size={14} /> Assign role</button>
+                              <button type="button" role="menuitem" disabled={writeDisabled} onClick={() => { setMoreActionsUserId(null); openDepartment(user); }}><Building2 size={14} /> Assign department</button>
+                              {user.user_status === 'active' || user.user_status === 'invited' ? (
+                                <button type="button" role="menuitem" disabled={writeDisabled} onClick={() => {
+                                  setMoreActionsUserId(null);
+                                  setReason('');
+                                  setLifecycle({ action: 'deactivate', users: [user] });
+                                }}><ShieldOff size={14} /> Deactivate user</button>
+                              ) : (
+                                <button type="button" role="menuitem" disabled={writeDisabled} onClick={() => {
+                                  setMoreActionsUserId(null);
+                                  setReason('Reactivation after admin review');
+                                  setLifecycle({ action: 'reactivate', users: [user] });
+                                }}><RotateCcw size={14} /> Reactivate user</button>
+                              )}
+                              {user.user_status === 'archived' ? (
+                                <button type="button" role="menuitem" disabled={writeDisabled} onClick={() => {
+                                  setMoreActionsUserId(null);
+                                  setReason('Unarchive after admin review');
+                                  setLifecycle({ action: 'unarchive', users: [user] });
+                                }}><RotateCcw size={14} /> Unarchive user</button>
+                              ) : (
+                                <button type="button" role="menuitem" disabled={writeDisabled} onClick={() => {
+                                  setMoreActionsUserId(null);
+                                  setReason('');
+                                  setLifecycle({ action: 'archive', users: [user] });
+                                }}><Archive size={14} /> Archive user</button>
+                              )}
+                              <button type="button" role="menuitem" onClick={() => { setMoreActionsUserId(null); exportSelected([user]); }}><Download size={14} /> Export user</button>
+                            </div>
+                          ) : null}
+                        </div>
                       </div>
                     </td>
                   </tr>

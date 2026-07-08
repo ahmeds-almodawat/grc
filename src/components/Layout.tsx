@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Activity,
+  ChevronDown,
   Home,
   BellRing,
   BookCopy,
@@ -131,6 +133,22 @@ interface NavItem {
   icon: ReactNode;
 }
 
+interface NavTreeItem {
+  key: PageKey;
+  label: string;
+  icon: ReactNode;
+  hint?: string;
+}
+
+interface NavTreeGroup {
+  id: string;
+  label: string;
+  hint?: string;
+  icon: ReactNode;
+  page?: PageKey;
+  children?: NavTreeItem[];
+}
+
 const primaryNav: NavItem[] = [
   { key: 'home', labelKey: 'nav.home', hintKey: 'nav.home.hint', icon: <Home size={18} /> },
   { key: 'dailyOperationsHub', labelKey: 'nav.workspace', hintKey: 'nav.workspace.hint', icon: <GanttChartSquare size={18} /> },
@@ -155,6 +173,105 @@ const uatLinks: NavItem[] = isScenarioLabEnabled
       { key: 'scenarioTestConsole', labelKey: 'nav.scenarioLab', icon: <WandSparkles size={18} /> },
     ]
   : [];
+
+const navTree: NavTreeGroup[] = [
+  { id: 'home', label: 'Home', hint: 'Start here', page: 'home', icon: <Home size={18} /> },
+  {
+    id: 'workspace',
+    label: 'Workspace',
+    hint: 'Daily work queues',
+    page: 'dailyOperationsHub',
+    icon: <GanttChartSquare size={18} />,
+    children: [
+      { key: 'myWork', label: 'My Work', icon: <UserCheck size={16} /> },
+      { key: 'operations', label: 'Operations', icon: <BellRing size={16} /> },
+      { key: 'departments', label: 'Departments', icon: <Building2 size={16} /> },
+      { key: 'projects', label: 'Projects', icon: <GanttChartSquare size={16} /> },
+      { key: 'escalations', label: 'Escalations', icon: <Siren size={16} /> },
+      { key: 'approvals', label: 'Approvals', icon: <ClipboardCheck size={16} /> },
+    ],
+  },
+  {
+    id: 'quality',
+    label: 'Quality & Safety',
+    hint: 'Incidents, risks, audits',
+    page: 'qualityHub',
+    icon: <Hospital size={18} />,
+    children: [
+      { key: 'ovr', label: 'OVR / Incidents', icon: <Hospital size={16} /> },
+      { key: 'ovrRisk', label: 'OVR Risk Indicators', icon: <Radar size={16} /> },
+      { key: 'risks', label: 'Risk Register', icon: <ShieldAlert size={16} /> },
+      { key: 'audit', label: 'Audit', icon: <FileSearch size={16} /> },
+      { key: 'compliance', label: 'Compliance', icon: <ClipboardCheck size={16} /> },
+      { key: 'governance', label: 'Governance', icon: <Landmark size={16} /> },
+    ],
+  },
+  {
+    id: 'accreditation',
+    label: 'Accreditation',
+    hint: 'Standards and evidence',
+    page: 'accreditationHub',
+    icon: <ClipboardCheck size={18} />,
+    children: [
+      { key: 'evidence', label: 'Evidence Library', icon: <FileCheck2 size={16} /> },
+      { key: 'documents', label: 'Document Control', icon: <FolderKanban size={16} /> },
+      { key: 'relationships', label: 'Clause / Control Map', icon: <Network size={16} /> },
+      { key: 'evidenceVault', label: 'Evidence Vault', icon: <FileStack size={16} /> },
+      { key: 'departmentScorecards', label: 'Department Scorecards', icon: <Radar size={16} /> },
+    ],
+  },
+  {
+    id: 'policies',
+    label: 'Policies & SOPs',
+    hint: 'Policies and attestations',
+    page: 'evidenceHub',
+    icon: <FolderKanban size={18} />,
+    children: [
+      { key: 'documents', label: 'Policies', icon: <FolderKanban size={16} /> },
+      { key: 'evidenceVault', label: 'SOP Attestations', icon: <FileStack size={16} /> },
+      { key: 'bilingualDictionary', label: 'Bilingual Dictionary', icon: <Languages size={16} /> },
+      { key: 'trainingGovernance', label: 'Training Governance', icon: <GraduationCap size={16} /> },
+    ],
+  },
+  {
+    id: 'dashboards',
+    label: 'Dashboards',
+    hint: 'Executive and operational views',
+    page: 'reportsHub',
+    icon: <Activity size={18} />,
+    children: [
+      { key: 'executiveTruth', label: 'Executive Truth', icon: <FileSpreadsheet size={16} /> },
+      { key: 'productionReadiness', label: 'Production Readiness', icon: <ClipboardList size={16} /> },
+      { key: 'productionOperatorConsole', label: 'Production Operator Console', icon: <Command size={16} /> },
+      { key: 'productionEvidenceClosure', label: 'Production Evidence Closure', icon: <FileCheck2 size={16} /> },
+      { key: 'dashboard', label: 'Dashboard', icon: <Activity size={16} /> },
+      { key: 'analytics', label: 'Analytics', icon: <Gauge size={16} /> },
+      { key: 'reportBuilder', label: 'Report Builder', icon: <BookCopy size={16} /> },
+      { key: 'boardPacks', label: 'Board Packs', icon: <BookCopy size={16} /> },
+    ],
+  },
+  {
+    id: 'admin',
+    label: 'Admin & Organization',
+    hint: 'Users, access, setup',
+    page: 'admin',
+    icon: <LockKeyhole size={18} />,
+    children: [
+      { key: 'admin', label: 'User Management', icon: <Users size={16} /> },
+      { key: 'accessControl', label: 'Access Control', icon: <KeyRound size={16} /> },
+      { key: 'setupCenter', label: 'Organization Setup', icon: <Rocket size={16} /> },
+      { key: 'importExport', label: 'Real Data Import', icon: <UploadCloud size={16} /> },
+      { key: 'adminSafety', label: 'Admin Safety', icon: <LockKeyhole size={16} /> },
+      { key: 'backupScheduler', label: 'Backup Scheduler', icon: <DatabaseBackup size={16} /> },
+      { key: 'migrationRunbook', label: 'Migration Runbook', icon: <ClipboardList size={16} /> },
+      { key: 'restoreDryRun', label: 'Restore Dry-Run', icon: <UploadCloud size={16} /> },
+      { key: 'controlledUatWorkbench', label: 'UAT Controls', icon: <ClipboardCheck size={16} /> },
+      { key: 'uatIssueCapture', label: 'UAT Issues', icon: <Bug size={16} /> },
+      { key: 'scenarioTestConsole', label: 'Scenario Lab', icon: <WandSparkles size={16} /> },
+      { key: 'loadSeedCenter', label: 'Load / Seed Center', icon: <FileSearch size={16} /> },
+    ],
+  },
+];
 
 export const legacyNavItems: NavItem[] = [
   { key: 'productionReadiness' as const, labelKey: 'nav.productionReadiness', icon: <ClipboardList size={18} /> },
@@ -235,19 +352,44 @@ function NavButton({ item, page, setPage, showHint = false }: { item: NavItem; p
   );
 }
 
+function NavTreeButton({ item, page, setPage }: { item: NavTreeItem; page: PageKey; setPage: (page: PageKey) => void }) {
+  return (
+    <button
+      className={`nav-child-item ${page === item.key ? 'active' : ''}`}
+      onClick={() => setPage(item.key)}
+      type="button"
+    >
+      {item.icon}
+      <span>{item.label}</span>
+    </button>
+  );
+}
+
 export function Layout({ page, setPage, children }: LayoutProps) {
   const { language, direction, toggleLanguage, t } = useI18n();
   const auth = useAuth();
   const organizationName = auth.profile?.organizationName;
   const canOpen = (targetPage: PageKey) => canAccessPageForUser(targetPage, auth.roles, organizationName);
-  const allowedPrimaryNav = primaryNav.filter(item => canOpen(item.key));
-  const allowedQuickLinks = quickLinks.filter(item => canOpen(item.key));
-  const allowedUatLinks = uatLinks.filter(item => canOpen(item.key));
-  const isLegacyPage = !allowedPrimaryNav.some(item => item.key === page)
-    && !allowedQuickLinks.some(item => item.key === page)
-    && !allowedUatLinks.some(item => item.key === page);
+  const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set(['workspace', 'admin']));
+  const allowedNavTree = useMemo(() => navTree
+    .map(group => {
+      const allowedChildren = (group.children ?? []).filter(item => canOpen(item.key));
+      const groupAllowed = group.page ? canOpen(group.page) : false;
+      return { ...group, children: allowedChildren, groupAllowed };
+    })
+    .filter(group => group.groupAllowed || group.children.length > 0), [auth.roles, organizationName]);
+  const activeGroupId = allowedNavTree.find(group => group.page === page || group.children.some(item => item.key === page))?.id;
+  const isLegacyPage = !allowedNavTree.some(group => group.page === page || group.children.some(item => item.key === page));
   const displayName = language === 'ar' && auth.profile?.fullNameAr ? auth.profile.fullNameAr : auth.profile?.fullNameEn;
   const externalPilot = isExternalPilotOrganization(organizationName);
+  const toggleGroup = (groupId: string) => {
+    setOpenGroups(previous => {
+      const next = new Set(previous);
+      if (next.has(groupId)) next.delete(groupId);
+      else next.add(groupId);
+      return next;
+    });
+  };
 
   return (
     <div className={`app-shell modern-app-shell ${direction === 'rtl' ? 'rtl-shell' : ''}`} dir={direction}>
@@ -265,22 +407,59 @@ export function Layout({ page, setPage, children }: LayoutProps) {
           <span>{language === 'en' ? t('language.switchToArabic') : t('language.switchToEnglish')}</span>
         </button>
 
-        <nav className="nav-list nav-list-modern" aria-label={t('nav.primary')}>
-          <div className="nav-section-label">{t('nav.primary')}</div>
-          {allowedPrimaryNav.map(item => <NavButton key={item.key} item={item} page={page} setPage={setPage} showHint />)}
+        <nav className="nav-list nav-list-modern sidebar-nav-tree" aria-label="Primary navigation">
+          <div className="nav-section-label">Navigation</div>
+          {allowedNavTree.map(group => {
+            const groupActive = group.page === page || group.children.some(item => item.key === page);
+            const expanded = openGroups.has(group.id) || activeGroupId === group.id;
+            const hasChildren = group.children.length > 0;
 
-          <div className="nav-section-label">{t('nav.quickLinks')}</div>
-          {allowedQuickLinks.map(item => <NavButton key={item.key} item={item} page={page} setPage={setPage} />)}
+            if (!hasChildren && group.page) {
+              return (
+                <button
+                  key={group.id}
+                  className={`nav-group-trigger nav-group-trigger--single ${groupActive ? 'active' : ''}`}
+                  onClick={() => setPage(group.page as PageKey)}
+                  type="button"
+                >
+                  {group.icon}
+                  <span>
+                    <strong>{group.label}</strong>
+                    {group.hint ? <small>{group.hint}</small> : null}
+                  </span>
+                </button>
+              );
+            }
 
-          {allowedUatLinks.length ? (
-            <>
-              <div className="nav-section-label">{t('nav.uatTools')}</div>
-              {allowedUatLinks.map(item => <NavButton key={item.key} item={item} page={page} setPage={setPage} />)}
-            </>
-          ) : null}
+            return (
+              <div className={`nav-tree-group ${groupActive ? 'active' : ''}`} key={group.id}>
+                <button
+                  className={`nav-group-trigger ${groupActive ? 'active' : ''}`}
+                  onClick={() => {
+                    if (group.page && !expanded) setPage(group.page);
+                    toggleGroup(group.id);
+                  }}
+                  type="button"
+                  aria-expanded={expanded}
+                >
+                  {group.icon}
+                  <span>
+                    <strong>{group.label}</strong>
+                    {group.hint ? <small>{group.hint}</small> : null}
+                  </span>
+                  <ChevronDown className={`nav-group-chevron ${expanded ? 'expanded' : ''}`} size={15} />
+                </button>
+                {expanded ? (
+                  <div className="nav-child-list">
+                    {group.children.map(item => <NavTreeButton key={item.key} item={item} page={page} setPage={setPage} />)}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
 
           {externalPilot ? <div className="sidebar-footnote">{t('nav.externalPilotScope')}</div> : null}
-          <div className="sidebar-footnote">{t('nav.sidebarHint')}</div>
+          <div className="sidebar-footnote">Use the expandable groups above to open subsidiary control pages.</div>
 
           {isLegacyPage ? (
             <div className="legacy-active-banner">

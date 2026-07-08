@@ -290,3 +290,13 @@ git status --short --branch
 ```
 
 Only keep generated release artifacts when intentionally updating current release evidence. Do not use `git add .`.
+
+
+## Patch 82H / 82H-1 / 82H-2 — Sidebar Nested Navigation and Compact Control Pages
+
+```powershell
+npm run patch82h:all
+npm run patch82h:proof
+```
+
+Patch 82H-2 keeps the same proof command and adds checks that User Management no longer renders the old in-page Control Pages hub, subsidiary rail, or horizontal control card navigation.
