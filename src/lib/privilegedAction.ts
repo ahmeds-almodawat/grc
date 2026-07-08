@@ -33,8 +33,15 @@ export async function invokePrivilegedAction<T>(
     const context = 'context' in error ? error.context : null;
     if (context instanceof Response) {
       try {
-        const body = await context.clone().json() as { error?: string };
-        message = body.error || message;
+        const body = await context.clone().json() as {
+          error?: string;
+          code?: string;
+          detail?: string;
+        };
+        const safeError = body.error || message;
+        const safeDetail = body.detail ? ` ${body.detail}` : '';
+        const safeCode = body.code ? ` [${body.code}]` : '';
+        message = `${safeError}${safeCode}${safeDetail}`.trim();
       } catch {
         // Keep the SDK error when the response is not JSON.
       }

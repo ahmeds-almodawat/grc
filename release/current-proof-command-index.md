@@ -102,6 +102,10 @@ npm run patch80a:all
 npm run patch81:all
 npm run patch82:all
 npm run patch82b:all
+npm run patch82c:all
+npm run patch82e:all
+npm run patch82f:all
+npm run patch82g:all
 ```
 
 Patch 58.1 adds validation lanes that avoid nested duplicate full chains:
@@ -276,6 +280,18 @@ Patch 82E adds record-level department drilldown proof:
 
 ```powershell
 npm run patch82e:proof
+```
+
+Patch 82F adds employee ID login alias proof:
+
+```powershell
+npm run patch82f:proof
+```
+
+Patch 82G adds privileged action JWT compatibility proof:
+
+```powershell
+npm run patch82g:proof
 ```
 
 ## G. Generated Release Artifacts

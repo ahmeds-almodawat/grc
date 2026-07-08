@@ -132,6 +132,22 @@ function jsonResponse(body: Record<string, unknown>, status: number) {
   });
 }
 
+function errorResponse(
+  error: string,
+  status: number,
+  code: string,
+  detail: string,
+  extra: Record<string, unknown> = {},
+) {
+  return jsonResponse({
+    ok: false,
+    error,
+    code,
+    detail,
+    ...extra,
+  }, status);
+}
+
 const userRoleOptions = new Set([
   'super_admin',
   'executive',
@@ -312,31 +328,57 @@ Deno.serve(async (request) => {
     return new Response('ok', { headers: corsHeaders });
   }
   if (request.method !== 'POST') {
-    return jsonResponse({ ok: false, error: 'Method not allowed.' }, 405);
+    return errorResponse(
+      'Method not allowed.',
+      405,
+      'METHOD_NOT_ALLOWED',
+      'Privileged actions only accept POST requests.',
+    );
   }
 
   const authorization = request.headers.get('Authorization');
   if (!authorization?.startsWith('Bearer ')) {
-    return jsonResponse({ ok: false, error: 'Authenticated user token required.' }, 401);
+    return errorResponse(
+      'Authenticated user token required.',
+      401,
+      'AUTH_TOKEN_REQUIRED',
+      'Send a valid Authorization Bearer token from the signed-in Supabase session.',
+    );
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!supabaseUrl || !anonKey || !serviceRoleKey) {
-    return jsonResponse({ ok: false, error: 'Edge Function environment is incomplete.' }, 500);
+    return errorResponse(
+      'Edge Function environment is incomplete.',
+      500,
+      'EDGE_ENV_INCOMPLETE',
+      'Required server-side Supabase environment variables are not configured.',
+    );
   }
 
   let requestBody: { action?: string; payload?: Record<string, unknown> };
   try {
     requestBody = await request.json();
   } catch {
-    return jsonResponse({ ok: false, error: 'A JSON request body is required.' }, 400);
+    return errorResponse(
+      'A JSON request body is required.',
+      400,
+      'JSON_BODY_REQUIRED',
+      'Send a JSON body containing the privileged action name and payload.',
+    );
   }
 
   const action = requestBody.action ?? '';
   if (!allowedActions.has(action)) {
-    return jsonResponse({ ok: false, error: `Unsupported privileged action: ${action}` }, 400);
+    return errorResponse(
+      `Unsupported privileged action: ${action}`,
+      400,
+      'UNSUPPORTED_PRIVILEGED_ACTION',
+      'The requested privileged action is not registered on this server bridge.',
+      { action },
+    );
   }
 
   const token = authorization.slice('Bearer '.length);
@@ -345,7 +387,12 @@ Deno.serve(async (request) => {
   });
   const { data: userData, error: userError } = await authClient.auth.getUser(token);
   if (userError || !userData.user) {
-    return jsonResponse({ ok: false, error: 'Invalid or expired authenticated user token.' }, 401);
+    return errorResponse(
+      'Invalid or expired authenticated user token.',
+      401,
+      'AUTH_TOKEN_INVALID',
+      'Supabase Auth could not validate the caller session token.',
+    );
   }
 
   const serviceClient = createClient(supabaseUrl, serviceRoleKey, {

@@ -57,12 +57,13 @@ const allowlistedPaths = [
   'release/patch82/patch82-staging-migration-rehearsal-evidence-proof.json',
   'release/patch82b/patch82b-interactive-dashboard-ui-polish-proof.json',
   'release/patch82c/patch82c-operational-dashboard-interactivity-proof.json',
-<<<<<<< Updated upstream
-=======
   'release/patch82e/patch82e-record-level-dashboard-drilldown-proof.json',
   'release/patch82f/patch82f-employee-id-login-alias-proof.json',
   'release/patch82g/patch82g-privileged-action-jwt-compatibility-proof.json',
->>>>>>> Stashed changes
+=======
+  'release/patch82e/patch82e-record-level-dashboard-drilldown-proof.json',
+  'release/patch82f/patch82f-employee-id-login-alias-proof.json',
+>>>>>>> f374b9438bff6bd389015c923fa1156127c38517
 ];
 
 const existing = [];
@@ -70,7 +71,12 @@ const skipped = [];
 
 for (const relPath of allowlistedPaths) {
   const fullPath = path.join(root, relPath);
-  if (fs.existsSync(fullPath)) {
+  const tracked = spawnSync('git', ['ls-files', '--', relPath], {
+    cwd: root,
+    encoding: 'utf8',
+    shell: false,
+  }).stdout.trim();
+  if (fs.existsSync(fullPath) && tracked) {
     existing.push(relPath);
   } else {
     skipped.push(relPath);
