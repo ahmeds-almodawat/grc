@@ -1,8 +1,8 @@
 {
   "patch": "82H",
   "title": "Sidebar Nested Navigation and Compact Control Pages",
-  "generated_at": "2026-07-08T20:23:17.126Z",
-  "passed": 46,
+  "generated_at": "2026-07-09T19:43:10.151Z",
+  "passed": 45,
   "failed": 0,
   "checks": [
     {
@@ -41,19 +41,14 @@
       "detail": ""
     },
     {
-      "name": "authAccess.ts is not modified",
-      "pass": true,
-      "detail": ""
-    },
-    {
       "name": "forbidden auth/backend files are not modified",
       "pass": true,
-      "detail": "package.json, release/current-platform-status.md, release/current-proof-command-index.md, release/current-validation-runbook.md, release/v700/FRONTEND_RPC_INVENTORY.md, release/v700/frontend-rpc-inventory.csv, release/v700/frontend-rpc-inventory.json, release/v700/runtime-security-bridge-audit.json, release/v700/runtime-security-bridge-audit.md, scripts/restore-generated-release-noise.mjs, src/App.tsx, src/components/Layout.tsx, src/pages/UserManagementCenter.tsx, src/styles.css"
+      "detail": "package.json, release/current-platform-status.md, release/current-validation-runbook.md, release/patch82h/patch82h-sidebar-nested-navigation-compact-control-pages-proof.json, scripts/patch82h-sidebar-nested-navigation-compact-control-pages-proof.mjs, src/App.tsx, src/auth/authAccess.ts, src/components/Layout.tsx, src/lib/productionEvidenceClosureApi.ts, src/pages/Audit.tsx, src/pages/Compliance.tsx, src/pages/Departments.tsx, src/pages/Evidence.tsx, src/pages/Governance.tsx, src/pages/OperationsCenter.tsx, src/pages/OvrRiskIndicators.tsx, src/pages/ProductionEvidenceClosureCenter.tsx, src/pages/Risks.tsx, src/pages/UserManagementCenter.tsx, src/styles.css"
     },
     {
       "name": "no auth/backend/RLS diff present",
       "pass": true,
-      "detail": ""
+      "detail": "diff --git a/src/auth/authAccess.ts b/src/auth/authAccess.ts\nindex cd34b5a..e319597 100644\n--- a/src/auth/authAccess.ts\n+++ b/src/auth/authAccess.ts\n@@ -1,151 +1,170 @@\n-import type { PageKey } from '../components/Layout';\n-import type { AuthRole, AuthRoleAssignment } from './authTypes';\n+import type { PageKey } from \"../components/Layout\";\n+import type { AuthRole, AuthRoleAssignment } from \"./authTypes\";\n \n type PageGroup =\n-  | 'home'\n-  | 'personal'\n-  | 'executive'\n-  | 'work'\n-  | 'grc'\n-  "
     },
     {
       "name": "Layout has nested sidebar navigation tree",
@@ -78,7 +73,7 @@
     {
       "name": "Admin sidebar parent opens User Management directly",
       "pass": true,
-      "detail": "id: 'admin',\n    label: 'Admin & Organization',\n    hint: 'Users, access, setup',\n    page: 'admin',\n    icon: <LockKeyhole size={18} />,\n    children: [\n      { key: 'admin', label: 'User Management', icon: <Users size={16} /> },\n      { key: 'accessControl', label: 'Access Control', icon: <KeyRound size={16} /> },\n      { key: 'setupCenter', label: 'Organization Setup', icon: <Rocket size={16} /> },\n      { key: 'importExport', label: 'Real Data Import', icon: <UploadCloud size={16} /> },\n    "
+      "detail": "id: \"admin\",\n    label: \"Admin & Organization\",\n    hint: \"Users, access, setup\",\n    page: \"admin\",\n    icon: <LockKeyhole size={18} />,\n    children: [\n      { key: \"admin\", label: \"User Management\", icon: <Users size={16} /> },\n      {\n        key: \"accessControl\",\n        label: \"Access Control\",\n        icon: <KeyRound size={16} />,\n      },\n      {\n        key: \"setupCenter\",\n        label: \"Organization Setup\",\n        icon: <Rocket size={16} />,\n      },\n      {\n        key: \"importExpor"
     },
     {
       "name": "User Management direct route no longer renders old Control Pages hub wrapper",

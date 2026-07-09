@@ -20,11 +20,6 @@ import { AuditFindingForm } from '../components/GrcForms';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
-import { ProfessionalGrcMaturityPanel } from '../components/v140/ProfessionalGrcMaturityPanel';
-import { ProfessionalGrcWorkflowMap } from '../components/v140/ProfessionalGrcWorkflowMap';
-import { AuditAssuranceCoveragePanel } from '../components/v150/AuditAssuranceCoveragePanel';
-import { AuditExecutionCenter } from './AuditExecutionCenter';
-import { AuditProgramWorkflowMap } from '../components/v150/AuditProgramWorkflowMap';
 import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
 import {
   acceptCorrectiveActionPlan,
@@ -69,9 +64,6 @@ import type {
   OverdueAuditFindingRow,
   RepeatAuditFindingRow,
 } from '../types/domain';
-import { FrameworkCrosswalkBackbonePanel } from '../components/v210/FrameworkCrosswalkBackbonePanel';
-import { CapaExecutionPanel } from '../components/v220/CapaExecutionPanel';
-import { ControlAssuranceReadinessPanel } from '../components/v220/ControlAssuranceReadinessPanel';
 
 function isPast(value: string | null | undefined) {
   if (!value) return false;
@@ -338,36 +330,25 @@ export function Audit() {
   return (
     <section className="page-section">
       <ModuleHeader
-        eyebrow="Patch 24 Audit findings workflow"
-        title="Audit Findings Workflow Center"
-        subtitle="Governed lifecycle from finding issue through response, action plan, evidence, auditor validation, escalation and closure pack."
+        eyebrow="Audit"
+        title="Audit Findings Register"
+        subtitle="Track audit findings, responses, corrective actions, evidence and closure."
         action={canManageFindings ? (
           <div className="inline-actions">
             <button className="primary-button" onClick={() => setFormOpen(true)}>New Finding</button>
           </div>
         ) : null}
       />
-
-      <CapaExecutionPanel />
-      <ControlAssuranceReadinessPanel />
-
-      <ProfessionalGrcWorkflowMap highlight="audit" />
-      <ProfessionalGrcMaturityPanel domain="audit" />
-      <AuditProgramWorkflowMap highlight="engagement-planning" />
-      <AuditExecutionCenter />
-      <AuditAssuranceCoveragePanel />
-      <FrameworkCrosswalkBackbonePanel context="audit" />
-
-      {error ? <div className="panel error-panel">{error}</div> : null}
+            {error ? <div className="panel error-panel">{error}</div> : null}
       {message ? <div className="notice-banner">{message}</div> : null}
-
-      <div className="operations-kpi-grid">
-        <MetricCard label="Findings register" value={metrics.register} />
-        <MetricCard label="Workflow queue" value={metrics.queue} tone={metrics.queue ? 'warning' : 'success'} />
-        <MetricCard label="Overdue findings" value={metrics.overdue} tone={metrics.overdue ? 'danger' : 'success'} />
-        <MetricCard label="Closure blocked" value={metrics.blocked} tone={metrics.blocked ? 'danger' : 'success'} />
-        <MetricCard label="Escalations" value={metrics.escalations} tone={metrics.escalations ? 'warning' : undefined} />
+      <div className="module-grid">
+        <div className="module-card"><strong>Findings</strong><span>{metrics.register} active</span></div>
+        <div className="module-card warning"><strong>Workflow queue</strong><span>{metrics.queue} queued</span></div>
+        <div className="module-card danger"><strong>Overdue findings</strong><span>{metrics.overdue} overdue</span></div>
+        <div className="module-card warning"><strong>Closure blocked</strong><span>{metrics.blocked} blocked</span></div>
+        <div className="module-card danger"><strong>Escalations</strong><span>{metrics.escalations} escalations</span></div>
       </div>
+
 
       {warnings.length ? (
         <div className="warning-stack">
@@ -382,13 +363,8 @@ export function Audit() {
         <div className="notice-banner">No Patch 24 audit workflow warnings are currently visible in your RLS scope.</div>
       )}
 
-      <div className="panel two-column">
-        <div>
-          <h4>Audit closure rule</h4>
-          <p className="muted">Closure requires accepted response, accepted/completed corrective action, accepted evidence or approved waiver where evidence is required, and auditor validation.</p>
-        </div>
-        <div className="mini-card"><span>Follow-up chain</span><strong>Finding - Response - Action Plan - Evidence - Validation - Closure Pack</strong></div>
-      </div>
+
+
 
       <div className="panel">
         <div className="panel-header"><h4><ClipboardCheck size={18} /> Audit findings register</h4></div>
@@ -430,7 +406,12 @@ export function Audit() {
         </DataState>
       </div>
 
-      <div className="panel">
+      <details className="panel" style={{ marginTop: '16px', border: 'none', background: 'transparent', boxShadow: 'none' }}>
+        <summary style={{ cursor: 'pointer', fontWeight: 600, padding: '12px 16px', background: 'var(--panel-bg)', borderRadius: '8px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
+          Show workflow queues and lifecycle details
+        </summary>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+<div className="panel">
         <div className="panel-header"><h4><Clock size={18} /> Workflow queue</h4></div>
         <DataState loading={workflowQueue.loading} error={workflowQueue.error} empty={!workflowQueue.data?.length} emptyTitle="No workflow queue items" emptyMessage="Findings requiring response, action, evidence, validation, correction, closure or escalation appear here.">
           <EntityTable<AuditFindingWorkflowQueueRow>
@@ -629,7 +610,10 @@ export function Audit() {
         )}
       </Modal>
 
-      <Modal open={formOpen} title="Create audit finding" onClose={() => setFormOpen(false)}>
+
+        </div>
+      </details>
+<Modal open={formOpen} title="Create audit finding" onClose={() => setFormOpen(false)}>
         <AuditFindingForm organizationId={organizationId} departments={departments.data || []} profiles={profiles.data || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void refreshAuditWorkflow(); }} />
       </Modal>
     </section>

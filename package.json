@@ -576,7 +576,14 @@
     "v250:final-proof": "node scripts/v250-final-proof.mjs",
     "pilot:v250-live-operating": "npm run v250:live-operating-audit && npm run v250:live-operating-report && npm run v250:final-proof",
     "patch82h:proof": "node scripts/patch82h-sidebar-nested-navigation-compact-control-pages-proof.mjs",
-    "patch82h:all": "npm run validate:build && npm run validate:security && npm run patch82h:proof"
+    "patch82h:all": "npm run validate:build && npm run validate:security && npm run patch82h:proof",
+    "patch82i:proof": "node scripts/patch82i-department-context-admin-ux-proof.mjs",
+    "patch82i:all": "npm run validate:build && npm run validate:security && npm run patch82i:proof",
+    "patch82j:proof": "node scripts/patch82j-risk-register-sizing-seed-label-proof.mjs",
+    "patch82k:proof": "node scripts/patch82k-super-admin-internal-tools-proof.mjs",
+    "patch82l:proof": "node scripts/patch82l-core-grc-product-cleanup-proof.mjs",
+    "patch82m:proof": "node scripts/patch82m-evidence-library-product-cleanup-proof.mjs",
+    "patch82n:proof": "node scripts/patch82n-production-evidence-closure-cleanup-proof.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

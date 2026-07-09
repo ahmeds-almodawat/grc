@@ -8,11 +8,7 @@
 - Patch 82H scope: sidebar nested navigation and compact control pages. It keeps the left sidebar visible and scrollable, moves subsidiary page navigation into expandable sidebar groups, expands the main content area, and compacts User Management KPIs, filters, and roster actions without changing auth, roles, RLS, backend contracts, Supabase migrations, or production readiness state.
 - Patch 82G scope: privileged admin action JWT compatibility and safe error visibility. The privileged Edge Function validates caller bearer tokens through Supabase Auth, rejects missing or invalid tokens with structured JSON errors, keeps service-role usage server-side only, preserves existing role checks, and does not change Supabase migrations, RLS, backend contracts, Patch 20 import logic, or production launch status.
 - Patch 82F scope: employee ID login alias for pilot usability. The sign-in screen accepts either a full email address or an employee ID, normalizes employee IDs to the Almodawat email domain for the existing password sign-in flow, keeps password requirements unchanged, and does not change Supabase Auth, RLS, backend contracts, or production launch status.
-=======
-- Current patch level: Patch 82G after implementation.
-- Patch 82G scope: privileged admin action JWT compatibility and safe error visibility. The privileged Edge Function validates caller bearer tokens through Supabase Auth, rejects missing or invalid tokens with structured JSON errors, keeps service-role usage server-side only, preserves existing role checks, and does not change Supabase migrations, RLS, backend contracts, Patch 20 import logic, or production launch status.
-- Patch 82F scope: employee ID login alias for pilot usability. The sign-in screen accepts either a full email address or an employee ID, normalizes employee IDs to the Almodawat email domain for the existing password sign-in flow, keeps password requirements unchanged, and does not change Supabase Auth, RLS, backend contracts, or production launch status.
->>>>>>> f374b9438bff6bd389015c923fa1156127c38517
+
 - Patch 82E scope: frontend-only record-level/actionable drilldown for Department Control Room metric counts. It makes non-zero metric cells actionable, keeps zero cells non-clickable, opens critical-risk and next-action drilldowns, cleans navigation labels, simplifies the top bar, and adds proof coverage. No Supabase migration was applied, staging rehearsal remains pending, and production caveat remains unchanged.
 - Patch 82C-1 scope: tiny proof/wording alignment fix for Patch 82C operational dashboard interactivity. It updates validation evidence so the existing interactive UI is detected after merge. No behavior, security, schema, Supabase, or production launch change was made.
 - Patch 82C-1 scope: tiny proof/wording alignment fix for Patch 82C operational dashboard interactivity. It updates validation evidence so the existing interactive UI is detected after merge. No behavior, security, schema, Supabase, or production launch change was made.
@@ -83,9 +79,7 @@ Use `npm run validate:fast` for the local development loop, `npm run validate:bu
 
 - Technical validation artifacts: `release/v700/`, `release/v64/`, `release/v66/`, `release/v672/`, `release/v673/`, and `release/v674/`.
 - Patch release evidence: `release/patch43/` through `release/patch82h/`.
-=======
-- Patch release evidence: `release/patch43/` through `release/patch82g/`.
->>>>>>> f374b9438bff6bd389015c923fa1156127c38517
+
 - Current production readiness, pilot/hypercare, hospital operations evidence, and closure follow-up are surfaced in the Production Readiness Center, Production Operator Console, and Production Evidence Closure page.
 - Current proof command index: `release/current-proof-command-index.md`.
 - Current validation runbook: `release/current-validation-runbook.md`.

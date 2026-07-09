@@ -18,7 +18,6 @@ import { DataState } from '../components/DataState';
 import { EntityTable } from '../components/EntityTable';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
-import { ScenarioFillButton } from '../components/ScenarioFillButton';
 import { StatusBadge } from '../components/StatusBadge';
 import { formatDate, humanize } from '../lib/format';
 import {
@@ -51,14 +50,7 @@ import type {
   EvidenceRow,
   SensitiveEvidenceRegisterRow,
 } from '../types/domain';
-import { GrcTraceabilityMap } from '../components/v180/GrcTraceabilityMap';
-import {
-  createScenarioLabScenario,
-  V99_SCENARIO_TAG,
-} from '../lib/scenarioLab';
-import { FrameworkCrosswalkBackbonePanel } from '../components/v210/FrameworkCrosswalkBackbonePanel';
 
-import { AuditorEvidencePackPanel } from '../components/v240/AuditorEvidencePackPanel';
 
 type EvidenceSelection = {
   evidence_file_id: string;
@@ -155,11 +147,7 @@ export function Evidence() {
   );
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [testFillOpen, setTestFillOpen] = useState(false);
-  const [testFillBusy, setTestFillBusy] = useState(false);
-  const [testFillMessage, setTestFillMessage] = useState<string | null>(null);
-  const canGovernEvidence = auth.roles.some(
+  const [message, setMessage] = useState<string | null>(null);  const canGovernEvidence = auth.roles.some(
     role => ['super_admin', 'governance_admin', 'compliance_officer', 'department_manager', 'auditor'].includes(role.role)
   );
 
@@ -234,23 +222,7 @@ export function Evidence() {
       sensitiveRegister.refresh(),
       chainOfCustody.refresh(),
     ]);
-  }
-
-  async function createSyntheticEvidence() {
-    setTestFillBusy(true);
-    setTestFillMessage(null);
-    try {
-      const result = await createScenarioLabScenario('evidence');
-      setTestFillMessage(`Synthetic evidence metadata created: ${result.id}`);
-      await refreshGovernanceData();
-    } catch (err) {
-      setTestFillMessage(err instanceof Error ? err.message : 'Failed to create synthetic evidence.');
-    } finally {
-      setTestFillBusy(false);
-    }
-  }
-
-  async function handleLegacyReview(row: EvidenceRow, status: 'accepted' | 'rejected' | 'needs_revision') {
+  }async function handleLegacyReview(row: EvidenceRow, status: 'accepted' | 'rejected' | 'needs_revision') {
     const defaultNote = status === 'accepted' ? '' : 'Needs correction or additional evidence.';
     const note = status === 'accepted' ? undefined : window.prompt('Evidence review note', defaultNote);
     if (note === null) return;
@@ -363,9 +335,9 @@ export function Evidence() {
   return (
     <section className="page-section">
       <ModuleHeader
-        eyebrow="Patch 23 Evidence governance"
-        title="Evidence Governance Center"
-        subtitle="Controlled proof for Risk, OVR, audit findings, compliance, projects, tasks, approvals, CAPA and action plans."
+        eyebrow="Evidence Library"
+        title="Evidence Library"
+        subtitle="Review, classify, accept and track evidence used for audits, risks, compliance and approvals."
         action={(
           <div className="inline-actions">
             <button
@@ -375,28 +347,19 @@ export function Evidence() {
               onClick={() => void handleGeneratePackIndex()}
             >
               <PackageCheck size={16} /> {compactActionLabel('Generate pack index', busyId === 'generate-pack')}
-            </button>
-            <ScenarioFillButton
-              label="Test-fill Evidence"
-              onClick={() => setTestFillOpen(true)}
-            />
-          </div>
+            </button>          </div>
         )}
       />
-
-      <GrcTraceabilityMap context="evidence" />
-      <FrameworkCrosswalkBackbonePanel context="evidence" />
-
       {error ? <div className="panel error-panel">{error}</div> : null}
       {message ? <div className="notice-banner">{message}</div> : null}
-      {testFillMessage ? <div className="notice-banner">{testFillMessage}</div> : null}
 
-      <div className="operations-kpi-grid">
-        <MetricCard label="Review queue" value={metrics.queue} tone={metrics.queue ? 'warning' : 'success'} />
-        <MetricCard label="Closure gates blocked" value={metrics.closureBlocked} tone={metrics.closureBlocked ? 'danger' : 'success'} />
-        <MetricCard label="Accepted pack candidates" value={metrics.acceptedCandidates} tone={metrics.acceptedCandidates ? 'success' : undefined} />
-        <MetricCard label="Sensitive register" value={metrics.sensitive} tone={metrics.sensitive ? 'warning' : undefined} />
+      <div className="module-grid">
+        <div className="module-card warning"><strong>Review queue</strong><span>{metrics.queue} queued</span></div>
+        <div className="module-card danger"><strong>Closure blocked</strong><span>{metrics.closureBlocked} blocked</span></div>
+        <div className="module-card good"><strong>Accepted pack candidates</strong><span>{metrics.acceptedCandidates} accepted</span></div>
+        <div className="module-card danger"><strong>Sensitive evidence</strong><span>{metrics.sensitive} sensitive</span></div>
       </div>
+
 
       {warnings.length ? (
         <div className="warning-stack">
@@ -412,15 +375,6 @@ export function Evidence() {
           No governed evidence warnings are currently visible in your RLS scope.
         </div>
       )}
-
-      <div className="panel two-column">
-        <div>
-          <h4>Evidence rule</h4>
-          <p className="muted">Closure, approval, acceptance, treatment and audit readiness should use accepted, current, non-expired evidence or an approved waiver.</p>
-        </div>
-        <div className="mini-card"><span>Storage bucket</span><strong>grc-evidence</strong></div>
-      </div>
-
       <div className="panel">
         <div className="panel-header">
           <h4><FileCheck2 size={18} /> Evidence review queue</h4>
@@ -430,7 +384,7 @@ export function Evidence() {
           error={reviewQueue.error}
           empty={!reviewQueue.data?.length}
           emptyTitle="No governed evidence in review"
-          emptyMessage="Files waiting for review, overdue review, revision, expiry or renewal will appear here after Patch 23 migration is applied."
+          emptyMessage="Files waiting for review, overdue review, revision, expiry or renewal will appear here after migration is applied."
         >
           <EntityTable<EvidenceReviewQueueRow>
             rows={reviewQueue.data || []}
@@ -533,59 +487,6 @@ export function Evidence() {
       </div>
 
       <div className="panel">
-        <div className="panel-header">
-          <h4><PackageCheck size={18} /> Evidence pack index</h4>
-        </div>
-        <DataState
-          loading={packIndex.loading}
-          error={packIndex.error}
-          empty={!packIndex.data?.length}
-          emptyTitle="No linked evidence pack candidates"
-          emptyMessage="Linked evidence for audit, board, regulatory and closure packs will appear here."
-        >
-          <EntityTable<EvidencePackIndexRow>
-            rows={packIndex.data || []}
-            getRowKey={row => `${row.linked_item_type}:${row.linked_item_id}:${row.evidence_file_id}`}
-            columns={[
-              { key: 'item', header: 'Linked item', render: row => `${humanize(row.linked_item_type)} - ${row.linked_item_title || row.linked_item_id.slice(0, 8)}` },
-              { key: 'evidence', header: 'Evidence', render: row => <button className="link-button" type="button" onClick={() => setSelectedEvidence(row)}>{evidenceTitle(row)}</button> },
-              { key: 'status', header: 'Review', render: row => <StatusBadge status={humanize(row.review_status)} /> },
-              { key: 'reviewer', header: 'Reviewer', render: row => row.reviewer_name || row.reviewer_id || '-' },
-              { key: 'flags', header: 'Required for', render: row => [row.required_for_closure && 'closure', row.required_for_acceptance && 'acceptance', row.required_for_approval && 'approval', row.required_for_treatment && 'treatment'].filter(Boolean).join(', ') || '-' },
-              { key: 'linked', header: 'Linked at', render: row => formatDate(row.linked_at) },
-            ]}
-          />
-        </DataState>
-      </div>
-
-      <div className="panel">
-        <div className="panel-header">
-          <h4><ShieldAlert size={18} /> Sensitive evidence register</h4>
-        </div>
-        <DataState
-          loading={sensitiveRegister.loading}
-          error={sensitiveRegister.error}
-          empty={!sensitiveRegister.data?.length}
-          emptyTitle="No sensitive evidence visible"
-          emptyMessage="Sensitive and highly sensitive evidence appears here with owner, reviewer, expiry and lock status."
-        >
-          <EntityTable<SensitiveEvidenceRegisterRow>
-            rows={sensitiveRegister.data || []}
-            getRowKey={row => row.evidence_file_id}
-            columns={[
-              { key: 'evidence', header: 'Evidence', render: row => <button className="link-button" type="button" onClick={() => setSelectedEvidence(row)}>{evidenceTitle(row)}</button> },
-              { key: 'sensitivity', header: 'Sensitivity', render: row => <StatusBadge status={humanize(row.sensitivity_level)} /> },
-              { key: 'reason', header: 'Classification reason', render: row => row.classification_reason || '-' },
-              { key: 'owner', header: 'Owner', render: row => row.owner_name || row.evidence_owner_id || '-' },
-              { key: 'reviewer', header: 'Reviewer', render: row => row.reviewer_name || row.reviewer_id || '-' },
-              { key: 'expiry', header: 'Expiry', render: row => formatDate(row.expiry_date) },
-              { key: 'lock', header: 'Lock', render: row => row.locked_at ? <StatusBadge status="Locked" /> : '-' },
-            ]}
-          />
-        </DataState>
-      </div>
-
-      <div className="panel">
         <div className="panel-header"><h4>Legacy evidence queue compatibility</h4></div>
         <DataState
           loading={legacyEvidence.loading}
@@ -652,7 +553,7 @@ export function Evidence() {
                 loading={false}
                 empty={!selectedLinks.length}
                 emptyTitle="No linked items"
-                emptyMessage="Use the Patch 23 link action from workflow modules or the API bridge to link this file."
+                emptyMessage="Use the link action from workflow modules or the API bridge to link this file."
               >
                 <EntityTable<EvidencePackIndexRow>
                   rows={selectedLinks}
@@ -716,44 +617,6 @@ export function Evidence() {
         ) : null}
       </Modal>
 
-      <Modal
-        open={testFillOpen}
-        title="Synthetic evidence test fill"
-        onClose={() => setTestFillOpen(false)}
-      >
-        <div className="form-grid">
-          <div className="notice-banner full-width">
-            This creates metadata-only synthetic evidence and a linked synthetic project.
-            It does not upload confidential content.
-          </div>
-          <label className="field full-width">
-            <span>File name</span>
-            <input readOnly value={`${V99_SCENARIO_TAG}-synthetic-evidence.txt`} />
-          </label>
-          <label className="field full-width">
-            <span>Description</span>
-            <textarea
-              readOnly
-              value={`[${V99_SCENARIO_TAG}] Synthetic evidence metadata. No confidential content.`}
-            />
-          </label>
-          <div className="form-actions full-width">
-            <button className="ghost-button" type="button" onClick={() => setTestFillOpen(false)}>
-              Cancel
-            </button>
-            <button
-              className="primary-button"
-              type="button"
-              disabled={testFillBusy}
-              onClick={() => void createSyntheticEvidence()}
-            >
-              {testFillBusy ? 'Creating...' : 'Create synthetic record'}
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      <AuditorEvidencePackPanel />
-    </section>
+          </section>
   );
 }
