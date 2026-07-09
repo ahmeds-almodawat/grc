@@ -616,8 +616,27 @@ function AuditActionForm({ state, profiles, findings, risks, complianceItems, on
   const needsReason = ['reject_response', 'reject_action', 'reject_extension', 'reject_closure', 'reopen', 'escalate'].includes(state.action);
   const needsNote = ['accept_response', 'accept_action', 'approve_extension', 'request_closure', 'validate_closure', 'issue'].includes(state.action);
 
+  const missingFields: string[] = [];
+  if (needsReason && !payload.reason) missingFields.push('Reason');
+  if (state.action === 'submit_response' && !payload.managementResponse) missingFields.push('Management Response');
+  if (state.action === 'submit_action' && !payload.correctiveActionPlan) missingFields.push('Corrective Action Plan');
+  if (state.action === 'submit_action' && !payload.correctiveActionDueDate) missingFields.push('Due Date');
+  if (state.action === 'request_extension' && !payload.requestedDueDate) missingFields.push('Requested Due Date');
+  if (state.action === 'link_risk' && !payload.relatedRiskId) missingFields.push('Related Risk ID');
+  if (state.action === 'link_compliance' && !payload.relatedComplianceId) missingFields.push('Related Compliance Item ID');
+
+  const isValid = missingFields.length === 0;
+
+  const currentFinding = findings.find(f => f.id === state.findingId);
+  const findingTitle = currentFinding ? `${currentFinding.finding_code ? currentFinding.finding_code + ' - ' : ''}${currentFinding.title}` : state.findingId;
+
   return (
     <div className="panel" style={{ padding: '24px', border: 'none', margin: 0 }}>
+       <div style={{ marginBottom: '16px' }}>
+         <strong>Action: {humanize(state.action)}</strong><br/>
+         <small>Finding: {findingTitle}</small>
+       </div>
+
        {needsReason && (
          <div className="field-group">
            <label>Reason *</label>
@@ -647,7 +666,7 @@ function AuditActionForm({ state, profiles, findings, risks, complianceItems, on
              <input type="date" value={payload.correctiveActionDueDate || ''} onChange={e => setPayload({...payload, correctiveActionDueDate: e.target.value})} />
            </div>
            <div className="field-group">
-             <label>Owner Profile ID (Optional)</label>
+             <label>Owner Profile (Optional)</label>
              <select value={payload.correctiveActionOwnerId || ''} onChange={e => setPayload({...payload, correctiveActionOwnerId: e.target.value})}>
                <option value="">-- Unassigned --</option>
                {profiles.map(p => <option key={p.id} value={p.id}>{p.full_name || p.email || p.id}</option>)}
@@ -666,7 +685,7 @@ function AuditActionForm({ state, profiles, findings, risks, complianceItems, on
        {['approve_extension', 'reject_extension'].includes(state.action) && (
          <div className="field-group">
            <label>Extension ID *</label>
-           <div className="notice-banner warning">No selectable records are available in your current scope.</div>
+           <div className="notice-banner warning">No selectable extension request is available in your current scope.</div>
          </div>
        )}
        {state.action === 'escalate' && (
@@ -683,7 +702,7 @@ function AuditActionForm({ state, profiles, findings, risks, complianceItems, on
        {state.action === 'mark_repeat' && (
          <>
            <div className="field-group">
-             <label>Original Finding ID (Optional)</label>
+             <label>Original Finding (Optional)</label>
              <select value={payload.repeatOfFindingId || ''} onChange={e => setPayload({...payload, repeatOfFindingId: e.target.value})}>
                <option value="">-- None --</option>
                {findings.filter(f => f.id !== state.findingId).map(f => <option key={f.id} value={f.id}>{f.finding_code ? f.finding_code + ' - ' : ''}{f.title}</option>)}
@@ -697,7 +716,7 @@ function AuditActionForm({ state, profiles, findings, risks, complianceItems, on
        )}
        {state.action === 'link_risk' && (
          <div className="field-group">
-           <label>Related Risk ID *</label>
+           <label>Related Risk *</label>
            <select value={payload.relatedRiskId || ''} onChange={e => setPayload({...payload, relatedRiskId: e.target.value})}>
              <option value="">-- Select a risk --</option>
              {risks.map(r => <option key={r.id} value={r.id}>{r.risk_code ? r.risk_code + ' - ' : ''}{r.title}</option>)}
@@ -706,7 +725,7 @@ function AuditActionForm({ state, profiles, findings, risks, complianceItems, on
        )}
        {state.action === 'link_compliance' && (
          <div className="field-group">
-           <label>Related Compliance Item ID *</label>
+           <label>Related Compliance Item *</label>
            <select value={payload.relatedComplianceId || ''} onChange={e => setPayload({...payload, relatedComplianceId: e.target.value})}>
              <option value="">-- Select a compliance item --</option>
              {complianceItems.map(c => <option key={c.id} value={c.id}>{c.requirement_code ? c.requirement_code + ' - ' : ''}{c.title}</option>)}
@@ -725,9 +744,12 @@ function AuditActionForm({ state, profiles, findings, risks, complianceItems, on
          </div>
        )}
        {needsReason && <div className="notice-banner danger" style={{ marginTop: '16px' }}>This is a destructive or negative action. Please provide a clear reason.</div>}
+
+       {!isValid && <div className="notice-banner warning" style={{ marginTop: '16px' }}>Please fill out all required fields. Missing: {missingFields.join(', ')}</div>}
+
        <div className="form-actions" style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
          <button className="ghost-button" onClick={onClose}>Cancel</button>
-         {['approve_extension', 'reject_extension'].includes(state.action) ? (
+         {['approve_extension', 'reject_extension'].includes(state.action) || !isValid ? (
            <button className="primary-button" disabled>Confirm Action</button>
          ) : (
            <button className="primary-button" onClick={() => onConfirm(payload)}>Confirm Action</button>

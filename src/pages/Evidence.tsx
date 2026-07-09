@@ -642,8 +642,26 @@ function EvidenceActionForm({ state, evidenceList, onClose, onConfirm }: { state
 
   const isReject = state.action === 'rejected' || state.action === 'reject' || state.action === 'needs_revision' || state.action === 'revision';
 
+  const missingFields: string[] = [];
+  if (state.scope === 'legacy' && !payload.note) missingFields.push('Review Note');
+  if (state.scope === 'evidence' && state.action === 'reject' && !payload.reason) missingFields.push('Rejection Reason');
+  if (state.scope === 'evidence' && state.action === 'revision' && !payload.reason) missingFields.push('Revision Reason');
+  if (state.scope === 'evidence' && state.action === 'supersede' && !payload.newEvidenceId) missingFields.push('Replacement Evidence');
+  if (state.scope === 'evidence' && state.action === 'lock' && !payload.note) missingFields.push('Lock Note');
+  if (state.scope === 'waiver' && state.action === 'request' && !payload.reason) missingFields.push('Waiver Reason');
+  if (state.scope === 'evidence' && state.action === 'classify' && !payload.sensitivity) missingFields.push('Sensitivity Level');
+
+  const isValid = missingFields.length === 0;
+
+  const evidenceTitle = state.row ? `${state.row.evidence_code ? state.row.evidence_code + ' - ' : ''}${state.row.evidence_title || state.row.item_title || state.row.file_name}` : 'Unknown';
+
   return (
     <div className="panel" style={{ padding: '24px', border: 'none', margin: 0 }}>
+       <div style={{ marginBottom: '16px' }}>
+         <strong>Action: {humanize(state.action)}</strong><br/>
+         <small>Evidence: {evidenceTitle}</small>
+       </div>
+
        {state.scope === 'legacy' && (
          <div className="field-group">
            <label>Review Note *</label>
@@ -664,7 +682,7 @@ function EvidenceActionForm({ state, evidenceList, onClose, onConfirm }: { state
        )}
        {state.scope === 'evidence' && state.action === 'supersede' && (
          <div className="field-group">
-           <label>Replacement Evidence File ID *</label>
+           <label>Replacement Evidence *</label>
            <select autoFocus value={payload.newEvidenceId || ''} onChange={e => setPayload({...payload, newEvidenceId: e.target.value})}>
              <option value="">-- Select replacement evidence --</option>
              {evidenceList.filter(e => e.id !== state.row.evidence_file_id).map(e => <option key={e.id} value={e.id}>{e.evidence_code ? e.evidence_code + ' - ' : ''}{e.evidence_title || e.item_title || e.file_name}</option>)}
@@ -675,6 +693,18 @@ function EvidenceActionForm({ state, evidenceList, onClose, onConfirm }: { state
          <div className="field-group">
            <label>Lock Note *</label>
            <input autoFocus value={payload.note || ''} onChange={e => setPayload({...payload, note: e.target.value})} />
+         </div>
+       )}
+       {state.scope === 'evidence' && state.action === 'classify' && (
+         <div className="field-group">
+           <label>Sensitivity Classification *</label>
+           <select autoFocus value={payload.sensitivity || ''} onChange={e => setPayload({...payload, sensitivity: e.target.value})}>
+             <option value="">-- Select sensitivity --</option>
+             <option value="public">Public</option>
+             <option value="internal">Internal</option>
+             <option value="confidential">Confidential</option>
+             <option value="restricted">Restricted</option>
+           </select>
          </div>
        )}
        {state.scope === 'waiver' && state.action === 'request' && (
@@ -696,9 +726,12 @@ function EvidenceActionForm({ state, evidenceList, onClose, onConfirm }: { state
          </>
        )}
        {isReject && <div className="notice-banner danger" style={{ marginTop: '16px' }}>This is a destructive or negative action. Please provide a clear reason.</div>}
+
+       {!isValid && <div className="notice-banner warning" style={{ marginTop: '16px' }}>Please fill out all required fields. Missing: {missingFields.join(', ')}</div>}
+
        <div className="form-actions" style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
          <button className="ghost-button" onClick={onClose}>Cancel</button>
-         {state.scope === 'waiver' && (state.action === 'approve' || state.action === 'reject') ? (
+         {(state.scope === 'waiver' && (state.action === 'approve' || state.action === 'reject')) || !isValid ? (
            <button className="primary-button" disabled>Confirm Action</button>
          ) : (
            <button className="primary-button" onClick={() => onConfirm(payload)}>Confirm Action</button>
