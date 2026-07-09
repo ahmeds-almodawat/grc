@@ -222,15 +222,29 @@ export function Evidence() {
       sensitiveRegister.refresh(),
       chainOfCustody.refresh(),
     ]);
-  }async function handleLegacyReview(row: EvidenceRow, status: 'accepted' | 'rejected' | 'needs_revision') {
+  }
+  const [actionModal, setActionModal] = useState<{ open: boolean; scope: 'legacy' | 'evidence' | 'waiver'; action: string; row: any } | null>(null);
+
+  function openActionModal(scope: 'legacy' | 'evidence' | 'waiver', action: string, row: any) {
+    if (scope === 'legacy' && action === 'accepted') {
+      return handleLegacyReview(row, action, {});
+    }
+    if (scope === 'evidence' && (action === 'submit' || action === 'accept')) {
+      return handleEvidenceAction(row, action, {});
+    }
+    setActionModal({ open: true, scope, action, row });
+  }
+
+  async function handleLegacyReview(row: any, status: 'accepted' | 'rejected' | 'needs_revision', payload: Record<string, any>) {
     const defaultNote = status === 'accepted' ? '' : 'Needs correction or additional evidence.';
-    const note = status === 'accepted' ? undefined : window.prompt('Evidence review note', defaultNote);
-    if (note === null) return;
+    const note = status === 'accepted' ? undefined : (payload.note || defaultNote);
+    if (status !== 'accepted' && !payload.note) return;
     setError(null);
     setMessage(null);
     setBusyId(row.id);
+    setActionModal(null);
     try {
-      await reviewEvidence(row.id, status, note || defaultNote || undefined);
+      await reviewEvidence(row.id, status, note || undefined);
       setMessage(`Evidence ${humanize(status)}.`);
       await refreshGovernanceData();
     } catch (err) {
@@ -240,26 +254,27 @@ export function Evidence() {
     }
   }
 
-  async function handleEvidenceAction(row: EvidenceSelection, action: 'submit' | 'accept' | 'reject' | 'revision' | 'supersede' | 'lock') {
+  async function handleEvidenceAction(row: any, action: 'submit' | 'accept' | 'reject' | 'revision' | 'supersede' | 'lock', payload: Record<string, any>) {
     const evidenceId = row.evidence_file_id;
     setError(null);
     setMessage(null);
     setBusyId(`${action}:${evidenceId}`);
+    setActionModal(null);
     try {
       if (action === 'submit') {
         await submitEvidenceForReview({ evidence_file_id: evidenceId, note: 'Submitted from Evidence Governance Center.' });
       } else if (action === 'accept') {
         await acceptEvidence({ evidence_file_id: evidenceId, note: 'Accepted from Evidence Governance Center.' });
       } else if (action === 'reject') {
-        const reason = window.prompt('Rejection reason', 'Evidence does not satisfy the requirement.');
-        if (reason === null) return;
+        const reason = payload.reason;
+        if (!reason) return;
         await rejectEvidence({ evidence_file_id: evidenceId, reason, note: reason });
       } else if (action === 'revision') {
-        const reason = window.prompt('Revision reason', 'Attach a corrected or more complete evidence version.');
-        if (reason === null) return;
+        const reason = payload.reason;
+        if (!reason) return;
         await requestEvidenceRevision({ evidence_file_id: evidenceId, reason, note: reason });
       } else if (action === 'supersede') {
-        const newEvidenceId = window.prompt('Replacement evidence file id');
+        const newEvidenceId = payload.newEvidenceId;
         if (!newEvidenceId) return;
         await supersedeEvidence({
           evidence_file_id: evidenceId,
@@ -267,8 +282,8 @@ export function Evidence() {
           note: 'Superseded from Evidence Governance Center.',
         });
       } else if (action === 'lock') {
-        const note = window.prompt('Lock note', 'Locked for audit-ready evidence pack.');
-        if (note === null) return;
+        const note = payload.note;
+        if (!note) return;
         await lockEvidence({ evidence_file_id: evidenceId, note });
       }
       setMessage(`${humanize(action)} action completed for ${evidenceTitle(row)}.`);
@@ -280,13 +295,14 @@ export function Evidence() {
     }
   }
 
-  async function handleWaiverAction(row: EvidenceClosureGateStatusRow | EvidenceGapDashboardRow, action: 'request' | 'approve' | 'reject') {
+  async function handleWaiverAction(row: any, action: 'request' | 'approve' | 'reject', payload: Record<string, any>) {
     setError(null);
     setMessage(null);
     setBusyId(`${action}:${row.requirement_id}`);
+    setActionModal(null);
     try {
       if (action === 'request') {
-        const reason = window.prompt('Waiver reason', 'Temporary waiver requested with compensating control.');
+        const reason = payload.reason;
         if (!reason) return;
         await requestEvidenceGateWaiver({
           requirement_id: row.requirement_id,
@@ -296,10 +312,10 @@ export function Evidence() {
           audit_note: reason,
         });
       } else {
-        const waiverId = window.prompt('Waiver id');
+        const waiverId = payload.waiverId;
         if (!waiverId) return;
-        const auditNote = window.prompt('Audit note', action === 'approve' ? 'Waiver approved with documented rationale.' : 'Waiver rejected; evidence remains required.');
-        if (auditNote === null) return;
+        const auditNote = payload.auditNote;
+        if (!auditNote) return;
         if (action === 'approve') {
           await approveEvidenceGateWaiver({ waiver_id: waiverId, audit_note: auditNote });
         } else {
@@ -314,8 +330,7 @@ export function Evidence() {
       setBusyId(null);
     }
   }
-
-  async function handleGeneratePackIndex() {
+async function handleGeneratePackIndex() {
     setError(null);
     setMessage(null);
     setBusyId('generate-pack');
@@ -402,11 +417,11 @@ export function Evidence() {
                 header: 'Actions',
                 render: row => canGovernEvidence ? (
                   <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Submit for review" onClick={() => void handleEvidenceAction(row, 'submit')}><Send size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Accept evidence" onClick={() => void handleEvidenceAction(row, 'accept')}><ThumbsUp size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Request revision" onClick={() => void handleEvidenceAction(row, 'revision')}><RotateCcw size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Reject evidence" onClick={() => void handleEvidenceAction(row, 'reject')}><XCircle size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled || Boolean(row.locked_at)} title="Lock evidence" onClick={() => void handleEvidenceAction(row, 'lock')}><Lock size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Submit for review" onClick={() => openActionModal('evidence', 'submit', row)}><Send size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Accept evidence" onClick={() => openActionModal('evidence', 'accept', row)}><ThumbsUp size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Request revision" onClick={() => openActionModal('evidence', 'revision', row)}><RotateCcw size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Reject evidence" onClick={() => openActionModal('evidence', 'reject', row)}><XCircle size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled || Boolean(row.locked_at)} title="Lock evidence" onClick={() => openActionModal('evidence', 'lock', row)}><Lock size={14} /></button>
                   </div>
                 ) : '-'
               },
@@ -440,7 +455,7 @@ export function Evidence() {
                 key: 'waiver',
                 header: 'Waiver',
                 render: row => canGovernEvidence ? (
-                  <button className="ghost-button compact-button" disabled={actionDisabled} onClick={() => void handleWaiverAction(row, 'request')}>
+                  <button className="ghost-button compact-button" disabled={actionDisabled} onClick={() => openActionModal('waiver', 'request', row)}>
                     <Link2 size={14} /> Request
                   </button>
                 ) : '-',
@@ -476,8 +491,8 @@ export function Evidence() {
                 header: 'Actions',
                 render: row => canGovernEvidence ? (
                   <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Approve waiver by id" onClick={() => void handleWaiverAction(row, 'approve')}><ThumbsUp size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Reject waiver by id" onClick={() => void handleWaiverAction(row, 'reject')}><XCircle size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Approve waiver by id" onClick={() => openActionModal('waiver', 'approve', row)}><ThumbsUp size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Reject waiver by id" onClick={() => openActionModal('waiver', 'reject', row)}><XCircle size={14} /></button>
                   </div>
                 ) : '-',
               },
@@ -514,9 +529,9 @@ export function Evidence() {
                 header: 'Review',
                 render: row => canGovernEvidence && (row.status === 'submitted' || row.status === 'needs_revision') ? (
                   <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => void handleLegacyReview(row, 'accepted')}>Accept</button>
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => void handleLegacyReview(row, 'needs_revision')}>Revise</button>
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => void handleLegacyReview(row, 'rejected')}>Reject</button>
+                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => openActionModal('legacy', 'accepted', row)}>Accept</button>
+                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => openActionModal('legacy', 'needs_revision', row)}>Revise</button>
+                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => openActionModal('legacy', 'rejected', row)}>Reject</button>
                   </div>
                 ) : '-'
               }
@@ -593,12 +608,12 @@ export function Evidence() {
                 <h4>Action controls</h4>
               </div>
               <div className="inline-actions">
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void handleEvidenceAction(selectedEvidence, 'submit')}><Send size={16} /> Submit</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void handleEvidenceAction(selectedEvidence, 'accept')}><ThumbsUp size={16} /> Accept</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void handleEvidenceAction(selectedEvidence, 'reject')}><XCircle size={16} /> Reject</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void handleEvidenceAction(selectedEvidence, 'revision')}><RotateCcw size={16} /> Revision</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void handleEvidenceAction(selectedEvidence, 'supersede')}><RefreshCw size={16} /> Supersede</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled || Boolean(selectedEvidence.locked_at)} onClick={() => void handleEvidenceAction(selectedEvidence, 'lock')}><Lock size={16} /> Lock</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'submit', selectedEvidence)}><Send size={16} /> Submit</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'accept', selectedEvidence)}><ThumbsUp size={16} /> Accept</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'reject', selectedEvidence)}><XCircle size={16} /> Reject</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'revision', selectedEvidence)}><RotateCcw size={16} /> Revision</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'supersede', selectedEvidence)}><RefreshCw size={16} /> Supersede</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled || Boolean(selectedEvidence.locked_at)} onClick={() => openActionModal('evidence', 'lock', selectedEvidence)}><Lock size={16} /> Lock</button>
               </div>
               {!canGovernEvidence ? <p className="muted">Your current role can view governed evidence but cannot perform state transitions.</p> : null}
             </div>
@@ -618,5 +633,70 @@ export function Evidence() {
       </Modal>
 
           </section>
+  );
+}
+
+
+function EvidenceActionForm({ state, onClose, onConfirm }: { state: any, onClose: () => void, onConfirm: (p: Record<string, any>) => void }) {
+  const [payload, setPayload] = useState<Record<string, any>>({});
+
+  const isReject = state.action === 'rejected' || state.action === 'reject' || state.action === 'needs_revision' || state.action === 'revision';
+
+  return (
+    <div className="panel" style={{ padding: '24px', border: 'none', margin: 0 }}>
+       {state.scope === 'legacy' && (
+         <div className="field-group">
+           <label>Review Note *</label>
+           <textarea autoFocus value={payload.note || ''} onChange={e => setPayload({...payload, note: e.target.value})} />
+         </div>
+       )}
+       {state.scope === 'evidence' && state.action === 'reject' && (
+         <div className="field-group">
+           <label>Rejection Reason *</label>
+           <input autoFocus value={payload.reason || ''} onChange={e => setPayload({...payload, reason: e.target.value})} />
+         </div>
+       )}
+       {state.scope === 'evidence' && state.action === 'revision' && (
+         <div className="field-group">
+           <label>Revision Reason *</label>
+           <input autoFocus value={payload.reason || ''} onChange={e => setPayload({...payload, reason: e.target.value})} />
+         </div>
+       )}
+       {state.scope === 'evidence' && state.action === 'supersede' && (
+         <div className="field-group">
+           <label>Replacement Evidence File ID *</label>
+           <input autoFocus value={payload.newEvidenceId || ''} onChange={e => setPayload({...payload, newEvidenceId: e.target.value})} />
+         </div>
+       )}
+       {state.scope === 'evidence' && state.action === 'lock' && (
+         <div className="field-group">
+           <label>Lock Note *</label>
+           <input autoFocus value={payload.note || ''} onChange={e => setPayload({...payload, note: e.target.value})} />
+         </div>
+       )}
+       {state.scope === 'waiver' && state.action === 'request' && (
+         <div className="field-group">
+           <label>Waiver Reason *</label>
+           <input autoFocus value={payload.reason || ''} onChange={e => setPayload({...payload, reason: e.target.value})} />
+         </div>
+       )}
+       {state.scope === 'waiver' && (state.action === 'approve' || state.action === 'reject') && (
+         <>
+           <div className="field-group">
+             <label>Waiver ID *</label>
+             <input autoFocus value={payload.waiverId || ''} onChange={e => setPayload({...payload, waiverId: e.target.value})} />
+           </div>
+           <div className="field-group">
+             <label>Audit Note *</label>
+             <input value={payload.auditNote || ''} onChange={e => setPayload({...payload, auditNote: e.target.value})} />
+           </div>
+         </>
+       )}
+       {isReject && <div className="notice-banner danger" style={{ marginTop: '16px' }}>This is a destructive or negative action. Please provide a clear reason.</div>}
+       <div className="form-actions" style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+         <button className="ghost-button" onClick={onClose}>Cancel</button>
+         <button className="primary-button" onClick={() => onConfirm(payload)}>Confirm Action</button>
+       </div>
+    </div>
   );
 }

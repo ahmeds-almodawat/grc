@@ -236,82 +236,71 @@ export function Audit() {
     ]);
   }
 
-  async function runFindingAction(action: string, auditFindingId: string) {
+
+  const [actionModal, setActionModal] = useState<{ open: boolean; action: string; findingId: string } | null>(null);
+
+  function openActionModal(action: string, auditFindingId: string) {
+    if (action === 'generate_pack' || action === 'request_closure' || action === 'validate_closure') {
+      setActionModal({ open: true, action, findingId: auditFindingId });
+      return;
+    }
+    setActionModal({ open: true, action, findingId: auditFindingId });
+  }
+
+  async function runFindingAction(action: string, auditFindingId: string, payload: Record<string, any>) {
     setBusyAction(`${action}:${auditFindingId}`);
     setError(null);
     setMessage(null);
+    setActionModal(null);
     try {
       if (action === 'issue') {
-        const severity = window.prompt('Severity level: low, medium, high, critical', 'medium') || 'medium';
-        await issueAuditFinding({ audit_finding_id: auditFindingId, severity_level: severity, note: 'Finding issued from Audit Findings Workflow Center.' });
+        await issueAuditFinding({ audit_finding_id: auditFindingId, severity_level: payload.severity || 'medium', note: payload.note || 'Finding issued from Audit Findings Workflow Center.' });
       } else if (action === 'submit_response') {
-        const managementResponse = window.prompt('Management response');
-        if (!managementResponse) return;
-        await submitManagementResponse({ audit_finding_id: auditFindingId, management_response: managementResponse });
+        if (!payload.managementResponse) return;
+        await submitManagementResponse({ audit_finding_id: auditFindingId, management_response: payload.managementResponse });
       } else if (action === 'accept_response') {
-        await acceptManagementResponse({ audit_finding_id: auditFindingId, note: 'Management response accepted.' });
+        await acceptManagementResponse({ audit_finding_id: auditFindingId, note: payload.note || 'Management response accepted.' });
       } else if (action === 'reject_response') {
-        const reason = window.prompt('Response rejection reason', 'Response is incomplete or not accountable.');
-        if (!reason) return;
-        await rejectManagementResponse({ audit_finding_id: auditFindingId, reason });
+        if (!payload.reason) return;
+        await rejectManagementResponse({ audit_finding_id: auditFindingId, reason: payload.reason });
       } else if (action === 'submit_action') {
-        const correctiveActionPlan = window.prompt('Corrective action plan');
-        if (!correctiveActionPlan) return;
-        const correctiveActionDueDate = window.prompt('Corrective action due date YYYY-MM-DD');
-        if (!correctiveActionDueDate) return;
-        const correctiveActionOwnerId = window.prompt('Corrective action owner profile id, optional') || undefined;
-        await submitCorrectiveActionPlan({ audit_finding_id: auditFindingId, corrective_action_plan: correctiveActionPlan, corrective_action_due_date: correctiveActionDueDate, corrective_action_owner_id: correctiveActionOwnerId });
+        if (!payload.correctiveActionPlan || !payload.correctiveActionDueDate) return;
+        await submitCorrectiveActionPlan({ audit_finding_id: auditFindingId, corrective_action_plan: payload.correctiveActionPlan, corrective_action_due_date: payload.correctiveActionDueDate, corrective_action_owner_id: payload.correctiveActionOwnerId || undefined });
       } else if (action === 'accept_action') {
-        await acceptCorrectiveActionPlan({ audit_finding_id: auditFindingId, note: 'Corrective action plan accepted.' });
+        await acceptCorrectiveActionPlan({ audit_finding_id: auditFindingId, note: payload.note || 'Corrective action plan accepted.' });
       } else if (action === 'reject_action') {
-        const reason = window.prompt('Action plan rejection reason', 'Action plan needs owner, date, or stronger remediation.');
-        if (!reason) return;
-        await rejectCorrectiveActionPlan({ audit_finding_id: auditFindingId, reason });
+        if (!payload.reason) return;
+        await rejectCorrectiveActionPlan({ audit_finding_id: auditFindingId, reason: payload.reason });
       } else if (action === 'request_extension') {
-        const requestedDueDate = window.prompt('Requested due date YYYY-MM-DD');
-        if (!requestedDueDate) return;
-        const reason = window.prompt('Extension reason', 'Additional time needed for corrective action validation.');
-        if (!reason) return;
-        await requestAuditFindingExtension({ audit_finding_id: auditFindingId, requested_due_date: requestedDueDate, reason });
-      } else if (action === 'approve_extension' || action === 'reject_extension') {
-        const extensionId = window.prompt('Extension request id');
-        if (!extensionId) return;
-        if (action === 'approve_extension') {
-          await approveAuditFindingExtension({ audit_finding_id: auditFindingId, extension_id: extensionId, note: 'Extension approved.' });
-        } else {
-          const reason = window.prompt('Extension rejection reason', 'Extension request not approved.');
-          if (!reason) return;
-          await rejectAuditFindingExtension({ audit_finding_id: auditFindingId, extension_id: extensionId, reason });
-        }
+        if (!payload.requestedDueDate || !payload.reason) return;
+        await requestAuditFindingExtension({ audit_finding_id: auditFindingId, requested_due_date: payload.requestedDueDate, reason: payload.reason });
+      } else if (action === 'approve_extension') {
+        if (!payload.extensionId) return;
+        await approveAuditFindingExtension({ audit_finding_id: auditFindingId, extension_id: payload.extensionId, note: payload.note || 'Extension approved.' });
+      } else if (action === 'reject_extension') {
+        if (!payload.extensionId || !payload.reason) return;
+        await rejectAuditFindingExtension({ audit_finding_id: auditFindingId, extension_id: payload.extensionId, reason: payload.reason });
       } else if (action === 'request_closure') {
-        await requestAuditFindingClosure({ audit_finding_id: auditFindingId, note: 'Closure requested for auditor validation.' });
+        await requestAuditFindingClosure({ audit_finding_id: auditFindingId, note: payload.note || 'Closure requested for auditor validation.' });
       } else if (action === 'validate_closure') {
-        await validateAuditFindingClosure({ audit_finding_id: auditFindingId, note: 'Closure validated.' });
+        await validateAuditFindingClosure({ audit_finding_id: auditFindingId, note: payload.note || 'Closure validated.' });
       } else if (action === 'reject_closure') {
-        const reason = window.prompt('Closure rejection reason', 'Closure evidence or remediation is not sufficient.');
-        if (!reason) return;
-        await rejectAuditFindingClosure({ audit_finding_id: auditFindingId, reason });
+        if (!payload.reason) return;
+        await rejectAuditFindingClosure({ audit_finding_id: auditFindingId, reason: payload.reason });
       } else if (action === 'reopen') {
-        const reason = window.prompt('Reopen reason', 'Finding requires further remediation.');
-        if (!reason) return;
-        await reopenAuditFindingWithReason({ audit_finding_id: auditFindingId, reason });
+        if (!payload.reason) return;
+        await reopenAuditFindingWithReason({ audit_finding_id: auditFindingId, reason: payload.reason });
       } else if (action === 'escalate') {
-        const reason = window.prompt('Escalation reason', 'High-risk, overdue, repeat, or systemic finding.');
-        if (!reason) return;
-        const escalationLevel = window.prompt('Escalation level', 'executive') || 'executive';
-        await escalateAuditFinding({ audit_finding_id: auditFindingId, reason, escalation_level: escalationLevel });
+        if (!payload.reason) return;
+        await escalateAuditFinding({ audit_finding_id: auditFindingId, reason: payload.reason, escalation_level: payload.escalationLevel || 'executive' });
       } else if (action === 'mark_repeat') {
-        const repeatOfFindingId = window.prompt('Original finding id, optional') || undefined;
-        const systemicIssueFlag = window.confirm('Mark this as systemic?');
-        await markRepeatAuditFinding({ audit_finding_id: auditFindingId, repeat_of_finding_id: repeatOfFindingId, systemic_issue_flag: systemicIssueFlag });
+        await markRepeatAuditFinding({ audit_finding_id: auditFindingId, repeat_of_finding_id: payload.repeatOfFindingId || undefined, systemic_issue_flag: Boolean(payload.systemicIssueFlag) });
       } else if (action === 'link_risk') {
-        const relatedRiskId = window.prompt('Related risk id');
-        if (!relatedRiskId) return;
-        await linkAuditFindingToRisk({ audit_finding_id: auditFindingId, related_risk_id: relatedRiskId });
+        if (!payload.relatedRiskId) return;
+        await linkAuditFindingToRisk({ audit_finding_id: auditFindingId, related_risk_id: payload.relatedRiskId });
       } else if (action === 'link_compliance') {
-        const relatedComplianceId = window.prompt('Related compliance item id');
-        if (!relatedComplianceId) return;
-        await linkAuditFindingToCompliance({ audit_finding_id: auditFindingId, related_compliance_id: relatedComplianceId });
+        if (!payload.relatedComplianceId) return;
+        await linkAuditFindingToCompliance({ audit_finding_id: auditFindingId, related_compliance_id: payload.relatedComplianceId });
       } else if (action === 'generate_pack') {
         await generateAuditClosurePackIndex({ audit_finding_id: auditFindingId });
       }
@@ -324,8 +313,7 @@ export function Audit() {
       setBusyAction(null);
     }
   }
-
-  const actionDisabled = !canManageFindings || Boolean(busyAction);
+const actionDisabled = !canManageFindings || Boolean(busyAction);
 
   return (
     <section className="page-section">
@@ -359,9 +347,7 @@ export function Audit() {
             </div>
           ))}
         </div>
-      ) : (
-        
-      )}
+      ) : null}
 
 
 
@@ -395,9 +381,9 @@ export function Audit() {
                 header: 'Actions',
                 render: row => canManageFindings ? (
                   <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Issue finding" onClick={() => void runFindingAction('issue', row.id)}><Send size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Request closure" onClick={() => void runFindingAction('request_closure', row.id)}><FileCheck2 size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Escalate" onClick={() => void runFindingAction('escalate', row.id)}><Flag size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Issue finding" onClick={() => openActionModal('issue', row.id)}><Send size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Request closure" onClick={() => openActionModal('request_closure', row.id)}><FileCheck2 size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Escalate" onClick={() => openActionModal('escalate', row.id)}><Flag size={14} /></button>
                   </div>
                 ) : '-',
               },
@@ -429,10 +415,10 @@ export function Audit() {
                 header: 'Actions',
                 render: row => canManageFindings ? (
                   <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Submit response" onClick={() => void runFindingAction('submit_response', row.audit_finding_id)}><Send size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Accept response" onClick={() => void runFindingAction('accept_response', row.audit_finding_id)}><ThumbsUp size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Reject response" onClick={() => void runFindingAction('reject_response', row.audit_finding_id)}><XCircle size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Submit action plan" onClick={() => void runFindingAction('submit_action', row.audit_finding_id)}><ClipboardCheck size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Submit response" onClick={() => openActionModal('submit_response', row.audit_finding_id)}><Send size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Accept response" onClick={() => openActionModal('accept_response', row.audit_finding_id)}><ThumbsUp size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Reject response" onClick={() => openActionModal('reject_response', row.audit_finding_id)}><XCircle size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Submit action plan" onClick={() => openActionModal('submit_action', row.audit_finding_id)}><ClipboardCheck size={14} /></button>
                   </div>
                 ) : '-',
               },
@@ -492,8 +478,8 @@ export function Audit() {
                 header: 'Actions',
                 render: row => canManageFindings ? (
                   <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Validate closure" onClick={() => void runFindingAction('validate_closure', row.audit_finding_id)}><ThumbsUp size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Reject closure" onClick={() => void runFindingAction('reject_closure', row.audit_finding_id)}><XCircle size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Validate closure" onClick={() => openActionModal('validate_closure', row.audit_finding_id)}><ThumbsUp size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Reject closure" onClick={() => openActionModal('reject_closure', row.audit_finding_id)}><XCircle size={14} /></button>
                   </div>
                 ) : '-',
               },
@@ -573,25 +559,25 @@ export function Audit() {
             <div className="panel full-width">
               <div className="panel-header"><h4>Action controls</h4></div>
               <div className="inline-actions">
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('issue', selectedFinding.id)}><Send size={16} /> Issue</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('submit_response', selectedFinding.id)}><Send size={16} /> Response</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('accept_response', selectedFinding.id)}><ThumbsUp size={16} /> Accept response</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('reject_response', selectedFinding.id)}><XCircle size={16} /> Reject response</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('submit_action', selectedFinding.id)}><ClipboardCheck size={16} /> Action plan</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('accept_action', selectedFinding.id)}><ThumbsUp size={16} /> Accept action</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('reject_action', selectedFinding.id)}><XCircle size={16} /> Reject action</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('request_extension', selectedFinding.id)}><Clock size={16} /> Extension</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('approve_extension', selectedFinding.id)}><ThumbsUp size={16} /> Approve extension</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('reject_extension', selectedFinding.id)}><XCircle size={16} /> Reject extension</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('request_closure', selectedFinding.id)}><FileCheck2 size={16} /> Request closure</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('validate_closure', selectedFinding.id)}><ThumbsUp size={16} /> Validate closure</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('reject_closure', selectedFinding.id)}><XCircle size={16} /> Reject closure</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('reopen', selectedFinding.id)}><RotateCcw size={16} /> Reopen</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('escalate', selectedFinding.id)}><Flag size={16} /> Escalate</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('mark_repeat', selectedFinding.id)}><ShieldAlert size={16} /> Mark repeat</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('link_risk', selectedFinding.id)}><Link2 size={16} /> Link risk</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('link_compliance', selectedFinding.id)}><Link2 size={16} /> Link compliance</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void runFindingAction('generate_pack', selectedFinding.id)}><PackageCheck size={16} /> Generate pack</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('issue', selectedFinding.id)}><Send size={16} /> Issue</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('submit_response', selectedFinding.id)}><Send size={16} /> Response</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('accept_response', selectedFinding.id)}><ThumbsUp size={16} /> Accept response</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('reject_response', selectedFinding.id)}><XCircle size={16} /> Reject response</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('submit_action', selectedFinding.id)}><ClipboardCheck size={16} /> Action plan</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('accept_action', selectedFinding.id)}><ThumbsUp size={16} /> Accept action</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('reject_action', selectedFinding.id)}><XCircle size={16} /> Reject action</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('request_extension', selectedFinding.id)}><Clock size={16} /> Extension</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('approve_extension', selectedFinding.id)}><ThumbsUp size={16} /> Approve extension</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('reject_extension', selectedFinding.id)}><XCircle size={16} /> Reject extension</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('request_closure', selectedFinding.id)}><FileCheck2 size={16} /> Request closure</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('validate_closure', selectedFinding.id)}><ThumbsUp size={16} /> Validate closure</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('reject_closure', selectedFinding.id)}><XCircle size={16} /> Reject closure</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('reopen', selectedFinding.id)}><RotateCcw size={16} /> Reopen</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('escalate', selectedFinding.id)}><Flag size={16} /> Escalate</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('mark_repeat', selectedFinding.id)}><ShieldAlert size={16} /> Mark repeat</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('link_risk', selectedFinding.id)}><Link2 size={16} /> Link risk</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('link_compliance', selectedFinding.id)}><Link2 size={16} /> Link compliance</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('generate_pack', selectedFinding.id)}><PackageCheck size={16} /> Generate pack</button>
               </div>
               {!canManageFindings ? <p className="muted">Your current role can view audit finding workflow data but cannot perform governed transitions.</p> : null}
             </div>
@@ -617,5 +603,116 @@ export function Audit() {
         <AuditFindingForm organizationId={organizationId} departments={departments.data || []} profiles={profiles.data || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void refreshAuditWorkflow(); }} />
       </Modal>
     </section>
+  );
+}
+
+
+function AuditActionForm({ state, onClose, onConfirm }: { state: any, onClose: () => void, onConfirm: (p: Record<string, any>) => void }) {
+  const [payload, setPayload] = useState<Record<string, any>>({});
+  const needsReason = ['reject_response', 'reject_action', 'reject_extension', 'reject_closure', 'reopen', 'escalate'].includes(state.action);
+  const needsNote = ['accept_response', 'accept_action', 'approve_extension', 'request_closure', 'validate_closure', 'issue'].includes(state.action);
+
+  return (
+    <div className="panel" style={{ padding: '24px', border: 'none', margin: 0 }}>
+       {needsReason && (
+         <div className="field-group">
+           <label>Reason *</label>
+           <input autoFocus value={payload.reason || ''} onChange={e => setPayload({...payload, reason: e.target.value})} />
+         </div>
+       )}
+       {needsNote && (
+         <div className="field-group">
+           <label>Note / Comment</label>
+           <input autoFocus value={payload.note || ''} onChange={e => setPayload({...payload, note: e.target.value})} />
+         </div>
+       )}
+       {state.action === 'submit_response' && (
+         <div className="field-group">
+           <label>Management Response *</label>
+           <textarea autoFocus value={payload.managementResponse || ''} onChange={e => setPayload({...payload, managementResponse: e.target.value})} />
+         </div>
+       )}
+       {state.action === 'submit_action' && (
+         <>
+           <div className="field-group">
+             <label>Corrective Action Plan *</label>
+             <textarea autoFocus value={payload.correctiveActionPlan || ''} onChange={e => setPayload({...payload, correctiveActionPlan: e.target.value})} />
+           </div>
+           <div className="field-group">
+             <label>Due Date (YYYY-MM-DD) *</label>
+             <input type="date" value={payload.correctiveActionDueDate || ''} onChange={e => setPayload({...payload, correctiveActionDueDate: e.target.value})} />
+           </div>
+           <div className="field-group">
+             <label>Owner Profile ID (Optional)</label>
+             <input value={payload.correctiveActionOwnerId || ''} onChange={e => setPayload({...payload, correctiveActionOwnerId: e.target.value})} />
+           </div>
+         </>
+       )}
+       {state.action === 'request_extension' && (
+         <>
+           <div className="field-group">
+             <label>Requested Due Date (YYYY-MM-DD) *</label>
+             <input type="date" value={payload.requestedDueDate || ''} onChange={e => setPayload({...payload, requestedDueDate: e.target.value})} />
+           </div>
+         </>
+       )}
+       {['approve_extension', 'reject_extension'].includes(state.action) && (
+         <div className="field-group">
+           <label>Extension ID *</label>
+           <input value={payload.extensionId || ''} onChange={e => setPayload({...payload, extensionId: e.target.value})} />
+         </div>
+       )}
+       {state.action === 'escalate' && (
+         <div className="field-group">
+           <label>Escalation Level</label>
+           <select value={payload.escalationLevel || 'executive'} onChange={e => setPayload({...payload, escalationLevel: e.target.value})}>
+             <option value="manager">Manager</option>
+             <option value="executive">Executive</option>
+             <option value="committee">Committee</option>
+             <option value="board">Board</option>
+           </select>
+         </div>
+       )}
+       {state.action === 'mark_repeat' && (
+         <>
+           <div className="field-group">
+             <label>Original Finding ID (Optional)</label>
+             <input value={payload.repeatOfFindingId || ''} onChange={e => setPayload({...payload, repeatOfFindingId: e.target.value})} />
+           </div>
+           <div className="field-group checkbox-field" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+             <input type="checkbox" id="systemic" checked={payload.systemicIssueFlag || false} onChange={e => setPayload({...payload, systemicIssueFlag: e.target.checked})} />
+             <label htmlFor="systemic">Mark as Systemic Issue</label>
+           </div>
+         </>
+       )}
+       {state.action === 'link_risk' && (
+         <div className="field-group">
+           <label>Related Risk ID *</label>
+           <input value={payload.relatedRiskId || ''} onChange={e => setPayload({...payload, relatedRiskId: e.target.value})} />
+         </div>
+       )}
+       {state.action === 'link_compliance' && (
+         <div className="field-group">
+           <label>Related Compliance Item ID *</label>
+           <input value={payload.relatedComplianceId || ''} onChange={e => setPayload({...payload, relatedComplianceId: e.target.value})} />
+         </div>
+       )}
+       {state.action === 'issue' && (
+         <div className="field-group">
+           <label>Severity Level</label>
+           <select value={payload.severity || 'medium'} onChange={e => setPayload({...payload, severity: e.target.value})}>
+             <option value="low">Low</option>
+             <option value="medium">Medium</option>
+             <option value="high">High</option>
+             <option value="critical">Critical</option>
+           </select>
+         </div>
+       )}
+       {needsReason && <div className="notice-banner danger" style={{ marginTop: '16px' }}>This is a destructive or negative action. Please provide a clear reason.</div>}
+       <div className="form-actions" style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+         <button className="ghost-button" onClick={onClose}>Cancel</button>
+         <button className="primary-button" onClick={() => onConfirm(payload)}>Confirm Action</button>
+       </div>
+    </div>
   );
 }

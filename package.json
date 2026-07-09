@@ -584,7 +584,8 @@
     "patch82l:proof": "node scripts/patch82l-core-grc-product-cleanup-proof.mjs",
     "patch82m:proof": "node scripts/patch82m-evidence-library-product-cleanup-proof.mjs",
     "patch82n:proof": "node scripts/patch82n-production-evidence-closure-cleanup-proof.mjs",
-    "patch82o:proof": "node scripts/patch82o-product-surface-cleanup-proof.mjs"
+    "patch82o:proof": "node scripts/patch82o-product-surface-cleanup-proof.mjs",
+    "patch82p:proof": "node scripts/patch82p-audit-evidence-action-modals-proof.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",
