@@ -124,3 +124,5 @@ Patch 58.2 extends restore coverage to generated proof JSON noise for Patch 56, 
 Patch 82H / 82H-1 / 82H-2 frontend-only compact navigation changes should run `npm run validate:build`, `npm run validate:security`, `npm run patch82h:proof`, and `npm run release:restore-noise`. Patch 82H must not change auth, route guards, RLS, Supabase migrations, backend contracts, privileged actions, or pilot data. Patch 82H-2 specifically verifies User Management opens directly from the main sidebar without the old in-page subsidiary hub or horizontal control-card navigation.
 
 Patch 82V security review changes should run `npm run validate:build`, `npm run validate:security`, `npm run patch82v:proof`, and `npm run release:restore-noise`. Patch 82V is an inventory pass and must not change backend/security files.
+
+Patch 82W security remediation plan should run `npm run validate:build`, `npm run validate:security`, `npm run patch82w:proof`, and `npm run release:restore-noise`. Patch 82W is a planning pass and must not change backend/security files.

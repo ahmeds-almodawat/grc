@@ -1,0 +1,65 @@
+{
+  "patches": [
+    {
+      "patchId": "82X",
+      "name": "RLS organization/role scoping review and safe migration plan",
+      "objective": "Remediate broad 'using (true)' authenticated policies by introducing organization and role constraints.",
+      "riskLevel": "High",
+      "affectedAreas": ["supabase/migrations/*.sql"],
+      "preChecks": ["Verify existing RLS coverage", "Audit all tables containing 'using (true)'"],
+      "implementationBoundaries": ["Only modify specific select policies for authenticated users", "Do not alter table schemas or relationships"],
+      "proofRequirements": ["Proof script ensuring 'using (true)' is removed for sensitive tables", "Tests verifying data isolation by organization_id"],
+      "rollbackPlan": "Revert the specific migration file containing the new RLS policies.",
+      "manualQaSteps": ["Log in as two distinct users across different organizations and verify record isolation"]
+    },
+    {
+      "patchId": "82Y",
+      "name": "Edge Function CORS and auth hardening plan",
+      "objective": "Restrict wildcard CORS headers and ensure robust token validation in the privileged-action Edge Function.",
+      "riskLevel": "Medium",
+      "affectedAreas": ["supabase/functions/privileged-action/index.ts"],
+      "preChecks": ["Review allowed origins in production", "Verify current token validation logic"],
+      "implementationBoundaries": ["Limit changes to CORS headers and auth verification lines only", "Do not alter the service-role client instantiation unless addressing explicit leaks"],
+      "proofRequirements": ["Proof script testing preflight OPTIONS requests reject unauthorized origins", "Tests verifying missing/invalid tokens are rejected"],
+      "rollbackPlan": "Deploy previous version of the Edge Function code.",
+      "manualQaSteps": ["Invoke Edge Function from localhost (allowed) vs external curl (denied)", "Invoke with expired token"]
+    },
+    {
+      "patchId": "82Z",
+      "name": "Privileged action allowlist/payload/audit hardening plan",
+      "objective": "Prevent allowlist drift and introduce audit logging for sensitive privileged actions executed via service role.",
+      "riskLevel": "Medium",
+      "affectedAreas": ["supabase/functions/privileged-action/index.ts", "src/lib/privilegedAction.ts", "supabase/migrations/*.sql"],
+      "preChecks": ["Compare frontend allowlist with Edge Function allowlist", "Identify high-risk actions missing audit logs"],
+      "implementationBoundaries": ["Only add logging calls or strict type validations", "Do not change payload contracts or action names"],
+      "proofRequirements": ["Proof script verifying allowlist parity", "Integration tests checking audit log insertion on execution"],
+      "rollbackPlan": "Revert Edge Function changes and any new audit logging SQL functions.",
+      "manualQaSteps": ["Trigger a privileged action via UI and verify audit log appears in database"]
+    },
+    {
+      "patchId": "83A",
+      "name": "Frontend/backend access parity verification",
+      "objective": "Ensure backend RLS and RPC constraints match the frontend SUPER_ADMIN_ONLY_PAGES gating.",
+      "riskLevel": "Low",
+      "affectedAreas": ["supabase/migrations/*.sql", "src/auth/authAccess.ts"],
+      "preChecks": ["List all frontend super_admin pages and their corresponding API calls", "Verify backend RLS for related tables"],
+      "implementationBoundaries": ["Only add RLS constraints reflecting super_admin requirement", "Do not change frontend routing logic"],
+      "proofRequirements": ["Proof script verifying direct API requests to super_admin tables fail for non-admins"],
+      "rollbackPlan": "Revert the RLS migration file.",
+      "manualQaSteps": ["Attempt to directly fetch internal readiness data via Supabase JS client as a normal hospital user"]
+    }
+  ],
+  "stopGoGates": [
+    "Before 82X: Verify all existing integration tests pass on staging.",
+    "After 82X: Confirm no regressions in standard hospital data access.",
+    "After 82Y: Confirm UI can still connect to Edge Functions without CORS errors.",
+    "Before 83A: Ensure complete mapping of frontend routes to backend tables."
+  ],
+  "doNotDo": [
+    "No broad RLS rewrite",
+    "No service-role exposure",
+    "No schema reset",
+    "No production-readiness claim",
+    "No weaken-auth shortcut"
+  ]
+}

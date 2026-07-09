@@ -322,3 +322,9 @@ Patch 82H-2 keeps the same proof command and adds checks that User Management no
 ```powershell
 npm run patch82v:proof
 ```
+
+## Patch 82W — Targeted Security Remediation Plan
+
+```powershell
+npm run patch82w:proof
+```

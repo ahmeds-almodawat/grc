@@ -590,7 +590,8 @@
     "patch82r:proof": "node scripts/patch82r-audit-evidence-modal-qa-proof.mjs",
     "patch82t:proof": "node scripts/patch82t-scenario-lab-test-row-filtering-proof.mjs",
     "patch82u:proof": "node scripts/patch82u-controlled-pilot-banner-wording-proof.mjs",
-    "patch82v:proof": "node scripts/patch82v-security-review-proof.mjs"
+    "patch82v:proof": "node scripts/patch82v-security-review-proof.mjs",
+    "patch82w:proof": "node scripts/patch82w-security-remediation-plan-proof.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",
