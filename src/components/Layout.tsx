@@ -561,12 +561,12 @@ const navTree: NavTreeGroup[] = [
       },
       {
         key: "productionEvidenceClosure",
-        label: "Final Runtime Security Closure",
+        label: "Production Evidence Closure",
         icon: <LockKeyhole size={16} />,
       },
       {
         key: "productionReadiness",
-        label: "Production Hardening Launch",
+        label: "Production Readiness",
         icon: <ShieldAlert size={16} />,
       },
       {

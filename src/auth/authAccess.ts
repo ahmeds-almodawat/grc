@@ -203,6 +203,7 @@ export function isExternalPilotOrganization(
 }
 
 export const SUPER_ADMIN_ONLY_PAGES: PageKey[] = [
+  "productionOperatorConsole",
   "finishFast",
   "productionFinish",
   "releaseFactory",

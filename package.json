@@ -583,7 +583,8 @@
     "patch82k:proof": "node scripts/patch82k-super-admin-internal-tools-proof.mjs",
     "patch82l:proof": "node scripts/patch82l-core-grc-product-cleanup-proof.mjs",
     "patch82m:proof": "node scripts/patch82m-evidence-library-product-cleanup-proof.mjs",
-    "patch82n:proof": "node scripts/patch82n-production-evidence-closure-cleanup-proof.mjs"
+    "patch82n:proof": "node scripts/patch82n-production-evidence-closure-cleanup-proof.mjs",
+    "patch82o:proof": "node scripts/patch82o-product-surface-cleanup-proof.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

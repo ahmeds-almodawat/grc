@@ -627,7 +627,7 @@ function RealDataControlPages() {
         "Import orchestration, activation queues, source validation, UAT readiness, and real-data handoff.",
       )}
       tabs={[
-        {
+        ...(auth.roles?.some((r) => r.role === "super_admin") ? [{
           id: "realDataImportCenter",
           label: t("hub.tab.realDataImportCenter", "System Import Center"),
           description: t(
@@ -636,8 +636,8 @@ function RealDataControlPages() {
           ),
           icon: <UploadCloud size={17} />,
           content: <RealDataImportCenter />,
-        },
-        {
+        },] : []),
+        ...(auth.roles?.some((r) => r.role === "super_admin") ? [{
           id: "realDataActivation",
           label: t("hub.tab.realDataActivation", "Real Data Activation"),
           description: t(
@@ -646,8 +646,8 @@ function RealDataControlPages() {
           ),
           icon: <UploadCloud size={17} />,
           content: <RealDataActivationCenter />,
-        },
-        {
+        },] : []),
+        ...(auth.roles?.some((r) => r.role === "super_admin") ? [{
           id: "realDataUatReadiness",
           label: t("hub.tab.realDataUatReadiness", "Real Data & UAT"),
           description: t(
@@ -656,7 +656,7 @@ function RealDataControlPages() {
           ),
           icon: <ClipboardCheck size={17} />,
           content: <RealDataUatReadinessCenter />,
-        },
+        },] : []),
       ]}
     />
   );
@@ -675,7 +675,7 @@ function ProductionGovernancePages() {
         "Go-live assurance, release governance, runtime closure, rollback, and executive signoff.",
       )}
       tabs={[
-        {
+        ...(auth.roles?.some((r) => r.role === "super_admin") ? [{
           id: "auditEvidenceGovernance",
           label: t(
             "hub.tab.auditEvidenceGovernance",
@@ -687,8 +687,8 @@ function ProductionGovernancePages() {
           ),
           icon: <FileCheck2 size={17} />,
           content: <AuditEvidenceGovernanceCenter />,
-        },
-        {
+        },] : []),
+        ...(auth.roles?.some((r) => r.role === "super_admin") ? [{
           id: "assuranceGoLive",
           label: t("hub.tab.assuranceGoLive", "Assurance Go-Live Pack"),
           description: t(
@@ -697,7 +697,7 @@ function ProductionGovernancePages() {
           ),
           icon: <PackageCheck size={17} />,
           content: <AssuranceGoLiveCenter />,
-        },
+        },] : []),
         ...(auth.roles?.some((r) => r.role === "super_admin")
           ? [
               {
@@ -732,7 +732,7 @@ function ProductionGovernancePages() {
               },
             ]
           : []),
-        {
+        ...(auth.roles?.some((r) => r.role === "super_admin") ? [{
           id: "realProductionGoNoGo",
           label: t("hub.tab.realProductionGoNoGo", "Production Go/No-Go"),
           description: t(
@@ -741,7 +741,7 @@ function ProductionGovernancePages() {
           ),
           icon: <PackageCheck size={17} />,
           content: <ProductionGoNoGoCenter />,
-        },
+        },] : []),
         ...(auth.roles?.some((r) => r.role === "super_admin")
           ? [
               {

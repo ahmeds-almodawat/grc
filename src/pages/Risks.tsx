@@ -273,7 +273,7 @@ export function Risks() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 <div className="panel">
         <div className="panel-header">
-          <div><h4>Patch 22 workflow queues</h4><p className="muted">Review, treatment, acceptance, closure and escalation items generated from governed risk state.</p></div>
+          
           <span className="status-chip warning">{queueRows.length} active</span>
         </div>
         <div className="module-grid">

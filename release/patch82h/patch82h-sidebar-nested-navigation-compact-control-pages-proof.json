@@ -1,7 +1,7 @@
 {
   "patch": "82H",
   "title": "Sidebar Nested Navigation and Compact Control Pages",
-  "generated_at": "2026-07-09T19:43:10.151Z",
+  "generated_at": "2026-07-09T19:49:29.736Z",
   "passed": 45,
   "failed": 0,
   "checks": [
@@ -43,12 +43,12 @@
     {
       "name": "forbidden auth/backend files are not modified",
       "pass": true,
-      "detail": "package.json, release/current-platform-status.md, release/current-validation-runbook.md, release/patch82h/patch82h-sidebar-nested-navigation-compact-control-pages-proof.json, scripts/patch82h-sidebar-nested-navigation-compact-control-pages-proof.mjs, src/App.tsx, src/auth/authAccess.ts, src/components/Layout.tsx, src/lib/productionEvidenceClosureApi.ts, src/pages/Audit.tsx, src/pages/Compliance.tsx, src/pages/Departments.tsx, src/pages/Evidence.tsx, src/pages/Governance.tsx, src/pages/OperationsCenter.tsx, src/pages/OvrRiskIndicators.tsx, src/pages/ProductionEvidenceClosureCenter.tsx, src/pages/Risks.tsx, src/pages/UserManagementCenter.tsx, src/styles.css"
+      "detail": "package.json, release/patch82h/patch82h-sidebar-nested-navigation-compact-control-pages-proof.json, src/App.tsx, src/auth/authAccess.ts, src/components/Layout.tsx, src/pages/AccreditationWarRoomCenter.tsx, src/pages/Audit.tsx, src/pages/Evidence.tsx, src/pages/OVR.tsx, src/pages/Risks.tsx"
     },
     {
       "name": "no auth/backend/RLS diff present",
       "pass": true,
-      "detail": "diff --git a/src/auth/authAccess.ts b/src/auth/authAccess.ts\nindex cd34b5a..e319597 100644\n--- a/src/auth/authAccess.ts\n+++ b/src/auth/authAccess.ts\n@@ -1,151 +1,170 @@\n-import type { PageKey } from '../components/Layout';\n-import type { AuthRole, AuthRoleAssignment } from './authTypes';\n+import type { PageKey } from \"../components/Layout\";\n+import type { AuthRole, AuthRoleAssignment } from \"./authTypes\";\n \n type PageGroup =\n-  | 'home'\n-  | 'personal'\n-  | 'executive'\n-  | 'work'\n-  | 'grc'\n-  "
+      "detail": "diff --git a/src/auth/authAccess.ts b/src/auth/authAccess.ts\nindex e319597..c68684e 100644\n--- a/src/auth/authAccess.ts\n+++ b/src/auth/authAccess.ts\n@@ -203,6 +203,7 @@ export function isExternalPilotOrganization(\n }\n \n export const SUPER_ADMIN_ONLY_PAGES: PageKey[] = [\n+  \"productionOperatorConsole\",\n   \"finishFast\",\n   \"productionFinish\",\n   \"releaseFactory\",\n"
     },
     {
       "name": "Layout has nested sidebar navigation tree",

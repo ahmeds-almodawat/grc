@@ -239,7 +239,7 @@ export function AccreditationWarRoomCenter() {
   const [gaps, setGaps] = useState<LiveResult<EvidenceGapRow[]>>(emptyRows('No evidence gaps loaded yet.'));
   const [gateFailures, setGateFailures] = useState<LiveResult<EvidenceGateFailureRow[]>>(emptyRows('No evidence gate failures loaded yet.'));
   const [waivers, setWaivers] = useState<LiveResult<EvidenceWaiverRow[]>>(emptyRows('No evidence waivers loaded yet.'));
-  const [surveyFindings, setSurveyFindings] = useState<LiveResult<SurveyBlockerRow[]>>(emptyRows('No mock survey findings loaded yet.'));
+  const [surveyFindings, setSurveyFindings] = useState<LiveResult<SurveyBlockerRow[]>>(emptyRows('No survey findings loaded yet.'));
   const [blockers, setBlockers] = useState<LiveResult<SurveyBlockerRow[]>>(emptyRows('No survey blockers loaded yet.'));
   const [incidents, setIncidents] = useState<LiveResult<EvidenceChainRow[]>>(emptyRows('No incident evidence chain loaded yet.'));
   const [audits, setAudits] = useState<LiveResult<EvidenceChainRow[]>>(emptyRows('No audit evidence chain loaded yet.'));
@@ -357,7 +357,7 @@ export function AccreditationWarRoomCenter() {
         <ModernCard title="Evidence Gap Register"><GapTable data={gapRows} /></ModernCard>
         <ModernCard title="Evidence Waiver Register"><WaiverTable data={waiverRows} /></ModernCard>
         <ModernCard title="Survey Blocker Summary"><BlockerTable data={blockerRows} /></ModernCard>
-        <ModernCard title="Mock Survey Finding Register"><BlockerTable data={surveyFindingRows} /></ModernCard>
+        <ModernCard title="Survey Finding Register"><BlockerTable data={surveyFindingRows} /></ModernCard>
         <ModernCard title="Queue Evidence Gate Overlay"><QueueOverlayTable data={queueOverlayRows} /></ModernCard>
         <ModernCard title="Incident / OVR Evidence Chain"><ChainTable data={incidentRows} label="Incident / OVR" /></ModernCard>
         <ModernCard title="Audit Evidence Chain"><ChainTable data={auditRows} label="Audit" /></ModernCard>

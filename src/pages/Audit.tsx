@@ -108,7 +108,7 @@ function EventTable({ rows }: { rows: AuditFindingValidationEventRow[] }) {
       loading={false}
       empty={!rows.length}
       emptyTitle="No validation events"
-      emptyMessage="Lifecycle transitions will appear here after Patch 24 actions run."
+      emptyMessage="Lifecycle transitions will appear here once actions run."
     >
       <EntityTable<AuditFindingValidationEventRow>
         rows={rows}
@@ -194,7 +194,7 @@ export function Audit() {
         id: 'evidence-missing',
         show: gateRows.some(row => row.evidence_required && row.accepted_evidence_count < row.minimum_accepted_evidence_count && row.approved_waiver_count === 0),
         title: 'Evidence missing',
-        body: 'Closure requires accepted evidence or an approved Patch 23 evidence waiver.',
+        body: 'Closure requires accepted evidence or an approved evidence waiver.',
       },
       {
         id: 'closure-blocked',
@@ -360,7 +360,7 @@ export function Audit() {
           ))}
         </div>
       ) : (
-        <div className="notice-banner">No Patch 24 audit workflow warnings are currently visible in your RLS scope.</div>
+        
       )}
 
 
@@ -477,7 +477,7 @@ export function Audit() {
 
       <div className="panel">
         <div className="panel-header"><h4><FileCheck2 size={18} /> Closure gate status</h4></div>
-        <DataState loading={closureGates.loading} error={closureGates.error} empty={!closureGates.data?.length} emptyTitle="No closure gates" emptyMessage="Closure gate status appears after Patch 24 migration is applied.">
+        <DataState loading={closureGates.loading} error={closureGates.error} empty={!closureGates.data?.length} emptyTitle="No closure gates" emptyMessage="Closure gate status will appear here.">
           <EntityTable<AuditClosureGateStatusRow>
             rows={closureGates.data || []}
             getRowKey={row => row.audit_finding_id}

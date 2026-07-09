@@ -495,7 +495,7 @@ export function Evidence() {
           emptyTitle="No legacy evidence items in your scope"
           emptyMessage={
             canGovernEvidence
-              ? 'Evidence will appear after controlled work submits files for review. Authorized administrators may use Scenario Lab for synthetic UAT metadata.'
+              ? 'Evidence will appear after controlled work submits files for review.'
               : 'No evidence records are currently assigned or visible to this read-only account.'
           }
         >
