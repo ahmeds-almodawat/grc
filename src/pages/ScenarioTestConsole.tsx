@@ -253,7 +253,7 @@ export function ScenarioTestConsole({ setPage }: { setPage: (page: PageKey) => v
 
   return (
     <section className="page-section">
-      <ControlledPilotBanner />
+      <ControlledPilotBanner context="internal" />
       <ModuleHeader
         eyebrow="v9.9 controlled pilot"
         title="Scenario Lab"

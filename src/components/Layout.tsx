@@ -44,6 +44,7 @@ import { useI18n } from "../i18n/I18nContext";
 import { useAuth } from "../auth/AuthProvider";
 import {
   canAccessPageForUser,
+  SUPER_ADMIN_ONLY_PAGES,
   isExternalPilotOrganization,
 } from "../auth/authAccess";
 import { isScenarioLabEnabled } from "../lib/scenarioLab";
@@ -932,7 +933,7 @@ export function Layout({ page, setPage, children }: LayoutProps) {
             <h2>{t("app.title")}</h2>
           </div>
           <div className="topbar-actions">
-            <ControlledPilotBanner compact />
+            {SUPER_ADMIN_ONLY_PAGES.includes(page as any) ? <ControlledPilotBanner compact context="internal" /> : <ControlledPilotBanner compact />}
             {canOpen("globalSearch") ? (
               <button
                 className="ghost-button"
