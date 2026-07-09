@@ -36,6 +36,8 @@ import {
   getDepartments,
   getOrganizations,
   getOverdueAuditFindings,
+  getRisks,
+  getComplianceItems,
   getProfiles,
   getRepeatAuditFindings,
   issueAuditFinding,
@@ -145,6 +147,8 @@ export function Audit() {
   );
   const departments = useAsyncData(getDepartments, []);
   const profiles = useAsyncData(getProfiles, []);
+  const risks = useAsyncData(getRisks, []);
+  const complianceItems = useAsyncData(getComplianceItems, []);
   const organizations = useAsyncData(getOrganizations, []);
   const organizationId = organizations.data?.[0]?.id || '';
   const canManageFindings = auth.roles.some(
@@ -607,7 +611,7 @@ const actionDisabled = !canManageFindings || Boolean(busyAction);
 }
 
 
-function AuditActionForm({ state, onClose, onConfirm }: { state: any, onClose: () => void, onConfirm: (p: Record<string, any>) => void }) {
+function AuditActionForm({ state, profiles, findings, risks, complianceItems, onClose, onConfirm }: { state: any, profiles: any[], findings: any[], risks: any[], complianceItems: any[], onClose: () => void, onConfirm: (p: Record<string, any>) => void }) {
   const [payload, setPayload] = useState<Record<string, any>>({});
   const needsReason = ['reject_response', 'reject_action', 'reject_extension', 'reject_closure', 'reopen', 'escalate'].includes(state.action);
   const needsNote = ['accept_response', 'accept_action', 'approve_extension', 'request_closure', 'validate_closure', 'issue'].includes(state.action);
@@ -644,7 +648,10 @@ function AuditActionForm({ state, onClose, onConfirm }: { state: any, onClose: (
            </div>
            <div className="field-group">
              <label>Owner Profile ID (Optional)</label>
-             <input value={payload.correctiveActionOwnerId || ''} onChange={e => setPayload({...payload, correctiveActionOwnerId: e.target.value})} />
+             <select value={payload.correctiveActionOwnerId || ''} onChange={e => setPayload({...payload, correctiveActionOwnerId: e.target.value})}>
+               <option value="">-- Unassigned --</option>
+               {profiles.map(p => <option key={p.id} value={p.id}>{p.full_name || p.email || p.id}</option>)}
+             </select>
            </div>
          </>
        )}
@@ -659,7 +666,7 @@ function AuditActionForm({ state, onClose, onConfirm }: { state: any, onClose: (
        {['approve_extension', 'reject_extension'].includes(state.action) && (
          <div className="field-group">
            <label>Extension ID *</label>
-           <input value={payload.extensionId || ''} onChange={e => setPayload({...payload, extensionId: e.target.value})} />
+           <div className="notice-banner warning">No selectable records are available in your current scope.</div>
          </div>
        )}
        {state.action === 'escalate' && (
@@ -677,7 +684,10 @@ function AuditActionForm({ state, onClose, onConfirm }: { state: any, onClose: (
          <>
            <div className="field-group">
              <label>Original Finding ID (Optional)</label>
-             <input value={payload.repeatOfFindingId || ''} onChange={e => setPayload({...payload, repeatOfFindingId: e.target.value})} />
+             <select value={payload.repeatOfFindingId || ''} onChange={e => setPayload({...payload, repeatOfFindingId: e.target.value})}>
+               <option value="">-- None --</option>
+               {findings.filter(f => f.id !== state.findingId).map(f => <option key={f.id} value={f.id}>{f.finding_code ? f.finding_code + ' - ' : ''}{f.title}</option>)}
+             </select>
            </div>
            <div className="field-group checkbox-field" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
              <input type="checkbox" id="systemic" checked={payload.systemicIssueFlag || false} onChange={e => setPayload({...payload, systemicIssueFlag: e.target.checked})} />
@@ -688,13 +698,19 @@ function AuditActionForm({ state, onClose, onConfirm }: { state: any, onClose: (
        {state.action === 'link_risk' && (
          <div className="field-group">
            <label>Related Risk ID *</label>
-           <input value={payload.relatedRiskId || ''} onChange={e => setPayload({...payload, relatedRiskId: e.target.value})} />
+           <select value={payload.relatedRiskId || ''} onChange={e => setPayload({...payload, relatedRiskId: e.target.value})}>
+             <option value="">-- Select a risk --</option>
+             {risks.map(r => <option key={r.id} value={r.id}>{r.risk_code ? r.risk_code + ' - ' : ''}{r.title}</option>)}
+           </select>
          </div>
        )}
        {state.action === 'link_compliance' && (
          <div className="field-group">
            <label>Related Compliance Item ID *</label>
-           <input value={payload.relatedComplianceId || ''} onChange={e => setPayload({...payload, relatedComplianceId: e.target.value})} />
+           <select value={payload.relatedComplianceId || ''} onChange={e => setPayload({...payload, relatedComplianceId: e.target.value})}>
+             <option value="">-- Select a compliance item --</option>
+             {complianceItems.map(c => <option key={c.id} value={c.id}>{c.requirement_code ? c.requirement_code + ' - ' : ''}{c.title}</option>)}
+           </select>
          </div>
        )}
        {state.action === 'issue' && (
@@ -711,7 +727,11 @@ function AuditActionForm({ state, onClose, onConfirm }: { state: any, onClose: (
        {needsReason && <div className="notice-banner danger" style={{ marginTop: '16px' }}>This is a destructive or negative action. Please provide a clear reason.</div>}
        <div className="form-actions" style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
          <button className="ghost-button" onClick={onClose}>Cancel</button>
-         <button className="primary-button" onClick={() => onConfirm(payload)}>Confirm Action</button>
+         {['approve_extension', 'reject_extension'].includes(state.action) ? (
+           <button className="primary-button" disabled>Confirm Action</button>
+         ) : (
+           <button className="primary-button" onClick={() => onConfirm(payload)}>Confirm Action</button>
+         )}
        </div>
     </div>
   );

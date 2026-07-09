@@ -637,7 +637,7 @@ async function handleGeneratePackIndex() {
 }
 
 
-function EvidenceActionForm({ state, onClose, onConfirm }: { state: any, onClose: () => void, onConfirm: (p: Record<string, any>) => void }) {
+function EvidenceActionForm({ state, evidenceList, onClose, onConfirm }: { state: any, evidenceList: any[], onClose: () => void, onConfirm: (p: Record<string, any>) => void }) {
   const [payload, setPayload] = useState<Record<string, any>>({});
 
   const isReject = state.action === 'rejected' || state.action === 'reject' || state.action === 'needs_revision' || state.action === 'revision';
@@ -665,7 +665,10 @@ function EvidenceActionForm({ state, onClose, onConfirm }: { state: any, onClose
        {state.scope === 'evidence' && state.action === 'supersede' && (
          <div className="field-group">
            <label>Replacement Evidence File ID *</label>
-           <input autoFocus value={payload.newEvidenceId || ''} onChange={e => setPayload({...payload, newEvidenceId: e.target.value})} />
+           <select autoFocus value={payload.newEvidenceId || ''} onChange={e => setPayload({...payload, newEvidenceId: e.target.value})}>
+             <option value="">-- Select replacement evidence --</option>
+             {evidenceList.filter(e => e.id !== state.row.evidence_file_id).map(e => <option key={e.id} value={e.id}>{e.evidence_code ? e.evidence_code + ' - ' : ''}{e.evidence_title || e.item_title || e.file_name}</option>)}
+           </select>
          </div>
        )}
        {state.scope === 'evidence' && state.action === 'lock' && (
@@ -684,7 +687,7 @@ function EvidenceActionForm({ state, onClose, onConfirm }: { state: any, onClose
          <>
            <div className="field-group">
              <label>Waiver ID *</label>
-             <input autoFocus value={payload.waiverId || ''} onChange={e => setPayload({...payload, waiverId: e.target.value})} />
+             <div className="notice-banner warning">No selectable records are available in your current scope.</div>
            </div>
            <div className="field-group">
              <label>Audit Note *</label>
@@ -695,7 +698,11 @@ function EvidenceActionForm({ state, onClose, onConfirm }: { state: any, onClose
        {isReject && <div className="notice-banner danger" style={{ marginTop: '16px' }}>This is a destructive or negative action. Please provide a clear reason.</div>}
        <div className="form-actions" style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
          <button className="ghost-button" onClick={onClose}>Cancel</button>
-         <button className="primary-button" onClick={() => onConfirm(payload)}>Confirm Action</button>
+         {state.scope === 'waiver' && (state.action === 'approve' || state.action === 'reject') ? (
+           <button className="primary-button" disabled>Confirm Action</button>
+         ) : (
+           <button className="primary-button" onClick={() => onConfirm(payload)}>Confirm Action</button>
+         )}
        </div>
     </div>
   );
