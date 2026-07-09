@@ -316,3 +316,9 @@ npm run patch82h:proof
 ```
 
 Patch 82H-2 keeps the same proof command and adds checks that User Management no longer renders the old in-page Control Pages hub, subsidiary rail, or horizontal control card navigation.
+
+## Patch 82V — Security Review
+
+```powershell
+npm run patch82v:proof
+```
