@@ -7,7 +7,6 @@ import { EntityTable } from '../components/EntityTable';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
-import { ScenarioFillButton } from '../components/ScenarioFillButton';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { formatDate, humanize } from '../lib/format';
 import { isEmptyLiveObject } from '../lib/liveData';
