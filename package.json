@@ -592,7 +592,8 @@
     "patch82u:proof": "node scripts/patch82u-controlled-pilot-banner-wording-proof.mjs",
     "patch82v:proof": "node scripts/patch82v-security-review-proof.mjs",
     "patch82w:proof": "node scripts/patch82w-security-remediation-plan-proof.mjs",
-    "patch83b:proof": "node scripts/patch83b-remove-visible-hub-rail-proof.mjs"
+    "patch83b:proof": "node scripts/patch83b-remove-visible-hub-rail-proof.mjs",
+    "patch83c:proof": "node scripts/patch83c-sidebar-category-consistency-proof.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

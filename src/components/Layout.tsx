@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import {
   Activity,
+  CalendarClock,
   ChevronDown,
   Home,
   BellRing,
@@ -173,6 +174,12 @@ const primaryNav: NavItem[] = [
     icon: <Hospital size={18} />,
   },
   {
+    key: "grcHub",
+    labelKey: "nav.grc",
+    hintKey: "nav.grc.hint",
+    icon: <ShieldAlert size={18} />,
+  },
+  {
     key: "accreditationHub",
     labelKey: "nav.accreditation",
     hintKey: "nav.accreditation.hint",
@@ -275,20 +282,28 @@ const navTree: NavTreeGroup[] = [
     page: "qualityHub",
     icon: <Hospital size={18} />,
     children: [
+      { key: "relationships", label: "Clause / Control Map", icon: <Network size={16} /> },
       { key: "ovr", label: "OVR / Incidents", icon: <Hospital size={16} /> },
       {
         key: "ovrRisk",
         label: "OVR Risk Indicators",
         icon: <Radar size={16} />,
       },
+    ],
+  },
+  {
+    id: "grc",
+    label: "GRC",
+    hint: "Risks, compliance, audits",
+    page: "grcHub",
+    icon: <ShieldAlert size={18} />,
+    children: [
       { key: "risks", label: "Risk Register", icon: <ShieldAlert size={16} /> },
       { key: "audit", label: "Audit", icon: <FileSearch size={16} /> },
-      {
-        key: "compliance",
-        label: "Compliance",
-        icon: <ClipboardCheck size={16} />,
-      },
+      { key: "compliance", label: "Compliance", icon: <ClipboardCheck size={16} /> },
       { key: "governance", label: "Governance", icon: <Landmark size={16} /> },
+      { key: "committeeAutomation", label: "Committees", icon: <Landmark size={16} /> },
+      { key: "smartReviews", label: "Review Calendar", icon: <CalendarClock size={16} /> },
     ],
   },
   {
@@ -299,24 +314,9 @@ const navTree: NavTreeGroup[] = [
     icon: <ClipboardCheck size={18} />,
     children: [
       {
-        key: "evidence",
-        label: "Evidence Library",
-        icon: <FileCheck2 size={16} />,
-      },
-      {
         key: "documents",
         label: "Document Control",
         icon: <FolderKanban size={16} />,
-      },
-      {
-        key: "relationships",
-        label: "Clause / Control Map",
-        icon: <Network size={16} />,
-      },
-      {
-        key: "evidenceVault",
-        label: "Evidence Vault",
-        icon: <FileStack size={16} />,
       },
       {
         key: "departmentScorecards",
@@ -332,6 +332,8 @@ const navTree: NavTreeGroup[] = [
     page: "evidenceHub",
     icon: <FolderKanban size={18} />,
     children: [
+      { key: "evidence", label: "Evidence Library", icon: <FileCheck2 size={16} /> },
+      { key: "evidenceVault", label: "Evidence Vault", icon: <FileStack size={16} /> },
       { key: "documents", label: "Policies", icon: <FolderKanban size={16} /> },
       {
         key: "evidenceVault",
@@ -348,6 +350,7 @@ const navTree: NavTreeGroup[] = [
         label: "Training Governance",
         icon: <GraduationCap size={16} />,
       },
+      { key: "importExport", label: "Real Data Import", icon: <UploadCloud size={16} /> },
     ],
   },
   {
@@ -404,11 +407,6 @@ const navTree: NavTreeGroup[] = [
         key: "setupCenter",
         label: "Organization Setup",
         icon: <Rocket size={16} />,
-      },
-      {
-        key: "importExport",
-        label: "Real Data Import",
-        icon: <UploadCloud size={16} />,
       },
       {
         key: "adminSafety",
