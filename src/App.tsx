@@ -155,7 +155,7 @@ function initialPageFromPath(): PageKey {
 function ExecutiveHub() {
   const { t } = useI18n();
   return (
-    <TabbedHub
+    <TabbedHub hideTabRail
       eyebrow={t("hub.executive.eyebrow")}
       title={t("hub.executive.title")}
       subtitle={t("hub.executive.subtitle")}
@@ -209,7 +209,7 @@ function ExecutiveHub() {
 function DailyOperationsHub({ setPage }: { setPage: (page: PageKey) => void }) {
   const { t } = useI18n();
   return (
-    <TabbedHub
+    <TabbedHub hideTabRail
       eyebrow={t("hub.dailyOperations.eyebrow", "Daily operations")}
       title={t("hub.dailyOperations.title", "Daily Operations")}
       subtitle={t(
@@ -348,7 +348,7 @@ function GrcHub() {
     },
   ];
   return (
-    <TabbedHub
+    <TabbedHub hideTabRail
       eyebrow={t("hub.grc.eyebrow")}
       title={t("hub.grc.title")}
       subtitle={t("hub.grc.subtitle")}
@@ -364,7 +364,7 @@ function GrcHub() {
 function QualitySafetyHub() {
   const { t } = useI18n();
   return (
-    <TabbedHub
+    <TabbedHub hideTabRail
       eyebrow={t("hub.quality.eyebrow", "Quality & safety")}
       title={t("hub.quality.title", "Quality & Safety")}
       subtitle={t(
@@ -414,7 +414,7 @@ function QualitySafetyHub() {
 function AccreditationHub() {
   const { t } = useI18n();
   return (
-    <TabbedHub
+    <TabbedHub hideTabRail
       eyebrow={t("hub.accreditation.eyebrow", "Accreditation operations")}
       title={t("hub.accreditation.title", "Accreditation & Readiness")}
       subtitle={t(
@@ -450,7 +450,7 @@ function AccreditationHub() {
 function EvidenceDocumentsHub() {
   const { t } = useI18n();
   return (
-    <TabbedHub
+    <TabbedHub hideTabRail
       eyebrow={t("hub.evidenceDocuments.eyebrow", "Evidence & files")}
       title={t("hub.evidenceDocuments.title", "Evidence & Documents")}
       subtitle={t(
@@ -525,7 +525,7 @@ function ReportsHub() {
     },
   ];
   return (
-    <TabbedHub
+    <TabbedHub hideTabRail
       eyebrow={t("hub.reports.eyebrow")}
       title={t("hub.reports.title")}
       subtitle={t("hub.reports.subtitle")}
@@ -1056,7 +1056,7 @@ function AdminMaintenanceHub({
 }) {
   const { t } = useI18n();
   return (
-    <TabbedHub
+    <TabbedHub hideTabRail
       eyebrow={t("hub.admin.eyebrow")}
       title={t("hub.admin.title", "Admin Maintenance")}
       subtitle={t("hub.admin.subtitle")}
