@@ -595,7 +595,8 @@
     "patch83b:proof": "node scripts/patch83b-remove-visible-hub-rail-proof.mjs",
     "patch83c:proof": "node scripts/patch83c-sidebar-category-consistency-proof.mjs",
     "patch83d:proof": "node scripts/patch83d-sidebar-hub-navigation-qa-proof.mjs",
-    "patch83e:proof": "node scripts/patch83e-rls-remediation-preflight-proof.mjs"
+    "patch83e:proof": "node scripts/patch83e-rls-remediation-preflight-proof.mjs",
+    "patch83f:proof": "node scripts/patch83f-rls-sql-design-draft-proof.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",
