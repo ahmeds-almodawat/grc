@@ -1,0 +1,38 @@
+-- ==============================================================
+-- PATCH 83G: RLS TEST CASE TEMPLATE
+-- WARNING: documentation-only template, do not run directly.
+-- No production database changes. No production project reference.
+-- ==============================================================
+
+-- ENVIRONMENT CHECK
+-- Require local or staging environment explicitly
+DO $$
+BEGIN
+    IF current_database() = 'production_db_name_reference_prohibited' THEN
+        RAISE EXCEPTION 'Production project reference must be rejected.';
+    END IF;
+END $$;
+
+-- 1. SWITCH TO PERSONA: Normal User
+SET ROLE authenticated;
+-- (Simulate JWT auth.uid() and role mapping using test token or local session)
+
+-- 2. POSITIVE READ ACCESS
+SELECT * FROM public.ovr_incidents WHERE department_id = 'test_dept_1';
+-- EXPECT: 1+ rows returned
+
+-- 3. NEGATIVE READ ACCESS (Cross-department denial)
+SELECT * FROM public.ovr_incidents WHERE department_id = 'test_dept_2';
+-- EXPECT: 0 rows returned
+
+-- 4. DENIED WRITE ACCESS
+INSERT INTO public.audit_logs (event_type) VALUES ('unauthorized_write');
+-- EXPECT: ERROR: new row violates row-level security policy
+
+-- 5. ROLLBACK CONFIRMATION / RESET
+RESET ROLE;
+-- Expected cleanup instructions and validation queries for state restoration.
+
+-- ==============================================================
+-- END OF TEMPLATE
+-- ==============================================================
