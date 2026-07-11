@@ -607,7 +607,8 @@
     "patch83h7:proof": "node scripts/patch83h7-remote-migration-history-proof.mjs",
     "patch83h8:proof": "node scripts/patch83h8-clean-local-baseline-proof.mjs",
     "patch83h9:proof": "node scripts/patch83h9-local-baseline-proof.mjs",
-    "patch83h10:proof": "node scripts/patch83h10-readonly-schema-extraction-proof.mjs"
+    "patch83h10:proof": "node scripts/patch83h10-readonly-schema-extraction-proof.mjs",
+    "patch83h10a:proof": "node scripts/patch83h10a-schema-extraction-proof.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",
