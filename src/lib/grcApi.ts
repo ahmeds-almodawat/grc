@@ -1605,6 +1605,31 @@ export interface BulkImportRowInput {
   validation_warnings: string[];
 }
 
+export interface ExecuteDepartmentImportInput extends Record<string, unknown> {
+  organization_id: string;
+  source_filename: string;
+  import_mode: 'create_only' | 'create_and_update';
+  rows: {
+    row_number: number;
+    raw_data: Record<string, string>;
+  }[];
+}
+
+export interface ExecuteDepartmentImportOutput {
+  batch_id: string;
+  status: 'success' | 'rejected';
+  total_rows: number;
+  created_count: number;
+  updated_count: number;
+  failed_count: number;
+  affected_department_ids?: string[];
+  error_summary?: any;
+}
+
+export async function executeDepartmentImport(input: ExecuteDepartmentImportInput) {
+  return invokePrivilegedAction<ExecuteDepartmentImportOutput>('department_import_execute', input);
+}
+
 export interface SaveBulkImportBatchInput {
   organization_id: string;
   batch_type: string;

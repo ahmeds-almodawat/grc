@@ -105,10 +105,10 @@ export function validateImportText(text: string, refData?: RefData | null): Impo
     }
 
     if (orgCode && code) {
-      // Use composite matching key: orgCode + '|' + divCode + '|' + deptCode
-      const compositeKey = `${orgCode}|${divCode || ''}|${code}`;
+      // Use composite matching key: orgCode + '|' + code
+      const compositeKey = `${orgCode}|${code}`;
       if (seenCompositeKeys.has(compositeKey)) {
-        errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []), `Duplicate department code in file: ${code} (under org ${orgCode} / div ${divCode || 'None'})`];
+        errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []), `Duplicate department code in file: ${code} (under org ${orgCode})`];
       } else {
         seenCompositeKeys.add(compositeKey);
       }
@@ -121,7 +121,7 @@ export function validateImportText(text: string, refData?: RefData | null): Impo
       if (divCode && orgCode && !refData.divs.has(`${orgCode}|${divCode}`)) {
         errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []), `Unknown division: ${divCode}`];
       }
-      if (orgCode && code && refData.depts.has(`${orgCode}|${divCode || ''}|${code}`)) {
+      if (orgCode && code && refData.depts.has(`${orgCode}|${code}`)) {
         errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []), `Department already exists in database: ${code}`];
       }
       if (managerEmail) {

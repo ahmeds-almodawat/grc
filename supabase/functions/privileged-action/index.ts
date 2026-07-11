@@ -93,6 +93,10 @@ const patch79OperationsGovernanceActions = new Set([
   'update_executive_governance_board_pack_status',
 ]);
 
+const patch83mDepartmentImportActions = new Set([
+  'department_import_execute',
+]);
+
 const allowedActions = new Set([
   'list_user_management_roster',
   'create_board_pack_snapshot',
@@ -1002,6 +1006,35 @@ Deno.serve(async (request) => {
         action,
       }, 403);
     }
+  }
+
+  if (action === 'department_import_execute') {
+    const payload = requestBody.payload ?? {};
+    const rows = payload.rows;
+    if (!Array.isArray(rows)) {
+      return jsonResponse({ ok: false, error: 'Rows array is required', action }, 400);
+    }
+    if (rows.length > 5000) {
+      return jsonResponse({ ok: false, error: 'Maximum 5,000 rows allowed per import batch', action }, 400);
+    }
+    const payloadSize = new TextEncoder().encode(JSON.stringify(payload)).length;
+    if (payloadSize > 5 * 1024 * 1024) {
+      return jsonResponse({ ok: false, error: 'Payload exceeds 5MB limit', action }, 400);
+    }
+
+    const { data, error } = await serviceClient.rpc('apply_department_import_batch', {
+      p_actor_id: userData.user.id,
+      p_organization_id: payload.organization_id,
+      p_source_filename: payload.source_filename,
+      p_import_mode: payload.import_mode,
+      p_rows: rows,
+    });
+
+    if (error) {
+      const authFailure = /unauthorized|service_role_required|active_actor_required|organization_scope_denied|division_scope_denied/i.test(error.message);
+      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
   }
 
   const { data, error } = await serviceClient.rpc('v72_execute_privileged_action', {

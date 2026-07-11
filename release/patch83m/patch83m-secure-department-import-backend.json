@@ -1,0 +1,35 @@
+{
+  "patch": "83M",
+  "title": "Secure Department Import Backend",
+  "status": "prepared",
+  "backend_source_created": true,
+  "migration_created": true,
+  "migration_applied": false,
+  "edge_function_source_updated": true,
+  "edge_function_deployed": false,
+  "cloud_runtime_tested": false,
+  "execution_available": false,
+  "frontend_execution_enabled": false,
+  "direct_browser_department_write": false,
+  "dedicated_rpc": "apply_department_import_batch",
+  "privileged_action": "department_import_execute",
+  "authorization_model": "explicit approved administrative roles via profiles join",
+  "authorized_roles": "super_admin, governance_admin",
+  "valid_import_modes": [
+    "create_only",
+    "create_and_update"
+  ],
+  "transaction_model": "atomic",
+  "rejected_batch_persistence": "rolled back with transaction, structured error returned without history",
+  "composite_identity": "organization_id, lower(trim(code))",
+  "duplicate_preflight_status": "validated",
+  "audit_behavior": "structured jsonb log in audit_logs, plus department_import_batches",
+  "raw_file_stored": false,
+  "db_push_executed": false,
+  "migration_repair_executed": false,
+  "next_patch": "83N controlled cloud deployment",
+  "blockers": [
+    "Patch 83N deployment and runtime testing"
+  ],
+  "no_production_readiness_claim": true
+}

@@ -5,7 +5,7 @@ describe('departmentImportValidation', () => {
   const mockRefData: RefData = {
     orgs: new Set(['ORG1']),
     divs: new Set(['ORG1|DIV1']),
-    depts: new Set(['ORG1|DIV1|DEPT1', 'ORG1||DEPT2']), // DEPT1 has division, DEPT2 has null division
+    depts: new Set(['ORG1|DEPT1', 'ORG1|DEPT2']), // DEPT1 and DEPT2 uniqueness relies on org+code
     managers: new Map([
       ['active@example.com', { user_status: 'active', organization_code: 'ORG1' }],
       ['inactive@example.com', { user_status: 'inactive', organization_code: 'ORG1' }],

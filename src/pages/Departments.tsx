@@ -6,7 +6,11 @@ import { EntityTable } from "../components/EntityTable";
 import { Modal } from "../components/Modal";
 import { ModuleHeader } from "../components/ModuleHeader";
 import { useAsyncData } from "../hooks/useAsyncData";
-import { createDepartment, getDepartmentExecutionSummary } from "../lib/grcApi";
+import {
+  createDepartment,
+  getDepartmentExecutionSummary,
+  executeDepartmentImport
+} from "../lib/grcApi";
 
 import { Download, UploadCloud, FileSpreadsheet, FileWarning } from "lucide-react";
 import { supabase } from "../lib/supabase";
@@ -54,6 +58,9 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
   const [importSaving, setImportSaving] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [importMode, setImportMode] = useState<'create_only' | 'create_and_update'>('create_only');
+  const isBackendDeployed = false; // Pending Patch 83N verification
   const [refData, setRefData] = useState<{ orgs: Set<string>; divs: Set<string>; depts: Set<string>; managers: Map<string, any> } | null>(null);
 
   const fetchReferenceData = async () => {
@@ -73,8 +80,7 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
         })),
         depts: new Set((depts || []).map((d: any) => {
           const orgCode = orgs?.find(o => o.id === d.organization_id)?.organization_code || '';
-          const divCode = divs?.find(div => div.id === d.division_id)?.division_code || '';
-          return `${orgCode.toUpperCase()}|${divCode.toUpperCase()}|${d.department_code?.toUpperCase()}`;
+          return `${orgCode.toUpperCase()}|${d.department_code?.toUpperCase()}`;
         })),
         managers: new Map((profiles || []).map((p: any) => {
           const orgCode = orgs?.find(o => o.id === p.organization_id)?.organization_code || '';
@@ -91,23 +97,55 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
     setImportValidation(result);
   };
 
-  const finishValidation = async () => {
+  const continueToConfirmation = () => {
     if (!importValidation || importValidation.invalidRows > 0 || importValidation.errorsByRow[0]) return;
+    setShowConfirmation(true);
+    setImportSuccess(null);
+    setImportError(null);
+  };
+
+  const handleExecuteImport = async () => {
+    if (!isBackendDeployed) {
+      setImportError("Department execution is unavailable until the controlled department import backend is deployed (Patch 83N).");
+      return;
+    }
+
+    if (!importValidation || importValidation.invalidRows > 0 || importValidation.errorsByRow[0]) return;
+
+    const orgId = auth?.profile?.organizationId;
+    if (!orgId) {
+      setImportError("Organization ID not found");
+      return;
+    }
+
     setImportSaving(true);
     setImportError(null);
     try {
-      // Intentionally simulating network delay for validation completion.
-      // No server-side mutation occurs here. The staging batch is NOT saved.
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setImportSuccess("Department file validation completed. No departments were created or updated. Department execution is unavailable until the controlled department import backend is deployed.");
-      setTimeout(() => {
-        setImportOpen(false);
-        setImportText("");
-        setImportValidation(null);
-        setImportSuccess(null);
-      }, 3000);
+      const response = await executeDepartmentImport({
+        organization_id: orgId,
+        source_filename: 'departments_import.csv',
+        import_mode: importMode,
+        rows: importValidation.rows.map((r: any) => ({
+          row_number: r.row_number,
+          raw_data: r.raw_data
+        }))
+      });
+
+      if (response.status === 'success') {
+        setImportSuccess(`Department import executed successfully. Created: ${response.created_count}, Updated: ${response.updated_count}.`);
+        setTimeout(() => {
+          setImportOpen(false);
+          setImportText("");
+          setImportValidation(null);
+          setImportSuccess(null);
+          setShowConfirmation(false);
+          departments.refresh();
+        }, 3000);
+      } else {
+        setImportError(`Department import rejected. Failed rows: ${response.failed_count}`);
+      }
     } catch (err) {
-      setImportError(err instanceof Error ? err.message : 'Failed to stage import batch');
+      setImportError(err instanceof Error ? err.message : 'Failed to execute import batch');
     } finally {
       setImportSaving(false);
     }
@@ -850,19 +888,54 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
                 setImportOpen(false);
                 setImportText("");
                 setImportValidation(null);
+                setShowConfirmation(false);
               }}
             >
               Cancel
             </button>
-            <button
-              className="primary-button"
-              type="button"
-              disabled={importSaving || !importValidation || importValidation.invalidRows > 0 || !!importValidation.errorsByRow[0] || importValidation.validRows === 0}
-              onClick={finishValidation}
-            >
-              <FileSpreadsheet size={16} /> {importSaving ? "Validating..." : "Complete Validation"}
-            </button>
+            {!showConfirmation ? (
+              <button
+                className="primary-button"
+                type="button"
+                disabled={importSaving || !importValidation || importValidation.invalidRows > 0 || !!importValidation.errorsByRow[0] || importValidation.validRows === 0}
+                onClick={continueToConfirmation}
+              >
+                Continue to Confirmation
+              </button>
+            ) : (
+              <button
+                className="primary-button"
+                type="button"
+                disabled={importSaving || !isBackendDeployed}
+                onClick={handleExecuteImport}
+              >
+                <FileSpreadsheet size={16} /> {importSaving ? "Executing..." : "Execute " + "Import"}
+              </button>
+            )}
           </div>
+
+          {showConfirmation && !isBackendDeployed && (
+            <div className="notice-banner warning" style={{ marginTop: '16px' }}>
+              <FileWarning size={16} /> Department execution is unavailable until the controlled department import backend is deployed (Patch 83N).
+            </div>
+          )}
+
+          {showConfirmation && isBackendDeployed && (
+            <div className="notice-banner info" style={{ marginTop: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                <strong>Confirm Execution</strong>
+                <p>You are about to execute the import batch containing {importValidation?.validRows} valid rows.</p>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="radio" name="importMode" checked={importMode === 'create_only'} onChange={() => setImportMode('create_only')} />
+                  Create Only (Fail if departments already exist)
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="radio" name="importMode" checked={importMode === 'create_and_update'} onChange={() => setImportMode('create_and_update')} />
+                  Create & Update (Update matching departments)
+                </label>
+              </div>
+            </div>
+          )}
         </div>
       </Modal>
 

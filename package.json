@@ -612,7 +612,8 @@
     "patch83i:proof": "node scripts/patch83i-live-cloud-rls-compatibility-proof.mjs",
     "patch83j:proof": "node scripts/patch83j-cloud-migration-166-proof.mjs",
     "patch83k:proof": "node scripts/patch83k-cloud-persona-runtime-proof.mjs",
-    "patch83l:proof": "node scripts/patch83l-department-import-backup-center-proof.mjs"
+    "patch83l:proof": "node scripts/patch83l-department-import-backup-center-proof.mjs",
+    "patch83m:proof": "node scripts/patch83m-secure-department-import-backend-proof.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",
