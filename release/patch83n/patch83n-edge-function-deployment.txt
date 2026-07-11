@@ -1,0 +1,6 @@
+WARNING: Docker is not running
+Uploading asset (privileged-action): supabase/functions/privileged-action/index.ts
+Deployed Functions on project zbrjjecpsrzposhuarcn: privileged-action
+You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/zbrjjecpsrzposhuarcn/functions
+A new version of Supabase CLI is available: v2.109.0 (currently installed v2.107.0)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli

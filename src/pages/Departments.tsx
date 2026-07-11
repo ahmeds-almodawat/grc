@@ -60,7 +60,7 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [importMode, setImportMode] = useState<'create_only' | 'create_and_update'>('create_only');
-  const isBackendDeployed = false; // Pending Patch 83N verification
+  const isBackendDeployed = import.meta.env.VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED === "true"; // Pending Patch 83N verification
   const [refData, setRefData] = useState<{ orgs: Set<string>; divs: Set<string>; depts: Set<string>; managers: Map<string, any> } | null>(null);
 
   const fetchReferenceData = async () => {
