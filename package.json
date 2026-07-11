@@ -598,7 +598,8 @@
     "patch83e:proof": "node scripts/patch83e-rls-remediation-preflight-proof.mjs",
     "patch83f:proof": "node scripts/patch83f-rls-sql-design-draft-proof.mjs",
     "patch83g:proof": "node scripts/patch83g-rls-staging-test-harness-proof.mjs",
-    "patch83h:proof": "node scripts/patch83h-first-narrow-rls-remediation-proof.mjs"
+    "patch83h:proof": "node scripts/patch83h-first-narrow-rls-remediation-proof.mjs",
+    "patch83h1:proof": "node scripts/patch83h1-rls-runtime-validation-proof.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",
