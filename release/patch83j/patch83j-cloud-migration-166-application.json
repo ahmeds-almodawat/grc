@@ -1,0 +1,18 @@
+{
+  "patch": "83J",
+  "status": "SUCCESS",
+  "application_method": "supabase db push",
+  "target_migration": "166_patch83h_first_narrow_rls_remediation.sql",
+  "unrelated_migrations_applied": false,
+  "migration_repair_executed": false,
+  "db_reset_executed": false,
+  "production_data_changed": false,
+  "pre_policy_state": "document_center_items_read broad SELECT USING (true)",
+  "post_policy_state": "document_center_items_read_scoped exactly matching design",
+  "write_policy_unchanged": true,
+  "rls_state": "Enabled",
+  "migration_history_state": "166 recorded as remotely applied",
+  "errors": [],
+  "rollback_readiness": "Ready via DROP POLICY document_center_items_read_scoped and recreate broad policy",
+  "next_steps": ["Patch 83K persona tests required next"]
+}
