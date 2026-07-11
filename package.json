@@ -602,7 +602,8 @@
     "patch83h1:proof": "node scripts/patch83h1-rls-runtime-validation-proof.mjs",
     "patch83h2:proof": "node scripts/patch83h2-rls-runtime-validation-proof.mjs",
     "patch83h3:proof": "node scripts/patch83h3-local-rls-runtime-proof.mjs",
-    "patch83h4:proof": "node scripts/patch83h4-migration-022-blocker-proof.mjs"
+    "patch83h4:proof": "node scripts/patch83h4-migration-022-blocker-proof.mjs",
+    "patch83h6:proof": "node scripts/patch83h6-safe-migration-chain-repair-proof.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

@@ -1,0 +1,40 @@
+{
+  "patch": "83H.6",
+  "status": "design_complete",
+  "historical_timeline": {
+    "f2271a3": "Original 016 authored, creating restore_dry_run_jobs. Migration 022 authored depending on it.",
+    "614d833": "Original 016 pure-renamed to 055.",
+    "current_issue": "022 runs before 055 locally, missing title column."
+  },
+  "original_016": "Contains CREATE TABLE IF NOT EXISTS restore_dry_run_jobs with title column.",
+  "current_055": "100% byte-for-byte identical to original 016.",
+  "structural_comparison": "Identical sections, no later modifications. Object list identical.",
+  "objects_created": ["grc_training_checklist", "rollout_waves", "rollout_wave_departments", "restore_dry_run_jobs", "v_setup_readiness_checklist", "trg_grc_training_checklist_updated_at", "trg_rollout_waves_updated_at"],
+  "idempotency_analysis": "Fully idempotent using IF NOT EXISTS, OR REPLACE, and ON CONFLICT DO NOTHING.",
+  "cloud_history_scenarios": {
+    "1": "Cloud has 016 and 055: Restoring 016 safe.",
+    "2": "Cloud has 016 but not 055: Restoring 016 safe, 055 skips safely.",
+    "3": "Cloud has 055 but not 016: Restoring 016 triggers out-of-order execution, safe but creates CLI warning.",
+    "4": "Fresh local: Restoring 016 fixes reset entirely.",
+    "5": "Partial developer DB: Must run reset."
+  },
+  "migration_history_risks": "Out-of-order push warnings if 016 is unapplied remotely. Modifying 022 risks checksum failure.",
+  "remediation_options": [
+    "Option A: Restore original 016.",
+    "Option B: Modify historical 022.",
+    "Option C: New local baseline snapshot.",
+    "Option D: High-numbered corrective migration.",
+    "Option E: Pre-022 compat migration (021_5).",
+    "Option F: Separate local branch."
+  ],
+  "option_scores": "Option A recommended. Option B rejected due to checksum risk.",
+  "recommended_option": "Option A: Restore original 016 from f2271a3, contingent on remote history verification.",
+  "required_preimplementation_evidence": "Read-only cloud migration history proving 016 applied status.",
+  "implementation_sequence": ["Verify cloud history", "git checkout f2271a3 016_...", "supabase db reset locally", "Test CI push"],
+  "stop_go_gates": "Stop if remote strictly rejects out-of-order and 016 unapplied.",
+  "rollback_strategy": "Delete 016 from repo and commit.",
+  "patch83h_runtime_impact": "BLOCKED until repair applied.",
+  "patch83i_gate": "BLOCKED",
+  "files_changed": [],
+  "limitations": "No repair applied yet."
+}
