@@ -146,6 +146,7 @@ export const pageGroups: Record<PageKey, PageGroup> = {
   evidenceVault: "quality",
   departmentScorecards: "reports",
   backupScheduler: "reports",
+  scaleBackupRestoreCenter: "admin",
   scenarioPlanning: "executive",
   mobileCommand: "executive",
   automationIntelligence: "grc",

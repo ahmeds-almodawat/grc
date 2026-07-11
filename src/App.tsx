@@ -136,6 +136,7 @@ import { LoadSeedCenter } from "./pages/LoadSeedCenter";
 import { ProductionBackupStrategyCenter } from "./pages/ProductionBackupStrategyCenter";
 import { MigrationRunbookCenter } from "./pages/MigrationRunbookCenter";
 import BackupHealthCheck from "./pages/BackupHealthCheck";
+import ScaleBackupRestoreCenter from "./pages/ScaleBackupRestoreCenter";
 import CustomReports from "./pages/CustomReports";
 import { ScenarioTestConsole } from "./pages/ScenarioTestConsole";
 import { UatIssueCapture } from "./pages/UatIssueCapture";
@@ -609,6 +610,16 @@ function AdminSystemControls() {
           description: t("hub.tab.guide.desc"),
           icon: <BookCopy size={17} />,
           content: <UserGuide />,
+        },
+        {
+          id: "scaleBackupRestore",
+          label: t("hub.tab.scaleBackupRestore", "Backup & Restore Center"),
+          description: t(
+            "hub.tab.scaleBackupRestore.desc",
+            "Monitor health, scale, schedule, and test backup and restore processes.",
+          ),
+          icon: <DatabaseBackup size={17} />,
+          content: <ScaleBackupRestoreCenter />,
         },
       ]}
     />
@@ -1304,6 +1315,8 @@ export default function App() {
         return <ProductionReadinessCenter />;
       case "admin":
         return <UserManagementCenter />;
+      case "scaleBackupRestoreCenter":
+        return <ScaleBackupRestoreCenter />;
       default:
         return <ExecutiveHub />;
     }

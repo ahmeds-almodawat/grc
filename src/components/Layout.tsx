@@ -123,7 +123,8 @@ export type PageKey =
   | "trainingGovernance"
   | "executiveTruth"
   | "productionReadiness"
-  | "admin";
+  | "admin"
+  | "scaleBackupRestoreCenter";
 
 interface LayoutProps {
   page: PageKey;

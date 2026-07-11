@@ -7,11 +7,30 @@ import { Modal } from "../components/Modal";
 import { ModuleHeader } from "../components/ModuleHeader";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { createDepartment, getDepartmentExecutionSummary } from "../lib/grcApi";
+
+import { Download, UploadCloud, FileSpreadsheet, FileWarning } from "lucide-react";
+import { supabase } from "../lib/supabase";
+import { validateImportText, parseDelimitedText } from "../utils/departmentImportValidation";
 import type { DepartmentExecutionSummary } from "../types/domain";
 
 type DepartmentFilter =
   "all" | "active" | "overdueProjects" | "overdueTasks" | "criticalRisks";
 type DrilldownFilter = DepartmentFilter | "compliance" | "audit" | "nextAction";
+
+
+type ParsedRow = Record<string, string>;
+
+function downloadFile(fileName: string, content: string, mimeType = 'text/csv;charset=utf-8;') {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 export function Departments({ setPage }: { setPage?: (page: string) => void }) {
   const auth = useAuth();
@@ -22,6 +41,92 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importValidation, setImportValidation] = useState<{
+    headers: string[];
+    rows: ParsedRow[];
+    errorsByRow: Record<number, string[]>;
+    validRows: number;
+    invalidRows: number;
+  } | null>(null);
+  const [importSaving, setImportSaving] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSuccess, setImportSuccess] = useState<string | null>(null);
+  const [refData, setRefData] = useState<{ orgs: Set<string>; divs: Set<string>; depts: Set<string>; managers: Map<string, any> } | null>(null);
+
+  const fetchReferenceData = async () => {
+    if (!supabase) return;
+    try {
+      const [{ data: orgs }, { data: divs }, { data: depts }, { data: profiles }] = await Promise.all([
+        supabase.from('organizations').select('organization_code, id'),
+        supabase.from('divisions').select('division_code, organization_id, id'),
+        supabase.from('departments').select('department_code, division_id, organization_id'),
+        supabase.from('profiles').select('email, id, user_status, organization_id')
+      ]);
+      setRefData({
+        orgs: new Set((orgs || []).map((o: any) => o.organization_code?.toUpperCase())),
+        divs: new Set((divs || []).map((d: any) => {
+          const orgCode = orgs?.find(o => o.id === d.organization_id)?.organization_code || '';
+          return `${orgCode.toUpperCase()}|${d.division_code?.toUpperCase()}`;
+        })),
+        depts: new Set((depts || []).map((d: any) => {
+          const orgCode = orgs?.find(o => o.id === d.organization_id)?.organization_code || '';
+          const divCode = divs?.find(div => div.id === d.division_id)?.division_code || '';
+          return `${orgCode.toUpperCase()}|${divCode.toUpperCase()}|${d.department_code?.toUpperCase()}`;
+        })),
+        managers: new Map((profiles || []).map((p: any) => {
+          const orgCode = orgs?.find(o => o.id === p.organization_id)?.organization_code || '';
+          return [p.email?.toLowerCase(), { ...p, organization_code: orgCode.toUpperCase() }];
+        }))
+      });
+    } catch (e) {
+      console.error("Failed to fetch reference data", e);
+    }
+  };
+
+  const handleValidation = (text: string) => {
+    const result = validateImportText(text, refData);
+    setImportValidation(result);
+  };
+
+  const finishValidation = async () => {
+    if (!importValidation || importValidation.invalidRows > 0 || importValidation.errorsByRow[0]) return;
+    setImportSaving(true);
+    setImportError(null);
+    try {
+      // Intentionally simulating network delay for validation completion.
+      // No server-side mutation occurs here. The staging batch is NOT saved.
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setImportSuccess("Department file validation completed. No departments were created or updated. Department execution is unavailable until the controlled department import backend is deployed.");
+      setTimeout(() => {
+        setImportOpen(false);
+        setImportText("");
+        setImportValidation(null);
+        setImportSuccess(null);
+      }, 3000);
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : 'Failed to stage import batch');
+    } finally {
+      setImportSaving(false);
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    const headers = ['organization_code', 'division_code', 'department_code', 'department_name_en', 'department_name_ar', 'department_type', 'manager_email', 'status'];
+    const sample = ['ALMODAWAT', 'MED', 'NUR', 'Nursing', 'التمريض', 'clinical', 'nursing.manager@almodawat.sa', 'active'];
+    const instructions = [
+      '# Department Import Template',
+      '# Accepted columns: ' + headers.join(', '),
+      '# Required columns: organization_code, department_code, department_name_en',
+      '# Status: active | inactive',
+      '# Department Types: clinical | administrative | support',
+      ''
+    ];
+    downloadFile('departments_template.csv', [...instructions, headers.join(','), sample.join(',')].join('\n'));
+  };
+
   const [activeFilter, setActiveFilter] = useState<DepartmentFilter>("all");
   const [departmentSearch, setDepartmentSearch] = useState("");
   const [selectedDepartment, setSelectedDepartment] =
@@ -153,15 +258,30 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
         subtitle="Use this page to see which departments are delayed, exposed to critical risk, or need management follow-up."
         action={
           canManageDepartments ? (
-            <button
-              className="primary-button"
-              onClick={() => {
-                setActionError(null);
-                setFormOpen(true);
-              }}
-            >
-              <Plus size={16} /> Create department
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                className="ghost-button"
+                onClick={() => {
+                  setImportError(null);
+                  setImportSuccess(null);
+                  setImportText("");
+                  setImportValidation(null);
+                  setImportOpen(true);
+                  fetchReferenceData();
+                }}
+              >
+                <UploadCloud size={16} /> Prepare Import Batch
+              </button>
+              <button
+                className="primary-button"
+                onClick={() => {
+                  setActionError(null);
+                  setFormOpen(true);
+                }}
+              >
+                <Plus size={16} /> Create department
+              </button>
+            </div>
           ) : null
         }
       />
@@ -661,6 +781,91 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
           </div>
         </div>
       </Modal>
+
+      <Modal
+        open={importOpen}
+        title="Prepare Department Import"
+        onClose={() => {
+          if (!importSaving) {
+            setImportOpen(false);
+            setImportText("");
+            setImportValidation(null);
+          }
+        }}
+      >
+        <div className="form-grid" style={{ minWidth: '600px' }}>
+          {importError && <div className="form-error full-width">{importError}</div>}
+          {importSuccess && <div className="notice-banner success full-width">{importSuccess}</div>}
+
+          <div className="full-width" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <p className="eyebrow">Paste CSV or Excel data</p>
+            <button type="button" className="ghost-button small" onClick={handleDownloadTemplate}>
+              <Download size={14} /> Download template
+            </button>
+          </div>
+
+          <label className="field full-width">
+            <textarea
+              style={{ minHeight: '200px', fontFamily: 'monospace', whiteSpace: 'pre' }}
+              placeholder="division_code,department_code,department_name_en..."
+              value={importText}
+              onChange={(e) => {
+                setImportText(e.target.value);
+                handleValidation(e.target.value);
+              }}
+            />
+          </label>
+
+          {importValidation && (
+            <div className="full-width">
+              <div className="stats-grid" style={{ marginBottom: '16px' }}>
+                <div className="stat-card">
+                  <div className="stat-value">{importValidation.rows.length}</div>
+                  <div className="stat-label">Total rows</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">{importValidation.validRows}</div>
+                  <div className="stat-label">Valid rows</div>
+                </div>
+                <div className={`stat-card ${importValidation.invalidRows > 0 || importValidation.errorsByRow[0] ? 'danger' : ''}`}>
+                  <div className="stat-value">{importValidation.invalidRows + (importValidation.errorsByRow[0] ? 1 : 0)}</div>
+                  <div className="stat-label">Invalid rows</div>
+                </div>
+              </div>
+
+              {importValidation.errorsByRow[0] && (
+                <div className="notice-banner warning">
+                  <FileWarning size={16} /> {importValidation.errorsByRow[0].join(', ')}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="form-actions full-width" style={{ marginTop: '24px' }}>
+            <button
+              className="ghost-button"
+              type="button"
+              disabled={importSaving}
+              onClick={() => {
+                setImportOpen(false);
+                setImportText("");
+                setImportValidation(null);
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              className="primary-button"
+              type="button"
+              disabled={importSaving || !importValidation || importValidation.invalidRows > 0 || !!importValidation.errorsByRow[0] || importValidation.validRows === 0}
+              onClick={finishValidation}
+            >
+              <FileSpreadsheet size={16} /> {importSaving ? "Validating..." : "Complete Validation"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
     </section>
   );
 }

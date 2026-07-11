@@ -1,0 +1,24 @@
+# Patch 83L: Department Import & Backup Center Proof
+- Backup Center location: `src/pages/ScaleBackupRestoreCenter.tsx`
+- Navigation path: Admin Hub -> System Control Pages -> Backup & Restore Center
+- Route key: `scaleBackupRestoreCenter`
+- Exact permission required: `admin` PageGroup
+- Authorized roles: `super_admin`, `governance_admin`
+- Department Import location: `src/pages/Departments.tsx`
+- Supported file types: `csv`
+- No XLSX support: true
+- Import modes: Staging / Prepare Import Batch Only
+- Maximum rows: 5000
+- Maximum file size: 5MB
+- Composite matching key: `organization_code + division_code + department_code`
+- Backend execution: `saveBulkImportBatch` (Staging only. Execution is blocked.)
+- Transaction behavior: Loop-based (partial) if executed.
+- execution_available: false
+- backend_processor_available: false
+- staging_batch_created: false
+- departments_modified: false
+- audit_event_generated: false
+- Migrations applied: false
+- db_push_executed: false
+- migration_repair_executed: false
+- Production-readiness claim: None.
