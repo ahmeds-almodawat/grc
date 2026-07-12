@@ -1,0 +1,154 @@
+{
+  "patch": "83Q.1",
+  "checked_at": "2026-07-12T20:26:31.879Z",
+  "strict_passed": true,
+  "check_count": 36,
+  "failed_count": 0,
+  "failed": [],
+  "checks": [
+    {
+      "name": "all four and only four Patch 83Q.1 action mappings exist",
+      "passed": true
+    },
+    {
+      "name": "Patch 83Q.1 action set is included in the fixed server allowlist",
+      "passed": true
+    },
+    {
+      "name": "fixed RPC mapping exists: create_pilot_go_no_go_review",
+      "passed": true
+    },
+    {
+      "name": "fixed RPC mapping exists: update_pilot_go_no_go_review_status",
+      "passed": true
+    },
+    {
+      "name": "fixed RPC mapping exists: record_pilot_go_no_go_event",
+      "passed": true
+    },
+    {
+      "name": "fixed RPC mapping exists: record_executive_production_signoff",
+      "passed": true
+    },
+    {
+      "name": "caller cannot select an arbitrary RPC name",
+      "passed": true
+    },
+    {
+      "name": "JWT is required before dispatch",
+      "passed": true
+    },
+    {
+      "name": "invalid JWT is denied before service-role dispatch",
+      "passed": true
+    },
+    {
+      "name": "unauthorized roles are denied with organization scope",
+      "passed": true
+    },
+    {
+      "name": "caller-supplied actor identity is ignored",
+      "passed": true
+    },
+    {
+      "name": "invalid UUID is denied",
+      "passed": true
+    },
+    {
+      "name": "statuses match the exact live Patch 44 table constraint",
+      "passed": true
+    },
+    {
+      "name": "invalid event type is denied without inventing a database enum",
+      "passed": true
+    },
+    {
+      "name": "required titles, notes, summaries, decisions, and snapshot hashes are validated",
+      "passed": true
+    },
+    {
+      "name": "RPC errors are returned without raw database messages",
+      "passed": true
+    },
+    {
+      "name": "frontend uses privileged-action for create_pilot_go_no_go_review",
+      "passed": true
+    },
+    {
+      "name": "frontend uses privileged-action for update_pilot_go_no_go_review_status",
+      "passed": true
+    },
+    {
+      "name": "frontend uses privileged-action for record_pilot_go_no_go_event",
+      "passed": true
+    },
+    {
+      "name": "all four actions remain registered as authenticated edge bridge actions",
+      "passed": true
+    },
+    {
+      "name": "direct browser RPC remains absent: create_pilot_go_no_go_review",
+      "passed": true
+    },
+    {
+      "name": "direct browser RPC remains absent: update_pilot_go_no_go_review_status",
+      "passed": true
+    },
+    {
+      "name": "direct browser RPC remains absent: record_pilot_go_no_go_event",
+      "passed": true
+    },
+    {
+      "name": "direct browser RPC remains absent: record_executive_production_signoff",
+      "passed": true
+    },
+    {
+      "name": "User Import mapping remains unchanged",
+      "passed": true
+    },
+    {
+      "name": "Department Import mapping remains unchanged",
+      "passed": true
+    },
+    {
+      "name": "Department Import remains disabled by default",
+      "passed": true
+    },
+    {
+      "name": "migration 170 keeps create_pilot_go_no_go_review service-role-only",
+      "passed": true
+    },
+    {
+      "name": "migration 170 keeps update_pilot_go_no_go_review_status service-role-only",
+      "passed": true
+    },
+    {
+      "name": "migration 170 keeps record_pilot_go_no_go_event service-role-only",
+      "passed": true
+    },
+    {
+      "name": "migration 170 keeps record_executive_production_signoff service-role-only",
+      "passed": true
+    },
+    {
+      "name": "evidence exists: patch83q1-input-contract.md",
+      "passed": true
+    },
+    {
+      "name": "evidence exists: patch83q1-security-design.md",
+      "passed": true
+    },
+    {
+      "name": "evidence exists: patch83q1-validation-results.md",
+      "passed": true
+    },
+    {
+      "name": "evidence exists: patch83q1-deployment-result.md",
+      "passed": true
+    },
+    {
+      "name": "evidence exists: patch83q1-activation-decision.md",
+      "passed": true
+    }
+  ]
+}

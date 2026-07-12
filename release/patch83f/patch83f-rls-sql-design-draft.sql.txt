@@ -1,0 +1,44 @@
+-- ==========================================
+-- PATCH 83F: RLS SQL DESIGN DRAFT
+-- WARNING: documentation-only SQL draft, do not run directly.
+-- ==========================================
+
+-- 1. Helper Assumptions & Functions
+-- We assume auth.uid() links to user_profiles
+-- We assume get_user_org_id() and get_user_dept_id() are created as SECURITY DEFINER
+
+-- 2. Organization-Scoped Read Pattern
+-- CREATE POLICY "organization_scoped_read" ON public.some_table
+-- FOR SELECT USING ( organization_id = get_user_org_id() );
+
+-- 3. Department-Scoped Read Pattern
+-- CREATE POLICY "department_scoped_read" ON public.some_table
+-- FOR SELECT USING ( department_id = get_user_dept_id() );
+
+-- 4. Owner/Assignee-Scoped Read Pattern
+-- CREATE POLICY "owner_scoped_read" ON public.some_table
+-- FOR SELECT USING ( owner_id = auth.uid() OR assignee_id = auth.uid() );
+
+-- 5. Role-Based Write Pattern
+-- CREATE POLICY "role_based_write" ON public.some_table
+-- FOR INSERT WITH CHECK ( get_user_role() IN ('governance_admin', 'manager') );
+
+-- 6. Auditor Read-Only Pattern
+-- CREATE POLICY "auditor_read_only" ON public.some_table
+-- FOR SELECT USING ( get_user_role() = 'auditor' );
+
+-- 7. Super_Admin/Governance_Admin Elevated Read Pattern
+-- CREATE POLICY "admin_elevated_read" ON public.some_table
+-- FOR SELECT USING ( get_user_role() IN ('super_admin', 'governance_admin') );
+
+-- 8. Service-Role-Only Writes
+-- (No INSERT policy for authenticated role, therefore only postgres/service_role can insert)
+
+-- 9. Append-Only Audit/Event Tables
+-- CREATE POLICY "append_only_insert" ON public.events
+-- FOR INSERT WITH CHECK ( true ); -- (Plus scoping checks)
+-- (No UPDATE or DELETE policies)
+
+-- ==========================================
+-- END OF DRAFT
+-- ==========================================

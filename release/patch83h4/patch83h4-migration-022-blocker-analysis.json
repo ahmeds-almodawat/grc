@@ -1,0 +1,24 @@
+{
+  "patch": "83H.4",
+  "status": "analysis_complete",
+  "failing_migration": "022_ultra_release_restore_admin_dictionary.sql",
+  "failing_statement": "update restore_dry_run_jobs set scenario_name = coalesce(scenario_name, title, 'Restore dry-run')...",
+  "table": "restore_dry_run_jobs",
+  "pre_022_columns": [],
+  "column_history": "Table does not exist prior to 022 in current repo history. Missing migration 016 likely originally created it with title, findings, tested_by, created_by, and completed_at columns.",
+  "root_cause": "Schema drift: Migration 022 assumes legacy columns exist from a missing migration (016), causing column 'title' does not exist error during local reset.",
+  "production_risks": "Modifying migration 022 directly risks checksum mismatch on supabase db push for existing environments. New environments fail to start.",
+  "remediation_options": [
+    "Option A: Modify historical migration 022.",
+    "Option B: Create a compatibility migration before 022.",
+    "Option C: Create a new clean baseline migration/snapshot for local environments.",
+    "Option D: Use a guarded procedural block inside 022.",
+    "Option E: Create a local-only bootstrap compatibility mechanism."
+  ],
+  "recommended_option": "Option B or Option A (if repair is permitted). Option B avoids history modification.",
+  "stop_go_gates": "Confirm production applied status of 022, authorize remediation path.",
+  "rollback_strategy": "Revert to current commit. Delete any compatibility migration if created.",
+  "patch83h_runtime_impact": "BLOCKED. Cannot reach migration 166 without a working baseline.",
+  "files_changed": [],
+  "limitations": "No fix applied yet."
+}

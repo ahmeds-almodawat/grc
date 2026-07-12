@@ -1,0 +1,72 @@
+{
+  "patch": "83E",
+  "name": "RLS Remediation Preflight Matrix",
+  "scope": [
+    "Analysis of tables and policy areas requiring RLS review",
+    "Definition of proposed future policy controls"
+  ],
+  "non_scope": [
+    "Actual remediation or deployment of RLS policies",
+    "Changes to database schemas or application behavior"
+  ],
+  "statement": "documentation-only, no migrations, no policy changes",
+  "references": [
+    "Patch 82V",
+    "Patch 82W"
+  ],
+  "matrix": [
+    {
+      "affected_area": "ovr_incidents",
+      "current_risk_pattern": "Broad authenticated access",
+      "proposed_future_control": "Department scoping where operationally required; organization/tenant scoping",
+      "required_precheck": "Table columns available for scoping (e.g., organization_id, department_id)",
+      "test_evidence": "Cross-department denial tests",
+      "rollback_note": "Revert to broad authenticated policy",
+      "implementation_priority": 1
+    },
+    {
+      "affected_area": "risks",
+      "current_risk_pattern": "Overly permissive read/write",
+      "proposed_future_control": "Role-based read/write boundaries",
+      "required_precheck": "User role/profile mapping exists",
+      "test_evidence": "Negative access tests",
+      "rollback_note": "Revert to prior permissive policy",
+      "implementation_priority": 2
+    },
+    {
+      "affected_area": "audit_logs",
+      "current_risk_pattern": "Potential for authenticated writes",
+      "proposed_future_control": "Service-role-only write paths; read-only for auditors",
+      "required_precheck": "Test personas are established",
+      "test_evidence": "Service-role edge function tests; auditor read-only tests",
+      "rollback_note": "Restore prior access",
+      "implementation_priority": 3
+    }
+  ],
+  "pre_migration_checks": [
+    "table columns available for scoping",
+    "existing data has organization/department ownership values",
+    "user role/profile mapping exists",
+    "normal user, manager, auditor, governance admin, super_admin test personas"
+  ],
+  "test_evidence_required": [
+    "positive access tests",
+    "negative access tests",
+    "cross-department denial tests",
+    "auditor read-only tests",
+    "privileged action tests",
+    "service-role edge function tests"
+  ],
+  "rollback_strategy": "Backup current policies, prepare down migration script, dry-run rollback in staging",
+  "stop_go_gates": "Stop on test failure or incomplete data. Go when 100% test pass and rollback verified.",
+  "future_implementation_sequence": [
+    "83F: RLS policy design SQL draft, docs only",
+    "83G: local/staging RLS test harness, docs/scripts only",
+    "83H: first narrow low-risk RLS migration, only after explicit approval"
+  ],
+  "known_limitations": [
+    "this does not make the system production-ready",
+    "this does not remediate RLS yet",
+    "this does not replace manual security review"
+  ]
+}

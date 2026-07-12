@@ -106,6 +106,7 @@ npm run patch82c:all
 npm run patch82e:all
 npm run patch82f:all
 npm run patch82g:all
+npm run patch82h:all
 ```
 
 Patch 58.1 adds validation lanes that avoid nested duplicate full chains:
@@ -294,6 +295,21 @@ Patch 82G adds privileged action JWT compatibility proof:
 npm run patch82g:proof
 ```
 
+Patch 82I through Patch 83L retain their individual proof commands in `package.json`. The secure Department Import activation chain is:
+
+```powershell
+npm run patch83m:proof
+npm run patch83n:proof
+npm run patch83o:proof
+npm run patch83o1:proof
+npm run patch83o2:proof
+npm run patch83o3:proof
+npm run patch83p:smoke
+npm run patch83p:proof
+```
+
+Patch 83P is controlled frontend activation readiness only. Its smoke runner builds disabled and enabled modes with a temporary process variable, restores the original process value, and does not modify `.env` files or deploy an environment.
+
 ## G. Generated Release Artifacts
 
 Many proof commands regenerate JSON and text evidence under `release/v*` and older `release/patch*` folders. That churn is expected after validation.
@@ -316,3 +332,15 @@ npm run patch82h:proof
 ```
 
 Patch 82H-2 keeps the same proof command and adds checks that User Management no longer renders the old in-page Control Pages hub, subsidiary rail, or horizontal control card navigation.
+
+## Patch 82V — Security Review
+
+```powershell
+npm run patch82v:proof
+```
+
+## Patch 82W — Targeted Security Remediation Plan
+
+```powershell
+npm run patch82w:proof
+```

@@ -1,10 +1,10 @@
 # v7.0 Frontend RPC Inventory
 
-Generated: 2026-07-05T13:10:06.805Z
+Generated: 2026-07-12T20:09:30.636Z
 
 - Direct frontend RPC calls: 1
-- Authenticated Edge bridge calls: 58
-- Unique RPC names: 57
+- Authenticated Edge bridge calls: 79
+- Unique RPC names: 78
 
 ## Classification counts
 
@@ -12,12 +12,12 @@ Generated: 2026-07-05T13:10:06.805Z
 {
   "accreditation_assurance": 8,
   "read_only_search": 1,
-  "production_readiness": 15,
+  "production_readiness": 28,
   "workflow_runtime": 14,
-  "privileged_admin": 6,
+  "privileged_admin": 12,
   "user_management": 11,
-  "scenario_lab": 3,
-  "evidence_governance": 1
+  "evidence_governance": 3,
+  "scenario_lab": 3
 }
 ```
 
@@ -38,12 +38,33 @@ Generated: 2026-07-05T13:10:06.805Z
 - `record_executive_truth_event` (1 call site)
 - `acknowledge_escalation_event` (1 call site)
 - `resolve_escalation_event` (1 call site)
+- `department_import_execute` (1 call site)
 - `assign_user_role` (2 call sites)
 - `deactivate_user_role` (2 call sites)
 - `create_department` (1 call site)
 - `create_user` (1 call site)
 - `update_ovr_workflow` (1 call site)
 - `create_ovr_corrective_action_project` (1 call site)
+- `record_production_evidence_closure_action` (1 call site)
+- `get_production_evidence_closure_action_history` (1 call site)
+- `create_controlled_production_cutover_decision` (1 call site)
+- `record_controlled_production_cutover_decision_event` (1 call site)
+- `create_live_pilot_session` (1 call site)
+- `update_live_pilot_session_status` (1 call site)
+- `create_live_pilot_issue` (1 call site)
+- `update_live_pilot_issue_status` (1 call site)
+- `record_live_pilot_department_acceptance` (1 call site)
+- `create_identity_role_integrity_review` (1 call site)
+- `update_identity_role_integrity_review_status` (1 call site)
+- `record_identity_role_integrity_finding` (1 call site)
+- `update_identity_role_integrity_finding_status` (1 call site)
+- `record_privileged_role_recertification` (1 call site)
+- `create_production_hypercare_window` (1 call site)
+- `update_production_hypercare_window_status` (1 call site)
+- `record_production_hypercare_item` (1 call site)
+- `update_production_hypercare_item_status` (1 call site)
+- `create_executive_governance_board_pack` (1 call site)
+- `update_executive_governance_board_pack_status` (1 call site)
 - `create_production_readiness_signoff` (1 call site)
 - `update_production_readiness_signoff_status` (1 call site)
 - `create_known_limitation` (1 call site)

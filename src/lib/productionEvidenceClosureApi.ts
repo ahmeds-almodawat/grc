@@ -2130,7 +2130,7 @@ export async function getProductionEvidenceClosureData(): Promise<ProductionEvid
     getProductionHypercareBlockers(),
   ]);
 
-  const intakeQueue = [
+  const rawIntakeQueue = [
     ...departmentLaunchPacks.map((row, index) => makeItem('Department launch', row, index, {
       requiredEvidence: 'Department owner, launch checklist, participant coverage, support path, and launch decision evidence.',
     })),
@@ -2174,6 +2174,16 @@ export async function getProductionEvidenceClosureData(): Promise<ProductionEvid
       requiredEvidence: 'Hypercare cadence, support ownership, or issue closure evidence.',
     })),
   ];
+
+  const intakeQueue = rawIntakeQueue.filter(item => {
+    const hasRealRefs = item.linkedEvidenceReferences.length > 0 && item.linkedEvidenceReferences[0] !== evidenceMissing;
+    if (!hasRealRefs && item.evidenceState === 'evidence_required') return false;
+    if (!hasRealRefs && (item.id.includes('synthetic') || item.title.includes('fallback'))) return false;
+    if (!hasRealRefs && ['open', 'evidence_required', 'blocked'].includes(item.evidenceState)) {
+       if (new RegExp(`^${item.category}-\\d+$`).test(item.id)) return false;
+    }
+    return true;
+  });
 
   const uniqueItems = Array.from(new Map(intakeQueue.map(item => [`${item.category}-${item.id}-${item.title}`, item])).values());
   const departmentRegister = departmentLaunchPacks.map(row => departmentEvidenceRow(row, supportReadiness, adoptionReadiness, policyAttestations));

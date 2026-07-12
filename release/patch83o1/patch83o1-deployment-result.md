@@ -1,0 +1,23 @@
+# Patch 83O.1 Deployment Result
+
+- Database push executed: true
+- Local migration 168 present: true
+- Remote migration 168 present: true
+- Local/remote aligned through: 168
+- Postmigration RPC audit completed: true
+- RPC signature unchanged: true
+- RPC uses only valid department columns: true
+- RPC execute granted to service_role: true
+- RPC execute denied to PUBLIC, anon, and authenticated: true
+- Department table definition unchanged: true
+- Department constraints/indexes/triggers/RLS policies unchanged: true
+- Migration repair executed: false
+- Database reset executed: false
+- Edge Function redeployed: false
+- Edge Function version: 4
+- Edge Function status: ACTIVE
+- Edge Function verify_jwt: true
+- Non-mutating runtime attempt: stopped before Test A because both supplied persona JWTs were expired
+- Department import action requests sent: 0
+- Live import mutations executed: false
+- Status: deployed; authenticated runtime verification blocked on refreshed existing personas

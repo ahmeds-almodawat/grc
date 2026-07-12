@@ -1,0 +1,22 @@
+{
+  "patch": "83H.9",
+  "status": "BLOCKED",
+  "baseline_source": "None",
+  "baseline_source_nonproduction": false,
+  "baseline_sha256": "N/A",
+  "local_host_verified": false,
+  "schema_loaded": false,
+  "ledger_initialized": false,
+  "represented_versions": [],
+  "migration_166_initially_pending": false,
+  "migration_166_applied_locally": false,
+  "schema_verification": "BLOCKED",
+  "policy_verification": "BLOCKED",
+  "failures": ["No approved non-production schema dump available."],
+  "blockers": ["Missing sanitized baseline source."],
+  "production_accessed": false,
+  "db_push_executed": false,
+  "migration_repair_executed": false,
+  "historical_migrations_modified": false,
+  "patch83i_gate": "BLOCKED"
+}

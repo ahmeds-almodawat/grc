@@ -60,10 +60,6 @@ const allowlistedPaths = [
   'release/patch82e/patch82e-record-level-dashboard-drilldown-proof.json',
   'release/patch82f/patch82f-employee-id-login-alias-proof.json',
   'release/patch82g/patch82g-privileged-action-jwt-compatibility-proof.json',
-=======
-  'release/patch82e/patch82e-record-level-dashboard-drilldown-proof.json',
-  'release/patch82f/patch82f-employee-id-login-alias-proof.json',
->>>>>>> f374b9438bff6bd389015c923fa1156127c38517
 ];
 
 const existing = [];

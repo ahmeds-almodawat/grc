@@ -1,0 +1,7 @@
+{
+  "edge_function_deployed": true,
+  "edge_function_name": "privileged-action",
+  "status": "success",
+  "static_validation_tool": "unsupported (deno not installed)",
+  "timestamp": "2026-07-11T20:27:02Z"
+}

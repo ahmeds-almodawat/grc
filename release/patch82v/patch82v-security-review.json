@@ -1,0 +1,54 @@
+{
+  "findings": [
+    {
+      "id": "RLS-001",
+      "severity": "High",
+      "category": "RLS policy review",
+      "file": "supabase/migrations/*.sql",
+      "evidence": "create policy ... for select to authenticated using (true);",
+      "whyItMatters": "Broad authenticated access allows any logged-in user to read sensitive data if RLS doesn't properly scope to organization_id or role.",
+      "suggestedPatch": "Replace 'using (true)' with organization-scoped logic: 'using (organization_id = auth.jwt()->>''organization_id'')'."
+    },
+    {
+      "id": "SR-001",
+      "severity": "Medium",
+      "category": "Service-role review",
+      "file": "supabase/functions/privileged-action/index.ts",
+      "evidence": "createClient(supabaseUrl, serviceRoleKey)",
+      "whyItMatters": "The Edge Function uses the service role key to bypass RLS, executing RPCs on behalf of the user. If the custom role-validation logic is flawed, it could lead to privilege escalation.",
+      "suggestedPatch": "Ensure all service-role RPCs maintain strict secondary authorization checks within Postgres."
+    },
+    {
+      "id": "CORS-001",
+      "severity": "Low",
+      "category": "CORS review",
+      "file": "supabase/functions/privileged-action/index.ts",
+      "evidence": "'Access-Control-Allow-Origin': '*'",
+      "whyItMatters": "Wildcard CORS headers allow any origin to attempt requests against the Edge Function, increasing exposure to CSRF or automated probing.",
+      "suggestedPatch": "Restrict Access-Control-Allow-Origin to specific trusted domains."
+    },
+    {
+      "id": "FE-001",
+      "severity": "Informational",
+      "category": "Frontend access review",
+      "file": "src/auth/authAccess.ts",
+      "evidence": "SUPER_ADMIN_ONLY_PAGES",
+      "whyItMatters": "Gating critical pages solely on the frontend ('super_admin') means direct API access might still be possible if backend RLS is not equally strict.",
+      "suggestedPatch": "Enforce super_admin gating in RLS or RPCs, rather than relying exclusively on React Router gating."
+    },
+    {
+      "id": "PA-001",
+      "severity": "Informational",
+      "category": "Privileged action review",
+      "file": "src/lib/privilegedAction.ts",
+      "evidence": "allowedActions.has(action)",
+      "whyItMatters": "Action allowlist coverage relies on maintaining synchronization between frontend `privilegedAction.ts` and the Edge Function. Drift could lead to unsupported actions failing.",
+      "suggestedPatch": "Maintain strict synchronization and add audit logging inside the privileged action RPCs."
+    }
+  ],
+  "recommendedSequence": [
+    "1. Restrict CORS in Edge Functions to known domains.",
+    "2. Scope 'using (true)' RLS policies to tenant organizations.",
+    "3. Align backend RLS with frontend SUPER_ADMIN_ONLY_PAGES."
+  ]
+}

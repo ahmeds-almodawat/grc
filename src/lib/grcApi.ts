@@ -1,3 +1,42 @@
+
+export function isScenarioLabRow(row: any): boolean {
+  if (!row) return false;
+  if (row.is_test_data === true || row.is_test_data === 'true') return true;
+  if (row.is_synthetic === true || row.is_synthetic === 'true') return true;
+
+  const provenanceFields = [
+    'test_dataset_tag',
+    'dataset_tag',
+    'source_tag',
+    'provenance_tag',
+    'scenario_id',
+    'scenario_name',
+    'data_origin'
+  ];
+
+  for (const field of provenanceFields) {
+    if (typeof row[field] === 'string') {
+      const val = row[field].toLowerCase();
+      if (
+        val.includes('v99_scenario_lab') ||
+        val.includes('scenario_lab') ||
+        val.includes('synthetic') ||
+        val.includes('mock') ||
+        val.includes('demo')
+      ) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+export function filterScenarioLabRows<T>(rows: T[]): T[] {
+  if (!Array.isArray(rows)) return rows;
+  return rows.filter(row => !isScenarioLabRow(row));
+}
+
 import { supabase } from './supabase';
 import { emptyLiveObject, emptyLiveArray } from './liveData';
 import { invokePrivilegedAction, requireServerBridge } from './privilegedAction';
@@ -322,7 +361,7 @@ export async function getProjects(): Promise<ProjectRow[]> {
       .order('target_end_date', { ascending: true, nullsFirst: false })
       .limit(100);
     if (error) throw error;
-    return (data as unknown as ProjectRow[])?.length ? (data as unknown as ProjectRow[]) : liveEmptyProjects;
+    return filterScenarioLabRows((data as unknown as ProjectRow[])?.length ? (data as unknown as ProjectRow[]) : liveEmptyProjects);
   } catch (error) {
     logFallback('projects', error);
     return emptyLiveArray<any>();
@@ -330,7 +369,7 @@ export async function getProjects(): Promise<ProjectRow[]> {
 }
 
 export async function getProjectMilestones(projectId: string): Promise<MilestoneRow[]> {
-  if (!supabase) return liveEmptyMilestones.filter(item => item.project_id === projectId);
+  if (!supabase) return filterScenarioLabRows(liveEmptyMilestones.filter(item => item.project_id === projectId));
 
   try {
     const { data, error } = await supabase
@@ -340,15 +379,15 @@ export async function getProjectMilestones(projectId: string): Promise<Milestone
       .order('sort_order', { ascending: true })
       .order('due_date', { ascending: true, nullsFirst: false });
     if (error) throw error;
-    return (data as unknown as MilestoneRow[]) || [];
+    return filterScenarioLabRows((data as unknown as MilestoneRow[]) || []);
   } catch (error) {
     logFallback('project milestones', error);
-    return liveEmptyMilestones.filter(item => item.project_id === projectId);
+    return filterScenarioLabRows(liveEmptyMilestones.filter(item => item.project_id === projectId));
   }
 }
 
 export async function getProjectTasks(projectId: string): Promise<TaskRow[]> {
-  if (!supabase) return liveEmptyTasks.filter(item => item.project_id === projectId);
+  if (!supabase) return filterScenarioLabRows(liveEmptyTasks.filter(item => item.project_id === projectId));
 
   try {
     const { data, error } = await supabase
@@ -358,10 +397,10 @@ export async function getProjectTasks(projectId: string): Promise<TaskRow[]> {
       .order('sort_order', { ascending: true })
       .order('due_date', { ascending: true, nullsFirst: false });
     if (error) throw error;
-    return (data as unknown as TaskRow[]) || [];
+    return filterScenarioLabRows((data as unknown as TaskRow[]) || []);
   } catch (error) {
     logFallback('project tasks', error);
-    return liveEmptyTasks.filter(item => item.project_id === projectId);
+    return filterScenarioLabRows(liveEmptyTasks.filter(item => item.project_id === projectId));
   }
 }
 
@@ -385,7 +424,7 @@ export async function getRisks(): Promise<RiskRow[]> {
     }
     const { data, error } = result;
     if (error) throw error;
-    return (data as unknown as RiskRow[])?.length ? (data as unknown as RiskRow[]) : liveEmptyRisks;
+    return filterScenarioLabRows((data as unknown as RiskRow[])?.length ? (data as unknown as RiskRow[]) : liveEmptyRisks);
   } catch (error) {
     logFallback('risks', error);
     return emptyLiveArray<any>();
@@ -410,32 +449,32 @@ async function readPatch22View<T>(view: string, label: string, orderColumn = 'ri
 
 export async function getRiskWorkflowQueue(): Promise<RiskWorkflowQueueRow[]> {
   const rows = await readPatch22View<RiskWorkflowQueueRow>('v_patch22_risk_workflow_queue', 'risk workflow queue', 'due_date');
-  return rows.length ? rows : liveEmptyRiskWorkflowQueue;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptyRiskWorkflowQueue);
 }
 
 export async function getRiskAppetiteBreaches(): Promise<RiskAppetiteBreachRow[]> {
   const rows = await readPatch22View<RiskAppetiteBreachRow>('v_patch22_risk_appetite_breaches', 'risk appetite breaches', 'residual_score');
-  return rows.length ? rows : liveEmptyRiskAppetiteBreaches;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptyRiskAppetiteBreaches);
 }
 
 export async function getRiskTreatmentQueue(): Promise<RiskTreatmentQueueRow[]> {
   const rows = await readPatch22View<RiskTreatmentQueueRow>('v_patch22_risk_treatment_queue', 'risk treatment queue', 'treatment_due_date');
-  return rows.length ? rows : liveEmptyRiskTreatmentQueue;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptyRiskTreatmentQueue);
 }
 
 export async function getRiskKriAlerts(): Promise<RiskKriAlertRow[]> {
   const rows = await readPatch22View<RiskKriAlertRow>('v_patch22_risk_kri_alerts', 'risk KRI alerts', 'measured_at');
-  return rows.length ? rows : liveEmptyRiskKriAlerts;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptyRiskKriAlerts);
 }
 
 export async function getExecutiveRiskEscalations(): Promise<ExecutiveRiskEscalationRow[]> {
   const rows = await readPatch22View<ExecutiveRiskEscalationRow>('v_patch22_executive_risk_escalations', 'executive risk escalations', 'residual_score');
-  return rows.length ? rows : liveEmptyExecutiveRiskEscalations;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptyExecutiveRiskEscalations);
 }
 
 export async function getRiskClosureBlockers(): Promise<RiskClosureBlockerRow[]> {
   const rows = await readPatch22View<RiskClosureBlockerRow>('v_patch22_risk_closure_blockers', 'risk closure blockers', 'risk_level');
-  return rows.length ? rows : liveEmptyRiskClosureBlockers;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptyRiskClosureBlockers);
 }
 
 export async function getRiskReassessmentHistory(riskId: string): Promise<RiskReassessmentHistoryRow[]> {
@@ -482,7 +521,7 @@ export async function getComplianceItems(): Promise<ComplianceRow[]> {
       .order('expiry_date', { ascending: true, nullsFirst: false })
       .limit(100);
     if (error) throw error;
-    return (data as unknown as ComplianceRow[])?.length ? (data as unknown as ComplianceRow[]) : liveEmptyCompliance;
+    return filterScenarioLabRows((data as unknown as ComplianceRow[])?.length ? (data as unknown as ComplianceRow[]) : liveEmptyCompliance);
   } catch (error) {
     logFallback('compliance items', error);
     return emptyLiveArray<any>();
@@ -499,7 +538,7 @@ export async function getAuditFindings(): Promise<AuditFindingRow[]> {
       .order('due_date', { ascending: true, nullsFirst: false })
       .limit(100);
     if (error) throw error;
-    return (data as unknown as AuditFindingRow[])?.length ? (data as unknown as AuditFindingRow[]) : liveEmptyAuditFindings;
+    return filterScenarioLabRows((data as unknown as AuditFindingRow[])?.length ? (data as unknown as AuditFindingRow[]) : liveEmptyAuditFindings);
   } catch (error) {
     logFallback('audit findings', error);
     return emptyLiveArray<any>();
@@ -524,32 +563,32 @@ async function readPatch24View<T>(view: string, label: string, orderColumn = 'du
 
 export async function getAuditFindingWorkflowQueue(): Promise<AuditFindingWorkflowQueueRow[]> {
   const rows = await readPatch24View<AuditFindingWorkflowQueueRow>('v_patch24_audit_finding_workflow_queue', 'Patch 24 audit finding workflow queue', 'due_date');
-  return rows.length ? rows : liveEmptyAuditFindingWorkflowQueue;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptyAuditFindingWorkflowQueue);
 }
 
 export async function getOverdueAuditFindings(): Promise<OverdueAuditFindingRow[]> {
   const rows = await readPatch24View<OverdueAuditFindingRow>('v_patch24_overdue_audit_findings', 'Patch 24 overdue audit findings', 'days_overdue');
-  return rows.length ? rows : liveEmptyOverdueAuditFindings;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptyOverdueAuditFindings);
 }
 
 export async function getRepeatAuditFindings(): Promise<RepeatAuditFindingRow[]> {
   const rows = await readPatch24View<RepeatAuditFindingRow>('v_patch24_repeat_audit_findings', 'Patch 24 repeat audit findings', 'detected_repeat_count');
-  return rows.length ? rows : liveEmptyRepeatAuditFindings;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptyRepeatAuditFindings);
 }
 
 export async function getAuditClosureGateStatus(): Promise<AuditClosureGateStatusRow[]> {
   const rows = await readPatch24View<AuditClosureGateStatusRow>('v_patch24_audit_closure_gate_status', 'Patch 24 audit closure gate status', 'finding_code');
-  return rows.length ? rows : liveEmptyAuditClosureGateStatus;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptyAuditClosureGateStatus);
 }
 
 export async function getAuditExecutiveEscalations(): Promise<AuditExecutiveEscalationRow[]> {
   const rows = await readPatch24View<AuditExecutiveEscalationRow>('v_patch24_audit_executive_escalations', 'Patch 24 audit executive escalations', 'due_date');
-  return rows.length ? rows : liveEmptyAuditExecutiveEscalations;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptyAuditExecutiveEscalations);
 }
 
 export async function getAuditClosurePackIndex(): Promise<AuditClosurePackIndexRow[]> {
   const rows = await readPatch24View<AuditClosurePackIndexRow>('v_patch24_audit_closure_pack_index', 'Patch 24 audit closure pack index', 'closure_pack_generated_at');
-  return rows.length ? rows : liveEmptyAuditClosurePackIndex;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptyAuditClosurePackIndex);
 }
 
 export async function getAuditFindingValidationEvents(auditFindingId?: string): Promise<AuditFindingValidationEventRow[]> {
@@ -580,7 +619,7 @@ export async function getGovernanceDecisions(): Promise<GovernanceDecisionRow[]>
       .order('due_date', { ascending: true, nullsFirst: false })
       .limit(100);
     if (error) throw error;
-    return (data as unknown as GovernanceDecisionRow[])?.length ? (data as unknown as GovernanceDecisionRow[]) : liveEmptyDecisions;
+    return filterScenarioLabRows((data as unknown as GovernanceDecisionRow[])?.length ? (data as unknown as GovernanceDecisionRow[]) : liveEmptyDecisions);
   } catch (error) {
     logFallback('governance decisions', error);
     return emptyLiveArray<any>();
@@ -593,7 +632,7 @@ export async function getMyWork(): Promise<MyWorkRow[]> {
   try {
     const { data, error } = await supabase.from('v_my_open_work_expanded').select('*').order('due_date', { ascending: true, nullsFirst: false }).limit(100);
     if (error) throw error;
-    return (data as unknown as MyWorkRow[])?.length ? (data as unknown as MyWorkRow[]) : liveEmptyMyWork;
+    return filterScenarioLabRows((data as unknown as MyWorkRow[])?.length ? (data as unknown as MyWorkRow[]) : liveEmptyMyWork);
   } catch (error) {
     logFallback('my work', error);
     return emptyLiveArray<any>();
@@ -606,7 +645,7 @@ export async function getApprovals(): Promise<ApprovalRow[]> {
   try {
     const { data, error } = await supabase.from('v_pending_approvals_expanded').select('*').order('requested_at', { ascending: true }).limit(100);
     if (error) throw error;
-    return (data as unknown as ApprovalRow[])?.length ? (data as unknown as ApprovalRow[]) : liveEmptyApprovals;
+    return filterScenarioLabRows((data as unknown as ApprovalRow[])?.length ? (data as unknown as ApprovalRow[]) : liveEmptyApprovals);
   } catch (error) {
     logFallback('approvals', error);
     return emptyLiveArray<any>();
@@ -619,7 +658,7 @@ export async function getEvidenceQueue(): Promise<EvidenceRow[]> {
   try {
     const { data, error } = await supabase.from('v_evidence_review_queue').select('*').order('created_at', { ascending: true }).limit(100);
     if (error) throw error;
-    return (data as unknown as EvidenceRow[])?.length ? (data as unknown as EvidenceRow[]) : liveEmptyEvidence;
+    return filterScenarioLabRows((data as unknown as EvidenceRow[])?.length ? (data as unknown as EvidenceRow[]) : liveEmptyEvidence);
   } catch (error) {
     logFallback('evidence review queue', error);
     return emptyLiveArray<any>();
@@ -644,17 +683,17 @@ async function readPatch23View<T>(view: string, label: string, orderColumn = 'cr
 
 export async function getEvidenceReviewQueue(): Promise<EvidenceReviewQueueRow[]> {
   const rows = await readPatch23View<EvidenceReviewQueueRow>('v_patch23_evidence_review_queue', 'Patch 23 evidence review queue', 'review_due_date');
-  return rows.length ? rows : liveEmptyEvidenceReviewQueue;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptyEvidenceReviewQueue);
 }
 
 export async function getEvidenceGapDashboard(): Promise<EvidenceGapDashboardRow[]> {
   const rows = await readPatch23View<EvidenceGapDashboardRow>('v_patch23_evidence_gap_dashboard', 'Patch 23 evidence gap dashboard', 'due_date');
-  return rows.length ? rows : liveEmptyEvidenceGapDashboard;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptyEvidenceGapDashboard);
 }
 
 export async function getEvidenceClosureGateStatus(): Promise<EvidenceClosureGateStatusRow[]> {
   const rows = await readPatch23View<EvidenceClosureGateStatusRow>('v_patch23_evidence_closure_gate_status', 'Patch 23 evidence closure gate status', 'due_date');
-  return rows.length ? rows : liveEmptyEvidenceClosureGateStatus;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptyEvidenceClosureGateStatus);
 }
 
 export async function getEvidenceChainOfCustody(evidenceFileId?: string): Promise<EvidenceChainOfCustodyRow[]> {
@@ -682,7 +721,7 @@ export async function getEvidencePackIndex(): Promise<EvidencePackIndexRow[]> {
 
 export async function getSensitiveEvidenceRegister(): Promise<SensitiveEvidenceRegisterRow[]> {
   const rows = await readPatch23View<SensitiveEvidenceRegisterRow>('v_patch23_sensitive_evidence_register', 'Patch 23 sensitive evidence register', 'expiry_date');
-  return rows.length ? rows : liveEmptySensitiveEvidenceRegister;
+  return filterScenarioLabRows(rows.length ? rows : liveEmptySensitiveEvidenceRegister);
 }
 
 
@@ -697,7 +736,7 @@ export async function getEscalations(): Promise<EscalationRow[]> {
       .order('due_date', { ascending: true, nullsFirst: false })
       .limit(100);
     if (error) throw error;
-    return (data as unknown as EscalationRow[])?.length ? (data as unknown as EscalationRow[]) : liveEmptyEscalations;
+    return filterScenarioLabRows((data as unknown as EscalationRow[])?.length ? (data as unknown as EscalationRow[]) : liveEmptyEscalations);
   } catch (error) {
     logFallback('escalation center', error);
     return emptyLiveArray<any>();
@@ -714,7 +753,7 @@ export async function getDelayReasonQueue(): Promise<DelayReasonQueueRow[]> {
       .order('due_date', { ascending: true, nullsFirst: false })
       .limit(100);
     if (error) throw error;
-    return (data as unknown as DelayReasonQueueRow[]) || [];
+    return filterScenarioLabRows((data as unknown as DelayReasonQueueRow[]) || []);
   } catch (error) {
     logFallback('delay reason queue', error);
     return emptyLiveArray<any>();
@@ -1566,6 +1605,31 @@ export interface BulkImportRowInput {
   validation_warnings: string[];
 }
 
+export interface ExecuteDepartmentImportInput extends Record<string, unknown> {
+  organization_id: string;
+  source_filename: string;
+  import_mode: 'create_only' | 'create_and_update';
+  rows: {
+    row_number: number;
+    raw_data: Record<string, string>;
+  }[];
+}
+
+export interface ExecuteDepartmentImportOutput {
+  batch_id: string;
+  status: 'success' | 'rejected';
+  total_rows: number;
+  created_count: number;
+  updated_count: number;
+  failed_count: number;
+  affected_department_ids?: string[];
+  error_summary?: any;
+}
+
+export async function executeDepartmentImport(input: ExecuteDepartmentImportInput) {
+  return invokePrivilegedAction<ExecuteDepartmentImportOutput>('department_import_execute', input);
+}
+
 export interface SaveBulkImportBatchInput {
   organization_id: string;
   batch_type: string;
@@ -1774,7 +1838,7 @@ export async function getOvrReports(): Promise<OvrReportRow[]> {
       .order('created_at', { ascending: false })
       .limit(100);
     if (error) throw error;
-    return (data as unknown as OvrReportRow[])?.length ? (data as unknown as OvrReportRow[]) : liveEmptyOvrReports;
+    return filterScenarioLabRows((data as unknown as OvrReportRow[])?.length ? (data as unknown as OvrReportRow[]) : liveEmptyOvrReports);
   } catch (error) {
     logFallback('OVR reports', error);
     return emptyLiveArray<any>();
@@ -1875,7 +1939,7 @@ export async function getOvrWorkflowQueue(): Promise<OvrWorkflowQueueRow[]> {
       .order('due_date', { ascending: true, nullsFirst: false })
       .limit(100);
     if (error) throw error;
-    return (data as unknown as OvrWorkflowQueueRow[]) || [];
+    return filterScenarioLabRows((data as unknown as OvrWorkflowQueueRow[]) || []);
   } catch (error) {
     logFallback('OVR workflow queue', error);
     return emptyLiveArray<any>();
@@ -1975,9 +2039,9 @@ export async function getOvrRepeatedCategoryAlerts(): Promise<OvrRepeatedCategor
       .select('*')
       .order('category_count_30d', { ascending: false });
     if (error) throw error;
-    return (data as unknown as OvrRepeatedCategoryAlert[])?.length
+    return filterScenarioLabRows((data as unknown as OvrRepeatedCategoryAlert[])?.length
       ? (data as unknown as OvrRepeatedCategoryAlert[])
-      : liveEmptyOvrRepeatedCategoryAlerts;
+      : liveEmptyOvrRepeatedCategoryAlerts);
   } catch (error) {
     logFallback('OVR repeated category alerts', error);
     return emptyLiveArray<any>();

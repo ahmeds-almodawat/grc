@@ -93,6 +93,17 @@ const patch79OperationsGovernanceActions = new Set([
   'update_executive_governance_board_pack_status',
 ]);
 
+const patch83mDepartmentImportActions = new Set([
+  'department_import_execute',
+]);
+
+const patch83q1ProductionReadinessActions = new Set([
+  'create_pilot_go_no_go_review',
+  'update_pilot_go_no_go_review_status',
+  'record_pilot_go_no_go_event',
+  'record_executive_production_signoff',
+]);
+
 const allowedActions = new Set([
   'list_user_management_roster',
   'create_board_pack_snapshot',
@@ -123,6 +134,7 @@ const allowedActions = new Set([
   ...patch77LivePilotActions,
   ...patch78IdentityIntegrityActions,
   ...patch79OperationsGovernanceActions,
+  ...patch83q1ProductionReadinessActions,
 ]);
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
@@ -183,6 +195,46 @@ function normalizeScope(value: unknown) {
 function normalizeUserType(value: unknown) {
   const userType = String(value ?? 'employee');
   return userTypeOptions.has(userType) ? userType : 'employee';
+}
+
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const pilotReviewStatuses = new Set([
+  'draft',
+  'ready_for_review',
+  'approved_for_controlled_pilot',
+  'approved_with_limitations',
+  'blocked',
+  'rejected',
+]);
+const pilotEventTypePattern = /^[a-z][a-z0-9_]{1,63}$/;
+
+async function authorizePatch83q1Actor(
+  serviceClient: any,
+  actorId: string,
+  allowedRoles: string[],
+) {
+  const { data: actorProfile, error: actorProfileError } = await serviceClient
+    .from('profiles')
+    .select('organization_id,is_active')
+    .eq('id', actorId)
+    .maybeSingle();
+  if (actorProfileError) throw new Error('PATCH83Q1_ACTOR_PROFILE_LOOKUP_FAILED');
+  if (!actorProfile?.organization_id || actorProfile.is_active === false) return false;
+
+  const { data: actorRoles, error: actorRolesError } = await serviceClient
+    .from('user_roles')
+    .select('role,organization_id')
+    .eq('user_id', actorId)
+    .eq('is_active', true);
+  if (actorRolesError) throw new Error('PATCH83Q1_ACTOR_ROLE_LOOKUP_FAILED');
+
+  return (actorRoles ?? []).some((assignment: any) =>
+    allowedRoles.includes(String(assignment.role))
+    && (
+      assignment.organization_id === null
+      || assignment.organization_id === actorProfile.organization_id
+    )
+  );
 }
 
 async function readUserManagementRoster(serviceClient: any, actorId: string) {
@@ -371,7 +423,10 @@ Deno.serve(async (request) => {
   }
 
   const action = requestBody.action ?? '';
-  if (!allowedActions.has(action)) {
+  if (
+    !allowedActions.has(action) &&
+    !patch83mDepartmentImportActions.has(action)
+  ) {
     return errorResponse(
       `Unsupported privileged action: ${action}`,
       400,
@@ -832,6 +887,208 @@ Deno.serve(async (request) => {
     return jsonResponse({ ok: true, action, result: data }, 200);
   }
 
+  if (patch83q1ProductionReadinessActions.has(action)) {
+    const payload = requestBody.payload ?? {};
+    const allowedRoles = action === 'record_executive_production_signoff'
+      ? ['governance_admin', 'super_admin']
+      : ['governance_admin', 'executive'];
+
+    let authorized = false;
+    try {
+      authorized = await authorizePatch83q1Actor(serviceClient, userData.user.id, allowedRoles);
+    } catch {
+      return errorResponse(
+        'Unable to verify production-readiness authority.',
+        500,
+        'PRODUCTION_READINESS_AUTHORIZATION_FAILED',
+        'The server could not safely verify the authenticated actor profile and organization-scoped role.',
+        { action },
+      );
+    }
+    if (!authorized) {
+      return errorResponse(
+        'Production-readiness authority required.',
+        403,
+        'PRODUCTION_READINESS_ROLE_REQUIRED',
+        action === 'record_executive_production_signoff'
+          ? 'An active governance_admin or super_admin role in the authenticated actor organization is required.'
+          : 'An active governance_admin or executive role in the authenticated actor organization is required.',
+        { action },
+      );
+    }
+
+    const reviewId = typeof payload.review_id === 'string' ? payload.review_id.trim() : '';
+    const title = typeof payload.title === 'string' ? payload.title.trim() : '';
+    const status = typeof payload.status === 'string' ? payload.status.trim() : '';
+    const notes = typeof payload.notes === 'string' ? payload.notes.trim() : '';
+    const eventType = typeof payload.event_type === 'string' ? payload.event_type.trim() : '';
+    const eventSummary = typeof payload.event_summary === 'string' ? payload.event_summary.trim() : '';
+    const decision = typeof payload.decision === 'string' ? payload.decision.trim() : '';
+    const snapshotHash = payload.snapshot_hash === null || payload.snapshot_hash === undefined
+      ? null
+      : typeof payload.snapshot_hash === 'string' ? payload.snapshot_hash.trim() : '';
+
+    if (action === 'create_pilot_go_no_go_review' && (!title || title.length > 200)) {
+      return errorResponse(
+        'A valid pilot review title is required.',
+        400,
+        'PILOT_REVIEW_TITLE_INVALID',
+        'Provide a non-empty title no longer than 200 characters.',
+        { action },
+      );
+    }
+    if (
+      (action === 'update_pilot_go_no_go_review_status' || action === 'record_pilot_go_no_go_event')
+      && !uuidPattern.test(reviewId)
+    ) {
+      return errorResponse(
+        'A valid pilot review UUID is required.',
+        400,
+        'PILOT_REVIEW_UUID_INVALID',
+        'The review_id must be a canonical UUID.',
+        { action },
+      );
+    }
+    if (action === 'update_pilot_go_no_go_review_status' && !pilotReviewStatuses.has(status)) {
+      return errorResponse(
+        'Unsupported pilot review status.',
+        400,
+        'PILOT_REVIEW_STATUS_INVALID',
+        'Use a status defined by the live pilot_go_no_go_reviews constraint.',
+        { action },
+      );
+    }
+    if (action === 'update_pilot_go_no_go_review_status' && (!notes || notes.length > 4000)) {
+      return errorResponse(
+        'Valid pilot review notes are required.',
+        400,
+        'PILOT_REVIEW_NOTES_INVALID',
+        'Provide non-empty review notes no longer than 4,000 characters.',
+        { action },
+      );
+    }
+    if (action === 'record_pilot_go_no_go_event' && !pilotEventTypePattern.test(eventType)) {
+      return errorResponse(
+        'Invalid pilot review event type.',
+        400,
+        'PILOT_EVENT_TYPE_INVALID',
+        'Use a lowercase snake_case event type between 2 and 64 characters.',
+        { action },
+      );
+    }
+    if (action === 'record_pilot_go_no_go_event' && (!eventSummary || eventSummary.length > 2000)) {
+      return errorResponse(
+        'A valid pilot event summary is required.',
+        400,
+        'PILOT_EVENT_SUMMARY_INVALID',
+        'Provide a non-empty event summary no longer than 2,000 characters.',
+        { action },
+      );
+    }
+    if (action === 'record_executive_production_signoff' && decision !== 'approved') {
+      return errorResponse(
+        'Invalid executive production decision.',
+        400,
+        'EXECUTIVE_PRODUCTION_DECISION_INVALID',
+        'The live RPC and table constraint permit only the approved decision.',
+        { action },
+      );
+    }
+    if (action === 'record_executive_production_signoff' && (!notes || notes.length > 4000)) {
+      return errorResponse(
+        'Valid executive authorization notes are required.',
+        400,
+        'EXECUTIVE_PRODUCTION_NOTES_INVALID',
+        'Provide non-empty authorization notes no longer than 4,000 characters.',
+        { action },
+      );
+    }
+    if (
+      action === 'record_executive_production_signoff'
+      && snapshotHash !== null
+      && (!snapshotHash || snapshotHash.length > 256 || !/^[a-zA-Z0-9:_-]+$/.test(snapshotHash))
+    ) {
+      return errorResponse(
+        'Invalid production snapshot hash.',
+        400,
+        'EXECUTIVE_PRODUCTION_SNAPSHOT_HASH_INVALID',
+        'When provided, snapshot_hash must contain only letters, digits, colons, underscores, or hyphens and be no longer than 256 characters.',
+        { action },
+      );
+    }
+
+    if (reviewId) {
+      const { data: review, error: reviewError } = await serviceClient
+        .from('pilot_go_no_go_reviews')
+        .select('id')
+        .eq('id', reviewId)
+        .maybeSingle();
+      if (reviewError) {
+        return errorResponse(
+          'Unable to verify the pilot review.',
+          500,
+          'PILOT_REVIEW_LOOKUP_FAILED',
+          'The server could not safely verify the requested pilot review.',
+          { action },
+        );
+      }
+      if (!review) {
+        return errorResponse(
+          'Pilot review not found.',
+          404,
+          'PILOT_REVIEW_NOT_FOUND',
+          'No pilot go/no-go review exists for the supplied review_id.',
+          { action },
+        );
+      }
+    }
+
+    let rpcResult: { data: unknown; error: any };
+    if (action === 'create_pilot_go_no_go_review') {
+      rpcResult = await serviceClient.rpc('create_pilot_go_no_go_review', {
+        p_title: title,
+        p_actor_id: userData.user.id,
+      });
+    } else if (action === 'update_pilot_go_no_go_review_status') {
+      rpcResult = await serviceClient.rpc('update_pilot_go_no_go_review_status', {
+        p_review_id: reviewId,
+        p_status: status,
+        p_notes: notes,
+        p_actor_id: userData.user.id,
+      });
+    } else if (action === 'record_pilot_go_no_go_event') {
+      rpcResult = await serviceClient.rpc('record_pilot_go_no_go_event', {
+        p_review_id: reviewId,
+        p_event_type: eventType,
+        p_event_summary: eventSummary,
+        p_actor_id: userData.user.id,
+      });
+    } else {
+      rpcResult = await serviceClient.rpc('record_executive_production_signoff', {
+        p_actor_id: userData.user.id,
+        p_decision: decision,
+        p_notes: notes,
+        p_snapshot_hash: snapshotHash,
+      });
+    }
+
+    if (rpcResult.error) {
+      const authorizationFailure = /UNAUTHORIZED|DENIED|REQUIRED|ACTIVE_ACTOR|ORGANIZATION|ROLE/i
+        .test(rpcResult.error.message ?? '');
+      return errorResponse(
+        authorizationFailure
+          ? 'Production-readiness authority was denied.'
+          : 'The production-readiness action could not be completed.',
+        authorizationFailure ? 403 : 409,
+        authorizationFailure ? 'PRODUCTION_READINESS_AUTHORITY_DENIED' : 'PRODUCTION_READINESS_ACTION_FAILED',
+        'The fixed production-readiness RPC rejected the validated request.',
+        { action },
+      );
+    }
+
+    return jsonResponse({ ok: true, action, result: rpcResult.data }, 200);
+  }
+
   if (action === 'create_department') {
     const { data, error } = await serviceClient.rpc('v98_create_department', {
       p_actor_id: userData.user.id,
@@ -1002,6 +1259,35 @@ Deno.serve(async (request) => {
         action,
       }, 403);
     }
+  }
+
+  if (action === 'department_import_execute') {
+    const payload = requestBody.payload ?? {};
+    const rows = payload.rows;
+    if (!Array.isArray(rows)) {
+      return jsonResponse({ ok: false, error: 'Rows array is required', action }, 400);
+    }
+    if (rows.length > 5000) {
+      return jsonResponse({ ok: false, error: 'Maximum 5,000 rows allowed per import batch', action }, 400);
+    }
+    const payloadSize = new TextEncoder().encode(JSON.stringify(payload)).length;
+    if (payloadSize > 5 * 1024 * 1024) {
+      return jsonResponse({ ok: false, error: 'Payload exceeds 5MB limit', action }, 400);
+    }
+
+    const { data, error } = await serviceClient.rpc('apply_department_import_batch', {
+      p_actor_id: userData.user.id,
+      p_organization_id: payload.organization_id,
+      p_source_filename: payload.source_filename,
+      p_import_mode: payload.import_mode,
+      p_rows: rows,
+    });
+
+    if (error) {
+      const authFailure = /unauthorized|service_role_required|active_actor_required|organization_scope_denied|division_scope_denied/i.test(error.message);
+      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
   }
 
   const { data, error } = await serviceClient.rpc('v72_execute_privileged_action', {

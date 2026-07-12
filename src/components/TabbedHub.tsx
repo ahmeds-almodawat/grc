@@ -19,9 +19,10 @@ interface TabbedHubProps {
   defaultTabId?: string;
   actions?: ReactNode;
   compact?: boolean;
+  hideTabRail?: boolean;
 }
 
-export function TabbedHub({ eyebrow, title, subtitle, tabs, defaultTabId, actions, compact = false }: TabbedHubProps) {
+export function TabbedHub({ eyebrow, title, subtitle, tabs, defaultTabId, actions, compact = false, hideTabRail = false }: TabbedHubProps) {
   const { direction } = useI18n();
   const firstTab = tabs[0]?.id ?? '';
   const [activeId, setActiveId] = useState(defaultTabId ?? firstTab);
@@ -41,43 +42,49 @@ export function TabbedHub({ eyebrow, title, subtitle, tabs, defaultTabId, action
         </div>
       </div>
 
-      <div className="hub-tab-layout">
-        <div className="hub-tab-rail panel" role="tablist" aria-label={title}>
-          {tabs.map(tab => {
-            const isActive = activeTab?.id === tab.id;
-            return (
-              <button
-                key={tab.id}
-                className={`hub-tab-button ${isActive ? 'active' : ''}`}
-                onClick={() => setActiveId(tab.id)}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-              >
-                <span className="hub-tab-icon">{tab.icon ?? <ChevronRight size={16} />}</span>
-                <span className="hub-tab-text">
-                  <strong>{tab.label}</strong>
-                  {tab.description ? <small>{tab.description}</small> : null}
-                </span>
-                {tab.badge !== undefined ? <span className="hub-tab-badge">{tab.badge}</span> : null}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="hub-tab-content" role="tabpanel">
-          <div className="hub-active-strip panel">
-            <div className="hub-active-strip__title">
-              <span className="hub-active-icon">{activeTab?.icon ?? <LayoutGrid size={17} />}</span>
-              <div>
-                <strong>{activeTab?.label}</strong>
-                {activeTab?.description ? <small>{activeTab.description}</small> : null}
-              </div>
-            </div>
-          </div>
+      {hideTabRail ? (
+        <div className="hub-tab-content">
           {activeTab?.content}
         </div>
-      </div>
+      ) : (
+        <div className="hub-tab-layout">
+          <div className="hub-tab-rail panel" role="tablist" aria-label={title}>
+            {tabs.map(tab => {
+              const isActive = activeTab?.id === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  className={`hub-tab-button ${isActive ? 'active' : ''}`}
+                  onClick={() => setActiveId(tab.id)}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                >
+                  <span className="hub-tab-icon">{tab.icon ?? <ChevronRight size={16} />}</span>
+                  <span className="hub-tab-text">
+                    <strong>{tab.label}</strong>
+                    {tab.description ? <small>{tab.description}</small> : null}
+                  </span>
+                  {tab.badge !== undefined ? <span className="hub-tab-badge">{tab.badge}</span> : null}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="hub-tab-content" role="tabpanel">
+            <div className="hub-active-strip panel">
+              <div className="hub-active-strip__title">
+                <span className="hub-active-icon">{activeTab?.icon ?? <LayoutGrid size={17} />}</span>
+                <div>
+                  <strong>{activeTab?.label}</strong>
+                  {activeTab?.description ? <small>{activeTab.description}</small> : null}
+                </div>
+              </div>
+            </div>
+            {activeTab?.content}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

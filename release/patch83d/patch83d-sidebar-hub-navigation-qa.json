@@ -1,0 +1,31 @@
+{
+  "patch": "83D",
+  "name": "Sidebar and hub navigation manual QA evidence pack",
+  "scope": [
+    "Patch 83B",
+    "Patch 83C"
+  ],
+  "date": "2026-07-11",
+  "status": "PASSED",
+  "user_acceptance_note": "all fine",
+  "checked_areas": [
+    "Workplace",
+    "Quality & Safety",
+    "GRC",
+    "Evidence & Documents",
+    "Reports",
+    "Admin/Internal"
+  ],
+  "acceptance_criteria": {
+    "no_duplicate_menu": true,
+    "sidebar_single_source": true,
+    "child_routes_open_expected": true,
+    "no_blank_pages": true,
+    "role_gating_preserved": true
+  },
+  "known_limitations": [
+    "this is manual UI QA evidence, not production readiness evidence",
+    "not a security/RLS remediation"
+  ],
+  "next_recommended_work": "Patch 82X / 83E: RLS remediation preflight matrix, documentation only"
+}

@@ -1,0 +1,51 @@
+{
+  "patch": "83H",
+  "selected_table": "public.document_center_items",
+  "risk_level": "Low",
+  "verified_columns": [
+    "organization_id",
+    "division_id",
+    "department_id",
+    "owner_id"
+  ],
+  "existing_policies": [
+    "document_center_items_read",
+    "document_center_items_write"
+  ],
+  "new_or_replaced_policies": [
+    "document_center_items_read_scoped"
+  ],
+  "permitted_personas": [
+    "owner",
+    "department_member",
+    "organization_member",
+    "super_admin"
+  ],
+  "denied_personas": [
+    "cross_department_user",
+    "cross_organization_user",
+    "anonymous_user",
+    "cross_department_auditor",
+    "cross_department_executive",
+    "cross_department_compliance",
+    "cross_department_governance"
+  ],
+  "positive_tests": [
+    "Owner views own document",
+    "User views department document",
+    "Super admin views all documents"
+  ],
+  "negative_tests": [
+    "User fails to view cross-department document",
+    "Auditor fails to view cross-department document",
+    "Anonymous fails to view any document"
+  ],
+  "rollback_sql": "BEGIN; DROP POLICY IF EXISTS document_center_items_read_scoped ON public.document_center_items; CREATE POLICY document_center_items_read ON public.document_center_items FOR SELECT TO authenticated USING (true); COMMIT;",
+  "files_changed": [
+    "supabase/migrations/166_patch83h_first_narrow_rls_remediation.sql"
+  ],
+  "limitations": [
+    "Relies on correct data seeding in staging to fully validate can_access_scope behavior",
+    "Runtime performance impact of can_access_scope evaluated positively in theory, but requires staging observation"
+  ]
+}

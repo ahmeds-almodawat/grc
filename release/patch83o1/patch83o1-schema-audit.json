@@ -1,0 +1,57 @@
+{
+  "patch": "83O.1",
+  "audit_date": "2026-07-12",
+  "sanitized": true,
+  "contains_business_rows": false,
+  "contains_credentials": false,
+  "migration_167_sha256": "5f4648c6a133fb77d311501713b89167dcb4e845c69b2fc075db51369dfac81b",
+  "premigration_alignment_through": 167,
+  "departments": {
+    "columns": [
+      { "name": "id", "type": "uuid", "nullable": false, "default": "gen_random_uuid()", "generated": false },
+      { "name": "organization_id", "type": "uuid", "nullable": false, "default": null, "generated": false },
+      { "name": "division_id", "type": "uuid", "nullable": true, "default": null, "generated": false },
+      { "name": "name_en", "type": "text", "nullable": false, "default": null, "generated": false },
+      { "name": "name_ar", "type": "text", "nullable": true, "default": null, "generated": false },
+      { "name": "code", "type": "text", "nullable": true, "default": null, "generated": false },
+      { "name": "is_active", "type": "boolean", "nullable": false, "default": "true", "generated": false },
+      { "name": "created_at", "type": "timestamptz", "nullable": false, "default": "now()", "generated": false },
+      { "name": "updated_at", "type": "timestamptz", "nullable": false, "default": "now()", "generated": false }
+    ],
+    "primary_key": ["id"],
+    "foreign_keys": [
+      "organization_id -> organizations.id on delete cascade",
+      "division_id -> divisions.id on delete set null"
+    ],
+    "unique_indexes": [
+      "uq_departments_active_code_norm (organization_id, lower(trim(code))) where is_active = true and code is not null"
+    ],
+    "other_indexes": [],
+    "triggers": ["trg_departments_updated_at before update -> public.set_updated_at()"],
+    "rls_enabled": true,
+    "policies": ["departments_read", "departments_write_admin"],
+    "type_column": null,
+    "manager_column": null
+  },
+  "canonical_manager_relation": {
+    "table": "user_roles",
+    "role": "department_manager",
+    "scope": "department",
+    "organization_column": "organization_id",
+    "department_column": "department_id",
+    "profile_affiliation_column": "profiles.department_id"
+  },
+  "department_import_batches_stores_raw_rows": false,
+  "rpc_signature": "public.apply_department_import_batch(uuid, uuid, text, text, jsonb) returns jsonb",
+  "rpc_premigration_execute_roles": ["service_role"],
+  "migration_167_incompatible_references": [
+    "departments.type",
+    "departments.manager_id",
+    "audit_logs.entity_type",
+    "audit_logs.entity_id"
+  ],
+  "unexpected_frontend_compatibility_findings": [
+    "disabled import preview uses legacy organization_code/division_code/department_code projections",
+    "disabled import execution payload shaping does not currently construct RPC raw_data rows"
+  ]
+}

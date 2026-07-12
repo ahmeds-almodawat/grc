@@ -1,14 +1,17 @@
 {
-  "generated_at": "2026-07-05T13:10:07.273Z",
+  "generated_at": "2026-07-12T20:09:34.329Z",
   "db_container": "supabase_db_grc-control-center",
-  "db_query_status": "passed",
+  "db_query_status": "passed_authoritative_live_schema_inventory",
   "db_query_error": null,
   "frontend_rpc_total": 1,
-  "authenticated_edge_bridge_call_total": 58,
+  "authenticated_edge_bridge_call_total": 79,
   "unique_frontend_rpc_total": 1,
-  "database_function_total": 213,
-  "database_security_definer_functions": 58,
+  "database_function_total": 388,
+  "database_security_definer_functions": 388,
+  "authoritative_live_public_security_definer_functions": 383,
+  "browser_executable_security_definer_functions": 2,
   "remaining_broad_security_definer_execute_grants": 0,
+  "verified_browser_safe_security_definer_execute_grants": 2,
   "managed_schema_broad_security_definer_observations": 5,
   "service_role_only_rpc_called_by_frontend": 0,
   "service_role_only_rpc_without_bridge_plan": 0,
@@ -20,20 +23,91 @@
     "real_persona_proof": true
   },
   "critical_runtime_security_findings": 0,
-  "status": "passed",
+  "status": "passed_with_verified_read_only_and_managed_observations",
   "scope_resolution": "Blocking broad-grant scope is the application-owned public schema. Supabase-managed net and supabase_functions functions are printed separately and are not changed by application migrations.",
   "application_broad_security_definer_grants": [],
+  "verified_browser_safe_security_definer_grants": [
+    {
+      "schema": "public",
+      "function_name": "current_user_org_id",
+      "identity_arguments": "",
+      "function_signature": "public.current_user_org_id()",
+      "owner": "postgres",
+      "language": "plpgsql",
+      "security_definer": true,
+      "volatility": "stable",
+      "public_execute": false,
+      "explicit_public_execute": false,
+      "public_execute_source": "explicitly_revoked",
+      "explicit_anon_execute": false,
+      "anon_execute": false,
+      "anon_execute_source": "none",
+      "explicit_authenticated_execute": true,
+      "authenticated_execute": true,
+      "authenticated_execute_source": "explicit_grant",
+      "explicit_service_role_execute": true,
+      "service_role_execute": true,
+      "acl_statements": [
+        "REVOKE ALL ON FUNCTION \"public\".\"current_user_org_id\"() FROM PUBLIC;",
+        "GRANT ALL ON FUNCTION \"public\".\"current_user_org_id\"() TO \"service_role\";",
+        "GRANT ALL ON FUNCTION \"public\".\"current_user_org_id\"() TO \"authenticated\";"
+      ],
+      "final_category": "browser_safe_authenticated_read_only",
+      "direct_browser_usage": false,
+      "edge_function_usage": false,
+      "behavior": "read_only",
+      "scope_enforcement": "auth.uid() lookup; null caller returns null",
+      "security_mode": "security_definer"
+    },
+    {
+      "schema": "public",
+      "function_name": "has_any_role",
+      "identity_arguments": "text[]",
+      "function_signature": "public.has_any_role(text[])",
+      "owner": "postgres",
+      "language": "plpgsql",
+      "security_definer": true,
+      "volatility": "stable",
+      "public_execute": true,
+      "explicit_public_execute": false,
+      "public_execute_source": "implicit_default",
+      "explicit_anon_execute": true,
+      "anon_execute": true,
+      "anon_execute_source": "explicit_grant",
+      "explicit_authenticated_execute": true,
+      "authenticated_execute": true,
+      "authenticated_execute_source": "explicit_grant",
+      "explicit_service_role_execute": true,
+      "service_role_execute": true,
+      "acl_statements": [
+        "GRANT ALL ON FUNCTION \"public\".\"has_any_role\"(\"p_roles\" \"text\"[]) TO \"anon\";",
+        "GRANT ALL ON FUNCTION \"public\".\"has_any_role\"(\"p_roles\" \"text\"[]) TO \"authenticated\";",
+        "GRANT ALL ON FUNCTION \"public\".\"has_any_role\"(\"p_roles\" \"text\"[]) TO \"service_role\";"
+      ],
+      "final_category": "browser_safe_authenticated_read_only",
+      "direct_browser_usage": false,
+      "edge_function_usage": false,
+      "behavior": "read_only",
+      "scope_enforcement": "auth.uid() lookup; null caller returns false",
+      "security_mode": "security_definer"
+    }
+  ],
   "managed_schema_broad_security_definer_grants": [
     {
       "schema": "graphql",
       "function_name": "get_schema_version",
       "identity_arguments": "",
       "function_signature": "graphql.get_schema_version()",
-      "security_mode": "security_definer",
+      "owner": "supabase_admin",
+      "language": "sql",
+      "security_definer": true,
+      "volatility": "volatile",
       "public_execute": true,
       "anon_execute": true,
       "authenticated_execute": true,
       "service_role_execute": true,
+      "final_category": "managed_schema_observation",
+      "security_mode": "security_definer",
       "qualified_function": "graphql.get_schema_version()",
       "broad_grantees": [
         "public",
@@ -47,11 +121,16 @@
       "function_name": "increment_schema_version",
       "identity_arguments": "",
       "function_signature": "graphql.increment_schema_version()",
-      "security_mode": "security_definer",
+      "owner": "supabase_admin",
+      "language": "plpgsql",
+      "security_definer": true,
+      "volatility": "volatile",
       "public_execute": true,
       "anon_execute": true,
       "authenticated_execute": true,
       "service_role_execute": true,
+      "final_category": "managed_schema_observation",
+      "security_mode": "security_definer",
       "qualified_function": "graphql.increment_schema_version()",
       "broad_grantees": [
         "public",
@@ -64,13 +143,18 @@
       "schema": "net",
       "function_name": "http_get",
       "identity_arguments": "url text, params jsonb, headers jsonb, timeout_milliseconds integer",
-      "function_signature": "net.http_get(text,jsonb,jsonb,integer)",
-      "security_mode": "security_definer",
+      "function_signature": "net.http_get(text, jsonb, jsonb, integer)",
+      "owner": "supabase_admin",
+      "language": "plpgsql",
+      "security_definer": true,
+      "volatility": "volatile",
       "public_execute": false,
       "anon_execute": true,
       "authenticated_execute": true,
       "service_role_execute": true,
-      "qualified_function": "net.http_get(text,jsonb,jsonb,integer)",
+      "final_category": "managed_schema_observation",
+      "security_mode": "security_definer",
+      "qualified_function": "net.http_get(text, jsonb, jsonb, integer)",
       "broad_grantees": [
         "anon",
         "authenticated"
@@ -81,13 +165,18 @@
       "schema": "net",
       "function_name": "http_post",
       "identity_arguments": "url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer",
-      "function_signature": "net.http_post(text,jsonb,jsonb,jsonb,integer)",
-      "security_mode": "security_definer",
+      "function_signature": "net.http_post(text, jsonb, jsonb, jsonb, integer)",
+      "owner": "supabase_admin",
+      "language": "plpgsql",
+      "security_definer": true,
+      "volatility": "volatile",
       "public_execute": false,
       "anon_execute": true,
       "authenticated_execute": true,
       "service_role_execute": true,
-      "qualified_function": "net.http_post(text,jsonb,jsonb,jsonb,integer)",
+      "final_category": "managed_schema_observation",
+      "security_mode": "security_definer",
+      "qualified_function": "net.http_post(text, jsonb, jsonb, jsonb, integer)",
       "broad_grantees": [
         "anon",
         "authenticated"
@@ -99,11 +188,16 @@
       "function_name": "http_request",
       "identity_arguments": "",
       "function_signature": "supabase_functions.http_request()",
-      "security_mode": "security_definer",
+      "owner": "supabase_functions_admin",
+      "language": "plpgsql",
+      "security_definer": true,
+      "volatility": "volatile",
       "public_execute": false,
       "anon_execute": true,
       "authenticated_execute": true,
       "service_role_execute": true,
+      "final_category": "managed_schema_observation",
+      "security_mode": "security_definer",
       "qualified_function": "supabase_functions.http_request()",
       "broad_grantees": [
         "anon",
@@ -242,7 +336,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 745
+          "line": 784
         }
       ],
       "current_security_mode": "security_definer",
@@ -266,7 +360,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 753
+          "line": 792
         }
       ],
       "current_security_mode": "security_definer",
@@ -290,7 +384,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1680
+          "line": 1744
         },
         {
           "file": "src/lib/userManagementApi.ts",
@@ -318,7 +412,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1695
+          "line": 1759
         },
         {
           "file": "src/lib/userManagementApi.ts",
@@ -346,7 +440,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1902
+          "line": 1966
         }
       ],
       "current_security_mode": "security_definer",
@@ -370,7 +464,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1929
+          "line": 1993
         }
       ],
       "current_security_mode": "security_definer",
@@ -546,7 +640,7 @@
       "classification": "read_only_search",
       "note": "Direct frontend RPC inventory; runtime authorization must be confirmed with DB grants and authenticated workflow tests.",
       "schema": "public",
-      "function_signature": "search_grc_global(text,integer)",
+      "function_signature": "public.search_grc_global(text, integer)",
       "current_security_mode": "security_invoker",
       "current_grant_status": {
         "public": true,
@@ -554,10 +648,10 @@
         "authenticated": true,
         "service_role": true
       },
-      "runtime_grant_status": "browser_safe_candidate",
+      "runtime_grant_status": "verified_browser_safe_read_only",
       "risk_level": "low",
       "recommended_action": "browser_safe_after_review",
-      "recommendation": "Keep browser access only while RLS, tenant filtering, and SECURITY INVOKER remain verified."
+      "recommendation": "Stable read-only SECURITY INVOKER search over the RLS-scoped global-search view."
     }
   ]
 }

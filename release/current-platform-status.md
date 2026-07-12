@@ -2,19 +2,23 @@
 
 ## Current Level
 
-- Current patch level: Patch 82H-2 after implementation.
+- Current patch level: Patch 83P activation readiness after implementation.
+- Production deployment executed=false.
+- Vercel environment modified=false.
+- Frontend execution remains disabled in the repository. The implementation is ready only for controlled Vercel enablement followed by a new reviewed build; this is not an unrestricted production-readiness claim.
+- Patch 83P scope: controlled frontend Department Import activation readiness. It centralizes an exact-match, fail-closed Vite flag, requires an authorized `super_admin` or `governance_admin`, a resolved organization, a validated nonempty preview without blocking errors, and an allowed import mode. Preview remains non-mutating and available while execution is disabled. Execution continues only through privileged action `department_import_execute`; no service-role key is exposed to the browser. Vercel activation and rollback are documented but were not executed.
+- Patch 83O through 83O.3 scope: authenticated runtime, schema-compatibility, validation-array, live mutation, audit, atomic rollback, duplicate, update, and cleanup verification for Department Import. Migrations 168 and 169 and privileged-action version 4 were verified before Patch 83P; the frontend remained disabled and no production-readiness claim was made.
+- Patch 83M and 83N scope: secure Department Import backend preparation and controlled cloud deployment verification. Browser execution remains indirect through the privileged-action bridge, with role and organization enforcement and server-side service-role use.
+- Patch 83L scope: exposes Backup Center access and adds the non-mutating Department Import preview.
+- Patch 83E through 83K scope: RLS remediation design, local/cloud validation harnesses, migration-chain analysis, the first scoped cloud RLS policy, and persona validation evidence. Blocked checks remain recorded as blocked rather than being represented as production approval.
+- Patch 83B through 83D scope: removes duplicate visible hub navigation, aligns sidebar categories, and records navigation QA evidence without restoring redundant in-page navigation.
+- Patch 82I through 82W scope: department-context navigation and organization-scoped administration, product-surface cleanup, safer audit/evidence workflows, Scenario Lab filtering, contextual pilot wording, security review, and remediation planning. Department context, role-based route checks, and User Import remain preserved.
 - Patch 82H-2 scope: removes the redundant in-page subsidiary navigation from User Management by sending the Admin & Organization sidebar parent directly to User Management, keeping the old hub route available, expanding the User Management content area, widening the roster and filters, and increasing KPI readability without changing auth, roles, route guards, RLS, backend contracts, Supabase migrations, or pilot data.
 - Patch 82H-1 scope: fixes compact navigation styling and removes the old Control Pages hub from the direct User Management route. It uses the actually loaded `src/styles.css`, keeps nested sidebar navigation styled inside the frozen dark sidebar, expands the main content area, and keeps User Management compact with KPI cards, filters, visible View/Edit row actions, and secondary actions inside More without changing auth, roles, RLS, backend contracts, Supabase migrations, or production readiness state.
 - Patch 82H scope: sidebar nested navigation and compact control pages. It keeps the left sidebar visible and scrollable, moves subsidiary page navigation into expandable sidebar groups, expands the main content area, and compacts User Management KPIs, filters, and roster actions without changing auth, roles, RLS, backend contracts, Supabase migrations, or production readiness state.
 - Patch 82G scope: privileged admin action JWT compatibility and safe error visibility. The privileged Edge Function validates caller bearer tokens through Supabase Auth, rejects missing or invalid tokens with structured JSON errors, keeps service-role usage server-side only, preserves existing role checks, and does not change Supabase migrations, RLS, backend contracts, Patch 20 import logic, or production launch status.
 - Patch 82F scope: employee ID login alias for pilot usability. The sign-in screen accepts either a full email address or an employee ID, normalizes employee IDs to the Almodawat email domain for the existing password sign-in flow, keeps password requirements unchanged, and does not change Supabase Auth, RLS, backend contracts, or production launch status.
-=======
-- Current patch level: Patch 82G after implementation.
-- Patch 82G scope: privileged admin action JWT compatibility and safe error visibility. The privileged Edge Function validates caller bearer tokens through Supabase Auth, rejects missing or invalid tokens with structured JSON errors, keeps service-role usage server-side only, preserves existing role checks, and does not change Supabase migrations, RLS, backend contracts, Patch 20 import logic, or production launch status.
-- Patch 82F scope: employee ID login alias for pilot usability. The sign-in screen accepts either a full email address or an employee ID, normalizes employee IDs to the Almodawat email domain for the existing password sign-in flow, keeps password requirements unchanged, and does not change Supabase Auth, RLS, backend contracts, or production launch status.
->>>>>>> f374b9438bff6bd389015c923fa1156127c38517
 - Patch 82E scope: frontend-only record-level/actionable drilldown for Department Control Room metric counts. It makes non-zero metric cells actionable, keeps zero cells non-clickable, opens critical-risk and next-action drilldowns, cleans navigation labels, simplifies the top bar, and adds proof coverage. No Supabase migration was applied, staging rehearsal remains pending, and production caveat remains unchanged.
-- Patch 82C-1 scope: tiny proof/wording alignment fix for Patch 82C operational dashboard interactivity. It updates validation evidence so the existing interactive UI is detected after merge. No behavior, security, schema, Supabase, or production launch change was made.
 - Patch 82C-1 scope: tiny proof/wording alignment fix for Patch 82C operational dashboard interactivity. It updates validation evidence so the existing interactive UI is detected after merge. No behavior, security, schema, Supabase, or production launch change was made.
 - Patch 82C scope: frontend-only operational dashboard interactivity for OVR / Incident Management, OVR Risk Indicators, Department Control Room, Operations & Notifications Center, Escalations / governance follow-up, and Approvals. It adds local card filters, search, reset controls, selected-record detail panels, and clearer empty-state guidance using already loaded data. No Supabase migration was applied, staging rehearsal remains pending, and production caveat remains unchanged.
 - Patch 82B scope: frontend-only interactive dashboard and UI polish for Production Readiness Center and Production Operator Console. It adds local focus cards, filters, search, and drilldown-style details using already loaded data. No Supabase migration was applied, staging rehearsal remains pending, and production caveat remains unchanged.
@@ -82,10 +86,7 @@ Use `npm run validate:fast` for the local development loop, `npm run validate:bu
 ## Evidence Locations
 
 - Technical validation artifacts: `release/v700/`, `release/v64/`, `release/v66/`, `release/v672/`, `release/v673/`, and `release/v674/`.
-- Patch release evidence: `release/patch43/` through `release/patch82h/`.
-=======
-- Patch release evidence: `release/patch43/` through `release/patch82g/`.
->>>>>>> f374b9438bff6bd389015c923fa1156127c38517
+- Patch release evidence: `release/patch43/` through `release/patch83p/`.
 - Current production readiness, pilot/hypercare, hospital operations evidence, and closure follow-up are surfaced in the Production Readiness Center, Production Operator Console, and Production Evidence Closure page.
 - Current proof command index: `release/current-proof-command-index.md`.
 - Current validation runbook: `release/current-validation-runbook.md`.

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+﻿import { useState, type ReactNode } from 'react';
 import { ArrowLeft, ClipboardCheck, ExternalLink, FileCheck2, ShieldAlert } from 'lucide-react';
 import { DataState } from '../components/DataState';
 import { ModernCard, StatusPill } from '../components/ModernCard';
@@ -92,7 +92,32 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
   const [actionError, setActionError] = useState('');
   const [recentActions, setRecentActions] = useState<ControlledEvidenceClosureActionResult[]>([]);
-  const items = [...(data?.intakeQueue ?? [])].sort((a, b) => itemSortScore(a) - itemSortScore(b));
+
+  const rawItems = [...(data?.intakeQueue ?? [])].sort((a, b) => itemSortScore(a) - itemSortScore(b));
+
+  const deduplicatedItems: (typeof rawItems[0] & { count: number; isGenerated: boolean })[] = [];
+  const signatureMap = new Map<string, number>();
+
+  let realEvidenceCount = 0;
+  for (const item of rawItems) {
+    if (item.linkedEvidenceReferences?.length > 0) {
+      realEvidenceCount++;
+    }
+    const signature = `${item.category}|${item.title}|${item.departmentOrScope}|${item.owner}|${item.dueDate}`;
+    if (signatureMap.has(signature)) {
+      const idx = signatureMap.get(signature)!;
+      deduplicatedItems[idx].count += 1;
+    } else {
+      signatureMap.set(signature, deduplicatedItems.length);
+      deduplicatedItems.push({
+        ...item,
+        count: 1,
+        isGenerated: !(item.linkedEvidenceReferences?.length > 0)
+      });
+    }
+  }
+  const items = deduplicatedItems;
+
   const selectedItem = items[0];
   const selectedHandoff = getEvidenceClosureHandoff(selectedItem);
   const reviewerReadiness = getReviewerDecisionReadiness(selectedItem);
@@ -165,9 +190,9 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
     <section className="page-section production-readiness-page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Production evidence operations</p>
+          <p className="eyebrow">Internal readiness tool â€” super_admin only</p>
           <h1>Production Evidence Closure</h1>
-          <p className="subtitle">Capture and close live evidence required for hospital production readiness, recovery assurance, adoption, policy acknowledgement, support readiness, and executive decision-making.</p>
+          <p className="subtitle">Internal tracking and evidence queue consolidation for super_admin review.</p>
         </div>
         {setPage ? (
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -206,7 +231,14 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
             </div>
           </ModernCard>
 
-          <ModernCard title="Evidence Intake Queue" subtitle="Live evidence items grouped by category and prioritized by closure risk.">
+
+          {realEvidenceCount === 0 && (
+            <div className="alert alert-info" style={{ marginBottom: '20px' }}>
+              No live production evidence records are attached yet.
+            </div>
+          )}
+          <ModernCard title="Evidence Intake Queue" subtitle="Consolidated readiness signals and live evidence items.">
+
             {items.length ? (
               <div className="table-wrap">
                 <table className="entity-table">
@@ -219,14 +251,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                       <th>Due date</th>
                       <th>Due date state</th>
                       <th>Evidence state</th>
-                      <th>Training/adoption/support evidence</th>
-                      <th>Backup and restore evidence</th>
-                      <th>Policy/SOP attestation evidence</th>
-                      <th>Access review evidence</th>
-                      <th>Owner state</th>
-                      <th>Reviewer state</th>
-                      <th>Blocker state</th>
-                      <th>Escalation readiness</th>
+
                       <th>Next action</th>
                     </tr>
                   </thead>
@@ -240,7 +265,36 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                       return (
                         <tr key={`${item.category}-${item.id}-${item.title}`}>
                           <td>{item.category}</td>
-                          <td><strong>{item.title}</strong></td>
+                          <td>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <strong>{item.title}</strong>
+                                {item.count > 1 && (
+                                  <span style={{ fontSize: '11px', background: 'var(--border-color)', padding: '2px 6px', borderRadius: '12px' }}>
+                                    {item.count} items
+                                  </span>
+                                )}
+                              </div>
+                              {item.isGenerated && (
+                                <span style={{ fontSize: '11px', color: 'var(--muted-color)' }}>
+                                  Generated readiness signal
+                                </span>
+                              )}
+                            </div>
+                            <details style={{ marginTop: '8px', fontSize: '12px' }}>
+                              <summary style={{ cursor: 'pointer', color: 'var(--primary-color)' }}>Show details</summary>
+                              <div style={{ padding: '8px', background: 'var(--panel-bg)', borderRadius: '4px', marginTop: '4px' }}>
+                                <div><strong>Training:</strong> {adoption.readinessState}</div>
+                                <div><strong>Backup/Restore:</strong> {recovery.readinessState}</div>
+                                <div><strong>Policy/SOP:</strong> {policySop.readinessState}</div>
+                                <div><strong>Access Review:</strong> {security.readinessState}</div>
+                                <div><strong>Owner State:</strong> {ownership.ownerState}</div>
+                                <div><strong>Reviewer State:</strong> {ownership.reviewerState}</div>
+                                <div><strong>Blocker:</strong> {item.blockerState}</div>
+                                <div><strong>Escalation:</strong> {ownership.escalationReadinessState}</div>
+                              </div>
+                            </details>
+                          </td>
                           <td>{item.departmentOrScope}</td>
                           <td>{ownership.ownerDisplay}</td>
                           <td>{item.dueDate}</td>
@@ -452,7 +506,7 @@ export function ProductionEvidenceClosureCenter({ setPage }: { setPage?: (page: 
                       <th>Training evidence</th>
                       <th>Training/adoption/support readiness</th>
                       <th>Policy/SOP evidence</th>
-                      <th>Policy/SOP attestation evidence</th>
+
                       <th>Support evidence</th>
                       <th>Backup/restore/DR evidence</th>
                       <th>Access/security evidence</th>

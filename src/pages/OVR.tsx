@@ -7,7 +7,6 @@ import { EntityTable } from '../components/EntityTable';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
-import { ScenarioFillButton } from '../components/ScenarioFillButton';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { formatDate, humanize } from '../lib/format';
 import { isEmptyLiveObject } from '../lib/liveData';
@@ -244,34 +243,7 @@ export function OVR() {
     }));
   };
 
-  const fillSyntheticOvr = () => {
-    const now = new Date();
-    setShowForm(true);
-    setForm({
-      logging_number: `V99-${Date.now().toString().slice(-8)}`,
-      occurrence_date: now.toISOString().slice(0, 10),
-      occurrence_time: now.toTimeString().slice(0, 5),
-      occurrence_location: 'Synthetic controlled-pilot test location',
-      involved_person_type: 'employee',
-      person_involved_name: 'Synthetic Pilot User - not a patient',
-      mrn_or_id_no: '',
-      age: '',
-      sex: '',
-      department_id: departments.data?.[0]?.id || '',
-      notification_at: '',
-      physical_condition: 'Synthetic/de-identified test condition only',
-      mental_condition: 'Synthetic/de-identified test condition only',
-      pre_occurrence_condition_flags: ['alert'],
-      brief_description:
-        `[${V99_SCENARIO_TAG}] Synthetic same-department operational observation. `
-        + 'No patient identifiers or confidential OVR narrative.',
-      occurrence_category: 'other',
-      severity_level: 'level_2',
-      injury_type: 'None - synthetic test',
-      create_linked_action_plan: false,
-    });
-    setMessage('Synthetic fields filled only. Review them before creating the tagged test record.');
-  };
+  
 
   const saveReport = async (status: 'draft' | 'submitted') => {
     setMessage(null);
@@ -470,7 +442,7 @@ export function OVR() {
         subtitle={t('ovr.subtitle')}
         action={!isReadOnly ? (
           <div className="inline-actions">
-            <ScenarioFillButton onClick={fillSyntheticOvr} />
+            
             <button className="primary-button" onClick={() => setShowForm(value => !value)}>
               <FilePlus2 size={17} />
               {t('ovr.newReport')}
@@ -657,7 +629,7 @@ export function OVR() {
               ? `No OVR records match ${ovrFilterLabel}. Reset filters or broaden the search.`
               : isReadOnly
               ? 'No readable OVR records are available for this account.'
-              : 'Create a controlled-pilot OVR when authorized. Administrators can also use Scenario Lab for synthetic UAT records.'
+              : 'Create a controlled-pilot OVR when authorized.'
           }
         >
           <EntityTable<OvrReportRow>

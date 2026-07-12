@@ -1,0 +1,30 @@
+# Patch 83O.2 Deployment Result
+
+- Database push executed: true
+- Only migration 169 pushed: true
+- Local migration 169 present: true
+- Remote migration 169 present: true
+- Local/remote migration 169 aligned: true
+- Read-only postmigration audit completed: true
+- RPC exists with exact signature: true
+- RPC is SECURITY DEFINER with exact safe search_path: true
+- Invalid division uses controlled array append: true
+- Missing/invalid manager validation uses controlled array append: true
+- Unsafe array self-concatenation remains in deployed RPC: false
+- References to nonexistent department type or manager columns: false
+- RPC execute granted to service_role: true
+- RPC execute granted to PUBLIC: false
+- RPC execute granted to anon: false
+- RPC execute granted to authenticated: false
+- Entire non-RPC public schema unchanged from predeployment dump: true
+- Department table definition, constraints, indexes, triggers, and policies unchanged: true
+- Migrations 167 and 168 unchanged: true
+- Migration 167 SHA-256: `5f4648c6a133fb77d311501713b89167dcb4e845c69b2fc075db51369dfac81b`
+- Migration 168 SHA-256: `b3658dc70519f2b70ccfb0f6d9f9f5a016417e5ec45783e72a47157ce945b017`
+- Migration repair executed: false
+- Database reset executed: false
+- Interactive secure runner executed: false
+- Live import mutations executed: false
+- Frontend department import execution enabled: false
+- Runtime retesting after migration 169: pending; user credentials required
+- Production readiness claimed: false

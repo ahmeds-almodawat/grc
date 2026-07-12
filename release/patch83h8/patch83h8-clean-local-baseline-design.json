@@ -1,0 +1,53 @@
+{
+  "patch": "83H.8",
+  "status": "design_complete",
+  "verified_remote_history": {
+    "016": "missing remotely",
+    "022": "applied remotely",
+    "055": "applied remotely",
+    "166": "local-only and unapplied"
+  },
+  "rejected_repairs": {
+    "restoring_016": "Creates out-of-order remote migration risk.",
+    "partial_pre_022_stub": "Creates out-of-order remote migration risk.",
+    "editing_022": "Alters remote checksum and requires unapproved migration repair.",
+    "high_numbered_corrective": "Cannot intercept reset failure halfway at 022."
+  },
+  "baseline_design_options": [
+    "Design A: Generated local baseline SQL snapshot",
+    "Design B: Local bootstrap script loading schema snapshot",
+    "Design C: Dedicated local migrations config",
+    "Design D: Temporary local baseline branch",
+    "Design E: Schema dump from verified non-prod clone"
+  ],
+  "recommended_design": "Design E: Schema dump combined with local bootstrap script.",
+  "safety_controls": [
+    "Fail closed unless localhost or 127.0.0.1",
+    "Reject production project ref zbrjjecpsrzposhuarcn",
+    "Reject linked remote execution",
+    "Never print secrets",
+    "Never run db push",
+    "Never run migration repair",
+    "Never modify cloud migration history"
+  ],
+  "baseline_generation": "Sanitized schema dump from non-prod clone.",
+  "checksum_strategy": "MD5 hash verification of baseline SQL before execution.",
+  "drift_detection": "Post-load comparison of critical tables against expected definitions.",
+  "schema_verification": "Verify restore_dry_run_jobs and document_center_items exist properly.",
+  "migration_166_local_application": "Use supabase migration up instead of db reset.",
+  "persona_test_sequence": "Run patch83h1 validation tests against local baseline container.",
+  "cleanup_strategy": "supabase stop --no-backup and clean rebuilds.",
+  "ci_strategy": "CI ignores baseline and pushes standard history because remote is intact.",
+  "rollback_strategy": "Delete local bootstrap scripts. Zero remote impact.",
+  "implementation_sequence": [
+    "Generate/verify local baseline SQL (sanitized).",
+    "Create local bootstrap runner script.",
+    "Add safety gates.",
+    "Run bootstrap script locally.",
+    "Apply migration 166 explicitly.",
+    "Re-run Patch 83H.3 persona testing."
+  ],
+  "stop_go_gates": "Stop if remote detected. Go if baseline applies and checksums match.",
+  "patch83i_gate": "BLOCKED",
+  "limitations": "No repair applied. Proof of concept only."
+}

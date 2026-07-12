@@ -18,7 +18,6 @@ import { DataState } from '../components/DataState';
 import { EntityTable } from '../components/EntityTable';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
-import { ScenarioFillButton } from '../components/ScenarioFillButton';
 import { StatusBadge } from '../components/StatusBadge';
 import { formatDate, humanize } from '../lib/format';
 import {
@@ -51,14 +50,7 @@ import type {
   EvidenceRow,
   SensitiveEvidenceRegisterRow,
 } from '../types/domain';
-import { GrcTraceabilityMap } from '../components/v180/GrcTraceabilityMap';
-import {
-  createScenarioLabScenario,
-  V99_SCENARIO_TAG,
-} from '../lib/scenarioLab';
-import { FrameworkCrosswalkBackbonePanel } from '../components/v210/FrameworkCrosswalkBackbonePanel';
 
-import { AuditorEvidencePackPanel } from '../components/v240/AuditorEvidencePackPanel';
 
 type EvidenceSelection = {
   evidence_file_id: string;
@@ -155,11 +147,7 @@ export function Evidence() {
   );
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [testFillOpen, setTestFillOpen] = useState(false);
-  const [testFillBusy, setTestFillBusy] = useState(false);
-  const [testFillMessage, setTestFillMessage] = useState<string | null>(null);
-  const canGovernEvidence = auth.roles.some(
+  const [message, setMessage] = useState<string | null>(null);  const canGovernEvidence = auth.roles.some(
     role => ['super_admin', 'governance_admin', 'compliance_officer', 'department_manager', 'auditor'].includes(role.role)
   );
 
@@ -235,30 +223,28 @@ export function Evidence() {
       chainOfCustody.refresh(),
     ]);
   }
+  const [actionModal, setActionModal] = useState<{ open: boolean; scope: 'legacy' | 'evidence' | 'waiver'; action: string; row: any } | null>(null);
 
-  async function createSyntheticEvidence() {
-    setTestFillBusy(true);
-    setTestFillMessage(null);
-    try {
-      const result = await createScenarioLabScenario('evidence');
-      setTestFillMessage(`Synthetic evidence metadata created: ${result.id}`);
-      await refreshGovernanceData();
-    } catch (err) {
-      setTestFillMessage(err instanceof Error ? err.message : 'Failed to create synthetic evidence.');
-    } finally {
-      setTestFillBusy(false);
+  function openActionModal(scope: 'legacy' | 'evidence' | 'waiver', action: string, row: any) {
+    if (scope === 'legacy' && action === 'accepted') {
+      return handleLegacyReview(row, action, {});
     }
+    if (scope === 'evidence' && (action === 'submit' || action === 'accept')) {
+      return handleEvidenceAction(row, action, {});
+    }
+    setActionModal({ open: true, scope, action, row });
   }
 
-  async function handleLegacyReview(row: EvidenceRow, status: 'accepted' | 'rejected' | 'needs_revision') {
+  async function handleLegacyReview(row: any, status: 'accepted' | 'rejected' | 'needs_revision', payload: Record<string, any>) {
     const defaultNote = status === 'accepted' ? '' : 'Needs correction or additional evidence.';
-    const note = status === 'accepted' ? undefined : window.prompt('Evidence review note', defaultNote);
-    if (note === null) return;
+    const note = status === 'accepted' ? undefined : (payload.note || defaultNote);
+    if (status !== 'accepted' && !payload.note) return;
     setError(null);
     setMessage(null);
     setBusyId(row.id);
+    setActionModal(null);
     try {
-      await reviewEvidence(row.id, status, note || defaultNote || undefined);
+      await reviewEvidence(row.id, status, note || undefined);
       setMessage(`Evidence ${humanize(status)}.`);
       await refreshGovernanceData();
     } catch (err) {
@@ -268,26 +254,27 @@ export function Evidence() {
     }
   }
 
-  async function handleEvidenceAction(row: EvidenceSelection, action: 'submit' | 'accept' | 'reject' | 'revision' | 'supersede' | 'lock') {
+  async function handleEvidenceAction(row: any, action: 'submit' | 'accept' | 'reject' | 'revision' | 'supersede' | 'lock', payload: Record<string, any>) {
     const evidenceId = row.evidence_file_id;
     setError(null);
     setMessage(null);
     setBusyId(`${action}:${evidenceId}`);
+    setActionModal(null);
     try {
       if (action === 'submit') {
         await submitEvidenceForReview({ evidence_file_id: evidenceId, note: 'Submitted from Evidence Governance Center.' });
       } else if (action === 'accept') {
         await acceptEvidence({ evidence_file_id: evidenceId, note: 'Accepted from Evidence Governance Center.' });
       } else if (action === 'reject') {
-        const reason = window.prompt('Rejection reason', 'Evidence does not satisfy the requirement.');
-        if (reason === null) return;
+        const reason = payload.reason;
+        if (!reason) return;
         await rejectEvidence({ evidence_file_id: evidenceId, reason, note: reason });
       } else if (action === 'revision') {
-        const reason = window.prompt('Revision reason', 'Attach a corrected or more complete evidence version.');
-        if (reason === null) return;
+        const reason = payload.reason;
+        if (!reason) return;
         await requestEvidenceRevision({ evidence_file_id: evidenceId, reason, note: reason });
       } else if (action === 'supersede') {
-        const newEvidenceId = window.prompt('Replacement evidence file id');
+        const newEvidenceId = payload.newEvidenceId;
         if (!newEvidenceId) return;
         await supersedeEvidence({
           evidence_file_id: evidenceId,
@@ -295,8 +282,8 @@ export function Evidence() {
           note: 'Superseded from Evidence Governance Center.',
         });
       } else if (action === 'lock') {
-        const note = window.prompt('Lock note', 'Locked for audit-ready evidence pack.');
-        if (note === null) return;
+        const note = payload.note;
+        if (!note) return;
         await lockEvidence({ evidence_file_id: evidenceId, note });
       }
       setMessage(`${humanize(action)} action completed for ${evidenceTitle(row)}.`);
@@ -308,13 +295,14 @@ export function Evidence() {
     }
   }
 
-  async function handleWaiverAction(row: EvidenceClosureGateStatusRow | EvidenceGapDashboardRow, action: 'request' | 'approve' | 'reject') {
+  async function handleWaiverAction(row: any, action: 'request' | 'approve' | 'reject', payload: Record<string, any>) {
     setError(null);
     setMessage(null);
     setBusyId(`${action}:${row.requirement_id}`);
+    setActionModal(null);
     try {
       if (action === 'request') {
-        const reason = window.prompt('Waiver reason', 'Temporary waiver requested with compensating control.');
+        const reason = payload.reason;
         if (!reason) return;
         await requestEvidenceGateWaiver({
           requirement_id: row.requirement_id,
@@ -324,10 +312,10 @@ export function Evidence() {
           audit_note: reason,
         });
       } else {
-        const waiverId = window.prompt('Waiver id');
+        const waiverId = payload.waiverId;
         if (!waiverId) return;
-        const auditNote = window.prompt('Audit note', action === 'approve' ? 'Waiver approved with documented rationale.' : 'Waiver rejected; evidence remains required.');
-        if (auditNote === null) return;
+        const auditNote = payload.auditNote;
+        if (!auditNote) return;
         if (action === 'approve') {
           await approveEvidenceGateWaiver({ waiver_id: waiverId, audit_note: auditNote });
         } else {
@@ -342,8 +330,7 @@ export function Evidence() {
       setBusyId(null);
     }
   }
-
-  async function handleGeneratePackIndex() {
+async function handleGeneratePackIndex() {
     setError(null);
     setMessage(null);
     setBusyId('generate-pack');
@@ -363,9 +350,9 @@ export function Evidence() {
   return (
     <section className="page-section">
       <ModuleHeader
-        eyebrow="Patch 23 Evidence governance"
-        title="Evidence Governance Center"
-        subtitle="Controlled proof for Risk, OVR, audit findings, compliance, projects, tasks, approvals, CAPA and action plans."
+        eyebrow="Evidence Library"
+        title="Evidence Library"
+        subtitle="Review, classify, accept and track evidence used for audits, risks, compliance and approvals."
         action={(
           <div className="inline-actions">
             <button
@@ -375,28 +362,19 @@ export function Evidence() {
               onClick={() => void handleGeneratePackIndex()}
             >
               <PackageCheck size={16} /> {compactActionLabel('Generate pack index', busyId === 'generate-pack')}
-            </button>
-            <ScenarioFillButton
-              label="Test-fill Evidence"
-              onClick={() => setTestFillOpen(true)}
-            />
-          </div>
+            </button>          </div>
         )}
       />
-
-      <GrcTraceabilityMap context="evidence" />
-      <FrameworkCrosswalkBackbonePanel context="evidence" />
-
       {error ? <div className="panel error-panel">{error}</div> : null}
       {message ? <div className="notice-banner">{message}</div> : null}
-      {testFillMessage ? <div className="notice-banner">{testFillMessage}</div> : null}
 
-      <div className="operations-kpi-grid">
-        <MetricCard label="Review queue" value={metrics.queue} tone={metrics.queue ? 'warning' : 'success'} />
-        <MetricCard label="Closure gates blocked" value={metrics.closureBlocked} tone={metrics.closureBlocked ? 'danger' : 'success'} />
-        <MetricCard label="Accepted pack candidates" value={metrics.acceptedCandidates} tone={metrics.acceptedCandidates ? 'success' : undefined} />
-        <MetricCard label="Sensitive register" value={metrics.sensitive} tone={metrics.sensitive ? 'warning' : undefined} />
+      <div className="module-grid">
+        <div className="module-card warning"><strong>Review queue</strong><span>{metrics.queue} queued</span></div>
+        <div className="module-card danger"><strong>Closure blocked</strong><span>{metrics.closureBlocked} blocked</span></div>
+        <div className="module-card good"><strong>Accepted pack candidates</strong><span>{metrics.acceptedCandidates} accepted</span></div>
+        <div className="module-card danger"><strong>Sensitive evidence</strong><span>{metrics.sensitive} sensitive</span></div>
       </div>
+
 
       {warnings.length ? (
         <div className="warning-stack">
@@ -412,15 +390,6 @@ export function Evidence() {
           No governed evidence warnings are currently visible in your RLS scope.
         </div>
       )}
-
-      <div className="panel two-column">
-        <div>
-          <h4>Evidence rule</h4>
-          <p className="muted">Closure, approval, acceptance, treatment and audit readiness should use accepted, current, non-expired evidence or an approved waiver.</p>
-        </div>
-        <div className="mini-card"><span>Storage bucket</span><strong>grc-evidence</strong></div>
-      </div>
-
       <div className="panel">
         <div className="panel-header">
           <h4><FileCheck2 size={18} /> Evidence review queue</h4>
@@ -430,7 +399,7 @@ export function Evidence() {
           error={reviewQueue.error}
           empty={!reviewQueue.data?.length}
           emptyTitle="No governed evidence in review"
-          emptyMessage="Files waiting for review, overdue review, revision, expiry or renewal will appear here after Patch 23 migration is applied."
+          emptyMessage="Files waiting for review, overdue review, revision, expiry or renewal will appear here after migration is applied."
         >
           <EntityTable<EvidenceReviewQueueRow>
             rows={reviewQueue.data || []}
@@ -448,11 +417,11 @@ export function Evidence() {
                 header: 'Actions',
                 render: row => canGovernEvidence ? (
                   <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Submit for review" onClick={() => void handleEvidenceAction(row, 'submit')}><Send size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Accept evidence" onClick={() => void handleEvidenceAction(row, 'accept')}><ThumbsUp size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Request revision" onClick={() => void handleEvidenceAction(row, 'revision')}><RotateCcw size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Reject evidence" onClick={() => void handleEvidenceAction(row, 'reject')}><XCircle size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled || Boolean(row.locked_at)} title="Lock evidence" onClick={() => void handleEvidenceAction(row, 'lock')}><Lock size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Submit for review" onClick={() => openActionModal('evidence', 'submit', row)}><Send size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Accept evidence" onClick={() => openActionModal('evidence', 'accept', row)}><ThumbsUp size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Request revision" onClick={() => openActionModal('evidence', 'revision', row)}><RotateCcw size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Reject evidence" onClick={() => openActionModal('evidence', 'reject', row)}><XCircle size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled || Boolean(row.locked_at)} title="Lock evidence" onClick={() => openActionModal('evidence', 'lock', row)}><Lock size={14} /></button>
                   </div>
                 ) : '-'
               },
@@ -486,7 +455,7 @@ export function Evidence() {
                 key: 'waiver',
                 header: 'Waiver',
                 render: row => canGovernEvidence ? (
-                  <button className="ghost-button compact-button" disabled={actionDisabled} onClick={() => void handleWaiverAction(row, 'request')}>
+                  <button className="ghost-button compact-button" disabled={actionDisabled} onClick={() => openActionModal('waiver', 'request', row)}>
                     <Link2 size={14} /> Request
                   </button>
                 ) : '-',
@@ -522,64 +491,11 @@ export function Evidence() {
                 header: 'Actions',
                 render: row => canGovernEvidence ? (
                   <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Approve waiver by id" onClick={() => void handleWaiverAction(row, 'approve')}><ThumbsUp size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Reject waiver by id" onClick={() => void handleWaiverAction(row, 'reject')}><XCircle size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Approve waiver by id" onClick={() => openActionModal('waiver', 'approve', row)}><ThumbsUp size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Reject waiver by id" onClick={() => openActionModal('waiver', 'reject', row)}><XCircle size={14} /></button>
                   </div>
                 ) : '-',
               },
-            ]}
-          />
-        </DataState>
-      </div>
-
-      <div className="panel">
-        <div className="panel-header">
-          <h4><PackageCheck size={18} /> Evidence pack index</h4>
-        </div>
-        <DataState
-          loading={packIndex.loading}
-          error={packIndex.error}
-          empty={!packIndex.data?.length}
-          emptyTitle="No linked evidence pack candidates"
-          emptyMessage="Linked evidence for audit, board, regulatory and closure packs will appear here."
-        >
-          <EntityTable<EvidencePackIndexRow>
-            rows={packIndex.data || []}
-            getRowKey={row => `${row.linked_item_type}:${row.linked_item_id}:${row.evidence_file_id}`}
-            columns={[
-              { key: 'item', header: 'Linked item', render: row => `${humanize(row.linked_item_type)} - ${row.linked_item_title || row.linked_item_id.slice(0, 8)}` },
-              { key: 'evidence', header: 'Evidence', render: row => <button className="link-button" type="button" onClick={() => setSelectedEvidence(row)}>{evidenceTitle(row)}</button> },
-              { key: 'status', header: 'Review', render: row => <StatusBadge status={humanize(row.review_status)} /> },
-              { key: 'reviewer', header: 'Reviewer', render: row => row.reviewer_name || row.reviewer_id || '-' },
-              { key: 'flags', header: 'Required for', render: row => [row.required_for_closure && 'closure', row.required_for_acceptance && 'acceptance', row.required_for_approval && 'approval', row.required_for_treatment && 'treatment'].filter(Boolean).join(', ') || '-' },
-              { key: 'linked', header: 'Linked at', render: row => formatDate(row.linked_at) },
-            ]}
-          />
-        </DataState>
-      </div>
-
-      <div className="panel">
-        <div className="panel-header">
-          <h4><ShieldAlert size={18} /> Sensitive evidence register</h4>
-        </div>
-        <DataState
-          loading={sensitiveRegister.loading}
-          error={sensitiveRegister.error}
-          empty={!sensitiveRegister.data?.length}
-          emptyTitle="No sensitive evidence visible"
-          emptyMessage="Sensitive and highly sensitive evidence appears here with owner, reviewer, expiry and lock status."
-        >
-          <EntityTable<SensitiveEvidenceRegisterRow>
-            rows={sensitiveRegister.data || []}
-            getRowKey={row => row.evidence_file_id}
-            columns={[
-              { key: 'evidence', header: 'Evidence', render: row => <button className="link-button" type="button" onClick={() => setSelectedEvidence(row)}>{evidenceTitle(row)}</button> },
-              { key: 'sensitivity', header: 'Sensitivity', render: row => <StatusBadge status={humanize(row.sensitivity_level)} /> },
-              { key: 'reason', header: 'Classification reason', render: row => row.classification_reason || '-' },
-              { key: 'owner', header: 'Owner', render: row => row.owner_name || row.evidence_owner_id || '-' },
-              { key: 'reviewer', header: 'Reviewer', render: row => row.reviewer_name || row.reviewer_id || '-' },
-              { key: 'expiry', header: 'Expiry', render: row => formatDate(row.expiry_date) },
-              { key: 'lock', header: 'Lock', render: row => row.locked_at ? <StatusBadge status="Locked" /> : '-' },
             ]}
           />
         </DataState>
@@ -594,7 +510,7 @@ export function Evidence() {
           emptyTitle="No legacy evidence items in your scope"
           emptyMessage={
             canGovernEvidence
-              ? 'Evidence will appear after controlled work submits files for review. Authorized administrators may use Scenario Lab for synthetic UAT metadata.'
+              ? 'Evidence will appear after controlled work submits files for review.'
               : 'No evidence records are currently assigned or visible to this read-only account.'
           }
         >
@@ -613,9 +529,9 @@ export function Evidence() {
                 header: 'Review',
                 render: row => canGovernEvidence && (row.status === 'submitted' || row.status === 'needs_revision') ? (
                   <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => void handleLegacyReview(row, 'accepted')}>Accept</button>
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => void handleLegacyReview(row, 'needs_revision')}>Revise</button>
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => void handleLegacyReview(row, 'rejected')}>Reject</button>
+                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => openActionModal('legacy', 'accepted', row)}>Accept</button>
+                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => openActionModal('legacy', 'needs_revision', row)}>Revise</button>
+                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => openActionModal('legacy', 'rejected', row)}>Reject</button>
                   </div>
                 ) : '-'
               }
@@ -652,7 +568,7 @@ export function Evidence() {
                 loading={false}
                 empty={!selectedLinks.length}
                 emptyTitle="No linked items"
-                emptyMessage="Use the Patch 23 link action from workflow modules or the API bridge to link this file."
+                emptyMessage="Use the link action from workflow modules or the API bridge to link this file."
               >
                 <EntityTable<EvidencePackIndexRow>
                   rows={selectedLinks}
@@ -692,12 +608,12 @@ export function Evidence() {
                 <h4>Action controls</h4>
               </div>
               <div className="inline-actions">
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void handleEvidenceAction(selectedEvidence, 'submit')}><Send size={16} /> Submit</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void handleEvidenceAction(selectedEvidence, 'accept')}><ThumbsUp size={16} /> Accept</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void handleEvidenceAction(selectedEvidence, 'reject')}><XCircle size={16} /> Reject</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void handleEvidenceAction(selectedEvidence, 'revision')}><RotateCcw size={16} /> Revision</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => void handleEvidenceAction(selectedEvidence, 'supersede')}><RefreshCw size={16} /> Supersede</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled || Boolean(selectedEvidence.locked_at)} onClick={() => void handleEvidenceAction(selectedEvidence, 'lock')}><Lock size={16} /> Lock</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'submit', selectedEvidence)}><Send size={16} /> Submit</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'accept', selectedEvidence)}><ThumbsUp size={16} /> Accept</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'reject', selectedEvidence)}><XCircle size={16} /> Reject</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'revision', selectedEvidence)}><RotateCcw size={16} /> Revision</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'supersede', selectedEvidence)}><RefreshCw size={16} /> Supersede</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled || Boolean(selectedEvidence.locked_at)} onClick={() => openActionModal('evidence', 'lock', selectedEvidence)}><Lock size={16} /> Lock</button>
               </div>
               {!canGovernEvidence ? <p className="muted">Your current role can view governed evidence but cannot perform state transitions.</p> : null}
             </div>
@@ -716,44 +632,111 @@ export function Evidence() {
         ) : null}
       </Modal>
 
-      <Modal
-        open={testFillOpen}
-        title="Synthetic evidence test fill"
-        onClose={() => setTestFillOpen(false)}
-      >
-        <div className="form-grid">
-          <div className="notice-banner full-width">
-            This creates metadata-only synthetic evidence and a linked synthetic project.
-            It does not upload confidential content.
-          </div>
-          <label className="field full-width">
-            <span>File name</span>
-            <input readOnly value={`${V99_SCENARIO_TAG}-synthetic-evidence.txt`} />
-          </label>
-          <label className="field full-width">
-            <span>Description</span>
-            <textarea
-              readOnly
-              value={`[${V99_SCENARIO_TAG}] Synthetic evidence metadata. No confidential content.`}
-            />
-          </label>
-          <div className="form-actions full-width">
-            <button className="ghost-button" type="button" onClick={() => setTestFillOpen(false)}>
-              Cancel
-            </button>
-            <button
-              className="primary-button"
-              type="button"
-              disabled={testFillBusy}
-              onClick={() => void createSyntheticEvidence()}
-            >
-              {testFillBusy ? 'Creating...' : 'Create synthetic record'}
-            </button>
-          </div>
-        </div>
-      </Modal>
+          </section>
+  );
+}
 
-      <AuditorEvidencePackPanel />
-    </section>
+
+function EvidenceActionForm({ state, evidenceList, onClose, onConfirm }: { state: any, evidenceList: any[], onClose: () => void, onConfirm: (p: Record<string, any>) => void }) {
+  const [payload, setPayload] = useState<Record<string, any>>({});
+
+  const isReject = state.action === 'rejected' || state.action === 'reject' || state.action === 'needs_revision' || state.action === 'revision';
+
+  const missingFields: string[] = [];
+  if (state.scope === 'legacy' && !payload.note) missingFields.push('Review Note');
+  if (state.scope === 'evidence' && state.action === 'reject' && !payload.reason) missingFields.push('Rejection Reason');
+  if (state.scope === 'evidence' && state.action === 'revision' && !payload.reason) missingFields.push('Revision Reason');
+  if (state.scope === 'evidence' && state.action === 'supersede' && !payload.newEvidenceId) missingFields.push('Replacement Evidence');
+  if (state.scope === 'evidence' && state.action === 'lock' && !payload.note) missingFields.push('Lock Note');
+  if (state.scope === 'waiver' && state.action === 'request' && !payload.reason) missingFields.push('Waiver Reason');
+  if (state.scope === 'evidence' && state.action === 'classify' && !payload.sensitivity) missingFields.push('Sensitivity Level');
+
+  const isValid = missingFields.length === 0;
+
+  const evidenceTitle = state.row ? `${state.row.evidence_code ? state.row.evidence_code + ' - ' : ''}${state.row.evidence_title || state.row.item_title || state.row.file_name}` : 'Unknown';
+
+  return (
+    <div className="panel" style={{ padding: '24px', border: 'none', margin: 0 }}>
+       <div style={{ marginBottom: '16px' }}>
+         <strong>Action: {humanize(state.action)}</strong><br/>
+         <small>Evidence: {evidenceTitle}</small>
+       </div>
+
+       {state.scope === 'legacy' && (
+         <div className="field-group">
+           <label>Review Note *</label>
+           <textarea autoFocus value={payload.note || ''} onChange={e => setPayload({...payload, note: e.target.value})} />
+         </div>
+       )}
+       {state.scope === 'evidence' && state.action === 'reject' && (
+         <div className="field-group">
+           <label>Rejection Reason *</label>
+           <input autoFocus value={payload.reason || ''} onChange={e => setPayload({...payload, reason: e.target.value})} />
+         </div>
+       )}
+       {state.scope === 'evidence' && state.action === 'revision' && (
+         <div className="field-group">
+           <label>Revision Reason *</label>
+           <input autoFocus value={payload.reason || ''} onChange={e => setPayload({...payload, reason: e.target.value})} />
+         </div>
+       )}
+       {state.scope === 'evidence' && state.action === 'supersede' && (
+         <div className="field-group">
+           <label>Replacement Evidence *</label>
+           <select autoFocus value={payload.newEvidenceId || ''} onChange={e => setPayload({...payload, newEvidenceId: e.target.value})}>
+             <option value="">-- Select replacement evidence --</option>
+             {evidenceList.filter(e => e.id !== state.row.evidence_file_id).map(e => <option key={e.id} value={e.id}>{e.evidence_code ? e.evidence_code + ' - ' : ''}{e.evidence_title || e.item_title || e.file_name}</option>)}
+           </select>
+         </div>
+       )}
+       {state.scope === 'evidence' && state.action === 'lock' && (
+         <div className="field-group">
+           <label>Lock Note *</label>
+           <input autoFocus value={payload.note || ''} onChange={e => setPayload({...payload, note: e.target.value})} />
+         </div>
+       )}
+       {state.scope === 'evidence' && state.action === 'classify' && (
+         <div className="field-group">
+           <label>Sensitivity Classification *</label>
+           <select autoFocus value={payload.sensitivity || ''} onChange={e => setPayload({...payload, sensitivity: e.target.value})}>
+             <option value="">-- Select sensitivity --</option>
+             <option value="public">Public</option>
+             <option value="internal">Internal</option>
+             <option value="confidential">Confidential</option>
+             <option value="restricted">Restricted</option>
+           </select>
+         </div>
+       )}
+       {state.scope === 'waiver' && state.action === 'request' && (
+         <div className="field-group">
+           <label>Waiver Reason *</label>
+           <input autoFocus value={payload.reason || ''} onChange={e => setPayload({...payload, reason: e.target.value})} />
+         </div>
+       )}
+       {state.scope === 'waiver' && (state.action === 'approve' || state.action === 'reject') && (
+         <>
+           <div className="field-group">
+             <label>Waiver ID *</label>
+             <div className="notice-banner warning">No selectable records are available in your current scope.</div>
+           </div>
+           <div className="field-group">
+             <label>Audit Note *</label>
+             <input value={payload.auditNote || ''} onChange={e => setPayload({...payload, auditNote: e.target.value})} />
+           </div>
+         </>
+       )}
+       {isReject && <div className="notice-banner danger" style={{ marginTop: '16px' }}>This is a destructive or negative action. Please provide a clear reason.</div>}
+
+       {!isValid && <div className="notice-banner warning" style={{ marginTop: '16px' }}>Please fill out all required fields. Missing: {missingFields.join(', ')}</div>}
+
+       <div className="form-actions" style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+         <button className="ghost-button" onClick={onClose}>Cancel</button>
+         {(state.scope === 'waiver' && (state.action === 'approve' || state.action === 'reject')) || !isValid ? (
+           <button className="primary-button" disabled>Confirm Action</button>
+         ) : (
+           <button className="primary-button" onClick={() => onConfirm(payload)}>Confirm Action</button>
+         )}
+       </div>
+    </div>
   );
 }

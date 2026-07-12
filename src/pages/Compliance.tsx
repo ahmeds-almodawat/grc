@@ -6,19 +6,11 @@ import { ComplianceForm } from '../components/GrcForms';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
-import { ComplianceExecutionWorkflowMap } from '../components/v160/ComplianceExecutionWorkflowMap';
-import { ComplianceObligationMaturityPanel } from '../components/v160/ComplianceObligationMaturityPanel';
-import { ComplianceTestingCalendar } from '../components/v160/ComplianceTestingCalendar';
 import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
 import { getComplianceItems, getDepartments, getOrganizations, getProfiles } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
 import type { ComplianceRow } from '../types/domain';
-import '../styles/v160-compliance-management.css';
-import { FrameworkCrosswalkBackbonePanel } from '../components/v210/FrameworkCrosswalkBackbonePanel';
 
-import { ComplianceHardeningOverview } from '../components/v230/ComplianceHardeningOverview';
-import { PolicyAttestationTracker } from '../components/v230/PolicyAttestationTracker';
-import { VendorIncidentHardeningPanel } from '../components/v230/VendorIncidentHardeningPanel';
 export function Compliance() {
   const auth = useAuth();
   const [formOpen, setFormOpen] = useState(false);
@@ -30,33 +22,38 @@ export function Compliance() {
   const canManageCompliance = auth.roles.some(role =>
     ['super_admin', 'governance_admin', 'compliance_officer', 'department_manager'].includes(role.role),
   );
+  const complianceRows = compliance.data || [];
+  const metrics = {
+    register: complianceRows.length,
+    expiring: complianceRows.filter(r => r.expiry_date && new Date(r.expiry_date).getTime() < Date.now() + 90 * 24 * 60 * 60 * 1000).length,
+    highRisk: complianceRows.filter(r => r.risk_level === 'critical' || r.risk_level === 'high').length,
+    evidenceNeeded: complianceRows.filter(r => r.status === 'evidence_needed' || r.status === 'review_needed').length,
+    overdue: complianceRows.filter(r => r.due_date && new Date(r.due_date).getTime() < Date.now() && r.status !== 'closed' && r.status !== 'compliant').length,
+  };
 
   return (
     <section className="page-section">
       <ModuleHeader
-        eyebrow="Compliance management system"
-        title="Obligations, regulatory change, testing, evidence and non-compliance follow-up"
-        subtitle="v16 connects compliance work into an ISO 37301-style chain: obligation, change, policy/control, test, evidence, issue, CAPA and management reporting."
+        eyebrow="Compliance"
+        title="Compliance Obligations Register"
+        subtitle="Track regulatory obligations, owners, expiry dates, evidence and status."
         action={canManageCompliance ? <button className="primary-button" onClick={() => setFormOpen(true)}>New Obligation</button> : null}
       />
 
-      <ComplianceExecutionWorkflowMap />
-      <ComplianceObligationMaturityPanel />
-      <ComplianceTestingCalendar />
-      <FrameworkCrosswalkBackbonePanel context="compliance" />
-
-
       <div className="module-grid">
-        <div className="module-card warning"><strong>Expiring soon</strong><span>MOH, Civil Defense, CBAHI and contract renewals with owner and evidence controls.</span></div>
-        <div className="module-card"><strong>Evidence needed</strong><span>Required files, review decision and rejected-evidence follow-up before marking compliant.</span></div>
-        <div className="module-card"><strong>Regulatory change</strong><span>Changed requirement becomes impact assessment, policy/control update and verification.</span></div>
-        <div className="module-card"><strong>Non-compliance</strong><span>Failed obligations and tests create issue, CAPA and leadership reporting.</span></div>
+        <div className="module-card"><strong>Total obligations</strong><span>{metrics.register} active</span></div>
+        <div className="module-card warning"><strong>Expiring soon</strong><span>{metrics.expiring} within 90 days</span></div>
+        <div className="module-card danger"><strong>High risk</strong><span>{metrics.highRisk} critical/high</span></div>
+        <div className="module-card warning"><strong>Evidence needed</strong><span>{metrics.evidenceNeeded} pending</span></div>
+        <div className="module-card danger"><strong>Overdue</strong><span>{metrics.overdue} overdue</span></div>
       </div>
+
+
 
       <div className="panel">
         <div className="panel-header">
           <div>
-            <h4>Compliance obligations</h4>
+            <h4>Compliance obligations register</h4>
             <p className="muted">Operational register for regulatory obligations, expiry warnings, responsible owner, risk level and evidence status.</p>
           </div>
           <span className="status-chip neutral">Evidence-based CMS</span>
@@ -80,28 +77,8 @@ export function Compliance() {
         </DataState>
       </div>
 
-      <div className="panel two-column">
-        <div>
-          <h4>Compliance closure rule</h4>
-          <p className="muted">
-            A high-risk obligation should not be closed only because the due date passed or a user changed the status. Closure should require reviewed evidence, a policy/control link where applicable, and issue/CAPA tracking when testing fails.
-          </p>
-        </div>
-        <div className="mini-card">
-          <span>Professional CMS workflow</span>
-          <strong>Obligation → Evidence → Test → Issue / CAPA → Management Reporting</strong>
-        </div>
-      </div>
-
       <Modal open={formOpen} title="Create compliance obligation" onClose={() => setFormOpen(false)}>
         <ComplianceForm organizationId={organizationId} departments={departments.data || []} profiles={profiles.data || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void compliance.refresh(); }} />
-      </Modal>
-    
-      {/* v23.0 compliance, policy, vendor and incident hardening */}
-      <ComplianceHardeningOverview />
-      <PolicyAttestationTracker />
-      <VendorIncidentHardeningPanel />
-
-</section>
+      </Modal></section>
   );
 }

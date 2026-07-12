@@ -1,0 +1,96 @@
+{
+  "patch": "83G",
+  "status": "DRAFT",
+  "scope": [
+    "Definition of a test harness for safe RLS policy evaluation",
+    "Requirements for environment, personas, test data, and expected evidence outputs",
+    "Definition of stop/go gates before applying real migrations"
+  ],
+  "non_scope": [
+    "No real RLS remediation applied",
+    "No live policies tested by this patch",
+    "No production database changes"
+  ],
+  "environments": {
+    "requirements": [
+      "local Supabase or dedicated staging project only",
+      "production project reference must be rejected",
+      "no service-role secret committed",
+      "secrets supplied only through local environment variables",
+      "test scripts must fail closed when environment checks are missing"
+    ]
+  },
+  "personas": [
+    "normal user",
+    "department manager",
+    "auditor/read-only",
+    "compliance or governance admin",
+    "super_admin",
+    "cross-department user"
+  ],
+  "test_data_requirements": [
+    "at least two organizations where supported by schema",
+    "at least two departments",
+    "organization ownership",
+    "department ownership",
+    "assigned owner",
+    "unassigned record",
+    "cross-department denial sample",
+    "cross-organization denial sample where supported",
+    "auditor read-only sample",
+    "audit/event append-only sample"
+  ],
+  "test_categories": [
+    "positive read access",
+    "negative read access",
+    "allowed write access",
+    "denied write access",
+    "cross-department denial",
+    "cross-organization denial",
+    "auditor read-only enforcement",
+    "owner/assignee access",
+    "privileged action path",
+    "service-role-only write path",
+    "append-only audit/event enforcement",
+    "anonymous access denial where applicable"
+  ],
+  "evidence_outputs": [
+    "environment validation result",
+    "command log",
+    "persona result matrix",
+    "expected-versus-actual result",
+    "failed test list",
+    "policy inventory before test",
+    "policy inventory after test",
+    "rollback confirmation",
+    "protected-table verification",
+    "final pass/fail summary"
+  ],
+  "stop_go_gates": [
+    "staging/local environment confirmed",
+    "production ref rejected",
+    "persona matrix complete",
+    "negative tests defined",
+    "rollback procedure documented",
+    "no unresolved schema assumptions",
+    "no service-role secret stored in repository",
+    "explicit user approval required before Patch 83H"
+  ],
+  "rollback_requirements": [
+    "rollback procedure documented",
+    "rollback confirmation",
+    "policy inventory after test"
+  ],
+  "future_sequence": [
+    "Patch 83H: first narrow, low-risk RLS migration only after explicit approval",
+    "Patch 83I: staged expansion only if 83H passes",
+    "no broad multi-table rollout in the first migration"
+  ],
+  "limitations": [
+    "no RLS remediated yet",
+    "no live policies tested by this documentation patch",
+    "no production readiness claim",
+    "results depend on staging/local data quality",
+    "schema assumptions must be verified before implementation"
+  ]
+}

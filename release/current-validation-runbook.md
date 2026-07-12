@@ -43,6 +43,18 @@ Patch 82F login usability changes should run `npm run validate:build`, `npm run 
 
 Patch 82G privileged action compatibility changes should run `npm run validate:build`, `npm run validate:security`, `npm run patch82g:proof`, and `npm run release:restore-noise`. Privileged admin actions must validate the caller bearer token through Supabase Auth, keep service-role usage server-side, reject missing or invalid tokens, and surface safe structured errors without weakening role checks.
 
+Patch 82H through 82H-2 compact navigation changes should run `npm run validate:build`, `npm run validate:security`, and `npm run patch82h:proof`. Preserve the nested sidebar, compact User Management layout, role-based routes, and removal of redundant in-page navigation.
+
+Patch 82I through Patch 83L retain their targeted proof commands. Changes affecting Department Context or Department Import must preserve organization scope, User Import, role checks, and the non-mutating preview.
+
+Patch 83M through Patch 83O.3 should run `npm run validate:build`, `npm run test:unit`, `npm run validate:security`, and the applicable `patch83m`, `patch83n`, `patch83o`, `patch83o1`, `patch83o2`, and `patch83o3` proofs. Browser code must not call `apply_department_import_batch` directly; execution must use privileged action `department_import_execute`, with service-role use kept server-side.
+
+Patch 83P should additionally run `npm run patch83p:smoke` and `npm run patch83p:proof`. Only exact lowercase `true` may enable the frontend execution flag. Frontend activation requires setting the reviewed Vercel variable and producing a new Vercel build; validation alone does not deploy or establish production readiness.
+
+Do not expose service-role credentials. Browser Department Import execution must continue through the authenticated privileged-action bridge and preserve role, organization, and RLS enforcement.
+
+To disable Department Import execution, set `VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED=false` and redeploy the frontend. Migrations 168 and 169 must not be rolled back merely to disable the UI.
+
 Never use `git add .`. Stage only the files intentionally changed for the patch.
 
 Do not accidentally commit:
@@ -116,12 +128,12 @@ npm run release:restore-noise
 git status --short --branch
 ```
 
-The restore helper only targets known allowlisted release evidence folders and does not stage or commit anything.
+The restore helper only targets known allowlisted release evidence folders and does not stage or commit anything. Restore only allowlisted generated evidence; keep intentional implementation and current-patch evidence changes.
 
 Patch 58.2 extends restore coverage to generated proof JSON noise for Patch 56, Patch 57, Patch 58, and Patch 58.1. Patch 62 extends restore coverage to the Patch 61 generated proof JSON. Patch 63 extends restore coverage to the Patch 62 generated proof JSON. Patch 64 extends restore coverage to the Patch 63 generated proof JSON. Patch 65 extends restore coverage to the Patch 64 generated proof JSON. Patch 66 extends restore coverage to the Patch 65 generated proof JSON. Patch 67 extends restore coverage to the Patch 66 generated proof JSON. Patch 68 extends restore coverage to the Patch 67 generated proof JSON. Patch 69 extends restore coverage to the Patch 68 generated proof JSON. Patch 70 extends restore coverage to the Patch 69 generated proof JSON. Patch 71 extends restore coverage to the Patch 70 generated proof JSON. Patch 72 extends restore coverage to the Patch 71 generated proof JSON. Patch 73 extends restore coverage to the Patch 72 generated proof JSON. Patch 74 extends restore coverage to the Patch 73 generated proof JSON. Patch 76 extends restore coverage to the Patch 75 generated proof JSON. Patch 77 extends restore coverage to the Patch 76 generated proof JSON. Patch 78 extends restore coverage to the Patch 77 generated proof JSON. Patch 79 extends restore coverage to the Patch 78 generated proof JSON. Patch 80A extends restore coverage to the Patch 79 generated proof JSON. Patch 81 extends restore coverage to the Patch 80A generated proof JSON. Patch 82F extends restore coverage to the Patch 82E generated proof JSON. Patch 82G extends restore coverage to the Patch 82F generated proof JSON. Keep implementation summaries, validation reports, and current status docs intentional when they are part of the active patch.
-
 
 Patch 82H / 82H-1 / 82H-2 frontend-only compact navigation changes should run `npm run validate:build`, `npm run validate:security`, `npm run patch82h:proof`, and `npm run release:restore-noise`. Patch 82H must not change auth, route guards, RLS, Supabase migrations, backend contracts, privileged actions, or pilot data. Patch 82H-2 specifically verifies User Management opens directly from the main sidebar without the old in-page subsidiary hub or horizontal control-card navigation.
-=======
-Patch 58.2 extends restore coverage to generated proof JSON noise for Patch 56, Patch 57, Patch 58, and Patch 58.1. Patch 62 extends restore coverage to the Patch 61 generated proof JSON. Patch 63 extends restore coverage to the Patch 62 generated proof JSON. Patch 64 extends restore coverage to the Patch 63 generated proof JSON. Patch 65 extends restore coverage to the Patch 64 generated proof JSON. Patch 66 extends restore coverage to the Patch 65 generated proof JSON. Patch 67 extends restore coverage to the Patch 66 generated proof JSON. Patch 68 extends restore coverage to the Patch 67 generated proof JSON. Patch 69 extends restore coverage to the Patch 68 generated proof JSON. Patch 70 extends restore coverage to the Patch 69 generated proof JSON. Patch 71 extends restore coverage to the Patch 70 generated proof JSON. Patch 72 extends restore coverage to the Patch 71 generated proof JSON. Patch 73 extends restore coverage to the Patch 72 generated proof JSON. Patch 74 extends restore coverage to the Patch 73 generated proof JSON. Patch 76 extends restore coverage to the Patch 75 generated proof JSON. Patch 77 extends restore coverage to the Patch 76 generated proof JSON. Patch 78 extends restore coverage to the Patch 77 generated proof JSON. Patch 79 extends restore coverage to the Patch 78 generated proof JSON. Patch 80A extends restore coverage to the Patch 79 generated proof JSON. Patch 81 extends restore coverage to the Patch 80A generated proof JSON. Patch 82F extends restore coverage to the Patch 82E generated proof JSON. Patch 82G extends restore coverage to the Patch 82F generated proof JSON. Keep implementation summaries, validation reports, and current status docs intentional when they are part of the active patch.
->>>>>>> f374b9438bff6bd389015c923fa1156127c38517
+
+Patch 82V security review changes should run `npm run validate:build`, `npm run validate:security`, `npm run patch82v:proof`, and `npm run release:restore-noise`. Patch 82V is an inventory pass and must not change backend/security files.
+
+Patch 82W security remediation plan should run `npm run validate:build`, `npm run validate:security`, `npm run patch82w:proof`, and `npm run release:restore-noise`. Patch 82W is a planning pass and must not change backend/security files.

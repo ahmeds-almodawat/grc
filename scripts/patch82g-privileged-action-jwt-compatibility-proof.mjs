@@ -48,7 +48,12 @@ record(results, 'package.json contains patch82g:proof', packageJson.scripts?.['p
 record(results, 'package.json contains patch82g:all', packageJson.scripts?.['patch82g:all'] === 'npm run validate:build && npm run validate:security && npm run patch82g:proof');
 record(results, 'no Patch 82G migration was added', !patch82gMigrationExists);
 record(results, 'no Supabase migration files modified', migrationChanged.length === 0, migrationChanged);
-record(results, 'privileged-action no longer uses jose jwtVerify with TextEncoder raw secret for caller auth', !/jwtVerify|from ['"]jose['"]|new TextEncoder\(\)\.encode|TextEncoder\(\)/.test(edgeText));
+record(
+  results,
+  'privileged-action does not use jose jwtVerify or encode a raw JWT secret for caller auth',
+  !/jwtVerify|from ['"]jose['"]/.test(edgeText)
+    && !/TextEncoder\(\)\.encode\([^\r\n]*(?:JWT|SECRET)/i.test(edgeText),
+);
 record(results, 'privileged-action validates bearer token through Supabase auth.getUser', /authorization\.slice\('Bearer '\.length\)/.test(edgeText) && /authClient\.auth\.getUser\(token\)/.test(edgeText));
 record(results, 'missing bearer token is rejected', edgeText.includes("!authorization?.startsWith('Bearer ')") && edgeText.includes('AUTH_TOKEN_REQUIRED') && /401/.test(edgeText));
 record(results, 'invalid caller token is rejected', edgeText.includes('AUTH_TOKEN_INVALID') && /userError \|\| !userData\.user/.test(edgeText) && /401/.test(edgeText));

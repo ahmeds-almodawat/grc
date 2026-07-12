@@ -1,0 +1,11 @@
+{
+  "patch": "83L",
+  "backupCenter": "ScaleBackupRestoreCenter",
+  "importMode": "staging_only",
+  "executionBlocked": true,
+  "staging_batch_created": false,
+  "execution_available": false,
+  "backend_processor_available": false,
+  "departments_modified": false,
+  "audit_event_generated": false
+}

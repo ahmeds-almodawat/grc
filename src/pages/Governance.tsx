@@ -5,24 +5,11 @@ import { DecisionForm } from '../components/GrcForms';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
-import { ProfessionalGrcMaturityPanel } from '../components/v140/ProfessionalGrcMaturityPanel';
-import { ProfessionalGrcWorkflowMap } from '../components/v140/ProfessionalGrcWorkflowMap';
 import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
 import { getDepartments, getGovernanceDecisions, getOrganizations, getProfiles } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
 import type { GovernanceDecisionRow } from '../types/domain';
-import { AssuranceMapPanel } from '../components/v180/AssuranceMapPanel';
-import { GrcTraceabilityMap } from '../components/v180/GrcTraceabilityMap';
-import { TraceabilityGapPanel } from '../components/v180/TraceabilityGapPanel';
-import { FrameworkCrosswalkBackbonePanel } from '../components/v210/FrameworkCrosswalkBackbonePanel';
-import { ControlAssuranceReadinessPanel } from '../components/v220/ControlAssuranceReadinessPanel';
 
-import { AssuranceReadinessPanel } from '../components/v240/AssuranceReadinessPanel';
-import { SodImmutableAuditPanel } from '../components/v240/SodImmutableAuditPanel';
-import { AuditorEvidencePackPanel } from '../components/v240/AuditorEvidencePackPanel';
-import { LiveOperatingCyclePanel } from '../components/v250/LiveOperatingCyclePanel';
-import { DataBridgeGovernancePanel } from '../components/v250/DataBridgeGovernancePanel';
-import { AccessReviewOperatingPanel } from '../components/v250/AccessReviewOperatingPanel';
 export function Governance() {
   const [formOpen, setFormOpen] = useState(false);
   const decisions = useAsyncData(getGovernanceDecisions, []);
@@ -30,37 +17,34 @@ export function Governance() {
   const profiles = useAsyncData(getProfiles, []);
   const organizations = useAsyncData(getOrganizations, []);
   const organizationId = organizations.data?.[0]?.id || '';
+  const decisionRows = decisions.data || [];
+  const metrics = {
+    register: decisionRows.length,
+    highPriority: decisionRows.filter(r => r.priority === 'critical' || r.priority === 'high').length,
+    overdue: decisionRows.filter(r => r.due_date && new Date(r.due_date).getTime() < Date.now() && r.status !== 'closed' && r.status !== 'completed').length,
+    open: decisionRows.filter(r => r.status === 'open' || r.status === 'in_progress').length,
+    closed: decisionRows.filter(r => r.status === 'closed' || r.status === 'completed').length,
+  };
 
   return (
     <section className="page-section">
       <ModuleHeader
-        eyebrow="Governance center"
-        title="Authority matrix, CEO decisions, committees, policies and delegations"
-        subtitle="Governance decisions can generate controlled projects and evidence-based follow-up."
+        eyebrow="Governance"
+        title="Governance Decisions Register"
+        subtitle="Track decisions, owners, due dates, priority, status and follow-up."
         action={<button className="primary-button" onClick={() => setFormOpen(true)}>New Decision</button>}
       />
 
-      {/* v22-control-testing-capa: governance assurance readiness */}
-      <ControlAssuranceReadinessPanel />
-
-      <GrcTraceabilityMap context="governance" />
-      <AssuranceMapPanel />
-      <TraceabilityGapPanel />
-      <FrameworkCrosswalkBackbonePanel context="governance" />
-
-
       <div className="module-grid">
-        <div className="module-card"><strong>Executive GRC dashboard</strong><span>Material risks, high issues, overdue CAPA, compliance exposure and audit coverage.</span></div>
-        <div className="module-card"><strong>Assurance map</strong><span>Shows which risks and obligations are covered by controls, compliance and audit.</span></div>
-        <div className="module-card"><strong>Committee / board reporting</strong><span>Structured decisions, risk acceptance, exceptions and follow-up actions.</span></div>
-        <div className="module-card"><strong>Cross-module traceability</strong><span>Risk → control → test → evidence → issue → CAPA → report.</span></div>
+        <div className="module-card"><strong>Total decisions</strong><span>{metrics.register} decisions</span></div>
+        <div className="module-card danger"><strong>High priority</strong><span>{metrics.highPriority} critical/high</span></div>
+        <div className="module-card danger"><strong>Overdue</strong><span>{metrics.overdue} overdue</span></div>
+        <div className="module-card warning"><strong>Open</strong><span>{metrics.open} open</span></div>
+        <div className="module-card good"><strong>Closed</strong><span>{metrics.closed} closed</span></div>
       </div>
 
-      <ProfessionalGrcWorkflowMap highlight="reporting" />
-      <ProfessionalGrcMaturityPanel domain="governance" />
-
       <div className="panel">
-        <div className="panel-header"><h4>Governance decisions</h4></div>
+        <div className="panel-header"><h4>Governance decisions register</h4></div>
         <DataState loading={decisions.loading} error={decisions.error} empty={!decisions.data?.length}>
           <EntityTable<GovernanceDecisionRow>
             rows={decisions.data || []}
@@ -81,19 +65,6 @@ export function Governance() {
 
       <Modal open={formOpen} title="Create governance decision" onClose={() => setFormOpen(false)}>
         <DecisionForm organizationId={organizationId} departments={departments.data || []} profiles={profiles.data || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void decisions.refresh(); }} />
-      </Modal>
-    
-      {/* v24.0 assurance, SoD, immutable audit and auditor evidence pack */}
-      <AssuranceReadinessPanel />
-      <SodImmutableAuditPanel />
-      <AuditorEvidencePackPanel />
-
-
-      {/* v25.0 live GRC operating workspace */}
-      <LiveOperatingCyclePanel />
-      <DataBridgeGovernancePanel />
-      <AccessReviewOperatingPanel />
-
-</section>
+      </Modal></section>
   );
 }

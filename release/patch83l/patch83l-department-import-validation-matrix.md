@@ -1,0 +1,18 @@
+# Patch 83L: Department Import Validation Matrix
+- [x] Download template (CSV only)
+- [x] Accepted columns explicitly checked
+- [x] Create-only staging default
+- [x] Dry-run preview table
+- [x] Duplicate detection (file) via composite key
+- [x] Duplicate detection (database) via composite key
+- [x] Invalid organization validation
+- [x] Invalid division validation
+- [x] Mismatch validation
+- [x] Unknown manager validation
+- [x] Inactive manager validation
+- [x] Manager outside organization validation
+- [x] Invalid status validation
+- [x] File size / row limits
+- [x] Blank row handling
+- [x] Duplicate-header rejection
+- [x] Formula-injection sanitization

@@ -300,7 +300,7 @@ export function ControlledUatWorkbench({ setPage }: { setPage: (page: PageKey) =
 
   return (
     <section className="page-section controlled-uat-page">
-      <ControlledPilotBanner />
+      <ControlledPilotBanner context="internal" />
       <ModuleHeader
         eyebrow="v14.0 controlled UAT execution"
         title="Controlled UAT Workbench"

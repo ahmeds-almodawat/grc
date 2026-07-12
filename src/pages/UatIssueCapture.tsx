@@ -142,7 +142,7 @@ export function UatIssueCapture() {
 
   return (
     <section className="page-section uat-issue-page">
-      <ControlledPilotBanner />
+      <ControlledPilotBanner context="internal" />
       <ModuleHeader
         eyebrow="v9.10 controlled pilot"
         title="UAT issue capture"

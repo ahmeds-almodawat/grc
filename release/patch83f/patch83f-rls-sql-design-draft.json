@@ -1,0 +1,32 @@
+{
+  "patch": "83F",
+  "name": "RLS SQL design draft",
+  "references": [
+    "Patch 82V",
+    "Patch 82W",
+    "Patch 83E"
+  ],
+  "statement": "documentation-only SQL draft, do not run directly",
+  "draft_entries": [
+    {
+      "affected_area": "ovr_incidents",
+      "proposed_policy_pattern": "department-scoped read",
+      "required_columns": ["department_id"],
+      "helper_dependency": "get_user_dept_id()",
+      "positive_tests": "Employee reads own department OVR",
+      "negative_tests": "Employee blocked from other department OVR",
+      "rollback_note": "Revert to broad read",
+      "migration_readiness": "pending 83G test harness"
+    },
+    {
+      "affected_area": "risks",
+      "proposed_policy_pattern": "role-based write",
+      "required_columns": ["organization_id"],
+      "helper_dependency": "get_user_role()",
+      "positive_tests": "Admin writes risk",
+      "negative_tests": "Normal user blocked from writing risk",
+      "rollback_note": "Revert to broad write",
+      "migration_readiness": "pending 83G test harness"
+    }
+  ]
+}
