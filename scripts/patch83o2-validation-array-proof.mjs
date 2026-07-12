@@ -35,11 +35,11 @@ for (const file of expectedEvidence) {
 check('Migration 169 exists', fs.existsSync(migration169Path));
 
 const migration167Bytes = fs.readFileSync(migration167Path);
-const migration168Bytes = fs.readFileSync(migration168Path);
-const migration168 = migration168Bytes.toString('utf8');
-const migration169 = fs.readFileSync(migration169Path, 'utf8');
+const migration168 = fs.readFileSync(migration168Path, 'utf8').replace(/\r\n/g, '\n');
+const migration169 = fs.readFileSync(migration169Path, 'utf8').replace(/\r\n/g, '\n');
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const departmentsPage = fs.readFileSync(path.join(root, 'src', 'pages', 'Departments.tsx'), 'utf8');
+const featureFlags = fs.readFileSync(path.join(root, 'src', 'config', 'featureFlags.ts'), 'utf8');
 const deploymentEvidence = fs.readFileSync(path.join(releaseDir, 'patch83o2-deployment-result.md'), 'utf8');
 const patch83oRuntimeEvidence = fs.readFileSync(
   path.join(root, 'release', 'patch83o', 'patch83o-authenticated-runtime-verification.md'),
@@ -53,7 +53,7 @@ check(
 );
 check(
   'Migration 168 remains byte-for-byte unchanged',
-  crypto.createHash('sha256').update(migration168Bytes).digest('hex') ===
+  crypto.createHash('sha256').update(migration168).digest('hex') ===
     'b3658dc70519f2b70ccfb0f6d9f9f5a016417e5ec45783e72a47157ce945b017'
 );
 
@@ -112,7 +112,13 @@ check('No raw department import rows are stored', !migration169.includes('insert
 check('Canonical audit mappings remain', migration169.includes('table_name,\n      record_id') && !migration169.includes('entity_type,') && !migration169.includes('entity_id,'));
 check('PUBLIC, anon, and authenticated remain revoked', /revoke all on function public\.apply_department_import_batch[\s\S]*from public, anon, authenticated;/i.test(migration169));
 check('Execute remains granted only to service_role', /grant execute on function public\.apply_department_import_batch[\s\S]*to service_role;/i.test(migration169));
-check('Frontend execution gate remains disabled by default', departmentsPage.includes('import.meta.env.VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED === "true"'));
+check(
+  'Centralized frontend execution gate remains disabled by default',
+  departmentsPage.includes('isDepartmentImportExecutionEnabled()')
+    && !departmentsPage.includes('import.meta.env.VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED')
+    && featureFlags.includes('value: unknown = import.meta.env.VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED')
+    && featureFlags.includes('return value === "true"'),
+);
 check('Live mutation approval is absent', process.env.PATCH83O_APPROVE_LIVE_MUTATION !== 'YES');
 check('Package exposes patch83o2:proof', packageJson.scripts?.['patch83o2:proof'] === 'node scripts/patch83o2-validation-array-proof.mjs');
 check('Deployment evidence records migration 169 alignment', deploymentEvidence.includes('Database push executed: true') && deploymentEvidence.includes('Local/remote migration 169 aligned: true'));

@@ -7,6 +7,10 @@ import { Modal } from "../components/Modal";
 import { ModuleHeader } from "../components/ModuleHeader";
 import { useAsyncData } from "../hooks/useAsyncData";
 import {
+  isDepartmentImportExecutionEligible,
+  isDepartmentImportExecutionEnabled,
+} from "../config/featureFlags";
+import {
   createDepartment,
   getDepartmentExecutionSummary,
   executeDepartmentImport
@@ -60,8 +64,32 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [importMode, setImportMode] = useState<'create_only' | 'create_and_update'>('create_only');
-  const isBackendDeployed = import.meta.env.VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED === "true"; // Pending Patch 83N verification
+  const isExecutionEnabledByConfiguration = isDepartmentImportExecutionEnabled();
   const [refData, setRefData] = useState<{ orgs: Set<string>; divs: Set<string>; depts: Set<string>; managers: Map<string, any> } | null>(null);
+  const hasAuthorizedImportRole =
+    !auth.isLocalBypass &&
+    auth.roles.some(
+      (assignment) =>
+        assignment.role === "super_admin" ||
+        assignment.role === "governance_admin",
+    );
+  const hasBlockingImportErrors = Boolean(
+    importValidation &&
+      (importValidation.invalidRows > 0 ||
+        Object.values(importValidation.errorsByRow).some(
+          (errors) => errors.length > 0,
+        )),
+  );
+  const departmentImportExecutionEligible =
+    isDepartmentImportExecutionEligible({
+      featureEnabled: isExecutionEnabledByConfiguration,
+      roles: auth.roles.map((assignment) => assignment.role),
+      previewExists: importValidation !== null,
+      validRowCount: importValidation?.validRows ?? 0,
+      hasBlockingValidationErrors: hasBlockingImportErrors,
+      organizationId: auth.profile?.organizationId,
+      importMode,
+    });
 
   const fetchReferenceData = async () => {
     if (!supabase) return;
@@ -98,19 +126,27 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
   };
 
   const continueToConfirmation = () => {
-    if (!importValidation || importValidation.invalidRows > 0 || importValidation.errorsByRow[0]) return;
+    if (!importValidation || hasBlockingImportErrors || importValidation.validRows === 0) return;
     setShowConfirmation(true);
     setImportSuccess(null);
     setImportError(null);
   };
 
   const handleExecuteImport = async () => {
-    if (!isBackendDeployed) {
-      setImportError("Department execution is unavailable until the controlled department import backend is deployed (Patch 83N).");
+    if (!isExecutionEnabledByConfiguration) {
+      setImportError("Execution is disabled by deployment configuration.");
       return;
     }
 
-    if (!importValidation || importValidation.invalidRows > 0 || importValidation.errorsByRow[0]) return;
+    if (!hasAuthorizedImportRole) {
+      setImportError("Execution is available only to authorized administrators.");
+      return;
+    }
+
+    if (!departmentImportExecutionEligible || !importValidation) {
+      setImportError("Execution requirements are not satisfied. Revalidate the preview, organization, and import mode.");
+      return;
+    }
 
     const orgId = auth?.profile?.organizationId;
     if (!orgId) {
@@ -197,13 +233,7 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
       return matchesFilter && matchesQuery;
     });
   }, [activeFilter, departmentSearch, rows]);
-  const canManageDepartments =
-    !auth.isLocalBypass &&
-    auth.roles.some(
-      (assignment) =>
-        assignment.role === "super_admin" ||
-        assignment.role === "governance_admin",
-    );
+  const canManageDepartments = hasAuthorizedImportRole;
   const totals = rows.reduce(
     (acc, row) => {
       acc.activeProjects += Number(row.active_projects || 0);
@@ -836,7 +866,10 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
           {importSuccess && <div className="notice-banner success full-width">{importSuccess}</div>}
 
           <div className="full-width" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <p className="eyebrow">Paste CSV or Excel data</p>
+            <div>
+              <p className="eyebrow">Paste CSV or Excel data</p>
+              <p className="muted">Preview does not modify data.</p>
+            </div>
             <button type="button" className="ghost-button small" onClick={handleDownloadTemplate}>
               <Download size={14} /> Download template
             </button>
@@ -906,7 +939,7 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
               <button
                 className="primary-button"
                 type="button"
-                disabled={importSaving || !isBackendDeployed}
+                disabled={importSaving || !departmentImportExecutionEligible}
                 onClick={handleExecuteImport}
               >
                 <FileSpreadsheet size={16} /> {importSaving ? "Executing..." : "Execute " + "Import"}
@@ -914,16 +947,17 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
             )}
           </div>
 
-          {showConfirmation && !isBackendDeployed && (
+          {showConfirmation && !isExecutionEnabledByConfiguration && (
             <div className="notice-banner warning" style={{ marginTop: '16px' }}>
-              <FileWarning size={16} /> Department execution is unavailable until the controlled department import backend is deployed (Patch 83N).
+              <FileWarning size={16} /> Execution is disabled by deployment configuration.
             </div>
           )}
 
-          {showConfirmation && isBackendDeployed && (
+          {showConfirmation && isExecutionEnabledByConfiguration && (
             <div className="notice-banner info" style={{ marginTop: '16px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
                 <strong>Confirm Execution</strong>
+                <p>Execution is available only to authorized administrators.</p>
                 <p>You are about to execute the import batch containing {importValidation?.validRows} valid rows.</p>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                   <input type="radio" name="importMode" checked={importMode === 'create_only'} onChange={() => setImportMode('create_only')} />

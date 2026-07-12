@@ -80,7 +80,14 @@ if (fs.existsSync(jsonFile)) {
 }
 
 const depsCode = fs.readFileSync(path.join(process.cwd(), 'src/pages/Departments.tsx'), 'utf8');
-check('Departments.tsx correctly checks import.meta.env.VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED', depsCode.includes('import.meta.env.VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED === "true"'));
+const featureFlagsCode = fs.readFileSync(path.join(process.cwd(), 'src/config/featureFlags.ts'), 'utf8');
+check(
+  'Department execution uses the centralized exact-match frontend gate',
+  depsCode.includes('isDepartmentImportExecutionEnabled()')
+    && !depsCode.includes('import.meta.env.VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED')
+    && featureFlagsCode.includes('value: unknown = import.meta.env.VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED')
+    && featureFlagsCode.includes('return value === "true"'),
+);
 
 console.log("\n---------------------------------------------");
 if (exitCode === 0) {

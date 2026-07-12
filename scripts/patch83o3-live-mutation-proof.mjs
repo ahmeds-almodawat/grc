@@ -88,7 +88,14 @@ const evidenceText = fs.existsSync(releaseDir)
 check('No credentials or Authorization headers exist in evidence', !/Authorization\s*:\s*|Bearer\s+[A-Za-z0-9._-]+|eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+|(?:password|anon_key|service_role_key)\s*[:=]\s*\S+/i.test(evidenceText));
 
 const departmentsPage = fs.readFileSync(departmentsPath, 'utf8');
-check('Frontend execution remains gated and disabled by default', departmentsPage.includes('import.meta.env.VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED === "true"'));
+const featureFlags = fs.readFileSync(path.join(root, 'src', 'config', 'featureFlags.ts'), 'utf8');
+check(
+  'Frontend execution remains centrally gated and disabled by default',
+  departmentsPage.includes('isDepartmentImportExecutionEnabled()')
+    && !departmentsPage.includes('import.meta.env.VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED')
+    && featureFlags.includes('value: unknown = import.meta.env.VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED')
+    && featureFlags.includes('return value === "true"'),
+);
 
 console.log('\n---------------------------------------------');
 console.log(exitCode === 0 ? 'Proof Passed.' : 'Proof Failed. Run the secure interactive live mutation runner to produce completed evidence.');

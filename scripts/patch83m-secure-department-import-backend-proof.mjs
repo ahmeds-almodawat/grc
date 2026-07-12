@@ -56,8 +56,14 @@ check('Migration validates organization scope explicitly', migrationCode.include
 check('Migration revokes public/anon access', migrationCode.toLowerCase().includes('revoke all on function public.apply_department_import_batch from public, anon, authenticated'));
 
 const depsCode = fs.readFileSync(path.join(process.cwd(), 'src/pages/Departments.tsx'), 'utf8');
+const featureFlagsCode = fs.readFileSync(path.join(process.cwd(), 'src/config/featureFlags.ts'), 'utf8');
 check('Departments.tsx uses executeDepartmentImport', depsCode.includes('executeDepartmentImport'));
-check('Departments.tsx explicitly states execution unavailable until Patch 83N', depsCode.includes('Patch 83N'));
+check(
+  'Department execution remains fail-closed behind deployment configuration',
+  depsCode.includes('Execution is disabled by deployment configuration.')
+    && depsCode.includes('isDepartmentImportExecutionEnabled()')
+    && featureFlagsCode.includes('return value === "true"'),
+);
 
 const validatorCode = fs.readFileSync(path.join(process.cwd(), 'src/utils/departmentImportValidation.ts'), 'utf8');
 check('Validation does not use division in composite key', !validatorCode.includes('${orgCode}|${divCode || \'\'}|${code}'));

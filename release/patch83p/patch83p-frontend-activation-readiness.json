@@ -1,0 +1,22 @@
+{
+  "patch": "83P",
+  "activation_decision": "ready_for_controlled_vercel_enablement",
+  "frontend_execution_enabled_in_repository": false,
+  "production_deployment_executed": false,
+  "production_environment_modified": false,
+  "production_readiness_claim": false,
+  "feature_flag": "VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED",
+  "enabled_value": "true",
+  "fail_closed": true,
+  "authorized_roles": [
+    "super_admin",
+    "governance_admin"
+  ],
+  "allowed_import_modes": [
+    "create_only",
+    "create_and_update"
+  ],
+  "frontend_action": "department_import_execute",
+  "direct_rpc_call": false,
+  "user_import_changed": false
+}

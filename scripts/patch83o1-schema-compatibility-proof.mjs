@@ -36,10 +36,11 @@ for (const file of expectedEvidence) {
 check('Migration 168 exists', fs.existsSync(migration168Path));
 
 const migration167 = fs.readFileSync(migration167Path, 'utf8');
-const migration168 = fs.readFileSync(migration168Path, 'utf8');
+const migration168 = fs.readFileSync(migration168Path, 'utf8').replace(/\r\n/g, '\n');
 const sha167 = crypto.createHash('sha256').update(fs.readFileSync(migration167Path)).digest('hex');
 const edgeFunction = fs.readFileSync(path.join(root, 'supabase', 'functions', 'privileged-action', 'index.ts'), 'utf8');
 const departmentsPage = fs.readFileSync(path.join(root, 'src', 'pages', 'Departments.tsx'), 'utf8');
+const featureFlags = fs.readFileSync(path.join(root, 'src', 'config', 'featureFlags.ts'), 'utf8');
 const deploymentEvidence = fs.readFileSync(path.join(releaseDir, 'patch83o1-deployment-result.md'), 'utf8');
 
 check('Migration 167 remains byte-for-byte unchanged', sha167 === '5f4648c6a133fb77d311501713b89167dcb4e845c69b2fc075db51369dfac81b');
@@ -72,7 +73,13 @@ check('Batch storage contains summaries, not raw rows', migration168.includes('a
 check('Audit writes use canonical table_name and record_id', migration168.includes('table_name,\n      record_id') && !migration168.includes('entity_type,') && !migration168.includes('entity_id,'));
 check('User import action remains registered', edgeFunction.includes("'patch19_apply_import_batch'"));
 check('Department browser action remains indirect', edgeFunction.includes("'department_import_execute'") && !edgeFunction.includes("patch83mDepartmentImportActions = new Set([\n  'apply_department_import_batch'"));
-check('Frontend execution gate remains present', departmentsPage.includes('import.meta.env.VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED === "true"'));
+check(
+  'Centralized frontend execution gate remains present',
+  departmentsPage.includes('isDepartmentImportExecutionEnabled()')
+    && !departmentsPage.includes('import.meta.env.VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED')
+    && featureFlags.includes('value: unknown = import.meta.env.VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED')
+    && featureFlags.includes('return value === "true"'),
+);
 check('Live mutation approval is absent', process.env.PATCH83O_APPROVE_LIVE_MUTATION !== 'YES');
 
 const audit = JSON.parse(fs.readFileSync(path.join(releaseDir, 'patch83o1-schema-audit.json'), 'utf8'));
