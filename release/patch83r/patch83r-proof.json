@@ -1,0 +1,182 @@
+{
+  "patch": "83R",
+  "checked_at": "2026-07-12T23:01:32.574Z",
+  "strict_passed": true,
+  "check_count": 43,
+  "failed_count": 0,
+  "failed": [],
+  "checks": [
+    {
+      "name": "exactly four lifecycle actions are registered",
+      "passed": true
+    },
+    {
+      "name": "fixed lifecycle action set is included in the allowlist",
+      "passed": true
+    },
+    {
+      "name": "validated JWT precedes lifecycle dispatch",
+      "passed": true
+    },
+    {
+      "name": "server derives actor identity for every lifecycle RPC",
+      "passed": true
+    },
+    {
+      "name": "organization-scoped active administrator role is required",
+      "passed": true
+    },
+    {
+      "name": "arbitrary RPC dispatch is impossible",
+      "passed": true
+    },
+    {
+      "name": "lifecycle database errors are not leaked raw",
+      "passed": true
+    },
+    {
+      "name": "service-role-only RPC exists: department_lifecycle_preview",
+      "passed": true
+    },
+    {
+      "name": "browser uses Edge bridge only: department_lifecycle_preview",
+      "passed": true
+    },
+    {
+      "name": "service-role-only RPC exists: department_lifecycle_rename",
+      "passed": true
+    },
+    {
+      "name": "browser uses Edge bridge only: department_lifecycle_rename",
+      "passed": true
+    },
+    {
+      "name": "service-role-only RPC exists: department_lifecycle_archive",
+      "passed": true
+    },
+    {
+      "name": "browser uses Edge bridge only: department_lifecycle_archive",
+      "passed": true
+    },
+    {
+      "name": "service-role-only RPC exists: department_lifecycle_restore",
+      "passed": true
+    },
+    {
+      "name": "browser uses Edge bridge only: department_lifecycle_restore",
+      "passed": true
+    },
+    {
+      "name": "no hard delete action or department deletion exists",
+      "passed": true
+    },
+    {
+      "name": "department code is immutable",
+      "passed": true
+    },
+    {
+      "name": "rename is organization-scoped and blocks archived departments",
+      "passed": true
+    },
+    {
+      "name": "normalized active duplicate names are denied",
+      "passed": true
+    },
+    {
+      "name": "archive reason is mandatory",
+      "passed": true
+    },
+    {
+      "name": "active users require a valid non-self active successor",
+      "passed": true
+    },
+    {
+      "name": "active-user reassignment is transactional and verified",
+      "passed": true
+    },
+    {
+      "name": "historical department references are preserved",
+      "passed": true
+    },
+    {
+      "name": "restore checks active conflicts and preserves identity",
+      "passed": true
+    },
+    {
+      "name": "archived departments are hidden by default and visibly labeled",
+      "passed": true
+    },
+    {
+      "name": "active assignment dropdowns exclude archived departments",
+      "passed": true
+    },
+    {
+      "name": "database guards reject new archived department assignments",
+      "passed": true
+    },
+    {
+      "name": "Department Import blocks archived code and normalized-name recreation",
+      "passed": true
+    },
+    {
+      "name": "User Import clearly rejects archived departments",
+      "passed": true
+    },
+    {
+      "name": "lifecycle audit captures actor, old/new values, reason, successor, reassignment and request id",
+      "passed": true
+    },
+    {
+      "name": "existing department RLS is not weakened",
+      "passed": true
+    },
+    {
+      "name": "focused database lifecycle tests cover authorization, conflicts, successor rules, reassignment, and restore",
+      "passed": true
+    },
+    {
+      "name": "migration 170 is unchanged",
+      "passed": true
+    },
+    {
+      "name": "Department Import remains disabled by default",
+      "passed": true
+    },
+    {
+      "name": "Vercel files and environment configuration are untouched",
+      "passed": true
+    },
+    {
+      "name": "evidence exists: patch83r-root-cause.md",
+      "passed": true
+    },
+    {
+      "name": "evidence exists: patch83r-schema-review.md",
+      "passed": true
+    },
+    {
+      "name": "evidence exists: patch83r-security-design.md",
+      "passed": true
+    },
+    {
+      "name": "evidence exists: patch83r-lifecycle-behavior.md",
+      "passed": true
+    },
+    {
+      "name": "evidence exists: patch83r-import-compatibility.md",
+      "passed": true
+    },
+    {
+      "name": "evidence exists: patch83r-validation-results.md",
+      "passed": true
+    },
+    {
+      "name": "evidence exists: patch83r-deployment-decision.md",
+      "passed": true
+    },
+    {
+      "name": "evidence makes no unrestricted production-readiness claim",
+      "passed": true
+    }
+  ]
+}

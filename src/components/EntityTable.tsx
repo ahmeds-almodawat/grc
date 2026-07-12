@@ -10,9 +10,10 @@ interface EntityTableProps<T> {
   columns: EntityTableColumn<T>[];
   rows: T[];
   getRowKey: (row: T) => string;
+  getRowClassName?: (row: T) => string | undefined;
 }
 
-export function EntityTable<T>({ columns, rows, getRowKey }: EntityTableProps<T>) {
+export function EntityTable<T>({ columns, rows, getRowKey, getRowClassName }: EntityTableProps<T>) {
   return (
     <div className="table-wrapper">
       <table>
@@ -23,7 +24,7 @@ export function EntityTable<T>({ columns, rows, getRowKey }: EntityTableProps<T>
         </thead>
         <tbody>
           {rows.map(row => (
-            <tr key={getRowKey(row)}>
+            <tr key={getRowKey(row)} className={getRowClassName?.(row)}>
               {columns.map(column => <td key={column.key}>{column.render(row)}</td>)}
             </tr>
           ))}

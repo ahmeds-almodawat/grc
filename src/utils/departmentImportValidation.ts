@@ -10,6 +10,7 @@ export interface RefData {
   orgs: Set<string>;
   divs: Set<string>;
   depts: Set<string>;
+  archivedDeptKeys?: Set<string>;
   managers: Map<string, any>;
 }
 
@@ -98,6 +99,8 @@ export function validateImportText(text: string, refData?: RefData | null): Impo
     const divCode = row['division_code']?.trim().toUpperCase();
     const code = row['department_code']?.trim().toUpperCase();
     const managerEmail = row['manager_email']?.trim().toLowerCase();
+    const nameEn = row['department_name_en']?.trim().replace(/\s+/g, ' ').toLowerCase();
+    const nameAr = row['department_name_ar']?.trim().replace(/\s+/g, ' ').toLowerCase();
     const status = row['status']?.trim().toLowerCase();
 
     if (status && !['active', 'inactive'].includes(status)) {
@@ -121,7 +124,15 @@ export function validateImportText(text: string, refData?: RefData | null): Impo
       if (divCode && orgCode && !refData.divs.has(`${orgCode}|${divCode}`)) {
         errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []), `Unknown division: ${divCode}`];
       }
-      if (orgCode && code && refData.depts.has(`${orgCode}|${code}`)) {
+      const archivedMatch = Boolean(orgCode && (
+        (code && refData.archivedDeptKeys?.has(`${orgCode}|CODE|${code}`))
+        || (nameEn && refData.archivedDeptKeys?.has(`${orgCode}|NAME|${nameEn}`))
+        || (nameAr && refData.archivedDeptKeys?.has(`${orgCode}|NAME|${nameAr}`))
+      ));
+      if (archivedMatch) {
+        errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []),
+          'archived_department_match: restore the matching department from Department Management before importing'];
+      } else if (orgCode && code && refData.depts.has(`${orgCode}|${code}`)) {
         errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []), `Department already exists in database: ${code}`];
       }
       if (managerEmail) {

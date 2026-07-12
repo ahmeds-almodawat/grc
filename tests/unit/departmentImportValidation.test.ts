@@ -6,6 +6,11 @@ describe('departmentImportValidation', () => {
     orgs: new Set(['ORG1']),
     divs: new Set(['ORG1|DIV1']),
     depts: new Set(['ORG1|DEPT1', 'ORG1|DEPT2']), // DEPT1 and DEPT2 uniqueness relies on org+code
+    archivedDeptKeys: new Set([
+      'ORG1|CODE|ARCHIVED',
+      'ORG1|NAME|archived department',
+      'ORG1|NAME|قسم مؤرشف',
+    ]),
     managers: new Map([
       ['active@example.com', { user_status: 'active', organization_code: 'ORG1' }],
       ['inactive@example.com', { user_status: 'inactive', organization_code: 'ORG1' }],
@@ -66,6 +71,18 @@ ORG1,D3,Dept3,outside@example.com`;
 ORG1,D1,Dept1,archived`;
     const result = validateImportText(csv, mockRefData);
     expect(result.errorsByRow[1][0]).toMatch(/Unsupported status/);
+  });
+
+  it('blocks archived department matches by code or normalized name', () => {
+    const csv = `organization_code,department_code,department_name_en,department_name_ar
+ORG1,ARCHIVED,Replacement,
+ORG1,NEW_CODE,  Archived   Department  ,
+ORG1,NEW_AR,New Arabic,قسم مؤرشف`;
+    const result = validateImportText(csv, mockRefData);
+    expect(result.invalidRows).toBe(3);
+    expect(result.errorsByRow[1]).toContainEqual(expect.stringContaining('archived_department_match'));
+    expect(result.errorsByRow[2]).toContainEqual(expect.stringContaining('archived_department_match'));
+    expect(result.errorsByRow[3]).toContainEqual(expect.stringContaining('archived_department_match'));
   });
 
   it('sanitizes formula-injection', () => {

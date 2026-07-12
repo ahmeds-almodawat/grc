@@ -1,10 +1,10 @@
 # v7.0 Frontend RPC Inventory
 
-Generated: 2026-07-12T20:09:30.636Z
+Generated: 2026-07-12T23:01:38.814Z
 
 - Direct frontend RPC calls: 1
-- Authenticated Edge bridge calls: 79
-- Unique RPC names: 78
+- Authenticated Edge bridge calls: 83
+- Unique RPC names: 82
 
 ## Classification counts
 
@@ -14,7 +14,7 @@ Generated: 2026-07-12T20:09:30.636Z
   "read_only_search": 1,
   "production_readiness": 28,
   "workflow_runtime": 14,
-  "privileged_admin": 12,
+  "privileged_admin": 16,
   "user_management": 11,
   "evidence_governance": 3,
   "scenario_lab": 3
@@ -38,6 +38,10 @@ Generated: 2026-07-12T20:09:30.636Z
 - `record_executive_truth_event` (1 call site)
 - `acknowledge_escalation_event` (1 call site)
 - `resolve_escalation_event` (1 call site)
+- `department_lifecycle_preview` (1 call site)
+- `department_lifecycle_rename` (1 call site)
+- `department_lifecycle_archive` (1 call site)
+- `department_lifecycle_restore` (1 call site)
 - `department_import_execute` (1 call site)
 - `assign_user_role` (2 call sites)
 - `deactivate_user_role` (2 call sites)

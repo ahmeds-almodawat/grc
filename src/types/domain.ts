@@ -1087,6 +1087,13 @@ export interface DepartmentExecutionSummary {
   organization_id: string;
   department_id: string;
   department_name: string;
+  department_name_ar: string | null;
+  department_code: string | null;
+  is_active: boolean;
+  archived_at: string | null;
+  archived_by: string | null;
+  archive_reason: string | null;
+  successor_department_id: string | null;
   active_projects: number;
   overdue_projects: number;
   overdue_milestones: number;
@@ -1094,6 +1101,41 @@ export interface DepartmentExecutionSummary {
   critical_risks: number;
   overdue_audit_findings: number;
   compliance_expiring_30_days: number;
+}
+
+export interface DepartmentLifecycleImpact {
+  active_users: number;
+  open_assignments_work_items: number;
+  policies: number;
+  sops: number;
+  training_items: number;
+  evidence: number;
+  risks: number;
+  audits: number;
+  other_active_references: number;
+}
+
+export interface DepartmentLifecyclePreview {
+  department_id: string;
+  organization_id: string;
+  code: string | null;
+  name_en: string;
+  name_ar: string | null;
+  is_active: boolean;
+  archived_at: string | null;
+  archived_by: string | null;
+  archive_reason: string | null;
+  successor_department_id: string | null;
+  impact: DepartmentLifecycleImpact;
+}
+
+export interface DepartmentLifecycleHistoryRow {
+  id: string;
+  action: 'DEPARTMENT_RENAMED' | 'DEPARTMENT_ARCHIVED' | 'DEPARTMENT_RESTORED';
+  actor_id: string | null;
+  old_data: Record<string, unknown> | null;
+  new_data: Record<string, unknown> | null;
+  created_at: string;
 }
 
 export type OvrStatus =

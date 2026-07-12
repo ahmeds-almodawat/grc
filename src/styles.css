@@ -8610,3 +8610,60 @@ table tbody tr:hover {
   font-size: 11px !important;
   min-height: 0 !important;
 }
+/* Patch 83R department lifecycle */
+.archived-department-row {
+  background: color-mix(in srgb, var(--surface-muted, #eef1f4) 72%, transparent);
+  color: var(--text-muted, #667085);
+}
+
+.department-name-cell,
+.department-name-comparison > div,
+.department-impact-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.department-name-cell .status-badge { width: fit-content; }
+.department-archive-toggle { display: inline-flex; align-items: center; gap: 0.5rem; }
+.department-actions-menu { position: relative; }
+.department-actions-menu summary { cursor: pointer; font-weight: 600; }
+.department-actions-menu > div {
+  position: absolute;
+  z-index: 20;
+  right: 0;
+  min-width: 13rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color, #d0d5dd);
+  border-radius: 0.75rem;
+  background: var(--surface, #fff);
+  box-shadow: 0 12px 28px rgb(16 24 40 / 16%);
+}
+.department-actions-menu button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.department-actions-menu button:hover { background: var(--surface-muted, #f2f4f7); }
+.department-lifecycle-modal { min-width: min(42rem, 80vw); }
+.department-name-comparison,
+.department-impact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+.department-name-comparison > div,
+.department-impact-grid > div {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color, #d0d5dd);
+  border-radius: 0.75rem;
+}
+.department-impact-grid span { text-transform: capitalize; color: var(--text-muted, #667085); }
+.department-lifecycle-history { display: grid; gap: 0.75rem; max-height: 65vh; overflow: auto; }
+.department-lifecycle-history pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.75rem; }
