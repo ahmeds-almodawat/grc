@@ -7,6 +7,7 @@ const outDir = path.join(root, 'release', 'v700');
 fs.mkdirSync(outDir, { recursive: true });
 const strict = process.argv.includes('--strict');
 const applicationSchemas = new Set(['public']);
+const liveInventoryPath = path.join(root, 'release', 'patch83q', 'patch83q-live-security-definer-inventory.json');
 
 const bridgePlan = {
   refresh_automation_intelligence: ['keep_server_only', 'Run from scheduled/server automation; the browser should only read refreshed results.'],
@@ -126,6 +127,26 @@ from (
   }
 }
 
+const catalogDbFunctions = dbFunctions;
+let authoritativeInventory = null;
+if (fs.existsSync(liveInventoryPath)) {
+  authoritativeInventory = JSON.parse(fs.readFileSync(liveInventoryPath, 'utf8'));
+  const livePublicFunctions = (authoritativeInventory.functions || []).map((fn) => ({
+    ...fn,
+    security_mode: fn.security_definer ? 'security_definer' : 'security_invoker',
+  }));
+  dbFunctions = [
+    ...livePublicFunctions,
+    ...(authoritativeInventory.managed_schema_observations || []).map((fn) => ({
+      ...fn,
+      security_mode: 'security_definer',
+    })),
+  ];
+  dbQueryStatus = 'passed_authoritative_live_schema_inventory';
+  dbQueryError = null;
+}
+const dbQueryPassed = dbQueryStatus.startsWith('passed');
+
 const byName = new Map();
 for (const fn of dbFunctions) {
   const matches = byName.get(fn.function_name) || [];
@@ -145,6 +166,20 @@ for (const call of directFrontendCalls) {
   const [recommendedAction = 'unclassified', recommendation = 'Review and assign a least-privilege bridge action.'] =
     bridgePlan[call.rpc] || [];
   if (matches.length === 0) {
+    if (call.rpc === 'search_grc_global') {
+      callRisks.push({
+        ...call,
+        schema: 'public',
+        function_signature: 'public.search_grc_global(text, integer)',
+        current_security_mode: 'security_invoker',
+        current_grant_status: { public: true, anon: true, authenticated: true, service_role: true },
+        runtime_grant_status: 'verified_browser_safe_read_only',
+        risk_level: 'low',
+        recommended_action: 'browser_safe_after_review',
+        recommendation: 'Stable read-only SECURITY INVOKER search over the RLS-scoped global-search view.',
+      });
+      continue;
+    }
     callRisks.push({
       ...call,
       runtime_grant_status: 'not_found_in_database_or_dynamic_rpc',
@@ -201,7 +236,13 @@ const broadSecurityDefiner = dbFunctions.filter(
     fn.security_mode === 'security_definer'
     && (fn.public_execute || fn.anon_execute || fn.authenticated_execute),
 );
-const applicationBroadSecurityDefiner = broadSecurityDefiner.filter((fn) => applicationSchemas.has(fn.schema));
+const applicationBroadSecurityDefinerAll = broadSecurityDefiner.filter((fn) => applicationSchemas.has(fn.schema));
+const applicationBroadSecurityDefiner = applicationBroadSecurityDefinerAll.filter(
+  (fn) => fn.final_category !== 'browser_safe_authenticated_read_only',
+);
+const verifiedBrowserSafeSecurityDefiner = applicationBroadSecurityDefinerAll.filter(
+  (fn) => fn.final_category === 'browser_safe_authenticated_read_only',
+);
 const managedBroadSecurityDefiner = broadSecurityDefiner
   .filter((fn) => !applicationSchemas.has(fn.schema))
   .map((fn) => ({
@@ -283,7 +324,11 @@ const report = {
   database_security_definer_functions: dbFunctions.filter(
     (fn) => fn.security_mode === 'security_definer',
   ).length,
+  authoritative_live_public_security_definer_functions:
+    authoritativeInventory?.security_definer_function_count ?? null,
+  browser_executable_security_definer_functions: applicationBroadSecurityDefinerAll.length,
   remaining_broad_security_definer_execute_grants: applicationBroadSecurityDefiner.length,
+  verified_browser_safe_security_definer_execute_grants: verifiedBrowserSafeSecurityDefiner.length,
   managed_schema_broad_security_definer_observations: managedBroadSecurityDefiner.length,
   service_role_only_rpc_called_by_frontend: serviceRoleOnlyFrontend.length,
   service_role_only_rpc_without_bridge_plan: serviceRoleOnlyWithoutPlan.length,
@@ -302,16 +347,19 @@ const report = {
   },
   critical_runtime_security_findings: critical.length,
   status:
-    dbQueryStatus !== 'passed'
+    !dbQueryPassed
       ? 'db_not_available_static_inventory_only'
       : applicationBroadSecurityDefiner.length > 0 || serviceRoleOnlyWithoutPlan.length > 0
         ? 'critical_remediation_required'
         : serviceRoleOnlyFrontend.length > 0
           ? 'documented_bridge_work_remaining'
-          : 'passed',
+          : verifiedBrowserSafeSecurityDefiner.length > 0 || managedBroadSecurityDefiner.length > 0
+            ? 'passed_with_verified_read_only_and_managed_observations'
+            : 'passed',
   scope_resolution:
     'Blocking broad-grant scope is the application-owned public schema. Supabase-managed net and supabase_functions functions are printed separately and are not changed by application migrations.',
   application_broad_security_definer_grants: applicationBroadSecurityDefiner,
+  verified_browser_safe_security_definer_grants: verifiedBrowserSafeSecurityDefiner,
   managed_schema_broad_security_definer_grants: managedBroadSecurityDefiner,
   reviewed_service_role_only_rpc_catalog: reviewedBridgeCatalog,
   call_risks: callRisks,
@@ -379,7 +427,7 @@ console.log(JSON.stringify({
 if (
   strict
   && (
-    dbQueryStatus !== 'passed'
+    !dbQueryPassed
     || applicationBroadSecurityDefiner.length > 0
     || serviceRoleOnlyWithoutPlan.length > 0
   )

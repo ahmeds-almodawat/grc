@@ -1,19 +1,19 @@
 {
   "summary": {
-    "generated_at": "2026-07-05T13:10:06.805Z",
+    "generated_at": "2026-07-12T20:09:30.636Z",
     "source": "src/**/*.{ts,tsx,js,jsx}",
     "frontend_rpc_call_count": 1,
-    "authenticated_edge_bridge_call_count": 58,
-    "unique_frontend_rpc_count": 57,
+    "authenticated_edge_bridge_call_count": 79,
+    "unique_frontend_rpc_count": 78,
     "classification_counts": {
       "accreditation_assurance": 8,
       "read_only_search": 1,
-      "production_readiness": 15,
+      "production_readiness": 28,
       "workflow_runtime": 14,
-      "privileged_admin": 6,
+      "privileged_admin": 12,
       "user_management": 11,
-      "scenario_lab": 3,
-      "evidence_governance": 1
+      "evidence_governance": 3,
+      "scenario_lab": 3
     },
     "unique_rpcs": [
       {
@@ -164,7 +164,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 745,
+            "line": 784,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -175,9 +175,20 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 753,
+            "line": 792,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
+          }
+        ]
+      },
+      {
+        "rpc": "department_import_execute",
+        "locations": [
+          {
+            "file": "src/lib/grcApi.ts",
+            "line": 1630,
+            "transport": "authenticated_edge_bridge",
+            "classification": "privileged_admin"
           }
         ]
       },
@@ -186,7 +197,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1680,
+            "line": 1744,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           },
@@ -203,7 +214,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1695,
+            "line": 1759,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           },
@@ -220,7 +231,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1709,
+            "line": 1773,
             "transport": "authenticated_edge_bridge",
             "classification": "user_management"
           }
@@ -231,7 +242,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1734,
+            "line": 1798,
             "transport": "authenticated_edge_bridge",
             "classification": "user_management"
           }
@@ -242,7 +253,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1902,
+            "line": 1966,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -253,9 +264,229 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1929,
+            "line": 1993,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
+          }
+        ]
+      },
+      {
+        "rpc": "record_production_evidence_closure_action",
+        "locations": [
+          {
+            "file": "src/lib/productionEvidenceClosureApi.ts",
+            "line": 757,
+            "transport": "authenticated_edge_bridge",
+            "classification": "evidence_governance"
+          }
+        ]
+      },
+      {
+        "rpc": "get_production_evidence_closure_action_history",
+        "locations": [
+          {
+            "file": "src/lib/productionEvidenceClosureApi.ts",
+            "line": 774,
+            "transport": "authenticated_edge_bridge",
+            "classification": "evidence_governance"
+          }
+        ]
+      },
+      {
+        "rpc": "create_controlled_production_cutover_decision",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 1509,
+            "transport": "authenticated_edge_bridge",
+            "classification": "production_readiness"
+          }
+        ]
+      },
+      {
+        "rpc": "record_controlled_production_cutover_decision_event",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 1525,
+            "transport": "authenticated_edge_bridge",
+            "classification": "production_readiness"
+          }
+        ]
+      },
+      {
+        "rpc": "create_live_pilot_session",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 1659,
+            "transport": "authenticated_edge_bridge",
+            "classification": "production_readiness"
+          }
+        ]
+      },
+      {
+        "rpc": "update_live_pilot_session_status",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 1672,
+            "transport": "authenticated_edge_bridge",
+            "classification": "production_readiness"
+          }
+        ]
+      },
+      {
+        "rpc": "create_live_pilot_issue",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 1689,
+            "transport": "authenticated_edge_bridge",
+            "classification": "production_readiness"
+          }
+        ]
+      },
+      {
+        "rpc": "update_live_pilot_issue_status",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 1703,
+            "transport": "authenticated_edge_bridge",
+            "classification": "production_readiness"
+          }
+        ]
+      },
+      {
+        "rpc": "record_live_pilot_department_acceptance",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 1719,
+            "transport": "authenticated_edge_bridge",
+            "classification": "production_readiness"
+          }
+        ]
+      },
+      {
+        "rpc": "create_identity_role_integrity_review",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 1836,
+            "transport": "authenticated_edge_bridge",
+            "classification": "privileged_admin"
+          }
+        ]
+      },
+      {
+        "rpc": "update_identity_role_integrity_review_status",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 1850,
+            "transport": "authenticated_edge_bridge",
+            "classification": "privileged_admin"
+          }
+        ]
+      },
+      {
+        "rpc": "record_identity_role_integrity_finding",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 1869,
+            "transport": "authenticated_edge_bridge",
+            "classification": "privileged_admin"
+          }
+        ]
+      },
+      {
+        "rpc": "update_identity_role_integrity_finding_status",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 1881,
+            "transport": "authenticated_edge_bridge",
+            "classification": "privileged_admin"
+          }
+        ]
+      },
+      {
+        "rpc": "record_privileged_role_recertification",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 1896,
+            "transport": "authenticated_edge_bridge",
+            "classification": "privileged_admin"
+          }
+        ]
+      },
+      {
+        "rpc": "create_production_hypercare_window",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 2064,
+            "transport": "authenticated_edge_bridge",
+            "classification": "production_readiness"
+          }
+        ]
+      },
+      {
+        "rpc": "update_production_hypercare_window_status",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 2081,
+            "transport": "authenticated_edge_bridge",
+            "classification": "production_readiness"
+          }
+        ]
+      },
+      {
+        "rpc": "record_production_hypercare_item",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 2098,
+            "transport": "authenticated_edge_bridge",
+            "classification": "production_readiness"
+          }
+        ]
+      },
+      {
+        "rpc": "update_production_hypercare_item_status",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 2111,
+            "transport": "authenticated_edge_bridge",
+            "classification": "production_readiness"
+          }
+        ]
+      },
+      {
+        "rpc": "create_executive_governance_board_pack",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 2124,
+            "transport": "authenticated_edge_bridge",
+            "classification": "production_readiness"
+          }
+        ]
+      },
+      {
+        "rpc": "update_executive_governance_board_pack_status",
+        "locations": [
+          {
+            "file": "src/lib/productionReadinessApi.ts",
+            "line": 2136,
+            "transport": "authenticated_edge_bridge",
+            "classification": "production_readiness"
           }
         ]
       },
@@ -264,7 +495,7 @@
         "locations": [
           {
             "file": "src/lib/productionReadinessApi.ts",
-            "line": 1358,
+            "line": 2450,
             "transport": "authenticated_edge_bridge",
             "classification": "production_readiness"
           }
@@ -275,7 +506,7 @@
         "locations": [
           {
             "file": "src/lib/productionReadinessApi.ts",
-            "line": 1371,
+            "line": 2463,
             "transport": "authenticated_edge_bridge",
             "classification": "production_readiness"
           }
@@ -286,7 +517,7 @@
         "locations": [
           {
             "file": "src/lib/productionReadinessApi.ts",
-            "line": 1386,
+            "line": 2478,
             "transport": "authenticated_edge_bridge",
             "classification": "production_readiness"
           }
@@ -297,7 +528,7 @@
         "locations": [
           {
             "file": "src/lib/productionReadinessApi.ts",
-            "line": 1399,
+            "line": 2491,
             "transport": "authenticated_edge_bridge",
             "classification": "production_readiness"
           }
@@ -308,7 +539,7 @@
         "locations": [
           {
             "file": "src/lib/productionReadinessApi.ts",
-            "line": 1413,
+            "line": 2505,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           }
@@ -319,7 +550,7 @@
         "locations": [
           {
             "file": "src/lib/productionReadinessApi.ts",
-            "line": 1426,
+            "line": 2518,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           }
@@ -330,7 +561,7 @@
         "locations": [
           {
             "file": "src/lib/productionReadinessApi.ts",
-            "line": 1442,
+            "line": 2534,
             "transport": "authenticated_edge_bridge",
             "classification": "production_readiness"
           }
@@ -341,7 +572,7 @@
         "locations": [
           {
             "file": "src/lib/productionReadinessApi.ts",
-            "line": 1455,
+            "line": 2547,
             "transport": "authenticated_edge_bridge",
             "classification": "production_readiness"
           }
@@ -352,7 +583,7 @@
         "locations": [
           {
             "file": "src/lib/productionReadinessApi.ts",
-            "line": 1470,
+            "line": 2562,
             "transport": "authenticated_edge_bridge",
             "classification": "production_readiness"
           }
@@ -363,7 +594,7 @@
         "locations": [
           {
             "file": "src/lib/productionReadinessApi.ts",
-            "line": 1483,
+            "line": 2575,
             "transport": "authenticated_edge_bridge",
             "classification": "production_readiness"
           }
@@ -374,7 +605,7 @@
         "locations": [
           {
             "file": "src/lib/productionReadinessApi.ts",
-            "line": 1494,
+            "line": 2586,
             "transport": "authenticated_edge_bridge",
             "classification": "production_readiness"
           }
@@ -385,7 +616,7 @@
         "locations": [
           {
             "file": "src/lib/productionReadinessApi.ts",
-            "line": 1507,
+            "line": 2599,
             "transport": "authenticated_edge_bridge",
             "classification": "production_readiness"
           }
@@ -396,7 +627,7 @@
         "locations": [
           {
             "file": "src/lib/productionReadinessApi.ts",
-            "line": 1520,
+            "line": 2612,
             "transport": "authenticated_edge_bridge",
             "classification": "production_readiness"
           }
@@ -764,7 +995,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 745,
+      "line": 784,
       "rpc": "acknowledge_escalation_event",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -772,7 +1003,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 753,
+      "line": 792,
       "rpc": "resolve_escalation_event",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -780,7 +1011,15 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1680,
+      "line": 1630,
+      "rpc": "department_import_execute",
+      "transport": "authenticated_edge_bridge",
+      "classification": "privileged_admin",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/grcApi.ts",
+      "line": 1744,
       "rpc": "assign_user_role",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -788,7 +1027,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1695,
+      "line": 1759,
       "rpc": "deactivate_user_role",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -796,7 +1035,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1709,
+      "line": 1773,
       "rpc": "create_department",
       "transport": "authenticated_edge_bridge",
       "classification": "user_management",
@@ -804,7 +1043,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1734,
+      "line": 1798,
       "rpc": "create_user",
       "transport": "authenticated_edge_bridge",
       "classification": "user_management",
@@ -812,7 +1051,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1902,
+      "line": 1966,
       "rpc": "update_ovr_workflow",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -820,15 +1059,175 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1929,
+      "line": 1993,
       "rpc": "create_ovr_corrective_action_project",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
       "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
     },
     {
+      "file": "src/lib/productionEvidenceClosureApi.ts",
+      "line": 757,
+      "rpc": "record_production_evidence_closure_action",
+      "transport": "authenticated_edge_bridge",
+      "classification": "evidence_governance",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionEvidenceClosureApi.ts",
+      "line": 774,
+      "rpc": "get_production_evidence_closure_action_history",
+      "transport": "authenticated_edge_bridge",
+      "classification": "evidence_governance",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
       "file": "src/lib/productionReadinessApi.ts",
-      "line": 1358,
+      "line": 1509,
+      "rpc": "create_controlled_production_cutover_decision",
+      "transport": "authenticated_edge_bridge",
+      "classification": "production_readiness",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 1525,
+      "rpc": "record_controlled_production_cutover_decision_event",
+      "transport": "authenticated_edge_bridge",
+      "classification": "production_readiness",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 1659,
+      "rpc": "create_live_pilot_session",
+      "transport": "authenticated_edge_bridge",
+      "classification": "production_readiness",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 1672,
+      "rpc": "update_live_pilot_session_status",
+      "transport": "authenticated_edge_bridge",
+      "classification": "production_readiness",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 1689,
+      "rpc": "create_live_pilot_issue",
+      "transport": "authenticated_edge_bridge",
+      "classification": "production_readiness",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 1703,
+      "rpc": "update_live_pilot_issue_status",
+      "transport": "authenticated_edge_bridge",
+      "classification": "production_readiness",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 1719,
+      "rpc": "record_live_pilot_department_acceptance",
+      "transport": "authenticated_edge_bridge",
+      "classification": "production_readiness",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 1836,
+      "rpc": "create_identity_role_integrity_review",
+      "transport": "authenticated_edge_bridge",
+      "classification": "privileged_admin",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 1850,
+      "rpc": "update_identity_role_integrity_review_status",
+      "transport": "authenticated_edge_bridge",
+      "classification": "privileged_admin",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 1869,
+      "rpc": "record_identity_role_integrity_finding",
+      "transport": "authenticated_edge_bridge",
+      "classification": "privileged_admin",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 1881,
+      "rpc": "update_identity_role_integrity_finding_status",
+      "transport": "authenticated_edge_bridge",
+      "classification": "privileged_admin",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 1896,
+      "rpc": "record_privileged_role_recertification",
+      "transport": "authenticated_edge_bridge",
+      "classification": "privileged_admin",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 2064,
+      "rpc": "create_production_hypercare_window",
+      "transport": "authenticated_edge_bridge",
+      "classification": "production_readiness",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 2081,
+      "rpc": "update_production_hypercare_window_status",
+      "transport": "authenticated_edge_bridge",
+      "classification": "production_readiness",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 2098,
+      "rpc": "record_production_hypercare_item",
+      "transport": "authenticated_edge_bridge",
+      "classification": "production_readiness",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 2111,
+      "rpc": "update_production_hypercare_item_status",
+      "transport": "authenticated_edge_bridge",
+      "classification": "production_readiness",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 2124,
+      "rpc": "create_executive_governance_board_pack",
+      "transport": "authenticated_edge_bridge",
+      "classification": "production_readiness",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 2136,
+      "rpc": "update_executive_governance_board_pack_status",
+      "transport": "authenticated_edge_bridge",
+      "classification": "production_readiness",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/productionReadinessApi.ts",
+      "line": 2450,
       "rpc": "create_production_readiness_signoff",
       "transport": "authenticated_edge_bridge",
       "classification": "production_readiness",
@@ -836,7 +1235,7 @@
     },
     {
       "file": "src/lib/productionReadinessApi.ts",
-      "line": 1371,
+      "line": 2463,
       "rpc": "update_production_readiness_signoff_status",
       "transport": "authenticated_edge_bridge",
       "classification": "production_readiness",
@@ -844,7 +1243,7 @@
     },
     {
       "file": "src/lib/productionReadinessApi.ts",
-      "line": 1386,
+      "line": 2478,
       "rpc": "create_known_limitation",
       "transport": "authenticated_edge_bridge",
       "classification": "production_readiness",
@@ -852,7 +1251,7 @@
     },
     {
       "file": "src/lib/productionReadinessApi.ts",
-      "line": 1399,
+      "line": 2491,
       "rpc": "update_known_limitation_status",
       "transport": "authenticated_edge_bridge",
       "classification": "production_readiness",
@@ -860,7 +1259,7 @@
     },
     {
       "file": "src/lib/productionReadinessApi.ts",
-      "line": 1413,
+      "line": 2505,
       "rpc": "create_backup_restore_operation",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -868,7 +1267,7 @@
     },
     {
       "file": "src/lib/productionReadinessApi.ts",
-      "line": 1426,
+      "line": 2518,
       "rpc": "update_backup_restore_operation_status",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -876,7 +1275,7 @@
     },
     {
       "file": "src/lib/productionReadinessApi.ts",
-      "line": 1442,
+      "line": 2534,
       "rpc": "create_bilingual_readiness_item",
       "transport": "authenticated_edge_bridge",
       "classification": "production_readiness",
@@ -884,7 +1283,7 @@
     },
     {
       "file": "src/lib/productionReadinessApi.ts",
-      "line": 1455,
+      "line": 2547,
       "rpc": "update_bilingual_readiness_status",
       "transport": "authenticated_edge_bridge",
       "classification": "production_readiness",
@@ -892,7 +1291,7 @@
     },
     {
       "file": "src/lib/productionReadinessApi.ts",
-      "line": 1470,
+      "line": 2562,
       "rpc": "create_navigation_simplification_item",
       "transport": "authenticated_edge_bridge",
       "classification": "production_readiness",
@@ -900,7 +1299,7 @@
     },
     {
       "file": "src/lib/productionReadinessApi.ts",
-      "line": 1483,
+      "line": 2575,
       "rpc": "update_navigation_simplification_status",
       "transport": "authenticated_edge_bridge",
       "classification": "production_readiness",
@@ -908,7 +1307,7 @@
     },
     {
       "file": "src/lib/productionReadinessApi.ts",
-      "line": 1494,
+      "line": 2586,
       "rpc": "create_pilot_go_no_go_review",
       "transport": "authenticated_edge_bridge",
       "classification": "production_readiness",
@@ -916,7 +1315,7 @@
     },
     {
       "file": "src/lib/productionReadinessApi.ts",
-      "line": 1507,
+      "line": 2599,
       "rpc": "update_pilot_go_no_go_review_status",
       "transport": "authenticated_edge_bridge",
       "classification": "production_readiness",
@@ -924,7 +1323,7 @@
     },
     {
       "file": "src/lib/productionReadinessApi.ts",
-      "line": 1520,
+      "line": 2612,
       "rpc": "record_pilot_go_no_go_event",
       "transport": "authenticated_edge_bridge",
       "classification": "production_readiness",
