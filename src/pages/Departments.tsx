@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Building2, Plus } from "lucide-react";
+import { Archive, Building2, Download, FileSpreadsheet, FileWarning, History, Pencil, Plus, RotateCcw, UploadCloud } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 import { DataState } from "../components/DataState";
 import { EntityTable } from "../components/EntityTable";
@@ -12,14 +12,18 @@ import {
 } from "../config/featureFlags";
 import {
   createDepartment,
+  archiveDepartment,
+  getDepartmentLifecycleHistory,
   getDepartmentExecutionSummary,
-  executeDepartmentImport
+  executeDepartmentImport,
+  previewDepartmentArchive,
+  renameDepartment,
+  restoreDepartment,
 } from "../lib/grcApi";
 
-import { Download, UploadCloud, FileSpreadsheet, FileWarning } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { validateImportText, parseDelimitedText } from "../utils/departmentImportValidation";
-import type { DepartmentExecutionSummary } from "../types/domain";
+import { validateImportText } from "../utils/departmentImportValidation";
+import type { DepartmentExecutionSummary, DepartmentLifecycleHistoryRow, DepartmentLifecyclePreview } from "../types/domain";
 
 type DepartmentFilter =
   "all" | "active" | "overdueProjects" | "overdueTasks" | "criticalRisks";
@@ -49,6 +53,18 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<DepartmentExecutionSummary | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<DepartmentExecutionSummary | null>(null);
+  const [restoreTarget, setRestoreTarget] = useState<DepartmentExecutionSummary | null>(null);
+  const [historyTarget, setHistoryTarget] = useState<DepartmentExecutionSummary | null>(null);
+  const [lifecyclePreview, setLifecyclePreview] = useState<DepartmentLifecyclePreview | null>(null);
+  const [lifecycleHistory, setLifecycleHistory] = useState<DepartmentLifecycleHistoryRow[]>([]);
+  const [lifecycleBusy, setLifecycleBusy] = useState(false);
+  const [renameNameEn, setRenameNameEn] = useState("");
+  const [renameNameAr, setRenameNameAr] = useState("");
+  const [archiveReason, setArchiveReason] = useState("");
+  const [successorDepartmentId, setSuccessorDepartmentId] = useState("");
 
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
@@ -65,7 +81,7 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [importMode, setImportMode] = useState<'create_only' | 'create_and_update'>('create_only');
   const isExecutionEnabledByConfiguration = isDepartmentImportExecutionEnabled();
-  const [refData, setRefData] = useState<{ orgs: Set<string>; divs: Set<string>; depts: Set<string>; managers: Map<string, any> } | null>(null);
+  const [refData, setRefData] = useState<{ orgs: Set<string>; divs: Set<string>; depts: Set<string>; archivedDeptKeys: Set<string>; managers: Map<string, any> } | null>(null);
   const hasAuthorizedImportRole =
     !auth.isLocalBypass &&
     auth.roles.some(
@@ -97,7 +113,7 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
       const [{ data: orgs }, { data: divs }, { data: depts }, { data: profiles }] = await Promise.all([
         supabase.from('organizations').select('organization_code, id'),
         supabase.from('divisions').select('division_code, organization_id, id'),
-        supabase.from('departments').select('department_code, division_id, organization_id'),
+        supabase.from('departments').select('code,name_en,name_ar,is_active,archived_at,division_id,organization_id'),
         supabase.from('profiles').select('email, id, user_status, organization_id')
       ]);
       setRefData({
@@ -106,9 +122,17 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
           const orgCode = orgs?.find(o => o.id === d.organization_id)?.organization_code || '';
           return `${orgCode.toUpperCase()}|${d.division_code?.toUpperCase()}`;
         })),
-        depts: new Set((depts || []).map((d: any) => {
+        depts: new Set((depts || []).filter((d: any) => d.is_active && !d.archived_at).map((d: any) => {
           const orgCode = orgs?.find(o => o.id === d.organization_id)?.organization_code || '';
-          return `${orgCode.toUpperCase()}|${d.department_code?.toUpperCase()}`;
+          return `${orgCode.toUpperCase()}|${d.code?.toUpperCase()}`;
+        })),
+        archivedDeptKeys: new Set((depts || []).filter((d: any) => !d.is_active && d.archived_at).flatMap((d: any) => {
+          const orgCode = (orgs?.find(o => o.id === d.organization_id)?.organization_code || '').toUpperCase();
+          const values: string[] = [];
+          if (d.code) values.push(`${orgCode}|CODE|${String(d.code).trim().toUpperCase()}`);
+          if (d.name_en) values.push(`${orgCode}|NAME|${String(d.name_en).trim().replace(/\s+/g, ' ').toLowerCase()}`);
+          if (d.name_ar) values.push(`${orgCode}|NAME|${String(d.name_ar).trim().replace(/\s+/g, ' ').toLowerCase()}`);
+          return values;
         })),
         managers: new Map((profiles || []).map((p: any) => {
           const orgCode = orgs?.find(o => o.id === p.organization_id)?.organization_code || '';
@@ -216,6 +240,7 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
   const filteredRows = useMemo(() => {
     const query = departmentSearch.trim().toLowerCase();
     return rows.filter((row) => {
+      if (!showArchived && !row.is_active) return false;
       const matchesFilter =
         activeFilter === "all" ||
         (activeFilter === "active" && Number(row.active_projects || 0) > 0) ||
@@ -227,12 +252,12 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
           Number(row.critical_risks || 0) > 0);
       const matchesQuery =
         !query ||
-        [row.department_name].some((value) =>
+        [row.department_name, row.department_name_ar, row.department_code].some((value) =>
           value?.toLowerCase().includes(query),
         );
       return matchesFilter && matchesQuery;
     });
-  }, [activeFilter, departmentSearch, rows]);
+  }, [activeFilter, departmentSearch, rows, showArchived]);
   const canManageDepartments = hasAuthorizedImportRole;
   const totals = rows.reduce(
     (acc, row) => {
@@ -259,6 +284,7 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
   const resetDashboardFilters = () => {
     setActiveFilter("all");
     setDepartmentSearch("");
+    setShowArchived(false);
     setSelectedDepartment(null);
     setDrilldownContext(null);
   };
@@ -315,6 +341,125 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
       );
     } finally {
       setSaving(false);
+    }
+  };
+
+  const normalizedName = (value: string | null | undefined) =>
+    (value ?? "").trim().replace(/\s+/g, " ").toLocaleLowerCase();
+
+  const openRename = (row: DepartmentExecutionSummary) => {
+    setActionError(null);
+    setRenameNameEn(row.department_name ?? "");
+    setRenameNameAr(row.department_name_ar ?? "");
+    setRenameTarget(row);
+  };
+
+  const submitRename = async () => {
+    if (!renameTarget || lifecycleBusy) return;
+    setActionError(null);
+    const nameEn = renameNameEn.trim();
+    const nameAr = renameNameAr.trim();
+    if (!nameEn && !nameAr) {
+      setActionError("At least one Arabic or English department name is required.");
+      return;
+    }
+    if (nameEn.length > 180 || nameAr.length > 180) {
+      setActionError("Department names must not exceed 180 characters.");
+      return;
+    }
+    const duplicate = rows.some((row) => row.department_id !== renameTarget.department_id && row.is_active && (
+      (nameEn && normalizedName(row.department_name) === normalizedName(nameEn))
+      || (nameAr && normalizedName(row.department_name_ar) === normalizedName(nameAr))
+    ));
+    if (duplicate) {
+      setActionError("An active department already uses one of these normalized names.");
+      return;
+    }
+    setLifecycleBusy(true);
+    try {
+      await renameDepartment({ department_id: renameTarget.department_id, name_en: nameEn, name_ar: nameAr });
+      setMessage(`Department ${renameTarget.department_code || renameTarget.department_name} renamed successfully.`);
+      setRenameTarget(null);
+      await departments.refresh();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Department rename failed.");
+    } finally {
+      setLifecycleBusy(false);
+    }
+  };
+
+  const openArchive = async (row: DepartmentExecutionSummary) => {
+    setActionError(null);
+    setArchiveReason("");
+    setSuccessorDepartmentId("");
+    setLifecyclePreview(null);
+    setArchiveTarget(row);
+    setLifecycleBusy(true);
+    try {
+      setLifecyclePreview(await previewDepartmentArchive(row.department_id));
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Archive impact preview failed.");
+    } finally {
+      setLifecycleBusy(false);
+    }
+  };
+
+  const submitArchive = async () => {
+    if (!archiveTarget || !lifecyclePreview || lifecycleBusy) return;
+    setActionError(null);
+    if (!archiveReason.trim()) {
+      setActionError("Archive reason is mandatory.");
+      return;
+    }
+    if (lifecyclePreview.impact.active_users > 0 && !successorDepartmentId) {
+      setActionError("Select an active successor department before archiving a department with active users.");
+      return;
+    }
+    setLifecycleBusy(true);
+    try {
+      const result = await archiveDepartment({
+        department_id: archiveTarget.department_id,
+        archive_reason: archiveReason,
+        successor_department_id: successorDepartmentId || null,
+      });
+      setMessage(`Department archived. ${result.reassigned_user_count} active user assignment(s) reassigned.`);
+      setArchiveTarget(null);
+      setLifecyclePreview(null);
+      await departments.refresh();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Department archive failed.");
+    } finally {
+      setLifecycleBusy(false);
+    }
+  };
+
+  const submitRestore = async () => {
+    if (!restoreTarget || lifecycleBusy) return;
+    setLifecycleBusy(true);
+    setActionError(null);
+    try {
+      await restoreDepartment(restoreTarget.department_id);
+      setMessage(`Department ${restoreTarget.department_code || restoreTarget.department_name} restored successfully.`);
+      setRestoreTarget(null);
+      await departments.refresh();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Department restore failed.");
+    } finally {
+      setLifecycleBusy(false);
+    }
+  };
+
+  const openHistory = async (row: DepartmentExecutionSummary) => {
+    setActionError(null);
+    setLifecycleHistory([]);
+    setHistoryTarget(row);
+    setLifecycleBusy(true);
+    try {
+      setLifecycleHistory(await getDepartmentLifecycleHistory(row.department_id));
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Lifecycle history could not be loaded.");
+    } finally {
+      setLifecycleBusy(false);
     }
   };
 
@@ -438,6 +583,14 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
             onChange={(event) => setDepartmentSearch(event.target.value)}
             placeholder="Search department"
           />
+          <label className="department-archive-toggle">
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={(event) => setShowArchived(event.target.checked)}
+            />
+            Show archived
+          </label>
         </div>
       </div>
 
@@ -467,11 +620,20 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
           <EntityTable<DepartmentExecutionSummary>
             rows={filteredRows}
             getRowKey={(row) => row.department_id}
+            getRowClassName={(row) => row.is_active ? undefined : "archived-department-row"}
             columns={[
               {
                 key: "department",
                 header: "Department",
-                render: (row) => <strong>{row.department_name}</strong>,
+                render: (row) => (
+                  <div className="department-name-cell">
+                    <strong>{row.department_name}</strong>
+                    <small>{row.department_code || "No code"}</small>
+                    <span className={`status-badge ${row.is_active ? "status-success" : "status-neutral"}`}>
+                      {row.is_active ? "Active" : "Archived"}
+                    </span>
+                  </div>
+                ),
               },
               {
                 key: "active",
@@ -580,6 +742,28 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
                     "0"
                   ),
               },
+              ...(canManageDepartments ? [{
+                key: "actions",
+                header: "Actions",
+                render: (row: DepartmentExecutionSummary) => (
+                  <details className="department-actions-menu">
+                    <summary>Actions</summary>
+                    <div>
+                      {row.is_active ? (
+                        <>
+                          <button type="button" onClick={() => openRename(row)}><Pencil size={14} /> Rename</button>
+                          <button type="button" onClick={() => void openArchive(row)}><Archive size={14} /> Archive</button>
+                        </>
+                      ) : (
+                        <>
+                          <button type="button" onClick={() => { setActionError(null); setRestoreTarget(row); }}><RotateCcw size={14} /> Restore</button>
+                          <button type="button" onClick={() => void openHistory(row)}><History size={14} /> View lifecycle history</button>
+                        </>
+                      )}
+                    </div>
+                  </details>
+                ),
+              }] : []),
             ]}
           />
         </DataState>
@@ -703,6 +887,118 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
           </div>
         ) : null}
       </div>
+
+      <Modal
+        open={!!renameTarget}
+        title={`Rename ${renameTarget?.department_code || "department"}`}
+        onClose={() => { if (!lifecycleBusy) { setRenameTarget(null); setActionError(null); } }}
+      >
+        <div className="form-grid department-lifecycle-modal">
+          {actionError ? <div className="form-error full-width">{actionError}</div> : null}
+          <div className="notice-banner full-width">
+            Department code <strong>{renameTarget?.department_code || "—"}</strong> is immutable.
+          </div>
+          <div className="department-name-comparison full-width">
+            <div><small>Current English</small><strong>{renameTarget?.department_name || "—"}</strong></div>
+            <div><small>Current Arabic</small><strong dir="rtl">{renameTarget?.department_name_ar || "—"}</strong></div>
+          </div>
+          <label className="field full-width">English name
+            <input maxLength={180} value={renameNameEn} onChange={(event) => setRenameNameEn(event.target.value)} />
+          </label>
+          <label className="field full-width">Arabic name
+            <input dir="rtl" maxLength={180} value={renameNameAr} onChange={(event) => setRenameNameAr(event.target.value)} />
+          </label>
+          <div className="form-actions full-width">
+            <button type="button" className="ghost-button" disabled={lifecycleBusy} onClick={() => setRenameTarget(null)}>Cancel</button>
+            <button type="button" className="primary-button" disabled={lifecycleBusy} onClick={() => void submitRename()}>
+              {lifecycleBusy ? "Renaming…" : "Confirm rename"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={!!archiveTarget}
+        title={`Archive ${archiveTarget?.department_name || "department"}`}
+        onClose={() => { if (!lifecycleBusy) { setArchiveTarget(null); setLifecyclePreview(null); setActionError(null); } }}
+      >
+        <div className="form-grid department-lifecycle-modal">
+          {actionError ? <div className="form-error full-width">{actionError}</div> : null}
+          <div className="notice-banner warning full-width">
+            Historical records and department references remain unchanged. There is no delete action.
+          </div>
+          {lifecycleBusy && !lifecyclePreview ? <p className="full-width">Loading archive impact…</p> : null}
+          {lifecyclePreview ? (
+            <div className="department-impact-grid full-width">
+              {Object.entries(lifecyclePreview.impact).map(([key, value]) => (
+                <div key={key}><strong>{value}</strong><span>{key.replace(/_/g, " ")}</span></div>
+              ))}
+            </div>
+          ) : null}
+          <label className="field full-width">Archive reason (required)
+            <textarea maxLength={1000} value={archiveReason} onChange={(event) => setArchiveReason(event.target.value)} placeholder="Explain why this department is being archived." />
+          </label>
+          {lifecyclePreview && lifecyclePreview.impact.active_users > 0 ? (
+            <label className="field full-width">Successor department for {lifecyclePreview.impact.active_users} active user(s)
+              <select value={successorDepartmentId} onChange={(event) => setSuccessorDepartmentId(event.target.value)}>
+                <option value="">Select an active successor</option>
+                {rows.filter((row) => row.is_active && row.department_id !== archiveTarget?.department_id).map((row) => (
+                  <option key={row.department_id} value={row.department_id}>{row.department_name} ({row.department_code || "no code"})</option>
+                ))}
+              </select>
+              <small>The archive and all active-user reassignments run in one rollback-safe transaction.</small>
+            </label>
+          ) : null}
+          <div className="form-actions full-width">
+            <button type="button" className="ghost-button" disabled={lifecycleBusy} onClick={() => setArchiveTarget(null)}>Cancel</button>
+            <button type="button" className="primary-button" disabled={lifecycleBusy || !lifecyclePreview || !archiveReason.trim() || Boolean(lifecyclePreview?.impact.active_users && !successorDepartmentId)} onClick={() => void submitArchive()}>
+              {lifecycleBusy ? "Archiving…" : "Confirm archive"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={!!restoreTarget}
+        title={`Restore ${restoreTarget?.department_name || "department"}`}
+        onClose={() => { if (!lifecycleBusy) { setRestoreTarget(null); setActionError(null); } }}
+      >
+        <div className="form-grid department-lifecycle-modal">
+          {actionError ? <div className="form-error full-width">{actionError}</div> : null}
+          <div className="panel full-width">
+            <p><strong>Archived:</strong> {restoreTarget?.archived_at ? new Date(restoreTarget.archived_at).toLocaleString() : "Unknown"}</p>
+            <p><strong>Reason:</strong> {restoreTarget?.archive_reason || "No legacy reason recorded"}</p>
+            <p><strong>Code:</strong> {restoreTarget?.department_code || "—"} (preserved)</p>
+          </div>
+          <div className="notice-banner full-width">
+            Restoration re-enables new assignments. The server will reject restoration if an active normalized name or code conflict exists.
+          </div>
+          <div className="form-actions full-width">
+            <button type="button" className="ghost-button" disabled={lifecycleBusy} onClick={() => setRestoreTarget(null)}>Cancel</button>
+            <button type="button" className="primary-button" disabled={lifecycleBusy} onClick={() => void submitRestore()}>
+              {lifecycleBusy ? "Restoring…" : "Confirm restoration"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={!!historyTarget}
+        title={`Lifecycle history: ${historyTarget?.department_name || "department"}`}
+        onClose={() => { if (!lifecycleBusy) { setHistoryTarget(null); setActionError(null); } }}
+      >
+        <div className="department-lifecycle-history">
+          {actionError ? <div className="form-error">{actionError}</div> : null}
+          {lifecycleBusy ? <p>Loading lifecycle history…</p> : null}
+          {!lifecycleBusy && !lifecycleHistory.length ? <p>No lifecycle events have been recorded.</p> : null}
+          {lifecycleHistory.map((event) => (
+            <article key={event.id} className="panel">
+              <div className="split-header"><strong>{event.action.replace(/_/g, " ")}</strong><time>{new Date(event.created_at).toLocaleString()}</time></div>
+              <pre>{JSON.stringify({ old: event.old_data, new: event.new_data }, null, 2)}</pre>
+            </article>
+          ))}
+        </div>
+      </Modal>
 
       <Modal
         open={!!manageDepartment}

@@ -783,6 +783,44 @@ export async function getUserManagementDepartments(): Promise<LiveResult<Departm
   return rows.length ? liveResult(rows) : emptyResult<DepartmentLookup[]>('No active departments are available.');
 }
 
+async function getArchivedUserManagementDepartments(): Promise<LiveResult<DepartmentLookup[]>> {
+  const notConfigured = configuredOrResult<DepartmentLookup[]>('Supabase is not configured for archived department lookup.');
+  if (notConfigured) return notConfigured;
+  const { data, error } = await supabase!
+    .from('departments')
+    .select('id,code,name_en,name_ar')
+    .eq('is_active', false)
+    .not('archived_at', 'is', null)
+    .order('name_en', { ascending: true });
+  if (error) return queryErrorResult<DepartmentLookup[]>(error, 'Unable to validate archived departments for user import.');
+  const rows = (data ?? []) as DepartmentLookup[];
+  return rows.length ? liveResult(rows) : emptyResult<DepartmentLookup[]>('No archived departments exist.');
+}
+
+function departmentLookupMap(departments: DepartmentLookup[]) {
+  const map = new Map<string, DepartmentLookup>();
+  departments.forEach(department => {
+    if (department.code) map.set(department.code.trim().toLowerCase(), department);
+    map.set(department.name_en.trim().replace(/\s+/g, ' ').toLowerCase(), department);
+    if (department.name_ar) map.set(department.name_ar.trim().replace(/\s+/g, ' ').toLowerCase(), department);
+  });
+  return map;
+}
+
+export function classifyUserImportDepartment(
+  reference: string,
+  activeDepartments: DepartmentLookup[],
+  archivedDepartments: DepartmentLookup[],
+) {
+  const key = reference.trim().replace(/\s+/g, ' ').toLowerCase();
+  if (!key) return { status: 'none' as const, department: null };
+  const active = departmentLookupMap(activeDepartments).get(key);
+  if (active) return { status: 'active' as const, department: active };
+  const archived = departmentLookupMap(archivedDepartments).get(key);
+  if (archived) return { status: 'archived' as const, department: archived };
+  return { status: 'unknown' as const, department: null };
+}
+
 export async function readAuditHistory(userId?: string): Promise<LiveResult<UserManagementAuditRow[]>> {
   const notConfigured = configuredOrResult<UserManagementAuditRow[]>('Supabase is not configured for user audit history.');
   if (notConfigured) return notConfigured;
@@ -828,25 +866,20 @@ export function parseUserImportCsv(text: string): ParsedUserImportRow[] {
 }
 
 export async function validateImportRows(rows: ParsedUserImportRow[]): Promise<UserImportValidationResult> {
-  const [usersResult, departmentsResult] = await Promise.all([
+  const [usersResult, departmentsResult, archivedDepartmentsResult] = await Promise.all([
     listUsersWithFilters({}),
     getUserManagementDepartments(),
+    getArchivedUserManagementDepartments(),
   ]);
 
-  if (usersResult.status === 'query_error' || departmentsResult.status === 'query_error') {
-    throw new Error(usersResult.message ?? departmentsResult.message ?? 'Unable to validate import rows.');
+  if (usersResult.status === 'query_error' || departmentsResult.status === 'query_error' || archivedDepartmentsResult.status === 'query_error') {
+    throw new Error(usersResult.message ?? departmentsResult.message ?? archivedDepartmentsResult.message ?? 'Unable to validate import rows.');
   }
 
   const users = usersResult.status === 'live' ? usersResult.data : [];
   const departments = departmentsResult.status === 'live' ? departmentsResult.data : [];
+  const archivedDepartments = archivedDepartmentsResult.status === 'live' ? archivedDepartmentsResult.data : [];
   const usersByEmail = new Map(users.map(user => [user.email.toLowerCase(), user]));
-  const departmentsByKey = new Map<string, DepartmentLookup>();
-  departments.forEach(department => {
-    if (department.code) departmentsByKey.set(department.code.toLowerCase(), department);
-    departmentsByKey.set(department.name_en.toLowerCase(), department);
-    if (department.name_ar) departmentsByKey.set(department.name_ar.toLowerCase(), department);
-  });
-
   const emailCounts = new Map<string, number>();
   rows.forEach(row => {
     const email = row.email.trim().toLowerCase();
@@ -864,7 +897,8 @@ export async function validateImportRows(rows: ParsedUserImportRow[]): Promise<U
     const role = row.role ? normalizeRole(row.role) : null;
     const status = normalizeStatus(row.status);
     const userType = normalizeUserType(row.user_type);
-    const department = row.department ? departmentsByKey.get(row.department.trim().toLowerCase()) : null;
+    const departmentClassification = classifyUserImportDepartment(row.department, departments, archivedDepartments);
+    const department = departmentClassification.status === 'active' ? departmentClassification.department : null;
 
     if (!row.full_name_en.trim()) errors.push('English name is required.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Valid email is required.');
@@ -872,7 +906,10 @@ export async function validateImportRows(rows: ParsedUserImportRow[]): Promise<U
       errors.push('Duplicate email in uploaded file.');
       duplicateEmailCount += 1;
     }
-    if (row.department && !department) {
+    if (departmentClassification.status === 'archived') {
+      errors.push('Archived department cannot be assigned. Restore it explicitly from Department Management first.');
+      unknownDepartmentCount += 1;
+    } else if (row.department && !department) {
       errors.push('Unknown department code or name.');
       unknownDepartmentCount += 1;
     }

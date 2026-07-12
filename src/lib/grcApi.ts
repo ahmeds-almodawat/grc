@@ -114,6 +114,8 @@ import type {
   CustomReportDefinition,
   DepartmentOption,
   DepartmentExecutionSummary,
+  DepartmentLifecycleHistoryRow,
+  DepartmentLifecyclePreview,
   EvidenceChainOfCustodyRow,
   EvidenceClosureGateStatusRow,
   EvidenceGapDashboardRow,
@@ -1595,6 +1597,79 @@ export async function getDepartmentExecutionSummary(): Promise<DepartmentExecuti
     logFallback('department execution summary', error);
     return emptyLiveArray<any>();
   }
+}
+
+function lifecycleRequestId() {
+  return `patch83r-${Date.now()}-${crypto.randomUUID()}`;
+}
+
+export async function previewDepartmentArchive(departmentId: string) {
+  return invokePrivilegedAction<DepartmentLifecyclePreview>('department_lifecycle_preview', {
+    department_id: departmentId,
+  });
+}
+
+export async function renameDepartment(input: {
+  department_id: string;
+  name_en: string;
+  name_ar: string;
+}) {
+  return invokePrivilegedAction<{
+    department_id: string;
+    code: string | null;
+    name_en: string;
+    name_ar: string | null;
+  }>('department_lifecycle_rename', {
+    department_id: input.department_id,
+    name_en: input.name_en.trim(),
+    name_ar: input.name_ar.trim(),
+    request_id: lifecycleRequestId(),
+  });
+}
+
+export async function archiveDepartment(input: {
+  department_id: string;
+  archive_reason: string;
+  successor_department_id?: string | null;
+}) {
+  return invokePrivilegedAction<{
+    department_id: string;
+    archived: true;
+    successor_department_id: string | null;
+    reassigned_user_count: number;
+  }>('department_lifecycle_archive', {
+    department_id: input.department_id,
+    archive_reason: input.archive_reason.trim(),
+    successor_department_id: input.successor_department_id || null,
+    request_id: lifecycleRequestId(),
+  });
+}
+
+export async function restoreDepartment(departmentId: string) {
+  return invokePrivilegedAction<{
+    department_id: string;
+    restored: true;
+    code: string | null;
+    name_en: string;
+    name_ar: string | null;
+  }>('department_lifecycle_restore', {
+    department_id: departmentId,
+    request_id: lifecycleRequestId(),
+  });
+}
+
+export async function getDepartmentLifecycleHistory(departmentId: string): Promise<DepartmentLifecycleHistoryRow[]> {
+  const client = requireLiveSupabase();
+  const { data, error } = await client
+    .from('audit_logs')
+    .select('id,action,actor_id,old_data,new_data,created_at')
+    .eq('table_name', 'departments')
+    .eq('record_id', departmentId)
+    .in('action', ['DEPARTMENT_RENAMED', 'DEPARTMENT_ARCHIVED', 'DEPARTMENT_RESTORED'])
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) throw new Error('Unable to load department lifecycle history.');
+  return (data ?? []) as DepartmentLifecycleHistoryRow[];
 }
 
 export interface BulkImportRowInput {

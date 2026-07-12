@@ -104,6 +104,13 @@ const patch83q1ProductionReadinessActions = new Set([
   'record_executive_production_signoff',
 ]);
 
+const patch83rDepartmentLifecycleActions = new Set([
+  'department_lifecycle_preview',
+  'department_lifecycle_rename',
+  'department_lifecycle_archive',
+  'department_lifecycle_restore',
+]);
+
 const allowedActions = new Set([
   'list_user_management_roster',
   'create_board_pack_snapshot',
@@ -135,6 +142,7 @@ const allowedActions = new Set([
   ...patch78IdentityIntegrityActions,
   ...patch79OperationsGovernanceActions,
   ...patch83q1ProductionReadinessActions,
+  ...patch83rDepartmentLifecycleActions,
 ]);
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
@@ -235,6 +243,43 @@ async function authorizePatch83q1Actor(
       || assignment.organization_id === actorProfile.organization_id
     )
   );
+}
+
+async function authorizePatch83rActor(serviceClient: any, actorId: string): Promise<string | null> {
+  const { data: actorProfile, error: actorProfileError } = await serviceClient
+    .from('profiles')
+    .select('organization_id,is_active,user_status')
+    .eq('id', actorId)
+    .maybeSingle();
+  if (actorProfileError) throw new Error('PATCH83R_ACTOR_PROFILE_LOOKUP_FAILED');
+  if (
+    !actorProfile?.organization_id
+    || actorProfile.is_active === false
+    || (actorProfile.user_status && actorProfile.user_status !== 'active')
+  ) return null;
+
+  const { data: actorRoles, error: actorRolesError } = await serviceClient
+    .from('user_roles')
+    .select('role,scope,organization_id')
+    .eq('user_id', actorId)
+    .eq('is_active', true);
+  if (actorRolesError) throw new Error('PATCH83R_ACTOR_ROLE_LOOKUP_FAILED');
+
+  const authorized = (actorRoles ?? []).some((assignment: any) =>
+    ['super_admin', 'governance_admin'].includes(String(assignment.role))
+    && assignment.scope === 'global'
+    && (
+      assignment.organization_id === null
+      || assignment.organization_id === actorProfile.organization_id
+    )
+  );
+  return authorized ? String(actorProfile.organization_id) : null;
+}
+
+function normalizedDepartmentValue(value: unknown) {
+  return typeof value === 'string'
+    ? value.trim().replace(/\s+/g, ' ').toLocaleLowerCase()
+    : '';
 }
 
 async function readUserManagementRoster(serviceClient: any, actorId: string) {
@@ -887,6 +932,130 @@ Deno.serve(async (request) => {
     return jsonResponse({ ok: true, action, result: data }, 200);
   }
 
+  if (patch83rDepartmentLifecycleActions.has(action)) {
+    const payload = requestBody.payload ?? {};
+    let actorOrganizationId: string | null = null;
+    try {
+      actorOrganizationId = await authorizePatch83rActor(serviceClient, userData.user.id);
+    } catch {
+      return errorResponse(
+        'Unable to verify department lifecycle authority.',
+        500,
+        'DEPARTMENT_LIFECYCLE_AUTHORIZATION_FAILED',
+        'The server could not safely verify the authenticated actor profile and organization-scoped role.',
+        { action },
+      );
+    }
+    if (!actorOrganizationId) {
+      return errorResponse(
+        'Department lifecycle authority required.',
+        403,
+        'DEPARTMENT_LIFECYCLE_ROLE_REQUIRED',
+        'An active global super_admin or governance_admin role in the authenticated actor organization is required.',
+        { action },
+      );
+    }
+
+    const departmentId = typeof payload.department_id === 'string' ? payload.department_id.trim() : '';
+    const successorDepartmentId = payload.successor_department_id === null || payload.successor_department_id === undefined
+      ? null
+      : typeof payload.successor_department_id === 'string' ? payload.successor_department_id.trim() : '';
+    const nameEn = typeof payload.name_en === 'string' ? payload.name_en.trim() : '';
+    const nameAr = typeof payload.name_ar === 'string' ? payload.name_ar.trim() : '';
+    const archiveReason = typeof payload.archive_reason === 'string' ? payload.archive_reason.trim() : '';
+    const requestId = payload.request_id === null || payload.request_id === undefined
+      ? null
+      : typeof payload.request_id === 'string' ? payload.request_id.trim() : '';
+
+    if (!uuidPattern.test(departmentId)) {
+      return errorResponse('A valid department UUID is required.', 400, 'DEPARTMENT_UUID_INVALID',
+        'The department_id must be a canonical UUID.', { action });
+    }
+    if (successorDepartmentId !== null && !uuidPattern.test(successorDepartmentId)) {
+      return errorResponse('A valid successor department UUID is required.', 400, 'SUCCESSOR_DEPARTMENT_UUID_INVALID',
+        'When provided, successor_department_id must be a canonical UUID.', { action });
+    }
+    if (requestId !== null && (!requestId || requestId.length > 128 || !/^[a-zA-Z0-9:._-]+$/.test(requestId))) {
+      return errorResponse('Invalid lifecycle request identifier.', 400, 'DEPARTMENT_REQUEST_ID_INVALID',
+        'When provided, request_id must use safe identifier characters and be no longer than 128 characters.', { action });
+    }
+    if (action === 'department_lifecycle_rename' && ((!nameEn && !nameAr) || nameEn.length > 180 || nameAr.length > 180)) {
+      return errorResponse('Valid department names are required.', 400, 'DEPARTMENT_NAMES_INVALID',
+        'Provide at least one non-empty Arabic or English name; each name may be at most 180 characters.', { action });
+    }
+    if (action === 'department_lifecycle_archive' && (!archiveReason || archiveReason.length > 1000)) {
+      return errorResponse('A valid archive reason is required.', 400, 'DEPARTMENT_ARCHIVE_REASON_INVALID',
+        'Provide a non-empty archive reason no longer than 1,000 characters.', { action });
+    }
+    if (action === 'department_lifecycle_archive' && successorDepartmentId === departmentId) {
+      return errorResponse('A department cannot succeed itself.', 400, 'DEPARTMENT_SUCCESSOR_SELF_DENIED',
+        'Choose a different active department as the successor.', { action });
+    }
+
+    let rpcResult: { data: unknown; error: any };
+    if (action === 'department_lifecycle_preview') {
+      rpcResult = await serviceClient.rpc('department_lifecycle_preview', {
+        p_actor_id: userData.user.id,
+        p_department_id: departmentId,
+      });
+    } else if (action === 'department_lifecycle_rename') {
+      rpcResult = await serviceClient.rpc('department_lifecycle_rename', {
+        p_actor_id: userData.user.id,
+        p_department_id: departmentId,
+        p_name_en: nameEn,
+        p_name_ar: nameAr,
+        p_request_id: requestId,
+      });
+    } else if (action === 'department_lifecycle_archive') {
+      rpcResult = await serviceClient.rpc('department_lifecycle_archive', {
+        p_actor_id: userData.user.id,
+        p_department_id: departmentId,
+        p_archive_reason: archiveReason,
+        p_successor_department_id: successorDepartmentId,
+        p_request_id: requestId,
+      });
+    } else {
+      rpcResult = await serviceClient.rpc('department_lifecycle_restore', {
+        p_actor_id: userData.user.id,
+        p_department_id: departmentId,
+        p_request_id: requestId,
+      });
+    }
+
+    const { data, error } = rpcResult;
+    if (error) {
+      const message = String(error.message ?? '');
+      const knownCode = [
+        'PATCH83R_ADMIN_ROLE_REQUIRED',
+        'PATCH83R_DEPARTMENT_NOT_FOUND',
+        'PATCH83R_DEPARTMENT_NAME_REQUIRED',
+        'PATCH83R_DEPARTMENT_NAME_TOO_LONG',
+        'PATCH83R_ARCHIVED_DEPARTMENT_RENAME_DENIED',
+        'PATCH83R_ACTIVE_DEPARTMENT_NAME_CONFLICT',
+        'PATCH83R_ARCHIVE_REASON_REQUIRED',
+        'PATCH83R_ARCHIVE_REASON_TOO_LONG',
+        'PATCH83R_DEPARTMENT_ALREADY_ARCHIVED',
+        'PATCH83R_SUCCESSOR_SELF_DENIED',
+        'PATCH83R_ACTIVE_USERS_REQUIRE_SUCCESSOR',
+        'PATCH83R_ACTIVE_SUCCESSOR_REQUIRED',
+        'PATCH83R_USER_REASSIGNMENT_INCOMPLETE',
+        'PATCH83R_DEPARTMENT_NOT_ARCHIVED',
+      ].find((code) => message.includes(code));
+      return errorResponse(
+        knownCode === 'PATCH83R_ADMIN_ROLE_REQUIRED'
+          ? 'Department lifecycle authority was denied.'
+          : 'The department lifecycle action could not be completed.',
+        knownCode === 'PATCH83R_ADMIN_ROLE_REQUIRED' ? 403 : knownCode === 'PATCH83R_DEPARTMENT_NOT_FOUND' ? 404 : 409,
+        knownCode ?? 'DEPARTMENT_LIFECYCLE_ACTION_FAILED',
+        knownCode
+          ? 'The fixed lifecycle operation rejected the validated request without changing historical references.'
+          : 'The database rejected the fixed lifecycle operation. No raw database detail is exposed.',
+        { action },
+      );
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
   if (patch83q1ProductionReadinessActions.has(action)) {
     const payload = requestBody.payload ?? {};
     const allowedRoles = action === 'record_executive_production_signoff'
@@ -1273,6 +1442,59 @@ Deno.serve(async (request) => {
     const payloadSize = new TextEncoder().encode(JSON.stringify(payload)).length;
     if (payloadSize > 5 * 1024 * 1024) {
       return jsonResponse({ ok: false, error: 'Payload exceeds 5MB limit', action }, 400);
+    }
+
+    let actorOrganizationId: string | null = null;
+    try {
+      actorOrganizationId = await authorizePatch83rActor(serviceClient, userData.user.id);
+    } catch {
+      return errorResponse('Unable to verify department import authority.', 500,
+        'DEPARTMENT_IMPORT_AUTHORIZATION_FAILED',
+        'The server could not safely verify the authenticated actor organization and role.', { action });
+    }
+    if (!actorOrganizationId || payload.organization_id !== actorOrganizationId) {
+      return errorResponse('Department import organization scope denied.', 403,
+        'DEPARTMENT_IMPORT_ORGANIZATION_SCOPE_DENIED',
+        'The import organization must match the authenticated administrator organization.', { action });
+    }
+
+    const { data: archivedDepartments, error: archivedLookupError } = await serviceClient
+      .from('departments')
+      .select('id,code,name_en,name_ar')
+      .eq('organization_id', actorOrganizationId)
+      .eq('is_active', false)
+      .not('archived_at', 'is', null)
+      .limit(5000);
+    if (archivedLookupError) {
+      return errorResponse('Unable to verify archived department matches.', 500,
+        'DEPARTMENT_IMPORT_ARCHIVED_LOOKUP_FAILED',
+        'The server could not safely complete the archived department preflight.', { action });
+    }
+    const archivedKeys = new Set<string>();
+    for (const department of archivedDepartments ?? []) {
+      const code = normalizedDepartmentValue(department.code);
+      const nameEn = normalizedDepartmentValue(department.name_en);
+      const nameAr = normalizedDepartmentValue(department.name_ar);
+      if (code) archivedKeys.add(`code:${code}`);
+      if (nameEn) archivedKeys.add(`name:${nameEn}`);
+      if (nameAr) archivedKeys.add(`name:${nameAr}`);
+    }
+    const archivedMatchRows = rows.flatMap((row: any, index: number) => {
+      const raw = row && typeof row === 'object' && row.raw_data && typeof row.raw_data === 'object'
+        ? row.raw_data : {};
+      const code = normalizedDepartmentValue(raw.department_code);
+      const nameEn = normalizedDepartmentValue(raw.department_name_en);
+      const nameAr = normalizedDepartmentValue(raw.department_name_ar);
+      const matched = (code && archivedKeys.has(`code:${code}`))
+        || (nameEn && archivedKeys.has(`name:${nameEn}`))
+        || (nameAr && archivedKeys.has(`name:${nameAr}`));
+      return matched ? [Number(row?.row_number ?? index + 1)] : [];
+    });
+    if (archivedMatchRows.length) {
+      return errorResponse('Department import contains an archived department match.', 409,
+        'archived_department_match',
+        'Restore the matching department explicitly from Department Management before importing it.',
+        { action, row_numbers: archivedMatchRows });
     }
 
     const { data, error } = await serviceClient.rpc('apply_department_import_batch', {
