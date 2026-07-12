@@ -614,7 +614,12 @@
     "patch83k:proof": "node scripts/patch83k-cloud-persona-runtime-proof.mjs",
     "patch83l:proof": "node scripts/patch83l-department-import-backup-center-proof.mjs",
     "patch83m:proof": "node scripts/patch83m-secure-department-import-backend-proof.mjs",
-    "patch83n:proof": "node scripts/patch83n-controlled-cloud-deployment-proof.mjs"
+    "patch83n:proof": "node scripts/patch83n-controlled-cloud-deployment-proof.mjs",
+    "patch83o:test": "node scripts/patch83o-authenticated-runtime-tests.mjs",
+    "patch83o:proof": "node scripts/patch83o-authenticated-runtime-proof.mjs",
+    "patch83o1:proof": "node scripts/patch83o1-schema-compatibility-proof.mjs",
+    "patch83o2:proof": "node scripts/patch83o2-validation-array-proof.mjs",
+    "patch83o3:proof": "node scripts/patch83o3-live-mutation-proof.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

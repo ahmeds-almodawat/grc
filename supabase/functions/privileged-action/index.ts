@@ -375,7 +375,10 @@ Deno.serve(async (request) => {
   }
 
   const action = requestBody.action ?? '';
-  if (!allowedActions.has(action)) {
+  if (
+    !allowedActions.has(action) &&
+    !patch83mDepartmentImportActions.has(action)
+  ) {
     return errorResponse(
       `Unsupported privileged action: ${action}`,
       400,
