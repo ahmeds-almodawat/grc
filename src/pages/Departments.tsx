@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Archive, Building2, Download, FileSpreadsheet, FileWarning, History, Pencil, Plus, RotateCcw, UploadCloud } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { Archive, Building2, Download, FileSpreadsheet, FileWarning, History, Pencil, Plus, RotateCcw, Trash2, UploadCloud } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 import { DataState } from "../components/DataState";
 import { EntityTable } from "../components/EntityTable";
@@ -22,7 +22,18 @@ import {
 } from "../lib/grcApi";
 
 import { supabase } from "../lib/supabase";
-import { validateImportText } from "../utils/departmentImportValidation";
+import {
+  DEPARTMENT_IMPORT_ORGANIZATION_CODE,
+  validateDepartmentImportRows,
+  type ImportValidationResult,
+  type RefData,
+} from "../utils/departmentImportValidation";
+import {
+  createDepartmentImportFileState,
+  createDepartmentImportTemplate,
+  parseDepartmentWorkbook,
+  type DepartmentWorkbookParseResult,
+} from "../utils/departmentWorkbook";
 import type { DepartmentExecutionSummary, DepartmentLifecycleHistoryRow, DepartmentLifecyclePreview } from "../types/domain";
 
 type DepartmentFilter =
@@ -30,10 +41,7 @@ type DepartmentFilter =
 type DrilldownFilter = DepartmentFilter | "compliance" | "audit" | "nextAction";
 
 
-type ParsedRow = Record<string, string>;
-
-function downloadFile(fileName: string, content: string, mimeType = 'text/csv;charset=utf-8;') {
-  const blob = new Blob([content], { type: mimeType });
+function downloadBlob(fileName: string, blob: Blob) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -42,6 +50,11 @@ function downloadFile(fileName: string, content: string, mimeType = 'text/csv;ch
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+function formatFileSize(size: number) {
+  if (size < 1024) return `${size} B`;
+  return `${(size / 1024).toFixed(size < 1024 * 100 ? 1 : 0)} KB`;
 }
 
 export function Departments({ setPage }: { setPage?: (page: string) => void }) {
@@ -67,21 +80,25 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
   const [successorDepartmentId, setSuccessorDepartmentId] = useState("");
 
   const [importOpen, setImportOpen] = useState(false);
-  const [importText, setImportText] = useState("");
-  const [importValidation, setImportValidation] = useState<{
-    headers: string[];
-    rows: ParsedRow[];
-    errorsByRow: Record<number, string[]>;
-    validRows: number;
-    invalidRows: number;
-  } | null>(null);
+  const [importFileState, setImportFileState] = useState<{
+    file: { name: string; size: number } | null;
+    validation: ImportValidationResult | null;
+    parseError: string | null;
+    parsing: boolean;
+  }>(() => createDepartmentImportFileState());
+  const importFileInputRef = useRef<HTMLInputElement>(null);
+  const importSelectionId = useRef(0);
+  const refDataRequestRef = useRef<Promise<RefData | null> | null>(null);
+  const parsedWorkbookRef = useRef<DepartmentWorkbookParseResult | null>(null);
+  const importValidation = importFileState.validation;
   const [importSaving, setImportSaving] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [importMode, setImportMode] = useState<'create_only' | 'create_and_update'>('create_only');
   const isExecutionEnabledByConfiguration = isDepartmentImportExecutionEnabled();
-  const [refData, setRefData] = useState<{ orgs: Set<string>; divs: Set<string>; depts: Set<string>; archivedDeptKeys: Set<string>; managers: Map<string, any> } | null>(null);
+  const [refData, setRefData] = useState<RefData | null>(null);
+  const [referenceDataStatus, setReferenceDataStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const hasAuthorizedImportRole =
     !auth.isLocalBypass &&
     auth.roles.some(
@@ -108,45 +125,155 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
     });
 
   const fetchReferenceData = async () => {
-    if (!supabase) return;
+    const organizationId = auth.profile?.organizationId;
+    if (!supabase || !organizationId) {
+      setRefData(null);
+      setReferenceDataStatus('error');
+      return null;
+    }
+    setReferenceDataStatus('loading');
     try {
-      const [{ data: orgs }, { data: divs }, { data: depts }, { data: profiles }] = await Promise.all([
-        supabase.from('organizations').select('organization_code, id'),
-        supabase.from('divisions').select('division_code, organization_id, id'),
-        supabase.from('departments').select('code,name_en,name_ar,is_active,archived_at,division_id,organization_id'),
-        supabase.from('profiles').select('email, id, user_status, organization_id')
+      const [orgResult, divResult, deptResult, profileResult] = await Promise.all([
+        supabase.from('organizations').select('id,name_en,name_ar,is_active').eq('id', organizationId).maybeSingle(),
+        supabase.from('divisions').select('id,organization_id,code,is_active').eq('organization_id', organizationId).eq('is_active', true),
+        supabase.from('departments').select('id,code,name_en,name_ar,is_active,archived_at,division_id,organization_id').eq('organization_id', organizationId),
+        supabase.from('profiles').select('id,email,is_active,user_status,organization_id').eq('organization_id', organizationId),
       ]);
-      setRefData({
-        orgs: new Set((orgs || []).map((o: any) => o.organization_code?.toUpperCase())),
-        divs: new Set((divs || []).map((d: any) => {
-          const orgCode = orgs?.find(o => o.id === d.organization_id)?.organization_code || '';
-          return `${orgCode.toUpperCase()}|${d.division_code?.toUpperCase()}`;
+      const firstError = orgResult.error || divResult.error || deptResult.error || profileResult.error;
+      if (firstError) throw firstError;
+      if (!orgResult.data || orgResult.data.id !== organizationId || orgResult.data.is_active === false) {
+        throw new Error('Active organization context was not available.');
+      }
+      const activeOrganizationCode = DEPARTMENT_IMPORT_ORGANIZATION_CODE;
+      const data: RefData = {
+        activeOrganizationCode,
+        divs: new Set((divResult.data || []).filter((division: any) => division.code).map((division: any) => {
+          return `${activeOrganizationCode}|${String(division.code).trim().toUpperCase()}`;
         })),
-        depts: new Set((depts || []).filter((d: any) => d.is_active && !d.archived_at).map((d: any) => {
-          const orgCode = orgs?.find(o => o.id === d.organization_id)?.organization_code || '';
-          return `${orgCode.toUpperCase()}|${d.code?.toUpperCase()}`;
+        depts: new Set((deptResult.data || []).filter((department: any) => department.is_active && !department.archived_at && department.code).map((department: any) => {
+          return `${activeOrganizationCode}|${String(department.code ?? '').trim().toUpperCase()}`;
         })),
-        archivedDeptKeys: new Set((depts || []).filter((d: any) => !d.is_active && d.archived_at).flatMap((d: any) => {
-          const orgCode = (orgs?.find(o => o.id === d.organization_id)?.organization_code || '').toUpperCase();
+        archivedDeptKeys: new Set((deptResult.data || []).filter((department: any) => !department.is_active && department.archived_at).flatMap((department: any) => {
           const values: string[] = [];
-          if (d.code) values.push(`${orgCode}|CODE|${String(d.code).trim().toUpperCase()}`);
-          if (d.name_en) values.push(`${orgCode}|NAME|${String(d.name_en).trim().replace(/\s+/g, ' ').toLowerCase()}`);
-          if (d.name_ar) values.push(`${orgCode}|NAME|${String(d.name_ar).trim().replace(/\s+/g, ' ').toLowerCase()}`);
+          if (department.code) values.push(`${activeOrganizationCode}|CODE|${String(department.code).trim().toUpperCase()}`);
+          if (department.name_en) values.push(`${activeOrganizationCode}|NAME|${String(department.name_en).trim().replace(/\s+/g, ' ').toLowerCase()}`);
+          if (department.name_ar) values.push(`${activeOrganizationCode}|NAME|${String(department.name_ar).trim().replace(/\s+/g, ' ').toLowerCase()}`);
           return values;
         })),
-        managers: new Map((profiles || []).map((p: any) => {
-          const orgCode = orgs?.find(o => o.id === p.organization_id)?.organization_code || '';
-          return [p.email?.toLowerCase(), { ...p, organization_code: orgCode.toUpperCase() }];
-        }))
-      });
-    } catch (e) {
-      console.error("Failed to fetch reference data", e);
+        managers: new Map((profileResult.data || []).map((profile: any) => [
+          String(profile.email ?? '').trim().toLowerCase(),
+          { ...profile, organization_code: activeOrganizationCode },
+        ])),
+      };
+      setRefData(data);
+      setReferenceDataStatus('ready');
+      return data;
+    } catch {
+      setRefData(null);
+      setReferenceDataStatus('error');
+      return null;
     }
   };
 
-  const handleValidation = (text: string) => {
-    const result = validateImportText(text, refData);
-    setImportValidation(result);
+  const loadReferenceData = (forceRefresh = false) => {
+    if (refDataRequestRef.current) return refDataRequestRef.current;
+    if (refData && !forceRefresh) return Promise.resolve(refData);
+
+    const request = fetchReferenceData();
+    refDataRequestRef.current = request;
+    void request.then(() => {
+      if (refDataRequestRef.current === request) refDataRequestRef.current = null;
+    });
+    return request;
+  };
+
+  const resetImportFile = () => {
+    importSelectionId.current += 1;
+    parsedWorkbookRef.current = null;
+    setImportFileState(createDepartmentImportFileState());
+    setShowConfirmation(false);
+    setImportError(null);
+    setImportSuccess(null);
+    if (importFileInputRef.current) importFileInputRef.current.value = '';
+  };
+
+  const handleWorkbookSelection = async (file: File | null) => {
+    if (!file) return;
+    const selectionId = importSelectionId.current + 1;
+    importSelectionId.current = selectionId;
+    setImportFileState(createDepartmentImportFileState(file));
+    parsedWorkbookRef.current = null;
+    setShowConfirmation(false);
+    setImportError(null);
+    setImportSuccess(null);
+
+    try {
+      const parsed = await parseDepartmentWorkbook(file);
+      if (selectionId !== importSelectionId.current) return;
+      parsedWorkbookRef.current = parsed;
+      const validationRefData = await loadReferenceData();
+      if (selectionId !== importSelectionId.current) return;
+      if (!validationRefData) {
+        setImportFileState({
+          file: { name: file.name, size: file.size },
+          validation: null,
+          parseError: null,
+          parsing: false,
+        });
+        return;
+      }
+      const validation = validateDepartmentImportRows(
+        parsed.headers,
+        parsed.rows,
+        validationRefData,
+        parsed.errorsByRow,
+      );
+      if (selectionId !== importSelectionId.current) return;
+      setImportFileState({
+        file: { name: file.name, size: file.size },
+        validation,
+        parseError: null,
+        parsing: false,
+      });
+    } catch (error) {
+      if (selectionId !== importSelectionId.current) return;
+      setImportFileState({
+        file: { name: file.name, size: file.size },
+        validation: null,
+        parseError: error instanceof Error ? error.message : 'The workbook could not be parsed.',
+        parsing: false,
+      });
+    }
+  };
+
+  const retryReferenceData = async () => {
+    const selectionId = importSelectionId.current;
+    const parsed = parsedWorkbookRef.current;
+    const file = importFileState.file;
+    setShowConfirmation(false);
+    setImportError(null);
+    setImportSuccess(null);
+    if (parsed && file) {
+      setImportFileState({ file, validation: null, parseError: null, parsing: true });
+    }
+
+    const validationRefData = await loadReferenceData(true);
+    if (selectionId !== importSelectionId.current) return;
+    if (!validationRefData) {
+      if (parsed && file) {
+        setImportFileState({ file, validation: null, parseError: null, parsing: false });
+      }
+      return;
+    }
+    if (!parsed || !file) return;
+
+    const validation = validateDepartmentImportRows(
+      parsed.headers,
+      parsed.rows,
+      validationRefData,
+      parsed.errorsByRow,
+    );
+    setImportFileState({ file, validation, parseError: null, parsing: false });
   };
 
   const continueToConfirmation = () => {
@@ -183,11 +310,11 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
     try {
       const response = await executeDepartmentImport({
         organization_id: orgId,
-        source_filename: 'departments_import.csv',
+        source_filename: importFileState.file?.name ?? 'departments_import.xlsx',
         import_mode: importMode,
-        rows: importValidation.rows.map((r: any) => ({
-          row_number: r.row_number,
-          raw_data: r.raw_data
+        rows: importValidation.rows.map((row) => ({
+          row_number: row.row_number,
+          raw_data: row.raw_data,
         }))
       });
 
@@ -195,8 +322,7 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
         setImportSuccess(`Department import executed successfully. Created: ${response.created_count}, Updated: ${response.updated_count}.`);
         setTimeout(() => {
           setImportOpen(false);
-          setImportText("");
-          setImportValidation(null);
+          resetImportFile();
           setImportSuccess(null);
           setShowConfirmation(false);
           departments.refresh();
@@ -211,18 +337,17 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
     }
   };
 
-  const handleDownloadTemplate = () => {
-    const headers = ['organization_code', 'division_code', 'department_code', 'department_name_en', 'department_name_ar', 'department_type', 'manager_email', 'status'];
-    const sample = ['ALMODAWAT', 'MED', 'NUR', 'Nursing', 'التمريض', 'clinical', 'nursing.manager@almodawat.sa', 'active'];
-    const instructions = [
-      '# Department Import Template',
-      '# Accepted columns: ' + headers.join(', '),
-      '# Required columns: organization_code, department_code, department_name_en',
-      '# Status: active | inactive',
-      '# Department Types: clinical | administrative | support',
-      ''
-    ];
-    downloadFile('departments_template.csv', [...instructions, headers.join(','), sample.join(',')].join('\n'));
+  const handleDownloadTemplate = async () => {
+    setImportError(null);
+    try {
+      const content = await createDepartmentImportTemplate();
+      downloadBlob(
+        'departments_template.xlsx',
+        new Blob([content], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
+      );
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : 'The Excel template could not be generated.');
+    }
   };
 
   const [activeFilter, setActiveFilter] = useState<DepartmentFilter>("all");
@@ -475,12 +600,9 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
               <button
                 className="ghost-button"
                 onClick={() => {
-                  setImportError(null);
-                  setImportSuccess(null);
-                  setImportText("");
-                  setImportValidation(null);
+                  resetImportFile();
                   setImportOpen(true);
-                  fetchReferenceData();
+                  void loadReferenceData(true);
                 }}
               >
                 <UploadCloud size={16} /> Prepare Import Batch
@@ -1152,36 +1274,101 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
         onClose={() => {
           if (!importSaving) {
             setImportOpen(false);
-            setImportText("");
-            setImportValidation(null);
+            resetImportFile();
           }
         }}
       >
         <div className="form-grid" style={{ minWidth: '600px' }}>
           {importError && <div className="form-error full-width">{importError}</div>}
           {importSuccess && <div className="notice-banner success full-width">{importSuccess}</div>}
+          {referenceDataStatus === 'error' && (
+            <div className="form-error full-width">
+              <span>Department reference data could not be loaded. Check your connection and permissions, then retry.</span>
+              <button
+                type="button"
+                className="ghost-button small"
+                disabled={importSaving}
+                onClick={() => void retryReferenceData()}
+              >
+                <RotateCcw size={14} /> Retry reference data
+              </button>
+            </div>
+          )}
 
           <div className="full-width" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <p className="eyebrow">Paste CSV or Excel data</p>
-              <p className="muted">Preview does not modify data.</p>
+              <label className="eyebrow" htmlFor="department-workbook-input">Upload Department Excel File</label>
+              <p className="muted">Upload the completed Excel template. Previewing does not modify data.</p>
             </div>
             <button type="button" className="ghost-button small" onClick={handleDownloadTemplate}>
               <Download size={14} /> Download template
             </button>
           </div>
 
-          <label className="field full-width">
-            <textarea
-              style={{ minHeight: '200px', fontFamily: 'monospace', whiteSpace: 'pre' }}
-              placeholder="division_code,department_code,department_name_en..."
-              value={importText}
-              onChange={(e) => {
-                setImportText(e.target.value);
-                handleValidation(e.target.value);
+          <div className="department-workbook-upload full-width">
+            <input
+              ref={importFileInputRef}
+              id="department-workbook-input"
+              className="visually-hidden"
+              type="file"
+              accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              disabled={importSaving}
+              onChange={(event) => {
+                const file = event.target.files?.[0] ?? null;
+                void handleWorkbookSelection(file);
               }}
             />
-          </label>
+            {!importFileState.file ? (
+              <button
+                type="button"
+                className="department-workbook-dropzone"
+                disabled={importSaving}
+                onClick={() => importFileInputRef.current?.click()}
+              >
+                <UploadCloud size={24} />
+                <strong>Choose .xlsx workbook</strong>
+                <span>CSV and legacy .xls files are not accepted. Maximum file size: 5 MB.</span>
+              </button>
+            ) : (
+              <div className="department-workbook-file">
+                <FileSpreadsheet size={24} />
+                <div>
+                  <strong>{importFileState.file.name}</strong>
+                  <span>{formatFileSize(importFileState.file.size)}</span>
+                </div>
+                <div className="department-workbook-actions">
+                  <button
+                    type="button"
+                    className="ghost-button small"
+                    disabled={importFileState.parsing || importSaving}
+                    onClick={() => {
+                      if (importFileInputRef.current) importFileInputRef.current.value = '';
+                      importFileInputRef.current?.click();
+                    }}
+                  >
+                    <UploadCloud size={14} /> Replace file
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost-button small danger-text"
+                    disabled={importSaving}
+                    onClick={resetImportFile}
+                  >
+                    <Trash2 size={14} /> Remove file
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {(importFileState.parsing || referenceDataStatus === 'loading') && (
+            <div className="notice-banner info full-width">
+              {importFileState.file ? 'Reading and validating the first worksheet…' : 'Loading department reference data…'}
+            </div>
+          )}
+          {importFileState.parseError && (
+            <div className="form-error full-width">{importFileState.parseError}</div>
+          )}
 
           {importValidation && (
             <div className="full-width">
@@ -1195,7 +1382,7 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
                   <div className="stat-label">Valid rows</div>
                 </div>
                 <div className={`stat-card ${importValidation.invalidRows > 0 || importValidation.errorsByRow[0] ? 'danger' : ''}`}>
-                  <div className="stat-value">{importValidation.invalidRows + (importValidation.errorsByRow[0] ? 1 : 0)}</div>
+                  <div className="stat-value">{importValidation.invalidRows}</div>
                   <div className="stat-label">Invalid rows</div>
                 </div>
               </div>
@@ -1203,6 +1390,55 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
               {importValidation.errorsByRow[0] && (
                 <div className="notice-banner warning">
                   <FileWarning size={16} /> {importValidation.errorsByRow[0].join(', ')}
+                </div>
+              )}
+
+              {importValidation.rows.length > 0 && (
+                <div className="department-import-preview table-scroll" aria-label="Department import workbook preview">
+                  <table className="entity-table">
+                    <thead>
+                      <tr>
+                        <th>Row</th>
+                        <th>Department code</th>
+                        <th>English name</th>
+                        <th>Arabic name</th>
+                        <th>Validation</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {importValidation.rows.slice(0, 50).map((row) => {
+                        const rowErrors = importValidation.errorsByRow[row.row_number] ?? [];
+                        return (
+                          <tr key={row.row_number} className={rowErrors.length ? 'department-import-preview-invalid' : undefined}>
+                            <td>{row.row_number}</td>
+                            <td>{row.raw_data.department_code}</td>
+                            <td dir="auto">{row.raw_data.department_name_en}</td>
+                            <td dir="auto">{row.raw_data.department_name_ar}</td>
+                            <td>{rowErrors.length ? 'Invalid' : 'Valid'}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  {importValidation.rows.length > 50 && (
+                    <p className="muted">Showing the first 50 of {importValidation.rows.length} rows.</p>
+                  )}
+                </div>
+              )}
+
+              {Object.entries(importValidation.errorsByRow).some(([rowNumber]) => Number(rowNumber) > 0) && (
+                <div className="department-import-row-errors" aria-label="Invalid department import rows">
+                  {Object.entries(importValidation.errorsByRow)
+                    .filter(([rowNumber, errors]) => Number(rowNumber) > 0 && errors.length > 0)
+                    .sort(([left], [right]) => Number(left) - Number(right))
+                    .map(([rowNumber, errors]) => (
+                      <div className="department-import-row-error" key={rowNumber}>
+                        <strong>Worksheet row {rowNumber}</strong>
+                        <ul>
+                          {errors.map((error) => <li key={error}>{error}</li>)}
+                        </ul>
+                      </div>
+                    ))}
                 </div>
               )}
             </div>
@@ -1215,9 +1451,7 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
               disabled={importSaving}
               onClick={() => {
                 setImportOpen(false);
-                setImportText("");
-                setImportValidation(null);
-                setShowConfirmation(false);
+                resetImportFile();
               }}
             >
               Cancel
@@ -1226,7 +1460,7 @@ export function Departments({ setPage }: { setPage?: (page: string) => void }) {
               <button
                 className="primary-button"
                 type="button"
-                disabled={importSaving || !importValidation || importValidation.invalidRows > 0 || !!importValidation.errorsByRow[0] || importValidation.validRows === 0}
+                disabled={importSaving || importFileState.parsing || !importFileState.file || !importValidation || importValidation.invalidRows > 0 || !!importValidation.errorsByRow[0] || importValidation.validRows === 0}
                 onClick={continueToConfirmation}
               >
                 Continue to Confirmation

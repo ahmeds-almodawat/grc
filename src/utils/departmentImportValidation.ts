@@ -1,154 +1,265 @@
+export const DEPARTMENT_IMPORT_COLUMNS = [
+  'organization_code',
+  'division_code',
+  'department_code',
+  'department_name_en',
+  'department_name_ar',
+  'department_type',
+  'manager_email',
+  'status',
+] as const;
+
+export const REQUIRED_DEPARTMENT_IMPORT_COLUMNS = [
+  'organization_code',
+  'department_code',
+  'department_name_en',
+  'department_name_ar',
+  'department_type',
+  'status',
+] as const;
+
+export const ALLOWED_DEPARTMENT_TYPES = ['clinical', 'administrative', 'support'] as const;
+export const ALLOWED_DEPARTMENT_STATUSES = ['active', 'inactive'] as const;
+export const DEPARTMENT_IMPORT_ORGANIZATION_CODE = 'ALMODAWAT';
+
+export type DepartmentImportColumn = (typeof DEPARTMENT_IMPORT_COLUMNS)[number];
+export type DepartmentImportRawData = Record<DepartmentImportColumn, string>;
+
+export interface NormalizedDepartmentImportRow {
+  row_number: number;
+  raw_data: DepartmentImportRawData;
+}
+
 export interface ImportValidationResult {
   headers: string[];
-  rows: Record<string, string>[];
+  rows: NormalizedDepartmentImportRow[];
   errorsByRow: Record<number, string[]>;
   validRows: number;
   invalidRows: number;
 }
 
 export interface RefData {
-  orgs: Set<string>;
+  activeOrganizationCode: string;
   divs: Set<string>;
   depts: Set<string>;
   archivedDeptKeys?: Set<string>;
-  managers: Map<string, any>;
+  managers: Map<string, { is_active?: boolean; user_status?: string; organization_code?: string }>;
 }
 
-export function parseDelimitedText(text: string): { headers: string[]; rows: Record<string, string>[] } {
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  if (lines.length === 0) return { headers: [], rows: [] };
-
-  const headers = lines[0].split(',').map(h => h.trim());
-  const rows: Record<string, string>[] = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(',').map(v => v.trim());
-    const row: Record<string, string> = {};
-    headers.forEach((h, index) => {
-      row[h] = values[index] || '';
-    });
-    rows.push(row);
-  }
-
-  return { headers, rows };
+function addError(errorsByRow: Record<number, string[]>, rowNumber: number, message: string) {
+  const errors = errorsByRow[rowNumber] ?? [];
+  if (!errors.includes(message)) errorsByRow[rowNumber] = [...errors, message];
 }
 
-export function validateImportText(text: string, refData?: RefData | null): ImportValidationResult {
-  // Check file size (rough estimate of 5MB)
-  if (new Blob([text]).size > 5242880) {
-    return { headers: [], rows: [], errorsByRow: { 0: ['File exceeds maximum size of 5MB'] }, validRows: 0, invalidRows: 0 };
-  }
+function normalizedName(value: string) {
+  return value.trim().replace(/\s+/g, ' ').toLowerCase();
+}
 
-  const { headers, rows } = parseDelimitedText(text);
+function normalizeRawData(input: Partial<Record<DepartmentImportColumn, string>>): DepartmentImportRawData {
+  const value = (column: DepartmentImportColumn) => String(input[column] ?? '').trim();
+  return {
+    organization_code: value('organization_code').toUpperCase(),
+    division_code: value('division_code').toUpperCase(),
+    department_code: value('department_code').toUpperCase(),
+    department_name_en: value('department_name_en'),
+    department_name_ar: value('department_name_ar'),
+    department_type: value('department_type').toLowerCase(),
+    manager_email: value('manager_email').toLowerCase(),
+    status: value('status').toLowerCase(),
+  };
+}
 
-  if (rows.length > 5000) {
-    return { headers, rows, errorsByRow: { 0: ['File exceeds maximum 5000 rows'] }, validRows: 0, invalidRows: 0 };
-  }
+export function createNormalizedDepartmentImportRow(
+  rowNumber: number,
+  input: Partial<Record<DepartmentImportColumn, string>>,
+): NormalizedDepartmentImportRow {
+  return { row_number: rowNumber, raw_data: normalizeRawData(input) };
+}
 
-  const acceptedColumns = ['organization_code', 'division_code', 'department_code', 'department_name_en', 'department_name_ar', 'department_type', 'manager_email', 'status'];
-  const required = ['organization_code', 'department_code', 'department_name_en'];
+function markDuplicateGroups(
+  groups: Map<string, number[]>,
+  errorsByRow: Record<number, string[]>,
+  message: (rows: number[]) => string,
+) {
+  groups.forEach((rowNumbers) => {
+    if (rowNumbers.length < 2) return;
+    rowNumbers.forEach((rowNumber) => addError(errorsByRow, rowNumber, message(rowNumbers)));
+  });
+}
 
-  const errorsByRow: Record<number, string[]> = {};
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  // Duplicate headers check
-  const headerSet = new Set<string>();
-  const duplicateHeaders = new Set<string>();
-  headers.forEach(h => {
-    if (headerSet.has(h)) duplicateHeaders.add(h);
-    headerSet.add(h);
+export function validateDepartmentImportRows(
+  headers: string[],
+  inputRows: NormalizedDepartmentImportRow[],
+  refData: RefData | null,
+  initialErrorsByRow: Record<number, string[]> = {},
+): ImportValidationResult {
+  const trimmedHeaders = headers.map((header) => header.trim());
+  const rows = inputRows.map((row) => ({
+    row_number: row.row_number,
+    raw_data: normalizeRawData(row.raw_data),
+  }));
+  const errorsByRow = Object.fromEntries(
+    Object.entries(initialErrorsByRow).map(([rowNumber, errors]) => [Number(rowNumber), [...errors]]),
+  ) as Record<number, string[]>;
+
+  const headerPositions = new Map<string, number[]>();
+  trimmedHeaders.forEach((header, index) => {
+    const positions = headerPositions.get(header) ?? [];
+    positions.push(index + 1);
+    headerPositions.set(header, positions);
   });
 
-  if (duplicateHeaders.size > 0) {
-    errorsByRow[0] = [`Duplicate headers found: ${Array.from(duplicateHeaders).join(', ')}`];
+  const blankHeaderColumns = headerPositions.get('') ?? [];
+  if (blankHeaderColumns.length) {
+    addError(errorsByRow, 0, `Blank column headers found at columns: ${blankHeaderColumns.join(', ')}`);
   }
 
-  const missingHeaders = required.filter(req => !headers.includes(req));
-  const invalidHeaders = headers.filter(h => !acceptedColumns.includes(h));
+  const duplicateHeaders = [...headerPositions.entries()]
+    .filter(([header, positions]) => header && positions.length > 1)
+    .map(([header]) => header);
+  if (duplicateHeaders.length) {
+    addError(errorsByRow, 0, `Duplicate column headers: ${duplicateHeaders.join(', ')}`);
+  }
 
+  const missingHeaders = REQUIRED_DEPARTMENT_IMPORT_COLUMNS.filter(
+    (column) => !trimmedHeaders.includes(column),
+  );
   if (missingHeaders.length) {
-    errorsByRow[0] = [...(errorsByRow[0] || []), `Missing required columns: ${missingHeaders.join(', ')}`];
-  }
-  if (invalidHeaders.length) {
-    errorsByRow[0] = [...(errorsByRow[0] || []), `Unsupported columns found: ${invalidHeaders.join(', ')}`];
+    addError(errorsByRow, 0, `Missing required columns: ${missingHeaders.join(', ')}`);
   }
 
-  const seenCompositeKeys = new Set<string>();
+  const unsupportedHeaders = [...new Set(
+    trimmedHeaders.filter(
+      (header) => header && !DEPARTMENT_IMPORT_COLUMNS.includes(header as DepartmentImportColumn),
+    ),
+  )];
+  if (unsupportedHeaders.length) {
+    addError(errorsByRow, 0, `Unsupported columns: ${unsupportedHeaders.join(', ')}`);
+  }
 
-  rows.forEach((row, index) => {
-    // Blank row handling
-    if (Object.values(row).every(v => !v.trim())) {
-      errorsByRow[index + 1] = ['Row is completely empty'];
-      return;
-    }
+  if (!rows.length) addError(errorsByRow, 0, 'Workbook contains no usable data rows.');
+  if (rows.length > 5000) addError(errorsByRow, 0, 'Workbook exceeds the maximum of 5,000 data rows.');
 
-    required.forEach(req => {
-      if (!row[req]?.trim()) {
-        errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []), `${req} is required`];
-      }
+  const organizationCodes = new Set<string>();
+  const codeGroups = new Map<string, number[]>();
+  const rowGroups = new Map<string, number[]>();
+
+  rows.forEach((row) => {
+    const data = row.raw_data;
+    const rowNumber = row.row_number;
+
+    REQUIRED_DEPARTMENT_IMPORT_COLUMNS.forEach((column) => {
+      if (!data[column]) addError(errorsByRow, rowNumber, `${column} is required`);
     });
 
-    Object.keys(row).forEach(k => {
-      let val = row[k] || '';
-      // Formula-injection sanitization
-      if (['=', '+', '-', '@'].includes(val.charAt(0))) {
-        row[k] = "'" + val;
-      }
-    });
+    if (data.organization_code) organizationCodes.add(data.organization_code);
 
-    const orgCode = row['organization_code']?.trim().toUpperCase();
-    const divCode = row['division_code']?.trim().toUpperCase();
-    const code = row['department_code']?.trim().toUpperCase();
-    const managerEmail = row['manager_email']?.trim().toLowerCase();
-    const nameEn = row['department_name_en']?.trim().replace(/\s+/g, ' ').toLowerCase();
-    const nameAr = row['department_name_ar']?.trim().replace(/\s+/g, ' ').toLowerCase();
-    const status = row['status']?.trim().toLowerCase();
-
-    if (status && !['active', 'inactive'].includes(status)) {
-       errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []), `Unsupported status: ${status}`];
+    if (data.department_code) {
+      const codeRows = codeGroups.get(data.department_code) ?? [];
+      codeRows.push(rowNumber);
+      codeGroups.set(data.department_code, codeRows);
     }
 
-    if (orgCode && code) {
-      // Use composite matching key: orgCode + '|' + code
-      const compositeKey = `${orgCode}|${code}`;
-      if (seenCompositeKeys.has(compositeKey)) {
-        errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []), `Duplicate department code in file: ${code} (under org ${orgCode})`];
-      } else {
-        seenCompositeKeys.add(compositeKey);
-      }
+    const rowSignature = DEPARTMENT_IMPORT_COLUMNS.map((column) => data[column]).join('\u001f');
+    const duplicateRows = rowGroups.get(rowSignature) ?? [];
+    duplicateRows.push(rowNumber);
+    rowGroups.set(rowSignature, duplicateRows);
+
+    if (data.department_type && !ALLOWED_DEPARTMENT_TYPES.includes(data.department_type as typeof ALLOWED_DEPARTMENT_TYPES[number])) {
+      addError(errorsByRow, rowNumber, `Unsupported department_type: ${data.department_type}`);
     }
 
-    if (refData) {
-      if (orgCode && !refData.orgs.has(orgCode)) {
-        errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []), `Unknown organization: ${orgCode}`];
-      }
-      if (divCode && orgCode && !refData.divs.has(`${orgCode}|${divCode}`)) {
-        errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []), `Unknown division: ${divCode}`];
-      }
-      const archivedMatch = Boolean(orgCode && (
-        (code && refData.archivedDeptKeys?.has(`${orgCode}|CODE|${code}`))
-        || (nameEn && refData.archivedDeptKeys?.has(`${orgCode}|NAME|${nameEn}`))
-        || (nameAr && refData.archivedDeptKeys?.has(`${orgCode}|NAME|${nameAr}`))
-      ));
-      if (archivedMatch) {
-        errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []),
-          'archived_department_match: restore the matching department from Department Management before importing'];
-      } else if (orgCode && code && refData.depts.has(`${orgCode}|${code}`)) {
-        errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []), `Department already exists in database: ${code}`];
-      }
-      if (managerEmail) {
-        const profile = refData.managers.get(managerEmail);
-        if (!profile) {
-          errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []), `Unknown manager email: ${managerEmail}`];
-        } else if (profile.user_status !== 'active') {
-          errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []), `Manager is not active: ${managerEmail}`];
-        } else if (orgCode && profile.organization_code && profile.organization_code !== orgCode) {
-          errorsByRow[index + 1] = [...(errorsByRow[index + 1] || []), `Manager outside organization: ${managerEmail}`];
-        }
+    if (data.status && !ALLOWED_DEPARTMENT_STATUSES.includes(data.status as typeof ALLOWED_DEPARTMENT_STATUSES[number])) {
+      addError(errorsByRow, rowNumber, `Unsupported status: ${data.status}`);
+    }
+
+    if (data.manager_email && !emailPattern.test(data.manager_email)) {
+      addError(errorsByRow, rowNumber, `Invalid manager_email: ${data.manager_email}`);
+    }
+
+    if (!refData) return;
+
+    if (data.organization_code && data.organization_code !== refData.activeOrganizationCode.toUpperCase()) {
+      addError(
+        errorsByRow,
+        rowNumber,
+        `organization_code must match the active organization: ${refData.activeOrganizationCode.toUpperCase()}`,
+      );
+    }
+
+    if (
+      data.division_code
+      && data.organization_code
+      && !refData.divs.has(`${data.organization_code}|${data.division_code}`)
+    ) {
+      addError(errorsByRow, rowNumber, `Unknown division: ${data.division_code}`);
+    }
+
+    const nameEn = normalizedName(data.department_name_en);
+    const nameAr = normalizedName(data.department_name_ar);
+    const archivedMatch = Boolean(data.organization_code && (
+      (data.department_code && refData.archivedDeptKeys?.has(`${data.organization_code}|CODE|${data.department_code}`))
+      || (nameEn && refData.archivedDeptKeys?.has(`${data.organization_code}|NAME|${nameEn}`))
+      || (nameAr && refData.archivedDeptKeys?.has(`${data.organization_code}|NAME|${nameAr}`))
+    ));
+
+    if (archivedMatch) {
+      addError(
+        errorsByRow,
+        rowNumber,
+        'archived_department_match: restore the matching department from Department Management before importing',
+      );
+    } else if (
+      data.organization_code
+      && data.department_code
+      && refData.depts.has(`${data.organization_code}|${data.department_code}`)
+    ) {
+      addError(errorsByRow, rowNumber, `Active department code already exists: ${data.department_code}`);
+    }
+
+    if (data.manager_email && emailPattern.test(data.manager_email)) {
+      const profile = refData.managers.get(data.manager_email);
+      if (!profile) {
+        addError(errorsByRow, rowNumber, `Unknown manager email: ${data.manager_email}`);
+      } else if (profile.is_active === false || profile.user_status !== 'active') {
+        addError(errorsByRow, rowNumber, `Manager is not active: ${data.manager_email}`);
+      } else if (
+        data.organization_code
+        && profile.organization_code
+        && profile.organization_code.toUpperCase() !== data.organization_code
+      ) {
+        addError(errorsByRow, rowNumber, `Manager outside organization: ${data.manager_email}`);
       }
     }
   });
 
-  const validRows = rows.filter((_, idx) => !errorsByRow[idx + 1]).length;
-  const invalidRows = rows.length - validRows;
-  return { headers, rows, errorsByRow, validRows, invalidRows };
+  if (organizationCodes.size > 1) {
+    addError(
+      errorsByRow,
+      0,
+      `Workbook contains more than one organization code: ${[...organizationCodes].sort().join(', ')}`,
+    );
+  }
+
+  markDuplicateGroups(
+    codeGroups,
+    errorsByRow,
+    (rowNumbers) => `Duplicate department_code in workbook (rows ${rowNumbers.join(', ')})`,
+  );
+  markDuplicateGroups(
+    rowGroups,
+    errorsByRow,
+    (rowNumbers) => `Duplicate row in workbook (rows ${rowNumbers.join(', ')})`,
+  );
+
+  const invalidRows = rows.filter((row) => (errorsByRow[row.row_number]?.length ?? 0) > 0).length;
+  return {
+    headers: trimmedHeaders,
+    rows,
+    errorsByRow,
+    validRows: rows.length - invalidRows,
+    invalidRows,
+  };
 }
