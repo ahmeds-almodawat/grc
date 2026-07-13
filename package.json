@@ -111,7 +111,7 @@
     "v65:all": "npm run typecheck && npm run build && npm run v60:strict && npm run v64:strict-all && npm run v65:phases",
     "v65:install-test-deps": "npm install -D vitest jsdom @testing-library/react @testing-library/jest-dom @playwright/test --registry=https://registry.npmjs.org/",
     "test:unit": "vitest run",
-    "test:e2e": "playwright test",
+    "test:e2e": "node -e \"process.env.VITE_SUPABASE_URL ||= 'http://127.0.0.1:54321'; process.env.VITE_SUPABASE_ANON_KEY ||= 'patch83s-playwright-public-anon-key'; const result = require('node:child_process').spawnSync(process.execPath, ['node_modules/@playwright/test/cli.js', 'test'], { stdio: 'inherit', env: process.env }); process.exit(result.status ?? 1)\"",
     "test:real": "npm run test:unit && npm run test:e2e",
     "v66:evidence": "node scripts/v66-staging-evidence-register.mjs",
     "v66:restore": "node scripts/v66-restore-dryrun-evidence.mjs",
