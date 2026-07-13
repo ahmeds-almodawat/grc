@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Bug,
   ClipboardList,
+  Download,
   FileCheck2,
   FolderKanban,
   Hospital,
@@ -114,6 +115,14 @@ export function WorkspaceHome({ setPage }: WorkspaceHomeProps) {
       metric: counts.data?.projects,
       metricLabel: t('home.metric.records'),
       tone: 'blue',
+    },
+    {
+      key: 'export-center',
+      page: 'importExport',
+      icon: <Download size={22} />,
+      title: 'Export Center',
+      description: 'Export governed datasets, build report packs and backups, or stage controlled imports.',
+      tone: 'amber',
     },
     {
       key: 'reports',
