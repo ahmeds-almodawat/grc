@@ -69,6 +69,10 @@ export default defineConfig({
             return 'vendor-icons';
           }
 
+          if (normalized.includes('/node_modules/exceljs/dist/')) {
+            return 'vendor-excel';
+          }
+
           if (normalized.includes('/src/i18n/')) {
             return 'app-i18n';
           }
