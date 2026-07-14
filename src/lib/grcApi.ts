@@ -1699,6 +1699,10 @@ export interface ExecuteDepartmentImportOutput {
   failed_count: number;
   affected_department_ids?: string[];
   error_summary?: any;
+  row_errors?: {
+    row_number: number;
+    errors: string[];
+  }[];
 }
 
 export async function executeDepartmentImport(input: ExecuteDepartmentImportInput) {
