@@ -1862,37 +1862,6 @@ export async function createDepartment(input: CreateDepartmentInput) {
   });
 }
 
-export interface CreateAdminUserInput {
-  email: string;
-  password: string;
-  full_name_en: string;
-  full_name_ar?: string | null;
-  department_id?: string | null;
-  role: AppRole;
-  scope: AccessScope;
-}
-
-export async function createAdminUser(input: CreateAdminUserInput) {
-  requireLiveSupabase();
-  return invokePrivilegedAction<{
-    id: string;
-    profile_id: string;
-    role_id: string;
-    organization_id: string;
-    department_id: string | null;
-    role: AppRole;
-    scope: AccessScope;
-  }>('create_user', {
-    email: input.email.trim().toLowerCase(),
-    password: input.password,
-    full_name_en: input.full_name_en.trim(),
-    full_name_ar: input.full_name_ar?.trim() || null,
-    department_id: input.department_id || null,
-    role: input.role,
-    scope: input.scope
-  });
-}
-
 export async function getOvrSummary(): Promise<OvrSummary> {
   if (!supabase) return emptyLiveObject<OvrSummary>('getOvrSummary');
 

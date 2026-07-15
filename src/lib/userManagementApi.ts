@@ -1,4 +1,19 @@
 import type { AccessScope, AppRole } from '../types/domain';
+import {
+  userRoleOptions,
+  userStatusOptions,
+  userTypeOptions,
+  type ParsedUserImportRow,
+  type UserImportValidationResult,
+  type UserStatus,
+  type UserType,
+} from '../utils/userWorkbook';
+import {
+  validateUserImportRows,
+  type UserImportAuthIdentity,
+  type UserImportOpenProvisioningIdentity,
+  type UserImportProfileIdentity,
+} from '../utils/userImportValidation';
 import { invokePrivilegedAction } from './privilegedAction';
 import { isSupabaseConfigured, supabase } from './supabase';
 import {
@@ -9,32 +24,17 @@ import {
   type LiveResult,
 } from './liveResult';
 
-export type UserStatus = 'active' | 'inactive' | 'archived' | 'invited' | 'locked';
-export type UserType = 'employee' | 'contractor' | 'vendor' | 'external_auditor' | 'service_account';
-
-export const userStatusOptions: UserStatus[] = ['active', 'inactive', 'archived', 'invited', 'locked'];
-export const userTypeOptions: UserType[] = ['employee', 'contractor', 'vendor', 'external_auditor', 'service_account'];
-export const userRoleOptions: AppRole[] = [
-  'super_admin',
-  'executive',
-  'governance_admin',
-  'division_head',
-  'department_manager',
-  'project_owner',
-  'milestone_owner',
-  'task_owner',
-  'auditor',
-  'compliance_officer',
-  'viewer',
-  'employee',
-];
+export { userRoleOptions, userStatusOptions, userTypeOptions };
+export type { ParsedUserImportRow, UserImportValidationResult, UserStatus, UserType };
 
 export type UserManagementRole = {
   user_role_id: string;
   role: AppRole;
   scope: AccessScope;
   organization_id: string | null;
+  division_id: string | null;
   department_id: string | null;
+  unit_id: string | null;
   is_active: boolean;
   assigned_at: string | null;
 };
@@ -45,7 +45,11 @@ export type UserManagementUserRow = {
   employee_no: string | null;
   full_name_en: string;
   full_name_ar: string | null;
+  /** Profile email. Managed profiles mirror the synthetic Auth address; legacy rows may drift. */
   email: string;
+  /** Canonical Auth sign-in email from protected credential state when available. */
+  auth_email: string | null;
+  contact_email: string | null;
   phone: string | null;
   job_title: string | null;
   user_type: UserType;
@@ -75,6 +79,16 @@ export type UserManagementUserRow = {
   open_project_count: number;
   open_task_count: number;
   pending_approval_count: number;
+  managed_identity: boolean;
+  identity_mode: 'employee_id_managed' | 'legacy_verified' | 'unverified' | null;
+  synthetic_auth_email: string | null;
+  credential_state: string | null;
+  credential_version: number | null;
+  must_change_password: boolean;
+  last_password_reset_at: string | null;
+  last_password_changed_at: string | null;
+  provisioning_state: string | null;
+  credential_proof_available: boolean;
 };
 
 export type UserManagementSummary = {
@@ -119,41 +133,53 @@ export type DepartmentLookup = {
   code: string | null;
   name_en: string;
   name_ar: string | null;
-};
-
-export type ParsedUserImportRow = {
-  row_number: number;
-  full_name_ar: string;
-  full_name_en: string;
-  email: string;
-  department: string;
-  department_id?: string | null;
-  job_title: string;
-  role: string;
-  status: string;
-  employee_no: string;
-  user_type: string;
-  validation_status?: 'valid' | 'error';
-  validation_errors?: string[];
-  validation_warnings?: string[];
-  matched_user_id?: string | null;
-};
-
-export type UserImportValidationResult = {
-  rows: ParsedUserImportRow[];
-  rowCount: number;
-  validCount: number;
-  invalidCount: number;
-  duplicateEmailCount: number;
-  unknownDepartmentCount: number;
-  unknownRoleCount: number;
+  division_id?: string | null;
 };
 
 export type ApplyImportResult = {
   batch_id: string;
   updated_count: number;
   pending_account_creation_count: number;
+  provisioning_ids: string[];
+  database_proof: {
+    import_row_count: number;
+    provisioning_record_count: number;
+    audit_record_count: number;
+    payload_sha256: string;
+  };
 };
+
+type UserImportIdentityReferenceResult = {
+  auth_identities: Array<{
+    employee_id: string;
+    auth_email: string;
+    auth_user_id: string | null;
+    organization_match: boolean | null;
+  }>;
+  profile_identities: Array<{
+    employee_id: string;
+    auth_email: string;
+    profile_id: string | null;
+    organization_match: boolean;
+    employee_id_match: boolean;
+    employee_id_case_insensitive_match: boolean;
+    auth_email_match: boolean;
+    has_cross_org_active_role: boolean;
+  }>;
+  provisioning_identities: Array<{
+    employee_id: string;
+    auth_email: string;
+    provisioning_id: string | null;
+    status: string | null;
+    organization_match: boolean | null;
+  }>;
+};
+
+export const USER_IMPORT_EXECUTION_CONFIRMATION = 'EXECUTE USER IMPORT';
+
+const USER_IMPORT_EMPLOYEE_ID_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
+const USER_IMPORT_UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const USER_IMPORT_SHA256_PATTERN = /^[0-9a-f]{64}$/;
 
 function configuredOrResult<T>(message: string): LiveResult<T> | null {
   if (!isSupabaseConfigured || !supabase) {
@@ -162,60 +188,6 @@ function configuredOrResult<T>(message: string): LiveResult<T> | null {
   return null;
 }
 
-function csvEscape(value: unknown): string {
-  const text = value === null || value === undefined ? '' : String(value);
-  return /[",\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-}
-
-function normalizeKey(value: string): string {
-  return value.trim().toLowerCase().replace(/[\s/-]+/g, '_');
-}
-
-function normalizeRole(value: string): AppRole | null {
-  const normalized = normalizeKey(value);
-  return userRoleOptions.find(role => role === normalized) ?? null;
-}
-
-function normalizeStatus(value: string): UserStatus | null {
-  const normalized = normalizeKey(value || 'active');
-  return userStatusOptions.find(status => status === normalized) ?? null;
-}
-
-function normalizeUserType(value: string): UserType {
-  const normalized = normalizeKey(value || 'employee');
-  return userTypeOptions.find(type => type === normalized) ?? 'employee';
-}
-
-function splitCsvLine(line: string): string[] {
-  const values: string[] = [];
-  let current = '';
-  let quoted = false;
-  for (let index = 0; index < line.length; index += 1) {
-    const char = line[index];
-    const next = line[index + 1];
-    if (char === '"' && quoted && next === '"') {
-      current += '"';
-      index += 1;
-    } else if (char === '"') {
-      quoted = !quoted;
-    } else if (char === ',' && !quoted) {
-      values.push(current.trim());
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-  values.push(current.trim());
-  return values;
-}
-
-function valueFor(record: Record<string, string>, keys: string[]): string {
-  for (const key of keys) {
-    const value = record[key];
-    if (value) return value.trim();
-  }
-  return '';
-}
 
 const PATCH19_PROFILE_COMPAT_MESSAGE = 'Showing existing People/profiles because Patch 19 user management views are not available yet. Apply migration 080 to enable lifecycle audit, import batches, and full role linkage.';
 
@@ -227,7 +199,7 @@ function errorText(error: unknown): string {
 
 function isMissingPatch19ProfileColumn(error: unknown): boolean {
   const text = errorText(error);
-  return ['user_status', 'user_type', 'last_login_at', 'last_reviewed_at', 'deactivated_at'].some(column => text.includes(column))
+  return ['contact_email', 'user_status', 'user_type', 'last_login_at', 'last_reviewed_at', 'deactivated_at'].some(column => text.includes(column))
     && (text.includes('does not exist') || text.includes('could not find') || text.includes('schema cache') || text.includes('42703') || text.includes('pgrst204'));
 }
 
@@ -277,7 +249,9 @@ function parseRoles(value: unknown): UserManagementRole[] {
     role: toAppRole(role.role),
     scope: toAccessScope(role.scope),
     organization_id: role.organization_id as string | null | undefined ?? null,
+    division_id: role.division_id as string | null | undefined ?? null,
     department_id: role.department_id as string | null | undefined ?? null,
+    unit_id: role.unit_id as string | null | undefined ?? null,
     is_active: Boolean(role.is_active),
     assigned_at: role.assigned_at as string | null | undefined ?? null,
   }));
@@ -318,6 +292,10 @@ function applyClientFilters(rows: UserManagementUserRow[], filters: UserManageme
       row.full_name_en,
       row.full_name_ar,
       row.email,
+      row.auth_email,
+      row.contact_email,
+      row.phone,
+      row.synthetic_auth_email,
       row.employee_no,
       row.department_name,
       row.job_title,
@@ -351,6 +329,8 @@ function accessMatrixRowToUserManagementRow(row: any): UserManagementUserRow {
     full_name_en: safeString(row.full_name_en, row.email ?? 'User'),
     full_name_ar: row.full_name_ar ?? null,
     email: safeString(row.email),
+    auth_email: null,
+    contact_email: null,
     phone: null,
     job_title: row.job_title ?? null,
     user_type: 'employee',
@@ -380,6 +360,16 @@ function accessMatrixRowToUserManagementRow(row: any): UserManagementUserRow {
     open_project_count: Number(row.owned_open_projects ?? 0),
     open_task_count: Number(row.open_tasks ?? 0),
     pending_approval_count: Number(row.pending_approvals ?? 0),
+    managed_identity: false,
+    identity_mode: null,
+    synthetic_auth_email: null,
+    credential_state: null,
+    credential_version: null,
+    must_change_password: false,
+    last_password_reset_at: null,
+    last_password_changed_at: null,
+    provisioning_state: null,
+    credential_proof_available: false,
   };
 }
 
@@ -393,6 +383,10 @@ function bridgeRowToUserManagementRow(row: any): UserManagementUserRow {
     full_name_en: safeString(row.full_name_en, row.email ?? 'User'),
     full_name_ar: row.full_name_ar ?? null,
     email: safeString(row.email),
+    auth_email: typeof row.auth_email === 'string' && row.auth_email.trim()
+      ? row.auth_email.trim().toLowerCase()
+      : null,
+    contact_email: row.contact_email ?? null,
     phone: row.phone ?? null,
     job_title: row.job_title ?? null,
     user_type: toUserType(row.user_type),
@@ -422,6 +416,18 @@ function bridgeRowToUserManagementRow(row: any): UserManagementUserRow {
     open_project_count: Number(row.open_project_count ?? 0),
     open_task_count: Number(row.open_task_count ?? 0),
     pending_approval_count: Number(row.pending_approval_count ?? 0),
+    managed_identity: row.managed_identity === true,
+    identity_mode: ['employee_id_managed', 'legacy_verified', 'unverified'].includes(String(row.identity_mode ?? ''))
+      ? row.identity_mode
+      : null,
+    synthetic_auth_email: row.synthetic_auth_email ?? null,
+    credential_state: row.credential_state ?? null,
+    credential_version: Number.isInteger(Number(row.credential_version)) ? Number(row.credential_version) : null,
+    must_change_password: row.must_change_password === true,
+    last_password_reset_at: row.last_password_reset_at ?? null,
+    last_password_changed_at: row.last_password_changed_at ?? null,
+    provisioning_state: row.provisioning_state ?? null,
+    credential_proof_available: row.credential_proof_available === true,
   };
 }
 
@@ -462,7 +468,7 @@ async function readRoleRowsByUser(userIds: string[]): Promise<Map<string, UserMa
   if (!userIds.length) return rolesByUser;
   const { data, error } = await supabase!
     .from('user_roles')
-    .select('id,user_id,role,scope,organization_id,department_id,is_active,assigned_at')
+    .select('id,user_id,role,scope,organization_id,division_id,department_id,unit_id,is_active,assigned_at')
     .in('user_id', userIds)
     .limit(5000);
   if (error) throw error;
@@ -473,7 +479,9 @@ async function readRoleRowsByUser(userIds: string[]): Promise<Map<string, UserMa
       role: toAppRole(row.role),
       scope: toAccessScope(row.scope),
       organization_id: row.organization_id ?? null,
+      division_id: row.division_id ?? null,
       department_id: row.department_id ?? null,
+      unit_id: row.unit_id ?? null,
       is_active: Boolean(row.is_active),
       assigned_at: row.assigned_at ?? null,
     };
@@ -483,8 +491,17 @@ async function readRoleRowsByUser(userIds: string[]): Promise<Map<string, UserMa
 }
 
 async function readProfileRowsForCompatibility(): Promise<any[]> {
+  const patch83tSelect = 'id,organization_id,employee_no,full_name_en,full_name_ar,email,contact_email,phone,job_title,division_id,department_id,unit_id,is_active,created_at,updated_at,user_status,user_type,last_login_at,last_reviewed_at,deactivated_at,deactivated_by,deactivation_reason';
   const patch19Select = 'id,organization_id,employee_no,full_name_en,full_name_ar,email,phone,job_title,division_id,department_id,unit_id,is_active,created_at,updated_at,user_status,user_type,last_login_at,last_reviewed_at,deactivated_at,deactivated_by,deactivation_reason';
   const legacySelect = 'id,organization_id,employee_no,full_name_en,full_name_ar,email,phone,job_title,division_id,department_id,unit_id,is_active,created_at,updated_at';
+  const patch83tResult = await supabase!
+    .from('profiles')
+    .select(patch83tSelect)
+    .order('full_name_en', { ascending: true })
+    .limit(2000);
+  if (!patch83tResult.error) return patch83tResult.data ?? [];
+  if (!isMissingPatch19ProfileColumn(patch83tResult.error)) throw patch83tResult.error;
+
   const patch19Result = await supabase!
     .from('profiles')
     .select(patch19Select)
@@ -522,6 +539,8 @@ async function readRowsFromProfiles(): Promise<UserManagementUserRow[]> {
       full_name_en: safeString(profile.full_name_en, profile.email ?? 'User'),
       full_name_ar: profile.full_name_ar ?? null,
       email: safeString(profile.email),
+      auth_email: null,
+      contact_email: profile.contact_email ?? null,
       phone: profile.phone ?? null,
       job_title: profile.job_title ?? null,
       user_type: toUserType(profile.user_type),
@@ -551,6 +570,16 @@ async function readRowsFromProfiles(): Promise<UserManagementUserRow[]> {
       open_project_count: 0,
       open_task_count: 0,
       pending_approval_count: 0,
+      managed_identity: false,
+      identity_mode: null,
+      synthetic_auth_email: null,
+      credential_state: null,
+      credential_version: null,
+      must_change_password: false,
+      last_password_reset_at: null,
+      last_password_changed_at: null,
+      provisioning_state: null,
+      credential_proof_available: false,
     };
   });
 }
@@ -624,26 +653,6 @@ async function updateProfilePatchViaRls(
     throw new Error(retry.error.message);
   }
   throw new Error(error.message);
-}
-
-async function updateProfileViaCompatibility(input: {
-  userId: string;
-  fullNameEn: string;
-  fullNameAr?: string | null;
-  employeeNo?: string | null;
-  jobTitle?: string | null;
-  userType?: UserType;
-}) {
-  const legacyPatch = {
-    full_name_en: input.fullNameEn.trim(),
-    full_name_ar: input.fullNameAr?.trim() || null,
-    employee_no: input.employeeNo?.trim() || null,
-    job_title: input.jobTitle?.trim() || null,
-  };
-  await updateProfilePatchViaRls(input.userId, {
-    ...legacyPatch,
-    user_type: input.userType ?? 'employee',
-  }, legacyPatch);
 }
 
 async function updateDepartmentViaCompatibility(userId: string, departmentId: string | null) {
@@ -723,7 +732,7 @@ export async function listUsersWithFilters(filters: UserManagementFilters = {}):
   const { data, error } = await query;
   if (error) return listUsersFromCompatibilitySources(filters, error);
 
-  const rawRows = (data ?? []) as UserManagementUserRow[];
+  const rawRows = (data ?? []).map(bridgeRowToUserManagementRow);
   let rows = applyClientFilters(rawRows, filters);
   if (rows.some(row => activeRoleCount(row) === 0)) {
     try {
@@ -774,8 +783,9 @@ export async function getUserManagementDepartments(): Promise<LiveResult<Departm
 
   const { data, error } = await supabase!
     .from('departments')
-    .select('id,code,name_en,name_ar')
+    .select('id,code,name_en,name_ar,division_id')
     .eq('is_active', true)
+    .is('archived_at', null)
     .order('name_en', { ascending: true });
 
   if (error) return queryErrorResult<DepartmentLookup[]>(error, 'Unable to load departments for user management.');
@@ -783,14 +793,13 @@ export async function getUserManagementDepartments(): Promise<LiveResult<Departm
   return rows.length ? liveResult(rows) : emptyResult<DepartmentLookup[]>('No active departments are available.');
 }
 
-async function getArchivedUserManagementDepartments(): Promise<LiveResult<DepartmentLookup[]>> {
+export async function getArchivedUserManagementDepartments(): Promise<LiveResult<DepartmentLookup[]>> {
   const notConfigured = configuredOrResult<DepartmentLookup[]>('Supabase is not configured for archived department lookup.');
   if (notConfigured) return notConfigured;
   const { data, error } = await supabase!
     .from('departments')
-    .select('id,code,name_en,name_ar')
-    .eq('is_active', false)
-    .not('archived_at', 'is', null)
+    .select('id,code,name_en,name_ar,division_id')
+    .or('is_active.eq.false,archived_at.not.is.null')
     .order('name_en', { ascending: true });
   if (error) return queryErrorResult<DepartmentLookup[]>(error, 'Unable to validate archived departments for user import.');
   const rows = (data ?? []) as DepartmentLookup[];
@@ -839,37 +848,34 @@ export async function readAuditHistory(userId?: string): Promise<LiveResult<User
   return rows.length ? liveResult(rows) : emptyResult<UserManagementAuditRow[]>('No user management audit history is available yet.');
 }
 
-export function parseUserImportCsv(text: string): ParsedUserImportRow[] {
-  const lines = text.split(/\r?\n/).filter(line => line.trim());
-  if (lines.length < 2) return [];
-  const headers = splitCsvLine(lines[0]).map(normalizeKey);
+export async function validateImportRows(
+  rows: ParsedUserImportRow[],
+  parserErrorsByRow: Record<number, string[]> = {},
+): Promise<UserImportValidationResult> {
+  const employeeIds = [
+    ...new Map(
+      rows
+        .map((row) => row.employee_no.trim())
+        .filter((employeeId) => USER_IMPORT_EMPLOYEE_ID_PATTERN.test(employeeId))
+        .map((employeeId) => [employeeId.toLowerCase(), employeeId]),
+    ).values(),
+  ];
+  const identityReferencesPromise = employeeIds.length
+    ? invokePrivilegedAction<UserImportIdentityReferenceResult>('patch83t_user_import_identity_references', {
+        employee_ids: employeeIds,
+      })
+    : Promise.resolve<UserImportIdentityReferenceResult>({
+        auth_identities: [],
+        profile_identities: [],
+        provisioning_identities: [],
+      });
 
-  return lines.slice(1).map((line, index) => {
-    const values = splitCsvLine(line);
-    const record: Record<string, string> = {};
-    headers.forEach((header, valueIndex) => {
-      record[header] = values[valueIndex] ?? '';
-    });
-    return {
-      row_number: index + 2,
-      full_name_ar: valueFor(record, ['arabic_name', 'full_name_ar', 'name_ar']),
-      full_name_en: valueFor(record, ['english_name', 'full_name_en', 'name_en', 'name']),
-      email: valueFor(record, ['email', 'email_address']),
-      department: valueFor(record, ['department_code', 'department_name', 'department']),
-      job_title: valueFor(record, ['job_title', 'title']),
-      role: valueFor(record, ['role', 'app_role']),
-      status: valueFor(record, ['status', 'user_status']),
-      employee_no: valueFor(record, ['employee_id', 'employee_no', 'employee_number']),
-      user_type: valueFor(record, ['user_type', 'type']),
-    };
-  });
-}
-
-export async function validateImportRows(rows: ParsedUserImportRow[]): Promise<UserImportValidationResult> {
-  const [usersResult, departmentsResult, archivedDepartmentsResult] = await Promise.all([
+  const [usersResult, departmentsResult, archivedDepartmentsResult, identityReferences, actorResult] = await Promise.all([
     listUsersWithFilters({}),
     getUserManagementDepartments(),
     getArchivedUserManagementDepartments(),
+    identityReferencesPromise,
+    supabase!.auth.getUser(),
   ]);
 
   if (usersResult.status === 'query_error' || departmentsResult.status === 'query_error' || archivedDepartmentsResult.status === 'query_error') {
@@ -879,129 +885,163 @@ export async function validateImportRows(rows: ParsedUserImportRow[]): Promise<U
   const users = usersResult.status === 'live' ? usersResult.data : [];
   const departments = departmentsResult.status === 'live' ? departmentsResult.data : [];
   const archivedDepartments = archivedDepartmentsResult.status === 'live' ? archivedDepartmentsResult.data : [];
-  const usersByEmail = new Map(users.map(user => [user.email.toLowerCase(), user]));
-  const emailCounts = new Map<string, number>();
-  rows.forEach(row => {
-    const email = row.email.trim().toLowerCase();
-    if (email) emailCounts.set(email, (emailCounts.get(email) ?? 0) + 1);
-  });
-
-  let duplicateEmailCount = 0;
-  let unknownDepartmentCount = 0;
-  let unknownRoleCount = 0;
-
-  const validatedRows = rows.map(row => {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-    const email = row.email.trim().toLowerCase();
-    const role = row.role ? normalizeRole(row.role) : null;
-    const status = normalizeStatus(row.status);
-    const userType = normalizeUserType(row.user_type);
-    const departmentClassification = classifyUserImportDepartment(row.department, departments, archivedDepartments);
-    const department = departmentClassification.status === 'active' ? departmentClassification.department : null;
-
-    if (!row.full_name_en.trim()) errors.push('English name is required.');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('Valid email is required.');
-    if (email && (emailCounts.get(email) ?? 0) > 1) {
-      errors.push('Duplicate email in uploaded file.');
-      duplicateEmailCount += 1;
-    }
-    if (departmentClassification.status === 'archived') {
-      errors.push('Archived department cannot be assigned. Restore it explicitly from Department Management first.');
-      unknownDepartmentCount += 1;
-    } else if (row.department && !department) {
-      errors.push('Unknown department code or name.');
-      unknownDepartmentCount += 1;
-    }
-    if (row.role && !role) {
-      errors.push('Unknown role.');
-      unknownRoleCount += 1;
-    }
-    if (!status) errors.push('Invalid status.');
-    if (email && !usersByEmail.has(email)) {
-      warnings.push('No existing app profile found; row will be tracked for account creation, not created from the browser.');
-    }
-
-    return {
-      ...row,
-      email,
-      role: role ?? row.role,
-      status: status ?? row.status,
-      user_type: userType,
-      department_id: department?.id ?? null,
-      matched_user_id: usersByEmail.get(email)?.user_id ?? null,
-      validation_status: errors.length ? 'error' as const : 'valid' as const,
-      validation_errors: errors,
-      validation_warnings: warnings,
-    };
-  });
-
-  const invalidCount = validatedRows.filter(row => row.validation_status === 'error').length;
-  return {
-    rows: validatedRows,
-    rowCount: validatedRows.length,
-    validCount: validatedRows.length - invalidCount,
-    invalidCount,
-    duplicateEmailCount,
-    unknownDepartmentCount,
-    unknownRoleCount,
-  };
+  if (
+    !Array.isArray(identityReferences.auth_identities)
+    || !Array.isArray(identityReferences.profile_identities)
+    || !Array.isArray(identityReferences.provisioning_identities)
+    || identityReferences.profile_identities.some((identity) => (
+      typeof identity.organization_match !== 'boolean'
+      || typeof identity.employee_id_match !== 'boolean'
+      || typeof identity.employee_id_case_insensitive_match !== 'boolean'
+      || typeof identity.auth_email_match !== 'boolean'
+      || typeof identity.has_cross_org_active_role !== 'boolean'
+    ))
+  ) {
+    throw new Error('Protected User Import identity-reference proof is incomplete. Deployment must include matching Patch 83T database and Edge contracts.');
+  }
+  const authIdentities: UserImportAuthIdentity[] = identityReferences.auth_identities
+    .filter((identity) => Boolean(identity.auth_user_id))
+    .map((identity) => ({
+      auth_user_id: identity.auth_user_id!,
+      email: identity.auth_email,
+      profile_user_id: identity.auth_user_id,
+      label: `${identity.auth_email} (${identity.auth_user_id})${identity.organization_match === false ? ' — not organization-aligned' : ''}`,
+    }));
+  const profileIdentities: UserImportProfileIdentity[] = identityReferences.profile_identities
+    .filter((identity) => Boolean(identity.profile_id))
+    .map((identity) => ({
+      profile_id: identity.profile_id!,
+      employee_no: identity.employee_id,
+      auth_email: identity.auth_email,
+      organization_match: identity.organization_match,
+      employee_id_match: identity.employee_id_match,
+      employee_id_case_insensitive_match: identity.employee_id_case_insensitive_match,
+      auth_email_match: identity.auth_email_match,
+      has_cross_org_active_role: identity.has_cross_org_active_role,
+    }));
+  const openProvisioningIdentities: UserImportOpenProvisioningIdentity[] = identityReferences.provisioning_identities
+    .filter((identity) => Boolean(identity.provisioning_id))
+    .map((identity) => ({
+      provisioning_id: identity.provisioning_id!,
+      employee_no: identity.employee_id,
+      auth_email: identity.auth_email,
+      state: identity.status,
+    }));
+  if (actorResult.error || !actorResult.data.user?.id) {
+    throw new Error('The authenticated actor could not be verified for User Import preview.');
+  }
+  const actor = users.find((user) => user.user_id === actorResult.data.user.id);
+  const actorIsSuperAdmin = Boolean(actor?.roles.some((role) => (
+    role.is_active
+    && role.role === 'super_admin'
+    && role.scope === 'global'
+    && (role.organization_id === null || role.organization_id === actor.organization_id)
+    && role.division_id === null
+    && role.department_id === null
+    && role.unit_id === null
+  )));
+  return validateUserImportRows(rows, {
+    users: users.map((user) => ({
+      user_id: user.user_id,
+      organization_id: user.organization_id,
+      employee_no: user.employee_no,
+      full_name_en: user.full_name_en,
+      email: user.email,
+      contact_email: user.contact_email,
+      roles: user.roles,
+    })),
+    authIdentities,
+    profileIdentities,
+    openProvisioningIdentities,
+    actorIsSuperAdmin,
+    activeDepartments: departments,
+    archivedDepartments,
+  }, parserErrorsByRow);
 }
 
-export async function applyImportBatch(fileName: string, validation: UserImportValidationResult): Promise<ApplyImportResult> {
-  try {
-    const result = await invokePrivilegedAction<ApplyImportResult>('patch19_apply_import_batch', {
-      file_name: fileName,
-      rows: validation.rows,
+export async function applyImportBatch(
+  fileName: string,
+  validation: UserImportValidationResult,
+  executionConfirmation: string,
+): Promise<ApplyImportResult> {
+  if (executionConfirmation !== USER_IMPORT_EXECUTION_CONFIRMATION) {
+    throw new Error(`Type ${USER_IMPORT_EXECUTION_CONFIRMATION} exactly before executing the import.`);
+  }
+  if (
+    validation.rowCount < 1
+    || validation.invalidCount !== 0
+    || validation.validCount !== validation.rowCount
+    || validation.rows.some((row) => (
+      row.validation_status !== 'valid'
+      || !row.planned_action
+      || row.planned_action === 'rejected'
+    ))
+  ) {
+    throw new Error('Only a non-empty, fully valid User Import preview can be executed.');
+  }
+  const result = await invokePrivilegedAction<ApplyImportResult>('patch83t_apply_user_excel_import', {
+    file_name: fileName,
+    source_format: 'xlsx',
+    execution_confirmation: executionConfirmation,
+    rows: validation.rows.map((row) => ({
+      row_number: row.row_number,
+      employee_id: row.employee_no,
+      full_name_en: row.full_name_en,
+      full_name_ar: row.full_name_ar,
+      contact_email: row.contact_email || null,
+      phone: row.phone_normalized,
+      department_code: row.department,
+      job_title: row.job_title,
+      role: row.role,
+      role_scope: row.role_scope,
+      status: row.status,
+      user_type: row.user_type,
+      account_action: row.account_action,
+      validation_status: row.validation_status,
+      expected_matched_user_id: row.matched_user_id ?? null,
+      expected_planned_action: row.planned_action,
+      expected_active_role_ids: row.matched_active_role_ids ?? [],
+    })),
+    valid_count: validation.validCount,
+    invalid_count: validation.invalidCount,
+    duplicate_employee_id_count: validation.duplicateEmployeeIdCount,
+    duplicate_contact_email_count: validation.duplicateContactEmailCount,
+    unknown_department_count: validation.unknownDepartmentCount,
+    unknown_role_count: validation.unknownRoleCount,
+    invalid_phone_count: validation.invalidPhoneCount,
+    validation_summary: {
+      row_count: validation.rowCount,
       valid_count: validation.validCount,
       invalid_count: validation.invalidCount,
-      duplicate_email_count: validation.duplicateEmailCount,
-      unknown_department_count: validation.unknownDepartmentCount,
-      unknown_role_count: validation.unknownRoleCount,
-      validation_summary: {
-        row_count: validation.rowCount,
-        valid_count: validation.validCount,
-        invalid_count: validation.invalidCount,
-      },
-    });
-    return result;
-  } catch (error) {
-    if (!isPatch19UnavailableError(error)) throw error;
-    let updatedCount = 0;
-    let pendingAccountCreationCount = 0;
-    for (const row of validation.rows.filter(item => item.validation_status === 'valid')) {
-      if (!row.matched_user_id) {
-        pendingAccountCreationCount += 1;
-        continue;
-      }
-      await updateProfileViaCompatibility({
-        userId: row.matched_user_id,
-        fullNameEn: row.full_name_en,
-        fullNameAr: row.full_name_ar,
-        employeeNo: row.employee_no,
-        jobTitle: row.job_title,
-        userType: normalizeUserType(row.user_type),
-      });
-      if (row.department_id !== undefined) await updateDepartmentViaCompatibility(row.matched_user_id, row.department_id ?? null);
-      if (row.status) await updateLifecycleViaCompatibility(row.matched_user_id, toUserStatus(row.status) === 'active' ? 'reactivate' : toUserStatus(row.status) === 'archived' ? 'archive' : 'deactivate', 'CSV import compatibility update');
-      const role = normalizeRole(row.role);
-      if (role) {
-        await assignRoleViaCompatibility({
-          userId: row.matched_user_id,
-          role,
-          scope: row.department_id ? 'department' : 'assigned_only',
-          departmentId: row.department_id ?? null,
-          reason: 'CSV import compatibility update',
-        });
-      }
-      updatedCount += 1;
-    }
-    return {
-      batch_id: `compat-${Date.now()}`,
-      updated_count: updatedCount,
-      pending_account_creation_count: pendingAccountCreationCount,
-    };
+      existing_user_update_count: validation.existingUserUpdateCount,
+      pending_account_creation_count: validation.pendingAccountCreationCount,
+    },
+  });
+  const proof = result?.database_proof;
+  const provisioningIds = Array.isArray(result?.provisioning_ids) ? result.provisioning_ids : [];
+  if (
+    !result
+    || !USER_IMPORT_UUID_PATTERN.test(result.batch_id)
+    || !Number.isInteger(result.updated_count)
+    || result.updated_count !== validation.existingUserUpdateCount
+    || !Number.isInteger(result.pending_account_creation_count)
+    || result.pending_account_creation_count !== validation.pendingAccountCreationCount
+    || provisioningIds.length !== validation.pendingAccountCreationCount
+    || provisioningIds.some((id) => typeof id !== 'string' || !USER_IMPORT_UUID_PATTERN.test(id))
+    || new Set(provisioningIds).size !== provisioningIds.length
+    || !proof
+    || !Number.isInteger(proof.import_row_count)
+    || proof.import_row_count !== validation.rowCount
+    || !Number.isInteger(proof.provisioning_record_count)
+    || proof.provisioning_record_count !== validation.pendingAccountCreationCount
+    || !Number.isInteger(proof.audit_record_count)
+    || proof.audit_record_count !== validation.existingUserUpdateCount
+    || typeof proof.payload_sha256 !== 'string'
+    || !USER_IMPORT_SHA256_PATTERN.test(proof.payload_sha256)
+  ) {
+    throw new Error('The database did not return complete, internally consistent Patch 83T import proof. Treat the execution outcome as unverified and reconcile before retrying.');
   }
+  return result;
 }
 
 export async function updateUserProfile(input: {
@@ -1009,24 +1049,23 @@ export async function updateUserProfile(input: {
   fullNameEn: string;
   fullNameAr?: string | null;
   employeeNo?: string | null;
+  contactEmail?: string | null;
+  phone?: string | null;
   jobTitle?: string | null;
   userType: UserType;
   reason?: string;
 }) {
-  try {
-    await invokePrivilegedAction('patch19_update_user_profile', {
-      user_id: input.userId,
-      full_name_en: input.fullNameEn,
-      full_name_ar: input.fullNameAr ?? null,
-      employee_no: input.employeeNo ?? null,
-      job_title: input.jobTitle ?? null,
-      user_type: input.userType,
-      reason: input.reason ?? null,
-    });
-  } catch (error) {
-    if (!isPatch19UnavailableError(error)) throw error;
-    await updateProfileViaCompatibility(input);
-  }
+  await invokePrivilegedAction('patch19_update_user_profile', {
+    user_id: input.userId,
+    full_name_en: input.fullNameEn,
+    full_name_ar: input.fullNameAr ?? null,
+    employee_id: input.employeeNo ?? null,
+    contact_email: input.contactEmail?.trim() || null,
+    phone: input.phone?.trim() || null,
+    job_title: input.jobTitle ?? null,
+    user_type: input.userType,
+    reason: input.reason ?? null,
+  });
 }
 
 export async function updateUserDepartment(input: { userId: string; departmentId: string | null; reason?: string }) {
@@ -1100,62 +1139,4 @@ export async function unarchiveUser(userId: string, reason: string) {
     if (!isPatch19UnavailableError(error)) throw error;
     await updateLifecycleViaCompatibility(userId, 'unarchive', reason);
   }
-}
-
-export function exportUsers(rows: UserManagementUserRow[]): string {
-  const headers = [
-    'English Name',
-    'Arabic Name',
-    'Email',
-    'Employee ID',
-    'Department',
-    'Job Title',
-    'Roles',
-    'Status',
-    'User Type',
-    'Last Login',
-    'Created Date',
-  ];
-  const body = rows.map(row => [
-    row.full_name_en,
-    row.full_name_ar ?? '',
-    row.email,
-    row.employee_no ?? '',
-    row.department_name ?? '',
-    row.job_title ?? '',
-    row.roles?.filter(role => role.is_active).map(role => role.role).join('; ') ?? '',
-    row.user_status,
-    row.user_type,
-    row.last_login_at ?? '',
-    row.created_at,
-  ]);
-  return [headers, ...body].map(values => values.map(csvEscape).join(',')).join('\n');
-}
-
-export function exportUserImportTemplate(): string {
-  const headers = [
-    'Arabic Name',
-    'English Name',
-    'Email',
-    'Department Code',
-    'Job Title',
-    'Role',
-    'Status',
-    'Employee ID',
-    'User Type',
-  ];
-  return `${headers.map(csvEscape).join(',')}\n`;
-}
-
-export function exportValidationErrors(rows: ParsedUserImportRow[]): string {
-  const headers = ['Row Number', 'Email', 'Errors', 'Warnings'];
-  const body = rows
-    .filter(row => row.validation_errors?.length || row.validation_warnings?.length)
-    .map(row => [
-      row.row_number,
-      row.email,
-      row.validation_errors?.join('; ') ?? '',
-      row.validation_warnings?.join('; ') ?? '',
-    ]);
-  return [headers, ...body].map(values => values.map(csvEscape).join(',')).join('\n');
 }

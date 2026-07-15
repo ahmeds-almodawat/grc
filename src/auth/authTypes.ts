@@ -17,6 +17,7 @@ export type AccessScope = 'global' | 'division' | 'department' | 'unit' | 'assig
 export type AuthStatus =
   | 'loading'
   | 'authenticated'
+  | 'password_change_required'
   | 'unauthenticated'
   | 'inactive'
   | 'configuration_error'
@@ -24,6 +25,12 @@ export type AuthStatus =
   | 'error';
 
 export type AuthUserStatus = 'active' | 'inactive' | 'archived' | 'invited' | 'locked';
+
+export type AuthCredentialState =
+  | 'legacy_unmanaged'
+  | 'active'
+  | 'password_change_required'
+  | 'blocked';
 
 export interface AuthProfile {
   id: string;
@@ -53,6 +60,8 @@ export interface AuthUserState {
   profile: AuthProfile | null;
   roles: AuthRoleAssignment[];
   primaryRole: AuthRole | null;
+  credentialState?: AuthCredentialState;
+  credentialVersion?: number;
   message?: string;
   isLocalBypass?: boolean;
 }

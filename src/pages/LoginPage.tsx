@@ -1,6 +1,8 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useCallback, useState } from 'react';
 import { Languages, LockKeyhole, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
+import { TurnstileLoginCaptcha } from '../auth/TurnstileLoginCaptcha';
+import { getLoginCaptchaSubmissionError, loginCaptchaConfig } from '../auth/loginCaptcha';
 import { useI18n } from '../i18n/I18nContext';
 import { isSupabaseConfigured } from '../lib/supabase';
 
@@ -19,6 +21,9 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaError, setCaptchaError] = useState<string | null>(loginCaptchaConfig.configurationError);
+  const [captchaResetVersion, setCaptchaResetVersion] = useState(0);
 
   const isArabic = language === 'ar';
   const title = isArabic ? 'تسجيل الدخول' : 'Sign in';
@@ -26,12 +31,31 @@ export function LoginPage() {
     ? 'يجب تسجيل الدخول قبل الوصول إلى منصة الحوكمة والمخاطر والامتثال.'
     : 'Sign in before accessing the Governance, Risk and Compliance platform.';
 
+  const handleCaptchaToken = useCallback((token: string | null) => {
+    setCaptchaToken(token);
+    if (token) setCaptchaError(null);
+  }, []);
+
+  const handleCaptchaUnavailable = useCallback((message: string) => {
+    setCaptchaToken(null);
+    setCaptchaError(message);
+  }, []);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+    const captchaSubmissionError = getLoginCaptchaSubmissionError(loginCaptchaConfig, captchaToken);
+    if (captchaSubmissionError) {
+      setCaptchaError(captchaSubmissionError);
+      return;
+    }
     setIsSubmitting(true);
-    const result = await auth.signIn(normalizeLoginIdentifier(loginIdentifier), password);
+    const result = await auth.signIn(normalizeLoginIdentifier(loginIdentifier), password, captchaToken);
     setIsSubmitting(false);
+    if (loginCaptchaConfig.required) {
+      setCaptchaToken(null);
+      setCaptchaResetVersion((current) => current + 1);
+    }
     if (!result.ok) setError(result.message ?? 'Login failed.');
   };
 
@@ -92,9 +116,30 @@ export function LoginPage() {
             />
           </label>
 
+          {loginCaptchaConfig.required && loginCaptchaConfig.siteKey && !loginCaptchaConfig.configurationError ? (
+            <TurnstileLoginCaptcha
+              siteKey={loginCaptchaConfig.siteKey}
+              language={language}
+              resetVersion={captchaResetVersion}
+              onToken={handleCaptchaToken}
+              onUnavailable={handleCaptchaUnavailable}
+            />
+          ) : null}
+
+          {captchaError ? <div className="auth-error" data-testid="login-captcha-error">{captchaError}</div> : null}
+
           {error ? <div className="auth-error">{error}</div> : null}
 
-          <button className="primary-action auth-submit" type="submit" disabled={isSubmitting || !isSupabaseConfigured}>
+          <button
+            className="primary-action auth-submit"
+            type="submit"
+            disabled={
+              isSubmitting
+              || !isSupabaseConfigured
+              || Boolean(loginCaptchaConfig.configurationError)
+              || (loginCaptchaConfig.required && !captchaToken)
+            }
+          >
             <LockKeyhole size={17} />
             {isSubmitting ? (isArabic ? 'جاري الدخول...' : 'Signing in...') : title}
           </button>

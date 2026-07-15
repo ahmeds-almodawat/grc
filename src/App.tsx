@@ -46,6 +46,7 @@ import {
   SUPER_ADMIN_ONLY_PAGES,
 } from "./auth/authAccess";
 import { LoginPage } from "./pages/LoginPage";
+import { ForcedPasswordChange } from "./pages/ForcedPasswordChange";
 import { UnauthorizedPage } from "./pages/UnauthorizedPage";
 import { TabbedHub } from "./components/TabbedHub";
 import { useI18n } from "./i18n/I18nContext";
@@ -564,7 +565,7 @@ function AdminSystemControls() {
           label: t("hub.tab.userManagement", "User Management"),
           description: t(
             "hub.tab.userManagement.desc",
-            "Professional user lifecycle, status, department, role, CSV import/export, and audit controls.",
+            "Professional user lifecycle, status, department, role, controlled Excel import/export, and audit controls.",
           ),
           icon: <Users size={17} />,
           content: <UserManagementCenter />,
@@ -1164,6 +1165,10 @@ export default function App() {
         </section>
       </main>
     );
+  }
+
+  if (auth.status === "password_change_required") {
+    return <ForcedPasswordChange />;
   }
 
   if (auth.status !== "authenticated") {

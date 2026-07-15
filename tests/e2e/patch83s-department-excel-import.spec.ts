@@ -91,7 +91,11 @@ async function installQaSessionAndSupabaseMocks(
     const method = request.method();
     const isRestWrite = url.includes('/rest/v1/') && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
     const isEdgeRequest = url.includes('/functions/v1/');
-    if (isRestWrite || isEdgeRequest) telemetry.previewWriteRequests.push(`${method} ${url}`);
+    const edgeAction = isEdgeRequest
+      ? (request.postDataJSON() as { action?: string } | null)?.action ?? ''
+      : '';
+    const isEdgeWrite = isEdgeRequest && edgeAction !== 'patch83u_get_credential_state';
+    if (isRestWrite || isEdgeWrite) telemetry.previewWriteRequests.push(`${method} ${url}`);
   });
 
   await page.route('**/auth/v1/**', async (route) => {
@@ -109,10 +113,20 @@ async function installQaSessionAndSupabaseMocks(
 
   await page.route('**/functions/v1/**', async (route) => {
     const body = route.request().postDataJSON() as { action?: string } | null;
+    const result = body?.action === 'patch83u_get_credential_state'
+      ? {
+          managed: true,
+          credential_state: 'active',
+          credential_version: 0,
+          auth_email: 'patch83s.qa@example.test',
+          access_allowed: true,
+          message: null,
+        }
+      : [];
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ ok: true, action: body?.action ?? '', result: [] }),
+      body: JSON.stringify({ ok: true, action: body?.action ?? '', result }),
     });
   });
 
@@ -233,7 +247,7 @@ function statValue(modal: Locator, label: string) {
 }
 
 test.describe('Patch 83S Department Excel Import browser QA', () => {
-  test('downloads, inspects, uploads, resets, replaces, and preserves User Import', async ({ page }) => {
+  test('downloads, inspects, uploads, resets, and replaces Department workbooks', async ({ page }) => {
     test.setTimeout(90_000);
     mkdirSync(evidenceDir, { recursive: true });
     const telemetry: QaTelemetry = { consoleProblems: [], pageErrors: [], previewActive: true, previewWriteRequests: [], referenceRequests: [] };
@@ -333,20 +347,6 @@ test.describe('Patch 83S Department Excel Import browser QA', () => {
     expect(telemetry.previewWriteRequests).toEqual([]);
     await modal.getByRole('button', { name: 'Cancel' }).click();
     telemetry.previewActive = false;
-
-    await page.locator('.nav-child-item').filter({ hasText: 'User Management' }).click();
-    await expect(page.getByRole('heading', { name: 'User Management Center' })).toBeVisible();
-    await page.getByRole('button', { name: 'Import CSV' }).click();
-    const userImport = page.getByRole('dialog', { name: 'Preview CSV import' });
-    await expect(userImport).toBeVisible();
-    const userCsv = [
-      'Arabic Name,English Name,Email,Department Code,Job Title,Role,Status,Employee ID,User Type',
-      'مستخدم اختبار,QA User,user.qa@example.test,,Analyst,employee,active,QA-001,employee',
-    ].join('\n');
-    await userImport.locator('input[type="file"]').setInputFiles({ name: 'user-import.csv', mimeType: 'text/csv', buffer: Buffer.from(userCsv, 'utf8') });
-    await expect(userImport).toContainText('user.qa@example.test');
-    await expect(userImport).toContainText('valid');
-    await page.screenshot({ path: path.join(evidenceDir, 'user-import-unchanged.png'), fullPage: true });
 
     expect(telemetry.pageErrors).toEqual([]);
     expect(telemetry.consoleProblems).toEqual([]);

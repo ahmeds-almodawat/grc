@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   Archive,
@@ -30,15 +30,12 @@ import {
 } from "../lib/liveResult";
 import {
   applyImportBatch,
+  USER_IMPORT_EXECUTION_CONFIRMATION,
   archiveUser,
   deactivateUser,
-  exportUserImportTemplate,
-  exportUsers,
-  exportValidationErrors,
   getUserManagementDepartments,
   getUserManagementSummary,
   listUsersWithFilters,
-  parseUserImportCsv,
   readAuditHistory,
   reactivateUser,
   unarchiveUser,
@@ -57,7 +54,22 @@ import {
   type UserStatus,
   type UserType,
 } from "../lib/userManagementApi";
+import {
+  adminResetPassword,
+  ADMIN_RESET_CONFIRMATION_TEXT,
+  listProvisioning,
+  provisionAccount,
+  reconcileCredentialState,
+  reconcileProvisioning,
+  type UserProvisioningRow,
+} from "../lib/userCredentialApi";
 import type { AccessScope, AppRole } from "../types/domain";
+import {
+  createUserImportTemplate,
+  createUserRosterWorkbook,
+  createUserValidationErrorsWorkbook,
+  parseUserWorkbook,
+} from "../utils/userWorkbook";
 
 type LifecycleAction = "deactivate" | "reactivate" | "archive" | "unarchive";
 
@@ -120,8 +132,7 @@ function linkedRecordCount(user: UserManagementUserRow): number {
   );
 }
 
-function downloadCsv(fileName: string, csv: string) {
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+function downloadBlob(fileName: string, blob: Blob) {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -130,8 +141,23 @@ function downloadCsv(fileName: string, csv: string) {
   URL.revokeObjectURL(url);
 }
 
+function xlsxBlob(content: ArrayBuffer) {
+  return new Blob([content], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+}
+
+function formatFileSize(size: number) {
+  if (size < 1024) return `${size} B`;
+  return `${(size / 1024).toFixed(size < 1024 * 100 ? 1 : 0)} KB`;
+}
+
 function nowFileStamp() {
   return new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+}
+
+function patch83uRequestId(action: string) {
+  return `patch83u:${action}:${crypto.randomUUID()}`;
 }
 
 export function UserManagementCenter() {
@@ -177,6 +203,8 @@ export function UserManagementCenter() {
     fullNameEn: "",
     fullNameAr: "",
     employeeNo: "",
+    contactEmail: "",
+    phone: "",
     jobTitle: "",
     userType: "employee" as UserType,
   });
@@ -185,23 +213,70 @@ export function UserManagementCenter() {
   const [scopeDraft, setScopeDraft] = useState<AccessScope>("assigned_only");
   const [roleDepartmentDraft, setRoleDepartmentDraft] = useState("");
   const [importOpen, setImportOpen] = useState(false);
-  const [importFileName, setImportFileName] = useState("");
+  const [importFile, setImportFile] = useState<{ name: string; size: number } | null>(null);
+  const [importParseError, setImportParseError] = useState<string | null>(null);
+  const [importParsing, setImportParsing] = useState(false);
   const [importValidation, setImportValidation] =
     useState<UserImportValidationResult | null>(null);
+  const [importConfirmation, setImportConfirmation] = useState("");
+  const importFileInputRef = useRef<HTMLInputElement>(null);
+  const importSelectionId = useRef(0);
+  const [provisioningOpen, setProvisioningOpen] = useState(false);
+  const [provisioningLoading, setProvisioningLoading] = useState(false);
+  const [provisioningRows, setProvisioningRows] = useState<UserProvisioningRow[]>([]);
+  const [provisioningError, setProvisioningError] = useState<string | null>(null);
+  const [provisioningTarget, setProvisioningTarget] = useState<{
+    row: UserProvisioningRow;
+    action: "provision" | "reconcile";
+  } | null>(null);
+  const [provisioningConfirmation, setProvisioningConfirmation] = useState("");
+  const [provisioningRequestId, setProvisioningRequestId] = useState("");
+  const [resetUser, setResetUser] = useState<UserManagementUserRow | null>(null);
+  const [resetRequestId, setResetRequestId] = useState("");
+  const [credentialReconcileUser, setCredentialReconcileUser] = useState<UserManagementUserRow | null>(null);
+  const [credentialReconcileConfirmation, setCredentialReconcileConfirmation] = useState("");
+  const [credentialReconcileRequestId, setCredentialReconcileRequestId] = useState("");
+  const [resetDraft, setResetDraft] = useState({
+    temporaryPassword: "",
+    confirmPassword: "",
+    employeeIdConfirmation: "",
+    resetConfirmation: "",
+    reason: "",
+  });
   const [bulkDepartment, setBulkDepartment] = useState("");
   const [bulkRole, setBulkRole] = useState<AppRole>("employee");
 
-  const canModify =
-    Boolean(auth.isLocalBypass) ||
-    auth.roles.some((role) =>
-      ["super_admin", "governance_admin"].includes(role.role),
-    );
+  const canonicalGlobalAdminRoles = auth.roles.filter((role) =>
+    ["super_admin", "governance_admin"].includes(role.role) &&
+    role.scope === "global" &&
+    (role.organizationId === null ||
+      role.organizationId === auth.profile?.organizationId) &&
+    !role.divisionId &&
+    !role.departmentId &&
+    !role.unitId,
+  );
+  const canModify = Boolean(auth.isLocalBypass) || canonicalGlobalAdminRoles.length > 0;
   const readOnly =
     !canModify ||
     (auth.roles.some((role) => ["auditor", "viewer"].includes(role.role)) &&
-      !auth.roles.some((role) =>
-        ["super_admin", "governance_admin"].includes(role.role),
-      ));
+      canonicalGlobalAdminRoles.length === 0);
+  const hasAuthorizedImportRole =
+    !auth.isLocalBypass &&
+    Boolean(auth.profile?.organizationId) &&
+    canonicalGlobalAdminRoles.length > 0;
+  const hasAuthorizedSuperAdmin =
+    !auth.isLocalBypass &&
+    Boolean(auth.session?.user.id) &&
+    Boolean(auth.profile?.organizationId) &&
+    auth.roles.some((role) =>
+      role.role === "super_admin" &&
+      role.scope === "global" &&
+      (role.organizationId === null ||
+        role.organizationId === auth.profile?.organizationId) &&
+      !role.divisionId &&
+      !role.departmentId &&
+      !role.unitId,
+    );
 
   const load = async () => {
     setLoading(true);
@@ -248,6 +323,10 @@ export function UserManagementCenter() {
           user.full_name_en,
           user.full_name_ar,
           user.email,
+          user.auth_email,
+          user.contact_email,
+          user.phone,
+          user.synthetic_auth_email,
           user.employee_no,
           user.department_name,
           user.job_title,
@@ -334,6 +413,8 @@ export function UserManagementCenter() {
       fullNameEn: user.full_name_en,
       fullNameAr: user.full_name_ar ?? "",
       employeeNo: user.employee_no ?? "",
+      contactEmail: user.contact_email ?? "",
+      phone: user.phone ?? "",
       jobTitle: user.job_title ?? "",
       userType: user.user_type,
     });
@@ -391,6 +472,8 @@ export function UserManagementCenter() {
           fullNameEn: profileDraft.fullNameEn,
           fullNameAr: profileDraft.fullNameAr,
           employeeNo: profileDraft.employeeNo,
+          contactEmail: profileDraft.contactEmail,
+          phone: profileDraft.phone,
           jobTitle: profileDraft.jobTitle,
           userType: profileDraft.userType,
           reason,
@@ -484,35 +567,349 @@ export function UserManagementCenter() {
     }
   };
 
-  const handleImportFile = async (file: File) => {
-    setImportFileName(file.name);
+  const loadProvisioningQueue = async () => {
+    if (!hasAuthorizedSuperAdmin) {
+      setProvisioningError("Provisioning requires an authenticated, organization-aligned global Super Admin.");
+      return;
+    }
+    setProvisioningLoading(true);
+    setProvisioningError(null);
+    try {
+      const result = await listProvisioning();
+      setProvisioningRows(result.rows);
+    } catch (error) {
+      setProvisioningRows([]);
+      setProvisioningError(
+        error instanceof Error ? error.message : "Unable to load the protected provisioning queue.",
+      );
+    } finally {
+      setProvisioningLoading(false);
+    }
+  };
+
+  const openProvisioningQueue = () => {
+    setProvisioningOpen(true);
+    setProvisioningTarget(null);
+    setProvisioningConfirmation("");
+    setProvisioningRequestId("");
+    void loadProvisioningQueue();
+  };
+
+  const chooseProvisioningAction = (
+    row: UserProvisioningRow,
+    action: "provision" | "reconcile",
+  ) => {
+    setProvisioningTarget({ row, action });
+    setProvisioningConfirmation("");
+    setProvisioningRequestId(patch83uRequestId(action));
+    setProvisioningError(null);
+  };
+
+  const submitProvisioningAction = async () => {
+    if (!provisioningTarget || !hasAuthorizedSuperAdmin) return;
+    const { row, action } = provisioningTarget;
+    if (provisioningConfirmation !== row.employee_id) {
+      setProvisioningError("Type the Employee ID exactly before continuing.");
+      return;
+    }
+    setSaving(true);
+    setProvisioningError(null);
+    try {
+      const command = {
+        provisioningId: row.id,
+        employeeIdConfirmation: provisioningConfirmation,
+        requestId: provisioningRequestId,
+      };
+      if (action === "provision") {
+        const result = await provisionAccount(command);
+        setMessage(
+          `Account provisioning completed for ${row.employee_id}. Profile ${result.profileId} requires a first-login password change.`,
+        );
+      } else {
+        const result = await reconcileProvisioning(command);
+        setMessage(`Provisioning reconciliation for ${row.employee_id}: ${result.outcome}.`);
+      }
+      setProvisioningTarget(null);
+      setProvisioningConfirmation("");
+      setProvisioningRequestId("");
+      await Promise.all([loadProvisioningQueue(), load()]);
+    } catch (error) {
+      setProvisioningError(
+        error instanceof Error ? error.message : "The controlled provisioning action failed.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openPasswordReset = (user: UserManagementUserRow) => {
+    if (
+      !user.credential_proof_available
+      || !user.auth_email
+      || !['employee_id_managed', 'legacy_verified'].includes(user.identity_mode ?? '')
+    ) {
+      setActionError("Verified credential identity is unavailable. Reset is blocked until the protected credential roster is restored.");
+      return;
+    }
+    setResetUser(user);
+    setResetRequestId(patch83uRequestId("admin-reset"));
+    setResetDraft({
+      temporaryPassword: user.employee_no ?? "",
+      confirmPassword: user.employee_no ?? "",
+      employeeIdConfirmation: "",
+      resetConfirmation: "",
+      reason: "",
+    });
     setActionError(null);
-    const text = await file.text();
-    const parsedRows = parseUserImportCsv(text);
-    const validation = await validateImportRows(parsedRows);
-    setImportValidation(validation);
+  };
+
+  const closePasswordReset = () => {
+    setResetUser(null);
+    setResetRequestId("");
+    setResetDraft({
+      temporaryPassword: "",
+      confirmPassword: "",
+      employeeIdConfirmation: "",
+      resetConfirmation: "",
+      reason: "",
+    });
+  };
+
+  const submitPasswordReset = async () => {
+    if (!resetUser || !hasAuthorizedSuperAdmin) return;
+    if (!resetUser.employee_no) {
+      setActionError("This user has no Employee ID. Resolve the identity record before resetting credentials.");
+      return;
+    }
+    if (
+      !resetUser.credential_proof_available
+      || !resetUser.auth_email
+      || !['employee_id_managed', 'legacy_verified'].includes(resetUser.identity_mode ?? '')
+    ) {
+      setActionError("Verified credential identity is unavailable. Password reset is blocked.");
+      return;
+    }
+    if (resetDraft.employeeIdConfirmation !== resetUser.employee_no) {
+      setActionError("Type the target Employee ID exactly before resetting the password.");
+      return;
+    }
+    if (resetDraft.temporaryPassword !== resetDraft.confirmPassword) {
+      setActionError("Temporary password confirmation does not match.");
+      return;
+    }
+    if (
+      !resetDraft.temporaryPassword
+      || resetDraft.temporaryPassword !== resetDraft.temporaryPassword.trim()
+      || resetDraft.temporaryPassword.length > 256
+    ) {
+      setActionError("Enter a non-empty temporary password without surrounding whitespace.");
+      return;
+    }
+    if (resetDraft.resetConfirmation !== ADMIN_RESET_CONFIRMATION_TEXT) {
+      setActionError(`Type ${ADMIN_RESET_CONFIRMATION_TEXT} exactly before resetting the password.`);
+      return;
+    }
+    if (!resetDraft.reason.trim() || resetDraft.reason.trim().length > 500) {
+      setActionError("A reset reason of 1-500 characters is required.");
+      return;
+    }
+    setSaving(true);
+    setActionError(null);
+    setMessage(null);
+    try {
+      await adminResetPassword({
+        userId: resetUser.user_id,
+        temporaryPassword: resetDraft.temporaryPassword,
+        employeeIdConfirmation: resetDraft.employeeIdConfirmation,
+        confirmationText: resetDraft.resetConfirmation,
+        reason: resetDraft.reason,
+        requestId: resetRequestId,
+      });
+      const employeeId = resetUser.employee_no;
+      closePasswordReset();
+      setMessage(
+        `Temporary password reset completed for ${employeeId}. Existing sessions were revoked and a password change is required at next sign-in.`,
+      );
+      await load();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "The temporary password reset failed.");
+      setResetDraft((draft) => ({
+        ...draft,
+        temporaryPassword: resetUser.employee_no ?? "",
+        confirmPassword: resetUser.employee_no ?? "",
+        employeeIdConfirmation: "",
+        resetConfirmation: "",
+      }));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openCredentialReconciliation = (user: UserManagementUserRow) => {
+    if (
+      !user.credential_proof_available
+      || !user.auth_email
+      || !['employee_id_managed', 'legacy_verified'].includes(user.identity_mode ?? '')
+    ) {
+      setActionError("Verified credential identity is unavailable. Reconciliation is blocked until the protected credential roster is restored.");
+      return;
+    }
+    setCredentialReconcileUser(user);
+    setCredentialReconcileConfirmation("");
+    setCredentialReconcileRequestId(patch83uRequestId("credential-reconcile"));
+    setActionError(null);
+  };
+
+  const closeCredentialReconciliation = () => {
+    setCredentialReconcileUser(null);
+    setCredentialReconcileConfirmation("");
+    setCredentialReconcileRequestId("");
+  };
+
+  const submitCredentialReconciliation = async () => {
+    if (!credentialReconcileUser || !hasAuthorizedSuperAdmin) return;
+    if (
+      !credentialReconcileUser.credential_proof_available
+      || !credentialReconcileUser.auth_email
+      || !['employee_id_managed', 'legacy_verified'].includes(credentialReconcileUser.identity_mode ?? '')
+      ||
+      !credentialReconcileUser.employee_no ||
+      credentialReconcileConfirmation !== credentialReconcileUser.employee_no
+    ) {
+      setActionError("Type the target Employee ID exactly before reconciling credential state.");
+      return;
+    }
+    setSaving(true);
+    setActionError(null);
+    setMessage(null);
+    try {
+      const result = await reconcileCredentialState({
+        userId: credentialReconcileUser.user_id,
+        employeeIdConfirmation: credentialReconcileConfirmation,
+        requestId: credentialReconcileRequestId,
+      });
+      const employeeId = credentialReconcileUser.employee_no;
+      closeCredentialReconciliation();
+      setMessage(`Credential reconciliation for ${employeeId}: ${result.outcome}.`);
+      await load();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Credential reconciliation failed.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const resetImportFile = () => {
+    importSelectionId.current += 1;
+    setImportFile(null);
+    setImportParseError(null);
+    setImportParsing(false);
+    setImportValidation(null);
+    setImportConfirmation("");
+    if (importFileInputRef.current) importFileInputRef.current.value = "";
+  };
+
+  const closeImport = () => {
+    setImportOpen(false);
+    resetImportFile();
+  };
+
+  const handleImportFile = async (file: File | null) => {
+    if (!file) return;
+    const selectionId = importSelectionId.current + 1;
+    importSelectionId.current = selectionId;
+    setImportConfirmation("");
+    setImportFile({ name: file.name, size: file.size });
+    setImportParseError(null);
+    setImportValidation(null);
+    setImportParsing(true);
+    setActionError(null);
+    try {
+      const parsed = await parseUserWorkbook(file);
+      const validation = await validateImportRows(parsed.rows, parsed.errorsByRow);
+      if (selectionId !== importSelectionId.current) return;
+      setImportValidation(validation);
+    } catch (error) {
+      if (selectionId !== importSelectionId.current) return;
+      setImportParseError(
+        error instanceof Error
+          ? error.message
+          : "The user workbook could not be parsed.",
+      );
+    } finally {
+      if (selectionId === importSelectionId.current) setImportParsing(false);
+    }
   };
 
   const applyImport = async () => {
     if (!importValidation) return;
-    const saved = await runAction(async () => {
-      await applyImportBatch(
-        importFileName || "user-management-import.csv",
-        importValidation,
+    if (!hasAuthorizedImportRole) {
+      setActionError(
+        "User Excel Import execution requires an authenticated Super Admin or Governance Admin.",
       );
+      return;
+    }
+    if (importConfirmation !== USER_IMPORT_EXECUTION_CONFIRMATION) {
+      setActionError(
+        `Type ${USER_IMPORT_EXECUTION_CONFIRMATION} exactly before executing the import.`,
+      );
+      return;
+    }
+    let databaseProofMessage = "";
+    const saved = await runAction(async () => {
+      const executionResult = await applyImportBatch(
+        importFile?.name || "user-management-import.xlsx",
+        importValidation,
+        importConfirmation,
+      );
+      const proof = executionResult.database_proof;
+      databaseProofMessage = `Import batch ${executionResult.batch_id} applied with database proof: ${proof.import_row_count} import rows, ${proof.provisioning_record_count} protected provisioning records, and ${proof.audit_record_count} profile audit records. Payload SHA-256: ${proof.payload_sha256}. No account was provisioned automatically.`;
     }, "Import batch applied. Existing profiles were updated; unknown accounts were tracked for account creation.");
     if (saved) {
-      setImportOpen(false);
-      setImportValidation(null);
+      if (databaseProofMessage) setMessage(databaseProofMessage);
+      closeImport();
     }
   };
 
-  const exportSelected = (rows: UserManagementUserRow[]) => {
+  const downloadUserTemplate = async () => {
+    setActionError(null);
+    try {
+      downloadBlob(
+        "user-management-import-template.xlsx",
+        xlsxBlob(await createUserImportTemplate()),
+      );
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Unable to create the Excel template.");
+    }
+  };
+
+  const downloadValidationErrors = async () => {
+    if (!importValidation) return;
+    setActionError(null);
+    try {
+      downloadBlob(
+        `user-import-validation-${nowFileStamp()}.xlsx`,
+        xlsxBlob(await createUserValidationErrorsWorkbook(importValidation.rows)),
+      );
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Unable to create the validation workbook.");
+    }
+  };
+
+  const exportSelected = async (rows: UserManagementUserRow[]) => {
     if (!rows.length) {
       setActionError("Select at least one user to export.");
       return;
     }
-    downloadCsv(`user-management-${nowFileStamp()}.csv`, exportUsers(rows));
+    setActionError(null);
+    try {
+      downloadBlob(
+        `user-management-${nowFileStamp()}.xlsx`,
+        xlsxBlob(await createUserRosterWorkbook(rows)),
+      );
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Unable to create the user roster workbook.");
+    }
   };
 
   return (
@@ -538,21 +935,24 @@ export function UserManagementCenter() {
           </button>
           <button
             className="ghost-button"
-            onClick={() =>
-              downloadCsv(
-                "user-management-import-template.csv",
-                exportUserImportTemplate(),
-              )
-            }
+            onClick={() => void downloadUserTemplate()}
           >
-            <FileDown size={16} /> Export template
+            <FileDown size={16} /> Excel template
           </button>
+          {hasAuthorizedSuperAdmin ? (
+            <button
+              className="ghost-button"
+              onClick={openProvisioningQueue}
+            >
+              <ShieldCheck size={16} /> Provisioning queue
+            </button>
+          ) : null}
           <button
             className="primary-button"
             onClick={() => setImportOpen(true)}
             disabled={writeDisabled}
           >
-            <UploadCloud size={16} /> Import CSV
+            <UploadCloud size={16} /> Import Excel
           </button>
         </div>
       </section>
@@ -658,7 +1058,7 @@ export function UserManagementCenter() {
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Name, email, employee ID, department, role"
+                placeholder="Name, Employee ID, Auth email, contact email, phone, department, role"
               />
             </label>
             <label className="field">
@@ -917,7 +1317,8 @@ export function UserManagementCenter() {
                     </label>
                   </th>
                   <th>Name</th>
-                  <th>Email</th>
+                  <th>Sign-in identity</th>
+                  <th>Contact / Phone</th>
                   <th>Department</th>
                   <th>Job title</th>
                   <th>Role(s)</th>
@@ -946,7 +1347,30 @@ export function UserManagementCenter() {
                           "No Arabic name / employee ID"}
                       </span>
                     </td>
-                    <td className="user-roster-email">{user.email}</td>
+                    <td className="user-roster-email">
+                      <strong>
+                        {!user.credential_proof_available
+                          ? "Identity mode unavailable"
+                          : user.managed_identity
+                            ? user.employee_no ?? "Missing Employee Login ID"
+                            : user.identity_mode === "legacy_verified"
+                              ? user.auth_email ?? "Verified Auth email unavailable"
+                              : "Unverified credential identity"}
+                      </strong>
+                      <div className="muted">
+                        {!user.credential_proof_available
+                          ? "Protected Auth identity unavailable"
+                          : user.managed_identity
+                            ? user.synthetic_auth_email ?? "Missing synthetic Auth email"
+                            : user.identity_mode === "legacy_verified"
+                              ? `Legacy profile Employee reference: ${user.employee_no ?? "Not provided"}`
+                              : "Credential reconciliation required"}
+                      </div>
+                    </td>
+                    <td>
+                      <div>{user.contact_email ?? "No contact email"}</div>
+                      <div className="muted">{user.phone ?? "No phone"}</div>
+                    </td>
                     <td>
                       {user.department_name ?? (
                         <span className="warning-text">Missing department</span>
@@ -1032,7 +1456,30 @@ export function UserManagementCenter() {
             </div>
             <div className="panel">
               <h4>{detailUser.full_name_en}</h4>
-              <p className="muted">{detailUser.email}</p>
+              <p>
+                {!detailUser.credential_proof_available
+                  ? "Identity mode: Unavailable (credential proof required)"
+                  : detailUser.managed_identity
+                    ? `Employee Login ID: ${detailUser.employee_no ?? "Missing"}`
+                    : detailUser.identity_mode === "legacy_verified"
+                      ? `Profile Employee Reference: ${detailUser.employee_no ?? "Missing"}`
+                      : "Identity mode: Unverified"}
+              </p>
+              <p>
+                {!detailUser.credential_proof_available
+                  ? "Auth identity: Unavailable (credential proof required)"
+                  : detailUser.managed_identity
+                    ? `Synthetic Auth Email: ${detailUser.synthetic_auth_email ?? "Missing"}`
+                    : detailUser.identity_mode === "legacy_verified"
+                      ? `Legacy Auth Email: ${detailUser.auth_email ?? "Missing"}`
+                      : "Auth identity: Unverified; reconciliation required"}
+              </p>
+              <p>Contact Email: {detailUser.contact_email ?? "Not provided"}</p>
+              <p>Phone: {detailUser.phone ?? "Not provided"}</p>
+              <p>Credential State: {detailUser.credential_state ? humanize(detailUser.credential_state) : "Unavailable"}</p>
+              <p>Must Change Password: {detailUser.must_change_password ? "Yes" : "No"}</p>
+              <p>Last Password Reset: {detailUser.last_password_reset_at ?? "Never / unavailable"}</p>
+              <p>Provisioning State: {detailUser.provisioning_state ? humanize(detailUser.provisioning_state) : "Not provisioned by Patch 83U"}</p>
               <p>
                 Department: {detailUser.department_name ?? "Missing department"}
               </p>
@@ -1108,10 +1555,40 @@ export function UserManagementCenter() {
             Employee ID
             <input
               value={profileDraft.employeeNo}
+              disabled={editUser?.managed_identity === true}
               onChange={(event) =>
                 setProfileDraft({
                   ...profileDraft,
                   employeeNo: event.target.value,
+                })
+              }
+            />
+          </label>
+          <label className="field">
+            Contact email (optional)
+            <input
+              type="email"
+              value={profileDraft.contactEmail}
+              onChange={(event) =>
+                setProfileDraft({
+                  ...profileDraft,
+                  contactEmail: event.target.value,
+                })
+              }
+            />
+            {editUser?.managed_identity ? (
+              <span className="muted">Managed Employee IDs are immutable; use credential reconciliation for identity conflicts.</span>
+            ) : null}
+          </label>
+          <label className="field">
+            Phone
+            <input
+              type="tel"
+              value={profileDraft.phone}
+              onChange={(event) =>
+                setProfileDraft({
+                  ...profileDraft,
+                  phone: event.target.value,
                 })
               }
             />
@@ -1304,6 +1781,33 @@ export function UserManagementCenter() {
             >
               <KeyRound size={14} /> Assign role
             </button>
+            {hasAuthorizedSuperAdmin &&
+            actionMenuUser.user_id !== auth.session?.user.id ? (
+              <>
+                <button
+                  type="button"
+                  className="ghost-button action-sheet-item"
+                  disabled={!actionMenuUser.employee_no || !actionMenuUser.auth_email || !actionMenuUser.credential_proof_available || !['employee_id_managed', 'legacy_verified'].includes(actionMenuUser.identity_mode ?? '')}
+                  onClick={() => {
+                    openPasswordReset(actionMenuUser);
+                    setActionMenuUser(null);
+                  }}
+                >
+                  <KeyRound size={14} /> Reset temporary password
+                </button>
+                <button
+                  type="button"
+                  className="ghost-button action-sheet-item"
+                  disabled={!actionMenuUser.employee_no || !actionMenuUser.auth_email || !actionMenuUser.credential_proof_available || !['employee_id_managed', 'legacy_verified'].includes(actionMenuUser.identity_mode ?? '')}
+                  onClick={() => {
+                    openCredentialReconciliation(actionMenuUser);
+                    setActionMenuUser(null);
+                  }}
+                >
+                  <ShieldCheck size={14} /> Reconcile credential state
+                </button>
+              </>
+            ) : null}
             <button
               type="button"
               className="ghost-button action-sheet-item"
@@ -1385,6 +1889,311 @@ export function UserManagementCenter() {
       </Modal>
 
       <Modal
+        open={provisioningOpen}
+        title="Protected account provisioning"
+        onClose={() => {
+          if (saving) return;
+          setProvisioningOpen(false);
+          setProvisioningTarget(null);
+          setProvisioningConfirmation("");
+          setProvisioningRequestId("");
+          setProvisioningError(null);
+        }}
+      >
+        <div className="page-stack user-workbook-modal">
+          <div className="notice-banner">
+            Patch 83T execution only queues unknown identities. A global Super Admin must explicitly provision or reconcile one protected record at a time. No password is returned to or stored by this screen.
+          </div>
+          <div className="inline-actions">
+            <button
+              type="button"
+              className="ghost-button"
+              disabled={provisioningLoading || saving}
+              onClick={() => void loadProvisioningQueue()}
+            >
+              <RefreshCw size={16} /> Refresh protected queue
+            </button>
+            <span className="muted">{provisioningRows.length} record{provisioningRows.length === 1 ? "" : "s"}</span>
+          </div>
+          {provisioningLoading ? <div className="notice-banner">Loading protected provisioning records…</div> : null}
+          {provisioningError ? <div className="form-error">{provisioningError}</div> : null}
+          {provisioningTarget ? (
+            <div className="panel form-grid">
+              <div className="full-width">
+                <strong>{provisioningTarget.action === "provision" ? "Provision" : "Reconcile"} {provisioningTarget.row.full_name_en}</strong>
+                <p className="muted">
+                  Auth email: {provisioningTarget.row.auth_email}. The first provisioned password is set server-side to the exact Employee ID and must be changed at first login.
+                </p>
+              </div>
+              <label className="field full-width">
+                Type Employee ID {provisioningTarget.row.employee_id} exactly
+                <input
+                  aria-label="Provisioning Employee ID confirmation"
+                  value={provisioningConfirmation}
+                  onChange={(event) => setProvisioningConfirmation(event.target.value)}
+                  autoComplete="off"
+                />
+              </label>
+              <div className="form-actions full-width">
+                <button
+                  type="button"
+                  className="ghost-button"
+                  disabled={saving}
+                  onClick={() => {
+                    setProvisioningTarget(null);
+                    setProvisioningConfirmation("");
+                    setProvisioningRequestId("");
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="primary-button"
+                  disabled={
+                    saving ||
+                    !hasAuthorizedSuperAdmin ||
+                    provisioningConfirmation !== provisioningTarget.row.employee_id
+                  }
+                  onClick={() => void submitProvisioningAction()}
+                >
+                  {saving
+                    ? "Processing…"
+                    : provisioningTarget.action === "provision"
+                      ? "Provision account"
+                      : "Reconcile account"}
+                </button>
+              </div>
+            </div>
+          ) : null}
+          {!provisioningLoading && provisioningRows.length === 0 ? (
+            <div className="notice-banner">No protected provisioning records are available for this organization.</div>
+          ) : null}
+          {provisioningRows.length ? (
+            <div className="table-scroll" aria-label="Protected user provisioning queue">
+              <table className="entity-table">
+                <thead>
+                  <tr>
+                    <th>Employee</th>
+                    <th>Auth email</th>
+                    <th>Contact</th>
+                    <th>Department</th>
+                    <th>Requested access</th>
+                    <th>Account action</th>
+                    <th>Lifecycle</th>
+                    <th>Status</th>
+                    <th>Attempts</th>
+                    <th>Controlled action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {provisioningRows.map((row) => {
+                    const canProvision = [
+                      "queued",
+                      "retryable_failed",
+                      "policy_blocked",
+                      "auth_created_pending_finalize",
+                    ].includes(row.provisioning_status);
+                    const canReconcile = [
+                      "provisioning",
+                      "reconciliation_required",
+                    ].includes(row.provisioning_status);
+                    return (
+                      <tr key={row.id}>
+                        <td>
+                          <strong>{row.full_name_en}</strong>
+                          <div className="muted">{row.employee_id}</div>
+                        </td>
+                        <td>{row.auth_email}</td>
+                        <td>
+                          <div>{row.contact_email ?? "No contact email"}</div>
+                          <div className="muted">{row.phone ?? "No phone"}</div>
+                        </td>
+                        <td>{row.department_code}</td>
+                        <td>{humanize(row.requested_role)} · {humanize(row.requested_scope)}</td>
+                        <td>{row.account_action}</td>
+                        <td>{humanize(row.requested_lifecycle)}</td>
+                        <td>
+                          <StatusPill tone={row.provisioning_status.includes("failed") || row.provisioning_status === "reconciliation_required" ? "danger" : row.provisioning_status === "completed" ? "good" : "warning"}>
+                            {humanize(row.provisioning_status)}
+                          </StatusPill>
+                          {row.last_error_code ? <div className="muted">{row.last_error_code}</div> : null}
+                        </td>
+                        <td>{row.attempt_count}</td>
+                        <td>
+                          {canProvision ? (
+                            <button
+                              type="button"
+                              className="ghost-button small"
+                              disabled={saving || !hasAuthorizedSuperAdmin}
+                              onClick={() => chooseProvisioningAction(row, "provision")}
+                            >
+                              Provision
+                            </button>
+                          ) : canReconcile ? (
+                            <button
+                              type="button"
+                              className="ghost-button small"
+                              disabled={saving || !hasAuthorizedSuperAdmin}
+                              onClick={() => chooseProvisioningAction(row, "reconcile")}
+                            >
+                              Reconcile
+                            </button>
+                          ) : (
+                            <span className="muted">No action</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+        </div>
+      </Modal>
+
+      <Modal
+        open={Boolean(resetUser)}
+        title="Super Admin temporary password reset"
+        onClose={() => {
+          if (!saving) closePasswordReset();
+        }}
+      >
+        {resetUser ? (
+          <div className="form-grid">
+            <div className="notice-banner full-width">
+              Both password fields default to the exact Employee ID. You may keep that value or enter another temporary password accepted by the hosted Supabase Auth policy. The action advances the credential version, suspends active roles, revokes existing sessions, and forces another password change.
+            </div>
+            <div className="panel full-width">
+              <strong>{resetUser.full_name_en}</strong>
+              <p className="muted">Employee ID: {resetUser.employee_no ?? "Missing"}</p>
+              <p className="muted">
+                {resetUser.managed_identity ? "Synthetic Auth email" : "Auth email"}: {resetUser.synthetic_auth_email ?? resetUser.auth_email ?? "Unavailable"}
+              </p>
+            </div>
+            <label className="field">
+              Temporary password
+              <input
+                type="password"
+                autoComplete="new-password"
+                maxLength={256}
+                value={resetDraft.temporaryPassword}
+                onChange={(event) => setResetDraft((draft) => ({ ...draft, temporaryPassword: event.target.value }))}
+              />
+            </label>
+            <label className="field">
+              Confirm temporary password
+              <input
+                type="password"
+                autoComplete="new-password"
+                maxLength={256}
+                value={resetDraft.confirmPassword}
+                onChange={(event) => setResetDraft((draft) => ({ ...draft, confirmPassword: event.target.value }))}
+              />
+            </label>
+            <label className="field full-width">
+              Type {ADMIN_RESET_CONFIRMATION_TEXT} exactly
+              <input
+                aria-label="Reset password action confirmation"
+                autoComplete="off"
+                value={resetDraft.resetConfirmation}
+                onChange={(event) => setResetDraft((draft) => ({ ...draft, resetConfirmation: event.target.value }))}
+              />
+            </label>
+            <label className="field full-width">
+              Type Employee ID {resetUser.employee_no ?? ""} exactly
+              <input
+                aria-label="Reset Employee ID confirmation"
+                autoComplete="off"
+                value={resetDraft.employeeIdConfirmation}
+                onChange={(event) => setResetDraft((draft) => ({ ...draft, employeeIdConfirmation: event.target.value }))}
+              />
+            </label>
+            <label className="field full-width">
+              Reset reason
+              <textarea
+                value={resetDraft.reason}
+                onChange={(event) => setResetDraft((draft) => ({ ...draft, reason: event.target.value }))}
+              />
+            </label>
+            {actionError ? <div className="form-error full-width">{actionError}</div> : null}
+            <div className="form-actions full-width">
+              <button type="button" className="ghost-button" disabled={saving} onClick={closePasswordReset}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="primary-button"
+                disabled={
+                  saving ||
+                  !hasAuthorizedSuperAdmin ||
+                  !resetUser.employee_no ||
+                  !resetDraft.temporaryPassword ||
+                  resetDraft.temporaryPassword !== resetDraft.temporaryPassword.trim() ||
+                  resetDraft.temporaryPassword !== resetDraft.confirmPassword ||
+                  resetDraft.employeeIdConfirmation !== resetUser.employee_no ||
+                  resetDraft.resetConfirmation !== ADMIN_RESET_CONFIRMATION_TEXT ||
+                  !resetDraft.reason.trim()
+                }
+                onClick={() => void submitPasswordReset()}
+              >
+                {saving ? "Resetting…" : "Reset password and revoke sessions"}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
+
+      <Modal
+        open={Boolean(credentialReconcileUser)}
+        title="Reconcile credential state"
+        onClose={() => {
+          if (!saving) closeCredentialReconciliation();
+        }}
+      >
+        {credentialReconcileUser ? (
+          <div className="form-grid">
+            <div className="notice-banner full-width">
+              This fail-closed recovery action compares protected Auth and database version evidence. It never changes or reveals a password and cannot activate ambiguous state.
+            </div>
+            <div className="panel full-width">
+              <strong>{credentialReconcileUser.full_name_en}</strong>
+              <p className="muted">Employee ID: {credentialReconcileUser.employee_no ?? "Missing"}</p>
+            </div>
+            <label className="field full-width">
+              Type Employee ID {credentialReconcileUser.employee_no ?? ""} exactly
+              <input
+                aria-label="Credential reconciliation Employee ID confirmation"
+                autoComplete="off"
+                value={credentialReconcileConfirmation}
+                onChange={(event) => setCredentialReconcileConfirmation(event.target.value)}
+              />
+            </label>
+            {actionError ? <div className="form-error full-width">{actionError}</div> : null}
+            <div className="form-actions full-width">
+              <button type="button" className="ghost-button" disabled={saving} onClick={closeCredentialReconciliation}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="primary-button"
+                disabled={
+                  saving ||
+                  !hasAuthorizedSuperAdmin ||
+                  !credentialReconcileUser.employee_no ||
+                  credentialReconcileConfirmation !== credentialReconcileUser.employee_no
+                }
+                onClick={() => void submitCredentialReconciliation()}
+              >
+                {saving ? "Reconciling…" : "Reconcile from protected proof"}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
+
+      <Modal
         open={Boolean(lifecycle)}
         title="Confirm user lifecycle action"
         onClose={() => setLifecycle(null)}
@@ -1437,71 +2246,104 @@ export function UserManagementCenter() {
 
       <Modal
         open={importOpen}
-        title="Preview CSV import"
-        onClose={() => setImportOpen(false)}
+        title="Preview User Excel Import"
+        onClose={closeImport}
       >
-        <div className="page-stack">
+        <div className="page-stack user-workbook-modal">
           <div className="notice-banner">
-            CSV import is preview-first and Excel-compatible. Existing profiles
-            can be updated; new Supabase Auth accounts are tracked for
-            administrator creation and are not created from the browser.
+            Excel import is preview-first. Existing profiles can be updated only
+            through the authenticated privileged-action bridge. Unknown accounts
+            are reported for separate controlled creation and are never created
+            from the browser.
           </div>
           <div className="inline-actions">
             <button
               className="ghost-button"
-              onClick={() =>
-                downloadCsv(
-                  "user-management-import-template.csv",
-                  exportUserImportTemplate(),
-                )
-              }
+              onClick={() => void downloadUserTemplate()}
             >
-              <FileDown size={16} /> Template
+              <FileDown size={16} /> Download Excel template
             </button>
             {importValidation ? (
               <button
                 className="ghost-button"
-                onClick={() =>
-                  downloadCsv(
-                    `user-import-validation-${nowFileStamp()}.csv`,
-                    exportValidationErrors(importValidation.rows),
-                  )
-                }
+                onClick={() => void downloadValidationErrors()}
               >
-                <FileDown size={16} /> Validation errors
+                <FileDown size={16} /> Export validation errors
               </button>
             ) : null}
           </div>
-          <label className="field">
-            Upload CSV
+          <div className="user-workbook-upload">
+            <label className="field" htmlFor="user-workbook-input">
+              Upload User Excel File
+              <span className="muted">
+                Accepts only a real .xlsx workbook. Previewing does not modify user data.
+              </span>
+            </label>
             <input
+              ref={importFileInputRef}
+              id="user-workbook-input"
               type="file"
-              accept=".csv,text/csv"
+              accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) void handleImportFile(file);
+                void handleImportFile(event.target.files?.[0] ?? null);
               }}
             />
-          </label>
+            {importFile ? (
+              <div className="user-workbook-file">
+                <div>
+                  <strong>{importFile.name}</strong>
+                  <span className="muted">{formatFileSize(importFile.size)}</span>
+                </div>
+                <div className="inline-actions">
+                  <button
+                    type="button"
+                    className="ghost-button small"
+                    onClick={() => importFileInputRef.current?.click()}
+                    disabled={importParsing}
+                  >
+                    Replace file
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost-button small"
+                    onClick={resetImportFile}
+                    disabled={importParsing}
+                  >
+                    Remove file
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+          {importParsing ? <div className="notice-banner">Parsing and validating workbook…</div> : null}
+          {importParseError ? <div className="form-error">{importParseError}</div> : null}
           {importValidation ? (
             <>
-              <div className="kpi-grid">
-                <KpiTile label="Rows" value={importValidation.rowCount} />
+              <div className="notice-banner">
+                For existing profiles, the workbook role and role scope are authoritative. Review each row warning for active assignments that execution will deactivate.
+              </div>
+              <div className="kpi-grid user-import-kpis">
+                <KpiTile label="Total rows" value={importValidation.rowCount} />
                 <KpiTile
-                  label="Valid"
+                  label="Valid rows"
                   value={importValidation.validCount}
                   tone="good"
                 />
                 <KpiTile
-                  label="Invalid"
+                  label="Invalid rows"
                   value={importValidation.invalidCount}
                   tone={importValidation.invalidCount ? "danger" : "good"}
                 />
                 <KpiTile
-                  label="Duplicate emails"
-                  value={importValidation.duplicateEmailCount}
+                  label="Duplicate Employee IDs"
+                  value={importValidation.duplicateEmployeeIdCount}
+                  tone={importValidation.duplicateEmployeeIdCount ? "danger" : "good"}
+                />
+                <KpiTile
+                  label="Duplicate contact emails"
+                  value={importValidation.duplicateContactEmailCount}
                   tone={
-                    importValidation.duplicateEmailCount ? "danger" : "good"
+                    importValidation.duplicateContactEmailCount ? "warning" : "good"
                   }
                 />
                 <KpiTile
@@ -1516,17 +2358,50 @@ export function UserManagementCenter() {
                   value={importValidation.unknownRoleCount}
                   tone={importValidation.unknownRoleCount ? "danger" : "good"}
                 />
+                <KpiTile
+                  label="Invalid phone numbers"
+                  value={importValidation.invalidPhoneCount}
+                  tone={importValidation.invalidPhoneCount ? "danger" : "good"}
+                />
+                <KpiTile
+                  label="Existing users to update"
+                  value={importValidation.existingUserUpdateCount}
+                  tone="warning"
+                />
+                <KpiTile
+                  label="Accounts pending controlled creation"
+                  value={importValidation.pendingAccountCreationCount}
+                  tone="neutral"
+                />
               </div>
-              <div className="table-scroll">
+              {importValidation.rowCount > 50 ? (
+                <div className="muted user-workbook-preview-note">
+                  Showing the first 50 of {importValidation.rowCount} rows. All validated rows remain included in the controlled execution.
+                </div>
+              ) : null}
+              <div className="table-scroll user-workbook-preview" aria-label="User Excel import preview">
                 <table className="entity-table">
                   <thead>
                     <tr>
                       <th>Row</th>
-                      <th>Name</th>
-                      <th>Email</th>
+                      <th>Employee ID</th>
+                      <th>English name</th>
+                      <th>Arabic name</th>
+                      <th>Synthetic Auth email</th>
+                      <th>Contact email</th>
+                      <th>Original phone</th>
+                      <th>Normalized phone</th>
                       <th>Department</th>
+                      <th>Job title</th>
                       <th>Role</th>
+                      <th>Role scope</th>
                       <th>Status</th>
+                      <th>User type</th>
+                      <th>Account action</th>
+                      <th>Matched profile</th>
+                      <th>Matched Auth identity</th>
+                      <th>Matched provisioning</th>
+                      <th>Planned action</th>
                       <th>Validation</th>
                     </tr>
                   </thead>
@@ -1534,11 +2409,39 @@ export function UserManagementCenter() {
                     {importValidation.rows.slice(0, 50).map((row) => (
                       <tr key={row.row_number}>
                         <td>{row.row_number}</td>
+                        <td>{row.employee_no}</td>
                         <td>{row.full_name_en}</td>
-                        <td>{row.email}</td>
-                        <td>{row.department}</td>
+                        <td>{row.full_name_ar || "—"}</td>
+                        <td>{row.synthetic_auth_email}</td>
+                        <td>{row.contact_email || "—"}</td>
+                        <td>{row.phone_original || "—"}</td>
+                        <td>{row.phone_normalized || "—"}</td>
+                        <td>
+                          <strong>{row.department}</strong>
+                          <div className="muted">{row.department_name}</div>
+                        </td>
+                        <td>{row.job_title}</td>
                         <td>{row.role}</td>
+                        <td>{row.role_scope}</td>
                         <td>{row.status}</td>
+                        <td>{row.user_type}</td>
+                        <td>{row.account_action}</td>
+                        <td>{row.matched_user_label || "No existing profile"}</td>
+                        <td>{row.matched_auth_identity_label || "No Auth identity"}</td>
+                        <td>{row.matched_provisioning_label || "No open provisioning identity"}</td>
+                        <td>
+                          <StatusPill
+                            tone={
+                              row.planned_action === "rejected"
+                                ? "danger"
+                                : row.planned_action === "update_existing_profile"
+                                  ? "warning"
+                                  : "neutral"
+                            }
+                          >
+                            {row.planned_action}
+                          </StatusPill>
+                        </td>
                         <td>
                           <StatusPill
                             tone={
@@ -1561,23 +2464,45 @@ export function UserManagementCenter() {
                   </tbody>
                 </table>
               </div>
+              <label className="field full-width">
+                Exact execution confirmation
+                <input
+                  aria-label="Exact execution confirmation"
+                  value={importConfirmation}
+                  onChange={(event) => setImportConfirmation(event.target.value)}
+                  placeholder={USER_IMPORT_EXECUTION_CONFIRMATION}
+                  autoComplete="off"
+                />
+                <span className="muted">
+                  Type <strong>{USER_IMPORT_EXECUTION_CONFIRMATION}</strong> exactly. This confirmation is rechecked by the protected database operation before any write.
+                </span>
+              </label>
               <div className="form-actions">
                 <button
                   className="ghost-button"
-                  onClick={() => setImportValidation(null)}
+                  onClick={resetImportFile}
                 >
-                  Clear preview
+                  Remove file
                 </button>
                 <button
                   className="primary-button"
                   disabled={
-                    writeDisabled || saving || importValidation.invalidCount > 0
+                    !hasAuthorizedImportRole ||
+                    saving ||
+                    importValidation.invalidCount > 0 ||
+                    importValidation.validCount === 0 ||
+                    importConfirmation !== USER_IMPORT_EXECUTION_CONFIRMATION
                   }
                   onClick={() => void applyImport()}
                 >
-                  <FileUp size={16} /> Apply validated import
+                  <FileUp size={16} /> Execute User Import
                 </button>
               </div>
+              {!hasAuthorizedImportRole ? (
+                <div className="notice-banner">
+                  Execution requires an authenticated, organization-aligned global Super Admin or Governance Admin. Upload and preview remain non-mutating.
+                </div>
+              ) : null}
             </>
           ) : null}
         </div>

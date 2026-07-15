@@ -6150,6 +6150,13 @@ body {
   width: 100%;
 }
 
+.auth-captcha {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-height: 70px;
+}
+
 .auth-warning,
 .auth-error {
   display: flex;
@@ -8813,6 +8820,86 @@ table tbody tr:hover {
   }
 
   .department-workbook-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+.user-workbook-modal {
+  width: min(1240px, calc(100vw - 72px));
+  max-width: 100%;
+}
+
+.user-workbook-upload {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 94%, var(--primary-color));
+}
+
+.user-workbook-upload .field {
+  gap: 4px;
+}
+
+.user-workbook-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.user-workbook-file > div:first-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.user-workbook-file strong {
+  overflow-wrap: anywhere;
+}
+
+.user-import-kpis {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.user-workbook-preview {
+  max-height: 430px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+}
+
+.user-workbook-preview .entity-table {
+  min-width: 2100px;
+}
+
+.user-workbook-preview th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface);
+}
+
+.user-workbook-preview td {
+  vertical-align: top;
+}
+
+@media (max-width: 720px) {
+  .user-workbook-modal {
+    width: 100%;
+  }
+
+  .user-workbook-file {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .user-workbook-file .inline-actions {
     width: 100%;
     justify-content: flex-start;
   }

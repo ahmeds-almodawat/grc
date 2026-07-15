@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { emptyLiveObject, emptyLiveArray } from './liveData';
+import { invokePrivilegedAction } from './privilegedAction';
 
 export type CommandSummary = {
   criticalNow: number;
@@ -177,9 +178,11 @@ export async function searchGlobal(query: string): Promise<GlobalSearchResult[]>
     return liveEmptySearch.filter(row => row.searchText.toLowerCase().includes(q) || row.title.toLowerCase().includes(q));
   }
   try {
-    const { data, error } = await supabase.rpc('search_grc_global', { p_query: query, p_limit: 60 });
-    if (error) throw error;
-    return ((data as any[]) || []).map(row => ({
+    const data = await invokePrivilegedAction<any[]>('search_grc_global', {
+      query: query.trim(),
+      limit: 60,
+    });
+    return (data || []).map(row => ({
       id: row.id,
       sourceTable: row.source_table,
       sourceType: row.source_type,

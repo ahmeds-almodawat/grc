@@ -624,7 +624,9 @@
     "patch83p:proof": "node scripts/patch83p-frontend-activation-proof.mjs",
     "patch83q:proof": "node scripts/patch83q-security-definer-grant-proof.mjs",
     "patch83q1:proof": "node scripts/patch83q1-privileged-dispatcher-proof.mjs",
-    "patch83r:proof": "node scripts/patch83r-department-lifecycle-proof.mjs"
+    "patch83r:proof": "node scripts/patch83r-department-lifecycle-proof.mjs",
+    "patch83u:auth-surface": "node scripts/patch83u-auth-surface-proof.mjs",
+    "patch83u:auth-settings-preflight": "node scripts/patch83u-auth-settings-preflight.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",
