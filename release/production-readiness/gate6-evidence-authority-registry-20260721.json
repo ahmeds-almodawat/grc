@@ -1,0 +1,70 @@
+{
+  "schema_version": "gate6-evidence-authority-registry-v1",
+  "generated_at": "2026-07-21T22:46:00.000Z",
+  "authority_rule": "Historical artifacts are validated against their capture-time contract; only Run 009 is current for the hosted reset proof.",
+  "artifacts": [
+    {
+      "path": "release/patch83u/patch83u-run006-proof-contract.json",
+      "capture_date": "2026-07-20",
+      "run_gate": "Run 006",
+      "status": "historical",
+      "superseded_by": "release/patch83u/patch83u-run007-proof-contract.json",
+      "immutable_sha256": "17c4adebdcb0abeb941d66d5cbc36040bf4e702315fc67f3c8fda9331b6f07df",
+      "authority_classification": "immutable_historical_evidence"
+    },
+    {
+      "path": "release/patch83u/patch83u-run007-proof-contract.json",
+      "capture_date": "2026-07-21",
+      "run_gate": "Run 007",
+      "status": "historical",
+      "superseded_by": "release/patch83u/patch83u-run008-proof-contract.json",
+      "immutable_sha256": "a90a4198e6a28a66d651a762baa524c9d1df9a5dc2576da73fe74d0cbffecea5",
+      "authority_classification": "immutable_historical_evidence"
+    },
+    {
+      "path": "release/patch83u/patch83u-run008-proof-contract.json",
+      "capture_date": "2026-07-21",
+      "run_gate": "Run 008",
+      "status": "superseded",
+      "superseded_by": "release/patch83u/patch83u-run009-proof-contract.json",
+      "immutable_sha256": "ba4acfb84fc63a5dceb51e9447c9839d28039ab0690192afe54b7382b8a38bab",
+      "authority_classification": "superseded_evidence"
+    },
+    {
+      "path": "release/patch83u/patch83u-run009-proof-contract.json",
+      "capture_date": "2026-07-21",
+      "run_gate": "Run 009",
+      "status": "current",
+      "superseded_by": null,
+      "immutable_sha256": "4622f9bd8c961bca9123701c8fa246578ad4a16ace18196953b22f022aff545f",
+      "authority_classification": "current_authoritative_evidence"
+    },
+    {
+      "path": "release/patch83u/patch83u-staging-reset-execution-freeze-v7-20260721.json",
+      "capture_date": "2026-07-21",
+      "run_gate": "Run 007",
+      "status": "historical",
+      "superseded_by": "release/patch83u/patch83u-staging-reset-execution-freeze-v8-20260721.json",
+      "immutable_sha256": "5925dddf34342fb85be739d2d50149b116ed7097712d45b83ea5e6a3ca8806d4",
+      "authority_classification": "immutable_historical_freeze"
+    },
+    {
+      "path": "release/patch83u/patch83u-staging-reset-execution-freeze-v8-20260721.json",
+      "capture_date": "2026-07-21",
+      "run_gate": "Run 008",
+      "status": "superseded",
+      "superseded_by": "release/patch83u/patch83u-staging-reset-execution-freeze-v9-20260721.json",
+      "immutable_sha256": "2013955076dcad07db557cff718f5952bf30e1ba6e5e8d36f5e48995114e4932",
+      "authority_classification": "superseded_freeze"
+    },
+    {
+      "path": "release/patch83u/patch83u-staging-reset-execution-freeze-v9-20260721.json",
+      "capture_date": "2026-07-21",
+      "run_gate": "Run 009",
+      "status": "current",
+      "superseded_by": null,
+      "immutable_sha256": "0db805c733371d6b07475e705fe53f7c200ad1629bc4c06d2974a00cd5f79cb8",
+      "authority_classification": "current_release_candidate_freeze"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schema_version": "gate11r-baseline-v2-validation-v1",
+  "captured_at": "2026-07-22T19:57:26.6547335Z",
+  "baseline": {
+    "path": "supabase/baselines/grc_platform_baseline_v2_through_185.sql",
+    "sha256": "6b1b0f814bf7d8414ace4303912f303f1a71a1e8913489db77a30ddd94c7846a",
+    "bytes": 4364505,
+    "migration_ceiling": 185,
+    "first_shared_forward_migration": 186
+  },
+  "clean_bootstrap": {
+    "result": "passed",
+    "duration_seconds": 21.913,
+    "migration_history": [185],
+    "reapplication_result": "expected_fail_closed",
+    "reapplication_exit_code": 3,
+    "reapplication_error_code": "GATE11_BASELINE_ALREADY_PRESENT"
+  },
+  "catalog": {
+    "raw_dump_sha256": "a9f45c074b9122077ad2da902919326202d81aead17d9a581f1015969a03d75e",
+    "canonical_statement_count": 12488,
+    "normalized_catalog_sha256": "edac07deb655aba711cd2bc7e834010449be42f36f27863326ce0a41d22a3485",
+    "expected_exact_match": true
+  },
+  "sql_contracts": {
+    "migration185_policy_contract": "passed",
+    "immutable_baseline_contract": "passed",
+    "gate5_governance": "passed",
+    "gate7_catalog_adversarial": "passed",
+    "gate7_runtime_action_adversarial": "passed",
+    "gate9r_security_advisor_fixture": "passed"
+  },
+  "database_lint": {
+    "command_exit_code": 0,
+    "inherited_finding_count": 4,
+    "new_gate11r_finding_count": 0,
+    "inherited_functions": [
+      "public.current_user_org_id",
+      "public.has_any_role",
+      "public.update_capa_action_item_status",
+      "public.v35_attach_updated_at_if_exists"
+    ],
+    "classification": "pre_existing_staging_derived_legacy_static_findings_recorded_for_gate12"
+  },
+  "contains_business_data": false,
+  "contains_credentials": false,
+  "overall_pass": true
+}

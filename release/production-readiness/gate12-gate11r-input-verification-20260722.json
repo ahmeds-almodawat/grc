@@ -1,0 +1,13 @@
+{
+  "schema_version": "gate12-gate11r-input-verification-v1",
+  "decision": "passed",
+  "branch": "patch83t-controlled-user-excel-import",
+  "head": "a9989b1e8d95a6bb775316a2d9e709ef84514c42",
+  "migration_185": {"sha256":"780efe381ac90a5ae4d8cf256f95246966e9b42c91adcd9a6dc7a13030e0ec65","bytes":10419},
+  "baseline_v2": {"sha256":"6b1b0f814bf7d8414ace4303912f303f1a71a1e8913489db77a30ddd94c7846a","bytes":4364505,"manifest_sha256":"052f81c85ce4de2e86a91ef21d13e7ea0071c2d97b8a09f2bbcf7b97505aedac","status":"release_approved"},
+  "normalized_catalog_sha256": "edac07deb655aba711cd2bc7e834010449be42f36f27863326ce0a41d22a3485",
+  "first_shared_forward_migration": 186,
+  "validation": {"unit":"1195/1195","focused":"56/56","playwright":"25/25","typecheck":true,"deno":true,"build":true,"sql_governance":true,"secret_scan":true},
+  "migrations_001_185_unchanged_since_gate11r": true,
+  "production_accessed": false
+}

@@ -18,7 +18,7 @@ export function GlobalSearch() {
     try {
       setResults(await searchGlobal(query));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Search failed');
+      setError(err instanceof Error ? err.message : t('search.failed'));
     } finally {
       setLoading(false);
     }

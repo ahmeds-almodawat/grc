@@ -1,0 +1,571 @@
+{
+  "schema_version": "patch83u-run006-proof-contract-v1",
+  "contract_id": "patch83u-hosted-reset-proof-run-006",
+  "run_number": 6,
+  "decision_is_execution_authorization": false,
+  "targets": {
+    "allowed_staging_project_ref": "zghsgzrdwbqdrpuxanac",
+    "prohibited_production_project_ref": "zbrjjecpsrzposhuarcn",
+    "application_origin": "http://localhost:5173",
+    "target_user_id": "2a276bdb-cf51-4303-846e-6b7fecf38b0c",
+    "target_employee_id": "11111",
+    "designated_super_admin_id": "83d92a59-6909-44e7-80f3-aff60a6734fb"
+  },
+  "runtime_contract": {
+    "schema_version": "174.2-auth-first",
+    "enforcement_state": "enforced",
+    "state_version": 5,
+    "edge_contract": "patch83u-edge-auth-first-v1",
+    "frontend_contract": "patch83u-frontend-auth-first-v1",
+    "required_migrations": [
+      "174",
+      "176",
+      "177"
+    ],
+    "stable_finalizer": "patch83u_finalize_password_change_after_revocation"
+  },
+  "edge_contract": {
+    "function_name": "privileged-action",
+    "version": 5,
+    "status": "ACTIVE",
+    "verify_jwt": true,
+    "source_sha256": "f4a53ddfd0167ca62661c3c9acc6b7b320a0e43f4b96efc821308e1db73caf87",
+    "source_bytes": 157176
+  },
+  "confirmation_contract": {
+    "contract_id": "patch83u-run006-reset-confirmation-v1",
+    "exact_phrase": "EXECUTE RUN 006 RESET NOW",
+    "case_sensitive": true,
+    "cli_override_supported": false,
+    "required_immediately_before_reset": true,
+    "evidence_retention": "boolean_and_contract_id_only"
+  },
+  "final_session_contract": {
+    "checkpoint": "after_fresh_employee_login",
+    "expected_session_count": 1,
+    "expected_unrevoked_refresh_token_count": 1,
+    "enforcement": "exact_integer_equality",
+    "cli_override_supported": false,
+    "justification_basis": "Checkpoint 5 proves zero active sessions and zero unrevoked refresh rows after global revocation and atomic finalization; exactly one fresh nonpersistent Employee login occurs before Checkpoint 6."
+  },
+  "checkpoint_contracts": {
+    "before_employee_sessions": {
+      "phase": 2,
+      "transaction_read_only": true,
+      "required_target_fields": [
+        "credential_state",
+        "credential_version",
+        "auth_credential_version",
+        "requested_lifecycle",
+        "role",
+        "scope",
+        "pending_operation",
+        "pending_operation_count",
+        "session_count",
+        "unrevoked_refresh_token_count"
+      ],
+      "expected": {
+        "credential_state": "active",
+        "credential_version": 2,
+        "auth_credential_version": 2,
+        "requested_lifecycle": "active",
+        "role": "employee",
+        "scope": "assigned_only",
+        "pending_operation": false,
+        "pending_operation_count": 0
+      }
+    },
+    "immediately_before_reset": {
+      "phase": 4,
+      "transaction_read_only": true,
+      "required_target_fields": [
+        "credential_state",
+        "credential_version",
+        "auth_credential_version",
+        "requested_lifecycle",
+        "role",
+        "scope",
+        "pending_operation",
+        "pending_operation_count",
+        "session_count",
+        "unrevoked_refresh_token_count"
+      ],
+      "expected": {
+        "credential_state": "active",
+        "credential_version": 2,
+        "auth_credential_version": 2,
+        "requested_lifecycle": "active",
+        "role": "employee",
+        "scope": "assigned_only",
+        "pending_operation": false,
+        "pending_operation_count": 0,
+        "minimum_session_count": 2,
+        "minimum_unrevoked_refresh_token_count": 2
+      }
+    },
+    "immediately_after_reset": {
+      "phase": 6,
+      "transaction_read_only": true,
+      "required_for_every_reset_outcome": true,
+      "required_target_fields": [
+        "credential_state",
+        "credential_version",
+        "auth_credential_version",
+        "requested_lifecycle",
+        "role",
+        "scope",
+        "pending_operation",
+        "pending_operation_count",
+        "session_count",
+        "unrevoked_refresh_token_count",
+        "reconciliation_auth_changed"
+      ],
+      "successful_expected": {
+        "credential_state": "admin_reset_change_required",
+        "credential_version": 3,
+        "auth_credential_version": 3,
+        "requested_lifecycle": "active",
+        "role": "employee",
+        "scope": "assigned_only",
+        "pending_operation": false,
+        "pending_operation_count": 0,
+        "session_count": 0,
+        "unrevoked_refresh_token_count": 0,
+        "reconciliation_auth_changed": false
+      }
+    },
+    "before_required_password_change": {
+      "phase": 10,
+      "transaction_read_only": true,
+      "required_target_fields": [
+        "credential_state",
+        "credential_version",
+        "auth_credential_version",
+        "requested_lifecycle",
+        "role",
+        "scope",
+        "pending_operation",
+        "pending_operation_count",
+        "session_count",
+        "unrevoked_refresh_token_count"
+      ],
+      "expected": {
+        "credential_state": "admin_reset_change_required",
+        "credential_version": 3,
+        "auth_credential_version": 3,
+        "requested_lifecycle": "active",
+        "role": "employee",
+        "scope": "assigned_only",
+        "pending_operation": false,
+        "pending_operation_count": 0,
+        "session_count": 1,
+        "unrevoked_refresh_token_count": 1
+      }
+    },
+    "immediately_after_password_change_finalization": {
+      "phase": 12,
+      "transaction_read_only": true,
+      "required_target_fields": [
+        "credential_state",
+        "credential_version",
+        "auth_credential_version",
+        "requested_lifecycle",
+        "role",
+        "scope",
+        "pending_operation",
+        "pending_operation_count",
+        "session_count",
+        "unrevoked_refresh_token_count",
+        "password_changed_at_set",
+        "sessions_revoked_at_set",
+        "reconciliation_auth_changed"
+      ],
+      "expected": {
+        "credential_state": "active",
+        "credential_version": 4,
+        "auth_credential_version": 4,
+        "requested_lifecycle": "active",
+        "role": "employee",
+        "scope": "assigned_only",
+        "pending_operation": false,
+        "pending_operation_count": 0,
+        "session_count": 0,
+        "unrevoked_refresh_token_count": 0,
+        "password_changed_at_set": true,
+        "sessions_revoked_at_set": true,
+        "reconciliation_auth_changed": false
+      }
+    },
+    "after_fresh_employee_login": {
+      "phase": 14,
+      "transaction_read_only": true,
+      "required_target_fields": [
+        "credential_state",
+        "credential_version",
+        "auth_credential_version",
+        "requested_lifecycle",
+        "role",
+        "scope",
+        "pending_operation",
+        "pending_operation_count",
+        "session_count",
+        "unrevoked_refresh_token_count"
+      ],
+      "expected": {
+        "credential_state": "active",
+        "credential_version": 4,
+        "auth_credential_version": 4,
+        "requested_lifecycle": "active",
+        "role": "employee",
+        "scope": "assigned_only",
+        "pending_operation": false,
+        "pending_operation_count": 0,
+        "session_count": 1,
+        "unrevoked_refresh_token_count": 1
+      }
+    }
+  },
+  "evidence_contract": {
+    "schema_version": "patch83u-staging-reset-proof-v5",
+    "redacted_only": true,
+    "prohibited_keys": [
+      "password",
+      "access_token",
+      "refresh_token",
+      "cookie",
+      "authorization",
+      "service_role",
+      "session_id",
+      "email",
+      "raw_request_body",
+      "raw_response_body",
+      "storage_state"
+    ],
+    "permitted_value_classes": [
+      "boolean",
+      "safe_error_code",
+      "safe_http_status",
+      "timestamp",
+      "user_uuid",
+      "credential_state",
+      "credential_version",
+      "count",
+      "role",
+      "scope",
+      "request_id_sha256",
+      "route_authorization_result",
+      "operation_type",
+      "operation_status"
+    ]
+  },
+  "phases": [
+    {
+      "phase": 1,
+      "name": "freeze_environment_and_provenance_gate",
+      "requirements": [
+        {
+          "id": "R006_P01_STAGING_AND_PRODUCTION_BOUNDARY",
+          "condition": "The application, Supabase project and all observed traffic resolve only to staging; the production project reference is refused."
+        },
+        {
+          "id": "R006_P01_FRONTEND_ORIGIN_EXACT",
+          "condition": "The application origin is exactly http://localhost:5173 and the loaded bundle proves the staging project."
+        },
+        {
+          "id": "R006_P01_FREEZE_AND_EDGE_PROVENANCE_EXACT",
+          "condition": "The authorized V6 freeze hash, complete frozen inventory, active Edge v5 metadata and downloaded source match exactly."
+        },
+        {
+          "id": "R006_P01_RUNTIME_AND_CONTRACTS_EXACT",
+          "condition": "Runtime enforcement, state version, migrations, frontend/Edge contracts and stable finalizer remain exact."
+        },
+        {
+          "id": "R006_P01_PROOF_ARTIFACT_HASHES_EXACT",
+          "condition": "The proof contract, checkpoint schema, evidence schema and traceability artifacts match their freeze-bound hashes and sizes."
+        },
+        {
+          "id": "R006_P01_TRACEABILITY_COMPLETE",
+          "condition": "Every canonical requirement has a complete traceability row and coverage is exactly 100 percent."
+        },
+        {
+          "id": "R006_P01_CONFIRMATION_AND_COUNT_CONTRACTS_FROZEN",
+          "condition": "The exact Run 006 confirmation and final 1/1 session contracts are freeze-bound and have no CLI override."
+        },
+        {
+          "id": "R006_P01_EVIDENCE_EXCLUSIONS_ACTIVE",
+          "condition": "Recursive secret-key and secret-value exclusions apply to all emitted evidence."
+        }
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "checkpoint_1_initial_database_gate",
+      "requirements": [
+        {
+          "id": "R006_P02_CHECKPOINT1_READ_ONLY",
+          "condition": "Checkpoint 1 is fresh staging SQL Editor evidence produced in BEGIN READ ONLY and ended with ROLLBACK."
+        },
+        {
+          "id": "R006_P02_INITIAL_EMPLOYEE_STATE",
+          "condition": "Employee 11111 is active, database/Auth version 2, employee/assigned_only, lifecycle active and has no pending operation."
+        },
+        {
+          "id": "R006_P02_INITIAL_ADMIN_STATE",
+          "condition": "The designated Super Admin is active, database/Auth version 1, super_admin/global, has no pending operation and is the sole eligible Super Admin."
+        },
+        {
+          "id": "R006_P02_FINALIZER_AND_RECOVERY_READY",
+          "condition": "Migrations 174/176/177, the stable service-only finalizer and emergency recovery route are present with restricted security."
+        }
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "controlled_session_setup",
+      "requirements": [
+        {
+          "id": "R006_P03_ADMIN_CONTEXTS_READY",
+          "condition": "The original Super Admin context remains available and an isolated secondary context successfully reauthenticates the designated Super Admin."
+        },
+        {
+          "id": "R006_P03_TWO_EMPLOYEE_SESSIONS",
+          "condition": "Exactly two controlled nonpersistent Employee browser contexts authenticate and retain refresh values only in process memory."
+        },
+        {
+          "id": "R006_P03_BOTH_REFRESHES_SUCCEED",
+          "condition": "Both controlled Employee sessions successfully refresh before reset."
+        },
+        {
+          "id": "R006_P03_EMPLOYEE_AUTHORIZATION_PROVEN",
+          "condition": "Both Employee contexts can access permitted content and both deny direct Admin navigation and Admin controls."
+        }
+      ]
+    },
+    {
+      "phase": 4,
+      "name": "checkpoint_2_immediately_before_reset",
+      "requirements": [
+        {
+          "id": "R006_P04_CHECKPOINT2_READ_ONLY",
+          "condition": "Checkpoint 2 is fresh read-only staging SQL evidence immediately before reset."
+        },
+        {
+          "id": "R006_P04_TARGET_PRE_RESET_UNCHANGED",
+          "condition": "Employee state remains active/version 2, employee/assigned_only, lifecycle active, no pending operation, with at least two sessions and unrevoked refresh rows."
+        },
+        {
+          "id": "R006_P04_ADMIN_AND_RUNTIME_UNCHANGED",
+          "condition": "The sole Super Admin and enforced runtime/contracts remain unchanged immediately before reset."
+        }
+      ]
+    },
+    {
+      "phase": 5,
+      "name": "single_protected_reset_submission",
+      "requirements": [
+        {
+          "id": "R006_P05_EXACT_RESET_CONFIRMATIONS",
+          "condition": "Employee ID 11111, UI RESET USER PASSWORD, backend PATCH83U_RESET_USER_PASSWORD and exact operator phrase all match."
+        },
+        {
+          "id": "R006_P05_ONE_SHOT_RESET",
+          "condition": "The real patch83u_admin_reset_password action is submitted at most once through User Management."
+        },
+        {
+          "id": "R006_P05_STABLE_REQUEST_CORRELATION",
+          "condition": "One stable request ID is generated only at submission and evidence retains only its SHA-256 correlation."
+        },
+        {
+          "id": "R006_P05_AMBIGUOUS_RESET_NO_RETRY",
+          "condition": "Timeout, ambiguity or protected failure permanently blocks automatic retry and never creates a replacement request ID."
+        }
+      ]
+    },
+    {
+      "phase": 6,
+      "name": "checkpoint_3_reset_outcome_classification",
+      "requirements": [
+        {
+          "id": "R006_P06_CHECKPOINT3_ALWAYS",
+          "condition": "Checkpoint 3 is required after every reset submission outcome, including error, timeout and ambiguity."
+        },
+        {
+          "id": "R006_P06_RESET_OUTCOME_CLASSIFIED",
+          "condition": "Checkpoint 3 and safe audit correlation classify the protected reset outcome before progression."
+        },
+        {
+          "id": "R006_P06_PROTECTED_STATE_FAIL_CLOSED",
+          "condition": "Reset-in-progress, review-required, recovery-required, version mismatch, nonzero sessions or runtime drift stops execution without automatic abort or reconciliation."
+        }
+      ]
+    },
+    {
+      "phase": 7,
+      "name": "reset_success_state",
+      "requirements": [
+        {
+          "id": "R006_P07_RESET_SUCCESS_STATE_V3",
+          "condition": "Successful reset reaches admin_reset_change_required with database/Auth credential version 3 and no pending operation."
+        },
+        {
+          "id": "R006_P07_RESET_ZERO_SESSIONS",
+          "condition": "Successful reset proves zero Auth sessions and zero unrevoked refresh-token rows."
+        },
+        {
+          "id": "R006_P07_RESET_GOVERNANCE_AND_AUDIT",
+          "condition": "Lifecycle, employee/assigned_only authorization and sole Super Admin state remain unchanged, and the reset audit is completed and request-correlated."
+        }
+      ]
+    },
+    {
+      "phase": 8,
+      "name": "negative_revocation_proof",
+      "requirements": [
+        {
+          "id": "R006_P08_OLD_PASSWORD_REJECTED",
+          "condition": "The old permanent password fails after reset."
+        },
+        {
+          "id": "R006_P08_BOTH_REFRESH_REPLAYS_REJECTED",
+          "condition": "Both retained pre-reset refresh values fail replay and only safe status/error evidence is retained."
+        },
+        {
+          "id": "R006_P08_BOTH_STALE_CONTEXTS_DENIED",
+          "condition": "Both stale Employee browser contexts cannot regain normal or protected application access."
+        }
+      ]
+    },
+    {
+      "phase": 9,
+      "name": "temporary_password_restricted_login",
+      "requirements": [
+        {
+          "id": "R006_P09_TEMPORARY_LOGIN_SUCCEEDS",
+          "condition": "A fresh nonpersistent context can authenticate Employee 11111 with the temporary password."
+        },
+        {
+          "id": "R006_P09_FORCED_CHANGE_ONLY",
+          "condition": "The temporary-password session exposes only Forced Password Change and denies normal, Admin and direct protected-route content."
+        }
+      ]
+    },
+    {
+      "phase": 10,
+      "name": "checkpoint_4_before_required_change",
+      "requirements": [
+        {
+          "id": "R006_P10_CHECKPOINT4_READ_ONLY",
+          "condition": "Checkpoint 4 is fresh read-only staging SQL evidence immediately before required password change."
+        },
+        {
+          "id": "R006_P10_PRE_CHANGE_STATE_V3_WITH_TEMP_SESSION",
+          "condition": "State remains admin_reset_change_required/version 3 with exactly one controlled temporary-login session and one unrevoked refresh row, unchanged role/scope and no recovery or reconciliation."
+        }
+      ]
+    },
+    {
+      "phase": 11,
+      "name": "required_password_change",
+      "requirements": [
+        {
+          "id": "R006_P11_REQUIRED_CHANGE_ACTION_EXACT",
+          "condition": "The real patch83u_change_required_password workflow is used with the current temporary and new permanent passwords."
+        },
+        {
+          "id": "R006_P11_SECRET_AND_POLICY_CONTROLS",
+          "condition": "Passwords remain hidden/in-memory, temporary and permanent values differ, and policy rejection never weakens or bypasses policy."
+        },
+        {
+          "id": "R006_P11_GLOBAL_SIGNOUT_AND_FINALIZER",
+          "condition": "Supported global sign-out succeeds and the stable finalizer atomically proves zero sessions before activation."
+        },
+        {
+          "id": "R006_P11_NO_AUTO_RECOVERY_ACTION",
+          "condition": "Ambiguity, nonzero sessions or recovery state stops fail-closed without automatic abort or reconciliation."
+        }
+      ]
+    },
+    {
+      "phase": 12,
+      "name": "checkpoint_5_finalization_proof",
+      "requirements": [
+        {
+          "id": "R006_P12_CHECKPOINT5_READ_ONLY",
+          "condition": "Checkpoint 5 is fresh read-only staging SQL evidence immediately after password-change finalization."
+        },
+        {
+          "id": "R006_P12_FINAL_ACTIVE_V4_ZERO",
+          "condition": "Employee is active at database/Auth version 4 with zero sessions and zero unrevoked refresh rows."
+        },
+        {
+          "id": "R006_P12_PASSWORD_CHANGED_AT_SET",
+          "condition": "Checkpoint 5 independently proves password_changed_at_set equals true."
+        },
+        {
+          "id": "R006_P12_SESSIONS_REVOKED_AT_SET",
+          "condition": "Checkpoint 5 independently proves sessions_revoked_at_set equals true."
+        },
+        {
+          "id": "R006_P12_GOVERNANCE_AND_RECONCILIATION_CLEARED",
+          "condition": "Lifecycle and employee/assigned_only authorization remain unchanged, no operation is pending and reconciliation_auth_changed is false."
+        },
+        {
+          "id": "R006_P12_PASSWORD_CHANGE_AUDIT_CORRELATED",
+          "condition": "The completed password-change operation and credential event are correlated to the distinct stable password-change request hash."
+        },
+        {
+          "id": "R006_P12_BROWSER_SIGNED_OUT",
+          "condition": "The password-change browser is signed out after finalization."
+        }
+      ]
+    },
+    {
+      "phase": 13,
+      "name": "fresh_login_authorization_regression",
+      "requirements": [
+        {
+          "id": "R006_P13_FRESH_PERMANENT_LOGIN",
+          "condition": "A new nonpersistent context successfully logs in with the new permanent password."
+        },
+        {
+          "id": "R006_P13_EMPLOYEE_ROLE_SCOPE_PRESERVED",
+          "condition": "The fresh session retains employee/assigned_only authorization and permitted Employee access."
+        },
+        {
+          "id": "R006_P13_DIRECT_ADMIN_DENIED",
+          "condition": "Admin navigation and controls are absent and direct Admin navigation redirects to a permitted page."
+        },
+        {
+          "id": "R006_P13_NETWORK_CONSOLE_SAFE",
+          "condition": "No production request or unexpected safe console/network error occurs."
+        }
+      ]
+    },
+    {
+      "phase": 14,
+      "name": "checkpoint_6_and_final_evidence",
+      "requirements": [
+        {
+          "id": "R006_P14_CHECKPOINT6_READ_ONLY",
+          "condition": "Checkpoint 6 is fresh read-only staging SQL evidence after the fresh Employee login."
+        },
+        {
+          "id": "R006_P14_EXACT_FINAL_SESSION_COUNT",
+          "condition": "Checkpoint 6 session_count is an integer exactly equal to 1; zero, missing, non-integer and excess values fail."
+        },
+        {
+          "id": "R006_P14_EXACT_FINAL_REFRESH_COUNT",
+          "condition": "Checkpoint 6 unrevoked_refresh_token_count is an integer exactly equal to 1; zero, missing, non-integer and excess values fail."
+        },
+        {
+          "id": "R006_P14_ADMIN_AND_RUNTIME_UNCHANGED",
+          "condition": "The designated sole Super Admin and enforced runtime/contracts remain unchanged at the final checkpoint."
+        },
+        {
+          "id": "R006_P14_REDACTED_EVIDENCE_VALID",
+          "condition": "Final evidence validates against the Run 006 schema and contains no prohibited secret, token, cookie, header, session identifier, email or raw sensitive payload."
+        }
+      ]
+    }
+  ]
+}

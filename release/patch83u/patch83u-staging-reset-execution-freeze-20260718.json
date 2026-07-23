@@ -1,0 +1,534 @@
+{
+  "schema_version": "patch83u-staging-reset-execution-freeze-v1",
+  "captured_at_utc": "2026-07-18T17:05:32.0359485Z",
+  "readiness_decision": "NOT READY FOR HOSTED EXECUTION",
+  "decision_is_not_execution_authorization": true,
+  "repository": {
+    "branch": "patch83t-controlled-user-excel-import",
+    "head": "a9989b1e8d95a6bb775316a2d9e709ef84514c42",
+    "dirty": true,
+    "status_entry_count_after_manifest_creation": 111,
+    "modified_entry_count_after_manifest_creation": 62,
+    "untracked_entry_count_after_manifest_creation": 49,
+    "staged_file_count": 0
+  },
+  "targets": {
+    "staging_project_ref": "zghsgzrdwbqdrpuxanac",
+    "prohibited_production_project_ref": "zbrjjecpsrzposhuarcn",
+    "production_accessed": false,
+    "staging_mutated": false
+  },
+  "expected_hosted_contract": {
+    "runtime_enforcement_state": "enforced",
+    "runtime_state_version": 5,
+    "newer_state_version_requires_deliberate_review": true,
+    "edge_contract": "patch83u-edge-auth-first-v1",
+    "frontend_contract": "patch83u-frontend-auth-first-v1",
+    "required_migrations": [
+      "174",
+      "176",
+      "177"
+    ],
+    "stable_finalizer": "patch83u_finalize_password_change_after_revocation",
+    "designated_super_admin_id": "83d92a59-6909-44e7-80f3-aff60a6734fb",
+    "target_user_id": "2a276bdb-cf51-4303-846e-6b7fecf38b0c",
+    "target_employee_id": "11111"
+  },
+  "toolchain": {
+    "node": "v24.12.0",
+    "npm": "11.17.0",
+    "playwright": "1.61.0",
+    "supabase_cli": "2.72.7",
+    "operating_system": "Microsoft Windows NT 10.0.26200.0",
+    "lockfile": "package-lock.json",
+    "lockfile_version": 3
+  },
+  "deployed_edge_attestation": {
+    "source": "release/patch83u/patch83u-staging-edge-deployment-attestation.json",
+    "function_name": "privileged-action",
+    "function_id": "2780bccb-0cb8-43dd-a8f1-36016d3d6533",
+    "version": 3,
+    "status": "ACTIVE",
+    "verify_jwt": true,
+    "import_map": false,
+    "hosted_ezbr_sha256": "7fee99f2d77590f48026ddb0aaec5d540403d7c85fda462aece5154492852762",
+    "downloaded_hosted_index_ts_sha256": "f4a53ddfd0167ca62661c3c9acc6b7b320a0e43f4b96efc821308e1db73caf87",
+    "frozen_local_index_ts_sha256": "f4a53ddfd0167ca62661c3c9acc6b7b320a0e43f4b96efc821308e1db73caf87",
+    "index_source_equality_proven": true,
+    "complete_bundle_binding_proven": false,
+    "limitation": "The downloaded entry source is byte-equal to the frozen local index.ts. The complete deployed dependency bundle and the meaning-to-source relationship of ezbr_sha256 were not cryptographically bound."
+  },
+  "application_target": {
+    "resolved": false,
+    "approved_origin": null,
+    "dedicated_hosted_staging_origin_found": false,
+    "local_vite_candidate_origin": "http://localhost:5173",
+    "local_vite_candidate_project_ref": "zbrjjecpsrzposhuarcn",
+    "local_vite_candidate_refused_as_production": true,
+    "active_local_environment_project_ref": "zbrjjecpsrzposhuarcn",
+    "hosted_auth_origin_allowlist_verified": false,
+    "captcha_hosted_setting_verified": false,
+    "manual_captcha_may_be_required": true,
+    "frozen_frontend_source_match": "A local Vite build would execute the frozen local source, but the current local environment targets the prohibited production project and therefore must not be used.",
+    "abort_reason": "No approved staging frontend origin was found, and the only locally resolvable frontend configuration points to production."
+  },
+  "read_only_database_evidence": {
+    "script": "scripts/patch83u-staging-reset-evidence.sql",
+    "approved_mechanism": "psql service=<operator-approved-staging-service>",
+    "ready": false,
+    "pg_service_file_found": false,
+    "pgservice_environment_value_found": false,
+    "new_credential_entry_performed": false,
+    "connection_opened": false,
+    "requirements_enforced_by_harness": [
+      "Reject PGPASSWORD, DATABASE_URL, and SUPABASE_SERVICE_ROLE_KEY.",
+      "Use a named psql service and verify connection metadata contains the staging project reference.",
+      "Run BEGIN READ ONLY and explicit ROLLBACK.",
+      "Select only safe states, versions, counts, booleans, role/scope, and timestamps."
+    ],
+    "abort_reason": "No operator-approved staging pg_service definition is presently available, so the non-secret read-only evidence channel is unresolved."
+  },
+  "migration_lineage": {
+    "source_equality_to_staging_proven": false,
+    "risk": "HIGH provenance and reproducibility risk; functional hosted behavior must be re-proved independently from the live catalog before any reset boundary.",
+    "reason": "Migration history rows prove versions, not source bytes. Existing push output records successful application of 173 and 174 but does not bind hashes. No cryptographic applied-source copy was found for 173 through 177.",
+    "chronology_evidence": [
+      "Historical patch83tu-staging-db-push.txt records migration 173 and 174 application on 2026-07-16.",
+      "The current 173 and 174 file timestamps predate that recorded push.",
+      "release/patch83u/patch83u-test-results.md records the current 173, 174, 175, 176, and 177 hashes in later local validation.",
+      "These facts support chronology but do not prove byte equality with the hosted applied statements."
+    ],
+    "historical_exact_copies_that_do_not_match_current": [
+      {
+        "archive": "patch83t-review.zip",
+        "migration": "173",
+        "bytes": 29576,
+        "sha256": "3b072a00f8ac8df0577c40c1e206cd6becbb7f9b41a72b0f500ccb1f5c118544"
+      },
+      {
+        "archive": "patch83tu-final-review.zip",
+        "migration": "173",
+        "bytes": 39390,
+        "sha256": "a58af92ba609e5a6c0180440ecf22991774650555f34e35e98203d4a92a3ff49"
+      },
+      {
+        "archive": "patch83tu-final-review.zip",
+        "migration": "174",
+        "bytes": 117457,
+        "sha256": "5bde79e53be699496d804ecee3de1bf409efdc01f513742883c5c9bf433b52ed"
+      }
+    ],
+    "migrations": [
+      {
+        "version": "173",
+        "path": "supabase/migrations/173_patch83t_controlled_user_excel_import.sql",
+        "sha256": "04cbe12e6226aff4eb3411512a6b2d0751b053d9ec04afb6b9ad3a15a04ba2a3",
+        "bytes": 80826,
+        "git_status": " M",
+        "tracked_at_head": true,
+        "head_sha256": "977af984dede015475f1116970f4f65b662907cccfe9fef06f460a67544e209f",
+        "head_bytes": 61228,
+        "diff_insertions": 453,
+        "diff_deletions": 43,
+        "ignore_all_space_insertions": 451,
+        "ignore_all_space_deletions": 41,
+        "formatting_only": false,
+        "applied_source_equality_proven": false
+      },
+      {
+        "version": "174",
+        "path": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+        "sha256": "716e3a34ffc303b228d0707e2144a4056d85d83afd0f7013fd9c743184751855",
+        "bytes": 276188,
+        "git_status": " M",
+        "tracked_at_head": true,
+        "head_sha256": "2da606dec31d112057530fb13f3781a945762fec3ff8ff11f76a674b569c26d5",
+        "head_bytes": 182738,
+        "diff_insertions": 3105,
+        "diff_deletions": 907,
+        "ignore_all_space_insertions": 3080,
+        "ignore_all_space_deletions": 882,
+        "formatting_only": false,
+        "applied_source_equality_proven": false
+      },
+      {
+        "version": "175",
+        "path": "supabase/migrations/175_patch83t_pgcrypto_digest_resolution.sql",
+        "sha256": "7a83e3fcdf200bfc0027882667c82015f4fe448257fa5e69ff34d339ed5cd1f4",
+        "bytes": 994,
+        "git_status": "??",
+        "tracked_at_head": false,
+        "applied_source_equality_proven": false
+      },
+      {
+        "version": "176",
+        "path": "supabase/migrations/176_patch83u_last_super_admin_recovery.sql",
+        "sha256": "e221c1c3ded23499d2ac69f33f4869a193ab333dc429719f190708cd142172bc",
+        "bytes": 25166,
+        "git_status": "??",
+        "tracked_at_head": false,
+        "recorded_hash_matches_current": true,
+        "applied_source_equality_proven": false
+      },
+      {
+        "version": "177",
+        "path": "supabase/migrations/177_patch83u_explicit_password_finalizer_rpc_name.sql",
+        "sha256": "22b3fd74254e4532e04187da2303fc2ff4ead95eac06296827f76156b77315f0",
+        "bytes": 6628,
+        "git_status": "??",
+        "tracked_at_head": false,
+        "recorded_hash_matches_current": true,
+        "applied_source_equality_proven": false
+      }
+    ]
+  },
+  "harness_static_integrity": {
+    "safety_defects_found_and_corrected_locally": [
+      "Credential fields could be reached before loaded frontend source proved the staging project reference.",
+      "The reset boundary did not require an original administrator context, exact admin credential version 1, no pending admin operation, or hosted emergency-recovery catalog proof.",
+      "Controlled employee refresh tokens were retained but not proven refreshable before reset."
+    ],
+    "remaining_harness_safety_defect": false,
+    "hosted_execution_performed": false,
+    "controls": {
+      "execute_flag_required": "scripts/patch83u-staging-multisession-reset-proof.mjs:501,518,1197",
+      "recursive_production_refusal": "scripts/patch83u-staging-multisession-reset-proof.mjs:69",
+      "command_argument_secret_refusal": "scripts/patch83u-staging-multisession-reset-proof.mjs:31,494",
+      "hidden_tty_prompts": "scripts/patch83u-staging-multisession-reset-proof.mjs:244,783-788",
+      "one_shot_and_ambiguous_lock": "scripts/patch83u-staging-multisession-reset-proof.mjs:457-489,975-985",
+      "memory_only_refresh_values": "scripts/patch83u-staging-multisession-reset-proof.mjs:652-662,885-895,1188",
+      "recursive_secret_schema_guard": "scripts/patch83u-staging-multisession-reset-proof.mjs:40-138,213",
+      "capture_disabled": "scripts/patch83u-staging-multisession-reset-proof.mjs:22-29,853-858",
+      "nonpersistent_contexts": "scripts/patch83u-staging-multisession-reset-proof.mjs:732-758",
+      "frontend_attested_before_credential_fill": "scripts/patch83u-staging-multisession-reset-proof.mjs:571-647",
+      "real_ui_reset_and_change": "scripts/patch83u-staging-multisession-reset-proof.mjs:949-980,1084-1117",
+      "read_only_evidence_checkpoints": "scripts/patch83u-staging-multisession-reset-proof.mjs:850,911,997,1118",
+      "drift_gates": "scripts/patch83u-staging-multisession-reset-proof.mjs:309-374",
+      "no_automatic_abort_or_reconciliation": "No abort or reconciliation RPC call exists in runtime source; only stop-and-escalate operator guidance is present."
+    }
+  },
+  "sole_super_admin_gate": {
+    "must_all_pass": [
+      "Designated administrator UUID is exact and differs from the employee reset target.",
+      "Profile and credential state are active; database/Auth credential versions are exactly 1.",
+      "Exactly one active super_admin/global role exists and exactly one eligible Super Admin is reported.",
+      "No administrator credential operation is pending.",
+      "An original administrator browser context remains authenticated and available.",
+      "A second isolated administrator context reauthenticates successfully.",
+      "Runtime remains enforced at version 5 or a deliberately reviewed newer version.",
+      "The service-role reconcile wrapper and owner-only emergency recovery implementation remain present with their restricted security contract.",
+      "The sole eligible Super Admin is never selected as the reset target."
+    ],
+    "reauthentication_performed_in_this_audit": false
+  },
+  "pre_reset_checklist": [
+    {
+      "order": 1,
+      "check": "Confirm staging project and approved application origin.",
+      "abort_if": "Project is production, project cannot be proved, or origin differs from the freeze."
+    },
+    {
+      "order": 2,
+      "check": "Recompute and compare every frozen SHA-256 and size.",
+      "abort_if": "Any execution-source byte differs."
+    },
+    {
+      "order": 3,
+      "check": "Confirm runtime enforced, state version 5 or reviewed newer, and exact frontend/Edge contracts.",
+      "abort_if": "Runtime or contract drift exists."
+    },
+    {
+      "order": 4,
+      "check": "Confirm migrations 174, 176, 177 and finalizer/recovery catalog security contracts.",
+      "abort_if": "Any required version/object/ACL/search_path predicate is absent; do not treat migration rows as source-byte proof."
+    },
+    {
+      "order": 5,
+      "check": "Confirm designated administrator state and sole-Super-Admin predicates.",
+      "abort_if": "Any identity, active, credential version, role/scope, eligibility, or pending-operation predicate fails."
+    },
+    {
+      "order": 6,
+      "check": "Keep an original administrator context available and reauthenticate a secondary isolated context.",
+      "abort_if": "Either context is unavailable or reauthentication fails."
+    },
+    {
+      "order": 7,
+      "check": "Confirm Employee 11111 is active with database/Auth credential version 2.",
+      "abort_if": "Identity, lifecycle, credential state, or version differs."
+    },
+    {
+      "order": 8,
+      "check": "Confirm employee / assigned_only.",
+      "abort_if": "Role, scope, or active-role cardinality differs."
+    },
+    {
+      "order": 9,
+      "check": "Confirm no pending employee credential operation.",
+      "abort_if": "Any prepared, in_progress, auth_changed, or pending operation exists."
+    },
+    {
+      "order": 10,
+      "check": "Establish two independent employee browser sessions.",
+      "abort_if": "Fewer than two isolated authenticated contexts exist."
+    },
+    {
+      "order": 11,
+      "check": "Confirm database session count is at least two.",
+      "abort_if": "Read-only database evidence reports fewer than two."
+    },
+    {
+      "order": 12,
+      "check": "Prove both controlled refresh values can refresh and retain only rotated values in memory.",
+      "abort_if": "Either refresh fails, leaks, or cannot be correlated to its context."
+    },
+    {
+      "order": 13,
+      "check": "Confirm direct Admin navigation is denied for the employee.",
+      "abort_if": "The employee remains on an Admin route or authorization result is ambiguous."
+    },
+    {
+      "order": 14,
+      "check": "Pause for exact hidden operator authorization.",
+      "abort_if": "The exact staging/project/target/action confirmation is not entered."
+    },
+    {
+      "order": 15,
+      "check": "Permit exactly one protected reset submission.",
+      "abort_if": "Any gate changes, runtime transitions, response is ambiguous, or a prior request correlation exists."
+    }
+  ],
+  "frozen_files": [
+    {
+      "path": "scripts/patch83u-staging-multisession-reset-proof.mjs",
+      "sha256": "059178a72408e24cda6658142ac68ca71361f0219ec2ce7235ef14341a9be4f3",
+      "bytes": 51117,
+      "git_status": "??",
+      "tracked_at_head": false
+    },
+    {
+      "path": "scripts/patch83u-staging-reset-evidence.sql",
+      "sha256": "1ae1e205528f1ba3162604886b5d6fc8c17e60e705e4bff371164960261edb25",
+      "bytes": 12467,
+      "git_status": "??",
+      "tracked_at_head": false
+    },
+    {
+      "path": "tests/unit/patch83uStagingMultisessionResetProof.test.ts",
+      "sha256": "d2f18ac08d656c46e416ba045a762507018b4193260574b80a5dd33383fc7c99",
+      "bytes": 13446,
+      "git_status": "??",
+      "tracked_at_head": false
+    },
+    {
+      "path": "release/patch83u/patch83u-staging-reset-harness-schema.json",
+      "sha256": "4cbfc4873be8b6c46c5b9b65a7e7aa3326590725f192f9e37f6be0e6e965c33b",
+      "bytes": 13275,
+      "git_status": "??",
+      "tracked_at_head": false
+    },
+    {
+      "path": "supabase/functions/privileged-action/index.ts",
+      "sha256": "f4a53ddfd0167ca62661c3c9acc6b7b320a0e43f4b96efc821308e1db73caf87",
+      "bytes": 157176,
+      "git_status": " M",
+      "tracked_at_head": true
+    },
+    {
+      "path": "supabase/config.toml",
+      "sha256": "8dbc2b021931fb8f67fe8599bbec95d44ae7379c2a72152840443cd394619169",
+      "bytes": 14598,
+      "git_status": "  ",
+      "tracked_at_head": true
+    },
+    {
+      "path": "supabase/migrations/173_patch83t_controlled_user_excel_import.sql",
+      "sha256": "04cbe12e6226aff4eb3411512a6b2d0751b053d9ec04afb6b9ad3a15a04ba2a3",
+      "bytes": 80826,
+      "git_status": " M",
+      "tracked_at_head": true
+    },
+    {
+      "path": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "sha256": "716e3a34ffc303b228d0707e2144a4056d85d83afd0f7013fd9c743184751855",
+      "bytes": 276188,
+      "git_status": " M",
+      "tracked_at_head": true
+    },
+    {
+      "path": "supabase/migrations/175_patch83t_pgcrypto_digest_resolution.sql",
+      "sha256": "7a83e3fcdf200bfc0027882667c82015f4fe448257fa5e69ff34d339ed5cd1f4",
+      "bytes": 994,
+      "git_status": "??",
+      "tracked_at_head": false
+    },
+    {
+      "path": "supabase/migrations/176_patch83u_last_super_admin_recovery.sql",
+      "sha256": "e221c1c3ded23499d2ac69f33f4869a193ab333dc429719f190708cd142172bc",
+      "bytes": 25166,
+      "git_status": "??",
+      "tracked_at_head": false
+    },
+    {
+      "path": "supabase/migrations/177_patch83u_explicit_password_finalizer_rpc_name.sql",
+      "sha256": "22b3fd74254e4532e04187da2303fc2ff4ead95eac06296827f76156b77315f0",
+      "bytes": 6628,
+      "git_status": "??",
+      "tracked_at_head": false
+    },
+    {
+      "path": "package.json",
+      "sha256": "8a2fd3617af1439a25a44b221ad661be59a906b33ff056347be27a5f6ce5c182",
+      "bytes": 58930,
+      "git_status": " M",
+      "tracked_at_head": true
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "b43b1bb7117e8b2dbfc5607f99a1cebd9a756043c28bff8ff53e48a2f16775d3",
+      "bytes": 122300,
+      "git_status": "  ",
+      "tracked_at_head": true
+    },
+    {
+      "path": "src/App.tsx",
+      "sha256": "3d9b5a54c83a547be78a2c8fe7273444fe7a635ad3664acb7dc6f2d9245c60a1",
+      "bytes": 51294,
+      "git_status": " M",
+      "tracked_at_head": true
+    },
+    {
+      "path": "src/pages/LoginPage.tsx",
+      "sha256": "0a81aa1f3b40b9ac82e683e655aff293730cf100c1c4d1669aa70358a0c65ef6",
+      "bytes": 6928,
+      "git_status": " M",
+      "tracked_at_head": true
+    },
+    {
+      "path": "src/pages/UserManagementCenter.tsx",
+      "sha256": "7b02d45094b24134ab088e950a1a06996f153983ca8af550f27f8d02cdf0970c",
+      "bytes": 116077,
+      "git_status": " M",
+      "tracked_at_head": true
+    },
+    {
+      "path": "src/pages/ForcedPasswordChange.tsx",
+      "sha256": "c9e2dca9c5ac2781ea3c752f92fa83cb5173a32a86848c40f73ddea3b1aec41f",
+      "bytes": 9968,
+      "git_status": " M",
+      "tracked_at_head": true
+    },
+    {
+      "path": "src/lib/userCredentialApi.ts",
+      "sha256": "ffad50852a80e63a5719e56d2486c4f54af153c71bbdca1e0c1c8d2857c1ced4",
+      "bytes": 28436,
+      "git_status": " M",
+      "tracked_at_head": true
+    },
+    {
+      "path": "src/lib/privilegedAction.ts",
+      "sha256": "3d6109e1b7c8c8a7f2da31ec3247a0f737a708074655ce06d29d84ed77d6a44c",
+      "bytes": 5509,
+      "git_status": " M",
+      "tracked_at_head": true
+    },
+    {
+      "path": "src/auth/AuthProvider.tsx",
+      "sha256": "05e3382fb269184ea316b0940094ce0acec244e4970c5e1ddea1e6003d6a606a",
+      "bytes": 43483,
+      "git_status": " M",
+      "tracked_at_head": true
+    },
+    {
+      "path": "src/auth/authAccess.ts",
+      "sha256": "f60cbe1ae75702740c15f0e7179693cbe2e0289fc15d00fbd2e5abfadf263435",
+      "bytes": 7867,
+      "git_status": "  ",
+      "tracked_at_head": true
+    },
+    {
+      "path": "src/auth/loginCaptcha.ts",
+      "sha256": "a94f9eae4bf4f30d22ba4f4dad1600c851ef78c754d365f399f3c5f65eaef75c",
+      "bytes": 2462,
+      "git_status": " M",
+      "tracked_at_head": true
+    },
+    {
+      "path": "src/auth/TurnstileLoginCaptcha.tsx",
+      "sha256": "3f0832992ef951c2661f4fd30814cb86666a9cb80aedec33a0cdf71cf649a15d",
+      "bytes": 7152,
+      "git_status": " M",
+      "tracked_at_head": true
+    },
+    {
+      "path": "src/config/featureFlags.ts",
+      "sha256": "2650fc8d210802b51bc49a85044386f6b8d3fc5f0e31c73d403715812209c024",
+      "bytes": 2473,
+      "git_status": " M",
+      "tracked_at_head": true
+    },
+    {
+      "path": "src/lib/supabaseClient.ts",
+      "sha256": "aad7419d217d52bacdc99f6194342a9ba1b6412cbafd6be2c1a5a53bf538213a",
+      "bytes": 2844,
+      "git_status": "  ",
+      "tracked_at_head": true
+    },
+    {
+      "path": "src/lib/supabase.ts",
+      "sha256": "8992660b6adb231f985dc26db53435ae8684ad401ec0f24635d9a111aadc2a7b",
+      "bytes": 3187,
+      "git_status": " M",
+      "tracked_at_head": true
+    },
+    {
+      "path": "src/routes/pageLocation.ts",
+      "sha256": "fa8e452b73d078c68dff0db7547b927b3ecdcc542857e20a31af798cb2b7004b",
+      "bytes": 9843,
+      "git_status": "??",
+      "tracked_at_head": false
+    }
+  ],
+  "local_validation": {
+    "harness_syntax": {
+      "command": "node --check scripts/patch83u-staging-multisession-reset-proof.mjs",
+      "result": "PASS"
+    },
+    "focused_unit_tests": {
+      "command": "npm run test:unit -- tests/unit/patch83uStagingMultisessionResetProof.test.ts",
+      "result": "PASS",
+      "test_files": 1,
+      "tests_passed": 21,
+      "tests_failed": 0
+    },
+    "json_and_schema": {
+      "result": "PASS",
+      "details": "Freeze JSON and evidence schema parsed; schema enforcement is exercised by the focused mocked unit suite."
+    },
+    "typecheck": {
+      "command": "npm run typecheck",
+      "result": "PASS"
+    },
+    "diff_check": {
+      "command": "git diff --check",
+      "result": "PASS",
+      "note": "Git emitted existing LF-to-CRLF conversion warnings but no whitespace error."
+    }
+  },
+  "audit_actions": {
+    "credentials_entered": false,
+    "login_performed": false,
+    "password_reset_performed": false,
+    "password_change_performed": false,
+    "global_sign_out_performed": false,
+    "refresh_replay_performed": false,
+    "database_connection_opened": false,
+    "deployment_performed": false,
+    "migration_applied": false,
+    "staging_mutation_performed": false,
+    "production_access_performed": false,
+    "files_staged": false,
+    "commit_created": false,
+    "push_performed": false
+  }
+}

@@ -6,6 +6,7 @@ import {
   createScenarioLabScenario,
   V99_SCENARIO_TAG,
 } from '../lib/scenarioLab';
+import { useI18n } from '../i18n/I18nContext';
 
 export type ControllableItemType = 'project' | 'milestone' | 'task';
 
@@ -33,10 +34,6 @@ const projectStatusOptions: ProjectStatus[] = [
   'cancelled'
 ];
 
-function label(value: string) {
-  return value.replaceAll('_', ' ');
-}
-
 interface StatusUpdateFormProps {
   itemType: ControllableItemType;
   itemId: string;
@@ -47,6 +44,7 @@ interface StatusUpdateFormProps {
 }
 
 export function StatusUpdateForm({ itemType, itemId, currentStatus, currentProgress, onCancel, onUpdated }: StatusUpdateFormProps) {
+  const { t } = useI18n();
   const [status, setStatus] = useState(currentStatus);
   const [progress, setProgress] = useState(currentProgress ?? 0);
   const [delayReason, setDelayReason] = useState('');
@@ -59,7 +57,7 @@ export function StatusUpdateForm({ itemType, itemId, currentStatus, currentProgr
     setError(null);
 
     if (status === 'delayed' && !delayReason.trim()) {
-      setError('Delay reason is required when status is delayed.');
+      setError(t('workControl.delayReasonRequired'));
       return;
     }
 
@@ -74,7 +72,7 @@ export function StatusUpdateForm({ itemType, itemId, currentStatus, currentProgr
       }
       onUpdated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update status.');
+      setError(err instanceof Error ? err.message : t('workControl.statusUpdateFailed'));
     } finally {
       setSaving(false);
     }
@@ -84,22 +82,22 @@ export function StatusUpdateForm({ itemType, itemId, currentStatus, currentProgr
     <form className="form-grid" onSubmit={handleSubmit}>
       {error ? <div className="form-error">{error}</div> : null}
       <label className="field">
-        <span>Status</span>
+        <span>{t('common.status')}</span>
         <select value={status} onChange={event => setStatus(event.target.value as typeof status)}>
-          {options.map(item => <option key={item} value={item}>{label(item)}</option>)}
+          {options.map(item => <option key={item} value={item}>{t(`status.${item}`, item.replaceAll('_', ' '))}</option>)}
         </select>
       </label>
       <label className="field">
-        <span>Progress %</span>
+        <span>{t('workControl.progressPercent')}</span>
         <input type="number" min="0" max="100" value={progress} onChange={event => setProgress(Number(event.target.value))} />
       </label>
       <label className="field full-width">
-        <span>Delay reason {status === 'delayed' ? '*' : ''}</span>
-        <textarea value={delayReason} onChange={event => setDelayReason(event.target.value)} placeholder="Required only when status is delayed." />
+        <span>{t('workControl.delayReason')} {status === 'delayed' ? '*' : ''}</span>
+        <textarea value={delayReason} onChange={event => setDelayReason(event.target.value)} placeholder={t('workControl.delayReasonHint')} />
       </label>
       <div className="form-actions full-width">
-        <button className="ghost-button" type="button" onClick={onCancel}>Cancel</button>
-        <button className="primary-button" disabled={saving}>{saving ? 'Saving…' : 'Update Status'}</button>
+        <button className="ghost-button" type="button" onClick={onCancel}>{t('common.cancel')}</button>
+        <button className="primary-button" disabled={saving}>{saving ? t('common.saving') : t('workControl.updateStatus')}</button>
       </div>
     </form>
   );
@@ -114,6 +112,7 @@ interface EvidenceUploadFormProps {
 }
 
 export function EvidenceUploadForm({ organizationId, itemType, itemId, onCancel, onUploaded }: EvidenceUploadFormProps) {
+  const { t } = useI18n();
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
@@ -123,7 +122,7 @@ export function EvidenceUploadForm({ organizationId, itemType, itemId, onCancel,
     event.preventDefault();
     setError(null);
     if (!file) {
-      setError('Please select a file to upload.');
+      setError(t('workControl.selectFile'));
       return;
     }
     setSaving(true);
@@ -136,7 +135,7 @@ export function EvidenceUploadForm({ organizationId, itemType, itemId, onCancel,
       await uploadEvidenceForItem({ organization_id: organizationId, item_type: itemType, item_id: itemId, file, description: description.trim() || undefined });
       onUploaded();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload evidence.');
+      setError(err instanceof Error ? err.message : t('workControl.uploadFailed'));
     } finally {
       setSaving(false);
     }
@@ -164,23 +163,23 @@ export function EvidenceUploadForm({ organizationId, itemType, itemId, onCancel,
       <div className="full-width">
         <ScenarioFillButton onClick={fillSyntheticEvidence} />
         {file?.name.includes(V99_SCENARIO_TAG)
-          ? <p className="muted">Prepared file: {file.name}</p>
+          ? <p className="muted">{t('workControl.preparedFile')}: {file.name}</p>
           : null}
       </div>
       <label className="field full-width">
-        <span>Evidence file *</span>
+        <span>{t('workControl.evidenceFile')} *</span>
         <input type="file" onChange={event => setFile(event.target.files?.[0] ?? null)} />
       </label>
       <label className="field full-width">
-        <span>Description</span>
-        <textarea value={description} onChange={event => setDescription(event.target.value)} placeholder="Explain what this evidence proves." />
+        <span>{t('common.description')}</span>
+        <textarea value={description} onChange={event => setDescription(event.target.value)} placeholder={t('workControl.evidenceDescriptionHint')} />
       </label>
       <div className="notice-banner full-width">
-        Evidence is uploaded to the private <strong>grc-evidence</strong> bucket and registered for review. It does not automatically close the item.
+        {t('workControl.privateEvidencePrefix')} <strong>grc-evidence</strong> {t('workControl.privateEvidenceSuffix')}
       </div>
       <div className="form-actions full-width">
-        <button className="ghost-button" type="button" onClick={onCancel}>Cancel</button>
-        <button className="primary-button" disabled={saving || !file}>{saving ? 'Uploading…' : 'Upload Evidence'}</button>
+        <button className="ghost-button" type="button" onClick={onCancel}>{t('common.cancel')}</button>
+        <button className="primary-button" disabled={saving || !file}>{saving ? t('workControl.uploading') : t('workControl.uploadEvidence')}</button>
       </div>
     </form>
   );
@@ -196,8 +195,9 @@ interface ApprovalRequestFormProps {
 }
 
 export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles, onCancel, onRequested }: ApprovalRequestFormProps) {
+  const { t, language } = useI18n();
   const [approverId, setApproverId] = useState('');
-  const [note, setNote] = useState('Please review and approve this controlled item.');
+  const [note, setNote] = useState(() => t('workControl.defaultRequestNote'));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -205,7 +205,7 @@ export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles
     event.preventDefault();
     setError(null);
     if (!approverId) {
-      setError('Select an approver.');
+      setError(t('workControl.selectApproverError'));
       return;
     }
     setSaving(true);
@@ -213,7 +213,7 @@ export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles
       await requestApproval({ organization_id: organizationId, item_type: itemType, item_id: itemId, approver_id: approverId, request_note: note.trim() || undefined });
       onRequested();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to request approval.');
+      setError(err instanceof Error ? err.message : t('workControl.requestFailed'));
     } finally {
       setSaving(false);
     }
@@ -223,19 +223,19 @@ export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles
     <form className="form-grid" onSubmit={handleSubmit}>
       {error ? <div className="form-error">{error}</div> : null}
       <label className="field full-width">
-        <span>Approver *</span>
+        <span>{t('approvals.approver')} *</span>
         <select value={approverId} onChange={event => setApproverId(event.target.value)}>
-          <option value="">Select approver</option>
-          {profiles.map(person => <option key={person.id} value={person.id}>{person.full_name_en}</option>)}
+          <option value="">{t('workControl.selectApprover')}</option>
+          {profiles.map(person => <option key={person.id} value={person.id}>{language === 'ar' && person.full_name_ar ? person.full_name_ar : person.full_name_en}</option>)}
         </select>
       </label>
       <label className="field full-width">
-        <span>Request note</span>
+        <span>{t('workControl.requestNote')}</span>
         <textarea value={note} onChange={event => setNote(event.target.value)} />
       </label>
       <div className="form-actions full-width">
-        <button className="ghost-button" type="button" onClick={onCancel}>Cancel</button>
-        <button className="primary-button" disabled={saving || !approverId}>{saving ? 'Sending…' : 'Request Approval'}</button>
+        <button className="ghost-button" type="button" onClick={onCancel}>{t('common.cancel')}</button>
+        <button className="primary-button" disabled={saving || !approverId}>{saving ? t('common.sending') : t('workControl.requestApproval')}</button>
       </div>
     </form>
   );
@@ -248,11 +248,12 @@ interface WorkControlButtonsProps {
 }
 
 export function WorkControlButtons({ onStatus, onEvidence, onApproval }: WorkControlButtonsProps) {
+  const { t } = useI18n();
   return (
     <div className="inline-actions">
-      <button className="ghost-button compact-button" type="button" onClick={onStatus}>Status</button>
-      <button className="ghost-button compact-button" type="button" onClick={onEvidence}>Evidence</button>
-      <button className="ghost-button compact-button" type="button" onClick={onApproval}>Approval</button>
+      <button className="ghost-button compact-button" type="button" onClick={onStatus}>{t('common.status')}</button>
+      <button className="ghost-button compact-button" type="button" onClick={onEvidence}>{t('common.evidence')}</button>
+      <button className="ghost-button compact-button" type="button" onClick={onApproval}>{t('common.approval')}</button>
     </div>
   );
 }

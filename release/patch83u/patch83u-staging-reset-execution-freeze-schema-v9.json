@@ -1,0 +1,1069 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://almodawat.sa/schemas/patch83u-staging-reset-execution-freeze-v9.json",
+  "title": "Patch 83U staging reset execution freeze — Run 009",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_version",
+    "captured_at_utc",
+    "readiness_decision",
+    "decision_is_execution_authorization",
+    "supersedes",
+    "repository",
+    "targets",
+    "toolchain",
+    "runtime_contract",
+    "operator_confirmation_contract",
+    "active_edge_provenance",
+    "run_contract",
+    "proof_contract",
+    "checkpoint_schema",
+    "traceability",
+    "final_session_contract",
+    "frozen_source",
+    "prior_evidence_integrity",
+    "run005_stop_state",
+    "local_validation",
+    "safety"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "./patch83u-staging-reset-execution-freeze-schema-v9.json"
+    },
+    "schema_version": {
+      "const": "patch83u-staging-reset-execution-freeze-v9"
+    },
+    "captured_at_utc": {
+      "$ref": "#/$defs/canonicalUtc"
+    },
+    "readiness_decision": {
+      "const": "READY FOR AUTOMATED RUN 009 AUTHORIZATION"
+    },
+    "decision_is_execution_authorization": {
+      "const": false
+    },
+    "supersedes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes",
+        "prior_authorization_reusable"
+      ],
+      "properties": {
+        "path": {
+          "const": "release/patch83u/patch83u-staging-reset-execution-freeze-v8-20260721.json"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "bytes": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "prior_authorization_reusable": {
+          "const": false
+        }
+      }
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "branch",
+        "head",
+        "working_tree_dirty",
+        "tracked_modified_count",
+        "untracked_count_after_manifest_creation",
+        "porcelain_entry_count_after_manifest_creation",
+        "staged_file_count"
+      ],
+      "properties": {
+        "branch": {
+          "const": "patch83t-controlled-user-excel-import"
+        },
+        "head": {
+          "const": "a9989b1e8d95a6bb775316a2d9e709ef84514c42"
+        },
+        "working_tree_dirty": {
+          "const": true
+        },
+        "tracked_modified_count": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "untracked_count_after_manifest_creation": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "porcelain_entry_count_after_manifest_creation": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "staged_file_count": {
+          "const": 0
+        }
+      }
+    },
+    "targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed_staging_project_ref",
+        "prohibited_production_project_ref",
+        "staging_supabase_origin",
+        "application_origin",
+        "production_accessed"
+      ],
+      "properties": {
+        "allowed_staging_project_ref": {
+          "const": "zghsgzrdwbqdrpuxanac"
+        },
+        "prohibited_production_project_ref": {
+          "const": "zbrjjecpsrzposhuarcn"
+        },
+        "staging_supabase_origin": {
+          "const": "https://zghsgzrdwbqdrpuxanac.supabase.co"
+        },
+        "application_origin": {
+          "const": "http://localhost:5173"
+        },
+        "production_accessed": {
+          "const": false
+        }
+      }
+    },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "npm",
+        "playwright",
+        "supabase_cli",
+        "operating_system"
+      ],
+      "properties": {
+        "node": {
+          "type": "string",
+          "minLength": 1
+        },
+        "npm": {
+          "type": "string",
+          "minLength": 1
+        },
+        "playwright": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supabase_cli": {
+          "type": "string",
+          "minLength": 1
+        },
+        "operating_system": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "runtime_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "enforcement_state",
+        "state_version",
+        "expected_edge_contract",
+        "compatible_edge_contract",
+        "expected_frontend_contract",
+        "compatible_frontend_contract",
+        "applied_migrations",
+        "finalizer"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "174.2-auth-first"
+        },
+        "enforcement_state": {
+          "const": "enforced"
+        },
+        "state_version": {
+          "const": 5
+        },
+        "expected_edge_contract": {
+          "const": "patch83u-edge-auth-first-v1"
+        },
+        "compatible_edge_contract": {
+          "const": "patch83u-edge-auth-first-v1"
+        },
+        "expected_frontend_contract": {
+          "const": "patch83u-frontend-auth-first-v1"
+        },
+        "compatible_frontend_contract": {
+          "const": "patch83u-frontend-auth-first-v1"
+        },
+        "applied_migrations": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": false,
+          "prefixItems": [
+            {
+              "const": "174"
+            },
+            {
+              "const": "176"
+            },
+            {
+              "const": "177"
+            }
+          ]
+        },
+        "finalizer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "name_bytes",
+            "security_definer",
+            "service_role_execute",
+            "authenticated_execute",
+            "anon_execute",
+            "public_execute"
+          ],
+          "properties": {
+            "name": {
+              "const": "patch83u_finalize_password_change_after_revocation"
+            },
+            "name_bytes": {
+              "const": 50
+            },
+            "security_definer": {
+              "const": true
+            },
+            "service_role_execute": {
+              "const": true
+            },
+            "authenticated_execute": {
+              "const": false
+            },
+            "anon_execute": {
+              "const": false
+            },
+            "public_execute": {
+              "const": false
+            }
+          }
+        }
+      }
+    },
+    "operator_confirmation_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_id",
+        "run_number",
+        "exact_phrase",
+        "case_sensitive",
+        "cli_override_supported",
+        "required_immediately_before_reset",
+        "evidence_retention"
+      ],
+      "properties": {
+        "contract_id": {
+          "const": "patch83u-run009-reset-confirmation-v1"
+        },
+        "run_number": {
+          "const": 9
+        },
+        "exact_phrase": {
+          "const": "EXECUTE RUN 009 RESET NOW"
+        },
+        "case_sensitive": {
+          "const": true
+        },
+        "cli_override_supported": {
+          "const": false
+        },
+        "required_immediately_before_reset": {
+          "const": true
+        },
+        "evidence_retention": {
+          "const": "boolean_and_contract_id_only"
+        }
+      }
+    },
+    "active_edge_provenance": {
+      "$ref": "#/$defs/edgeProvenance"
+    },
+    "run_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_number",
+        "evidence_directory",
+        "checkpoint_directory",
+        "checkpoint_files",
+        "output_path_pattern",
+        "exclusive_create_required",
+        "evidence_schema_path",
+        "evidence_schema_sha256",
+        "evidence_schema_bytes",
+        "evidence_schema_version",
+        "frontend_mode",
+        "sql_editor_project_ref_option",
+        "sql_editor_project_confirmation_gate_id",
+        "precredential_no_secret_fixture_flag",
+        "precredential_mode_flag",
+        "precredential_success_output"
+      ],
+      "properties": {
+        "run_number": {
+          "const": 9
+        },
+        "evidence_directory": {
+          "const": "release/patch83u/reset-proof-run-009"
+        },
+        "checkpoint_directory": {
+          "const": "release/patch83u/reset-proof-run-009/checkpoints"
+        },
+        "checkpoint_files": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": false,
+          "prefixItems": [
+            {
+              "const": "01-before-employee-sessions.json"
+            },
+            {
+              "const": "02-immediately-before-reset.json"
+            },
+            {
+              "const": "03-immediately-after-reset.json"
+            },
+            {
+              "const": "04-before-required-password-change.json"
+            },
+            {
+              "const": "05-immediately-after-password-change-finalization.json"
+            },
+            {
+              "const": "06-after-fresh-employee-login.json"
+            }
+          ]
+        },
+        "output_path_pattern": {
+          "const": "release/patch83u/reset-proof-run-009/patch83u-staging-reset-final-results-attempt-NNN.json"
+        },
+        "exclusive_create_required": {
+          "const": true
+        },
+        "evidence_schema_path": {
+          "const": "release/patch83u/patch83u-staging-reset-harness-schema-v8.json"
+        },
+        "evidence_schema_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "evidence_schema_bytes": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "evidence_schema_version": {
+          "const": "patch83u-staging-reset-proof-v8"
+        },
+        "frontend_mode": {
+          "const": "staging"
+        },
+        "sql_editor_project_ref_option": {
+          "const": "--sql-editor-project-ref"
+        },
+        "sql_editor_project_confirmation_gate_id": {
+          "const": "patch83u-sql-editor-project-confirmation-v1"
+        },
+        "precredential_no_secret_fixture_flag": {
+          "const": "--precredential-inert-fixture"
+        },
+        "precredential_mode_flag": {
+          "const": "--precredential-readiness-only"
+        },
+        "precredential_success_output": {
+          "const": "PATCH83U PRE-CREDENTIAL READINESS PASSED"
+        }
+      }
+    },
+    "proof_contract": {
+      "$ref": "#/$defs/proofContractBinding"
+    },
+    "checkpoint_schema": {
+      "$ref": "#/$defs/checkpointSchemaBinding"
+    },
+    "traceability": {
+      "$ref": "#/$defs/traceabilityBinding"
+    },
+    "final_session_contract": {
+      "$ref": "#/$defs/finalSessionContract"
+    },
+    "frozen_source": {
+      "$ref": "#/$defs/sourceManifest"
+    },
+    "prior_evidence_integrity": {
+      "$ref": "#/$defs/priorEvidenceManifest"
+    },
+    "run005_stop_state": {
+      "$ref": "#/$defs/run005StopState"
+    },
+    "local_validation": {
+      "$ref": "#/$defs/localValidation"
+    },
+    "safety": {
+      "$ref": "#/$defs/safety"
+    }
+  },
+  "$defs": {
+    "canonicalUtc": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+    },
+    "nonNegativeInteger": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?![A-Za-z]:)(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?!.*[\\r\\n\\t]).+$"
+    },
+    "edgeProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "metadata",
+        "provenance_record",
+        "source",
+        "bundle_binding"
+      ],
+      "properties": {
+        "identity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "project_ref",
+            "function_name"
+          ],
+          "properties": {
+            "project_ref": {
+              "const": "zghsgzrdwbqdrpuxanac"
+            },
+            "function_name": {
+              "const": "privileged-action"
+            }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "status",
+            "verify_jwt",
+            "hosted_ezbr_sha256",
+            "created_at_unix_ms",
+            "created_at_utc",
+            "updated_at_unix_ms",
+            "updated_at_utc"
+          ],
+          "properties": {
+            "version": {
+              "const": 5
+            },
+            "status": {
+              "const": "ACTIVE"
+            },
+            "verify_jwt": {
+              "const": true
+            },
+            "hosted_ezbr_sha256": {
+              "const": "7fee99f2d77590f48026ddb0aaec5d540403d7c85fda462aece5154492852762"
+            },
+            "created_at_unix_ms": {
+              "const": 1784213509236
+            },
+            "created_at_utc": {
+              "const": "2026-07-16T14:51:49.236Z"
+            },
+            "updated_at_unix_ms": {
+              "const": 1784325647510
+            },
+            "updated_at_utc": {
+              "const": "2026-07-17T22:00:47.510Z"
+            }
+          }
+        },
+        "provenance_record": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256",
+            "bytes"
+          ],
+          "properties": {
+            "path": {
+              "const": "release/patch83u/patch83u-staging-edge-v5-provenance-20260719.json"
+            },
+            "sha256": {
+              "const": "959bcab302c4a12857005b39e2f19ff35d27a6872eb25596ce24eb80c947ca74"
+            },
+            "bytes": {
+              "const": 4495
+            }
+          }
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "downloaded",
+            "local",
+            "byte_identical",
+            "production_ref_absent"
+          ],
+          "properties": {
+            "downloaded": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "sha256",
+                "bytes"
+              ],
+              "properties": {
+                "sha256": {
+                  "const": "f4a53ddfd0167ca62661c3c9acc6b7b320a0e43f4b96efc821308e1db73caf87"
+                },
+                "bytes": {
+                  "const": 157176
+                }
+              }
+            },
+            "local": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "sha256",
+                "bytes"
+              ],
+              "properties": {
+                "path": {
+                  "const": "supabase/functions/privileged-action/index.ts"
+                },
+                "sha256": {
+                  "const": "f4a53ddfd0167ca62661c3c9acc6b7b320a0e43f4b96efc821308e1db73caf87"
+                },
+                "bytes": {
+                  "const": 157176
+                }
+              }
+            },
+            "byte_identical": {
+              "const": true
+            },
+            "production_ref_absent": {
+              "const": true
+            }
+          }
+        },
+        "bundle_binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "raw_entrypoint_binding_proven",
+            "complete_deployment_bundle_binding_proven",
+            "hosted_hash_meaning_as_raw_source_hash_proven"
+          ],
+          "properties": {
+            "raw_entrypoint_binding_proven": {
+              "const": true
+            },
+            "complete_deployment_bundle_binding_proven": {
+              "const": false
+            },
+            "hosted_hash_meaning_as_raw_source_hash_proven": {
+              "const": false
+            }
+          }
+        }
+      }
+    },
+    "proofContractBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes",
+        "schema_version",
+        "contract_id",
+        "requirement_count"
+      ],
+      "properties": {
+        "path": {
+          "const": "release/patch83u/patch83u-run009-proof-contract.json"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "bytes": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "schema_version": {
+          "const": "patch83u-run009-proof-contract-v1"
+        },
+        "contract_id": {
+          "const": "patch83u-hosted-reset-proof-run-009"
+        },
+        "requirement_count": {
+          "const": 56
+        }
+      }
+    },
+    "checkpointSchemaBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes",
+        "schema_version"
+      ],
+      "properties": {
+        "path": {
+          "const": "release/patch83u/patch83u-staging-checkpoint-file-schema-v3.json"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "bytes": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "schema_version": {
+          "const": "patch83u-staging-sql-editor-checkpoint-file-v3"
+        }
+      }
+    },
+    "traceabilityBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "json_path",
+        "json_sha256",
+        "json_bytes",
+        "markdown_path",
+        "markdown_sha256",
+        "markdown_bytes",
+        "schema_version",
+        "requirement_count",
+        "mapped_requirement_count",
+        "coverage_percent",
+        "complete"
+      ],
+      "properties": {
+        "json_path": {
+          "const": "release/patch83u/patch83u-run009-proof-traceability.json"
+        },
+        "json_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "json_bytes": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "markdown_path": {
+          "const": "release/patch83u/patch83u-run009-proof-traceability.md"
+        },
+        "markdown_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "markdown_bytes": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "schema_version": {
+          "const": "patch83u-run009-proof-traceability-v1"
+        },
+        "requirement_count": {
+          "const": 56
+        },
+        "mapped_requirement_count": {
+          "const": 56
+        },
+        "coverage_percent": {
+          "const": 100
+        },
+        "complete": {
+          "const": true
+        }
+      }
+    },
+    "finalSessionContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checkpoint",
+        "expected_session_count",
+        "expected_unrevoked_refresh_token_count",
+        "enforcement",
+        "cli_override_supported",
+        "justification_basis"
+      ],
+      "properties": {
+        "checkpoint": {
+          "const": "after_fresh_employee_login"
+        },
+        "expected_session_count": {
+          "const": 1
+        },
+        "expected_unrevoked_refresh_token_count": {
+          "const": 1
+        },
+        "enforcement": {
+          "const": "exact_integer_equality"
+        },
+        "cli_override_supported": {
+          "const": false
+        },
+        "justification_basis": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "sourceManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hash_algorithm",
+        "aggregate_algorithm",
+        "file_count",
+        "total_bytes",
+        "aggregate_sha256",
+        "files"
+      ],
+      "properties": {
+        "hash_algorithm": {
+          "const": "sha256"
+        },
+        "aggregate_algorithm": {
+          "const": "SHA-256 of ordinal-path-sorted UTF-8 lines path<TAB>sha256<TAB>bytes joined by LF with no trailing LF"
+        },
+        "file_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "total_bytes": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "aggregate_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/sourceFile"
+          }
+        }
+      }
+    },
+    "sourceFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes",
+        "git_status",
+        "tracked_at_head"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/repositoryPath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "bytes": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "git_status": {
+          "type": "string",
+          "enum": [
+            "clean",
+            " M",
+            "??"
+          ]
+        },
+        "tracked_at_head": {
+          "type": "boolean"
+        }
+      }
+    },
+    "priorEvidenceManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hash_algorithm",
+        "aggregate_algorithm",
+        "file_count",
+        "total_bytes",
+        "aggregate_sha256",
+        "files",
+        "run005_absence_assertions"
+      ],
+      "properties": {
+        "hash_algorithm": {
+          "const": "sha256"
+        },
+        "aggregate_algorithm": {
+          "const": "SHA-256 of ordinal-path-sorted UTF-8 lines path<TAB>sha256<TAB>bytes joined by LF with no trailing LF"
+        },
+        "file_count": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "total_bytes": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "aggregate_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/immutableFile"
+          }
+        },
+        "run005_absence_assertions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "checkpoint_files_absent",
+            "attempt_output_files_absent"
+          ],
+          "properties": {
+            "checkpoint_files_absent": {
+              "const": true
+            },
+            "attempt_output_files_absent": {
+              "const": true
+            }
+          }
+        }
+      }
+    },
+    "immutableFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes",
+        "immutable"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/repositoryPath"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "bytes": {
+          "$ref": "#/$defs/nonNegativeInteger"
+        },
+        "immutable": {
+          "const": true
+        }
+      }
+    },
+    "run005StopState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "failure_code",
+        "authorization_consumed",
+        "credentials_entered",
+        "login_performed",
+        "employee_sessions_created",
+        "sql_checkpoints_executed",
+        "reset_request_id_generated",
+        "reset_submitted",
+        "password_change_submitted",
+        "credential_or_auth_state_changed",
+        "recovery_or_reconciliation_required",
+        "super_admin_untouched",
+        "production_accessed"
+      ],
+      "properties": {
+        "phase": {
+          "const": "phase_3_startup_initial_edge_provenance_gate"
+        },
+        "failure_code": {
+          "const": "PATCH83U_PRE_HARNESS_FROZEN_CONTRACT_AUDIT_FAILED"
+        },
+        "authorization_consumed": {
+          "const": true
+        },
+        "credentials_entered": {
+          "const": false
+        },
+        "login_performed": {
+          "const": false
+        },
+        "employee_sessions_created": {
+          "const": false
+        },
+        "sql_checkpoints_executed": {
+          "const": false
+        },
+        "reset_request_id_generated": {
+          "const": false
+        },
+        "reset_submitted": {
+          "const": false
+        },
+        "password_change_submitted": {
+          "const": false
+        },
+        "credential_or_auth_state_changed": {
+          "const": false
+        },
+        "recovery_or_reconciliation_required": {
+          "const": false
+        },
+        "super_admin_untouched": {
+          "const": true
+        },
+        "production_accessed": {
+          "const": false
+        }
+      }
+    },
+    "localValidation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "freeze_schema",
+        "precredential_readiness",
+        "javascript_syntax",
+        "focused_tests",
+        "auth_session_tests",
+        "typescript",
+        "build",
+        "git_diff_check",
+        "secret_scan"
+      ],
+      "properties": {
+        "freeze_schema": {
+          "const": "passed"
+        },
+        "precredential_readiness": {
+          "const": "passed"
+        },
+        "javascript_syntax": {
+          "const": "passed"
+        },
+        "focused_tests": {
+          "const": "passed"
+        },
+        "auth_session_tests": {
+          "const": "passed"
+        },
+        "typescript": {
+          "const": "passed"
+        },
+        "build": {
+          "type": "string",
+          "enum": [
+            "passed",
+            "not_run_application_source_unchanged"
+          ]
+        },
+        "git_diff_check": {
+          "const": "passed"
+        },
+        "secret_scan": {
+          "const": "passed"
+        }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "credentials_entered",
+        "login_performed",
+        "employee_sessions_created",
+        "reset_request_id_generated",
+        "reset_performed",
+        "password_change_performed",
+        "refresh_replay_performed",
+        "deployment_performed",
+        "migration_performed",
+        "hosted_mutation_performed",
+        "production_accessed",
+        "files_staged",
+        "commit_performed",
+        "push_performed"
+      ],
+      "properties": {
+        "credentials_entered": {
+          "const": false
+        },
+        "login_performed": {
+          "const": false
+        },
+        "employee_sessions_created": {
+          "const": false
+        },
+        "reset_request_id_generated": {
+          "const": false
+        },
+        "reset_performed": {
+          "const": false
+        },
+        "password_change_performed": {
+          "const": false
+        },
+        "refresh_replay_performed": {
+          "const": false
+        },
+        "deployment_performed": {
+          "const": false
+        },
+        "migration_performed": {
+          "const": false
+        },
+        "hosted_mutation_performed": {
+          "const": false
+        },
+        "production_accessed": {
+          "const": false
+        },
+        "files_staged": {
+          "const": false
+        },
+        "commit_performed": {
+          "const": false
+        },
+        "push_performed": {
+          "const": false
+        }
+      }
+    }
+  }
+}

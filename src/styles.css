@@ -8904,3 +8904,338 @@ table tbody tr:hover {
     justify-content: flex-start;
   }
 }
+
+/* Patch 83U: keep the protected provisioning queue inside one responsive,
+   localized dialog without changing the shared sizing of any other modal. */
+.provisioning-queue-dialog {
+  width: min(95vw, 1500px);
+  max-width: calc(100vw - 24px);
+  height: 90dvh;
+  max-height: 90dvh;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.provisioning-queue-dialog .modal-header {
+  position: relative;
+  z-index: 4;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 16px;
+  margin: 0;
+  padding: 12px 18px;
+  border-block-end: 1px solid var(--ui-border);
+  background: var(--ui-surface-solid);
+}
+
+.provisioning-queue-dialog .modal-header-copy {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 3px;
+  min-width: 0;
+}
+
+.provisioning-queue-dialog .modal-header h4 {
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.provisioning-queue-dialog .modal-header-description {
+  color: #92400e;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.provisioning-queue-dialog .modal-header > .ghost-button {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  white-space: nowrap;
+}
+
+.provisioning-queue-modal {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 12px 18px 16px;
+  overflow: hidden;
+}
+
+.provisioning-queue-toolbar {
+  flex: 0 0 auto;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.provisioning-queue-toolbar .ghost-button {
+  min-height: 36px;
+}
+
+.provisioning-queue-state {
+  flex: 0 0 auto;
+  margin: 0 !important;
+}
+
+.provisioning-queue-confirmation {
+  flex: 0 0 auto;
+  gap: 10px !important;
+  max-height: min(270px, 38dvh);
+  padding: 12px !important;
+  overflow-y: auto;
+}
+
+.provisioning-queue-confirmation p {
+  margin: 4px 0 0;
+}
+
+.provisioning-queue-table-scroll {
+  flex: 1 1 360px;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+  background: var(--ui-surface-solid);
+}
+
+.provisioning-queue-table-scroll:focus-visible {
+  outline: 3px solid rgba(15, 118, 110, 0.2);
+  outline-offset: 2px;
+}
+
+.provisioning-queue-table {
+  width: 100%;
+  min-width: 1180px;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.provisioning-queue-table th,
+.provisioning-queue-table td {
+  padding: 9px 10px !important;
+  text-align: start !important;
+  vertical-align: top;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.provisioning-queue-table th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--ui-surface-solid) !important;
+  font-size: 12px !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  white-space: normal;
+}
+
+.provisioning-queue-table td {
+  font-size: 12.5px;
+  background: var(--ui-surface-solid);
+}
+
+.provisioning-queue-table .provisioning-queue-employee {
+  width: 180px;
+}
+
+.provisioning-queue-table .provisioning-queue-employee-id {
+  width: 90px;
+  white-space: nowrap;
+}
+
+.provisioning-queue-table .provisioning-queue-auth-email {
+  width: 170px;
+}
+
+.provisioning-queue-table .provisioning-queue-department {
+  width: 85px;
+}
+
+.provisioning-queue-table .provisioning-queue-access {
+  width: 135px;
+}
+
+.provisioning-queue-table .provisioning-queue-account-action {
+  width: 100px;
+}
+
+.provisioning-queue-table .provisioning-queue-lifecycle {
+  width: 105px;
+}
+
+.provisioning-queue-table .provisioning-queue-status {
+  width: 130px;
+}
+
+.provisioning-queue-table .provisioning-queue-attempts {
+  width: 65px;
+  text-align: center !important;
+}
+
+.provisioning-queue-table .provisioning-queue-controlled-action {
+  width: 120px;
+}
+
+.provisioning-queue-table th.provisioning-queue-employee,
+.provisioning-queue-table td.provisioning-queue-employee {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 2;
+  box-shadow: -1px 0 0 var(--ui-border);
+}
+
+.provisioning-queue-table th.provisioning-queue-controlled-action,
+.provisioning-queue-table td.provisioning-queue-controlled-action {
+  position: sticky;
+  inset-inline-end: 0;
+  z-index: 2;
+  box-shadow: 1px 0 0 var(--ui-border);
+}
+
+.provisioning-queue-table th.provisioning-queue-employee,
+.provisioning-queue-table th.provisioning-queue-controlled-action {
+  z-index: 4;
+}
+
+.provisioning-queue-contact {
+  display: grid;
+  gap: 2px;
+  margin-top: 4px;
+  font-size: 11.5px;
+}
+
+.provisioning-queue-email {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: start;
+  unicode-bidi: plaintext;
+}
+
+.provisioning-queue-controlled-action .ghost-button {
+  width: 100%;
+  min-height: 34px;
+  white-space: normal;
+}
+
+@media (max-width: 640px) {
+  .modal-backdrop:has(> .provisioning-queue-dialog) {
+    padding: 6px;
+  }
+
+  .provisioning-queue-dialog {
+    width: calc(100vw - 12px);
+    max-width: none;
+    height: calc(100dvh - 12px);
+    max-height: calc(100dvh - 12px);
+    border-radius: 14px;
+  }
+
+  .provisioning-queue-dialog .modal-header {
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .provisioning-queue-dialog .modal-header h4 {
+    font-size: 16px;
+  }
+
+  .provisioning-queue-dialog .modal-header-description {
+    font-size: 11.5px;
+  }
+
+  .provisioning-queue-dialog .modal-header > .ghost-button {
+    min-height: 34px;
+    padding: 7px 10px;
+  }
+
+  .provisioning-queue-modal {
+    gap: 8px;
+    padding: 8px 10px 10px;
+  }
+
+  .provisioning-queue-toolbar {
+    align-items: center;
+  }
+
+  .provisioning-queue-toolbar .ghost-button {
+    min-height: 34px;
+    padding: 7px 9px;
+    white-space: normal;
+  }
+
+  .provisioning-queue-confirmation {
+    max-height: 42dvh;
+  }
+
+  .provisioning-queue-table {
+    min-width: 1120px;
+  }
+
+  .provisioning-queue-table .provisioning-queue-employee {
+    width: 150px;
+  }
+
+  .provisioning-queue-table .provisioning-queue-controlled-action {
+    width: 105px;
+  }
+}
+
+/* PATCH 83U Phase 1: Employee Arabic/RTL presentation only. */
+.rtl-shell .sidebar-nav-tree button,
+.rtl-shell .nav-section-label,
+.rtl-shell .sidebar-footnote,
+.rtl-shell .module-header,
+.rtl-shell .panel-header,
+.rtl-shell .detail-panel {
+  text-align: right !important;
+}
+
+.rtl-shell .workspace-card__footer svg,
+.rtl-shell .workspace-hero__actions svg {
+  transform: scaleX(-1);
+}
+
+.rtl-shell .table-wrapper th,
+.rtl-shell .table-wrapper td {
+  text-align: right;
+}
+
+.modern-main-content .page-section,
+.modern-main-content .table-wrapper {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.modern-main-content .table-wrapper {
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+@media (max-width: 640px) {
+  .sidebar-nav-tree .nav-group-trigger,
+  .sidebar-nav-tree .nav-child-item {
+    min-width: 0;
+  }
+
+  .modern-main-content .page-section {
+    overflow-x: clip;
+  }
+
+  .modern-main-content .table-wrapper {
+    width: 100%;
+  }
+}

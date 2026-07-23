@@ -1,0 +1,30 @@
+{
+  "schema_version": "gate11r-staging-postflight-v1",
+  "captured_at": "2026-07-22T19:08:35Z",
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "transaction_read_only": true,
+  "explicit_rollback": true,
+  "migration_history": {"latest":185,"migration_185_count":1,"above_185":0},
+  "runtime": {"schema_version":"174.2-auth-first","enforcement_state":"enforced","state_version":5,"contracts_compatible":true},
+  "tables": {
+    "count": 2,
+    "rls_enabled": 2,
+    "rls_forced": 2,
+    "public_privileges_absent": true,
+    "anon_privileges_absent": true,
+    "authenticated_select_only": true,
+    "service_role_select_only": true
+  },
+  "policies": {
+    "legacy_unrestricted_policy_count": 0,
+    "credential_gate_count": 2,
+    "super_admin_read_policy_count": 2,
+    "exact_definition_match": true
+  },
+  "dependent_view": {"security_invoker":true,"public_select":false,"anon_select":false,"authenticated_select":true,"service_role_select":true},
+  "protected_rpc_acl": {"function_count":3,"public_execute":false,"anon_execute":false,"authenticated_execute":false,"service_role_execute":true},
+  "result": "passed",
+  "business_data_selected": false,
+  "auth_data_selected": false,
+  "production_accessed": false
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "patch83u-run008-reservation-v1",
+  "run_number": 8,
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "production_project_ref": "zbrjjecpsrzposhuarcn",
+  "execution_authorized": false,
+  "exact_confirmation_phrase": "EXECUTE RUN 008 RESET NOW",
+  "confirmation_cli_override_supported": false,
+  "initial_credential_version": 4,
+  "post_reset_credential_version": 5,
+  "final_credential_version": 6,
+  "initial_session_count": 0,
+  "initial_unrevoked_refresh_token_count": 0,
+  "prior_runs_preserved": true,
+  "output_policy": "create_only",
+  "credential_source": "CurrentUser DPAPI exact-name bundle",
+  "preparation_only": true
+}

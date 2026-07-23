@@ -1,0 +1,44 @@
+{
+  "gate": "production_gate_8_v2",
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "result": "passed",
+  "frontend": {
+    "origin": "http://localhost:5173",
+    "startup_guard_project_ref": "zghsgzrdwbqdrpuxanac",
+    "http_status": 200,
+    "screen": "signed_out_login",
+    "profile_reconciliation_absent": true,
+    "error_overlay_absent": true,
+    "console_error_count": 0,
+    "production_request_count": 0,
+    "supabase_traffic_staging_only": true,
+    "credentials_entered": false,
+    "session_created": false
+  },
+  "database_security": {
+    "transaction_read_only": true,
+    "explicit_rollback": true,
+    "runtime_action_browser_dml_grants": 0,
+    "runtime_action_browser_write_policies": 0,
+    "legacy_tables_without_browser_grants": 18,
+    "legacy_tables_without_policies": 18,
+    "unknown_runtime_action_denied": true,
+    "unsigned_runtime_action_denied": true,
+    "unauthorized_attestation_execute": false,
+    "service_role_attestation_execute": true,
+    "service_role_attestation_overall_pass": true,
+    "credential_governance_runtime_compatible": true,
+    "last_super_admin_contract_intact": true
+  },
+  "security_advisor": {
+    "total": 71,
+    "info": 18,
+    "warn": 53,
+    "gate8_scope_findings": "18 expected informational RLS-enabled/no-policy notices for intentionally browser-closed legacy tables",
+    "new_gate8_scope_warning_or_error": false,
+    "pre_existing_out_of_scope_warnings": 53
+  },
+  "business_data_created_modified_or_deleted": false,
+  "auth_account_modified": false,
+  "production_accessed": false
+}

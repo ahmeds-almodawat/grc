@@ -1,3 +1,5 @@
+import type { Patch83uCapabilities } from '../lib/userCredentialApi';
+
 export type AuthRole =
   | 'super_admin'
   | 'executive'
@@ -15,13 +17,19 @@ export type AuthRole =
 export type AccessScope = 'global' | 'division' | 'department' | 'unit' | 'assigned_only';
 
 export type AuthStatus =
-  | 'loading'
-  | 'authenticated'
-  | 'password_change_required'
+  | 'initializing'
   | 'unauthenticated'
-  | 'inactive'
+  | 'authenticating'
+  | 'authenticated_checking_capabilities'
+  | 'authenticated_checking_credential_state'
+  | 'authenticated_loading_authorization'
+  | 'authenticated_password_change_required'
+  | 'authenticated_active'
+  | 'authenticated_deployment_incompatible'
+  | 'authenticated_reconciliation_required'
+  | 'authenticated_access_denied'
+  | 'signing_out'
   | 'configuration_error'
-  | 'profile_missing'
   | 'error';
 
 export type AuthUserStatus = 'active' | 'inactive' | 'archived' | 'invited' | 'locked';
@@ -30,6 +38,7 @@ export type AuthCredentialState =
   | 'legacy_unmanaged'
   | 'active'
   | 'password_change_required'
+  | 'reconciliation_required'
   | 'blocked';
 
 export interface AuthProfile {
@@ -63,5 +72,10 @@ export interface AuthUserState {
   credentialState?: AuthCredentialState;
   credentialVersion?: number;
   message?: string;
+  notice?: string;
+  deploymentErrorCode?: string;
+  compatibilityRetryCount?: number;
+  compatibilityRetryAvailableAt?: number;
+  patch83uCapabilities?: Patch83uCapabilities;
   isLocalBypass?: boolean;
 }

@@ -8,6 +8,14 @@ const normalizeName = (value) => value
   .trim()
   .toLowerCase();
 
+const normalizeCatalogIdentifier = (value) => {
+  let normalized = normalizeName(value);
+  while (Buffer.byteLength(normalized, 'utf8') > 63) {
+    normalized = normalized.slice(0, -1);
+  }
+  return normalized;
+};
+
 const stripSqlComments = (sql) => sql
   .replace(/\/\*[\s\S]*?\*\//g, ' ')
   .replace(/--.*$/gm, ' ');
@@ -139,7 +147,7 @@ function parseMigrationState(migrationFiles) {
     }
 
     for (const match of collectMatches(sql, /\bcreate\s+(?:or\s+replace\s+)?function\s+((?:public\.)?"?[a-zA-Z_][\w$]*"?)\s*\(([^)]*)\)([\s\S]*?)\$\$\s*;/gi)) {
-      const name = normalizeName(match[1]);
+      const name = normalizeCatalogIdentifier(match[1]);
       const records = functions.get(name) || [];
       const identity = match[2].replace(/\s+/g, ' ').trim();
       const replacement = {
@@ -156,6 +164,26 @@ function parseMigrationState(migrationFiles) {
       functions.set(name, records);
       if (!functionAcl.has(name)) {
         functionAcl.set(name, { public: true, authenticated: true, evidence: ['PostgreSQL default PUBLIC EXECUTE'] });
+      }
+    }
+
+    for (const match of collectMatches(sql, /\balter\s+function\s+((?:public\.)?"?[a-zA-Z_][\w$]*"?)\s*\([^)]*\)\s+rename\s+to\s+("?[a-zA-Z_][\w$]*"?)/gi)) {
+      const sourceName = normalizeCatalogIdentifier(match[1]);
+      const destinationName = normalizeCatalogIdentifier(match[2]);
+      const records = functions.get(sourceName) || [];
+      if (records.length) {
+        functions.delete(sourceName);
+        functions.set(destinationName, records.map((record) => ({
+          ...record,
+          name: destinationName,
+          renamed_from: sourceName,
+          definition_file: migrationFile.path,
+          definition_line: lineNumber(sql, match.index),
+        })));
+      }
+      if (functionAcl.has(sourceName)) {
+        functionAcl.set(destinationName, functionAcl.get(sourceName));
+        functionAcl.delete(sourceName);
       }
     }
 
@@ -183,10 +211,16 @@ function parseMigrationState(migrationFiles) {
 
     for (const match of collectMatches(sql, /\b(grant|revoke)\s+(?:all|execute)\s+on\s+function\s+((?:public\.)?"?[a-zA-Z_][\w$]*"?)\s*\([^)]*\)\s+(?:to|from)\s+([\w\s,]+)/gi)) {
       const operation = match[1].toLowerCase();
-      const name = normalizeName(match[2]);
+      const name = normalizeCatalogIdentifier(match[2]);
       const grantees = match[3].toLowerCase();
-      const record = functionAcl.get(name) || { public: true, authenticated: true, evidence: ['PostgreSQL default PUBLIC EXECUTE'] };
-      for (const role of ['authenticated', 'public', 'anon']) {
+      const record = functionAcl.get(name) || {
+        public: true,
+        authenticated: true,
+        anon: true,
+        service_role: false,
+        evidence: ['PostgreSQL default PUBLIC EXECUTE'],
+      };
+      for (const role of ['authenticated', 'public', 'anon', 'service_role']) {
         if (new RegExp(`\\b${role}\\b`, 'i').test(grantees)) record[role] = operation === 'grant';
       }
       record.evidence.push(`${migrationFile.path}:${lineNumber(sql, match.index)} ${operation} execute ${grantees.trim()}`);
@@ -474,6 +508,7 @@ export function analyzePatch83uAuthSurface({
     after_credential_access_check: credentialCheckIndex >= 0 && searchBlockIndex > credentialCheckIndex,
     anon_key_client: /createClient\(supabaseUrl,\s*anonKey/.test(searchEdgeBlock),
     caller_bearer_forwarded: /Authorization:\s*`Bearer \$\{token\}`/.test(searchEdgeBlock),
+    frontend_contract_forwarded: /['"]x-patch83u-frontend-contract-version['"]\s*:\s*PATCH83U_FRONTEND_CONTRACT_VERSION/.test(searchEdgeBlock),
     search_rpc_uses_rls_client: /rlsClient\.rpc\(['"]search_grc_global['"]/.test(searchEdgeBlock),
     service_client_not_used_for_search: !/serviceClient\.rpc\(['"]search_grc_global['"]/.test(searchEdgeBlock),
   };
@@ -526,6 +561,9 @@ export function analyzePatch83uAuthSurface({
     })
     .sort((a, b) => a.signature.localeCompare(b.signature));
   const targetBroadSecurityDefiners = [];
+  const reviewedRestrictedSecurityDefiners = [];
+  const reviewedPatch83uMigrationCeiling = 177;
+  const explicitServiceOnlyAclFloor = 176;
   for (const [name, definitions] of state.functions) {
     for (const definition of definitions) {
       const migrationNumber = Number(
@@ -533,27 +571,85 @@ export function analyzePatch83uAuthSurface({
       );
       if (migrationNumber < 171) continue;
       if (definition.security_mode !== 'security_definer') continue;
-      // Migration 174's dynamic revoke cannot protect a routine introduced by a
-      // later migration. Treat every future SECURITY DEFINER routine as broadly
-      // executable until this proof is deliberately extended with exact ACL and
-      // purpose evidence. That makes a new exception fail closed by default.
-      const acl = migrationNumber > 174
+      // Migration 174's dynamic revoke cannot protect a routine introduced or
+      // renamed by a later migration. Every SECURITY DEFINER introduced, replaced,
+      // or renamed by migrations 176 through the reviewed ceiling therefore needs
+      // its own explicit browser-role revoke plus a service-role grant (or explicit
+      // owner-only service-role revoke). Any later migration fails closed.
+      const recordedAcl = state.functionAcl.get(name) || {
+        public: true,
+        authenticated: true,
+        anon: true,
+        service_role: false,
+        evidence: ['PostgreSQL default PUBLIC EXECUTE'],
+      };
+      const requiresExplicitServiceOnlyAcl = migrationNumber >= explicitServiceOnlyAclFloor
+        && migrationNumber <= reviewedPatch83uMigrationCeiling;
+      const migrationEvidencePrefix = `${definition.definition_file}:`;
+      const explicitRevokeEvidence = recordedAcl.evidence
+        .filter((item) =>
+          item.includes(migrationEvidencePrefix)
+          && item.includes('revoke execute'))
+        .join(' ');
+      const hasExplicitBrowserRevoke = requiresExplicitServiceOnlyAcl
+        && /\bpublic\b/.test(explicitRevokeEvidence)
+        && /\banon\b/.test(explicitRevokeEvidence)
+        && /\bauthenticated\b/.test(explicitRevokeEvidence);
+      const hasExplicitServiceGrant = requiresExplicitServiceOnlyAcl
+        && recordedAcl.service_role === true
+        && recordedAcl.evidence.some((item) =>
+          item.includes(migrationEvidencePrefix)
+          && item.includes('grant execute')
+          && /\bservice_role\b/.test(item));
+      const hasExplicitOwnerOnlyRevoke = requiresExplicitServiceOnlyAcl
+        && recordedAcl.service_role !== true
+        && recordedAcl.evidence.some((item) =>
+          item.includes(migrationEvidencePrefix)
+          && item.includes('revoke execute')
+          && /\bservice_role\b/.test(item));
+      const explicitServiceOnlyAclProven = hasExplicitBrowserRevoke
+        && (hasExplicitServiceGrant || hasExplicitOwnerOnlyRevoke)
+        && !recordedAcl.public
+        && !recordedAcl.anon
+        && !recordedAcl.authenticated;
+      const acl = migrationNumber > reviewedPatch83uMigrationCeiling
+        || (requiresExplicitServiceOnlyAcl && !explicitServiceOnlyAclProven)
         ? {
           public: true,
           authenticated: true,
           anon: true,
-          evidence: ['future migration SECURITY DEFINER routine requires explicit ACL review'],
+          service_role: false,
+          evidence: [
+            requiresExplicitServiceOnlyAcl
+              ? `migration ${migrationNumber} SECURITY DEFINER routine requires an explicit PUBLIC/anon/authenticated revoke plus either a service_role-only grant or an explicit owner-only service_role revoke`
+              : 'future migration SECURITY DEFINER routine requires explicit ACL review',
+          ],
         }
-        : state.functionAcl.get(name) || {
-          public: true,
-          authenticated: true,
-          anon: true,
-          evidence: ['PostgreSQL default PUBLIC EXECUTE'],
-        };
+        : recordedAcl;
+      if (requiresExplicitServiceOnlyAcl && explicitServiceOnlyAclProven) {
+        reviewedRestrictedSecurityDefiners.push({
+          source: `migration${migrationNumber}_service_role_acl_review`,
+          schema: 'public',
+          name,
+          signature: `public.${name}(${definition.identity})`,
+          public_execute: false,
+          anon_execute: false,
+          authenticated_execute: false,
+          service_role_execute: recordedAcl.service_role === true,
+          disposition: recordedAcl.service_role === true ? 'service_role_only' : 'owner_only',
+          definition_file: definition.definition_file,
+          definition_line: definition.definition_line,
+          acl_evidence: recordedAcl.evidence,
+        });
+      }
       if (!acl.public && !acl.authenticated && !acl.anon) continue;
       const allowedPurpose = targetRlsHelperAllowlist.get(name) || null;
       targetBroadSecurityDefiners.push({
-        source: migrationNumber > 174 ? 'future_migration_requires_review' : 'target_migrations_171_174',
+        source: migrationNumber > reviewedPatch83uMigrationCeiling
+          ? 'future_migration_requires_review'
+          : requiresExplicitServiceOnlyAcl
+            ? `migration${migrationNumber}_service_role_acl_review`
+            : `target_migrations_171_${reviewedPatch83uMigrationCeiling}`,
         schema: 'public',
         name,
         signature: `public.${name}(${definition.identity})`,
@@ -573,6 +669,7 @@ export function analyzePatch83uAuthSurface({
     }
   }
   targetBroadSecurityDefiners.sort((a, b) => a.signature.localeCompare(b.signature));
+  reviewedRestrictedSecurityDefiners.sort((a, b) => a.signature.localeCompare(b.signature));
   const aclFunctionFindings = [
     ...liveBroadSecurityDefiners.filter((item) => !item.allowed),
     ...targetBroadSecurityDefiners.filter((item) => !item.allowed),
@@ -633,10 +730,10 @@ export function analyzePatch83uAuthSurface({
     status: findings.length ? 'fail' : 'pass',
     evidence: {
       browser_source: 'src/**/*.{ts,tsx}',
-      target_schema: 'ordered supabase/migrations/*.sql including unapplied 173/174',
+      target_schema: 'ordered supabase/migrations/*.sql through reviewed migration 177',
       deployed_function_catalog: deployedFunctionInventory ? 'release/patch83q/patch83q-live-security-definer-inventory.json' : 'not supplied',
       deployed_search_entries: deployedSearch.length,
-      note: 'Static target-schema proof. Runtime catalog verification remains required after authorized migration deployment.',
+      note: 'Static target-schema proof. Runtime catalog verification of migration 177 remains required after authorized staging application.',
     },
     summary: {
       direct_browser_rpc_count: directRpcs.length,
@@ -655,8 +752,10 @@ export function analyzePatch83uAuthSurface({
       views_without_explicit_migration_grant_count: viewsWithoutExplicitGrant.length,
       retained_live_broad_security_definer_count: liveBroadSecurityDefiners.length,
       target_broad_security_definer_count: targetBroadSecurityDefiners.length,
+      reviewed_restricted_security_definer_count: reviewedRestrictedSecurityDefiners.length,
       acl_reachable_materialized_view_count: aclReachableMaterializedViews.length,
       legacy_browser_base_table_hardening_count: state.legacyBrowserBaseTables.size,
+      reviewed_patch83u_migration_ceiling: reviewedPatch83uMigrationCeiling,
     },
     search_grc_global: {
       disposition: searchFindings.length ? 'unsafe' : 'authenticated_edge_bridge_with_caller_jwt_rls',
@@ -673,6 +772,7 @@ export function analyzePatch83uAuthSurface({
     acl_reachable_security_definer_rpcs: {
       retained_live: liveBroadSecurityDefiners,
       target_migrations_171_plus: targetBroadSecurityDefiners,
+      reviewed_restricted_migrations_176_177: reviewedRestrictedSecurityDefiners,
       retained_live_allowlist: [...retainedLiveHelperAllowlist.entries()].map(([signature, purpose]) => ({ signature, purpose })),
       target_rls_helper_allowlist: [...targetRlsHelperAllowlist.entries()].map(([name, purpose]) => ({ name, purpose })),
       patch83u_dynamic_revoke_proven: state.patch83uDynamicRevoke,
@@ -741,25 +841,34 @@ function renderMarkdown(report) {
   ].map((rpc) =>
     `| \`${rpc.signature}\` | ${rpc.source} | ${rpc.public_execute ? 'yes' : 'no'} | ${rpc.anon_execute ? 'yes' : 'no'} | ${rpc.authenticated_execute ? 'yes' : 'no'} | ${rpc.allowed ? 'allowed' : 'UNSAFE'} | ${rpc.allowed_purpose || ''} |`,
   ).join('\n');
+  const restrictedRpcRows = report.acl_reachable_security_definer_rpcs.reviewed_restricted_migrations_176_177
+    .map((rpc) =>
+      `| \`${rpc.signature}\` | ${rpc.source} | ${rpc.service_role_execute ? 'yes' : 'no'} | ${rpc.disposition} | \`${rpc.definition_file}:${rpc.definition_line}\` |`,
+    ).join('\n');
   const legacyBaseRows = report.legacy_browser_base_table_hardening.map((table) =>
     `| \`${table.name}\` | ${table.organization_scoped ? 'organization_id' : 'credential-gated global metadata'} | yes | yes |`,
   ).join('\n');
   return `# Patch 83U authenticated browser surface inventory\n\n`
     + `Status: **${report.status.toUpperCase()}**\n\n`
-    + `This is a deterministic static replay of the ordered migration chain plus actual browser call sites. It does not claim that unapplied migrations 173/174 or the resulting catalog state have been deployed.\n\n`
+    + `This is a deterministic static replay of the ordered migration chain through reviewed migration 177 plus actual browser call sites. Supplied evidence records migration 176 as applied to staging, but this static artifact is not live-catalog proof and does not claim migration-177 application or the resulting final catalog state.\n\n`
     + `## Summary\n\n`
     + `- Direct browser RPCs: ${report.summary.direct_browser_rpc_count}\n`
     + `- Direct browser views: ${report.summary.direct_browser_view_count}\n`
     + `- Direct browser materialized views: ${report.summary.direct_browser_materialized_view_count}\n`
     + `- Unsafe surfaces: ${report.summary.unsafe_surface_count}\n`
     + `- Search transport: ${report.summary.search_transport}\n`
+    + `- Reviewed restricted migration 176–177 SECURITY DEFINER routines: ${report.summary.reviewed_restricted_security_definer_count}\n`
     + `- Target credential-gate migration present: ${report.summary.credential_gate_target_present ? 'yes' : 'no'}\n\n`
     + `## search_grc_global\n\n`
     + `Disposition: **${report.search_grc_global.disposition}**. The accepted design is the authenticated Edge bridge using an anon-key Supabase client carrying the caller Bearer token; the RPC remains SECURITY INVOKER and its complete view/base-table chain must remain security-invoker and credential-gated by RLS.\n\n`
     + `## ACL-reachable SECURITY DEFINER routines\n\n`
-    + `The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–174 permit exactly three Patch 83U RLS decision helpers; the dynamic Patch 83U revoke denies browser execution on every other Patch 83U routine.\n\n`
+    + `The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–174 permit exactly three Patch 83U RLS decision helpers. Every SECURITY DEFINER routine introduced, replaced, or renamed by migrations 176–177 must contain its own explicit revoke from PUBLIC/anon/authenticated plus either an explicit service_role-only grant or an explicit owner-only service_role revoke; migration 174's earlier dynamic revoke is not accepted as evidence for migrations 176–177.\n\n`
     + `| Signature | Evidence source | PUBLIC | anon | authenticated | Disposition | Purpose |\n`
     + `|---|---|---:|---:|---:|---|---|\n${rpcRows || '| _none_ | | | | | | |'}\n\n`
+    + `### Reviewed restricted routines from migrations 176–177\n\n`
+    + `These routines are not reachable by browser roles. They are listed explicitly so migration 177's stable finalizer name and in-migration ACL proof remain visible.\n\n`
+    + `| Signature | Evidence source | service_role | Disposition | Definition evidence |\n`
+    + `|---|---|---:|---|---|\n${restrictedRpcRows || '| _none_ | | | | |'}\n\n`
     + `## Materialized views\n\n`
     + `No browser-referenced or ACL-reachable materialized view exists in the target replay. Migration 174 checks the live public catalog and aborts if \`authenticated\` can SELECT any materialized view.\n\n`
     + `## Direct browser views\n\n`

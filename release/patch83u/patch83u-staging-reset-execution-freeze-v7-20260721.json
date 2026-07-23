@@ -1,0 +1,1097 @@
+{
+  "$schema": "./patch83u-staging-reset-execution-freeze-schema-v7.json",
+  "schema_version": "patch83u-staging-reset-execution-freeze-v7",
+  "captured_at_utc": "2026-07-21T09:27:59.875Z",
+  "readiness_decision": "READY FOR FINAL HOSTED PROOF AUTHORIZATION",
+  "decision_is_execution_authorization": false,
+  "supersedes": {
+    "path": "release/patch83u/patch83u-staging-reset-execution-freeze-v6-20260720.json",
+    "sha256": "741a610233a8175e75018587c297cce05809f9259957f9f7c9028301495a29d9",
+    "bytes": 36015,
+    "prior_authorization_reusable": false
+  },
+  "repository": {
+    "branch": "patch83t-controlled-user-excel-import",
+    "head": "a9989b1e8d95a6bb775316a2d9e709ef84514c42",
+    "working_tree_dirty": true,
+    "tracked_modified_count": 64,
+    "untracked_count_after_manifest_creation": 3147,
+    "porcelain_entry_count_after_manifest_creation": 3211,
+    "staged_file_count": 0
+  },
+  "targets": {
+    "allowed_staging_project_ref": "zghsgzrdwbqdrpuxanac",
+    "prohibited_production_project_ref": "zbrjjecpsrzposhuarcn",
+    "staging_supabase_origin": "https://zghsgzrdwbqdrpuxanac.supabase.co",
+    "application_origin": "http://localhost:5173",
+    "production_accessed": false
+  },
+  "toolchain": {
+    "node": "v24.12.0",
+    "npm": "11.17.0",
+    "playwright": "1.61.0",
+    "supabase_cli": "2.72.7",
+    "operating_system": "win32 10.0.26200 x64"
+  },
+  "runtime_contract": {
+    "schema_version": "174.2-auth-first",
+    "enforcement_state": "enforced",
+    "state_version": 5,
+    "expected_edge_contract": "patch83u-edge-auth-first-v1",
+    "compatible_edge_contract": "patch83u-edge-auth-first-v1",
+    "expected_frontend_contract": "patch83u-frontend-auth-first-v1",
+    "compatible_frontend_contract": "patch83u-frontend-auth-first-v1",
+    "applied_migrations": [
+      "174",
+      "176",
+      "177"
+    ],
+    "finalizer": {
+      "name": "patch83u_finalize_password_change_after_revocation",
+      "name_bytes": 50,
+      "security_definer": true,
+      "service_role_execute": true,
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "public_execute": false
+    }
+  },
+  "operator_confirmation_contract": {
+    "contract_id": "patch83u-run007-reset-confirmation-v1",
+    "run_number": 7,
+    "exact_phrase": "EXECUTE RUN 007 RESET NOW",
+    "case_sensitive": true,
+    "cli_override_supported": false,
+    "required_immediately_before_reset": true,
+    "evidence_retention": "boolean_and_contract_id_only"
+  },
+  "active_edge_provenance": {
+    "identity": {
+      "project_ref": "zghsgzrdwbqdrpuxanac",
+      "function_name": "privileged-action"
+    },
+    "metadata": {
+      "version": 5,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "hosted_ezbr_sha256": "7fee99f2d77590f48026ddb0aaec5d540403d7c85fda462aece5154492852762",
+      "created_at_unix_ms": 1784213509236,
+      "created_at_utc": "2026-07-16T14:51:49.236Z",
+      "updated_at_unix_ms": 1784325647510,
+      "updated_at_utc": "2026-07-17T22:00:47.510Z"
+    },
+    "provenance_record": {
+      "path": "release/patch83u/patch83u-staging-edge-v5-provenance-20260719.json",
+      "sha256": "959bcab302c4a12857005b39e2f19ff35d27a6872eb25596ce24eb80c947ca74",
+      "bytes": 4495
+    },
+    "source": {
+      "downloaded": {
+        "sha256": "f4a53ddfd0167ca62661c3c9acc6b7b320a0e43f4b96efc821308e1db73caf87",
+        "bytes": 157176
+      },
+      "local": {
+        "path": "supabase/functions/privileged-action/index.ts",
+        "sha256": "f4a53ddfd0167ca62661c3c9acc6b7b320a0e43f4b96efc821308e1db73caf87",
+        "bytes": 157176
+      },
+      "byte_identical": true,
+      "production_ref_absent": true
+    },
+    "bundle_binding": {
+      "raw_entrypoint_binding_proven": true,
+      "complete_deployment_bundle_binding_proven": false,
+      "hosted_hash_meaning_as_raw_source_hash_proven": false
+    }
+  },
+  "run_contract": {
+    "run_number": 7,
+    "evidence_directory": "release/patch83u/reset-proof-run-007",
+    "checkpoint_directory": "release/patch83u/reset-proof-run-007/checkpoints",
+    "checkpoint_files": [
+      "01-before-employee-sessions.json",
+      "02-immediately-before-reset.json",
+      "03-immediately-after-reset.json",
+      "04-before-required-password-change.json",
+      "05-immediately-after-password-change-finalization.json",
+      "06-after-fresh-employee-login.json"
+    ],
+    "output_path_pattern": "release/patch83u/reset-proof-run-007/patch83u-staging-reset-final-results-attempt-NNN.json",
+    "exclusive_create_required": true,
+    "evidence_schema_path": "release/patch83u/patch83u-staging-reset-harness-schema-v6.json",
+    "evidence_schema_sha256": "541b2be7d050f52c0b9c2e87aab4e25544bb228b7579f6afbf32a1ea51cf814c",
+    "evidence_schema_bytes": 28690,
+    "evidence_schema_version": "patch83u-staging-reset-proof-v6",
+    "frontend_mode": "staging",
+    "precredential_mode_flag": "--precredential-readiness-only",
+    "precredential_success_output": "PATCH83U PRE-CREDENTIAL READINESS PASSED"
+  },
+  "proof_contract": {
+    "path": "release/patch83u/patch83u-run007-proof-contract.json",
+    "sha256": "a90a4198e6a28a66d651a762baa524c9d1df9a5dc2576da73fe74d0cbffecea5",
+    "bytes": 21347,
+    "schema_version": "patch83u-run007-proof-contract-v1",
+    "contract_id": "patch83u-hosted-reset-proof-run-007",
+    "requirement_count": 56
+  },
+  "checkpoint_schema": {
+    "path": "release/patch83u/patch83u-staging-checkpoint-file-schema-v3.json",
+    "sha256": "6be550ac2d18254d338d7d0489ffae03c1cfe9634bc93bc5fad992b3134809c5",
+    "bytes": 30633,
+    "schema_version": "patch83u-staging-sql-editor-checkpoint-file-v3"
+  },
+  "traceability": {
+    "json_path": "release/patch83u/patch83u-run007-proof-traceability.json",
+    "json_sha256": "987f59e9e23d419417fb69c22ad3429fc04f8952073e7743b573512e8515a51c",
+    "json_bytes": 46877,
+    "markdown_path": "release/patch83u/patch83u-run007-proof-traceability.md",
+    "markdown_sha256": "e53a60ccfa1a3a2c5fdcdedaac6e77946fef810acc7eff50a6dc9ead98a49b68",
+    "markdown_bytes": 8710,
+    "schema_version": "patch83u-run007-proof-traceability-v1",
+    "requirement_count": 56,
+    "mapped_requirement_count": 56,
+    "coverage_percent": 100,
+    "complete": true
+  },
+  "final_session_contract": {
+    "checkpoint": "after_fresh_employee_login",
+    "expected_session_count": 1,
+    "expected_unrevoked_refresh_token_count": 1,
+    "enforcement": "exact_integer_equality",
+    "cli_override_supported": false,
+    "justification_basis": "Checkpoint 5 proves zero active sessions and zero unrevoked refresh rows after global revocation and atomic finalization; exactly one fresh nonpersistent Employee login occurs before Checkpoint 6."
+  },
+  "frozen_source": {
+    "hash_algorithm": "sha256",
+    "aggregate_algorithm": "SHA-256 of ordinal-path-sorted UTF-8 lines path<TAB>sha256<TAB>bytes joined by LF with no trailing LF",
+    "file_count": 88,
+    "total_bytes": 3092332,
+    "aggregate_sha256": "0d7346d22365c1d9ec1a3a0573b0863fa0e00e5d8c0471a25b9f48c019726c8a",
+    "files": [
+      {
+        "path": ".gitignore",
+        "sha256": "e8499b124b314709f5b0b7fae3ecc9fa89f5e7e6639367712a0973e03f4a4860",
+        "bytes": 3787,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "package-lock.json",
+        "sha256": "b43b1bb7117e8b2dbfc5607f99a1cebd9a756043c28bff8ff53e48a2f16775d3",
+        "bytes": 122300,
+        "git_status": "clean",
+        "tracked_at_head": true
+      },
+      {
+        "path": "package.json",
+        "sha256": "645c691a8855de336545ef85d9810401d0ffdbc0b247efae86cb57429eeb366a",
+        "bytes": 59360,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "playwright.config.ts",
+        "sha256": "5dbb47db28e5ab27e42eb6de1f849fe5c8c08d07e63b31694f92e286f870241c",
+        "bytes": 566,
+        "git_status": "clean",
+        "tracked_at_head": true
+      },
+      {
+        "path": "playwright.staging-clean.config.ts",
+        "sha256": "e4d67162123dcb0947c8bdc155e7d5028508c61cd6507a3fcddef5fa31522868",
+        "bytes": 534,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/patch83u-run006-proof-contract.json",
+        "sha256": "17c4adebdcb0abeb941d66d5cbc36040bf4e702315fc67f3c8fda9331b6f07df",
+        "bytes": 21275,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/patch83u-run006-proof-traceability.json",
+        "sha256": "0a0d5b80b9c0924314487d3fac4da2b8058510037b4abf99fdcae627f677d972",
+        "bytes": 46865,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/patch83u-run006-proof-traceability.md",
+        "sha256": "89eaae726784aa57a50f9d09a061605897685812d92694c5796b0231dbf9cdd0",
+        "bytes": 8710,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/patch83u-run007-proof-contract.json",
+        "sha256": "a90a4198e6a28a66d651a762baa524c9d1df9a5dc2576da73fe74d0cbffecea5",
+        "bytes": 21347,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/patch83u-run007-proof-traceability.json",
+        "sha256": "987f59e9e23d419417fb69c22ad3429fc04f8952073e7743b573512e8515a51c",
+        "bytes": 46877,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/patch83u-run007-proof-traceability.md",
+        "sha256": "e53a60ccfa1a3a2c5fdcdedaac6e77946fef810acc7eff50a6dc9ead98a49b68",
+        "bytes": 8710,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-checkpoint-file-schema-v2.json",
+        "sha256": "51c5c9bc1de2003f8906cedd0e185dce361068e017973c25767fa4384fadfc4d",
+        "bytes": 30695,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-checkpoint-file-schema-v3.json",
+        "sha256": "6be550ac2d18254d338d7d0489ffae03c1cfe9634bc93bc5fad992b3134809c5",
+        "bytes": 30633,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-edge-v5-provenance-20260719.json",
+        "sha256": "959bcab302c4a12857005b39e2f19ff35d27a6872eb25596ce24eb80c947ca74",
+        "bytes": 4495,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-schema-v6.json",
+        "sha256": "8de2fe69843d443d053d9270956394abd78fb33726401a0c44b39d0f33384ffe",
+        "bytes": 27337,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-schema-v7.json",
+        "sha256": "c2172f48f0675fa9d375127d34e902d99a488000d5ca8920eecad15e02eca2a5",
+        "bytes": 27344,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-harness-schema-v5.json",
+        "sha256": "e4dbeeb914452e38cd8fb4a3b32d993e60995a1bb84f4cfba948009c86997ca3",
+        "bytes": 28690,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-harness-schema-v6.json",
+        "sha256": "541b2be7d050f52c0b9c2e87aab4e25544bb228b7579f6afbf32a1ea51cf814c",
+        "bytes": 28690,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-006/README.md",
+        "sha256": "750939cbfd1efbf25d8c1963aa9f8934054aa0102dc207922551dcbb809a983b",
+        "bytes": 1956,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-006/checkpoints/README.md",
+        "sha256": "a1e336d3f3ddb39f9b309f9f8f830cb53d4b154a89449648a258fb703c54d6e3",
+        "bytes": 815,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-006/run006-reservation.json",
+        "sha256": "93acc084406ea0432f7f445fe3aba1bdc1bd21876a9e76f73844687d2c48b03c",
+        "bytes": 1269,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-007/README.md",
+        "sha256": "518280fa139d49dea20ed5bfd00dc2af9a9e5aac2bc2d54fb99702853715f7a4",
+        "bytes": 2267,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-007/checkpoints/README.md",
+        "sha256": "b962e6f16c24ea0764ac96d50173270c06c0182e75f3a88f221696f2d9bd08c7",
+        "bytes": 815,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-007/run007-reservation.json",
+        "sha256": "88dead0a8d85c484f770beab765d03b208375cd1d16c05a588f8d36bc7ed5b38",
+        "bytes": 1404,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "scripts/patch83u-generate-run006-freeze.mjs",
+        "sha256": "c3d5bbb06b7bd3e200b272c096d2448c603d6426ff1c0bdca9ca63c7370e7340",
+        "bytes": 26094,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "scripts/patch83u-generate-run007-freeze.mjs",
+        "sha256": "ad8df6cdf63859ee3b85cfdb717cc9749bf8d5663f7d7074f69f8c58a884e95b",
+        "bytes": 26372,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "scripts/patch83u-run006-contract-audit.mjs",
+        "sha256": "2e62a058a8f53d51a60190507d8bf6d61f03bddc8ab1709588c501578e5fce15",
+        "bytes": 42872,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "scripts/patch83u-run007-contract-audit.mjs",
+        "sha256": "41b5692f4730e803ca9e5cc9138792cfb1d85eb3881172f330a99d8129741e0e",
+        "bytes": 44415,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "scripts/patch83u-staging-multisession-reset-proof.mjs",
+        "sha256": "d87b23d69234522a417b1c9b1bf5eb082c83db9ba8e1e3b9a44ebc028aa487b8",
+        "bytes": 229192,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "scripts/patch83u-staging-reset-evidence.sql",
+        "sha256": "1ae1e205528f1ba3162604886b5d6fc8c17e60e705e4bff371164960261edb25",
+        "bytes": 12467,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "scripts/patch83u-staging-sql-editor-evidence.sql",
+        "sha256": "ce23a9b5f5a1db6d181da059919af9b3a5cc7b8ddf420dc490c4d86b3c81dd92",
+        "bytes": 44770,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "scripts/start-patch83u-staging-frontend.mjs",
+        "sha256": "e5ced674c7b791b23ac602065563d9ab125509bffb1046246778ac311bf08579",
+        "bytes": 8337,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "src/App.tsx",
+        "sha256": "79cfbead40a8e6428d83567a89693990e4eab7ad35db16c9a2d435e6d6319800",
+        "bytes": 51394,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/auth/AuthProvider.tsx",
+        "sha256": "930d041cbf14ddbf5484c4e5b82916f0fa3b53271c08114ceb5468f8e8adcd73",
+        "bytes": 45453,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/auth/TurnstileLoginCaptcha.tsx",
+        "sha256": "3f0832992ef951c2661f4fd30814cb86666a9cb80aedec33a0cdf71cf649a15d",
+        "bytes": 7152,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/auth/authAccess.ts",
+        "sha256": "f60cbe1ae75702740c15f0e7179693cbe2e0289fc15d00fbd2e5abfadf263435",
+        "bytes": 7867,
+        "git_status": "clean",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/auth/authTypes.ts",
+        "sha256": "313e23897ffbab4e03ed88f4ea867e26e78fae2453f02ea54c207e5b0c8e792d",
+        "bytes": 2177,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/auth/loginCaptcha.ts",
+        "sha256": "a94f9eae4bf4f30d22ba4f4dad1600c851ef78c754d365f399f3c5f65eaef75c",
+        "bytes": 2462,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/components/Layout.tsx",
+        "sha256": "fa7d508906deb10e1c4af3aa5917858c3299273b1a622abcd465738c89505622",
+        "bytes": 25632,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/components/Modal.tsx",
+        "sha256": "c8cbc46bf9f18cfa9274dc9f3ca69f9eab22af80419d9da75017b8885ab16d18",
+        "bytes": 1544,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/config/featureFlags.ts",
+        "sha256": "2650fc8d210802b51bc49a85044386f6b8d3fc5f0e31c73d403715812209c024",
+        "bytes": 2473,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/i18n/I18nContext.tsx",
+        "sha256": "47213686a92a7d1029221de58421c341488bdfd947cdcf649b44521226dc1d16",
+        "bytes": 203261,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/lib/privilegedAction.ts",
+        "sha256": "3d6109e1b7c8c8a7f2da31ec3247a0f737a708074655ce06d29d84ed77d6a44c",
+        "bytes": 5509,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/lib/runtimeActionRegistry.ts",
+        "sha256": "168cdd055cd93ece0b50c7d146e9539bbfb03b67466993c8839931a3e12a425b",
+        "bytes": 42313,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/lib/supabase.ts",
+        "sha256": "6b0fa42705a27e1d04215f912b282206f94fc5e5e72e619ca87ea7004c03bba6",
+        "bytes": 3966,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/lib/supabaseAuthStorage.ts",
+        "sha256": "1a6269915c96a9f0db5786bfa90ae6676e8f04d5d48f037a2eaf9e9fc361fd44",
+        "bytes": 6384,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "src/lib/supabaseClient.ts",
+        "sha256": "aad7419d217d52bacdc99f6194342a9ba1b6412cbafd6be2c1a5a53bf538213a",
+        "bytes": 2844,
+        "git_status": "clean",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/lib/userCredentialApi.ts",
+        "sha256": "ffad50852a80e63a5719e56d2486c4f54af153c71bbdca1e0c1c8d2857c1ced4",
+        "bytes": 28436,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/lib/userManagementApi.ts",
+        "sha256": "1fafb3aeb35d257ea0312c5d93cad4c2ca327dc380d4ff2e5f097354d6a52f20",
+        "bytes": 49676,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/main.tsx",
+        "sha256": "0646cc747c999f25930f5ae2e0ecdfbb25f5dbb4e0842408d4ad478585423d71",
+        "bytes": 426,
+        "git_status": "clean",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/pages/AuthenticatedAccessDenied.tsx",
+        "sha256": "a5aab2868b873ee6cb508783eb2c971dac9c42953752aad2d19ef5782f28f230",
+        "bytes": 1366,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "src/pages/AuthenticatedDeploymentError.tsx",
+        "sha256": "858cc6138d8b158c51a0be0e356d46a39b54a1ee003bc014afdc50ebd67b8843",
+        "bytes": 2762,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "src/pages/CredentialReconciliationRequired.tsx",
+        "sha256": "31107955807cd60011717e8e3e14de3e57b775820aa1410d06e911656bd3dee7",
+        "bytes": 1514,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "src/pages/ForcedPasswordChange.tsx",
+        "sha256": "c9e2dca9c5ac2781ea3c752f92fa83cb5173a32a86848c40f73ddea3b1aec41f",
+        "bytes": 9968,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/pages/LoginPage.tsx",
+        "sha256": "0a81aa1f3b40b9ac82e683e655aff293730cf100c1c4d1669aa70358a0c65ef6",
+        "bytes": 6928,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/pages/UnauthorizedPage.tsx",
+        "sha256": "641dcf7d46ff017d848f63a659af5a819377465a4eff9e1a082e910dd583e258",
+        "bytes": 1403,
+        "git_status": "clean",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/pages/UserManagementCenter.tsx",
+        "sha256": "7b02d45094b24134ab088e950a1a06996f153983ca8af550f27f8d02cdf0970c",
+        "bytes": 116077,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/routes/pageLocation.ts",
+        "sha256": "fa8e452b73d078c68dff0db7547b927b3ecdcc542857e20a31af798cb2b7004b",
+        "bytes": 9843,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "src/styles.css",
+        "sha256": "ef90ef8d7041d910893c6d3529ac283332b9380c7625f63d5a9d0f91b2540d8c",
+        "bytes": 185263,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/types/domain.ts",
+        "sha256": "df8b01661bcbf6814ca35cd5ebdd5a5af76f30bd31ca609402c632aefc1d7a39",
+        "bytes": 41254,
+        "git_status": "clean",
+        "tracked_at_head": true
+      },
+      {
+        "path": "src/vite-env.d.ts",
+        "sha256": "e9d8674fb3868d553c9fad086765ae7f02946734d6fae54663d4bfdbf3f0246a",
+        "bytes": 421,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "supabase/config.toml",
+        "sha256": "8dbc2b021931fb8f67fe8599bbec95d44ae7379c2a72152840443cd394619169",
+        "bytes": 14598,
+        "git_status": "clean",
+        "tracked_at_head": true
+      },
+      {
+        "path": "supabase/functions/privileged-action/index.ts",
+        "sha256": "f4a53ddfd0167ca62661c3c9acc6b7b320a0e43f4b96efc821308e1db73caf87",
+        "bytes": 157176,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "supabase/migrations/173_patch83t_controlled_user_excel_import.sql",
+        "sha256": "04cbe12e6226aff4eb3411512a6b2d0751b053d9ec04afb6b9ad3a15a04ba2a3",
+        "bytes": 80826,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+        "sha256": "716e3a34ffc303b228d0707e2144a4056d85d83afd0f7013fd9c743184751855",
+        "bytes": 276188,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "supabase/migrations/175_patch83t_pgcrypto_digest_resolution.sql",
+        "sha256": "7a83e3fcdf200bfc0027882667c82015f4fe448257fa5e69ff34d339ed5cd1f4",
+        "bytes": 994,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "supabase/migrations/176_patch83u_last_super_admin_recovery.sql",
+        "sha256": "e221c1c3ded23499d2ac69f33f4869a193ab333dc429719f190708cd142172bc",
+        "bytes": 25166,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "supabase/migrations/177_patch83u_explicit_password_finalizer_rpc_name.sql",
+        "sha256": "22b3fd74254e4532e04187da2303fc2ff4ead95eac06296827f76156b77315f0",
+        "bytes": 6628,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "supabase/tests/patch83tu_release_preflight.sql",
+        "sha256": "defbb3e26b1b48bd630213bf32b5aa2b3dbefddf3b622355da5b28631a5dcac4",
+        "bytes": 121873,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "supabase/tests/patch83u_credential_governance_tests.sql",
+        "sha256": "47a2260e753fbeb43c28ec2031466a0d5f20ee0a39a166f36cdb2b7f90c9eae2",
+        "bytes": 102667,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "tests/e2e/patch83u-credential-provisioning.spec.ts",
+        "sha256": "907f6dbfe5482420a9c4c79f71fbb5df28324c1fbd8e6941eae9d5e9251eff84",
+        "bytes": 30371,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "tests/e2e/patch83u-existing-user-password-rotation.spec.ts",
+        "sha256": "8eedcb2cb3ca4215f24b1ebda8fb7775b3488f0d26ef5faebabd421b6b36d6c9",
+        "bytes": 19269,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "tests/e2e/patch83u-staging-clean-session.playwright.ts",
+        "sha256": "a1722c1dd6a39cdce18354bac422e8ce9aae1ccb0a7942ed4b82e502109681f7",
+        "bytes": 6351,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "tests/unit/authSessionRace.test.ts",
+        "sha256": "a8a751ec418232642990bb86f6848e0fb6c6d34da734c9e6912ec2a067c988c6",
+        "bytes": 21846,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "tests/unit/patch83uAuthGateContract.test.ts",
+        "sha256": "fba52e1937e1665b6628a1653727d236cc9ab6fd844fa614a7f256de9fee81d3",
+        "bytes": 9358,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "tests/unit/patch83uCheckpointFileInput.test.ts",
+        "sha256": "455c0d3fc06cf1afe7a28556b8074b57f5a7bef09fa7a7a1aacfdfeb18f9f483",
+        "bytes": 29700,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "tests/unit/patch83uExecutionFreezeContract.test.ts",
+        "sha256": "5f513796d59b60b9dfd109524e0f59f00381919bb6cb44c5ae0c989bd544fbbd",
+        "bytes": 27996,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "tests/unit/patch83uPasswordChangeSessionFlowContract.test.ts",
+        "sha256": "1b5fb7aa079eb149a3e7f22dc8826c68423d347ec26b3458dd4c5b9afa47f1f3",
+        "bytes": 9543,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "tests/unit/patch83uRun006CompletionEvidenceContract.test.ts",
+        "sha256": "7fbdd5a0d8da0ec91e9ae15da7d44eabfd41f77af9737c1672ed23dc7a9c72f5",
+        "bytes": 67762,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "tests/unit/patch83uRun007CompletionEvidenceContract.test.ts",
+        "sha256": "d2983caee3f79a740cafe9bde18b19e6b4e9f42f40187af26d759930e7021215",
+        "bytes": 67768,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "tests/unit/patch83uStagingFrontendTarget.test.ts",
+        "sha256": "a2456c06085e5c6806a3f65bcf027d1032c0d5e685a4c3b68f5327c88c187a8a",
+        "bytes": 4626,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "tests/unit/patch83uStagingMultisessionResetProof.test.ts",
+        "sha256": "bd09ce6727f543b236765b81761e4f77a5d3344a32c196b82885ca17a28097f6",
+        "bytes": 99567,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "tests/unit/supabaseAuthStorage.test.ts",
+        "sha256": "98de1559d7cee98b5d3423b2bd2ac3885e76ff719648283aa1548a4c984b4300",
+        "bytes": 6507,
+        "git_status": "??",
+        "tracked_at_head": false
+      },
+      {
+        "path": "tests/unit/userCredentialApi.test.ts",
+        "sha256": "473fd6278584307b33dbf454b5dde190b0c04f39377709e15977cf048b23ff02",
+        "bytes": 18483,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "tests/unit/userCredentialGovernanceContract.test.ts",
+        "sha256": "af2dcd069bd1f3b6571b2262461b808529882f04d391f85aa48e774ad645985b",
+        "bytes": 55080,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "tsconfig.json",
+        "sha256": "5a599a41fd887deae8c38beb0c4ba0070d3c438689c2f29a470b7d42b867b49f",
+        "bytes": 559,
+        "git_status": "clean",
+        "tracked_at_head": true
+      },
+      {
+        "path": "vite.config.ts",
+        "sha256": "ad4807d5842c861c2d39392994ce3b3a3021455c6c91102b49dd901717e7661b",
+        "bytes": 4129,
+        "git_status": " M",
+        "tracked_at_head": true
+      },
+      {
+        "path": "vitest.config.ts",
+        "sha256": "e1afc4d1c59308fe64b35d2370d385d1feb5150bd8c394fb6facfa5a4a2b0d6f",
+        "bytes": 273,
+        "git_status": "clean",
+        "tracked_at_head": true
+      }
+    ]
+  },
+  "prior_evidence_integrity": {
+    "hash_algorithm": "sha256",
+    "aggregate_algorithm": "SHA-256 of ordinal-path-sorted UTF-8 lines path<TAB>sha256<TAB>bytes joined by LF with no trailing LF",
+    "file_count": 42,
+    "total_bytes": 355203,
+    "aggregate_sha256": "39854df2a5b362eaaebf7375a090e2d7e329ebc714089991c1df609fc5ae4867",
+    "files": [
+      {
+        "path": "release/patch83u/patch83u-staging-authorization-regression-proof.json",
+        "sha256": "377e2d04d8d147fc074bf4541b64d4bb0e4b485e95c20224a7ad429072f21967",
+        "bytes": 458,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-forced-password-change-proof.json",
+        "sha256": "4463e69ffa046a01c3773b8f74bd31b97615b7a84d09761b4f395cbd0b5f42df",
+        "bytes": 457,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-multisession-before-reset.txt",
+        "sha256": "306e8003f047ffb803ad9d1229c155fde8e11fb6fe47e5770946efe87a4779ef",
+        "bytes": 490,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-network-console-redacted.json",
+        "sha256": "f4012e0cf713c81774f498718b1dda565d1c80e8f3177301c83bc503d6475386",
+        "bytes": 466,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-refresh-replay-negative-proof.json",
+        "sha256": "92b8185049a32d720cfb1b2b96a5b7575fe7f1c4fccbfa6e96d03aea1728ea09",
+        "bytes": 452,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-20260718.json",
+        "sha256": "a61bff1d30790c27a61c6984de0ed8e1b3601351b134aa0dc598ad2ecf6ddd00",
+        "bytes": 22160,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-20260718.md",
+        "sha256": "f188e200f7d07d3d43dc4301ef565599f112956dadadbff10ddf9d6520ec7f29",
+        "bytes": 16835,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-20260719.json",
+        "sha256": "26a089d6cfcabcb387ed8e2c1a295a4b686b81b7967632ce778c8913e4aca04d",
+        "bytes": 23011,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-20260719.md",
+        "sha256": "6ad8c79c0f0202205846cbc4a034eef2f95ecd96a8c2d60603d4486dcd55de11",
+        "bytes": 9831,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-schema-v5.json",
+        "sha256": "0b37d88f681f4567d39cae82866fed73b6bf3d8056c09ff35327a6d8e65d31ab",
+        "bytes": 23184,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-schema-v6.json",
+        "sha256": "8de2fe69843d443d053d9270956394abd78fb33726401a0c44b39d0f33384ffe",
+        "bytes": 27337,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-v2-20260719.json",
+        "sha256": "f7f4a8bdb8d41e906b2c5b0df47e4014c2cd7d970d8b8ce54ba3776683b77f85",
+        "bytes": 20998,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-v2-20260719.md",
+        "sha256": "f04694ccc038463dbcfa065b9e4c4926f6d00a11e9e58c34aed1a3d575ba4c71",
+        "bytes": 5414,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-v3-20260720.json",
+        "sha256": "23dd686e15e7334d58ccc774e2f3e6890aec27a23f9d738bd419f122301ad3e9",
+        "bytes": 28749,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-v3-20260720.md",
+        "sha256": "21a72f33eba6dbf409dc4bd507d9c9ff2a7a3029d81788ea47824f53d8822f3b",
+        "bytes": 3676,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-v4-20260720.json",
+        "sha256": "8e81321e13460a69af61104d14ce486c2a103518375447f8f44907ccd3a69bd7",
+        "bytes": 30592,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-v4-20260720.md",
+        "sha256": "6b218f1f9b3321b36b1f3e6e76ea798dc8cfca36ea65c6ba4775cf74a0d9bac2",
+        "bytes": 3681,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-v5-20260720.json",
+        "sha256": "52013d69ca30ea38a0765832c28888565db280adcedb575ed8646fb1429c8e0b",
+        "bytes": 32091,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-v5-20260720.md",
+        "sha256": "90bd83f5319569fafde5721eb07e5e7a93a4d131167fb1df8f63a46ed2c4120c",
+        "bytes": 5007,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-v6-20260720.json",
+        "sha256": "741a610233a8175e75018587c297cce05809f9259957f9f7c9028301495a29d9",
+        "bytes": 36015,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-execution-freeze-v6-20260720.md",
+        "sha256": "a3bfad5009ccc52af377f2f203ec774798aa81badc81c90d34b380bab6a3b5e6",
+        "bytes": 1511,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-final-report.md",
+        "sha256": "15520c412ab302c7466e0c8da422ded065695c51d637388949f811b86a831a66",
+        "bytes": 1607,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-final-results.json",
+        "sha256": "832caaf8e8fe5c3ebca87f4852454b660e05a35ebc1fae666edf195f95d24607",
+        "bytes": 1611,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-harness-schema-v4.json",
+        "sha256": "b51578a6dee84ee78f620f23b12697388406cf6ec58fe9e52ccebac716413568",
+        "bytes": 12546,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-reset-harness-schema-v5.json",
+        "sha256": "e4dbeeb914452e38cd8fb4a3b32d993e60995a1bb84f4cfba948009c86997ca3",
+        "bytes": 28690,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-session-revocation-after-reset.txt",
+        "sha256": "02d319fd677d04b394d70dade9e21faae457d0985069f4c8efb2afc45f89eb22",
+        "bytes": 408,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/patch83u-staging-super-admin-reset-browser-proof.json",
+        "sha256": "b09f95742f2f833d6dc852600d22f6fdc82898b5e834f5c809cf380a13ef4c1c",
+        "bytes": 570,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-002/README.md",
+        "sha256": "bbf0cf8f055c17a7f92425cd33a9946c5e84bb95ccdf5b988e8899da2e2271b8",
+        "bytes": 584,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-002/patch83u-staging-reset-final-results-attempt-003.json",
+        "sha256": "60528fe7161d8870e46710dba42e08ff366d437a7e9845ff829349e7b99c2be4",
+        "bytes": 722,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-002/patch83u-staging-reset-final-results-attempt-004.json",
+        "sha256": "d30efb713a66220edf5d1cd3b36700747c2028306453179a6924d6440835af25",
+        "bytes": 715,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-002/patch83u-staging-reset-final-results.json",
+        "sha256": "6be0f0d052bcdaf9c5a2e4ccdd4446cf72c703bc9c2d5ed693e4bb4c6e1333fa",
+        "bytes": 715,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-003/README.md",
+        "sha256": "926c3e532c4d1708ac9aa914d712489e5938a26e427b93cc38c5014b40b9bbd2",
+        "bytes": 2614,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-003/checkpoints/01-before-employee-sessions.json",
+        "sha256": "56887b42ae67d8efd319764636137f74f21cbe50370a1509f152f70e0564586d",
+        "bytes": 2018,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-004/README.md",
+        "sha256": "8683ae11cbd6d117f79d2c970968fd68d263f3899ac38af5e7032bdfa0c220f3",
+        "bytes": 1544,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-004/checkpoints/README.md",
+        "sha256": "0ead3352ec44807b4515ee38a33595762d5e5b91d8bbfbb0cf19113157598ac0",
+        "bytes": 430,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-004/run004-reservation.json",
+        "sha256": "419b00653644d5504b9e4a492660ff279e273a783184aa514dc43ce4956886a2",
+        "bytes": 932,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-005/README.md",
+        "sha256": "d6fde092d1a7ede7bf73827b17000bf83851eaebc16bfc1e4e19b41e6e755033",
+        "bytes": 1617,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-005/checkpoints/README.md",
+        "sha256": "3a7c0dc8aa99f85f41cbf1e778037caeb4a324478d5e443baee151b7eb6f5ff7",
+        "bytes": 430,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-005/run005-reservation.json",
+        "sha256": "58090408b2287467e35034bc5293da9347bde1e9fa2c18c4d8aac58d82e3d669",
+        "bytes": 995,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-006/README.md",
+        "sha256": "750939cbfd1efbf25d8c1963aa9f8934054aa0102dc207922551dcbb809a983b",
+        "bytes": 1956,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-006/checkpoints/README.md",
+        "sha256": "a1e336d3f3ddb39f9b309f9f8f830cb53d4b154a89449648a258fb703c54d6e3",
+        "bytes": 815,
+        "immutable": true
+      },
+      {
+        "path": "release/patch83u/reset-proof-run-006/run006-reservation.json",
+        "sha256": "93acc084406ea0432f7f445fe3aba1bdc1bd21876a9e76f73844687d2c48b03c",
+        "bytes": 1269,
+        "immutable": true
+      }
+    ],
+    "run005_absence_assertions": {
+      "checkpoint_files_absent": true,
+      "attempt_output_files_absent": true
+    }
+  },
+  "run005_stop_state": {
+    "phase": "phase_3_startup_initial_edge_provenance_gate",
+    "failure_code": "PATCH83U_PRE_HARNESS_FROZEN_CONTRACT_AUDIT_FAILED",
+    "authorization_consumed": true,
+    "credentials_entered": false,
+    "login_performed": false,
+    "employee_sessions_created": false,
+    "sql_checkpoints_executed": false,
+    "reset_request_id_generated": false,
+    "reset_submitted": false,
+    "password_change_submitted": false,
+    "credential_or_auth_state_changed": false,
+    "recovery_or_reconciliation_required": false,
+    "super_admin_untouched": true,
+    "production_accessed": false
+  },
+  "local_validation": {
+    "freeze_schema": "passed",
+    "precredential_readiness": "passed",
+    "javascript_syntax": "passed",
+    "focused_tests": "passed",
+    "auth_session_tests": "passed",
+    "typescript": "passed",
+    "build": "not_run_application_source_unchanged",
+    "git_diff_check": "passed",
+    "secret_scan": "passed"
+  },
+  "safety": {
+    "credentials_entered": false,
+    "login_performed": false,
+    "employee_sessions_created": false,
+    "reset_request_id_generated": false,
+    "reset_performed": false,
+    "password_change_performed": false,
+    "refresh_replay_performed": false,
+    "deployment_performed": false,
+    "migration_performed": false,
+    "hosted_mutation_performed": false,
+    "production_accessed": false,
+    "files_staged": false,
+    "commit_performed": false,
+    "push_performed": false
+  }
+}

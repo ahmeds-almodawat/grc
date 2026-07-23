@@ -1,0 +1,91 @@
+{
+  "schema_version": "gate12r-captcha-contract-v1",
+  "captured_at_utc": "2026-07-22T22:15:33.8766031Z",
+  "decision": "contract_proven_manual_provider_configuration_required",
+  "provider": {
+    "name": "Cloudflare Turnstile",
+    "browser_script_origin": "https://challenges.cloudflare.com",
+    "render_mode": "explicit"
+  },
+  "frontend": {
+    "captcha_required_variable": "VITE_AUTH_CAPTCHA_REQUIRED",
+    "captcha_required_value": "true",
+    "public_site_key_variable": "VITE_AUTH_CAPTCHA_SITE_KEY",
+    "site_key_classification": "public_browser_value",
+    "server_secret_allowed_in_vite_configuration": false,
+    "missing_required_flag_behavior": "not_release_acceptable",
+    "missing_site_key_behavior": "fail_closed_before_auth_request",
+    "invalid_required_flag_behavior": "fail_closed_before_auth_request",
+    "token_forwarding": "Supabase password authentication captchaToken option"
+  },
+  "backend": {
+    "authoritative_token_validator": "Supabase Auth",
+    "server_secret_required": true,
+    "server_secret_location": "Supabase Auth CAPTCHA provider configuration",
+    "server_secret_location_classification": "protected_control_plane",
+    "server_secret_belongs_in_vercel": false,
+    "server_secret_belongs_in_edge_function_secret": false,
+    "edge_function_behavior": "for protected password reauthentication, forwards the one-time CAPTCHA token to Supabase Auth signInWithPassword and maps CAPTCHA rejection to a safe error"
+  },
+  "hostname": {
+    "required_staging_hostname": "grc-staging-lilac.vercel.app",
+    "reserved_origin": "https://grc-staging-lilac.vercel.app",
+    "provider_registration_required": true,
+    "wildcard_production_domain_accepted": false,
+    "production_origin_accepted": false,
+    "localhost_only_accepted": false,
+    "unrelated_preview_hostname_accepted": false,
+    "provider_test_key_accepted_for_release_candidate": false,
+    "verification_status": "manual_confirmation_required"
+  },
+  "vercel_scope": {
+    "project": "grc-staging",
+    "environment": "preview",
+    "preview_requires_separate_settings": true,
+    "production_environment_mutation_required": false,
+    "deployment_authorized": false
+  },
+  "hosted_verification": {
+    "turnstile_hostname_confirmed": false,
+    "public_site_key_configured_in_vercel_preview": false,
+    "supabase_auth_captcha_enabled_status": "unable_to_verify",
+    "supabase_auth_captcha_provider_status": "unable_to_verify",
+    "supabase_auth_captcha_secret_status": "unable_to_verify",
+    "reason": "No authorized Cloudflare dashboard session or process-local Supabase Management API credential was available. Values must not be requested in chat."
+  },
+  "source_evidence": [
+    {
+      "path": "src/auth/TurnstileLoginCaptcha.tsx",
+      "sha256": "3f0832992ef951c2661f4fd30814cb86666a9cb80aedec33a0cdf71cf649a15d",
+      "proves": ["provider", "browser_script_origin", "explicit_rendering", "public_site_key_usage"]
+    },
+    {
+      "path": "src/auth/loginCaptcha.ts",
+      "sha256": "a94f9eae4bf4f30d22ba4f4dad1600c851ef78c754d365f399f3c5f65eaef75c",
+      "proves": ["exact_environment_names", "strict_required_flag", "fail_closed_missing_site_key"]
+    },
+    {
+      "path": "src/auth/AuthProvider.tsx",
+      "sha256": "930d041cbf14ddbf5484c4e5b82916f0fa3b53271c08114ceb5468f8e8adcd73",
+      "proves": ["captcha_token_passed_to_supabase_auth", "safe_captcha_error_mapping"]
+    },
+    {
+      "path": "src/pages/LoginPage.tsx",
+      "sha256": "0a81aa1f3b40b9ac82e683e655aff293730cf100c1c4d1669aa70358a0c65ef6",
+      "proves": ["required_widget_rendering", "sign_in_disabled_without_token", "token_reset_after_attempt"]
+    },
+    {
+      "path": "supabase/functions/privileged-action/index.ts",
+      "sha256": "f4a53ddfd0167ca62661c3c9acc6b7b320a0e43f4b96efc821308e1db73caf87",
+      "proves": ["edge_forwards_token_to_supabase_auth", "no_provider_secret_in_edge_source"]
+    },
+    {
+      "path": "release/patch83u/patch83u-auth-settings-preflight.md",
+      "sha256": "ba01858f2fba58705f944f226f9fbf5be9deb60c5b0904b96937149d13fe6f32",
+      "proves": ["supabase_auth_is_authoritative_validator", "provider_secret_control_plane_boundary", "release_flag_must_be_true"]
+    }
+  ],
+  "prohibited_project_ref": "zbrjjecpsrzposhuarcn",
+  "authorized_staging_project_ref": "zghsgzrdwbqdrpuxanac",
+  "secrets_recorded": false
+}

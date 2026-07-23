@@ -1,0 +1,95 @@
+{
+  "evidence_id": "patch83u-staging-clean-session-fix-20260719",
+  "captured_at_utc": "2026-07-19T00:38:11Z",
+  "result": "FIXED",
+  "branch": "patch83t-controlled-user-excel-import",
+  "head": "a9989b1e8d95a6bb775316a2d9e709ef84514c42",
+  "staging_project_ref": "zghsgzrdwbqdrpuxanac",
+  "staged_file_count": 0,
+  "diagnose_fix_test_iterations": 3,
+  "root_cause": [
+    "The primary Auth client overrode Supabase project isolation with one legacy browser-storage and cross-tab namespace.",
+    "A structurally session-shaped persisted object could enter the authenticated pipeline without current-project and expiry screening.",
+    "Same-document storage removal emitted no Auth event, while the profile-denial state retained the in-memory session and was excluded from focus reconciliation.",
+    "No custom storage adapter existed before the correction; an undefined adapter result was not the cause."
+  ],
+  "safe_storage_key_names": [
+    "grc-control-center-auth",
+    "grc-control-center-auth:zghsgzrdwbqdrpuxanac",
+    "grc-control-center-auth:zghsgzrdwbqdrpuxanac-code-verifier"
+  ],
+  "screen_classification": {
+    "before_empty_nonpersistent_context": "login",
+    "before_synthetic_legacy_session": "profile_reconciliation",
+    "before_same_document_removal": "profile_reconciliation",
+    "after_empty_nonpersistent_context": "login",
+    "after_clean_reload": "login",
+    "after_wrong_project_legacy_data": "login",
+    "after_authenticated_missing_profile": "profile_reconciliation",
+    "after_same_document_removal": "login"
+  },
+  "files_changed": [
+    "src/lib/supabaseAuthStorage.ts",
+    "src/lib/supabase.ts",
+    "src/auth/AuthProvider.tsx",
+    "src/App.tsx",
+    "tests/unit/supabaseAuthStorage.test.ts",
+    "tests/unit/authSessionRace.test.ts",
+    "tests/unit/patch83uAuthGateContract.test.ts",
+    "playwright.staging-clean.config.ts",
+    "tests/e2e/patch83u-staging-clean-session.playwright.ts",
+    "release/patch83u/patch83u-staging-clean-session-fix-20260719.md",
+    "release/patch83u/patch83u-staging-clean-session-fix-20260719.json"
+  ],
+  "validation": [
+    {
+      "command": "npm run dev:staging",
+      "result": "pass",
+      "safe_guard_output": "Verified staging Supabase project: zghsgzrdwbqdrpuxanac"
+    },
+    {
+      "command": "npx vitest run tests/unit/supabaseAuthStorage.test.ts tests/unit/authSessionRace.test.ts tests/unit/patch83uAuthGateContract.test.ts tests/unit/patch83uStagingFrontendTarget.test.ts",
+      "result": "pass",
+      "test_files": 4,
+      "tests": 39
+    },
+    {
+      "command": "npx playwright test --config playwright.staging-clean.config.ts",
+      "result": "pass",
+      "tests": 3,
+      "nonpersistent_contexts": true,
+      "https_dispatch_blocked": true
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "pass"
+    },
+    {
+      "command": "npm run build -- --mode staging",
+      "result": "pass",
+      "modules_transformed": 2004,
+      "advisory": "existing_chunk_size_warning_only"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass",
+      "advisory": "line_ending_notices_only"
+    }
+  ],
+  "safety": {
+    "credential_entered": false,
+    "interactive_login_performed": false,
+    "hosted_auth_action_performed": false,
+    "hosted_data_read": false,
+    "hosted_mutation_performed": false,
+    "database_connection_opened": false,
+    "password_reset_performed": false,
+    "password_change_performed": false,
+    "deployment_performed": false,
+    "migration_performed": false,
+    "production_access_performed": false,
+    "file_staged": false,
+    "commit_performed": false,
+    "push_performed": false
+  }
+}

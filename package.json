@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:staging": "node scripts/start-patch83u-staging-frontend.mjs",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
@@ -626,7 +627,16 @@
     "patch83q1:proof": "node scripts/patch83q1-privileged-dispatcher-proof.mjs",
     "patch83r:proof": "node scripts/patch83r-department-lifecycle-proof.mjs",
     "patch83u:auth-surface": "node scripts/patch83u-auth-surface-proof.mjs",
-    "patch83u:auth-settings-preflight": "node scripts/patch83u-auth-settings-preflight.mjs"
+    "patch83u:auth-settings-preflight": "node scripts/patch83u-auth-settings-preflight.mjs",
+    "patch83u:staging-reset-proof": "node scripts/patch83u-staging-multisession-reset-proof.mjs",
+    "patch83u:run006-contract-audit": "node scripts/patch83u-run006-contract-audit.mjs",
+    "patch83u:generate-run006-freeze": "node scripts/patch83u-generate-run006-freeze.mjs",
+    "patch83u:run007-contract-audit": "node scripts/patch83u-run007-contract-audit.mjs",
+    "patch83u:generate-run007-freeze": "node scripts/patch83u-generate-run007-freeze.mjs",
+    "patch83u:run008-contract-audit": "node scripts/patch83u-run008-contract-audit.mjs",
+    "patch83u:generate-run008-freeze": "node scripts/patch83u-generate-run008-freeze.mjs",
+    "patch83u:run009-contract-audit": "node scripts/patch83u-run009-contract-audit.mjs",
+    "patch83u:generate-run009-freeze": "node scripts/patch83u-generate-run009-freeze.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",

@@ -266,7 +266,8 @@ describe('Patch 83T execution security contract', () => {
     const migration = source('supabase/migrations/173_patch83t_controlled_user_excel_import.sql');
     expect(edge).toContain("'patch83t_apply_user_excel_import'");
     expect(edge).toContain("serviceClient.rpc('patch83t_apply_user_excel_import'");
-    expect(migration).toContain("if auth.role() <> 'service_role'");
+    expect(migration.match(/if auth\.role\(\) is distinct from 'service_role'/g)).toHaveLength(2);
+    expect(migration).not.toContain("if auth.role() <> 'service_role'");
     expect(migration).toContain("ur.role in ('super_admin', 'governance_admin')");
     expect(migration).toContain('set search_path = pg_catalog, public, pg_temp');
     expect(migration).toMatch(/revoke all on function public\.patch83t_apply_user_excel_import\(uuid, jsonb\)[\s\S]*from public, anon, authenticated;/i);
@@ -274,6 +275,62 @@ describe('Patch 83T execution security contract', () => {
     expect(migration).not.toMatch(/(?:insert\s+into|update|delete\s+from)\s+auth\.users|admin\.create|invite_user/i);
     expect(migration).not.toMatch(/\b(password|temporary_password|encrypted_password)\s+(text|varchar|jsonb)\b/i);
     expect(migration).not.toMatch(/->>\s*['"](?:password|temporary_password)['"]/i);
+  });
+
+  it('keeps the Patch 83T capability handshake read-only, service-only, and fixed-shape', () => {
+    const edge = source('supabase/functions/privileged-action/index.ts');
+    const migration = source('supabase/migrations/173_patch83t_controlled_user_excel_import.sql');
+    const capabilityStart = migration.indexOf(
+      'create or replace function public.patch83t_get_user_import_capabilities(',
+    );
+    const capabilityEnd = migration.indexOf('\n$$;', capabilityStart);
+    const capabilitySql = migration.slice(capabilityStart, capabilityEnd + 4);
+
+    expect(edge).toContain("'patch83t_get_user_import_capabilities'");
+    expect(edge).toContain("serviceClient.rpc('patch83t_get_user_import_capabilities'");
+    expect(edge).toContain('x-patch83t-frontend-contract-version');
+    expect(capabilitySql).toMatch(/language plpgsql[\s\S]*stable[\s\S]*security definer/i);
+    expect(capabilitySql).toContain('set search_path = pg_catalog, public, pg_temp');
+    expect(capabilitySql).toContain("coalesce(auth.jwt()->>'role', '') is distinct from 'service_role'");
+    expect(capabilitySql).toContain("ur.role in ('super_admin', 'governance_admin')");
+    expect(capabilitySql).toContain("ur.scope = 'global'");
+    expect(capabilitySql).toContain('(ur.organization_id is null or ur.organization_id = v_actor_org)');
+    expect(capabilitySql).not.toMatch(/\b(?:insert\s+into|update|delete\s+from)\b/i);
+    for (const field of [
+      'edge_contract_version',
+      'migration_173_available',
+      'identity_reference_action_available',
+      'import_execution_action_available',
+      'maximum_rows',
+      'runtime_status',
+      'compatible',
+      'server_time',
+    ]) expect(capabilitySql).toContain(`'${field}'`);
+    expect(migration).toMatch(/revoke all on function public\.patch83t_get_user_import_capabilities\(uuid, text, text\)[\s\S]*from public, anon, authenticated;/i);
+    expect(migration).toMatch(/grant execute on function public\.patch83t_get_user_import_capabilities\(uuid, text, text\)[\s\S]*to service_role;/i);
+  });
+
+  it('limits the optional migration-174 exception to exact missing-contract diagnostics and Patch 83T actions', () => {
+    const edge = source('supabase/functions/privileged-action/index.ts');
+    const actionSet = edge.split('const patch83tUserImportActions = new Set([')[1]
+      ?.split(']);')[0] ?? '';
+    const actionNames = [...actionSet.matchAll(/'([^']+)'/g)].map((match) => match[1]);
+    const missingCheck = edge.split('function isMissingPatch83uRuntimeContract')[1]
+      ?.split('type Patch83uCapabilities')[0] ?? '';
+
+    expect(actionNames).toEqual([
+      'patch83t_get_user_import_capabilities',
+      'patch83t_user_import_identity_references',
+      'patch83t_apply_user_excel_import',
+    ]);
+    expect(missingCheck).toContain("['PGRST202', '42883'].includes(code)");
+    expect(missingCheck).toMatch(/patch83u_get_capabilities/i);
+    expect(missingCheck).toMatch(/does not exist\|could not find\|not find the function\|schema cache/i);
+    expect(edge).toContain(
+      'patch83tUserImportActions.has(action) && isMissingPatch83uRuntimeContract(capabilityResult.error)',
+    );
+    expect(edge).toContain('capabilities = patch83uCapabilitiesFromResponse(capabilityResult.data)');
+    expect(edge).toMatch(/capabilities[\s\S]*runtimeState === 'enforced'[\s\S]*credentialState\.access_allowed !== true/);
   });
 
   it('keeps identity, hierarchy, role replacement, and administrator safety checks server-side', () => {
@@ -289,8 +346,82 @@ describe('Patch 83T execution security contract', () => {
     expect(migration).toContain('PATCH83T_CROSS_ORG_ROLE_ASSIGNMENT_REQUIRES_REVIEW');
     expect(migration).toContain("division_id = v_division_id");
     expect(migration).toContain("unit_id = null");
-    expect(migration).toContain('perform public.deactivate_user_role(');
+    expect(migration).toContain('PATCH83T_ROLE_DEACTIVATION_PROOF_FAILED');
     expect(migration).toMatch(/'active_roles',[\s\S]*public\.user_management_audit_history/i);
+  });
+
+  it('uses an actor-bound service-only role mutation path instead of legacy auth.uid helpers', () => {
+    const migration = source('supabase/migrations/173_patch83t_controlled_user_excel_import.sql');
+    const applyStart = migration.indexOf(
+      'create or replace function public.patch83t_apply_user_excel_import(',
+    );
+    const applyEnd = migration.indexOf('\n$$;', applyStart);
+    const applySql = migration.slice(applyStart, applyEnd + 4);
+
+    expect(applySql).toContain("if auth.role() is distinct from 'service_role'");
+    expect(applySql).not.toContain('public.assign_user_role(');
+    expect(applySql).not.toContain('public.deactivate_user_role(');
+    expect(applySql).not.toContain('auth.uid()');
+    expect(applySql).not.toContain("set_config('request.jwt.claim.role'");
+    expect(applySql).toMatch(/update public\.user_roles[\s\S]*set is_active = false[\s\S]*PATCH83T_ROLE_DEACTIVATION_PROOF_FAILED/);
+    expect(applySql).toMatch(/insert into public\.user_roles[\s\S]*null, true, p_actor_id, now\(\)/);
+    expect(applySql).toMatch(/update public\.user_roles[\s\S]*set is_active = true,[\s\S]*assigned_by = p_actor_id/);
+    expect(applySql).toMatch(/public\.role_change_audit[\s\S]*'deactivated'[\s\S]*v_old_role[\s\S]*p_actor_id/);
+    expect(applySql).toMatch(/values \(\s*v_actor_org, v_target_user, v_user_role_id, 'deactivated'/);
+    expect(applySql).toMatch(/public\.role_change_audit[\s\S]*'assigned'[\s\S]*v_new_role[\s\S]*p_actor_id/);
+    expect(applySql).toMatch(/public\.role_change_audit[\s\S]*'reactivated'[\s\S]*v_new_role[\s\S]*p_actor_id/);
+    expect(applySql).toContain('PATCH83T_ROLE_ASSIGNMENT_PROOF_FAILED');
+    expect(applySql).toContain('PATCH83T_ROLE_REACTIVATION_PROOF_FAILED');
+    expect(applySql).toMatch(/set_config\('patch83u\.controlled_role_restore', 'on', true\)[\s\S]*set_config\('patch83u\.controlled_role_restore', 'off', true\)/);
+  });
+
+  it('keeps Patch 83T runtime-compatible without a parse-time Patch 83U dependency', () => {
+    const migration = source('supabase/migrations/173_patch83t_controlled_user_excel_import.sql');
+    const applyStart = migration.indexOf(
+      'create or replace function public.patch83t_apply_user_excel_import(',
+    );
+    const applyEnd = migration.indexOf('\n$$;', applyStart);
+    const applySql = migration.slice(applyStart, applyEnd + 4);
+
+    expect(applySql).toContain(
+      "to_regprocedure('public.patch83u_runtime_super_admin_eligible(uuid,uuid)')",
+    );
+    expect(applySql).toContain(
+      "to_regprocedure('public.patch83u_runtime_enforcement_state()')",
+    );
+    expect(applySql).toMatch(/execute \$patch83t_lock_runtime\$[\s\S]*for share/);
+    expect(applySql).toMatch(/execute \$patch83t_lock_target_credential\$[\s\S]*for update/);
+    expect(applySql).toMatch(/execute \$patch83t_target_super\$[\s\S]*patch83u_runtime_super_admin_eligible/);
+    expect(applySql).toMatch(/execute \$patch83t_super_count\$[\s\S]*patch83u_runtime_super_admin_eligible/);
+    expect(applySql).toMatch(/disabled', 'prepared'[\s\S]*existing_password_rotation_pending/);
+    expect(applySql).toMatch(/= 'enforced'[\s\S]*cs\.credential_state = 'active'/);
+    expect(applySql).toMatch(/= 'emergency_suspended'[\s\S]*cs\.identity_mode = 'legacy_verified'[\s\S]*cs\.credential_state <> 'disabled'/);
+    expect(applySql).toMatch(/v_active_super_admin_count[\s\S]*- v_super_admin_removal_count[\s\S]*\+ v_super_admin_addition_count < 1/);
+
+    // Every Patch 83U object is resolved or executed dynamically. Migration 173
+    // still parses and installs before those migration-174 objects exist.
+    expect(applySql).not.toMatch(/perform\s+public\.patch83u_runtime_/i);
+    expect(applySql).not.toMatch(/select\s+public\.patch83u_runtime_super_admin_eligible\([^$]*;/i);
+  });
+
+  it('preserves an existing active canonical role while credential/RLS enforcement stays authoritative', () => {
+    const migration = source('supabase/migrations/173_patch83t_controlled_user_excel_import.sql');
+    const applyStart = migration.indexOf(
+      'create or replace function public.patch83t_apply_user_excel_import(',
+    );
+    const applyEnd = migration.indexOf('\n$$;', applyStart);
+    const applySql = migration.slice(applyStart, applyEnd + 4);
+    const executionRoleBlock = applySql.slice(
+      applySql.indexOf("v_role_should_activate := v_status = 'active';"),
+      applySql.indexOf("select jsonb_build_object(\n      'batch_id'", applySql.indexOf("v_role_should_activate := v_status = 'active';")),
+    );
+
+    expect(executionRoleBlock).toContain("v_role_should_activate := v_status = 'active';");
+    expect(executionRoleBlock).not.toMatch(/v_role_should_activate\s*:=\s*[^;]*v_credential_state/);
+    expect(executionRoleBlock).not.toContain('PATCH83T_TARGET_CREDENTIAL_RECONCILIATION_REQUIRED');
+    expect(executionRoleBlock).toContain("set_config('patch83u.controlled_role_restore', 'on', true)");
+    expect(executionRoleBlock).not.toContain("set_config('request.jwt.claim.role'");
+    expect(executionRoleBlock).toMatch(/elsif not v_role_should_activate[\s\S]*null, false, p_actor_id/);
   });
 
   it('independently enforces strict account_action semantics in preview and SQL', () => {

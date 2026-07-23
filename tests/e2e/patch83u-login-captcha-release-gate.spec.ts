@@ -7,6 +7,9 @@ let captchaServer: ChildProcess | null = null;
 let captchaBaseUrl = '';
 let serverLog = '';
 
+const existingUserId = '00000000-0000-4000-8000-000000000084';
+const existingAuthEmail = 'existing.admin@example.test';
+
 async function freePort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = createServer();
@@ -62,6 +65,48 @@ async function completeCaptcha(page: Page, token: string) {
   await page.evaluate((value) => (window as any).__patch83uTurnstile.verify(value), token);
 }
 
+function existingSessionUser() {
+  return {
+    id: existingUserId,
+    aud: 'authenticated',
+    role: 'authenticated',
+    email: existingAuthEmail,
+    app_metadata: {
+      provider: 'email',
+      providers: ['email'],
+      credential_version: 1,
+    },
+    user_metadata: {},
+    identities: [],
+    created_at: new Date(0).toISOString(),
+  };
+}
+
+async function seedExistingAuthenticatedSession(page: Page) {
+  await page.addInitScript(({ user }) => {
+    localStorage.setItem('grc-control-center-auth', JSON.stringify({
+      access_token: 'patch83u-captcha-existing-user-token',
+      refresh_token: 'patch83u-captcha-existing-user-refresh',
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      expires_in: 3600,
+      token_type: 'bearer',
+      user,
+    }));
+  }, { user: existingSessionUser() });
+}
+
+function requestJson(raw: string | null): Record<string, unknown> {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? parsed as Record<string, unknown>
+      : {};
+  } catch {
+    return {};
+  }
+}
+
 test.describe('Patch 83U required login CAPTCHA browser gate', () => {
   test.describe.configure({ mode: 'serial' });
 
@@ -78,6 +123,7 @@ test.describe('Patch 83U required login CAPTCHA browser gate', () => {
         VITE_AUTH_BYPASS_LOCAL: 'false',
         VITE_AUTH_CAPTCHA_REQUIRED: 'true',
         VITE_AUTH_CAPTCHA_SITE_KEY: '1x00000000000000000000AA',
+        VITE_PATCH83U_CREDENTIAL_GOVERNANCE_ENABLED: 'true',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true,
@@ -206,5 +252,132 @@ test.describe('Patch 83U required login CAPTCHA browser gate', () => {
       password: 'EmployeePass!2026',
       gotrue_meta_security: { captcha_token: 'accepted-captcha-token' },
     });
+  });
+
+  test('requires a fresh CAPTCHA token for every forced current-password reauthentication attempt', async ({ page }) => {
+    const passwordChangePayloads: Record<string, unknown>[] = [];
+    await seedExistingAuthenticatedSession(page);
+    await installTurnstileMock(page);
+    await page.route('**/functions/v1/**', async (route) => {
+      const body = requestJson(route.request().postData());
+      const action = typeof body.action === 'string' ? body.action : '';
+      const payload = body.payload && typeof body.payload === 'object' && !Array.isArray(body.payload)
+        ? body.payload as Record<string, unknown>
+        : {};
+
+      let status = 200;
+      let response: Record<string, unknown>;
+      if (action === 'patch83u_get_capabilities') {
+        response = {
+          ok: true,
+          action,
+          result: {
+            edge_contract_version: 'patch83u-edge-auth-first-v1',
+            installed_schema_version: 174,
+            runtime_enforcement_state: 'enforced',
+            credential_state_action_available: true,
+            password_change_action_available: true,
+            provisioning_action_available: true,
+            reset_action_available: true,
+            server_time: '2026-07-16T00:00:00.000Z',
+            compatibility_status: 'compatible',
+          },
+        };
+      } else if (action === 'patch83u_get_credential_state') {
+        response = {
+          ok: true,
+          action,
+          result: {
+            managed: true,
+            credential_state: 'existing_password_change_required',
+            credential_version: 1,
+            auth_email: existingAuthEmail,
+            access_allowed: false,
+            message: 'Change your existing password before application access.',
+          },
+        };
+      } else if (action === 'patch83u_change_required_password') {
+        passwordChangePayloads.push(payload);
+        if (payload.current_password === 'wrong-existing-password') {
+          status = 401;
+          response = {
+            error: 'Current password verification failed.',
+            code: 'PATCH83U_CURRENT_PASSWORD_INVALID',
+          };
+        } else {
+          response = {
+            ok: true,
+            action,
+            result: {
+              userId: existingUserId,
+              status: 'active',
+              credentialVersion: 2,
+              mustReauthenticate: true,
+              reconciliationRequired: false,
+              sessionRevocationReviewRequired: false,
+              idempotentReplay: false,
+              requestId: payload.request_id,
+            },
+          };
+        }
+      } else {
+        response = { ok: true, action, result: {} };
+      }
+
+      await route.fulfill({
+        status,
+        contentType: 'application/json',
+        body: JSON.stringify(response),
+      });
+    });
+
+    await page.goto(captchaBaseUrl);
+    await expect(page.getByRole('heading', { name: 'Password change required' })).toBeVisible();
+    await expect(page.getByLabel('Password change CAPTCHA challenge')).toBeVisible();
+    const submit = page.getByRole('button', { name: 'Change password' });
+    await expect(submit).toBeDisabled();
+
+    await page.getByLabel('Current password').fill('wrong-existing-password');
+    await page.getByLabel('New password', { exact: true }).fill('Permanent.Password#2026');
+    await page.getByLabel('Confirm new password').fill('Permanent.Password#2026');
+    await page.locator('form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+    await expect(page.getByRole('alert')).toContainText('Complete the CAPTCHA challenge');
+    expect(passwordChangePayloads).toEqual([]);
+    await expect.poll(
+      () => page.evaluate(() => (window as any).__patch83uTurnstile.resetCount),
+    ).toBe(1);
+
+    await completeCaptcha(page, 'forced-reauth-token-one');
+    await submit.click();
+    await expect(page.getByRole('alert')).toContainText('Current password verification failed');
+    expect(passwordChangePayloads[0]).toMatchObject({
+      current_password: 'wrong-existing-password',
+      new_password: 'Permanent.Password#2026',
+      confirm_new_password: 'Permanent.Password#2026',
+      captcha_token: 'forced-reauth-token-one',
+      request_id: expect.stringMatching(/^[0-9a-f-]{36}$/),
+    });
+    await expect.poll(
+      () => page.evaluate(() => (window as any).__patch83uTurnstile.resetCount),
+    ).toBe(2);
+    await expect(submit).toBeDisabled();
+
+    await page.getByLabel('Current password').fill('Existing.Password#2025');
+    await completeCaptcha(page, 'forced-reauth-token-two');
+    await submit.click();
+    await expect.poll(() => passwordChangePayloads.length).toBe(2);
+    expect(passwordChangePayloads[1]).toMatchObject({
+      current_password: 'Existing.Password#2025',
+      captcha_token: 'forced-reauth-token-two',
+      request_id: expect.stringMatching(/^[0-9a-f-]{36}$/),
+    });
+    expect(passwordChangePayloads[1].request_id).not.toBe(passwordChangePayloads[0].request_id);
+    await expect(page.getByRole('status')).toContainText('Password changed. Sign in again using your new password.');
+    await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+
+    const persistedAuth = await page.evaluate(() => localStorage.getItem('grc-control-center-auth'));
+    expect(persistedAuth ?? '').not.toContain('Existing.Password#2025');
+    expect(persistedAuth ?? '').not.toContain('Permanent.Password#2026');
+    expect(persistedAuth).toBeNull();
   });
 });

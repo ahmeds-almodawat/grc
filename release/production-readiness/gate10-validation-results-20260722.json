@@ -1,0 +1,66 @@
+{
+  "schema_version": "gate10-validation-results-v1",
+  "captured_at": "2026-07-22T16:40:52.5362101Z",
+  "repository": {
+    "branch": "patch83t-controlled-user-excel-import",
+    "head": "a9989b1e8d95a6bb775316a2d9e709ef84514c42",
+    "tracked_modified_count": 64,
+    "untracked_count": 364,
+    "staged_file_count": 0,
+    "deleted_tracked_file_count": 0,
+    "status_sha256": "0d4509324657d46703624a24fd8853e0e566137814508f17f3971e813a0621da"
+  },
+  "tool_versions": {
+    "supabase_cli": "2.72.7",
+    "node": "v24.12.0",
+    "npm": "11.17.0",
+    "deno": "2.9.3"
+  },
+  "freeze": {
+    "aggregate_sha256": "f3da08ac6aedcdf5f56e5d4a0c5be307c737b108448fcf85f8b96ba0aaf106cd",
+    "inputs_checked": 19,
+    "mismatch_count": 0
+  },
+  "migrations": {
+    "migration_183_sha256": "371b01b09406138a3620da700efeff0bcca95bb874a028740562e0eac4c8112c",
+    "migration_184_sha256": "69523e1a0f19056d364c4fd6fb6271b9de275e713077b6038013cb8e3b808c6d",
+    "sql_governance_and_adversarial_tests": "passed",
+    "disposable_databases_removed": true
+  },
+  "tests": {
+    "full_unit": {
+      "files_passed": 40,
+      "tests_passed": 1174,
+      "tests_failed": 0
+    },
+    "focused_gate5_gate6_gate9_gate9r": {
+      "files_passed": 4,
+      "tests_passed": 35,
+      "tests_failed": 0
+    },
+    "typescript": "passed",
+    "deno_edge_check": "passed",
+    "production_build": "passed_with_expected_chunk_size_warning",
+    "playwright": {
+      "initial_serial_run": "one transient 0.34px subpixel variance",
+      "isolated_rerun": "1/1 passed",
+      "final_unchanged_serial_run": "25/25 passed"
+    },
+    "json_parse": "passed",
+    "secret_scan": "passed",
+    "runtime_production_reference_scan": "passed",
+    "skip_only_scan": "passed",
+    "git_diff_check": "passed_with_line_ending_warnings_only"
+  },
+  "security": {
+    "staging_smoke": "passed",
+    "signed_out_frontend": "Login",
+    "production_runtime_reference_count": 0,
+    "credentials_entered": false,
+    "auth_request_performed_by_smoke": false,
+    "business_data_modified_by_smoke": false
+  },
+  "source_or_migration_changed_during_gate10": false,
+  "production_accessed": false,
+  "overall_pass": true
+}

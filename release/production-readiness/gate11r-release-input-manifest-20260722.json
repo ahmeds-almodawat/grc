@@ -1,0 +1,76 @@
+{
+  "schema_version": "gate11r-release-input-manifest-v1",
+  "captured_at": "2026-07-22T19:57:26.6547335Z",
+  "decision": "PRODUCTION GATE 11R PASSED — IMMUTABLE BASELINE V2 VERIFIED",
+  "repository": {
+    "branch": "patch83t-controlled-user-excel-import",
+    "head": "a9989b1e8d95a6bb775316a2d9e709ef84514c42",
+    "staged_file_count": 0,
+    "deleted_tracked_file_count": 0,
+    "tracked_modified_file_count": 64,
+    "untracked_file_count": 458
+  },
+  "staging": {
+    "project_ref": "zghsgzrdwbqdrpuxanac",
+    "latest_migration": 185,
+    "migration185_applied_count": 1,
+    "runtime": "174.2-auth-first/enforced/state-5",
+    "postflight_pass": true,
+    "catalog_exact_match": true,
+    "security_advisor": {
+      "critical_or_high_application_findings": 0,
+      "new_findings_after_185": 0,
+      "remaining_accepted_findings": 21
+    },
+    "write_scope": "single_authorized_migration185_attempt_only"
+  },
+  "migration185": {
+    "path": "supabase/migrations/185_pilot_go_no_go_anonymous_policy_reconciliation.sql",
+    "sha256": "780efe381ac90a5ae4d8cf256f95246966e9b42c91adcd9a6dc7a13030e0ec65",
+    "bytes": 10419
+  },
+  "baseline_v2": {
+    "sql_path": "supabase/baselines/grc_platform_baseline_v2_through_185.sql",
+    "sql_sha256": "6b1b0f814bf7d8414ace4303912f303f1a71a1e8913489db77a30ddd94c7846a",
+    "sql_bytes": 4364505,
+    "manifest_path": "supabase/baselines/grc_platform_baseline_v2_through_185.manifest.json",
+    "manifest_sha256": "052f81c85ce4de2e86a91ef21d13e7ea0071c2d97b8a09f2bbcf7b97505aedac",
+    "normalized_catalog_sha256": "edac07deb655aba711cd2bc7e834010449be42f36f27863326ce0a41d22a3485",
+    "immutable": true,
+    "release_status": "release_approved",
+    "first_shared_forward_migration": 186
+  },
+  "lineage": {
+    "contract_sha256": "1247cf57094e18c9a7591a4d64ed13d43ee88f864bb00ad012904a2cc7de6f76",
+    "legacy_history_version_count": 140,
+    "baseline_history": [185],
+    "legacy_track_pass": true,
+    "baseline_track_pass": true,
+    "future186_proof_pass": true,
+    "mixed_or_unknown_history_refused": true
+  },
+  "validation": {
+    "unit": "1195/1195 passed",
+    "focused_release_unit": "56/56 passed",
+    "patch83u_playwright_serial": "25/25 passed",
+    "typescript": "passed",
+    "deno_edge_check": "passed",
+    "production_build": "passed",
+    "sql_contracts": "passed",
+    "json_parse": "27/27 passed",
+    "secret_scan": "55 files; 0 hits",
+    "skipped_or_only_scan": "passed",
+    "git_diff_check": "passed",
+    "migration_001_184_hashes": "139/139 unchanged"
+  },
+  "known_nonblocking_residuals": [
+    "Security Advisor retains 18 intentional deny-all RLS-without-policy informational findings and 3 accepted Patch83U boolean SECURITY DEFINER warnings.",
+    "Local database lint reports four inherited staging-derived legacy function findings; Gate 11R introduced none.",
+    "The command policy refused recursive deletion of 18 stopped Gate11R temporary directories outside the repository; all Gate11R containers were removed and no process remains."
+  ],
+  "next_gate": "Gate 12 production release-candidate review and explicit production authorization; this manifest does not authorize production access or deployment.",
+  "auth_accounts_modified": false,
+  "business_data_modified": false,
+  "production_accessed": false,
+  "commit_push_tag_deploy_performed": false
+}

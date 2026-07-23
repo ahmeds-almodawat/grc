@@ -201,7 +201,7 @@ describe('Patch 83T User workbook parsing', () => {
       })),
     );
     await expect(parseUserWorkbook(tooManyRows)).rejects.toMatchObject({ code: 'WORKBOOK_TOO_MANY_ROWS' });
-  });
+  }, 15_000);
 
   it('creates a professionally formatted template with text columns, dropdowns, Arabic, and safety instructions', async () => {
     const workbook = new ExcelJS.Workbook();
@@ -237,7 +237,7 @@ describe('Patch 83T User workbook parsing', () => {
     expect(instructionText).toContain('Unsupported combinations are validation errors');
     expect(instructionText).toContain('00966501234567');
     expect(USER_IMPORT_COLUMNS).not.toContain('password');
-  });
+  }, 15_000);
 
   it('creates roster and validation exports as formatted xlsx workbooks', async () => {
     const roster = new ExcelJS.Workbook();

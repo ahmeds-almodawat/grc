@@ -1,0 +1,19 @@
+{
+  "schema_version":"gate12r-dedicated-staging-target-contract-v1",
+  "project_name":"grc-staging",
+  "provider":"Vercel",
+  "supabase_project_ref":"zghsgzrdwbqdrpuxanac",
+  "prohibited_supabase_project_ref":"zbrjjecpsrzposhuarcn",
+  "required_public_environment_names":["VITE_SUPABASE_URL","VITE_SUPABASE_ANON_KEY","VITE_PATCH83U_CREDENTIAL_GOVERNANCE_ENABLED","VITE_AUTH_CAPTCHA_REQUIRED","VITE_AUTH_CAPTCHA_SITE_KEY"],
+  "frontend_contract":"patch83u-frontend-auth-first-v1",
+  "browser_key_only":true,
+  "service_role_or_secret_prohibited":true,
+  "provider_managed_encrypted_environment":true,
+  "no_env_upload":true,
+  "no_production_domain":true,
+  "automatic_production_promotion":false,
+  "commit_sha_metadata_required":true,
+  "rollback_required":true,
+  "deployment_protection_required":true,
+  "deployment_authorized":false
+}

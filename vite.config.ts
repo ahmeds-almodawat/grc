@@ -2,6 +2,35 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 
+const PATCH83U_STAGING_PROJECT_REF = 'zghsgzrdwbqdrpuxanac';
+const PATCH83U_PRODUCTION_PROJECT_REF = 'zbrjjecpsrzposhuarcn';
+
+function assertPatch83uStagingMode(mode: string) {
+  if (mode !== 'staging') return;
+  if (process.env.PATCH83U_STAGING_FRONTEND_VERIFIED !== PATCH83U_STAGING_PROJECT_REF) {
+    throw new Error('PATCH83U_STAGING_FRONTEND_STARTUP_GUARD_REQUIRED');
+  }
+  const browserValues = Object.entries(process.env)
+    .filter(([key]) => key.startsWith('VITE_'))
+    .map(([, value]) => value ?? '');
+  if (browserValues.some((value) => value.includes(PATCH83U_PRODUCTION_PROJECT_REF))) {
+    throw new Error('PATCH83U_STAGING_FRONTEND_PRODUCTION_REF_REFUSED');
+  }
+  let url: URL;
+  try {
+    url = new URL(process.env.VITE_SUPABASE_URL ?? '');
+  } catch {
+    throw new Error('PATCH83U_STAGING_FRONTEND_URL_INVALID');
+  }
+  if (
+    url.origin !== `https://${PATCH83U_STAGING_PROJECT_REF}.supabase.co`
+    || url.pathname !== '/'
+    || !process.env.VITE_SUPABASE_ANON_KEY
+  ) {
+    throw new Error('PATCH83U_STAGING_FRONTEND_CONFIGURATION_NOT_PROVEN');
+  }
+}
+
 function normalizeId(id: string) {
   return id.split(path.sep).join('/');
 }
@@ -46,9 +75,13 @@ function pageChunk(id: string) {
   return 'pages-other';
 }
 
-export default defineConfig({
-  plugins: [react()],
-  build: {
+export default defineConfig(({ mode }) => {
+  assertPatch83uStagingMode(mode);
+  const stagingMode = mode === 'staging';
+  return {
+    envDir: stagingMode ? false : undefined,
+    plugins: [react()],
+    build: {
     // The app is intentionally broad. The target is to reduce the main bundle,
     // not hide warnings blindly. Keep the warning reasonably strict.
     chunkSizeWarningLimit: 650,
@@ -94,5 +127,6 @@ export default defineConfig({
         },
       },
     },
-  },
+    },
+  };
 });

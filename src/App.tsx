@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Activity,
   ArchiveRestore,
@@ -38,7 +38,7 @@ import {
   Users,
   WandSparkles,
 } from "lucide-react";
-import { Layout, type PageKey } from "./components/Layout";
+import { Layout } from "./components/Layout";
 import { useAuth } from "./auth/AuthProvider";
 import {
   canAccessPageForUser,
@@ -47,6 +47,9 @@ import {
 } from "./auth/authAccess";
 import { LoginPage } from "./pages/LoginPage";
 import { ForcedPasswordChange } from "./pages/ForcedPasswordChange";
+import { AuthenticatedDeploymentError } from "./pages/AuthenticatedDeploymentError";
+import { CredentialReconciliationRequired } from "./pages/CredentialReconciliationRequired";
+import { AuthenticatedAccessDenied } from "./pages/AuthenticatedAccessDenied";
 import { UnauthorizedPage } from "./pages/UnauthorizedPage";
 import { TabbedHub } from "./components/TabbedHub";
 import { useI18n } from "./i18n/I18nContext";
@@ -143,15 +146,19 @@ import { ScenarioTestConsole } from "./pages/ScenarioTestConsole";
 import { UatIssueCapture } from "./pages/UatIssueCapture";
 import { ControlledUatWorkbench } from "./pages/ControlledUatWorkbench";
 import { isScenarioLabEnabled } from "./lib/scenarioLab";
+import {
+  isCanonicalPageLocation,
+  isPageKey,
+  pageKeyFromLocation,
+  resolveAuthorizedPage,
+  writePageLocation,
+  type PageKey,
+  type PageNavigator,
+} from "./routes/pageLocation";
 
-const routeAliases: Record<string, PageKey> = {
-  "/production-operator-console": "productionOperatorConsole",
-  "/production-evidence-closure": "productionEvidenceClosure",
-};
-
-function initialPageFromPath(): PageKey {
+function initialPageFromLocation(): PageKey {
   if (typeof window === "undefined") return "home";
-  return routeAliases[window.location.pathname] ?? "home";
+  return pageKeyFromLocation(window.location) ?? "home";
 }
 
 function ExecutiveHub() {
@@ -1143,35 +1150,127 @@ function AdminMaintenanceHub({
 }
 
 export default function App() {
-  const [page, setPage] = useState<PageKey>(initialPageFromPath);
+  const [page, setPageState] = useState<PageKey>(initialPageFromLocation);
   const auth = useAuth();
+  const { t } = useI18n();
+  const organizationName = auth.profile?.organizationName;
+
+  const canOpenPage = useCallback(
+    (targetPage: PageKey) =>
+      canAccessPageForUser(targetPage, auth.roles, organizationName),
+    [auth.roles, organizationName],
+  );
+
+  const navigateToPage = useCallback<PageNavigator>(
+    (candidate, options = {}) => {
+      if (!isPageKey(candidate)) return;
+
+      let targetPage = candidate;
+      let historyMode = options.mode ?? "push";
+      if (
+        auth.status === "authenticated_active" &&
+        !canOpenPage(candidate)
+      ) {
+        targetPage = firstAllowedPage(auth.roles, organizationName);
+        historyMode = "replace";
+      }
+
+      setPageState((currentPage) =>
+        currentPage === targetPage ? currentPage : targetPage,
+      );
+      writePageLocation(targetPage, { mode: historyMode });
+    },
+    [auth.status, auth.roles, organizationName, canOpenPage],
+  );
+
+  // Existing child pages accept a one-argument setPage-style callback. This
+  // wrapper preserves that API while routing every navigation through history.
+  const setPage = useCallback(
+    (targetPage: PageKey) => navigateToPage(targetPage),
+    [navigateToPage],
+  );
+
+  const restorePageFromLocation = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    const requestedPage = pageKeyFromLocation(window.location);
+    if (auth.status !== "authenticated_active") {
+      setPageState(requestedPage ?? "home");
+      return;
+    }
+
+    const resolution = resolveAuthorizedPage(
+      requestedPage,
+      canOpenPage,
+      firstAllowedPage(auth.roles, organizationName),
+    );
+    setPageState((currentPage) =>
+      currentPage === resolution.page ? currentPage : resolution.page,
+    );
+
+    if (
+      resolution.shouldReplace ||
+      !isCanonicalPageLocation(window.location, resolution.page)
+    ) {
+      writePageLocation(resolution.page, { mode: "replace" });
+    }
+  }, [
+    auth.status,
+    auth.roles,
+    organizationName,
+    canOpenPage,
+  ]);
 
   useEffect(() => {
-    if (
-      auth.status === "authenticated" &&
-      !canAccessPageForUser(page, auth.roles, auth.profile?.organizationName)
-    ) {
-      setPage(firstAllowedPage(auth.roles, auth.profile?.organizationName));
-    }
-  }, [auth.status, auth.roles, auth.profile?.organizationName, page]);
+    if (auth.status === "authenticated_active") restorePageFromLocation();
+  }, [auth.status, restorePageFromLocation]);
 
-  if (auth.status === "loading") {
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const handlePopState = () => restorePageFromLocation();
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [restorePageFromLocation]);
+
+  if (auth.status.startsWith("authenticated_") && !auth.session?.user) {
+    return <LoginPage />;
+  }
+
+  if (
+    auth.status === "initializing"
+    || auth.status === "authenticated_checking_capabilities"
+    || auth.status === "authenticated_checking_credential_state"
+    || auth.status === "authenticated_loading_authorization"
+    || auth.status === "signing_out"
+  ) {
     return (
       <main className="auth-screen">
         <section className="auth-card auth-card--compact">
           <div className="brand-mark">GRC</div>
-          <h1>Loading secure session...</h1>
-          <p>Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø¬Ù„Ø³Ø© Ø§Ù„Ø¢Ù…Ù†Ø©...</p>
+          <h1>{t("auth.loadingSecureSession")}</h1>
+          <p>{t("auth.loadingSecureSessionHint")}</p>
         </section>
       </main>
     );
   }
 
-  if (auth.status === "password_change_required") {
+  if (auth.status === "authenticated_password_change_required") {
     return <ForcedPasswordChange />;
   }
 
-  if (auth.status !== "authenticated") {
+  if (auth.status === "authenticated_deployment_incompatible") {
+    return <AuthenticatedDeploymentError />;
+  }
+
+  if (auth.status === "authenticated_reconciliation_required") {
+    return <CredentialReconciliationRequired />;
+  }
+
+  if (auth.status === "authenticated_access_denied") {
+    return <AuthenticatedAccessDenied />;
+  }
+
+  if (auth.status !== "authenticated_active") {
     return <LoginPage />;
   }
 
@@ -1338,7 +1437,7 @@ export default function App() {
   );
 
   return (
-    <Layout page={page} setPage={setPage}>
+    <Layout page={page} navigateToPage={navigateToPage}>
       {content}
     </Layout>
   );

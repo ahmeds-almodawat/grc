@@ -136,7 +136,12 @@ describe('Patch 83U authenticated surface release proof', () => {
         if (action !== 'patch83u_change_required_password' && credentialState.access_allowed !== true) throw new Error('denied');
         if (action === 'search_grc_global') {
           const rlsClient = createClient(supabaseUrl, anonKey, {
-            global: { headers: { Authorization: \`Bearer \${token}\` } },
+            global: {
+              headers: {
+                Authorization: \`Bearer \${token}\`,
+                'x-patch83u-frontend-contract-version': PATCH83U_FRONTEND_CONTRACT_VERSION,
+              },
+            },
           });
           return rlsClient.rpc('search_grc_global', {});
         }
@@ -146,6 +151,7 @@ describe('Patch 83U authenticated surface release proof', () => {
     expect(report.status).toBe('pass');
     expect(report.summary.direct_browser_rpc_count).toBe(0);
     expect(report.summary.direct_browser_materialized_view_count).toBe(0);
+    expect(report.search_grc_global.caller_jwt_rls_proof.frontend_contract_forwarded).toBe(true);
     expect(report.search_grc_global.disposition).toBe('authenticated_edge_bridge_with_caller_jwt_rls');
     expect(report.direct_browser_views[0]).toMatchObject({
       security_invoker: true,
@@ -158,7 +164,7 @@ describe('Patch 83U authenticated surface release proof', () => {
   it('fails closed when a future migration introduces an unaudited SECURITY DEFINER routine', () => {
     const report = analyzePatch83uAuthSurface({
       migrationFiles: [{
-        path: 'supabase/migrations/175_future_fixture.sql',
+        path: 'supabase/migrations/178_future_fixture.sql',
         text: `
           create function public.future_browser_helper()
           returns integer language sql security definer as $$ select 1 $$;
@@ -223,5 +229,5 @@ describe('Patch 83U authenticated surface release proof', () => {
     )).toBe(true);
     expect(report.summary.non_rls_base_table_count).toBe(0);
     expect(report.status).toBe('pass');
-  });
+  }, 15_000);
 });

@@ -1,0 +1,15 @@
+captured_at=2026-07-19T11:55:24.9750365Z
+project_ref=zghsgzrdwbqdrpuxanac
+subject_user_id=2a276bdb-cf51-4303-846e-6b7fecf38b0c
+execution_status=stopped_fail_closed
+checkpoint=phase_1_edge_metadata
+freeze_json_sha256_match=true
+frozen_file_count=57
+frozen_file_mismatch_count=0
+aggregate_sha256_match=true
+employee_sessions_created=false
+administrator_reauthentication_performed=false
+credentials_entered=false
+reset_submitted=false
+hosted_mutation_performed=false
+production_accessed=false

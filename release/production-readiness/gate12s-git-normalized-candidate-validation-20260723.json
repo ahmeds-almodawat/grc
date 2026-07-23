@@ -1,0 +1,55 @@
+{
+  "schema_version": "gate12s-git-normalized-candidate-validation-v1",
+  "status": "passed",
+  "candidate": {
+    "source": "Git index stage-0 blob export",
+    "approved_staged_paths": 355,
+    "payload_paths": 347,
+    "payload_bytes": 16728205,
+    "payload_aggregate_sha256": "ec8afdf84b63bf5e48e90728548e80d5055e70c3f82aaf0b4d62abb2b357ab97",
+    "export_blob_mismatches": 0,
+    "independent_aggregate_match": true,
+    "env_local_files": 0,
+    "real_credentials": 0
+  },
+  "tests": {
+    "full_unit": "1198/1198 passed",
+    "focused_hermetic": "596/596 passed across 6 files",
+    "focused_release": "56/56 passed across 7 files",
+    "patch83u_serial": "25/25 passed (18 core plus 7 CAPTCHA)",
+    "captcha_playwright": "7/7 passed",
+    "sql_gate5_gate7": "passed in disposable PostgreSQL 17",
+    "baseline_v2_workdir": "passed; baseline_v2_lineage; only baseline migration 185",
+    "migration_lineage": "passed",
+    "typescript": "passed",
+    "deno_edge_check": "passed",
+    "production_build": "passed",
+    "synthetic_captcha_required_build": "passed"
+  },
+  "security": {
+    "npm_audit_vulnerabilities": 0,
+    "json_parse_failures": 0,
+    "skip_or_only_occurrences": 0,
+    "compiled_production_project_references": 0,
+    "compiled_secret_patterns": 0,
+    "real_secret_findings": 0,
+    "synthetic_secret_rejection_fixtures": 2,
+    "forbidden_environment_files": 0,
+    "captured_runtime_checkpoint_json_files": 0,
+    "checkpoint_directory_readmes": 6,
+    "conflict_markers": 0
+  },
+  "integrity": {
+    "baseline_v2_sql_sha256": "6b1b0f814bf7d8414ace4303912f303f1a71a1e8913489db77a30ddd94c7846a",
+    "baseline_v2_manifest_sha256": "052f81c85ce4de2e86a91ef21d13e7ea0071c2d97b8a09f2bbcf7b97505aedac",
+    "migration185_sha256": "780efe381ac90a5ae4d8cf256f95246966e9b42c91adcd9a6dc7a13030e0ec65",
+    "migrations_001_185_changed_by_gate12s": false,
+    "baseline_v2_changed_by_gate12s": false
+  },
+  "hosted_access": {
+    "staging_write": false,
+    "production_access": false,
+    "deployment": false
+  },
+  "overall_pass": true
+}

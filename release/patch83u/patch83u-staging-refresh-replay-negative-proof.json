@@ -1,0 +1,12 @@
+{
+  "schema_version": "patch83u-staging-refresh-replay-proof-stop-v1",
+  "captured_at": "2026-07-19T11:55:24.9750365Z",
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "subject_user_id": "2a276bdb-cf51-4303-846e-6b7fecf38b0c",
+  "execution_status": "not_run_due_to_phase_1_gate",
+  "controlled_employee_sessions_created": 0,
+  "refresh_replay_attempts": 0,
+  "refresh_replay_failed": null,
+  "reset_submitted": false,
+  "hosted_mutation_performed": false
+}

@@ -1,0 +1,48 @@
+{
+  "schema_version": "gate12r-hermetic-clean-candidate-validation-v2",
+  "captured_at": "2026-07-23T09:00:00Z",
+  "candidate_configuration": {
+    "env_local_files_copied": false,
+    "ignored_checkpoint_files_copied": false,
+    "real_credentials_used": false,
+    "external_network_used_by_unit_tests": false,
+    "captcha_configuration": "process-only synthetic public fixture"
+  },
+  "fixture_correction": {
+    "path": "tests/sql/gate5_pre178_structural_fixture.sql",
+    "classification": "test-only faithful structural fixture correction",
+    "added_verified_columns": [
+      "reviewer_role",
+      "reviewer_user_id",
+      "due_at",
+      "signed_off_at",
+      "created_by"
+    ],
+    "sha256": "85b627e2dd1043876dbf327edcff0caa46f02a295ab8fb2951c3635748e0bd52",
+    "product_behavior_changed": false
+  },
+  "results": {
+    "focused_hermetic_unit": { "passed": 573, "failed": 0 },
+    "full_unit": { "files_passed": 44, "passed": 1198, "failed": 0 },
+    "focused_release": { "passed": 56, "failed": 0 },
+    "playwright_patch83u_serial": { "passed": 25, "failed": 0 },
+    "playwright_captcha": { "passed": 7, "failed": 0 },
+    "typescript": "passed",
+    "deno_edge_check": "passed",
+    "production_build": "passed",
+    "captcha_required_build": "passed",
+    "gate5_gate7_disposable_sql": "passed",
+    "gate9r_migrations_183_184_disposable_sql": "passed",
+    "migration185_contract": "passed_by_immutable_baseline_and_focused_contract",
+    "baseline_v2_hash_binding": "passed",
+    "migration_lineage_contract": "passed",
+    "npm_audit": { "critical": 0, "high": 0, "moderate": 0, "low": 0 },
+    "skip_only_occurrences": 0,
+    "json_parse": "passed_with_node_json_parser",
+    "secret_scan": "passed",
+    "production_reference_in_build": false
+  },
+  "hosted_mutation": false,
+  "production_accessed": false,
+  "overall_pass": true
+}

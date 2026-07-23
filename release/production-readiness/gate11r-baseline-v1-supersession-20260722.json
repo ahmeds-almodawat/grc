@@ -1,0 +1,13 @@
+{
+  "schema_version": "gate11r-baseline-v1-supersession-v1",
+  "baseline": "supabase/baselines/grc_platform_baseline_v1_through_184.sql",
+  "manifest": "supabase/baselines/grc_platform_baseline_v1_through_184.manifest.json",
+  "original_sql_sha256": "895844aa75ace8d9974c855d54635519e609c77b50bbf6102cbafc660bceb7b6",
+  "original_sql_bytes": 4363439,
+  "original_manifest_sha256": "2792a332ffc8e15f40538e70c0c424c3d5c62625c3bfebd4edd44173ff012a57",
+  "status": "superseded_historical_candidate",
+  "production_approved": false,
+  "superseded_by": "supabase/baselines/grc_platform_baseline_v2_through_185.sql",
+  "reason": "Migration 185 removed the two unjustified anonymous governance-table read policies.",
+  "historical_artifacts_modified": false
+}

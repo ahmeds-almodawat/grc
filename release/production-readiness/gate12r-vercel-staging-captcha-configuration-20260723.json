@@ -1,0 +1,47 @@
+{
+  "schema_version": "gate12r-vercel-staging-captcha-configuration-v1",
+  "captured_at_utc": "2026-07-23T08:38:18.1223761Z",
+  "project": "grc-staging",
+  "origin": "https://grc-staging-lilac.vercel.app",
+  "deployments": 0,
+  "provider": "Cloudflare Turnstile",
+  "provider_hostname": "grc-staging-lilac.vercel.app",
+  "provider_hostname_status": "operator_confirmed",
+  "vercel": {
+    "read_only_name_and_scope_verification": true,
+    "required_names": [
+      "VITE_AUTH_CAPTCHA_REQUIRED",
+      "VITE_AUTH_CAPTCHA_SITE_KEY",
+      "VITE_PATCH83U_CREDENTIAL_GOVERNANCE_ENABLED",
+      "VITE_SUPABASE_ANON_KEY",
+      "VITE_SUPABASE_URL"
+    ],
+    "preview_all_required_names_present": true,
+    "production_all_required_names_present": true,
+    "configured_type": "sensitive",
+    "captcha_required_exact_true": "operator_attested",
+    "credential_governance_exact_true": "operator_attested",
+    "supabase_project_ref_exact_staging": "operator_attested",
+    "captcha_site_key_present": "operator_attested",
+    "values_retrieved_by_gate": false,
+    "forbidden_credential_shaped_names_present": false,
+    "turnstile_secret_present": false,
+    "service_role_key_present": false,
+    "database_credential_present": false
+  },
+  "supabase_auth": {
+    "project_ref": "zghsgzrdwbqdrpuxanac",
+    "captcha_enabled": "operator_confirmed",
+    "captcha_provider": "turnstile",
+    "matching_secret_present_and_masked": "operator_confirmed",
+    "leaked_password_protection_enabled": "verified_from_gate10_and_gate11r_release_evidence",
+    "hosted_value_retrieved_by_gate": false,
+    "mutation_performed_by_gate": false
+  },
+  "prohibited_project_ref": "zbrjjecpsrzposhuarcn",
+  "production_reference_configured": "operator_attested_false",
+  "secret_or_value_recorded": false,
+  "deployment_performed": false,
+  "existing_grc_project_changed": false,
+  "result": "passed"
+}

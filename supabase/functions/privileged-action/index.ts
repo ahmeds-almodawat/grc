@@ -2,9 +2,22 @@ import { createClient } from 'npm:@supabase/supabase-js@2.108.2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-patch83t-frontend-contract-version, x-patch83u-frontend-contract-version, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+
+const PATCH83T_EDGE_CONTRACT_VERSION = 'patch83t-edge-user-import-v1';
+const PATCH83T_FRONTEND_CONTRACT_VERSION = 'patch83t-frontend-user-import-v1';
+const PATCH83T_MAXIMUM_ROWS = 5000;
+const PATCH83U_EDGE_CONTRACT_VERSION = 'patch83u-edge-auth-first-v1';
+const PATCH83U_FRONTEND_CONTRACT_VERSION = 'patch83u-frontend-auth-first-v1';
+const PATCH83U_INSTALLED_SCHEMA_VERSION = 174;
+const patch83uRuntimeStates = new Set([
+  'disabled',
+  'prepared',
+  'enforced',
+  'emergency_suspended',
+]);
 
 const patch22RiskActions = new Set([
   'update_risk_assessment',
@@ -132,8 +145,10 @@ const allowedActions = new Set([
   'patch19_reactivate_user',
   'patch19_archive_user',
   'patch19_unarchive_user',
+  'patch83t_get_user_import_capabilities',
   'patch83t_apply_user_excel_import',
   'patch83t_user_import_identity_references',
+  'patch83u_get_capabilities',
   'patch83u_get_credential_state',
   'patch83u_list_provisioning',
   'patch83u_provision_account',
@@ -153,13 +168,43 @@ const allowedActions = new Set([
   ...patch83rDepartmentLifecycleActions,
 ]);
 
-const patch19OrganizationScopedTargetActions = new Set([
-  'patch19_update_user_department',
-  'patch19_assign_user_role',
+const patch19LifecycleActions = new Set([
   'patch19_deactivate_user',
   'patch19_reactivate_user',
   'patch19_archive_user',
   'patch19_unarchive_user',
+]);
+
+const patch19OrganizationScopedTargetActions = new Set([
+  'patch19_update_user_department',
+  'patch19_assign_user_role',
+  ...patch19LifecycleActions,
+]);
+
+const patch83uActions = new Set([
+  'patch83u_get_capabilities',
+  'patch83u_get_credential_state',
+  'patch83u_list_provisioning',
+  'patch83u_provision_account',
+  'patch83u_reconcile_provisioning',
+  'patch83u_reconcile_credential_state',
+  'patch83u_change_required_password',
+  'patch83u_admin_reset_password',
+]);
+
+const patch83tUserImportActions = new Set([
+  'patch83t_get_user_import_capabilities',
+  'patch83t_user_import_identity_references',
+  'patch83t_apply_user_excel_import',
+]);
+
+const patch83uEnforcedOnlyActions = new Set([
+  'patch83u_list_provisioning',
+  'patch83u_provision_account',
+  'patch83u_reconcile_provisioning',
+  'patch83u_reconcile_credential_state',
+  'patch83u_change_required_password',
+  'patch83u_admin_reset_password',
 ]);
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
@@ -208,13 +253,25 @@ function safeString(value: unknown, fallback = '') {
 }
 
 function normalizeRole(value: unknown) {
-  const role = String(value ?? 'employee');
-  return userRoleOptions.has(role) ? role : 'employee';
+  const role = String(value ?? '');
+  if (!userRoleOptions.has(role)) throw new Error('PATCH83U_ROLE_CONTRACT_INVALID');
+  return role;
 }
 
 function normalizeScope(value: unknown) {
-  const scope = String(value ?? 'assigned_only');
-  return accessScopeOptions.has(scope) ? scope : 'assigned_only';
+  const scope = String(value ?? '');
+  if (!accessScopeOptions.has(scope)) throw new Error('PATCH83U_SCOPE_CONTRACT_INVALID');
+  return scope;
+}
+
+function patch83uRoleScopeAllowed(role: string, scope: string) {
+  if (['super_admin', 'executive', 'governance_admin', 'auditor', 'compliance_officer'].includes(role)) {
+    return scope === 'global';
+  }
+  if (role === 'division_head') return scope === 'division';
+  if (role === 'department_manager') return scope === 'department';
+  return ['project_owner', 'milestone_owner', 'task_owner', 'viewer', 'employee'].includes(role)
+    && scope === 'assigned_only';
 }
 
 function normalizeUserType(value: unknown) {
@@ -234,6 +291,125 @@ function asObject(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? value as Record<string, unknown>
     : {};
+}
+
+type Patch83tUserImportCapabilities = {
+  edge_contract_version: string;
+  migration_173_available: boolean;
+  identity_reference_action_available: boolean;
+  import_execution_action_available: boolean;
+  maximum_rows: number;
+  runtime_status: 'compatible' | 'incompatible';
+  compatible: boolean;
+  server_time: string;
+};
+
+const patch83tCapabilityKeys = new Set([
+  'edge_contract_version',
+  'migration_173_available',
+  'identity_reference_action_available',
+  'import_execution_action_available',
+  'maximum_rows',
+  'runtime_status',
+  'compatible',
+  'server_time',
+]);
+
+function patch83tCapabilitiesFromResponse(value: unknown): Patch83tUserImportCapabilities | null {
+  const row = asObject(value);
+  const keys = Object.keys(row);
+  const edgeContractVersion = String(row.edge_contract_version ?? '').trim();
+  const runtimeStatus = String(row.runtime_status ?? '').trim();
+  const serverTime = String(row.server_time ?? '').trim();
+  if (
+    keys.length !== patch83tCapabilityKeys.size
+    || keys.some((key) => !patch83tCapabilityKeys.has(key))
+    || !edgeContractVersion
+    || !['compatible', 'incompatible'].includes(runtimeStatus)
+    || typeof row.migration_173_available !== 'boolean'
+    || typeof row.identity_reference_action_available !== 'boolean'
+    || typeof row.import_execution_action_available !== 'boolean'
+    || row.maximum_rows !== PATCH83T_MAXIMUM_ROWS
+    || typeof row.compatible !== 'boolean'
+    || !serverTime
+    || row.compatible !== (runtimeStatus === 'compatible')
+  ) {
+    return null;
+  }
+  return {
+    edge_contract_version: edgeContractVersion,
+    migration_173_available: row.migration_173_available,
+    identity_reference_action_available: row.identity_reference_action_available,
+    import_execution_action_available: row.import_execution_action_available,
+    maximum_rows: row.maximum_rows,
+    runtime_status: runtimeStatus as Patch83tUserImportCapabilities['runtime_status'],
+    compatible: row.compatible,
+    server_time: serverTime,
+  };
+}
+
+function patch83tCapabilityErrorText(error: unknown) {
+  const row = asObject(error);
+  return [row.code, row.message, row.details, row.hint]
+    .map((value) => String(value ?? ''))
+    .join(' ');
+}
+
+function isMissingPatch83tCapabilityContract(error: unknown) {
+  const row = asObject(error);
+  const code = String(row.code ?? '').trim().toUpperCase();
+  const diagnostic = patch83tCapabilityErrorText(error);
+  return ['PGRST202', '42883'].includes(code)
+    && /patch83t_get_user_import_capabilities/i.test(diagnostic)
+    && /does not exist|could not find|not find the function|schema cache/i.test(diagnostic);
+}
+
+function isMissingPatch83tActionContract(error: unknown, rpcName: string) {
+  const row = asObject(error);
+  const code = String(row.code ?? '').trim().toUpperCase();
+  const diagnostic = patch83tCapabilityErrorText(error);
+  return ['PGRST202', '42883'].includes(code)
+    && diagnostic.includes(rpcName)
+    && /does not exist|could not find|not find the function|schema cache/i.test(diagnostic);
+}
+
+function patch83tActionUnavailableResponse(action: string) {
+  return errorResponse(
+    'User Excel Import backend compatibility is unavailable.',
+    503,
+    'PATCH83T_USER_IMPORT_ACTION_UNAVAILABLE',
+    'The controlled User Excel Import backend is not fully deployed. No user data was changed.',
+    { action },
+  );
+}
+
+function patch83tCapabilityErrorResponse(action: string, error: unknown) {
+  const diagnostic = patch83tCapabilityErrorText(error);
+  if (/PATCH83T_USER_ADMIN_REQUIRED/i.test(diagnostic)) {
+    return errorResponse(
+      'User Excel Import administrator access is required.',
+      403,
+      'PATCH83T_USER_ADMIN_REQUIRED',
+      'The authenticated user is not authorized for controlled User Excel Import.',
+      { action },
+    );
+  }
+  if (isMissingPatch83tCapabilityContract(error)) {
+    return errorResponse(
+      'User Excel Import backend compatibility is unavailable.',
+      503,
+      'PATCH83T_USER_IMPORT_MIGRATION_REQUIRED',
+      'The controlled User Excel Import backend is not fully deployed. No user data was changed.',
+      { action },
+    );
+  }
+  return errorResponse(
+    'User Excel Import backend compatibility could not be verified.',
+    503,
+    'PATCH83T_USER_IMPORT_ACTION_UNAVAILABLE',
+    'The controlled User Excel Import backend is unavailable. No user data was changed.',
+    { action },
+  );
 }
 
 function patch83uCredentialVersionFromMetadata(metadata: Record<string, unknown>) {
@@ -285,6 +461,10 @@ function patch83uIsPasswordPolicyError(error: unknown) {
     && /policy|weak|length|characters|at least|too short|invalid/.test(diagnostic);
 }
 
+function patch83uIsCaptchaError(error: unknown) {
+  return /captcha|turnstile|challenge/.test(patch83uAuthErrorText(error));
+}
+
 function patch83uInitialPasswordPolicyResponse(action: string) {
   return errorResponse(
     patch83uPasswordPolicyMessage,
@@ -308,9 +488,86 @@ function isMissingPatch83uCredentialContract(error: unknown) {
     && ['PGRST202', '42883'].includes(code);
 }
 
+function isMissingPatch83uRuntimeContract(error: unknown) {
+  const row = asObject(error);
+  const code = String(row.code ?? '').trim().toUpperCase();
+  const diagnostic = [row.message, row.details, row.hint]
+    .map((value) => String(value ?? ''))
+    .join(' ');
+  const referencesRuntimeContract = /patch83u_get_capabilities/i.test(diagnostic);
+  const explicitlyMissing = /does not exist|could not find|not find the function|schema cache/i.test(diagnostic);
+  return referencesRuntimeContract
+    && explicitlyMissing
+    && ['PGRST202', '42883'].includes(code);
+}
+
+type Patch83uCapabilities = {
+  edge_contract_version: string;
+  installed_schema_version: number;
+  runtime_enforcement_state: 'disabled' | 'prepared' | 'enforced' | 'emergency_suspended';
+  credential_state_action_available: boolean;
+  password_change_action_available: boolean;
+  provisioning_action_available: boolean;
+  reset_action_available: boolean;
+  server_time: string;
+  compatibility_status: string;
+};
+
+function patch83uCapabilitiesFromResponse(value: unknown): Patch83uCapabilities | null {
+  const row = asObject(value);
+  const runtimeState = String(row.runtime_enforcement_state ?? '');
+  const installedSchemaVersion = patch83uStrictResponseInteger(row.installed_schema_version);
+  const edgeContractVersion = String(row.edge_contract_version ?? '');
+  const serverTime = String(row.server_time ?? '');
+  const compatibilityStatus = String(row.compatibility_status ?? '');
+  if (
+    !patch83uRuntimeStates.has(runtimeState)
+    || installedSchemaVersion !== PATCH83U_INSTALLED_SCHEMA_VERSION
+    || edgeContractVersion !== PATCH83U_EDGE_CONTRACT_VERSION
+    || !serverTime
+    || !compatibilityStatus
+    || typeof row.credential_state_action_available !== 'boolean'
+    || typeof row.password_change_action_available !== 'boolean'
+    || typeof row.provisioning_action_available !== 'boolean'
+    || typeof row.reset_action_available !== 'boolean'
+  ) {
+    return null;
+  }
+  return {
+    edge_contract_version: edgeContractVersion,
+    installed_schema_version: installedSchemaVersion,
+    runtime_enforcement_state: runtimeState as Patch83uCapabilities['runtime_enforcement_state'],
+    credential_state_action_available: row.credential_state_action_available,
+    password_change_action_available: row.password_change_action_available,
+    provisioning_action_available: row.provisioning_action_available,
+    reset_action_available: row.reset_action_available,
+    server_time: serverTime,
+    compatibility_status: compatibilityStatus,
+  };
+}
+
+function patch83uRuntimeErrorResponse(action: string, error: unknown) {
+  if (isMissingPatch83uRuntimeContract(error)) {
+    return errorResponse(
+      'Credential-governance capabilities are unavailable.',
+      503,
+      'PATCH83U_CREDENTIAL_MIGRATION_REQUIRED',
+      'Patch 83U migration 174 is not installed on this deployment.',
+      { action },
+    );
+  }
+  return errorResponse(
+    'Credential-governance capabilities could not be verified.',
+    503,
+    'PATCH83U_CREDENTIAL_STATE_UNAVAILABLE',
+    'The authenticated deployment contract could not be verified. No application action was opened.',
+    { action },
+  );
+}
+
 function patch83uFailureResponse(action: string, error: unknown, fallback: string) {
   const code = patch83uSafeCode(error, fallback);
-  const status = /SUPER_ADMIN|SERVICE_ROLE|ORGANIZATION|CONFIRMATION|SELF_RESET|ACCESS_DENIED/.test(code)
+  const status = /SUPER_ADMIN|SERVICE_ROLE|ORGANIZATION|CONFIRMATION|SELF_RESET|SELF_LIFECYCLE|ACCESS_DENIED/.test(code)
     ? 403
     : /INVALID|REQUIRED/.test(code) ? 400 : 409;
   return errorResponse(
@@ -690,38 +947,227 @@ Deno.serve(async (request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const credentialStateResult = await serviceClient.rpc('patch83u_get_credential_state', {
-    p_actor_id: userData.user.id,
-    p_token_credential_version: tokenCredentialVersion,
-    p_token_email: tokenEmail,
-    p_session_id: tokenSessionId,
-  });
-  if (credentialStateResult.error) {
-    if (!isMissingPatch83uCredentialContract(credentialStateResult.error)) {
-      return errorResponse(
-        'Credential-state verification failed.',
-        503,
-        'PATCH83U_CREDENTIAL_STATE_UNAVAILABLE',
-        'The credential-state service could not verify this session. Access remains denied.',
-        { action },
-      );
-    }
+  const requestPayload = asObject(requestBody.payload);
+  const frontendContractHeader = String(
+    request.headers.get('x-patch83u-frontend-contract-version') ?? '',
+  ).trim();
+  const patch83tFrontendContractHeader = String(
+    request.headers.get('x-patch83t-frontend-contract-version') ?? '',
+  ).trim();
+  const frontendContractPayload = String(requestPayload.frontend_contract_version ?? '').trim();
+  if (
+    action === 'patch83u_get_capabilities'
+    && frontendContractHeader
+    && frontendContractPayload
+    && frontendContractHeader !== frontendContractPayload
+  ) {
     return errorResponse(
-      'Credential-state verification is unavailable.',
-      503,
-      'PATCH83U_CREDENTIAL_MIGRATION_REQUIRED',
-      'Apply Patch 83U migration 174 before using the matching privileged-action deployment.',
+      'Frontend credential-governance contracts do not match.',
+      409,
+      'PATCH83U_FRONTEND_CONTRACT_MISMATCH',
+      'The authenticated client supplied inconsistent frontend contract versions.',
       { action },
     );
   }
-  const credentialState = (credentialStateResult.data ?? {}) as Record<string, unknown>;
+  const frontendContractVersion = action === 'patch83u_get_capabilities'
+    ? (frontendContractPayload || frontendContractHeader)
+    : frontendContractHeader;
+
+  const capabilityResult = await serviceClient.rpc('patch83u_get_capabilities', {
+    p_actor_id: userData.user.id,
+    p_edge_contract_version: PATCH83U_EDGE_CONTRACT_VERSION,
+    p_frontend_contract_version: frontendContractVersion,
+  });
+  let capabilities: Patch83uCapabilities | null = null;
+  if (capabilityResult.error) {
+    // The controlled deployment order installs migration 174 in disabled mode
+    // before this Edge build. If that authenticated runtime proof is missing or
+    // unavailable, do not guess whether enforcement is active and never bypass
+    // it with the service-role dispatcher.
+    if (!(patch83tUserImportActions.has(action) && isMissingPatch83uRuntimeContract(capabilityResult.error))) {
+      return patch83uRuntimeErrorResponse(action, capabilityResult.error);
+    }
+    // Migration 174 is an optional, later credential-governance release in the
+    // Patch 83T deployment order. Only the three Patch 83T actions may continue
+    // when its capability RPC is proven absent by the exact PostgREST/Postgres
+    // missing-function diagnostics above. If migration 174 exists, all existing
+    // capability, credential-state, session, and enforcement checks still run;
+    // every other runtime error remains fail closed.
+  } else {
+    capabilities = patch83uCapabilitiesFromResponse(capabilityResult.data);
+    if (!capabilities) {
+      return errorResponse(
+        'Credential-governance capability proof was invalid.',
+        503,
+        'PATCH83U_EDGE_CONTRACT_MISMATCH',
+        'The authenticated Edge and database capability contracts are incompatible.',
+        { action },
+      );
+    }
+  }
+
+  if (action === 'patch83u_get_capabilities') {
+    if (!capabilities) {
+      return errorResponse(
+        'Credential-governance capabilities are unavailable.',
+        503,
+        'PATCH83U_CREDENTIAL_MIGRATION_REQUIRED',
+        'Patch 83U migration 174 is not installed on this deployment.',
+        { action },
+      );
+    }
+    return jsonResponse({ ok: true, action, result: capabilities }, 200);
+  }
+
+  if (capabilities && patch83uActions.has(action) && frontendContractHeader !== PATCH83U_FRONTEND_CONTRACT_VERSION) {
+    return errorResponse(
+      'The frontend credential-governance contract is incompatible.',
+      409,
+      'PATCH83U_FRONTEND_CONTRACT_MISMATCH',
+      'Refresh to the compatible application build or sign out.',
+      { action },
+    );
+  }
+
+  const runtimeState = capabilities?.runtime_enforcement_state ?? 'disabled';
+  if (capabilities && patch83uEnforcedOnlyActions.has(action) && runtimeState !== 'enforced') {
+    const emergency = runtimeState === 'emergency_suspended';
+    return errorResponse(
+      emergency
+        ? 'Credential governance is temporarily suspended.'
+        : 'Credential governance is not prepared for mutations.',
+      409,
+      emergency ? 'PATCH83U_RUNTIME_EMERGENCY_SUSPENDED' : 'PATCH83U_RUNTIME_NOT_PREPARED',
+      emergency
+        ? 'Password transitions, provisioning, resets, and reconciliation are disabled during emergency suspension.'
+        : 'The protected runtime must be fully compatible and enforced before this action is available.',
+      { action },
+    );
+  }
+
+  if (
+    capabilities
+    && runtimeState === 'enforced'
+    && (
+      (action === 'patch83u_change_required_password' && !capabilities.password_change_action_available)
+      || (action === 'patch83u_admin_reset_password' && !capabilities.reset_action_available)
+      || (
+        [
+          'patch83u_list_provisioning',
+          'patch83u_provision_account',
+          'patch83u_reconcile_provisioning',
+          'patch83u_reconcile_credential_state',
+        ].includes(action)
+        && !capabilities.provisioning_action_available
+      )
+    )
+  ) {
+    return errorResponse(
+      'The requested credential-governance action is unavailable.',
+      503,
+      'PATCH83U_CREDENTIAL_STATE_UNAVAILABLE',
+      'The authenticated capability contract does not advertise this protected action.',
+      { action },
+    );
+  }
+
+  if (
+    capabilities
+    && runtimeState === 'enforced'
+    && (
+      frontendContractHeader !== PATCH83U_FRONTEND_CONTRACT_VERSION
+      || capabilities.compatibility_status !== 'compatible'
+    )
+  ) {
+    return errorResponse(
+      'The authenticated deployment contract is incompatible.',
+      409,
+      frontendContractHeader === PATCH83U_FRONTEND_CONTRACT_VERSION
+        ? 'PATCH83U_EDGE_CONTRACT_MISMATCH'
+        : 'PATCH83U_FRONTEND_CONTRACT_MISMATCH',
+      'No application action was opened. Refresh to the compatible application build or sign out.',
+      { action },
+    );
+  }
+
+  let credentialState: Record<string, unknown> = {};
+  if (
+    capabilities
+    && (
+      runtimeState === 'enforced'
+      || runtimeState === 'emergency_suspended'
+      || action === 'patch83u_get_credential_state'
+    )
+  ) {
+    if (!capabilities.credential_state_action_available) {
+      return errorResponse(
+        'Credential-state verification is unavailable.',
+        503,
+        'PATCH83U_CREDENTIAL_STATE_UNAVAILABLE',
+        'The authenticated deployment does not expose the required credential-state action.',
+        { action },
+      );
+    }
+    const credentialStateResult = await serviceClient.rpc('patch83u_get_credential_state', {
+      p_actor_id: userData.user.id,
+      p_token_credential_version: tokenCredentialVersion,
+      p_token_email: tokenEmail,
+      p_session_id: tokenSessionId,
+    });
+    if (credentialStateResult.error) {
+      if (!isMissingPatch83uCredentialContract(credentialStateResult.error)) {
+        return errorResponse(
+          'Credential-state verification failed.',
+          503,
+          'PATCH83U_CREDENTIAL_STATE_UNAVAILABLE',
+          'The credential-state service could not verify this session. Access remains denied.',
+          { action },
+        );
+      }
+      return errorResponse(
+        'Credential-state verification is unavailable.',
+        503,
+        'PATCH83U_CREDENTIAL_MIGRATION_REQUIRED',
+        'Apply Patch 83U migration 174 before using the matching privileged-action deployment.',
+        { action },
+      );
+    }
+    credentialState = (credentialStateResult.data ?? {}) as Record<string, unknown>;
+  }
 
   if (action === 'patch83u_get_credential_state') {
     return jsonResponse({ ok: true, action, result: credentialState }, 200);
   }
 
+  let actorOrganizationId = String(credentialState.organization_id ?? '').trim();
   if (
-    action !== 'patch83u_change_required_password'
+    !actorOrganizationId
+    && (
+      ['assign_user_role', 'patch19_assign_user_role', 'deactivate_user_role'].includes(action)
+      || patch19LifecycleActions.has(action)
+    )
+  ) {
+    const { data: actorProfile, error: actorProfileError } = await serviceClient
+      .from('profiles')
+      .select('organization_id,is_active')
+      .eq('id', userData.user.id)
+      .maybeSingle();
+    actorOrganizationId = String(actorProfile?.organization_id ?? '').trim();
+    if (actorProfileError || actorProfile?.is_active !== true || !uuidPattern.test(actorOrganizationId)) {
+      return errorResponse(
+        'The authenticated actor organization could not be verified.',
+        403,
+        'PATCH83U_ORGANIZATION_SCOPE_REQUIRED',
+        'Role mutations require an active profile with an exact organization boundary.',
+        { action },
+      );
+    }
+  }
+
+  if (
+    capabilities
+    && ['enforced', 'emergency_suspended'].includes(runtimeState)
+    && action !== 'patch83u_change_required_password'
     && credentialState.access_allowed !== true
   ) {
     return errorResponse(
@@ -731,6 +1177,80 @@ Deno.serve(async (request) => {
       String(credentialState.message ?? 'Change or reconcile the credential before accessing application actions.'),
       { action, credential_state: credentialState.credential_state ?? 'unknown' },
     );
+  }
+
+  let patch83tCapabilities: Patch83tUserImportCapabilities | null = null;
+  if (patch83tUserImportActions.has(action)) {
+    const patch83tFrontendContractPayload = action === 'patch83t_get_user_import_capabilities'
+      ? frontendContractPayload
+      : '';
+    if (
+      patch83tFrontendContractHeader !== PATCH83T_FRONTEND_CONTRACT_VERSION
+      || (
+        action === 'patch83t_get_user_import_capabilities'
+        && patch83tFrontendContractPayload !== PATCH83T_FRONTEND_CONTRACT_VERSION
+      )
+    ) {
+      return errorResponse(
+        'The User Excel Import frontend contract is incompatible.',
+        409,
+        'PATCH83T_FRONTEND_CONTRACT_MISMATCH',
+        'Use the matching controlled User Excel Import application build. No user data was changed.',
+        { action },
+      );
+    }
+
+    const patch83tCapabilityResult = await serviceClient.rpc('patch83t_get_user_import_capabilities', {
+      p_actor_id: userData.user.id,
+      p_edge_contract_version: PATCH83T_EDGE_CONTRACT_VERSION,
+      p_frontend_contract_version: patch83tFrontendContractHeader,
+    });
+    if (patch83tCapabilityResult.error) {
+      return patch83tCapabilityErrorResponse(action, patch83tCapabilityResult.error);
+    }
+    patch83tCapabilities = patch83tCapabilitiesFromResponse(patch83tCapabilityResult.data);
+    if (!patch83tCapabilities) {
+      return errorResponse(
+        'The User Excel Import Edge contract is incompatible.',
+        503,
+        'PATCH83T_EDGE_CONTRACT_MISMATCH',
+        'The controlled User Excel Import backend returned an invalid compatibility response. No user data was changed.',
+        { action },
+      );
+    }
+
+    if (action === 'patch83t_get_user_import_capabilities') {
+      return jsonResponse({ ok: true, action, result: patch83tCapabilities }, 200);
+    }
+
+    const requiredActionAvailable = action === 'patch83t_user_import_identity_references'
+      ? patch83tCapabilities.identity_reference_action_available
+      : patch83tCapabilities.import_execution_action_available;
+    if (patch83tCapabilities.edge_contract_version !== PATCH83T_EDGE_CONTRACT_VERSION) {
+      return errorResponse(
+        'The User Excel Import Edge contract is incompatible.',
+        409,
+        'PATCH83T_EDGE_CONTRACT_MISMATCH',
+        'The controlled User Excel Import backend is not fully deployed. No user data was changed.',
+        { action },
+      );
+    }
+    if (
+      !patch83tCapabilities.migration_173_available
+      || !patch83tCapabilities.compatible
+      || patch83tCapabilities.runtime_status !== 'compatible'
+      || !requiredActionAvailable
+    ) {
+      return errorResponse(
+        'User Excel Import backend compatibility is unavailable.',
+        503,
+        patch83tCapabilities.migration_173_available
+          ? 'PATCH83T_USER_IMPORT_ACTION_UNAVAILABLE'
+          : 'PATCH83T_USER_IMPORT_MIGRATION_REQUIRED',
+        'The controlled User Excel Import backend is not fully deployed. No user data was changed.',
+        { action },
+      );
+    }
   }
 
   if (action === 'search_grc_global') {
@@ -755,7 +1275,15 @@ Deno.serve(async (request) => {
     // gate before the search RPC is reached.
     const rlsClient = createClient(supabaseUrl, anonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
-      global: { headers: { Authorization: `Bearer ${token}` } },
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // The incoming client contract has already been checked above. Carry
+          // the pinned compatible contract through the caller-JWT PostgREST hop
+          // so enforced credential-gated RLS can verify the same deployment.
+          'x-patch83u-frontend-contract-version': PATCH83U_FRONTEND_CONTRACT_VERSION,
+        },
+      },
     });
     const { data, error } = await rlsClient.rpc('search_grc_global', {
       p_query: query,
@@ -797,6 +1325,9 @@ Deno.serve(async (request) => {
       p_employee_ids: employeeIds,
     });
     if (error) {
+      if (isMissingPatch83tActionContract(error, 'patch83t_user_import_identity_references')) {
+        return patch83tActionUnavailableResponse(action);
+      }
       return patch83uFailureResponse(action, error, 'PATCH83T_IDENTITY_REFERENCE_LOOKUP_FAILED');
     }
     return jsonResponse({ ok: true, action, result: data }, 200);
@@ -1060,6 +1591,8 @@ Deno.serve(async (request) => {
     const confirmNewPassword = typeof payload.confirm_new_password === 'string'
       ? payload.confirm_new_password
       : '';
+    const captchaToken = typeof payload.captcha_token === 'string' ? payload.captcha_token : '';
+    const requestId = String(payload.request_id ?? '');
     if (
       !currentPassword
       || !newPassword
@@ -1073,73 +1606,124 @@ Deno.serve(async (request) => {
       || confirmNewPassword.length > 256
       || newPassword === currentPassword
       || !uuidPattern.test(tokenSessionId)
+      || !patch83uRequestIdPattern.test(requestId)
+      || (payload.captcha_token !== undefined && typeof payload.captcha_token !== 'string')
+      || captchaToken !== captchaToken.trim()
+      || captchaToken.length > 8192
     ) {
       return errorResponse(
         'Password input or confirmation validation failed.',
         400,
         'PATCH83U_PASSWORD_CHANGE_INPUT_INVALID',
-        'Provide matching non-empty password fields without surrounding whitespace; the new password must differ from the current password.',
+        'Provide matching non-empty password fields without surrounding whitespace, a safe request ID, and a fresh CAPTCHA token when required.',
         { action },
       );
     }
 
-    const beginResult = await serviceClient.rpc('patch83u_begin_required_password_change', {
+    // This first database step is read-only. The current credential is verified
+    // against Supabase Auth before the idempotent transition is claimed.
+    const prepareResult = await serviceClient.rpc('patch83u_prepare_required_password_change', {
       p_actor_id: userData.user.id,
       p_session_id: tokenSessionId,
       p_token_credential_version: tokenCredentialVersion,
+      p_request_id: requestId,
     });
-    if (beginResult.error) {
-      return patch83uFailureResponse(action, beginResult.error, 'PATCH83U_PASSWORD_CHANGE_BEGIN_FAILED');
+    if (prepareResult.error) {
+      return patch83uFailureResponse(action, prepareResult.error, 'PATCH83U_PASSWORD_CHANGE_PREPARE_FAILED');
     }
 
-    const begun = asObject(beginResult.data);
-    const operationId = String(begun.operation_id ?? '');
-    const authEmail = String(begun.auth_email ?? '').trim().toLowerCase();
-    const employeeId = String(begun.employee_id ?? '');
-    const identityMode = String(begun.identity_mode ?? '');
-    const currentCredentialVersion = patch83uStrictResponseInteger(begun.current_credential_version);
-    const nextCredentialVersion = patch83uStrictResponseInteger(begun.next_credential_version);
+    const prepared = asObject(prepareResult.data);
+    const authEmail = String(prepared.auth_email ?? '').trim().toLowerCase();
+    const employeeId = prepared.employee_id === null ? '' : String(prepared.employee_id ?? '');
+    const identityMode = String(prepared.identity_mode ?? '');
+    const currentCredentialVersion = patch83uStrictResponseInteger(prepared.current_credential_version);
+    const completed = prepared.completed;
+    const preparedStatus = String(prepared.result_status ?? '');
+    if (
+      String(prepared.user_id ?? '') !== userData.user.id
+      || String(prepared.request_id ?? '') !== requestId
+      || !authEmail
+      || authEmail !== tokenEmail
+      || !['employee_id_managed', 'legacy_verified'].includes(identityMode)
+      || (employeeId !== '' && employeeId !== employeeId.trim())
+      || (
+        identityMode === 'employee_id_managed'
+        && (
+          !patch83uEmployeeIdPattern.test(employeeId)
+          || authEmail !== `${employeeId.toLowerCase()}@almodawat.sa`
+        )
+      )
+      || currentCredentialVersion < 0
+      || typeof completed !== 'boolean'
+      || !preparedStatus
+      || prepared.must_reauthenticate !== true
+    ) {
+      return errorResponse(
+        'Password-change preparation proof failed.',
+        409,
+        'PATCH83U_PASSWORD_CHANGE_PREPARE_PROOF_FAILED',
+        'The protected credential state did not return the exact authenticated identity proof.',
+        { action },
+      );
+    }
+
+    if (completed) {
+      if (!['active', 'recovery_required', 'session_revocation_review_required'].includes(preparedStatus)) {
+        return errorResponse(
+          'Password-change replay proof failed.',
+          409,
+          'PATCH83U_PASSWORD_CHANGE_REPLAY_PROOF_FAILED',
+          'The completed idempotency result was not safe to replay.',
+          { action },
+        );
+      }
+      return jsonResponse({
+        ok: true,
+        action,
+        result: {
+          userId: userData.user.id,
+          requestId,
+          status: preparedStatus,
+          credentialVersion: currentCredentialVersion,
+          mustReauthenticate: true,
+          reconciliationRequired: preparedStatus === 'recovery_required',
+          sessionRevocationReviewRequired: preparedStatus === 'session_revocation_review_required',
+          idempotentReplay: true,
+        },
+      }, 200);
+    }
+
+    const normalizedNewPassword = newPassword.toLowerCase();
+    const authEmailLocalPart = authEmail.slice(0, authEmail.lastIndexOf('@')).toLowerCase();
+    if (
+      (employeeId && normalizedNewPassword === employeeId.toLowerCase())
+      || normalizedNewPassword === authEmailLocalPart
+    ) {
+      return errorResponse(
+        'The new password reuses a protected login identifier.',
+        400,
+        'PATCH83U_PERMANENT_PASSWORD_MANAGED_IDENTITY_REUSE_DENIED',
+        'Choose a new password that is not the trusted Employee ID or Auth-email local part.',
+        { action },
+      );
+    }
+
+    const verificationClient = createClient(supabaseUrl, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    });
+    let operationId = '';
+    let nextCredentialVersion = -1;
     let authChanged = false;
+    let sessionRevocationConfirmed = false;
+    let globalSessionRevocationAttempted = false;
+    let globalSessionRevocationConfirmed = false;
+    let reauthenticationAccessToken = '';
 
     try {
-      if (
-        !uuidPattern.test(operationId)
-        || !authEmail
-        || authEmail !== tokenEmail
-        || !['employee_id_managed', 'legacy_verified'].includes(identityMode)
-        || !employeeId
-        || employeeId !== employeeId.trim()
-        || (
-          identityMode === 'employee_id_managed'
-          && (
-            !patch83uEmployeeIdPattern.test(employeeId)
-            || authEmail !== `${employeeId.toLowerCase()}@almodawat.sa`
-          )
-        )
-        || !Number.isInteger(currentCredentialVersion)
-        || !Number.isInteger(nextCredentialVersion)
-        || currentCredentialVersion < 0
-        || nextCredentialVersion < 1
-        || nextCredentialVersion !== currentCredentialVersion + 1
-      ) {
-        throw new Error('PATCH83U_PASSWORD_CHANGE_BEGIN_PROOF_FAILED');
-      }
-
-      const normalizedNewPassword = newPassword.toLowerCase();
-      const authEmailLocalPart = authEmail.slice(0, authEmail.lastIndexOf('@')).toLowerCase();
-      if (
-        normalizedNewPassword === employeeId.toLowerCase()
-        || normalizedNewPassword === authEmailLocalPart
-      ) {
-        throw new Error('PATCH83U_PERMANENT_PASSWORD_MANAGED_IDENTITY_REUSE_DENIED');
-      }
-
-      const verificationClient = createClient(supabaseUrl, anonKey, {
-        auth: { persistSession: false, autoRefreshToken: false },
-      });
       const verification = await verificationClient.auth.signInWithPassword({
         email: authEmail,
         password: currentPassword,
+        ...(captchaToken ? { options: { captchaToken } } : {}),
       });
       if (
         verification.error
@@ -1148,7 +1732,52 @@ Deno.serve(async (request) => {
         || verification.data.user.id !== userData.user.id
         || String(verification.data.user.email ?? '').trim().toLowerCase() !== authEmail
       ) {
-        throw new Error('PATCH83U_CURRENT_PASSWORD_VERIFICATION_FAILED');
+        throw new Error(
+          patch83uIsCaptchaError(verification.error)
+            ? 'PATCH83U_CAPTCHA_VERIFICATION_FAILED'
+            : 'PATCH83U_CURRENT_PASSWORD_VERIFICATION_FAILED',
+        );
+      }
+      reauthenticationAccessToken = verification.data.session.access_token;
+      const reauthenticationClaims = await verificationClient.auth.getClaims(reauthenticationAccessToken);
+      const replacementClaims = asObject(reauthenticationClaims.data?.claims);
+      const replacementSessionId = String(replacementClaims.session_id ?? '').trim();
+      const replacementCredentialVersion = patch83uCredentialVersionFromMetadata(
+        asObject(verification.data.user.app_metadata),
+      );
+      if (
+        reauthenticationClaims.error
+        || String(replacementClaims.sub ?? '') !== userData.user.id
+        || !uuidPattern.test(replacementSessionId)
+        || replacementCredentialVersion !== currentCredentialVersion
+      ) {
+        throw new Error('PATCH83U_CURRENT_PASSWORD_SESSION_PROOF_FAILED');
+      }
+
+      const beginResult = await serviceClient.rpc('patch83u_begin_required_password_change', {
+        p_actor_id: userData.user.id,
+        p_session_id: replacementSessionId,
+        p_token_credential_version: replacementCredentialVersion,
+        p_request_id: requestId,
+      });
+      if (beginResult.error) {
+        throw new Error(patch83uSafeCode(beginResult.error, 'PATCH83U_PASSWORD_CHANGE_BEGIN_FAILED'));
+      }
+      const begun = asObject(beginResult.data);
+      operationId = String(begun.operation_id ?? '');
+      nextCredentialVersion = patch83uStrictResponseInteger(begun.next_credential_version);
+      if (
+        String(begun.user_id ?? '') !== userData.user.id
+        || String(begun.request_id ?? '') !== requestId
+        || String(begun.auth_email ?? '').trim().toLowerCase() !== authEmail
+        || (begun.employee_id === null ? '' : String(begun.employee_id ?? '')) !== employeeId
+        || String(begun.identity_mode ?? '') !== identityMode
+        || !uuidPattern.test(operationId)
+        || patch83uStrictResponseInteger(begun.current_credential_version) !== currentCredentialVersion
+        || nextCredentialVersion !== currentCredentialVersion + 1
+        || typeof begun.idempotent_replay !== 'boolean'
+      ) {
+        throw new Error('PATCH83U_PASSWORD_CHANGE_BEGIN_PROOF_FAILED');
       }
 
       const authLookup = await serviceClient.auth.admin.getUserById(userData.user.id);
@@ -1164,12 +1793,21 @@ Deno.serve(async (request) => {
         throw new Error('PATCH83U_AUTH_DATABASE_VERSION_MISMATCH');
       }
 
-      const signOutResult = await serviceClient.auth.admin.signOut(
-        verification.data.session.access_token,
-        'global',
-      );
-      if (signOutResult.error) {
-        throw new Error('PATCH83U_GLOBAL_SESSION_REVOCATION_FAILED');
+      // Revoke every currently applicable Auth session while the disposable
+      // current-password proof still names an active session. Updating the Auth
+      // password first can invalidate that disposable session and make a later
+      // global sign-out return session_not_found without proving that every
+      // other session was revoked. A failed or ambiguous global sign-out is
+      // never promoted to revocation proof; finalization remains fail closed.
+      globalSessionRevocationAttempted = true;
+      try {
+        const signOutResult = await serviceClient.auth.admin.signOut(
+          reauthenticationAccessToken,
+          'global',
+        );
+        globalSessionRevocationConfirmed = !signOutResult.error;
+      } catch {
+        globalSessionRevocationConfirmed = false;
       }
 
       // The Auth request may commit even if the client receives a transport or
@@ -1219,12 +1857,37 @@ Deno.serve(async (request) => {
         throw new Error('PATCH83U_AUTH_PASSWORD_UPDATE_PROOF_FAILED');
       }
 
-      const finalizeResult = await serviceClient.rpc('patch83u_finalize_required_password_change', {
-        p_actor_id: userData.user.id,
-        p_operation_id: operationId,
-        p_applied_credential_version: nextCredentialVersion,
-        p_verified_auth_email: authEmail,
-      });
+      // Only a successful supported Auth global sign-out may enter the atomic
+      // zero-session finalizer. That service-only RPC holds auth.sessions stable
+      // while it proves zero and finalizes, closing the insert race between a
+      // separate proof query and the credential-state update. session_not_found
+      // or any other ambiguous Auth result takes the existing false-proof path,
+      // which can only persist session_revocation_review_required.
+      let finalizeResult: { data: unknown; error: unknown };
+      if (globalSessionRevocationConfirmed) {
+        sessionRevocationConfirmed = true;
+        finalizeResult = await serviceClient.rpc(
+          'patch83u_finalize_password_change_after_revocation',
+          {
+            p_actor_id: userData.user.id,
+            p_operation_id: operationId,
+            p_request_id: requestId,
+            p_applied_credential_version: nextCredentialVersion,
+            p_verified_auth_email: authEmail,
+          },
+        );
+      } else {
+        sessionRevocationConfirmed = false;
+        finalizeResult = await serviceClient.rpc('patch83u_finalize_required_password_change', {
+          p_actor_id: userData.user.id,
+          p_operation_id: operationId,
+          p_request_id: requestId,
+          p_applied_credential_version: nextCredentialVersion,
+          p_verified_auth_email: authEmail,
+          p_session_revocation_confirmed: false,
+        });
+      }
+
       if (finalizeResult.error) {
         throw new Error(patch83uSafeCode(finalizeResult.error, 'PATCH83U_PASSWORD_CHANGE_FINALIZE_FAILED'));
       }
@@ -1232,12 +1895,18 @@ Deno.serve(async (request) => {
       const finalized = asObject(finalizeResult.data);
       const finalizedState = String(finalized.credential_state ?? '');
       const finalizedNeedsReconciliation = finalized.reconciliation_required === true;
+      const sessionRevocationReviewRequired = finalized.session_revocation_review_required === true;
       if (
         String(finalized.user_id ?? '') !== userData.user.id
+        || String(finalized.request_id ?? '') !== requestId
         || patch83uStrictResponseInteger(finalized.credential_version) !== nextCredentialVersion
-        || !['active', 'recovery_required'].includes(finalizedState)
+        || !['active', 'recovery_required', 'session_revocation_review_required'].includes(finalizedState)
         || finalized.must_reauthenticate !== true
+        || typeof finalized.reconciliation_required !== 'boolean'
+        || typeof finalized.session_revocation_review_required !== 'boolean'
+        || typeof finalized.idempotent_replay !== 'boolean'
         || finalizedNeedsReconciliation !== (finalizedState === 'recovery_required')
+        || sessionRevocationReviewRequired !== (finalizedState === 'session_revocation_review_required')
       ) {
         throw new Error('PATCH83U_PASSWORD_CHANGE_FINALIZE_PROOF_FAILED');
       }
@@ -1246,22 +1915,69 @@ Deno.serve(async (request) => {
         action,
         result: {
           userId: userData.user.id,
+          requestId,
           status: finalizedState,
+          credentialVersion: nextCredentialVersion,
           mustReauthenticate: true,
           reconciliationRequired: finalizedNeedsReconciliation,
+          sessionRevocationReviewRequired,
+          idempotentReplay: finalized.idempotent_replay,
         },
       }, 200);
     } catch (operationError) {
+      let abortResult: Record<string, unknown> | null = null;
       if (uuidPattern.test(operationId)) {
-        await serviceClient.rpc('patch83u_abort_required_password_change', {
+        const aborted = await serviceClient.rpc('patch83u_abort_required_password_change', {
           p_actor_id: userData.user.id,
           p_operation_id: operationId,
+          p_request_id: requestId,
           p_auth_changed: authChanged,
+          p_session_revocation_confirmed: sessionRevocationConfirmed,
           p_error_code: patch83uSafeCode(operationError, 'PATCH83U_PASSWORD_CHANGE_FAILED'),
           p_error_message: 'The protected password-change operation did not complete.',
         });
+        if (!aborted.error) abortResult = asObject(aborted.data);
       }
-      if (patch83uSafeCode(operationError, '') === 'PATCH83U_PERMANENT_PASSWORD_POLICY_REJECTED') {
+
+      // A finalize response can be lost after the database commits, and an
+      // attempted Auth write can be ambiguous even when the Edge call fails.
+      // Prefer the idempotency ledger's exact terminal state over a generic
+      // error so the browser always closes the old session and never retries a
+      // completed password write under a new request ID.
+      if (abortResult) {
+        const abortedState = String(abortResult.credential_state ?? '');
+        const abortedVersion = patch83uStrictResponseInteger(abortResult.credential_version);
+        const abortedReconciliation = abortResult.reconciliation_required;
+        const abortedSessionReview = abortResult.session_revocation_review_required;
+        if (
+          String(abortResult.user_id ?? '') === userData.user.id
+          && String(abortResult.request_id ?? '') === requestId
+          && ['active', 'recovery_required', 'session_revocation_review_required'].includes(abortedState)
+          && abortedVersion >= 0
+          && typeof abortedReconciliation === 'boolean'
+          && typeof abortedSessionReview === 'boolean'
+          && typeof abortResult.idempotent_replay === 'boolean'
+          && abortedReconciliation === (abortedState === 'recovery_required')
+          && abortedSessionReview === (abortedState === 'session_revocation_review_required')
+        ) {
+          return jsonResponse({
+            ok: true,
+            action,
+            result: {
+              userId: userData.user.id,
+              requestId,
+              status: abortedState,
+              credentialVersion: abortedVersion,
+              mustReauthenticate: true,
+              reconciliationRequired: abortedReconciliation,
+              sessionRevocationReviewRequired: abortedSessionReview,
+              idempotentReplay: abortResult.idempotent_replay,
+            },
+          }, 200);
+        }
+      }
+      const operationCode = patch83uSafeCode(operationError, 'PATCH83U_PASSWORD_CHANGE_FAILED');
+      if (operationCode === 'PATCH83U_PERMANENT_PASSWORD_POLICY_REJECTED') {
         return errorResponse(
           patch83uPermanentPasswordPolicyMessage,
           409,
@@ -1270,7 +1986,39 @@ Deno.serve(async (request) => {
           { action },
         );
       }
+      if (operationCode === 'PATCH83U_CAPTCHA_VERIFICATION_FAILED') {
+        return errorResponse(
+          'The CAPTCHA challenge was not accepted.',
+          400,
+          operationCode,
+          'Complete a fresh CAPTCHA challenge and try the authenticated password change again.',
+          { action },
+        );
+      }
+      if (operationCode === 'PATCH83U_CURRENT_PASSWORD_VERIFICATION_FAILED') {
+        return errorResponse(
+          'The current credential could not be verified.',
+          401,
+          operationCode,
+          'The protected credential transition was not started.',
+          { action },
+        );
+      }
       return patch83uFailureResponse(action, operationError, 'PATCH83U_PASSWORD_CHANGE_FAILED');
+    } finally {
+      if (reauthenticationAccessToken && !globalSessionRevocationAttempted) {
+        try {
+          await serviceClient.auth.admin.signOut(
+            reauthenticationAccessToken,
+            'local',
+          );
+        } catch {
+          // Best-effort cleanup for the disposable current-password session.
+          // This path runs only before any global attempt and is never global
+          // revocation proof or input to credential-state finalization.
+        }
+      }
+      reauthenticationAccessToken = '';
     }
   }
 
@@ -1279,6 +2027,9 @@ Deno.serve(async (request) => {
     const targetUserId = String(payload.user_id ?? '');
     const temporaryPassword = typeof payload.temporary_password === 'string'
       ? payload.temporary_password
+      : '';
+    const confirmTemporaryPassword = typeof payload.confirm_temporary_password === 'string'
+      ? payload.confirm_temporary_password
       : '';
     const employeeIdConfirmation = typeof payload.employee_id_confirmation === 'string'
       ? payload.employee_id_confirmation
@@ -1294,8 +2045,12 @@ Deno.serve(async (request) => {
       || !employeeIdConfirmation
       || employeeIdConfirmation !== employeeIdConfirmation.trim()
       || !temporaryPassword
+      || !confirmTemporaryPassword
+      || temporaryPassword !== confirmTemporaryPassword
       || temporaryPassword.length > 256
+      || confirmTemporaryPassword.length > 256
       || temporaryPassword !== temporaryPassword.trim()
+      || confirmTemporaryPassword !== confirmTemporaryPassword.trim()
       || resetConfirmation !== 'PATCH83U_RESET_USER_PASSWORD'
       || !reason
       || reason.length > 500
@@ -1305,7 +2060,16 @@ Deno.serve(async (request) => {
         'The administrator reset request is invalid.',
         400,
         'PATCH83U_ADMIN_RESET_INPUT_INVALID',
-        'A non-self target, exact Employee ID, non-empty temporary password, exact reset confirmation, reason, and safe request ID are required.',
+        'A non-self target, exact Employee ID, matching temporary-password confirmation, exact reset confirmation, reason, and safe request ID are required.',
+        { action },
+      );
+    }
+    if (reason.includes(temporaryPassword)) {
+      return errorResponse(
+        'The administrator reset request is invalid.',
+        400,
+        'PATCH83U_ADMIN_RESET_REASON_INVALID',
+        'The reset reason must not contain credential material.',
         { action },
       );
     }
@@ -1327,18 +2091,86 @@ Deno.serve(async (request) => {
     const authEmail = String(begun.auth_email ?? '').trim().toLowerCase();
     const currentCredentialVersion = patch83uStrictResponseInteger(begun.current_credential_version);
     const nextCredentialVersion = patch83uStrictResponseInteger(begun.next_credential_version);
+    const resultCredentialVersion = patch83uStrictResponseInteger(begun.credential_version);
+    const resultStatus = String(begun.result_status ?? '');
+    const completed = begun.completed;
+    const begunReconciliationRequired = begun.reconciliation_required;
+    const begunSessionRevocationReviewRequired = begun.session_revocation_review_required;
+    const begunIdempotentReplay = begun.idempotent_replay;
     let authChanged = false;
+    let sessionRevocationConfirmed = false;
 
     try {
       if (
         !uuidPattern.test(operationId)
         || String(begun.user_id ?? '') !== targetUserId
+        || String(begun.request_id ?? '') !== requestId
         || !authEmail
         || !Number.isInteger(currentCredentialVersion)
         || !Number.isInteger(nextCredentialVersion)
         || currentCredentialVersion < 0
         || nextCredentialVersion < 1
         || nextCredentialVersion !== currentCredentialVersion + 1
+        || resultCredentialVersion < 0
+        || typeof completed !== 'boolean'
+        || typeof begunReconciliationRequired !== 'boolean'
+        || typeof begunSessionRevocationReviewRequired !== 'boolean'
+        || typeof begunIdempotentReplay !== 'boolean'
+      ) {
+        throw new Error('PATCH83U_ADMIN_RESET_BEGIN_PROOF_FAILED');
+      }
+
+      if (completed) {
+        if (
+          ![
+            'admin_reset_change_required',
+            'recovery_required',
+            'session_revocation_review_required',
+          ].includes(resultStatus)
+          || begunReconciliationRequired !== [
+            'recovery_required',
+            'session_revocation_review_required',
+          ].includes(resultStatus)
+          || begunSessionRevocationReviewRequired
+            !== (resultStatus === 'session_revocation_review_required')
+          || begunIdempotentReplay !== true
+        ) {
+          throw new Error('PATCH83U_ADMIN_RESET_REPLAY_PROOF_FAILED');
+        }
+        return jsonResponse({
+          ok: true,
+          action,
+          result: {
+            userId: targetUserId,
+            requestId,
+            status: resultStatus,
+            credentialVersion: resultCredentialVersion,
+            mustChangePassword: resultStatus === 'admin_reset_change_required',
+            mustReauthenticate: true,
+            reconciliationRequired: begunReconciliationRequired,
+            sessionRevocationReviewRequired: begunSessionRevocationReviewRequired,
+            idempotentReplay: true,
+          },
+        }, 200);
+      }
+
+      // A second caller must never resume an operation whose first Edge request
+      // may still be updating Auth. Reconciliation owns abandoned in-progress
+      // operations; only a terminal ledger result is safe to replay.
+      if (begunIdempotentReplay) {
+        return errorResponse(
+          'The protected reset operation is already in progress.',
+          409,
+          'PATCH83U_ADMIN_RESET_ALREADY_IN_PROGRESS',
+          'Do not change the request ID or repeat the Auth mutation. Reconcile the protected operation if it does not reach a terminal result.',
+          { action },
+        );
+      }
+      if (
+        resultStatus !== 'in_progress'
+        || resultCredentialVersion !== currentCredentialVersion
+        || begunReconciliationRequired
+        || begunSessionRevocationReviewRequired
       ) {
         throw new Error('PATCH83U_ADMIN_RESET_BEGIN_PROOF_FAILED');
       }
@@ -1373,78 +2205,94 @@ Deno.serve(async (request) => {
         authChanged = false;
         throw new Error('PATCH83U_RESET_PASSWORD_POLICY_REJECTED');
       }
-      let verifiedAuthUser = updateResult.data.user;
-      if (updateResult.error || !verifiedAuthUser) {
-        const ambiguousProof = await serviceClient.auth.admin.getUserById(targetUserId);
-        const ambiguousMetadata = asObject(ambiguousProof.data.user?.app_metadata);
-        const ambiguousVersion = patch83uCredentialVersionFromMetadata(ambiguousMetadata);
-        if (
-          ambiguousProof.error
-          || !ambiguousProof.data.user
-          || String(ambiguousProof.data.user.email ?? '').trim().toLowerCase() !== authEmail
-        ) {
-          throw new Error('PATCH83U_RESET_AUTH_PASSWORD_UPDATE_FAILED');
-        }
-        if (ambiguousVersion === currentCredentialVersion) {
-          authChanged = false;
-          throw new Error('PATCH83U_RESET_AUTH_PASSWORD_UPDATE_FAILED');
-        }
-        if (ambiguousVersion !== nextCredentialVersion) {
-          throw new Error('PATCH83U_RESET_AUTH_PASSWORD_UPDATE_VERSION_AMBIGUOUS');
-        }
-        verifiedAuthUser = ambiguousProof.data.user;
+      if (updateResult.error || !updateResult.data.user) {
+        throw new Error('PATCH83U_RESET_AUTH_PASSWORD_UPDATE_FAILED');
       }
-      const verificationClient = createClient(supabaseUrl, anonKey, {
-        auth: { persistSession: false, autoRefreshToken: false },
-      });
-      const verification = await verificationClient.auth.signInWithPassword({
-        email: authEmail,
-        password: temporaryPassword,
-      });
+      const updatedAuthUser = updateResult.data.user;
+      const updatedMetadata = asObject(updatedAuthUser.app_metadata);
       if (
-        verification.error
-        || !verification.data.user
-        || !verification.data.session
-        || verification.data.user.id !== targetUserId
-        || String(verification.data.user.email ?? '').trim().toLowerCase() !== authEmail
-      ) {
-        throw new Error('PATCH83U_RESET_TEMPORARY_PASSWORD_PROOF_FAILED');
-      }
-      const signOutResult = await serviceClient.auth.admin.signOut(
-        verification.data.session.access_token,
-        'global',
-      );
-      if (signOutResult.error) {
-        throw new Error('PATCH83U_RESET_GLOBAL_SESSION_REVOCATION_FAILED');
-      }
-
-      const verifiedMetadata = asObject(verifiedAuthUser.app_metadata);
-      if (
-        verifiedAuthUser.id !== targetUserId
-        || String(verifiedAuthUser.email ?? '').trim().toLowerCase() !== authEmail
-        || patch83uCredentialVersionFromMetadata(verifiedMetadata) !== nextCredentialVersion
+        updatedAuthUser.id !== targetUserId
+        || String(updatedAuthUser.email ?? '').trim().toLowerCase() !== authEmail
+        || patch83uCredentialVersionFromMetadata(updatedMetadata) !== nextCredentialVersion
       ) {
         throw new Error('PATCH83U_RESET_AUTH_UPDATE_PROOF_FAILED');
       }
+
+      // A successful Admin response is necessary but not sufficient. Read the
+      // Auth user back through the Admin API and require the exact canonical
+      // email and credential-version metadata before database finalization.
+      // The temporary password is never used for a target sign-in: hosted Auth
+      // CAPTCHA may be mandatory and no trusted CAPTCHA token exists here.
+      const followUpAuthLookup = await serviceClient.auth.admin.getUserById(targetUserId);
+      const verifiedAuthUser = followUpAuthLookup.data.user;
+      const verifiedMetadata = asObject(verifiedAuthUser?.app_metadata);
+      if (
+        followUpAuthLookup.error
+        || !verifiedAuthUser
+        || verifiedAuthUser.id !== targetUserId
+        || String(verifiedAuthUser.email ?? '').trim().toLowerCase() !== authEmail
+        || patch83uCredentialVersionFromMetadata(verifiedMetadata) !== nextCredentialVersion
+      ) {
+        throw new Error('PATCH83U_RESET_AUTH_FOLLOW_UP_PROOF_FAILED');
+      }
+
+      const sessionProofResult = await serviceClient.rpc(
+        'patch83u_admin_reset_session_revocation_proof',
+        {
+          p_actor_id: userData.user.id,
+          p_target_user_id: targetUserId,
+          p_operation_id: operationId,
+          p_request_id: requestId,
+          p_applied_credential_version: nextCredentialVersion,
+          p_verified_auth_email: authEmail,
+        },
+      );
+      if (sessionProofResult.error) {
+        throw new Error(patch83uSafeCode(
+          sessionProofResult.error,
+          'PATCH83U_ADMIN_RESET_SESSION_PROOF_FAILED',
+        ));
+      }
+      const sessionProof = asObject(sessionProofResult.data);
+      if (
+        String(sessionProof.user_id ?? '') !== targetUserId
+        || String(sessionProof.operation_id ?? '') !== operationId
+        || String(sessionProof.request_id ?? '') !== requestId
+        || patch83uStrictResponseInteger(sessionProof.credential_version) !== nextCredentialVersion
+        || typeof sessionProof.sessions_revoked !== 'boolean'
+      ) {
+        throw new Error('PATCH83U_ADMIN_RESET_SESSION_PROOF_FAILED');
+      }
+      sessionRevocationConfirmed = sessionProof.sessions_revoked;
 
       const finalizeResult = await serviceClient.rpc('patch83u_finalize_admin_reset', {
         p_actor_id: userData.user.id,
         p_target_user_id: targetUserId,
         p_operation_id: operationId,
+        p_request_id: requestId,
         p_applied_credential_version: nextCredentialVersion,
         p_verified_auth_email: authEmail,
+        p_session_revocation_confirmed: sessionRevocationConfirmed,
       });
       if (finalizeResult.error) {
         throw new Error(patch83uSafeCode(finalizeResult.error, 'PATCH83U_ADMIN_RESET_FINALIZE_FAILED'));
       }
 
       const finalized = asObject(finalizeResult.data);
+      const finalizedState = String(finalized.credential_state ?? '');
+      const sessionRevocationReviewRequired = finalized.session_revocation_review_required === true;
+      const mustChangePassword = finalized.must_change_password === true;
       if (
         String(finalized.user_id ?? '') !== targetUserId
-        || String(finalized.credential_state ?? '') !== 'admin_reset_change_required'
+        || String(finalized.request_id ?? '') !== requestId
+        || !['admin_reset_change_required', 'session_revocation_review_required'].includes(finalizedState)
         || patch83uStrictResponseInteger(finalized.credential_version) !== nextCredentialVersion
-        || finalized.must_change_password !== true
+        || mustChangePassword !== (finalizedState === 'admin_reset_change_required')
         || finalized.must_reauthenticate !== true
+        || typeof finalized.reconciliation_required !== 'boolean'
+        || typeof finalized.session_revocation_review_required !== 'boolean'
+        || typeof finalized.idempotent_replay !== 'boolean'
+        || sessionRevocationReviewRequired !== !sessionRevocationConfirmed
       ) {
         throw new Error('PATCH83U_ADMIN_RESET_FINALIZE_PROOF_FAILED');
       }
@@ -1454,21 +2302,75 @@ Deno.serve(async (request) => {
         action,
         result: {
           userId: targetUserId,
-          status: 'admin_reset_change_required',
-          mustChangePassword: true,
+          requestId,
+          status: finalizedState,
+          credentialVersion: nextCredentialVersion,
+          mustChangePassword,
           mustReauthenticate: true,
+          reconciliationRequired: finalized.reconciliation_required,
+          sessionRevocationReviewRequired,
+          idempotentReplay: finalized.idempotent_replay,
         },
       }, 200);
     } catch (operationError) {
+      let abortResult: Record<string, unknown> | null = null;
       if (uuidPattern.test(operationId)) {
-        await serviceClient.rpc('patch83u_abort_admin_reset', {
+        const aborted = await serviceClient.rpc('patch83u_abort_admin_reset', {
           p_actor_id: userData.user.id,
           p_target_user_id: targetUserId,
           p_operation_id: operationId,
+          p_request_id: requestId,
           p_auth_changed: authChanged,
+          p_session_revocation_confirmed: sessionRevocationConfirmed,
           p_error_code: patch83uSafeCode(operationError, 'PATCH83U_ADMIN_RESET_FAILED'),
           p_error_message: 'The protected administrator reset operation did not complete.',
         });
+        if (!aborted.error) abortResult = asObject(aborted.data);
+      }
+
+      // The reset ledger is authoritative after a potentially committed Auth
+      // write. Return only its typed non-secret terminal proof; recovery and
+      // session-review states remain non-active and are surfaced distinctly by
+      // the administrator UI.
+      if (abortResult) {
+        const abortedState = String(abortResult.credential_state ?? '');
+        const abortedVersion = patch83uStrictResponseInteger(abortResult.credential_version);
+        const abortedReconciliation = abortResult.reconciliation_required;
+        const abortedSessionReview = abortResult.session_revocation_review_required;
+        if (
+          String(abortResult.user_id ?? '') === targetUserId
+          && String(abortResult.request_id ?? '') === requestId
+          && [
+            'admin_reset_change_required',
+            'recovery_required',
+            'session_revocation_review_required',
+          ].includes(abortedState)
+          && abortedVersion >= 0
+          && typeof abortedReconciliation === 'boolean'
+          && typeof abortedSessionReview === 'boolean'
+          && typeof abortResult.idempotent_replay === 'boolean'
+          && abortedReconciliation === [
+            'recovery_required',
+            'session_revocation_review_required',
+          ].includes(abortedState)
+          && abortedSessionReview === (abortedState === 'session_revocation_review_required')
+        ) {
+          return jsonResponse({
+            ok: true,
+            action,
+            result: {
+              userId: targetUserId,
+              requestId,
+              status: abortedState,
+              credentialVersion: abortedVersion,
+              mustChangePassword: abortedState === 'admin_reset_change_required',
+              mustReauthenticate: true,
+              reconciliationRequired: abortedReconciliation,
+              sessionRevocationReviewRequired: abortedSessionReview,
+              idempotentReplay: abortResult.idempotent_replay,
+            },
+          }, 200);
+        }
       }
       if (patch83uSafeCode(operationError, '') === 'PATCH83U_RESET_PASSWORD_POLICY_REJECTED') {
         return errorResponse(
@@ -1593,11 +2495,11 @@ Deno.serve(async (request) => {
     const reason = payload.reason === null || payload.reason === undefined
       ? null
       : String(payload.reason).trim();
-    const actorOrganizationId = String(credentialState.organization_id ?? '').trim();
     if (
       !uuidPattern.test(targetUserId)
       || !userRoleOptions.has(role)
       || !accessScopeOptions.has(scope)
+      || !patch83uRoleScopeAllowed(role, scope)
       || (organizationId !== null && !uuidPattern.test(organizationId))
       || (organizationId !== null && organizationId !== actorOrganizationId)
       || (divisionId !== null && !uuidPattern.test(divisionId))
@@ -1681,7 +2583,7 @@ Deno.serve(async (request) => {
       String(deactivated.id ?? '').trim() !== userRoleId
       || String(deactivated.user_role_id ?? '').trim() !== userRoleId
       || !uuidPattern.test(String(deactivated.target_user_id ?? '').trim())
-      || String(deactivated.organization_id ?? '').trim() !== String(credentialState.organization_id ?? '').trim()
+      || String(deactivated.organization_id ?? '').trim() !== actorOrganizationId
       || !userRoleOptions.has(deactivatedRole)
       || !accessScopeOptions.has(deactivatedScope)
       || (deactivatedDivisionId !== null && !uuidPattern.test(String(deactivatedDivisionId)))
@@ -1770,6 +2672,9 @@ Deno.serve(async (request) => {
     });
 
     if (error) {
+      if (isMissingPatch83tActionContract(error, 'patch83t_apply_user_excel_import')) {
+        return patch83tActionUnavailableResponse(action);
+      }
       const authorizationFailure =
         /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|ORGANIZATION|ADMIN|PRIVILEGED_ROLE/i
           .test(error.message);
@@ -1861,6 +2766,101 @@ Deno.serve(async (request) => {
         { action },
       );
     }
+  }
+
+  if (patch19LifecycleActions.has(action)) {
+    const payload = asObject(requestBody.payload);
+    const targetUserId = String(payload.user_id ?? '').trim();
+    const reason = typeof payload.reason === 'string' ? payload.reason.trim() : '';
+    const expected = ({
+      patch19_deactivate_user: {
+        status: 'inactive', auditAction: 'deactivated', active: false,
+      },
+      patch19_reactivate_user: {
+        status: 'active', auditAction: 'reactivated', active: true,
+      },
+      patch19_archive_user: {
+        status: 'archived', auditAction: 'archived', active: false,
+      },
+      patch19_unarchive_user: {
+        status: 'active', auditAction: 'unarchived', active: true,
+      },
+    } as Record<string, { status: string; auditAction: string; active: boolean }>)[action];
+    if (!uuidPattern.test(targetUserId) || !reason || reason.length > 500 || !expected) {
+      return errorResponse(
+        'The user lifecycle request is invalid.',
+        400,
+        'PATCH83U_USER_LIFECYCLE_REQUEST_INVALID',
+        'Provide the exact target user and a non-empty lifecycle reason of at most 500 characters.',
+        { action },
+      );
+    }
+
+    const { data, error } = await serviceClient.rpc('patch83u_apply_user_lifecycle', {
+      p_actor_id: userData.user.id,
+      p_target_user_id: targetUserId,
+      p_action: action,
+      p_reason: reason,
+    });
+    if (error) return patch83uFailureResponse(action, error, 'PATCH83U_USER_LIFECYCLE_FAILED');
+
+    const proof = asObject(data);
+    const deactivatedRoleCount = patch83uStrictResponseInteger(proof.deactivated_role_count);
+    const roleAuditRecordCount = patch83uStrictResponseInteger(proof.role_audit_record_count);
+    const remainingActiveRoleCount = patch83uStrictResponseInteger(proof.remaining_active_role_count);
+    const reactivatedRoleCount = patch83uStrictResponseInteger(proof.reactivated_role_count);
+    const auditRecordCount = patch83uStrictResponseInteger(proof.audit_record_count);
+    const credentialEventRecords = patch83uStrictResponseInteger(proof.credential_event_records);
+    const linkedRecordCount = patch83uStrictResponseInteger(proof.linked_record_count);
+    const credentialState = String(proof.credential_state ?? '');
+    const expectedCredentialEventRecords = credentialState === 'reconciliation_required' ? 0 : 1;
+    if (
+      proof.updated !== true
+      || String(proof.user_id ?? '') !== targetUserId
+      || String(proof.organization_id ?? '') !== actorOrganizationId
+      || proof.action !== action
+      || proof.audit_action !== expected.auditAction
+      || proof.user_status !== expected.status
+      || proof.is_active !== expected.active
+      || proof.requested_lifecycle !== expected.status
+      || !uuidPattern.test(String(proof.audit_id ?? ''))
+      || deactivatedRoleCount < 0
+      || roleAuditRecordCount < 0
+      || remainingActiveRoleCount < 0
+      || reactivatedRoleCount < 0
+      || auditRecordCount < 0
+      || credentialEventRecords < 0
+      || linkedRecordCount < 0
+      || auditRecordCount !== 1
+      || reactivatedRoleCount !== 0
+      || deactivatedRoleCount !== roleAuditRecordCount
+      || credentialEventRecords !== expectedCredentialEventRecords
+      || (
+        !expected.active
+        && (
+          credentialState !== 'disabled'
+          || remainingActiveRoleCount !== 0
+        )
+      )
+      || (
+        expected.active
+        && (
+          !['reactivation_change_required', 'reconciliation_required'].includes(credentialState)
+          || deactivatedRoleCount !== 0
+          || roleAuditRecordCount !== 0
+          || remainingActiveRoleCount !== 0
+        )
+      )
+    ) {
+      return errorResponse(
+        'User lifecycle result proof failed.',
+        409,
+        'PATCH83U_USER_LIFECYCLE_PROOF_FAILED',
+        'The database did not prove the exact profile, credential, role, and audit transition. Reconcile before retrying.',
+        { action },
+      );
+    }
+    return jsonResponse({ ok: true, action, result: proof }, 200);
   }
 
   if (action.startsWith('patch19_')) {

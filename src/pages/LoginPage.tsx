@@ -50,13 +50,18 @@ export function LoginPage() {
       return;
     }
     setIsSubmitting(true);
-    const result = await auth.signIn(normalizeLoginIdentifier(loginIdentifier), password, captchaToken);
-    setIsSubmitting(false);
-    if (loginCaptchaConfig.required) {
-      setCaptchaToken(null);
-      setCaptchaResetVersion((current) => current + 1);
+    try {
+      const result = await auth.signIn(normalizeLoginIdentifier(loginIdentifier), password, captchaToken);
+      if (!result.ok) setError(result.message ?? 'Sign-in failed. Try again.');
+    } catch {
+      setError('Sign-in failed. Try again.');
+    } finally {
+      setIsSubmitting(false);
+      if (loginCaptchaConfig.required) {
+        setCaptchaToken(null);
+        setCaptchaResetVersion((current) => current + 1);
+      }
     }
-    if (!result.ok) setError(result.message ?? 'Login failed.');
   };
 
   return (
@@ -72,6 +77,8 @@ export function LoginPage() {
 
         <p className="auth-subtitle">{subtitle}</p>
 
+        {auth.notice ? <div className="auth-warning" role="status">{auth.notice}</div> : null}
+
         {!isSupabaseConfigured ? (
           <div className="auth-warning">
             <ShieldAlert size={18} />
@@ -83,7 +90,7 @@ export function LoginPage() {
           </div>
         ) : null}
 
-        {auth.status === 'inactive' || auth.status === 'profile_missing' || auth.status === 'error' ? (
+        {auth.status === 'configuration_error' || auth.status === 'error' ? (
           <div className="auth-warning">
             <ShieldAlert size={18} />
             <span>{auth.message}</span>
@@ -135,6 +142,7 @@ export function LoginPage() {
             type="submit"
             disabled={
               isSubmitting
+              || auth.status === 'authenticating'
               || !isSupabaseConfigured
               || Boolean(loginCaptchaConfig.configurationError)
               || (loginCaptchaConfig.required && !captchaToken)

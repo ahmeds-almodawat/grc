@@ -1,0 +1,35 @@
+{
+  "schema_version": "gate11r-post185-fingerprint-comparison-v2",
+  "captured_at": "2026-07-22T19:29:44.3989400Z",
+  "staging_project_ref": "zghsgzrdwbqdrpuxanac",
+  "migration_ceiling": 185,
+  "normalization_method": "pg17.6_single_parse_dump_roundtrip_default_acl_neutralized",
+  "expected": {
+    "path": "release/production-readiness/gate11r-expected-post185-catalog-fingerprint-v2-20260722.json",
+    "canonical_statement_count": 12488,
+    "canonical_sql_sha256": "edac07deb655aba711cd2bc7e834010449be42f36f27863326ce0a41d22a3485",
+    "fingerprint_file_sha256": "14233441b97313a8dfa55f423a08e57338d5aeae08b512939a83cb2d471a5ae9"
+  },
+  "hosted": {
+    "path": "release/production-readiness/gate11r-staging-post185-catalog-fingerprint-v2-20260722.json",
+    "source_raw_schema_sha256": "03a8f0d3ae7d65168563e3cfb432431a50abf5808fede578784953a7cd987a02",
+    "canonical_statement_count": 12488,
+    "canonical_sql_sha256": "edac07deb655aba711cd2bc7e834010449be42f36f27863326ce0a41d22a3485",
+    "fingerprint_file_sha256": "a4d3ef74f335d20b152ce0b26d5d0c8efa160cc2ac6092bd2c051b11473467ee"
+  },
+  "comparison": {
+    "canonical_statement_count_equal": true,
+    "canonical_sql_sha256_equal": true,
+    "statement_set_only_expected": 0,
+    "statement_set_only_hosted": 0,
+    "relation_drift": 0,
+    "rls_drift": 0,
+    "acl_drift": 0,
+    "policy_drift": 0,
+    "function_definition_drift": 0,
+    "search_path_drift": 0,
+    "index_constraint_drift": 0,
+    "exact_normalized_equality": true
+  },
+  "production_accessed": false
+}

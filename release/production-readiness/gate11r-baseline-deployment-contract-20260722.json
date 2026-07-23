@@ -1,0 +1,23 @@
+{
+  "schema_version": "gate11r-baseline-deployment-contract-v1",
+  "captured_at": "2026-07-22T19:57:26.6547335Z",
+  "baseline_id": "grc-platform-post185-v2",
+  "baseline_manifest_path": "supabase/baselines/grc_platform_baseline_v2_through_185.manifest.json",
+  "baseline_manifest_sha256": "052f81c85ce4de2e86a91ef21d13e7ea0071c2d97b8a09f2bbcf7b97505aedac",
+  "baseline_sql_path": "supabase/baselines/grc_platform_baseline_v2_through_185.sql",
+  "baseline_sql_sha256": "6b1b0f814bf7d8414ace4303912f303f1a71a1e8913489db77a30ddd94c7846a",
+  "normalized_catalog_sha256": "edac07deb655aba711cd2bc7e834010449be42f36f27863326ce0a41d22a3485",
+  "baseline_history_versions": [185],
+  "legacy_history_versions": [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185],
+  "legacy_history_version_count": 140,
+  "first_shared_forward_migration": 186,
+  "release_workdir_rules": {
+    "empty_environment": "materialize baseline migration 185 only, followed by migrations numbered 186 or later",
+    "existing_environment": "preserve the existing historical migration ledger and apply migrations numbered 186 or later",
+    "history_initialization": "prohibited",
+    "migration_repair": "prohibited",
+    "manual_history_writes": "prohibited",
+    "mixed_lineage": "fail_closed"
+  },
+  "production_accessed": false
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": "gate11r-baseline-manifest-v2",
+  "baseline_id": "grc-platform-post185-v2",
+  "baseline_version": "2.0.0",
+  "filename": "supabase/baselines/grc_platform_baseline_v2_through_185.sql",
+  "release_status": "release_approved",
+  "immutable": true,
+  "candidate_only": false,
+  "approved_at": "2026-07-22T19:57:26.6547335Z",
+  "sql_sha256": "6b1b0f814bf7d8414ace4303912f303f1a71a1e8913489db77a30ddd94c7846a",
+  "sql_bytes": 4364505,
+  "normalized_target_catalog_sha256": "edac07deb655aba711cd2bc7e834010449be42f36f27863326ce0a41d22a3485",
+  "normalized_expected_fingerprint_file_sha256": "14233441b97313a8dfa55f423a08e57338d5aeae08b512939a83cb2d471a5ae9",
+  "normalized_hosted_fingerprint_file_sha256": "a4d3ef74f335d20b152ce0b26d5d0c8efa160cc2ac6092bd2c051b11473467ee",
+  "source_staging_classification": "authorized_schema_only_staging_catalog_metadata",
+  "source_migration_ceiling": 185,
+  "included_schemas": ["public"],
+  "excluded_schemas": ["auth", "storage", "realtime", "graphql", "graphql_public", "vault", "supabase_functions", "pg_catalog", "information_schema"],
+  "extension_prerequisites": ["pgcrypto", "uuid-ossp"],
+  "seed_policy": "one fail-closed structural patch83u_runtime_control row; no business, user, tenant, session, credential, or environment data",
+  "first_future_migration_number": 186,
+  "deployment_lineage_contract": "verified",
+  "toolchain": {
+    "supabase_cli": "2.72.7",
+    "postgresql": "17.6",
+    "node": "24.12.0",
+    "deno": "2.9.3"
+  },
+  "blocking_findings": [],
+  "validation_evidence_paths": [
+    "release/production-readiness/gate11r-post185-fingerprint-comparison-20260722.json",
+    "release/production-readiness/gate11r-baseline-v2-validation-20260722.json",
+    "release/production-readiness/gate11r-migration-lineage-validation-20260722.json",
+    "release/production-readiness/gate11r-baseline-deployment-contract-20260722.json",
+    "release/production-readiness/gate11r-playwright-geometry-resolution-20260722.json"
+  ]
+}

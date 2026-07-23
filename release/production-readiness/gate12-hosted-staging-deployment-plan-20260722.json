@@ -1,0 +1,16 @@
+{
+  "schema_version":"gate12-hosted-staging-deployment-plan-v1",
+  "target_classification":"B. EXISTING TARGET REQUIRES CONFIGURATION",
+  "provider":"Vercel",
+  "existing_project":"grc",
+  "local_linkage_present":false,
+  "dedicated_staging_origin_verified":false,
+  "expected_origin":"to_be_approved_before_deployment",
+  "deployment_source":"clean worktree of exact release commit",
+  "deployment_command":"vercel deploy (preview/staging scope only; exact project linkage must first be approved)",
+  "database_migration_during_frontend_deploy":false,
+  "edge_deployment_included":false,
+  "rollback":"provider rollback to prior staging deployment",
+  "executed":false,
+  "blocker":"dedicated staging project/environment linkage and origin are not yet proven"
+}

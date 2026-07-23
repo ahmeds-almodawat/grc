@@ -1,0 +1,22 @@
+{
+  "schema_version": "patch83u-staging-reset-proof-v1",
+  "generated_at": "2026-07-19T20:59:21.721Z",
+  "execution_status": "readiness_failed",
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "subject_user_id": "2a276bdb-cf51-4303-846e-6b7fecf38b0c",
+  "request_id_hash": null,
+  "events": [
+    {
+      "event": "edge_deployment_gate_initial",
+      "result": true,
+      "observed_at": "2026-07-19T20:59:21.520Z"
+    }
+  ],
+  "operator_guidance": [
+    {
+      "code": "network_interruption",
+      "guidance": "Treat the result as ambiguous. Do not resubmit; preserve the original request-ID hash and obtain fresh read-only evidence.",
+      "observed_state": "PATCH83U_SQL_EDITOR_EVIDENCE_JSON_INVALID"
+    }
+  ]
+}

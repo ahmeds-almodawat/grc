@@ -1,0 +1,236 @@
+{
+  "schema_version": "gate10-security-advisor-final-v1",
+  "captured_at": "2026-07-22T16:20:52.697Z",
+  "staging_project_ref": "zghsgzrdwbqdrpuxanac",
+  "production_project_ref": "zbrjjecpsrzposhuarcn",
+  "production_access": "prohibited",
+  "access_mode": "read_only_security_advisor",
+  "before_auth_setting_total": 22,
+  "after_auth_setting_total": 21,
+  "severity_counts": {
+    "INFO": 18,
+    "WARN": 3
+  },
+  "leaked_password_warning_present": false,
+  "residual_summary": {
+    "intentional_deny_all_no_policy_info": 18,
+    "accepted_patch83u_boolean_helper_warnings": 3
+  },
+  "unexpected_application_managed_findings": 0,
+  "findings": [
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "company_rollout_waves",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "final_go_live_stop_rules",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "final_pilot_signoff_matrix",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "final_validation_runs",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "i18n_translation_coverage_items",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "mock_data_allowlist",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "phased_auto_test_cases",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "phased_auto_test_phases",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "phased_auto_test_results",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "phased_auto_test_runs",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "pilot_execution_runs",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "pilot_feedback_items",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "pilot_fix_sprint_items",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "production_data_switchovers",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "production_empty_state_checks",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "production_exception_register_v58",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "rtl_visual_qa_items",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "entity": "v50_scale_test_results",
+      "entity_type": "table",
+      "schema": "public",
+      "classification": "intentional_deny_all_no_browser_policy",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+      "level": "WARN",
+      "entity": "patch83u_credential_access_allowed",
+      "entity_type": null,
+      "schema": "public",
+      "classification": "accepted_patch83u_boolean_helper",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+      "level": "WARN",
+      "entity": "patch83u_profile_update_allowed",
+      "entity_type": null,
+      "schema": "public",
+      "classification": "accepted_patch83u_boolean_helper",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+      "level": "WARN",
+      "entity": "patch83u_user_role_mutation_allowed",
+      "entity_type": null,
+      "schema": "public",
+      "classification": "accepted_patch83u_boolean_helper",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+    }
+  ],
+  "overall_pass": true,
+  "auth_users_modified": false,
+  "passwords_modified": false,
+  "sessions_modified": false
+}

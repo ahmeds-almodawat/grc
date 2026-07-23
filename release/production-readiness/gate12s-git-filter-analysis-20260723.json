@@ -1,0 +1,27 @@
+{
+  "schema_version": "gate12s-git-filter-analysis-v1",
+  "repository_branch": "release/grc-platform-1.0.0-rc.1",
+  "head": "a9989b1e8d95a6bb775316a2d9e709ef84514c42",
+  "git_configuration": {
+    "core_autocrlf": true,
+    "core_autocrlf_origin": "system Git configuration",
+    "core_eol": "unset",
+    "core_safecrlf": "unset",
+    "repository_attributes_for_root": "unspecified"
+  },
+  "direct_stage0_blob_audit": {
+    "approved_paths_checked": 350,
+    "working_and_staged_identical": 284,
+    "expected_line_ending_normalization": 66,
+    "other_expected_clean_filter_transformations": 0,
+    "unexpected_content_transformations": 0,
+    "missing_paths": 0
+  },
+  "previous_319_mismatch_diagnosis": {
+    "status": "superseded",
+    "reason": "PowerShell ZIP extraction transformed line endings in the diagnostic export; direct git cat-file inspection proves only 66 Git-normalized paths",
+    "security_impact": "none; no unexpected staged transformation remains"
+  },
+  "release_source_of_truth": "Git index stage-0 blobs",
+  "overall_pass": true
+}

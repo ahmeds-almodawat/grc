@@ -1,10 +1,10 @@
 # v7.0 Frontend RPC Inventory
 
-Generated: 2026-07-12T23:01:38.814Z
+Generated: 2026-07-17T21:12:58.404Z
 
-- Direct frontend RPC calls: 1
-- Authenticated Edge bridge calls: 83
-- Unique RPC names: 82
+- Direct frontend RPC calls: 0
+- Authenticated Edge bridge calls: 85
+- Unique RPC names: 83
 
 ## Classification counts
 
@@ -15,7 +15,7 @@ Generated: 2026-07-12T23:01:38.814Z
   "production_readiness": 28,
   "workflow_runtime": 14,
   "privileged_admin": 16,
-  "user_management": 11,
+  "user_management": 12,
   "evidence_governance": 3,
   "scenario_lab": 3
 }
@@ -46,7 +46,6 @@ Generated: 2026-07-12T23:01:38.814Z
 - `assign_user_role` (2 call sites)
 - `deactivate_user_role` (2 call sites)
 - `create_department` (1 call site)
-- `create_user` (1 call site)
 - `update_ovr_workflow` (1 call site)
 - `create_ovr_corrective_action_project` (1 call site)
 - `record_production_evidence_closure_action` (1 call site)
@@ -96,8 +95,10 @@ Generated: 2026-07-12T23:01:38.814Z
 - `record_competency_assessment` (1 call site)
 - `reopen_training_assignment_with_reason` (1 call site)
 - `link_training_evidence` (1 call site)
+- `patch83t_get_user_import_capabilities` (1 call site)
 - `list_user_management_roster` (1 call site)
-- `patch19_apply_import_batch` (1 call site)
+- `patch83t_user_import_identity_references` (1 call site)
+- `patch83t_apply_user_excel_import` (1 call site)
 - `patch19_update_user_profile` (1 call site)
 - `patch19_update_user_department` (1 call site)
 - `patch19_assign_user_role` (1 call site)

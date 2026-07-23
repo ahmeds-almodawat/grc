@@ -160,7 +160,7 @@ declare
   v_profile_identities jsonb;
   v_provisioning_identities jsonb;
 begin
-  if auth.role() <> 'service_role' then
+  if auth.role() is distinct from 'service_role' then
     raise exception 'PATCH83T_SERVICE_ROLE_REQUIRED';
   end if;
 
@@ -354,9 +354,13 @@ declare
   v_user_role_id uuid;
   v_requested_role_id uuid;
   v_requested_role_count integer;
+  v_old_role jsonb;
+  v_new_role jsonb;
   v_role_should_activate boolean;
   v_credential_state text;
   v_credential_suspension_id uuid;
+  v_patch83u_runtime_super_admin_available boolean := false;
+  v_patch83u_runtime_control_locked boolean := false;
   v_target_is_active_super_admin boolean;
   v_target_credential_eligible boolean := true;
   v_active_super_admin_count integer := 0;
@@ -365,7 +369,7 @@ declare
   v_database_row_count integer := 0;
   v_database_audit_count integer := 0;
 begin
-  if auth.role() <> 'service_role' then
+  if auth.role() is distinct from 'service_role' then
     raise exception 'PATCH83T_SERVICE_ROLE_REQUIRED';
   end if;
 
@@ -393,6 +397,28 @@ begin
   perform pg_catalog.pg_advisory_xact_lock(
     pg_catalog.hashtextextended('patch83u-super-admin-eligibility:' || v_actor_org::text, 0)
   );
+
+  -- Migration 173 must remain independently applicable before Patch 83U. Resolve
+  -- the optional runtime contract by signature and keep every reference to its
+  -- objects inside dynamic SQL so PostgreSQL never creates a parse-time 174
+  -- dependency. Holding the singleton row prevents an enforcement transition
+  -- from changing effective-admin semantics during this import transaction.
+  v_patch83u_runtime_super_admin_available :=
+    to_regprocedure('public.patch83u_runtime_super_admin_eligible(uuid,uuid)') is not null
+    and to_regprocedure('public.patch83u_runtime_enforcement_state()') is not null
+    and to_regclass('public.patch83u_runtime_control') is not null;
+  if v_patch83u_runtime_super_admin_available then
+    execute $patch83t_lock_runtime$
+      select true
+      from public.patch83u_runtime_control
+      where singleton = true
+      for share
+    $patch83t_lock_runtime$
+    into v_patch83u_runtime_control_locked;
+    if not coalesce(v_patch83u_runtime_control_locked, false) then
+      raise exception 'PATCH83T_PATCH83U_RUNTIME_CONTROL_REQUIRED';
+    end if;
+  end if;
 
   perform 1
   from public.profiles p
@@ -450,18 +476,66 @@ begin
     and coalesce(p.user_status, 'active') = 'active'
   for update of ur, p;
   if to_regclass('public.user_credential_states') is not null then
+    -- Lock a structural superset, not only credential_state = 'active'. A
+    -- disabled/prepared verified legacy Super Admin is normally backfilled as
+    -- existing_password_rotation_pending, while emergency mode permits any
+    -- non-disabled verified-legacy state. Locking every structural candidate
+    -- makes all four runtime interpretations stable until the batch guard completes.
     execute $patch83t_lock_eligible_admins$
       select 1
-      from public.user_credential_states cs
-      join public.profiles p on p.id = cs.user_id
-      where p.organization_id = $1
+      from public.user_roles ur
+      join public.profiles p on p.id = ur.user_id
+      join public.user_credential_states cs on cs.user_id = p.id
+      where ur.is_active = true
+        and ur.role = 'super_admin'
+        and ur.scope = 'global'
+        and (ur.organization_id is null or ur.organization_id = $1)
+        and ur.division_id is null
+        and ur.department_id is null
+        and ur.unit_id is null
+        and p.organization_id = $1
         and p.is_active = true
-        and p.user_status = 'active'
+        and coalesce(p.user_status, 'active') = 'active'
         and cs.organization_id = $1
-        and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
-        and cs.credential_state = 'active'
       for update of cs
     $patch83t_lock_eligible_admins$ using v_actor_org;
+  end if;
+  if v_patch83u_runtime_super_admin_available then
+    -- Runtime eligibility also depends on Auth usability and exact email
+    -- identity proof. Lock each structural candidate's Auth and identity rows;
+    -- the Auth-row lock also prevents a concurrent identity insert.
+    perform 1
+    from auth.users u
+    join public.profiles p on p.id = u.id
+    join public.user_roles ur on ur.user_id = p.id
+    where ur.is_active = true
+      and ur.role = 'super_admin'
+      and ur.scope = 'global'
+      and (ur.organization_id is null or ur.organization_id = v_actor_org)
+      and ur.division_id is null
+      and ur.department_id is null
+      and ur.unit_id is null
+      and p.organization_id = v_actor_org
+      and p.is_active = true
+      and p.user_status = 'active'
+    for update of u;
+
+    perform 1
+    from auth.identities ai
+    join public.profiles p on p.id = ai.user_id
+    join public.user_roles ur on ur.user_id = p.id
+    where ur.is_active = true
+      and ur.role = 'super_admin'
+      and ur.scope = 'global'
+      and (ur.organization_id is null or ur.organization_id = v_actor_org)
+      and ur.division_id is null
+      and ur.department_id is null
+      and ur.unit_id is null
+      and p.organization_id = v_actor_org
+      and p.is_active = true
+      and p.user_status = 'active'
+      and ai.provider = 'email'
+    for update of ai;
   end if;
 
   if coalesce(p_payload->>'source_format', '') <> 'xlsx' then
@@ -813,6 +887,30 @@ begin
       where ur.user_id = v_target_user
       for update;
 
+      -- A target that is not currently a Super Admin can still become the
+      -- replacement in this batch. Lock its optional credential row before
+      -- evaluating projected runtime eligibility so a concurrent credential
+      -- transition cannot change the last-Super-Admin result.
+      if to_regclass('public.user_credential_states') is not null then
+        execute $patch83t_lock_target_credential$
+          select 1
+          from public.user_credential_states cs
+          where cs.user_id = $1
+          for update
+        $patch83t_lock_target_credential$ using v_target_user;
+      end if;
+      if v_patch83u_runtime_super_admin_available then
+        perform 1
+        from auth.users u
+        where u.id = v_target_user
+        for update;
+        perform 1
+        from auth.identities ai
+        where ai.user_id = v_target_user
+          and ai.provider = 'email'
+        for update;
+      end if;
+
       select coalesce(array_agg(ur.id order by ur.id), array[]::uuid[])
       into v_actual_active_role_ids
       from public.user_roles ur
@@ -882,8 +980,123 @@ begin
         raise exception 'PATCH83T_SELF_ROLE_CHANGE_DENIED';
       end if;
 
-      if to_regclass('public.user_credential_states') is not null then
+      if v_patch83u_runtime_super_admin_available then
         execute $patch83t_target_super$
+          select public.patch83u_runtime_super_admin_eligible($1, $2)
+        $patch83t_target_super$
+        into v_target_is_active_super_admin
+        using v_target_user, v_actor_org;
+
+        -- The runtime helper includes the existing Super Admin role itself. For
+        -- a projected replacement, evaluate the same runtime-specific identity
+        -- and credential proof without requiring that not-yet-assigned role:
+        -- bootstrap semantics while disabled/prepared, canonical effective
+        -- credential semantics while enforced, and verified-legacy break glass
+        -- while emergency_suspended.
+        execute $patch83t_target_candidate$
+          select case
+            when public.patch83u_runtime_enforcement_state() in ('disabled', 'prepared') then exists (
+              select 1
+              from public.profiles p
+              join public.user_credential_states cs on cs.user_id = p.id
+              join auth.users u on u.id = p.id
+              where p.id = $1
+                and p.organization_id = $2
+                and p.is_active = true
+                and p.user_status = 'active'
+                and cs.organization_id = p.organization_id
+                and cs.identity_mode = 'legacy_verified'
+                and cs.credential_state in (
+                  'active', 'existing_password_rotation_pending',
+                  'existing_password_change_required', 'password_change_in_progress'
+                )
+                and nullif(btrim(u.email), '') is not null
+                and u.email_confirmed_at is not null
+                and u.deleted_at is null
+                and (u.banned_until is null or u.banned_until <= now())
+                and lower(btrim(u.email)) = cs.auth_email
+                and public.patch83u_auth_credential_version(u.raw_app_meta_data) = cs.credential_version
+                and 1 = (
+                  select count(*) from auth.identities ai
+                  where ai.user_id = u.id and ai.provider = 'email'
+                )
+                and exists (
+                  select 1 from auth.identities ai
+                  where ai.user_id = u.id
+                    and ai.provider = 'email'
+                    and lower(btrim(coalesce(ai.identity_data ->> 'email', '')))
+                      = lower(btrim(u.email))
+                )
+            )
+            when public.patch83u_runtime_enforcement_state() = 'enforced' then exists (
+              select 1
+              from public.profiles p
+              join public.user_credential_states cs on cs.user_id = p.id
+              join auth.users u on u.id = p.id
+              where p.id = $1
+                and p.organization_id = $2
+                and p.is_active = true
+                and p.user_status = 'active'
+                and cs.organization_id = p.organization_id
+                and cs.credential_state = 'active'
+                and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
+                and nullif(btrim(u.email), '') is not null
+                and u.email_confirmed_at is not null
+                and u.deleted_at is null
+                and (u.banned_until is null or u.banned_until <= now())
+                and lower(btrim(u.email)) = cs.auth_email
+                and public.patch83u_auth_credential_version(u.raw_app_meta_data) = cs.credential_version
+                and 1 = (
+                  select count(*) from auth.identities ai
+                  where ai.user_id = u.id and ai.provider = 'email'
+                )
+                and 1 = (
+                  select count(*) from auth.identities ai
+                  where ai.user_id = u.id
+                    and ai.provider = 'email'
+                    and lower(btrim(coalesce(ai.identity_data ->> 'email', '')))
+                      = lower(btrim(u.email))
+                )
+            )
+            when public.patch83u_runtime_enforcement_state() = 'emergency_suspended' then exists (
+              select 1
+              from public.profiles p
+              join public.user_credential_states cs on cs.user_id = p.id
+              join auth.users u on u.id = p.id
+              where p.id = $1
+                and p.organization_id = $2
+                and p.is_active = true
+                and p.user_status = 'active'
+                and cs.organization_id = p.organization_id
+                and cs.identity_mode = 'legacy_verified'
+                and cs.credential_state <> 'disabled'
+                and nullif(btrim(u.email), '') is not null
+                and u.email_confirmed_at is not null
+                and u.deleted_at is null
+                and (u.banned_until is null or u.banned_until <= now())
+                and lower(btrim(u.email)) = cs.auth_email
+                and public.patch83u_auth_credential_version(u.raw_app_meta_data) = cs.credential_version
+                and 1 = (
+                  select count(*) from auth.identities ai
+                  where ai.user_id = u.id and ai.provider = 'email'
+                )
+                and exists (
+                  select 1 from auth.identities ai
+                  where ai.user_id = u.id
+                    and ai.provider = 'email'
+                    and lower(btrim(coalesce(ai.identity_data ->> 'email', '')))
+                      = lower(btrim(u.email))
+                )
+            )
+            else false
+          end
+        $patch83t_target_candidate$
+        into v_target_credential_eligible
+        using v_target_user, v_actor_org;
+      elsif to_regclass('public.user_credential_states') is not null then
+        -- Compatibility with an older optional credential table that predates
+        -- the Patch 83U runtime contract. This is the original Patch 83T rule.
+        execute $patch83t_target_super_legacy$
           select exists (
             select 1
             from public.user_roles ur
@@ -904,11 +1117,11 @@ begin
               and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
               and cs.credential_state = 'active'
           )
-        $patch83t_target_super$
+        $patch83t_target_super_legacy$
         into v_target_is_active_super_admin
         using v_target_user, v_actor_org;
 
-        execute $patch83t_target_credential$
+        execute $patch83t_target_credential_legacy$
           select exists (
             select 1
             from public.profiles p
@@ -921,7 +1134,7 @@ begin
               and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
               and cs.credential_state = 'active'
           )
-        $patch83t_target_credential$
+        $patch83t_target_credential_legacy$
         into v_target_credential_eligible
         using v_target_user, v_actor_org;
       else
@@ -960,8 +1173,28 @@ begin
     end if;
   end loop;
 
-  if to_regclass('public.user_credential_states') is not null then
+  if v_patch83u_runtime_super_admin_available then
     execute $patch83t_super_count$
+      select count(distinct ur.user_id)::integer
+      from public.user_roles ur
+      join public.profiles p on p.id = ur.user_id
+      where ur.is_active = true
+        and ur.role = 'super_admin'
+        and ur.scope = 'global'
+        and (ur.organization_id is null or ur.organization_id = $1)
+        and ur.division_id is null
+        and ur.department_id is null
+        and ur.unit_id is null
+        and p.organization_id = $1
+        and p.is_active = true
+        and p.user_status = 'active'
+        and public.patch83u_runtime_super_admin_eligible(ur.user_id, $1)
+    $patch83t_super_count$
+    into v_active_super_admin_count
+    using v_actor_org;
+  elsif to_regclass('public.user_credential_states') is not null then
+    -- Original optional-credential behavior for a pre-runtime schema.
+    execute $patch83t_super_count_legacy$
       select count(distinct ur.user_id)::integer
       from public.user_roles ur
       join public.profiles p on p.id = ur.user_id
@@ -979,7 +1212,7 @@ begin
         and cs.organization_id = $1
         and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
         and cs.credential_state = 'active'
-    $patch83t_super_count$
+    $patch83t_super_count_legacy$
     into v_active_super_admin_count
     using v_actor_org;
   else
@@ -1057,7 +1290,6 @@ begin
   ) returning id into v_batch_id;
 
   perform set_config('request.jwt.claim.sub', p_actor_id::text, true);
-  perform set_config('request.jwt.claim.role', 'authenticated', true);
   perform set_config(
     'patch83u.super_admin_batch_guard_verified',
     v_actor_org::text || ':' || p_actor_id::text,
@@ -1372,20 +1604,17 @@ begin
       if v_credential_state is null then
         raise exception 'PATCH83T_TARGET_CREDENTIAL_STATE_REQUIRED';
       end if;
-      if not (
-        (v_status = 'active' and v_credential_state in ('active', 'reactivation_change_required'))
-        or (v_status = 'invited' and v_credential_state = 'initial_change_required')
-        or (v_status in ('inactive', 'archived', 'locked') and v_credential_state = 'disabled')
-      ) then
-        raise exception 'PATCH83T_TARGET_CREDENTIAL_RECONCILIATION_REQUIRED';
-      end if;
-      v_role_should_activate := v_status = 'active' and v_credential_state = 'active';
     end if;
 
     -- The workbook role is authoritative for the imported organization. Remove
-    -- stale active assignments through the audited role helper. Invited and
-    -- reactivated managed identities keep the exact desired role inactive in a
-    -- protected suspension set until the required password change completes.
+    -- stale active assignments through this actor-bound audited path. The legacy
+    -- role helpers require a caller-session user subject and therefore cannot
+    -- authorize the Edge service-role call used by this RPC. For an existing
+    -- active profile, the canonical requested role row remains active regardless
+    -- of credential state:
+    -- enforced Patch 83U credential/RLS policy makes a rotation-pending identity
+    -- ineffective without physically rewriting its role. Only a non-active
+    -- lifecycle keeps the requested row inactive here.
     for v_user_role_id in
       select ur.id
       from public.user_roles ur
@@ -1408,9 +1637,31 @@ begin
       order by ur.id
       for update
     loop
-      perform public.deactivate_user_role(
-        v_user_role_id,
-        'Patch 83T controlled User Excel Import'
+      select to_jsonb(ur)
+      into v_old_role
+      from public.user_roles ur
+      where ur.id = v_user_role_id
+        and ur.user_id = v_target_user
+        and ur.is_active = true;
+      if v_old_role is null then
+        raise exception 'PATCH83T_ROLE_DEACTIVATION_PROOF_FAILED';
+      end if;
+
+      update public.user_roles
+      set is_active = false
+      where id = v_user_role_id
+        and user_id = v_target_user
+        and is_active = true;
+      if not found then
+        raise exception 'PATCH83T_ROLE_DEACTIVATION_PROOF_FAILED';
+      end if;
+
+      insert into public.role_change_audit (
+        organization_id, target_user_id, user_role_id, action,
+        old_data, reason, changed_by
+      ) values (
+        v_actor_org, v_target_user, v_user_role_id, 'deactivated',
+        v_old_role, 'Patch 83T controlled User Excel Import', p_actor_id
       );
     end loop;
 
@@ -1432,17 +1683,79 @@ begin
       select 1 from public.user_roles ur
       where ur.id = v_requested_role_id and ur.is_active = true
     ) then
-      perform public.assign_user_role(
-        v_target_user,
-        v_role,
-        v_scope,
-        v_actor_org,
-        null,
-        case when v_scope = 'department' then v_department_id else null end,
-        null,
-        'Patch 83T controlled User Excel Import'
-      );
-      select ur.id into v_requested_role_id
+      -- Patch 83U's generic activation trigger normally rejects an active role
+      -- for a credential-gated identity. This service-role-only import already
+      -- validated the complete canonical batch role and runtime-aware last-SA
+      -- result, so use its narrow controlled-restore marker to preserve the role
+      -- row while leaving effective access to the credential/RLS boundary.
+      if v_patch83u_runtime_super_admin_available then
+        perform set_config('patch83u.controlled_role_restore', 'on', true);
+      end if;
+
+      if v_requested_role_id is null then
+        insert into public.user_roles (
+          user_id, role, scope, organization_id, division_id,
+          department_id, unit_id, is_active, assigned_by, assigned_at
+        ) values (
+          v_target_user, v_role, v_scope, v_actor_org, null,
+          case when v_scope = 'department' then v_department_id else null end,
+          null, true, p_actor_id, now()
+        ) returning id into v_requested_role_id;
+
+        select to_jsonb(ur)
+        into v_new_role
+        from public.user_roles ur
+        where ur.id = v_requested_role_id
+          and ur.user_id = v_target_user
+          and ur.is_active = true;
+        if v_new_role is null then
+          raise exception 'PATCH83T_ROLE_ASSIGNMENT_PROOF_FAILED';
+        end if;
+
+        insert into public.role_change_audit (
+          organization_id, target_user_id, user_role_id, action,
+          new_data, reason, changed_by
+        ) values (
+          v_actor_org, v_target_user, v_requested_role_id, 'assigned',
+          v_new_role, 'Patch 83T controlled User Excel Import', p_actor_id
+        );
+      else
+        update public.user_roles
+        set is_active = true,
+            assigned_by = p_actor_id,
+            assigned_at = now()
+        where id = v_requested_role_id
+          and user_id = v_target_user
+          and is_active = false;
+        if not found then
+          raise exception 'PATCH83T_ROLE_REACTIVATION_PROOF_FAILED';
+        end if;
+
+        select to_jsonb(ur)
+        into v_new_role
+        from public.user_roles ur
+        where ur.id = v_requested_role_id
+          and ur.user_id = v_target_user
+          and ur.is_active = true;
+        if v_new_role is null then
+          raise exception 'PATCH83T_ROLE_REACTIVATION_PROOF_FAILED';
+        end if;
+
+        insert into public.role_change_audit (
+          organization_id, target_user_id, user_role_id, action,
+          new_data, reason, changed_by
+        ) values (
+          v_actor_org, v_target_user, v_requested_role_id, 'reactivated',
+          v_new_role, 'Patch 83T controlled User Excel Import', p_actor_id
+        );
+      end if;
+
+      if v_patch83u_runtime_super_admin_available then
+        perform set_config('patch83u.controlled_role_restore', 'off', true);
+      end if;
+
+      select count(*), min(ur.id::text)::uuid
+      into v_requested_role_count, v_requested_role_id
       from public.user_roles ur
       where ur.user_id = v_target_user
         and ur.role = v_role
@@ -1451,8 +1764,10 @@ begin
         and ur.division_id is null
         and ur.department_id is not distinct from case when v_scope = 'department' then v_department_id else null end
         and ur.unit_id is null
-      order by ur.id
-      limit 1;
+        and ur.is_active = true;
+      if v_requested_role_count <> 1 or v_requested_role_id is null then
+        raise exception 'PATCH83T_ROLE_ASSIGNMENT_PROOF_FAILED';
+      end if;
     elsif not v_role_should_activate then
       if v_requested_role_id is null then
         insert into public.user_roles (
@@ -1474,7 +1789,9 @@ begin
         from public.user_roles ur where ur.id = v_requested_role_id;
       end if;
 
-      if to_regclass('public.user_credential_states') is not null then
+      if to_regclass('public.user_credential_states') is not null
+        and to_regclass('public.user_credential_suspended_roles') is not null
+      then
         if v_credential_suspension_id is null then
           v_credential_suspension_id := gen_random_uuid();
           execute
@@ -1606,6 +1923,99 @@ from public, anon, authenticated;
 
 grant execute on function public.patch83t_apply_user_excel_import(uuid, jsonb)
 to service_role;
+
+-- The Edge bridge uses this service-role-only, read-only-in-effect handshake to
+-- prove that the complete Patch 83T database contract is present before it
+-- permits either identity resolution or import execution. It returns no user,
+-- role, organization, schema-object, SQL, or service-role details.
+create or replace function public.patch83t_get_user_import_capabilities(
+  p_actor_id uuid,
+  p_edge_contract_version text,
+  p_frontend_contract_version text
+)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+declare
+  v_actor_org uuid;
+  v_identity_reference_action_available boolean;
+  v_import_execution_action_available boolean;
+  v_compatible boolean;
+  v_expected_edge_contract constant text := 'patch83t-edge-user-import-v1';
+  v_expected_frontend_contract constant text := 'patch83t-frontend-user-import-v1';
+begin
+  if coalesce(auth.jwt()->>'role', '') is distinct from 'service_role' then
+    raise exception 'PATCH83T_SERVICE_ROLE_REQUIRED';
+  end if;
+
+  select p.organization_id
+  into v_actor_org
+  from public.profiles p
+  where p.id = p_actor_id
+    and p.organization_id is not null
+    and p.is_active = true
+    and p.user_status = 'active';
+
+  if v_actor_org is null or not exists (
+    select 1
+    from public.user_roles ur
+    where ur.user_id = p_actor_id
+      and ur.is_active = true
+      and ur.role in ('super_admin', 'governance_admin')
+      and ur.scope = 'global'
+      and (ur.organization_id is null or ur.organization_id = v_actor_org)
+      and ur.division_id is null
+      and ur.department_id is null
+      and ur.unit_id is null
+  ) then
+    raise exception 'PATCH83T_USER_ADMIN_REQUIRED';
+  end if;
+
+  v_identity_reference_action_available := coalesce(
+    has_function_privilege(
+      'service_role',
+      to_regprocedure('public.patch83t_user_import_identity_references(uuid,text[])'),
+      'EXECUTE'
+    ),
+    false
+  );
+  v_import_execution_action_available := coalesce(
+    has_function_privilege(
+      'service_role',
+      to_regprocedure('public.patch83t_apply_user_excel_import(uuid,jsonb)'),
+      'EXECUTE'
+    ),
+    false
+  );
+  v_compatible := p_edge_contract_version = v_expected_edge_contract
+    and p_frontend_contract_version = v_expected_frontend_contract
+    and v_identity_reference_action_available
+    and v_import_execution_action_available;
+
+  return jsonb_build_object(
+    'edge_contract_version', v_expected_edge_contract,
+    'migration_173_available', true,
+    'identity_reference_action_available', v_identity_reference_action_available,
+    'import_execution_action_available', v_import_execution_action_available,
+    'maximum_rows', 5000,
+    'runtime_status', case when v_compatible then 'compatible' else 'incompatible' end,
+    'compatible', v_compatible,
+    'server_time', statement_timestamp()
+  );
+end;
+$$;
+
+revoke all on function public.patch83t_get_user_import_capabilities(uuid, text, text)
+from public, anon, authenticated;
+
+grant execute on function public.patch83t_get_user_import_capabilities(uuid, text, text)
+to service_role;
+
+comment on function public.patch83t_get_user_import_capabilities(uuid, text, text) is
+'Patch 83T authenticated deployment-compatibility proof. Service-role Edge access only; verifies the active global User Import administrator and returns non-sensitive, read-only capability metadata.';
 
 comment on function public.patch83t_apply_user_excel_import(uuid, jsonb) is
 'Patch 83T atomic, organization-scoped User Excel Import. Requires a verified active administrator through the service-role Edge bridge; unknown accounts remain pending and no Auth users are created.';

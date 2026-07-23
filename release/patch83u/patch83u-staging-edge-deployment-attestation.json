@@ -1,0 +1,128 @@
+{
+  "attestation_version": "patch83u-edge-deployment-attestation-v1",
+  "captured_at": "2026-07-18T12:20:06.3824713Z",
+  "scope": {
+    "project_ref": "zghsgzrdwbqdrpuxanac",
+    "function_name": "privileged-action",
+    "production_project_prohibited": "zbrjjecpsrzposhuarcn",
+    "mutation_performed": false
+  },
+  "verified_facts": [
+    {
+      "fact": "The Supabase function-list API reported privileged-action version 3 as ACTIVE with JWT verification enabled.",
+      "method": "supabase functions list --project-ref zghsgzrdwbqdrpuxanac -o json",
+      "confidence": "high"
+    },
+    {
+      "fact": "The supported read-only functions download command returned one deployed source file named index.ts.",
+      "method": "supabase functions download privileged-action --project-ref zghsgzrdwbqdrpuxanac --use-api --workdir <isolated-temporary-directory>",
+      "confidence": "high"
+    },
+    {
+      "fact": "The downloaded index.ts and the reviewed repository index.ts are byte-for-byte equal: both are 157176 bytes and have the same SHA-256.",
+      "method": "independent local SHA-256 and byte comparison",
+      "confidence": "high"
+    },
+    {
+      "fact": "The repository function directory contains only index.ts and config.toml selects that file as the entrypoint with verify_jwt=true.",
+      "method": "local filesystem and configuration inspection",
+      "confidence": "high"
+    }
+  ],
+  "hosted_metadata": {
+    "function_id": "2780bccb-0cb8-43dd-a8f1-36016d3d6533",
+    "version": 3,
+    "status": "ACTIVE",
+    "verify_jwt": true,
+    "import_map": false,
+    "ezbr_sha256": "7fee99f2d77590f48026ddb0aaec5d540403d7c85fda462aece5154492852762",
+    "source": "Supabase CLI 2.72.7 read-only function list"
+  },
+  "downloaded_artifact": {
+    "files_returned": [
+      "index.ts"
+    ],
+    "index_ts_sha256": "f4a53ddfd0167ca62661c3c9acc6b7b320a0e43f4b96efc821308e1db73caf87",
+    "index_ts_bytes": 157176,
+    "retained_in_repository": false
+  },
+  "computed_local_hashes": [
+    {
+      "path": "supabase/functions/privileged-action/index.ts",
+      "sha256": "f4a53ddfd0167ca62661c3c9acc6b7b320a0e43f4b96efc821308e1db73caf87",
+      "bytes": 157176,
+      "material_role": "Edge Function entrypoint and complete local function source"
+    },
+    {
+      "path": "supabase/config.toml",
+      "sha256": "8dbc2b021931fb8f67fe8599bbec95d44ae7379c2a72152840443cd394619169",
+      "bytes": 14598,
+      "material_role": "Function entrypoint and verify_jwt deployment configuration"
+    }
+  ],
+  "dependency_and_configuration_inventory": {
+    "entrypoint": "./functions/privileged-action/index.ts",
+    "verify_jwt": true,
+    "import_map": false,
+    "imports": [
+      {
+        "specifier": "npm:@supabase/supabase-js@2.108.2",
+        "pinned_in_source": true,
+        "downloaded_dependency_bytes_available_for_hashing": false
+      }
+    ],
+    "additional_local_function_source_files": [],
+    "dependency_lock_or_import_map_used_by_function": false
+  },
+  "local_git": {
+    "branch": "patch83t-controlled-user-excel-import",
+    "head": "a9989b1e8d95a6bb775316a2d9e709ef84514c42",
+    "working_tree_clean": false,
+    "staged_file_count": 0,
+    "preparation_start_status_entries": 101,
+    "preparation_start_modified_entries": 61,
+    "preparation_start_untracked_entries": 40,
+    "prepared_status_entries": 109,
+    "prepared_modified_entries": 62,
+    "prepared_untracked_entries": 47,
+    "status_note": "The repository already contained extensive uncommitted Patch 83T/83U work. This preparation preserved it and added only the files listed in the readiness report."
+  },
+  "inferred_relationships": [
+    {
+      "inference": "The read-only download result is the source associated by the Supabase Functions API with the queried staging function/version.",
+      "basis": "The download and list commands used the same explicit staging project and function name.",
+      "confidence": "high"
+    },
+    {
+      "inference": "The reviewed local index.ts is the same source text returned for the active hosted function.",
+      "basis": "Exact byte length, SHA-256, and byte comparison match.",
+      "confidence": "high"
+    }
+  ],
+  "unproven_relationships": [
+    {
+      "relationship": "Hosted ezbr_sha256 to index.ts SHA-256",
+      "status": "not proven",
+      "reason": "The values differ, and the supported CLI/API documentation inspected does not define ezbr_sha256 as the raw entrypoint hash. It may identify a bundled or archived deployment representation, but that meaning was not established."
+    },
+    {
+      "relationship": "Hosted bundled dependency bytes to the locally resolved npm dependency",
+      "status": "not proven",
+      "reason": "The supported source download returned index.ts only and no deploy bundle or dependency byte manifest."
+    }
+  ],
+  "confidence": {
+    "hosted_metadata": "high",
+    "downloaded_source_matches_reviewed_index_ts": "high",
+    "complete_bundle_cryptographic_binding": "not established",
+    "overall_statement": "High confidence in active metadata and source-text equality; no claim of a complete cryptographic bundle or ezbr-to-source binding."
+  },
+  "safety": {
+    "deployment_performed": false,
+    "function_changed": false,
+    "hosted_login_performed": false,
+    "hosted_credential_action_performed": false,
+    "production_accessed": false,
+    "credential_material_recorded": false
+  }
+}

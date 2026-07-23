@@ -22,6 +22,8 @@ import { useAuth } from "../auth/AuthProvider";
 import { DataState } from "../components/DataState";
 import { Modal } from "../components/Modal";
 import { KpiTile, ModernCard, StatusPill } from "../components/ModernCard";
+import { isPatch83tUserExcelImportEnabled } from "../config/featureFlags";
+import { useI18n } from "../i18n/I18nContext";
 import { humanize } from "../lib/format";
 import {
   getLiveResultMessage,
@@ -63,6 +65,16 @@ import {
   reconcileProvisioning,
   type UserProvisioningRow,
 } from "../lib/userCredentialApi";
+import { PrivilegedActionError } from "../lib/privilegedAction";
+import {
+  createPatch83tUserImportCapabilitySingleFlight,
+  getPatch83tUserImportCapabilities,
+  isPatch83tDeploymentCompatibilityError,
+  isPatch83tUserImportCapabilityCompatible,
+  PATCH83T_USER_IMPORT_DEPLOYMENT_MESSAGE,
+  PATCH83T_USER_IMPORT_FEATURE_DISABLED_MESSAGE,
+  type Patch83tUserImportCapabilities,
+} from "../lib/userImportCompatibility";
 import type { AccessScope, AppRole } from "../types/domain";
 import {
   createUserImportTemplate,
@@ -72,6 +84,11 @@ import {
 } from "../utils/userWorkbook";
 
 type LifecycleAction = "deactivate" | "reactivate" | "archive" | "unarchive";
+type ImportCompatibilityStatus =
+  | "disabled"
+  | "checking"
+  | "compatible"
+  | "incompatible";
 
 const emptySummary: LiveResult<UserManagementSummary> = {
   status: "empty",
@@ -162,6 +179,7 @@ function patch83uRequestId(action: string) {
 
 export function UserManagementCenter() {
   const auth = useAuth();
+  const { language, direction, t } = useI18n();
   const [summary, setSummary] =
     useState<LiveResult<UserManagementSummary>>(emptySummary);
   const [users, setUsers] =
@@ -219,8 +237,25 @@ export function UserManagementCenter() {
   const [importValidation, setImportValidation] =
     useState<UserImportValidationResult | null>(null);
   const [importConfirmation, setImportConfirmation] = useState("");
+  const [importCompatibilityStatus, setImportCompatibilityStatus] =
+    useState<ImportCompatibilityStatus>("disabled");
+  const [importCapabilities, setImportCapabilities] =
+    useState<Patch83tUserImportCapabilities | null>(null);
+  const [importCompatibilityMessage, setImportCompatibilityMessage] =
+    useState<string | null>(null);
   const importFileInputRef = useRef<HTMLInputElement>(null);
+  const importSelectedFileRef = useRef<File | null>(null);
   const importSelectionId = useRef(0);
+  const importCompatibilityGeneration = useRef(0);
+  const importCapabilityCheckRef = useRef<
+    ReturnType<typeof createPatch83tUserImportCapabilitySingleFlight> | null
+  >(null);
+  if (!importCapabilityCheckRef.current) {
+    importCapabilityCheckRef.current =
+      createPatch83tUserImportCapabilitySingleFlight(
+        getPatch83tUserImportCapabilities,
+      );
+  }
   const [provisioningOpen, setProvisioningOpen] = useState(false);
   const [provisioningLoading, setProvisioningLoading] = useState(false);
   const [provisioningRows, setProvisioningRows] = useState<UserProvisioningRow[]>([]);
@@ -264,6 +299,20 @@ export function UserManagementCenter() {
     !auth.isLocalBypass &&
     Boolean(auth.profile?.organizationId) &&
     canonicalGlobalAdminRoles.length > 0;
+  const userImportFeatureEnabled = isPatch83tUserExcelImportEnabled();
+  const importUploadDisabled =
+    !userImportFeatureEnabled
+    || importCompatibilityStatus !== "compatible"
+    || importParsing;
+  const importUploadStateDescriptionId = importParsing
+    ? "user-workbook-parsing-status"
+    : importCompatibilityStatus === "compatible"
+      ? null
+      : "user-workbook-compatibility-status";
+  const importUploadDescribedBy = [
+    "user-workbook-input-description",
+    importUploadStateDescriptionId,
+  ].filter(Boolean).join(" ");
   const hasAuthorizedSuperAdmin =
     !auth.isLocalBypass &&
     Boolean(auth.session?.user.id) &&
@@ -277,6 +326,23 @@ export function UserManagementCenter() {
       !role.departmentId &&
       !role.unitId,
     );
+  const patch83uRuntimeEnforced =
+    auth.patch83uCapabilities?.runtime_enforcement_state === "enforced";
+  const patch83uProvisioningAvailable = Boolean(
+    patch83uRuntimeEnforced &&
+    auth.patch83uCapabilities?.provisioning_action_available,
+  );
+  const patch83uResetAvailable = Boolean(
+    patch83uRuntimeEnforced &&
+    auth.patch83uCapabilities?.reset_action_available,
+  );
+  const canUsePatch83uProvisioning =
+    hasAuthorizedSuperAdmin && patch83uProvisioningAvailable;
+  const canUsePatch83uReset = hasAuthorizedSuperAdmin && patch83uResetAvailable;
+  const resetReasonContainsTemporaryPassword = Boolean(
+    resetDraft.temporaryPassword
+    && resetDraft.reason.includes(resetDraft.temporaryPassword),
+  );
 
   const load = async () => {
     setLoading(true);
@@ -568,8 +634,10 @@ export function UserManagementCenter() {
   };
 
   const loadProvisioningQueue = async () => {
-    if (!hasAuthorizedSuperAdmin) {
-      setProvisioningError("Provisioning requires an authenticated, organization-aligned global Super Admin.");
+    if (!canUsePatch83uProvisioning) {
+      setProvisioningError(
+        t("userManagement.provisioningQueue.unavailableError"),
+      );
       return;
     }
     setProvisioningLoading(true);
@@ -580,7 +648,9 @@ export function UserManagementCenter() {
     } catch (error) {
       setProvisioningRows([]);
       setProvisioningError(
-        error instanceof Error ? error.message : "Unable to load the protected provisioning queue.",
+        error instanceof Error
+          ? error.message
+          : t("userManagement.provisioningQueue.loadError"),
       );
     } finally {
       setProvisioningLoading(false);
@@ -588,6 +658,7 @@ export function UserManagementCenter() {
   };
 
   const openProvisioningQueue = () => {
+    if (!canUsePatch83uProvisioning) return;
     setProvisioningOpen(true);
     setProvisioningTarget(null);
     setProvisioningConfirmation("");
@@ -606,10 +677,12 @@ export function UserManagementCenter() {
   };
 
   const submitProvisioningAction = async () => {
-    if (!provisioningTarget || !hasAuthorizedSuperAdmin) return;
+    if (!provisioningTarget || !canUsePatch83uProvisioning) return;
     const { row, action } = provisioningTarget;
     if (provisioningConfirmation !== row.employee_id) {
-      setProvisioningError("Type the Employee ID exactly before continuing.");
+      setProvisioningError(
+        t("userManagement.provisioningQueue.exactEmployeeIdError"),
+      );
       return;
     }
     setSaving(true);
@@ -643,6 +716,10 @@ export function UserManagementCenter() {
   };
 
   const openPasswordReset = (user: UserManagementUserRow) => {
+    if (!canUsePatch83uReset) {
+      setActionError("Password reset is unavailable until credential governance is fully enforced.");
+      return;
+    }
     if (
       !user.credential_proof_available
       || !user.auth_email
@@ -676,7 +753,7 @@ export function UserManagementCenter() {
   };
 
   const submitPasswordReset = async () => {
-    if (!resetUser || !hasAuthorizedSuperAdmin) return;
+    if (!resetUser || !canUsePatch83uReset) return;
     if (!resetUser.employee_no) {
       setActionError("This user has no Employee ID. Resolve the identity record before resetting credentials.");
       return;
@@ -713,13 +790,18 @@ export function UserManagementCenter() {
       setActionError("A reset reason of 1-500 characters is required.");
       return;
     }
+    if (resetReasonContainsTemporaryPassword) {
+      setActionError("Enter a reset reason that contains no credential material.");
+      return;
+    }
     setSaving(true);
     setActionError(null);
     setMessage(null);
     try {
-      await adminResetPassword({
+      const result = await adminResetPassword({
         userId: resetUser.user_id,
         temporaryPassword: resetDraft.temporaryPassword,
+        confirmTemporaryPassword: resetDraft.confirmPassword,
         employeeIdConfirmation: resetDraft.employeeIdConfirmation,
         confirmationText: resetDraft.resetConfirmation,
         reason: resetDraft.reason,
@@ -727,25 +809,50 @@ export function UserManagementCenter() {
       });
       const employeeId = resetUser.employee_no;
       closePasswordReset();
-      setMessage(
-        `Temporary password reset completed for ${employeeId}. Existing sessions were revoked and a password change is required at next sign-in.`,
-      );
+      if (result.status === "admin_reset_change_required") {
+        setMessage(
+          `Temporary password reset completed for ${employeeId}. Existing sessions were revoked and a password change is required at next sign-in.`,
+        );
+      } else if (result.status === "session_revocation_review_required") {
+        setMessage(
+          `The temporary password changed for ${employeeId}, but session revocation requires protected administrator review. Application access remains blocked.`,
+        );
+      } else {
+        setMessage(
+          `The password-reset operation for ${employeeId} entered protected recovery. Application access remains blocked until credential reconciliation is completed.`,
+        );
+      }
       await load();
     } catch (error) {
       setActionError(error instanceof Error ? error.message : "The temporary password reset failed.");
-      setResetDraft((draft) => ({
-        ...draft,
-        temporaryPassword: resetUser.employee_no ?? "",
-        confirmPassword: resetUser.employee_no ?? "",
-        employeeIdConfirmation: "",
-        resetConfirmation: "",
-      }));
+      const ambiguous = error instanceof PrivilegedActionError && (
+        error.retryable || [
+          "PATCH83U_ADMIN_RESET_BEGIN_FAILED",
+          "PATCH83U_ADMIN_RESET_FINALIZE_FAILED",
+          "PATCH83U_ADMIN_RESET_FAILED",
+          "PATCH83U_ADMIN_RESET_ALREADY_IN_PROGRESS",
+        ].includes(error.code ?? "")
+      );
+      if (!ambiguous) {
+        setResetRequestId(patch83uRequestId("admin-reset"));
+        setResetDraft((draft) => ({
+          ...draft,
+          temporaryPassword: resetUser.employee_no ?? "",
+          confirmPassword: resetUser.employee_no ?? "",
+          employeeIdConfirmation: "",
+          resetConfirmation: "",
+        }));
+      }
     } finally {
       setSaving(false);
     }
   };
 
   const openCredentialReconciliation = (user: UserManagementUserRow) => {
+    if (!canUsePatch83uProvisioning) {
+      setActionError("Credential reconciliation is unavailable until credential governance is fully enforced.");
+      return;
+    }
     if (
       !user.credential_proof_available
       || !user.auth_email
@@ -767,7 +874,7 @@ export function UserManagementCenter() {
   };
 
   const submitCredentialReconciliation = async () => {
-    if (!credentialReconcileUser || !hasAuthorizedSuperAdmin) return;
+    if (!credentialReconcileUser || !canUsePatch83uProvisioning) return;
     if (
       !credentialReconcileUser.credential_proof_available
       || !credentialReconcileUser.auth_email
@@ -799,8 +906,21 @@ export function UserManagementCenter() {
     }
   };
 
+  const markImportIncompatible = () => {
+    // Invalidate any parser/reference result that is still in flight while
+    // retaining the selected File object and its visible metadata for Retry.
+    importSelectionId.current += 1;
+    setImportCapabilities(null);
+    setImportCompatibilityStatus("incompatible");
+    setImportCompatibilityMessage(PATCH83T_USER_IMPORT_DEPLOYMENT_MESSAGE);
+    setImportParseError(null);
+    setImportParsing(false);
+    setImportConfirmation("");
+  };
+
   const resetImportFile = () => {
     importSelectionId.current += 1;
+    importSelectedFileRef.current = null;
     setImportFile(null);
     setImportParseError(null);
     setImportParsing(false);
@@ -810,14 +930,21 @@ export function UserManagementCenter() {
   };
 
   const closeImport = () => {
+    importCompatibilityGeneration.current += 1;
     setImportOpen(false);
+    setImportCompatibilityStatus("disabled");
+    setImportCapabilities(null);
+    setImportCompatibilityMessage(null);
     resetImportFile();
   };
 
-  const handleImportFile = async (file: File | null) => {
-    if (!file) return;
+  const processImportFile = async (
+    file: File,
+    capabilityProof: Patch83tUserImportCapabilities,
+  ) => {
     const selectionId = importSelectionId.current + 1;
     importSelectionId.current = selectionId;
+    importSelectedFileRef.current = file;
     setImportConfirmation("");
     setImportFile({ name: file.name, size: file.size });
     setImportParseError(null);
@@ -826,11 +953,19 @@ export function UserManagementCenter() {
     setActionError(null);
     try {
       const parsed = await parseUserWorkbook(file);
-      const validation = await validateImportRows(parsed.rows, parsed.errorsByRow);
+      const validation = await validateImportRows(
+        parsed.rows,
+        parsed.errorsByRow,
+        capabilityProof,
+      );
       if (selectionId !== importSelectionId.current) return;
       setImportValidation(validation);
     } catch (error) {
       if (selectionId !== importSelectionId.current) return;
+      if (isPatch83tDeploymentCompatibilityError(error)) {
+        markImportIncompatible();
+        return;
+      }
       setImportParseError(
         error instanceof Error
           ? error.message
@@ -841,8 +976,78 @@ export function UserManagementCenter() {
     }
   };
 
+  const checkImportCompatibility = async (
+    revalidateSelectedFile = false,
+  ): Promise<Patch83tUserImportCapabilities | null> => {
+    if (!userImportFeatureEnabled) {
+      importCompatibilityGeneration.current += 1;
+      setImportCapabilities(null);
+      setImportCompatibilityStatus("disabled");
+      setImportCompatibilityMessage(PATCH83T_USER_IMPORT_FEATURE_DISABLED_MESSAGE);
+      return null;
+    }
+    const generation = importCompatibilityGeneration.current + 1;
+    importCompatibilityGeneration.current = generation;
+    setImportCompatibilityStatus("checking");
+    setImportCompatibilityMessage(null);
+    try {
+      const capabilities = await importCapabilityCheckRef.current!();
+      if (generation !== importCompatibilityGeneration.current) return null;
+      if (!isPatch83tUserImportCapabilityCompatible(capabilities)) {
+        markImportIncompatible();
+        return null;
+      }
+      setImportCapabilities(capabilities);
+      setImportCompatibilityStatus("compatible");
+      setImportCompatibilityMessage(null);
+      const selectedFile = importSelectedFileRef.current;
+      if (revalidateSelectedFile && selectedFile) {
+        await processImportFile(selectedFile, capabilities);
+      }
+      return capabilities;
+    } catch {
+      if (generation !== importCompatibilityGeneration.current) return null;
+      markImportIncompatible();
+      return null;
+    }
+  };
+
+  const openImport = () => {
+    setActionError(null);
+    setImportOpen(true);
+    if (!userImportFeatureEnabled) {
+      importCompatibilityGeneration.current += 1;
+      setImportCapabilities(null);
+      setImportCompatibilityStatus("disabled");
+      setImportCompatibilityMessage(PATCH83T_USER_IMPORT_FEATURE_DISABLED_MESSAGE);
+      return;
+    }
+    void checkImportCompatibility();
+  };
+
+  const handleImportFile = async (file: File | null) => {
+    if (!file) return;
+    const capabilityProof = importCapabilities;
+    if (
+      importCompatibilityStatus !== "compatible"
+      || !isPatch83tUserImportCapabilityCompatible(capabilityProof)
+    ) {
+      return;
+    }
+    await processImportFile(file, capabilityProof);
+  };
+
   const applyImport = async () => {
     if (!importValidation) return;
+    const capabilityProof = importCapabilities;
+    if (
+      !userImportFeatureEnabled
+      || importCompatibilityStatus !== "compatible"
+      || !isPatch83tUserImportCapabilityCompatible(capabilityProof)
+    ) {
+      markImportIncompatible();
+      return;
+    }
     if (!hasAuthorizedImportRole) {
       setActionError(
         "User Excel Import execution requires an authenticated Super Admin or Governance Admin.",
@@ -861,7 +1066,13 @@ export function UserManagementCenter() {
         importFile?.name || "user-management-import.xlsx",
         importValidation,
         importConfirmation,
-      );
+        capabilityProof,
+      ).catch((error) => {
+        if (isPatch83tDeploymentCompatibilityError(error)) {
+          markImportIncompatible();
+        }
+        throw error;
+      });
       const proof = executionResult.database_proof;
       databaseProofMessage = `Import batch ${executionResult.batch_id} applied with database proof: ${proof.import_row_count} import rows, ${proof.provisioning_record_count} protected provisioning records, and ${proof.audit_record_count} profile audit records. Payload SHA-256: ${proof.payload_sha256}. No account was provisioned automatically.`;
     }, "Import batch applied. Existing profiles were updated; unknown accounts were tracked for account creation.");
@@ -927,6 +1138,7 @@ export function UserManagementCenter() {
         </div>
         <div className="inline-actions compact-header-actions">
           <button
+            type="button"
             className="ghost-button"
             onClick={() => void load()}
             disabled={loading}
@@ -934,23 +1146,38 @@ export function UserManagementCenter() {
             <RefreshCw size={16} /> Refresh
           </button>
           <button
+            type="button"
             className="ghost-button"
             onClick={() => void downloadUserTemplate()}
           >
             <FileDown size={16} /> Excel template
           </button>
-          {hasAuthorizedSuperAdmin ? (
+          {hasAuthorizedSuperAdmin && auth.patch83uCapabilities ? (
             <button
+              type="button"
               className="ghost-button"
               onClick={openProvisioningQueue}
+              disabled={!canUsePatch83uProvisioning}
+              title={
+                canUsePatch83uProvisioning
+                  ? t("userManagement.provisioningQueue.openTitle")
+                  : t("userManagement.provisioningQueue.unavailableTitle")
+              }
             >
-              <ShieldCheck size={16} /> Provisioning queue
+              <ShieldCheck size={16} />{" "}
+              {t("userManagement.provisioningQueue.open")}
             </button>
           ) : null}
           <button
+            type="button"
             className="primary-button"
-            onClick={() => setImportOpen(true)}
+            onClick={openImport}
             disabled={writeDisabled}
+            title={
+              userImportFeatureEnabled
+                ? "Open the controlled User Excel Import preview"
+                : PATCH83T_USER_IMPORT_FEATURE_DISABLED_MESSAGE
+            }
           >
             <UploadCloud size={16} /> Import Excel
           </button>
@@ -961,6 +1188,11 @@ export function UserManagementCenter() {
         <div className="notice-banner">
           Read-only mode is active for this role. User changes require Super
           Admin or Governance Admin access.
+        </div>
+      ) : null}
+      {!userImportFeatureEnabled ? (
+        <div className="notice-banner">
+          {PATCH83T_USER_IMPORT_FEATURE_DISABLED_MESSAGE}
         </div>
       ) : null}
       {compatibilityMode ? (
@@ -1631,10 +1863,11 @@ export function UserManagementCenter() {
             />
           </label>
           <div className="form-actions full-width">
-            <button className="ghost-button" onClick={() => setEditUser(null)}>
+            <button type="button" className="ghost-button" onClick={() => setEditUser(null)}>
               Cancel
             </button>
             <button
+              type="button"
               className="primary-button"
               disabled={saving || writeDisabled}
               onClick={() => void submitProfile()}
@@ -1674,12 +1907,14 @@ export function UserManagementCenter() {
           </label>
           <div className="form-actions full-width">
             <button
+              type="button"
               className="ghost-button"
               onClick={() => setDepartmentUser(null)}
             >
               Cancel
             </button>
             <button
+              type="button"
               className="primary-button"
               disabled={saving || writeDisabled}
               onClick={() => void submitDepartment()}
@@ -1749,10 +1984,11 @@ export function UserManagementCenter() {
             preserves the existing access model.
           </div>
           <div className="form-actions full-width">
-            <button className="ghost-button" onClick={() => setRoleUser(null)}>
+            <button type="button" className="ghost-button" onClick={() => setRoleUser(null)}>
               Cancel
             </button>
             <button
+              type="button"
               className="primary-button"
               disabled={saving || writeDisabled}
               onClick={() => void submitRole()}
@@ -1782,12 +2018,13 @@ export function UserManagementCenter() {
               <KeyRound size={14} /> Assign role
             </button>
             {hasAuthorizedSuperAdmin &&
+            auth.patch83uCapabilities &&
             actionMenuUser.user_id !== auth.session?.user.id ? (
               <>
                 <button
                   type="button"
                   className="ghost-button action-sheet-item"
-                  disabled={!actionMenuUser.employee_no || !actionMenuUser.auth_email || !actionMenuUser.credential_proof_available || !['employee_id_managed', 'legacy_verified'].includes(actionMenuUser.identity_mode ?? '')}
+                  disabled={!canUsePatch83uReset || !actionMenuUser.employee_no || !actionMenuUser.auth_email || !actionMenuUser.credential_proof_available || !['employee_id_managed', 'legacy_verified'].includes(actionMenuUser.identity_mode ?? '')}
                   onClick={() => {
                     openPasswordReset(actionMenuUser);
                     setActionMenuUser(null);
@@ -1798,7 +2035,7 @@ export function UserManagementCenter() {
                 <button
                   type="button"
                   className="ghost-button action-sheet-item"
-                  disabled={!actionMenuUser.employee_no || !actionMenuUser.auth_email || !actionMenuUser.credential_proof_available || !['employee_id_managed', 'legacy_verified'].includes(actionMenuUser.identity_mode ?? '')}
+                  disabled={!canUsePatch83uProvisioning || !actionMenuUser.employee_no || !actionMenuUser.auth_email || !actionMenuUser.credential_proof_available || !['employee_id_managed', 'legacy_verified'].includes(actionMenuUser.identity_mode ?? '')}
                   onClick={() => {
                     openCredentialReconciliation(actionMenuUser);
                     setActionMenuUser(null);
@@ -1833,7 +2070,8 @@ export function UserManagementCenter() {
               >
                 <ShieldOff size={14} /> Deactivate user
               </button>
-            ) : (
+            ) : actionMenuUser.user_status === "inactive" ||
+              actionMenuUser.user_status === "locked" ? (
               <button
                 type="button"
                 className="ghost-button action-sheet-item"
@@ -1846,7 +2084,7 @@ export function UserManagementCenter() {
               >
                 <RotateCcw size={14} /> Reactivate user
               </button>
-            )}
+            ) : null}
             {actionMenuUser.user_status === "archived" ? (
               <button
                 type="button"
@@ -1890,7 +2128,15 @@ export function UserManagementCenter() {
 
       <Modal
         open={provisioningOpen}
-        title="Protected account provisioning"
+        title={t("userManagement.provisioningQueue.title")}
+        className="provisioning-queue-dialog"
+        closeLabel={t("userManagement.provisioningQueue.close")}
+        direction={direction}
+        headerDescription={
+          <span className="provisioning-queue-warning">
+            {t("userManagement.provisioningQueue.warning")}
+          </span>
+        }
         onClose={() => {
           if (saving) return;
           setProvisioningOpen(false);
@@ -1900,35 +2146,64 @@ export function UserManagementCenter() {
           setProvisioningError(null);
         }}
       >
-        <div className="page-stack user-workbook-modal">
-          <div className="notice-banner">
-            Patch 83T execution only queues unknown identities. A global Super Admin must explicitly provision or reconcile one protected record at a time. No password is returned to or stored by this screen.
-          </div>
-          <div className="inline-actions">
+        <div className="provisioning-queue-modal">
+          <div className="inline-actions provisioning-queue-toolbar">
             <button
               type="button"
               className="ghost-button"
-              disabled={provisioningLoading || saving}
+              disabled={provisioningLoading || saving || !canUsePatch83uProvisioning}
               onClick={() => void loadProvisioningQueue()}
             >
-              <RefreshCw size={16} /> Refresh protected queue
+              <RefreshCw size={16} />{" "}
+              {t("userManagement.provisioningQueue.refresh")}
             </button>
-            <span className="muted">{provisioningRows.length} record{provisioningRows.length === 1 ? "" : "s"}</span>
+            <span className="muted">
+              {provisioningRows.length}{" "}
+              {t(
+                provisioningRows.length === 1
+                  ? "userManagement.provisioningQueue.record"
+                  : "userManagement.provisioningQueue.records",
+              )}
+            </span>
           </div>
-          {provisioningLoading ? <div className="notice-banner">Loading protected provisioning records…</div> : null}
-          {provisioningError ? <div className="form-error">{provisioningError}</div> : null}
+          {provisioningLoading ? (
+            <div className="notice-banner provisioning-queue-state" role="status">
+              {t("userManagement.provisioningQueue.loading")}
+            </div>
+          ) : null}
+          {provisioningError ? (
+            <div className="form-error provisioning-queue-state" role="alert">
+              {provisioningError}
+            </div>
+          ) : null}
           {provisioningTarget ? (
-            <div className="panel form-grid">
+            <div className="panel form-grid provisioning-queue-confirmation">
               <div className="full-width">
-                <strong>{provisioningTarget.action === "provision" ? "Provision" : "Reconcile"} {provisioningTarget.row.full_name_en}</strong>
+                <strong>
+                  {t(
+                    provisioningTarget.action === "provision"
+                      ? "userManagement.provisioningQueue.confirmProvision"
+                      : "userManagement.provisioningQueue.confirmReconcile",
+                  )}{" "}
+                  {language === "ar" && provisioningTarget.row.full_name_ar
+                    ? provisioningTarget.row.full_name_ar
+                    : provisioningTarget.row.full_name_en}
+                </strong>
                 <p className="muted">
-                  Auth email: {provisioningTarget.row.auth_email}. The first provisioned password is set server-side to the exact Employee ID and must be changed at first login.
+                  {t("userManagement.provisioningQueue.authEmailPrefix")}{" "}
+                  <bdi>{provisioningTarget.row.auth_email}</bdi>.{" "}
+                  {t(
+                    "userManagement.provisioningQueue.initialPasswordNotice",
+                  )}
                 </p>
               </div>
               <label className="field full-width">
-                Type Employee ID {provisioningTarget.row.employee_id} exactly
+                {t("userManagement.provisioningQueue.confirmEmployeeId")}{" "}
+                <bdi>{provisioningTarget.row.employee_id}</bdi>
                 <input
-                  aria-label="Provisioning Employee ID confirmation"
+                  aria-label={t(
+                    "userManagement.provisioningQueue.confirmEmployeeIdAria",
+                  )}
                   value={provisioningConfirmation}
                   onChange={(event) => setProvisioningConfirmation(event.target.value)}
                   autoComplete="off"
@@ -1945,45 +2220,82 @@ export function UserManagementCenter() {
                     setProvisioningRequestId("");
                   }}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="button"
                   className="primary-button"
                   disabled={
                     saving ||
-                    !hasAuthorizedSuperAdmin ||
+                    !canUsePatch83uProvisioning ||
                     provisioningConfirmation !== provisioningTarget.row.employee_id
                   }
                   onClick={() => void submitProvisioningAction()}
                 >
                   {saving
-                    ? "Processing…"
+                    ? t("userManagement.provisioningQueue.processing")
                     : provisioningTarget.action === "provision"
-                      ? "Provision account"
-                      : "Reconcile account"}
+                      ? t(
+                          "userManagement.provisioningQueue.provisionAccount",
+                        )
+                      : t(
+                          "userManagement.provisioningQueue.reconcileAccount",
+                        )}
                 </button>
               </div>
             </div>
           ) : null}
           {!provisioningLoading && provisioningRows.length === 0 ? (
-            <div className="notice-banner">No protected provisioning records are available for this organization.</div>
+            <div className="notice-banner provisioning-queue-state">
+              {t("userManagement.provisioningQueue.empty")}
+            </div>
           ) : null}
           {provisioningRows.length ? (
-            <div className="table-scroll" aria-label="Protected user provisioning queue">
-              <table className="entity-table">
+            <div
+              className="provisioning-queue-table-scroll"
+              role="region"
+              aria-label={t("userManagement.provisioningQueue.ariaLabel")}
+              tabIndex={0}
+            >
+              <table className="entity-table provisioning-queue-table">
                 <thead>
                   <tr>
-                    <th>Employee</th>
-                    <th>Auth email</th>
-                    <th>Contact</th>
-                    <th>Department</th>
-                    <th>Requested access</th>
-                    <th>Account action</th>
-                    <th>Lifecycle</th>
-                    <th>Status</th>
-                    <th>Attempts</th>
-                    <th>Controlled action</th>
+                    <th className="provisioning-queue-employee">
+                      {t("userManagement.provisioningQueue.header.employee")}
+                    </th>
+                    <th className="provisioning-queue-employee-id">
+                      {t("userManagement.provisioningQueue.header.employeeId")}
+                    </th>
+                    <th className="provisioning-queue-auth-email">
+                      {t("userManagement.provisioningQueue.header.authEmail")}
+                    </th>
+                    <th className="provisioning-queue-department">
+                      {t("userManagement.provisioningQueue.header.department")}
+                    </th>
+                    <th className="provisioning-queue-access">
+                      {t(
+                        "userManagement.provisioningQueue.header.requestedAccess",
+                      )}
+                    </th>
+                    <th className="provisioning-queue-account-action">
+                      {t(
+                        "userManagement.provisioningQueue.header.accountAction",
+                      )}
+                    </th>
+                    <th className="provisioning-queue-lifecycle">
+                      {t("userManagement.provisioningQueue.header.lifecycle")}
+                    </th>
+                    <th className="provisioning-queue-status">
+                      {t("userManagement.provisioningQueue.header.status")}
+                    </th>
+                    <th className="provisioning-queue-attempts">
+                      {t("userManagement.provisioningQueue.header.attempts")}
+                    </th>
+                    <th className="provisioning-queue-controlled-action">
+                      {t(
+                        "userManagement.provisioningQueue.header.controlledAction",
+                      )}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2000,47 +2312,113 @@ export function UserManagementCenter() {
                     ].includes(row.provisioning_status);
                     return (
                       <tr key={row.id}>
-                        <td>
-                          <strong>{row.full_name_en}</strong>
-                          <div className="muted">{row.employee_id}</div>
+                        <td className="provisioning-queue-employee">
+                          <strong>
+                            {language === "ar" && row.full_name_ar
+                              ? row.full_name_ar
+                              : row.full_name_en}
+                          </strong>
+                          {row.full_name_ar ? (
+                            <div className="muted">
+                              {language === "ar"
+                                ? row.full_name_en
+                                : row.full_name_ar}
+                            </div>
+                          ) : null}
+                          <div className="muted provisioning-queue-contact">
+                            <span>
+                              {row.contact_email ??
+                                t(
+                                  "userManagement.provisioningQueue.noContactEmail",
+                                )}
+                            </span>
+                            <span dir="ltr">
+                              {row.phone ??
+                                t(
+                                  "userManagement.provisioningQueue.noPhone",
+                                )}
+                            </span>
+                          </div>
                         </td>
-                        <td>{row.auth_email}</td>
-                        <td>
-                          <div>{row.contact_email ?? "No contact email"}</div>
-                          <div className="muted">{row.phone ?? "No phone"}</div>
+                        <td className="provisioning-queue-employee-id">
+                          <bdi>{row.employee_id}</bdi>
                         </td>
-                        <td>{row.department_code}</td>
-                        <td>{humanize(row.requested_role)} · {humanize(row.requested_scope)}</td>
-                        <td>{row.account_action}</td>
-                        <td>{humanize(row.requested_lifecycle)}</td>
-                        <td>
+                        <td className="provisioning-queue-auth-email">
+                          <span
+                            className="provisioning-queue-email"
+                            dir="ltr"
+                            title={row.auth_email}
+                          >
+                            {row.auth_email}
+                          </span>
+                        </td>
+                        <td className="provisioning-queue-department">
+                          <bdi>{row.department_code}</bdi>
+                        </td>
+                        <td className="provisioning-queue-access">
+                          {t(
+                            `userManagement.provisioningQueue.role.${row.requested_role}`,
+                            humanize(row.requested_role),
+                          )}{" "}
+                          ·{" "}
+                          {t(
+                            `userManagement.provisioningQueue.scope.${row.requested_scope}`,
+                            humanize(row.requested_scope),
+                          )}
+                        </td>
+                        <td className="provisioning-queue-account-action">
+                          {t(
+                            `userManagement.provisioningQueue.accountAction.${row.account_action}`,
+                            humanize(row.account_action),
+                          )}
+                        </td>
+                        <td className="provisioning-queue-lifecycle">
+                          {t(
+                            `userManagement.provisioningQueue.lifecycle.${row.requested_lifecycle}`,
+                            humanize(row.requested_lifecycle),
+                          )}
+                        </td>
+                        <td className="provisioning-queue-status">
                           <StatusPill tone={row.provisioning_status.includes("failed") || row.provisioning_status === "reconciliation_required" ? "danger" : row.provisioning_status === "completed" ? "good" : "warning"}>
-                            {humanize(row.provisioning_status)}
+                            {t(
+                              `userManagement.provisioningQueue.status.${row.provisioning_status}`,
+                              humanize(row.provisioning_status),
+                            )}
                           </StatusPill>
                           {row.last_error_code ? <div className="muted">{row.last_error_code}</div> : null}
                         </td>
-                        <td>{row.attempt_count}</td>
-                        <td>
+                        <td className="provisioning-queue-attempts">
+                          {row.attempt_count}
+                        </td>
+                        <td className="provisioning-queue-controlled-action">
                           {canProvision ? (
                             <button
                               type="button"
                               className="ghost-button small"
-                              disabled={saving || !hasAuthorizedSuperAdmin}
+                              disabled={saving || !canUsePatch83uProvisioning}
                               onClick={() => chooseProvisioningAction(row, "provision")}
                             >
-                              Provision
+                              {t(
+                                "userManagement.provisioningQueue.action.provision",
+                              )}
                             </button>
                           ) : canReconcile ? (
                             <button
                               type="button"
                               className="ghost-button small"
-                              disabled={saving || !hasAuthorizedSuperAdmin}
+                              disabled={saving || !canUsePatch83uProvisioning}
                               onClick={() => chooseProvisioningAction(row, "reconcile")}
                             >
-                              Reconcile
+                              {t(
+                                "userManagement.provisioningQueue.action.reconcile",
+                              )}
                             </button>
                           ) : (
-                            <span className="muted">No action</span>
+                            <span className="muted">
+                              {t(
+                                "userManagement.provisioningQueue.action.none",
+                              )}
+                            </span>
                           )}
                         </td>
                       </tr>
@@ -2063,7 +2441,7 @@ export function UserManagementCenter() {
         {resetUser ? (
           <div className="form-grid">
             <div className="notice-banner full-width">
-              Both password fields default to the exact Employee ID. You may keep that value or enter another temporary password accepted by the hosted Supabase Auth policy. The action advances the credential version, suspends active roles, revokes existing sessions, and forces another password change.
+              Both password fields default to the exact Employee ID. You may keep that value or enter another temporary password accepted by the hosted Supabase Auth policy. The action advances the credential version, blocks normal application access until the password is changed, and attempts to revoke existing sessions. Role rows and lifecycle state are preserved.
             </div>
             <div className="panel full-width">
               <strong>{resetUser.full_name_en}</strong>
@@ -2117,6 +2495,11 @@ export function UserManagementCenter() {
                 onChange={(event) => setResetDraft((draft) => ({ ...draft, reason: event.target.value }))}
               />
             </label>
+            {resetReasonContainsTemporaryPassword ? (
+              <div className="form-error full-width">
+                The reset reason must not contain the temporary password.
+              </div>
+            ) : null}
             {actionError ? <div className="form-error full-width">{actionError}</div> : null}
             <div className="form-actions full-width">
               <button type="button" className="ghost-button" disabled={saving} onClick={closePasswordReset}>
@@ -2127,14 +2510,15 @@ export function UserManagementCenter() {
                 className="primary-button"
                 disabled={
                   saving ||
-                  !hasAuthorizedSuperAdmin ||
+                  !canUsePatch83uReset ||
                   !resetUser.employee_no ||
                   !resetDraft.temporaryPassword ||
                   resetDraft.temporaryPassword !== resetDraft.temporaryPassword.trim() ||
                   resetDraft.temporaryPassword !== resetDraft.confirmPassword ||
                   resetDraft.employeeIdConfirmation !== resetUser.employee_no ||
                   resetDraft.resetConfirmation !== ADMIN_RESET_CONFIRMATION_TEXT ||
-                  !resetDraft.reason.trim()
+                  !resetDraft.reason.trim() ||
+                  resetReasonContainsTemporaryPassword
                 }
                 onClick={() => void submitPasswordReset()}
               >
@@ -2180,7 +2564,7 @@ export function UserManagementCenter() {
                 className="primary-button"
                 disabled={
                   saving ||
-                  !hasAuthorizedSuperAdmin ||
+                  !canUsePatch83uProvisioning ||
                   !credentialReconcileUser.employee_no ||
                   credentialReconcileConfirmation !== credentialReconcileUser.employee_no
                 }
@@ -2227,12 +2611,14 @@ export function UserManagementCenter() {
             </label>
             <div className="form-actions full-width">
               <button
+                type="button"
                 className="ghost-button"
                 onClick={() => setLifecycle(null)}
               >
                 Cancel
               </button>
               <button
+                type="button"
                 className="primary-button"
                 disabled={saving || writeDisabled || !reason.trim()}
                 onClick={() => void submitLifecycle()}
@@ -2258,6 +2644,7 @@ export function UserManagementCenter() {
           </div>
           <div className="inline-actions">
             <button
+              type="button"
               className="ghost-button"
               onClick={() => void downloadUserTemplate()}
             >
@@ -2265,6 +2652,7 @@ export function UserManagementCenter() {
             </button>
             {importValidation ? (
               <button
+                type="button"
                 className="ghost-button"
                 onClick={() => void downloadValidationErrors()}
               >
@@ -2272,23 +2660,42 @@ export function UserManagementCenter() {
               </button>
             ) : null}
           </div>
-          <div className="user-workbook-upload">
-            <label className="field" htmlFor="user-workbook-input">
-              Upload User Excel File
-              <span className="muted">
+          <div className="user-workbook-upload" aria-disabled={importUploadDisabled}>
+            <div className="field">
+              <span>Upload User Excel File</span>
+              <span id="user-workbook-input-description" className="muted">
                 Accepts only a real .xlsx workbook. Previewing does not modify user data.
               </span>
-            </label>
+            </div>
             <input
               ref={importFileInputRef}
               id="user-workbook-input"
+              className="visually-hidden"
               type="file"
               accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              aria-label="User Excel workbook file input"
+              aria-disabled={importUploadDisabled}
+              aria-describedby={importUploadDescribedBy}
+              disabled={importUploadDisabled}
+              tabIndex={-1}
               onChange={(event) => {
                 void handleImportFile(event.target.files?.[0] ?? null);
               }}
             />
-            {importFile ? (
+            {!importFile ? (
+              <div className="inline-actions">
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={() => importFileInputRef.current?.click()}
+                  aria-disabled={importUploadDisabled}
+                  aria-describedby={importUploadDescribedBy}
+                  disabled={importUploadDisabled}
+                >
+                  <UploadCloud size={16} /> Choose .xlsx workbook
+                </button>
+              </div>
+            ) : (
               <div className="user-workbook-file">
                 <div>
                   <strong>{importFile.name}</strong>
@@ -2299,7 +2706,9 @@ export function UserManagementCenter() {
                     type="button"
                     className="ghost-button small"
                     onClick={() => importFileInputRef.current?.click()}
-                    disabled={importParsing}
+                    aria-disabled={importUploadDisabled}
+                    aria-describedby={importUploadDescribedBy}
+                    disabled={importUploadDisabled}
                   >
                     Replace file
                   </button>
@@ -2313,9 +2722,55 @@ export function UserManagementCenter() {
                   </button>
                 </div>
               </div>
-            ) : null}
+            )}
           </div>
-          {importParsing ? <div className="notice-banner">Parsing and validating workbook…</div> : null}
+          {importCompatibilityStatus === "disabled" ? (
+            <div
+              id="user-workbook-compatibility-status"
+              className="notice-banner"
+              role="status"
+            >
+              {importCompatibilityMessage ?? PATCH83T_USER_IMPORT_FEATURE_DISABLED_MESSAGE}
+            </div>
+          ) : null}
+          {importCompatibilityStatus === "checking" ? (
+            <div
+              id="user-workbook-compatibility-status"
+              className="notice-banner"
+              role="status"
+            >
+              Checking User Excel Import backend compatibility...
+            </div>
+          ) : null}
+          {importCompatibilityStatus === "incompatible" ? (
+            <div
+              id="user-workbook-compatibility-status"
+              className="notice-banner"
+              role="alert"
+            >
+              <div>
+                {importCompatibilityMessage ?? PATCH83T_USER_IMPORT_DEPLOYMENT_MESSAGE}
+              </div>
+              <div className="inline-actions">
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={() => void checkImportCompatibility(true)}
+                >
+                  <RefreshCw size={16} /> Retry compatibility check
+                </button>
+              </div>
+            </div>
+          ) : null}
+          {importParsing ? (
+            <div
+              id="user-workbook-parsing-status"
+              className="notice-banner"
+              role="status"
+            >
+              Parsing and validating workbook…
+            </div>
+          ) : null}
           {importParseError ? <div className="form-error">{importParseError}</div> : null}
           {importValidation ? (
             <>
@@ -2479,14 +2934,19 @@ export function UserManagementCenter() {
               </label>
               <div className="form-actions">
                 <button
+                  type="button"
                   className="ghost-button"
                   onClick={resetImportFile}
                 >
                   Remove file
                 </button>
                 <button
+                  type="button"
                   className="primary-button"
                   disabled={
+                    !userImportFeatureEnabled ||
+                    importCompatibilityStatus !== "compatible" ||
+                    !isPatch83tUserImportCapabilityCompatible(importCapabilities) ||
                     !hasAuthorizedImportRole ||
                     saving ||
                     importValidation.invalidCount > 0 ||

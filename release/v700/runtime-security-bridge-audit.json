@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-07-12T23:01:42.371Z",
+  "generated_at": "2026-07-17T21:12:58.843Z",
   "db_container": "supabase_db_grc-control-center",
   "db_query_status": "passed_authoritative_live_schema_inventory",
   "db_query_error": null,
-  "frontend_rpc_total": 1,
-  "authenticated_edge_bridge_call_total": 83,
-  "unique_frontend_rpc_total": 1,
+  "frontend_rpc_total": 0,
+  "authenticated_edge_bridge_call_total": 85,
+  "unique_frontend_rpc_total": 0,
   "database_function_total": 388,
   "database_security_definer_functions": 388,
   "authoritative_live_public_security_definer_functions": 383,
@@ -384,11 +384,11 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1819
+          "line": 1823
         },
         {
           "file": "src/lib/userManagementApi.ts",
-          "line": 674
+          "line": 700
         }
       ],
       "current_security_mode": "security_definer",
@@ -412,11 +412,11 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1834
+          "line": 1838
         },
         {
           "file": "src/lib/userManagementApi.ts",
-          "line": 689
+          "line": 715
         }
       ],
       "current_security_mode": "security_definer",
@@ -440,7 +440,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2041
+          "line": 2014
         }
       ],
       "current_security_mode": "security_definer",
@@ -464,7 +464,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2068
+          "line": 2041
         }
       ],
       "current_security_mode": "security_definer",
@@ -631,27 +631,5 @@
       "remediation_status": "direct_browser_call_removed_or_guarded"
     }
   ],
-  "call_risks": [
-    {
-      "file": "src/lib/commandCenterApi.ts",
-      "line": 180,
-      "rpc": "search_grc_global",
-      "transport": "direct_browser_rpc",
-      "classification": "read_only_search",
-      "note": "Direct frontend RPC inventory; runtime authorization must be confirmed with DB grants and authenticated workflow tests.",
-      "schema": "public",
-      "function_signature": "public.search_grc_global(text, integer)",
-      "current_security_mode": "security_invoker",
-      "current_grant_status": {
-        "public": true,
-        "anon": true,
-        "authenticated": true,
-        "service_role": true
-      },
-      "runtime_grant_status": "verified_browser_safe_read_only",
-      "risk_level": "low",
-      "recommended_action": "browser_safe_after_review",
-      "recommendation": "Stable read-only SECURITY INVOKER search over the RLS-scoped global-search view."
-    }
-  ]
+  "call_risks": []
 }

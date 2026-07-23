@@ -10,7 +10,10 @@ export function formatDate(value: string | null | undefined) {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
+  const locale = typeof document !== 'undefined' && document.documentElement.lang === 'ar'
+    ? 'ar-SA'
+    : undefined;
+  return date.toLocaleDateString(locale, { year: 'numeric', month: 'short', day: '2-digit' });
 }
 
 export function ownerName(owner?: { full_name_en: string | null; full_name_ar: string | null } | null) {

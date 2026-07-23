@@ -1,0 +1,13 @@
+{
+  "schema_version":"gate12-deployment-artifact-verification-v1",
+  "baseline_sql_sha256":"6b1b0f814bf7d8414ace4303912f303f1a71a1e8913489db77a30ddd94c7846a",
+  "baseline_manifest_sha256":"052f81c85ce4de2e86a91ef21d13e7ea0071c2d97b8a09f2bbcf7b97505aedac",
+  "migration_hashes":{"178":"fecadb52184f9924a1bdb9daccf705df628fd761eab95f8ee70273e844b39ef8","179":"79a9d466f5f747a18574806e5bcb05c6931c725df795bb6d1635a184a4099633","180":"20c70be3138d1ccc65605a48e255c60c08c7ab24bd81727ff788f0496f821349","181":"7339da35ad00a1f23fe776fa7d0c4505812c93e597acbc9a0ce28705a886effb","182":"8dd8eaa3e6a6841069d84942e4c0d817f85e94a35541bf45b408a1eb21eb9588","183":"371b01b09406138a3620da700efeff0bcca95bb874a028740562e0eac4c8112c","184":"69523e1a0f19056d364c4fd6fb6271b9de275e713077b6038013cb8e3b808c6d","185":"780efe381ac90a5ae4d8cf256f95246966e9b42c91adcd9a6dc7a13030e0ec65"},
+  "future_migration":186,
+  "baseline_workdir_history":[185],
+  "legacy_lineage":"legacy_upgrade_lineage",
+  "empty_baseline_lineage":"baseline_v2_lineage",
+  "mixed_unknown_lineage_rejected":true,
+  "migration_repair_required":false,
+  "disposable_validation":"passed"
+}

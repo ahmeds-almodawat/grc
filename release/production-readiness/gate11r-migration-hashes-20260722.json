@@ -1,0 +1,16 @@
+{
+  "schema_version": "gate11r-migration-hashes-v1",
+  "captured_at": "2026-07-22T18:33:20.2444629Z",
+  "migration_ceiling": 185,
+  "migrations": [
+    {
+      "version": 185,
+      "path": "supabase/migrations/185_pilot_go_no_go_anonymous_policy_reconciliation.sql",
+      "sha256": "780efe381ac90a5ae4d8cf256f95246966e9b42c91adcd9a6dc7a13030e0ec65",
+      "bytes": 10419
+    }
+  ],
+  "migrations_001_184_verified_unchanged": true,
+  "staging_applied": false,
+  "production_accessed": false
+}

@@ -1,0 +1,47 @@
+{
+  "schema_version": "gate10-postflight-v1",
+  "captured_at": "2026-07-22T14:24:22.809920Z",
+  "staging_project_ref": "zghsgzrdwbqdrpuxanac",
+  "production_project_ref": "zbrjjecpsrzposhuarcn",
+  "production_access": "prohibited",
+  "transaction_read_only": true,
+  "explicit_rollback": true,
+  "migration_history": {
+    "183_count": 1,
+    "184_count": 1,
+    "latest_migration": 184,
+    "unexpected_above_184": 0
+  },
+  "runtime": {
+    "enforcement_state": "enforced",
+    "state_version": 5,
+    "catalog_attestation_overall_pass": true
+  },
+  "migration_183": {
+    "target_table_count": 9,
+    "rls_enabled_and_forced_count": 9,
+    "policy_count": 19,
+    "legacy_policy_count": 0,
+    "always_true_policy_count": 0,
+    "anon_table_privilege_count": 0,
+    "normalized_contract_match": true
+  },
+  "migration_184": {
+    "target_function_count": 39,
+    "safe_search_path_count": 39,
+    "mutable_search_path_count": 0,
+    "security_definer_count": 0,
+    "public_execute_count": 0,
+    "anon_execute_count": 0,
+    "normalized_contract_match": true
+  },
+  "normalized_catalog": {
+    "canonical_line_count": 77,
+    "mismatch_count": 0,
+    "catalog_sha256": "15984ffb01170702380a6c1e92c0636faffc47e0958367f64323acf0584c67bb"
+  },
+  "overall_pass": true,
+  "business_data_selected": false,
+  "auth_data_selected": false,
+  "hosted_mutation_after_migration_attempt": false
+}

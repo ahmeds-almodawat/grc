@@ -1,0 +1,11 @@
+{
+  "schema_version":"gate12-release-version-plan-v1",
+  "current_package_version":"1.0.0",
+  "proposed_version":"1.0.0-rc.1",
+  "proposed_branch":"release/grc-platform-1.0.0-rc.1",
+  "commit_message":"release: GRC Platform 1.0.0-rc.1 (baseline 185)",
+  "annotated_rc_tag":"v1.0.0-rc.1",
+  "later_production_tag":"v1.0.0",
+  "collision_detected":false,
+  "executed":false
+}

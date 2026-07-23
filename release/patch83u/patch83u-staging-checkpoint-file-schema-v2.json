@@ -1,0 +1,1265 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://almodawat.sa/schemas/patch83u-staging-sql-editor-checkpoint-file-v2.json",
+  "title": "Patch 83U staging SQL Editor checkpoint file — Run 006",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/beforeEmployeeSessionsCheckpoint"
+    },
+    {
+      "$ref": "#/$defs/immediatelyBeforeResetCheckpoint"
+    },
+    {
+      "$ref": "#/$defs/immediatelyAfterResetCheckpoint"
+    },
+    {
+      "$ref": "#/$defs/passwordChangeFinalizationCheckpoint"
+    },
+    {
+      "$ref": "#/$defs/beforeRequiredPasswordChangeCheckpoint"
+    },
+    {
+      "$ref": "#/$defs/freshLoginCheckpoint"
+    }
+  ],
+  "$defs": {
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "enforcement_state",
+        "state_version",
+        "edge_contract",
+        "frontend_contract",
+        "designated_super_admin_id",
+        "request_hash_function_available"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "174.2-auth-first"
+        },
+        "enforcement_state": {
+          "const": "enforced"
+        },
+        "state_version": {
+          "const": 5
+        },
+        "edge_contract": {
+          "const": "patch83u-edge-auth-first-v1"
+        },
+        "frontend_contract": {
+          "const": "patch83u-frontend-auth-first-v1"
+        },
+        "designated_super_admin_id": {
+          "const": "83d92a59-6909-44e7-80f3-aff60a6734fb"
+        },
+        "request_hash_function_available": {
+          "const": true
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "user_id",
+        "profile_state",
+        "profile_active",
+        "same_organization_as_designated_admin",
+        "credential_state",
+        "credential_version",
+        "auth_credential_version",
+        "requested_lifecycle",
+        "role",
+        "scope",
+        "active_role_count",
+        "pending_operation",
+        "pending_operation_count",
+        "session_count",
+        "unrevoked_refresh_token_count",
+        "updated_at"
+      ],
+      "properties": {
+        "user_id": {
+          "const": "2a276bdb-cf51-4303-846e-6b7fecf38b0c"
+        },
+        "profile_state": {
+          "const": "active"
+        },
+        "profile_active": {
+          "const": true
+        },
+        "same_organization_as_designated_admin": {
+          "type": "boolean"
+        },
+        "credential_state": {
+          "enum": [
+            "active",
+            "reset_in_progress",
+            "admin_reset_change_required",
+            "password_change_in_progress",
+            "session_revocation_review_required",
+            "recovery_required"
+          ]
+        },
+        "credential_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "auth_credential_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "requested_lifecycle": {
+          "const": "active"
+        },
+        "role": {
+          "const": "employee"
+        },
+        "scope": {
+          "const": "assigned_only"
+        },
+        "active_role_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pending_operation": {
+          "type": "boolean"
+        },
+        "pending_operation_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "session_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unrevoked_refresh_token_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "admin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "user_id",
+        "profile_state",
+        "profile_active",
+        "credential_state",
+        "credential_version",
+        "auth_credential_version",
+        "role",
+        "scope",
+        "active_role_count",
+        "pending_operation",
+        "pending_operation_count",
+        "updated_at"
+      ],
+      "properties": {
+        "user_id": {
+          "const": "83d92a59-6909-44e7-80f3-aff60a6734fb"
+        },
+        "profile_state": {
+          "const": "active"
+        },
+        "profile_active": {
+          "const": true
+        },
+        "credential_state": {
+          "const": "active"
+        },
+        "credential_version": {
+          "const": 1
+        },
+        "auth_credential_version": {
+          "const": 1
+        },
+        "role": {
+          "const": "super_admin"
+        },
+        "scope": {
+          "const": "global"
+        },
+        "active_role_count": {
+          "const": 1
+        },
+        "pending_operation": {
+          "const": false
+        },
+        "pending_operation_count": {
+          "const": 0
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "credential_event_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "latest_event_type": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 100
+        },
+        "latest_event_code": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[A-Z0-9_]{1,100}$"
+        },
+        "latest_event_credential_version": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "latest_event_request_id_hash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "latest_event_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "operation_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "latest_operation_type": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "password_change",
+            "admin_reset",
+            null
+          ]
+        },
+        "latest_operation_status": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 100
+        },
+        "latest_operation_current_version": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "latest_operation_next_version": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "latest_operation_resulting_state": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 100
+        },
+        "latest_operation_auth_changed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "latest_operation_revocation_confirmed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "latest_operation_request_id_hash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "latest_operation_completed_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "finalizer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "name_bytes",
+        "exists",
+        "routine_kind_function",
+        "destination_name_unique",
+        "old_or_truncated_name_absent",
+        "security_definer",
+        "restricted_search_path",
+        "service_role_execute_only"
+      ],
+      "properties": {
+        "name": {
+          "const": "patch83u_finalize_password_change_after_revocation"
+        },
+        "name_bytes": {
+          "const": 50
+        },
+        "exists": {
+          "type": "boolean"
+        },
+        "routine_kind_function": {
+          "type": "boolean"
+        },
+        "destination_name_unique": {
+          "type": "boolean"
+        },
+        "old_or_truncated_name_absent": {
+          "type": "boolean"
+        },
+        "security_definer": {
+          "type": "boolean"
+        },
+        "restricted_search_path": {
+          "type": "boolean"
+        },
+        "service_role_execute_only": {
+          "type": "boolean"
+        }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wrapper_exists",
+        "implementation_exists",
+        "standard_implementation_exists",
+        "wrapper_security_definer",
+        "wrapper_restricted_search_path",
+        "wrapper_service_role_execute_only",
+        "implementation_not_callable_by_service_role",
+        "standard_implementation_owner_only"
+      ],
+      "properties": {
+        "wrapper_exists": {
+          "type": "boolean"
+        },
+        "implementation_exists": {
+          "type": "boolean"
+        },
+        "standard_implementation_exists": {
+          "type": "boolean"
+        },
+        "wrapper_security_definer": {
+          "type": "boolean"
+        },
+        "wrapper_restricted_search_path": {
+          "type": "boolean"
+        },
+        "wrapper_service_role_execute_only": {
+          "type": "boolean"
+        },
+        "implementation_not_callable_by_service_role": {
+          "type": "boolean"
+        },
+        "standard_implementation_owner_only": {
+          "type": "boolean"
+        }
+      }
+    },
+    "targetBeforeEmployeeSessions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "user_id",
+        "profile_state",
+        "profile_active",
+        "same_organization_as_designated_admin",
+        "credential_state",
+        "credential_version",
+        "auth_credential_version",
+        "requested_lifecycle",
+        "role",
+        "scope",
+        "active_role_count",
+        "pending_operation",
+        "pending_operation_count",
+        "session_count",
+        "unrevoked_refresh_token_count",
+        "updated_at"
+      ],
+      "properties": {
+        "user_id": {
+          "const": "2a276bdb-cf51-4303-846e-6b7fecf38b0c"
+        },
+        "profile_state": {
+          "const": "active"
+        },
+        "profile_active": {
+          "const": true
+        },
+        "same_organization_as_designated_admin": {
+          "const": true
+        },
+        "credential_state": {
+          "const": "active"
+        },
+        "credential_version": {
+          "const": 2
+        },
+        "auth_credential_version": {
+          "const": 2
+        },
+        "requested_lifecycle": {
+          "const": "active"
+        },
+        "role": {
+          "const": "employee"
+        },
+        "scope": {
+          "const": "assigned_only"
+        },
+        "active_role_count": {
+          "const": 1
+        },
+        "pending_operation": {
+          "const": false
+        },
+        "pending_operation_count": {
+          "const": 0
+        },
+        "session_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unrevoked_refresh_token_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "targetImmediatelyBeforeReset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "user_id",
+        "profile_state",
+        "profile_active",
+        "same_organization_as_designated_admin",
+        "credential_state",
+        "credential_version",
+        "auth_credential_version",
+        "requested_lifecycle",
+        "role",
+        "scope",
+        "active_role_count",
+        "pending_operation",
+        "pending_operation_count",
+        "session_count",
+        "unrevoked_refresh_token_count",
+        "updated_at"
+      ],
+      "properties": {
+        "user_id": {
+          "const": "2a276bdb-cf51-4303-846e-6b7fecf38b0c"
+        },
+        "profile_state": {
+          "const": "active"
+        },
+        "profile_active": {
+          "const": true
+        },
+        "same_organization_as_designated_admin": {
+          "const": true
+        },
+        "credential_state": {
+          "const": "active"
+        },
+        "credential_version": {
+          "const": 2
+        },
+        "auth_credential_version": {
+          "const": 2
+        },
+        "requested_lifecycle": {
+          "const": "active"
+        },
+        "role": {
+          "const": "employee"
+        },
+        "scope": {
+          "const": "assigned_only"
+        },
+        "active_role_count": {
+          "const": 1
+        },
+        "pending_operation": {
+          "const": false
+        },
+        "pending_operation_count": {
+          "const": 0
+        },
+        "session_count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "unrevoked_refresh_token_count": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "targetImmediatelyAfterReset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "user_id",
+        "profile_state",
+        "profile_active",
+        "same_organization_as_designated_admin",
+        "credential_state",
+        "credential_version",
+        "auth_credential_version",
+        "requested_lifecycle",
+        "role",
+        "scope",
+        "active_role_count",
+        "pending_operation",
+        "pending_operation_count",
+        "session_count",
+        "unrevoked_refresh_token_count",
+        "reconciliation_auth_changed",
+        "updated_at"
+      ],
+      "properties": {
+        "user_id": {
+          "const": "2a276bdb-cf51-4303-846e-6b7fecf38b0c"
+        },
+        "profile_state": {
+          "const": "active"
+        },
+        "profile_active": {
+          "const": true
+        },
+        "same_organization_as_designated_admin": {
+          "const": true
+        },
+        "credential_state": {
+          "enum": [
+            "active",
+            "reset_in_progress",
+            "admin_reset_change_required",
+            "session_revocation_review_required",
+            "recovery_required"
+          ]
+        },
+        "credential_version": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "auth_credential_version": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "requested_lifecycle": {
+          "const": "active"
+        },
+        "role": {
+          "const": "employee"
+        },
+        "scope": {
+          "const": "assigned_only"
+        },
+        "active_role_count": {
+          "const": 1
+        },
+        "pending_operation": {
+          "type": "boolean"
+        },
+        "pending_operation_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "session_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unrevoked_refresh_token_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reconciliation_auth_changed": {
+          "type": "boolean"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "targetBeforeRequiredPasswordChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "user_id",
+        "profile_state",
+        "profile_active",
+        "same_organization_as_designated_admin",
+        "credential_state",
+        "credential_version",
+        "auth_credential_version",
+        "requested_lifecycle",
+        "role",
+        "scope",
+        "active_role_count",
+        "pending_operation",
+        "pending_operation_count",
+        "session_count",
+        "unrevoked_refresh_token_count",
+        "updated_at"
+      ],
+      "properties": {
+        "user_id": {
+          "const": "2a276bdb-cf51-4303-846e-6b7fecf38b0c"
+        },
+        "profile_state": {
+          "const": "active"
+        },
+        "profile_active": {
+          "const": true
+        },
+        "same_organization_as_designated_admin": {
+          "const": true
+        },
+        "credential_state": {
+          "const": "admin_reset_change_required"
+        },
+        "credential_version": {
+          "const": 3
+        },
+        "auth_credential_version": {
+          "const": 3
+        },
+        "requested_lifecycle": {
+          "const": "active"
+        },
+        "role": {
+          "const": "employee"
+        },
+        "scope": {
+          "const": "assigned_only"
+        },
+        "active_role_count": {
+          "const": 1
+        },
+        "pending_operation": {
+          "const": false
+        },
+        "pending_operation_count": {
+          "const": 0
+        },
+        "session_count": {
+          "const": 1
+        },
+        "unrevoked_refresh_token_count": {
+          "const": 1
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "targetAfterPasswordChangeFinalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "user_id",
+        "profile_state",
+        "profile_active",
+        "same_organization_as_designated_admin",
+        "credential_state",
+        "credential_version",
+        "auth_credential_version",
+        "requested_lifecycle",
+        "role",
+        "scope",
+        "active_role_count",
+        "pending_operation",
+        "pending_operation_count",
+        "session_count",
+        "unrevoked_refresh_token_count",
+        "updated_at",
+        "password_changed_at_set",
+        "sessions_revoked_at_set",
+        "reconciliation_auth_changed"
+      ],
+      "properties": {
+        "user_id": {
+          "const": "2a276bdb-cf51-4303-846e-6b7fecf38b0c"
+        },
+        "profile_state": {
+          "const": "active"
+        },
+        "profile_active": {
+          "type": "boolean"
+        },
+        "same_organization_as_designated_admin": {
+          "type": "boolean"
+        },
+        "credential_state": {
+          "const": "active"
+        },
+        "credential_version": {
+          "const": 4
+        },
+        "auth_credential_version": {
+          "const": 4
+        },
+        "requested_lifecycle": {
+          "const": "active"
+        },
+        "role": {
+          "const": "employee"
+        },
+        "scope": {
+          "const": "assigned_only"
+        },
+        "active_role_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pending_operation": {
+          "const": false
+        },
+        "pending_operation_count": {
+          "const": 0
+        },
+        "session_count": {
+          "const": 0
+        },
+        "unrevoked_refresh_token_count": {
+          "const": 0
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "password_changed_at_set": {
+          "const": true
+        },
+        "sessions_revoked_at_set": {
+          "const": true
+        },
+        "reconciliation_auth_changed": {
+          "const": false
+        }
+      }
+    },
+    "targetAfterFreshLogin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "user_id",
+        "profile_state",
+        "profile_active",
+        "same_organization_as_designated_admin",
+        "credential_state",
+        "credential_version",
+        "auth_credential_version",
+        "requested_lifecycle",
+        "role",
+        "scope",
+        "active_role_count",
+        "pending_operation",
+        "pending_operation_count",
+        "session_count",
+        "unrevoked_refresh_token_count",
+        "updated_at"
+      ],
+      "properties": {
+        "user_id": {
+          "const": "2a276bdb-cf51-4303-846e-6b7fecf38b0c"
+        },
+        "profile_state": {
+          "const": "active"
+        },
+        "profile_active": {
+          "type": "boolean"
+        },
+        "same_organization_as_designated_admin": {
+          "type": "boolean"
+        },
+        "credential_state": {
+          "const": "active"
+        },
+        "credential_version": {
+          "const": 4
+        },
+        "auth_credential_version": {
+          "const": 4
+        },
+        "requested_lifecycle": {
+          "const": "active"
+        },
+        "role": {
+          "const": "employee"
+        },
+        "scope": {
+          "const": "assigned_only"
+        },
+        "active_role_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pending_operation": {
+          "const": false
+        },
+        "pending_operation_count": {
+          "const": 0
+        },
+        "session_count": {
+          "const": 1
+        },
+        "unrevoked_refresh_token_count": {
+          "const": 1
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "beforeEmployeeSessionsCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checkpoint",
+        "expected_project_ref",
+        "operator_project_confirmation_required",
+        "transaction_read_only",
+        "captured_at",
+        "runtime",
+        "target",
+        "admin",
+        "audit",
+        "eligible_super_admin_count",
+        "applied_migrations",
+        "finalizer",
+        "recovery"
+      ],
+      "properties": {
+        "checkpoint": {
+          "const": "before_employee_sessions"
+        },
+        "expected_project_ref": {
+          "const": "zghsgzrdwbqdrpuxanac"
+        },
+        "operator_project_confirmation_required": {
+          "const": true
+        },
+        "transaction_read_only": {
+          "const": true
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime"
+        },
+        "target": {
+          "$ref": "#/$defs/targetBeforeEmployeeSessions"
+        },
+        "admin": {
+          "$ref": "#/$defs/admin"
+        },
+        "audit": {
+          "$ref": "#/$defs/audit"
+        },
+        "eligible_super_admin_count": {
+          "const": 1
+        },
+        "applied_migrations": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "enum": [
+              "174",
+              "176",
+              "177"
+            ]
+          }
+        },
+        "finalizer": {
+          "$ref": "#/$defs/finalizer"
+        },
+        "recovery": {
+          "$ref": "#/$defs/recovery"
+        }
+      }
+    },
+    "immediatelyBeforeResetCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checkpoint",
+        "expected_project_ref",
+        "operator_project_confirmation_required",
+        "transaction_read_only",
+        "captured_at",
+        "runtime",
+        "target",
+        "admin",
+        "audit",
+        "eligible_super_admin_count",
+        "applied_migrations",
+        "finalizer",
+        "recovery"
+      ],
+      "properties": {
+        "checkpoint": {
+          "const": "immediately_before_reset"
+        },
+        "expected_project_ref": {
+          "const": "zghsgzrdwbqdrpuxanac"
+        },
+        "operator_project_confirmation_required": {
+          "const": true
+        },
+        "transaction_read_only": {
+          "const": true
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime"
+        },
+        "target": {
+          "$ref": "#/$defs/targetImmediatelyBeforeReset"
+        },
+        "admin": {
+          "$ref": "#/$defs/admin"
+        },
+        "audit": {
+          "$ref": "#/$defs/audit"
+        },
+        "eligible_super_admin_count": {
+          "const": 1
+        },
+        "applied_migrations": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "enum": [
+              "174",
+              "176",
+              "177"
+            ]
+          }
+        },
+        "finalizer": {
+          "$ref": "#/$defs/finalizer"
+        },
+        "recovery": {
+          "$ref": "#/$defs/recovery"
+        }
+      }
+    },
+    "immediatelyAfterResetCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checkpoint",
+        "expected_project_ref",
+        "operator_project_confirmation_required",
+        "transaction_read_only",
+        "captured_at",
+        "runtime",
+        "target",
+        "admin",
+        "audit",
+        "eligible_super_admin_count"
+      ],
+      "properties": {
+        "checkpoint": {
+          "const": "immediately_after_reset"
+        },
+        "expected_project_ref": {
+          "const": "zghsgzrdwbqdrpuxanac"
+        },
+        "operator_project_confirmation_required": {
+          "const": true
+        },
+        "transaction_read_only": {
+          "const": true
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime"
+        },
+        "target": {
+          "$ref": "#/$defs/targetImmediatelyAfterReset"
+        },
+        "admin": {
+          "$ref": "#/$defs/admin"
+        },
+        "audit": {
+          "$ref": "#/$defs/audit"
+        },
+        "eligible_super_admin_count": {
+          "const": 1
+        },
+        "applied_migrations": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "enum": [
+              "174",
+              "176",
+              "177"
+            ]
+          }
+        },
+        "finalizer": {
+          "$ref": "#/$defs/finalizer"
+        },
+        "recovery": {
+          "$ref": "#/$defs/recovery"
+        }
+      }
+    },
+    "beforeRequiredPasswordChangeCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checkpoint",
+        "expected_project_ref",
+        "operator_project_confirmation_required",
+        "transaction_read_only",
+        "captured_at",
+        "runtime",
+        "target",
+        "admin",
+        "audit",
+        "eligible_super_admin_count"
+      ],
+      "properties": {
+        "checkpoint": {
+          "const": "before_required_password_change"
+        },
+        "expected_project_ref": {
+          "const": "zghsgzrdwbqdrpuxanac"
+        },
+        "operator_project_confirmation_required": {
+          "const": true
+        },
+        "transaction_read_only": {
+          "const": true
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime"
+        },
+        "target": {
+          "$ref": "#/$defs/targetBeforeRequiredPasswordChange"
+        },
+        "admin": {
+          "$ref": "#/$defs/admin"
+        },
+        "audit": {
+          "$ref": "#/$defs/audit"
+        },
+        "eligible_super_admin_count": {
+          "const": 1
+        }
+      }
+    },
+    "passwordChangeFinalizationCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checkpoint",
+        "expected_project_ref",
+        "operator_project_confirmation_required",
+        "transaction_read_only",
+        "captured_at",
+        "runtime",
+        "target",
+        "admin",
+        "audit",
+        "eligible_super_admin_count"
+      ],
+      "properties": {
+        "checkpoint": {
+          "const": "immediately_after_password_change_finalization"
+        },
+        "expected_project_ref": {
+          "const": "zghsgzrdwbqdrpuxanac"
+        },
+        "operator_project_confirmation_required": {
+          "const": true
+        },
+        "transaction_read_only": {
+          "const": true
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime"
+        },
+        "target": {
+          "$ref": "#/$defs/targetAfterPasswordChangeFinalization"
+        },
+        "admin": {
+          "$ref": "#/$defs/admin"
+        },
+        "audit": {
+          "$ref": "#/$defs/audit"
+        },
+        "eligible_super_admin_count": {
+          "const": 1
+        },
+        "applied_migrations": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "enum": [
+              "174",
+              "176",
+              "177"
+            ]
+          }
+        },
+        "finalizer": {
+          "$ref": "#/$defs/finalizer"
+        },
+        "recovery": {
+          "$ref": "#/$defs/recovery"
+        }
+      }
+    },
+    "freshLoginCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checkpoint",
+        "expected_project_ref",
+        "operator_project_confirmation_required",
+        "transaction_read_only",
+        "captured_at",
+        "runtime",
+        "target",
+        "admin",
+        "audit",
+        "eligible_super_admin_count"
+      ],
+      "properties": {
+        "checkpoint": {
+          "const": "after_fresh_employee_login"
+        },
+        "expected_project_ref": {
+          "const": "zghsgzrdwbqdrpuxanac"
+        },
+        "operator_project_confirmation_required": {
+          "const": true
+        },
+        "transaction_read_only": {
+          "const": true
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime"
+        },
+        "target": {
+          "$ref": "#/$defs/targetAfterFreshLogin"
+        },
+        "admin": {
+          "$ref": "#/$defs/admin"
+        },
+        "audit": {
+          "$ref": "#/$defs/audit"
+        },
+        "eligible_super_admin_count": {
+          "const": 1
+        },
+        "applied_migrations": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "enum": [
+              "174",
+              "176",
+              "177"
+            ]
+          }
+        },
+        "finalizer": {
+          "$ref": "#/$defs/finalizer"
+        },
+        "recovery": {
+          "$ref": "#/$defs/recovery"
+        }
+      }
+    }
+  }
+}

@@ -15,6 +15,71 @@ coverage/
 .env
 .env.*.local
 
+# Patch 83U operator-produced SQL Editor checkpoint handoff files.
+# The fixed Run 003 namespace is validated and hash-bound by the harness.
+/release/patch83u/reset-proof-run-003/checkpoints/01-before-employee-sessions.json
+/release/patch83u/reset-proof-run-003/checkpoints/02-immediately-before-reset.json
+/release/patch83u/reset-proof-run-003/checkpoints/03-immediately-after-reset.json
+/release/patch83u/reset-proof-run-003/checkpoints/04-before-required-password-change.json
+/release/patch83u/reset-proof-run-003/checkpoints/05-immediately-after-password-change-finalization.json
+/release/patch83u/reset-proof-run-003/checkpoints/06-after-fresh-employee-login.json
+
+# Patch 83U Run 004 operator-produced SQL Editor checkpoint handoff files.
+# Keep these six paths exact; broad checkpoint wildcards are intentionally forbidden.
+/release/patch83u/reset-proof-run-004/checkpoints/01-before-employee-sessions.json
+/release/patch83u/reset-proof-run-004/checkpoints/02-immediately-before-reset.json
+/release/patch83u/reset-proof-run-004/checkpoints/03-immediately-after-reset.json
+/release/patch83u/reset-proof-run-004/checkpoints/04-before-required-password-change.json
+/release/patch83u/reset-proof-run-004/checkpoints/05-immediately-after-password-change-finalization.json
+/release/patch83u/reset-proof-run-004/checkpoints/06-after-fresh-employee-login.json
+
+# Patch 83U Run 005 operator-produced SQL Editor checkpoint handoff files.
+# Keep these six paths exact; broad checkpoint wildcards are intentionally forbidden.
+/release/patch83u/reset-proof-run-005/checkpoints/01-before-employee-sessions.json
+/release/patch83u/reset-proof-run-005/checkpoints/02-immediately-before-reset.json
+/release/patch83u/reset-proof-run-005/checkpoints/03-immediately-after-reset.json
+/release/patch83u/reset-proof-run-005/checkpoints/04-before-required-password-change.json
+/release/patch83u/reset-proof-run-005/checkpoints/05-immediately-after-password-change-finalization.json
+/release/patch83u/reset-proof-run-005/checkpoints/06-after-fresh-employee-login.json
+
+# Patch 83U Run 006 operator-produced SQL Editor checkpoint handoff files.
+# Keep these six paths exact; broad checkpoint wildcards are intentionally forbidden.
+/release/patch83u/reset-proof-run-006/checkpoints/01-before-employee-sessions.json
+/release/patch83u/reset-proof-run-006/checkpoints/02-immediately-before-reset.json
+/release/patch83u/reset-proof-run-006/checkpoints/03-immediately-after-reset.json
+/release/patch83u/reset-proof-run-006/checkpoints/04-before-required-password-change.json
+/release/patch83u/reset-proof-run-006/checkpoints/05-immediately-after-password-change-finalization.json
+/release/patch83u/reset-proof-run-006/checkpoints/06-after-fresh-employee-login.json
+
+# Patch 83U Run 007 operator-produced SQL Editor checkpoint handoff files.
+# Keep these six paths exact; broad checkpoint wildcards are intentionally forbidden.
+/release/patch83u/reset-proof-run-007/checkpoints/01-before-employee-sessions.json
+/release/patch83u/reset-proof-run-007/checkpoints/02-immediately-before-reset.json
+/release/patch83u/reset-proof-run-007/checkpoints/03-immediately-after-reset.json
+/release/patch83u/reset-proof-run-007/checkpoints/04-before-required-password-change.json
+/release/patch83u/reset-proof-run-007/checkpoints/05-immediately-after-password-change-finalization.json
+/release/patch83u/reset-proof-run-007/checkpoints/06-after-fresh-employee-login.json
+
+# Patch 83U Run 008 operator-produced SQL Editor checkpoint handoff files.
+# Keep these six paths exact; broad checkpoint wildcards are intentionally forbidden.
+/release/patch83u/reset-proof-run-008/checkpoints/01-before-employee-sessions.json
+/release/patch83u/reset-proof-run-008/checkpoints/02-immediately-before-reset.json
+/release/patch83u/reset-proof-run-008/checkpoints/03-immediately-after-reset.json
+/release/patch83u/reset-proof-run-008/checkpoints/04-before-required-password-change.json
+/release/patch83u/reset-proof-run-008/checkpoints/05-immediately-after-password-change-finalization.json
+/release/patch83u/reset-proof-run-008/checkpoints/06-after-fresh-employee-login.json
+/release/patch83u/reset-proof-run-008/patch83u-staging-reset-final-results-attempt-001.json
+
+# Patch 83U Run 009 operator-produced SQL Editor checkpoint handoff files.
+# Keep these six paths exact; broad checkpoint wildcards are intentionally forbidden.
+/release/patch83u/reset-proof-run-009/checkpoints/01-before-employee-sessions.json
+/release/patch83u/reset-proof-run-009/checkpoints/02-immediately-before-reset.json
+/release/patch83u/reset-proof-run-009/checkpoints/03-immediately-after-reset.json
+/release/patch83u/reset-proof-run-009/checkpoints/04-before-required-password-change.json
+/release/patch83u/reset-proof-run-009/checkpoints/05-immediately-after-password-change-finalization.json
+/release/patch83u/reset-proof-run-009/checkpoints/06-after-fresh-employee-login.json
+/release/patch83u/reset-proof-run-009/patch83u-staging-reset-final-results-attempt-001.json
+
 # temporary logs
 .codex-*.log
 *.tmp

@@ -1,0 +1,13 @@
+{
+  "schema_version": "gate11r-playwright-geometry-resolution-v1",
+  "captured_at": "2026-07-22T19:57:26.6547335Z",
+  "test_file": "tests/e2e/patch83u-credential-provisioning.spec.ts",
+  "root_cause": "stale_scroller_geometry_combined_with_subpixel_rounding_after_rtl_viewport_resize",
+  "correction": "wait_for_fonts_and_animation_frames_then_recapture_scroller_geometry_and_use_one_physical_pixel_tolerance",
+  "product_source_changed": false,
+  "security_or_authorization_changed": false,
+  "isolated_geometry_test": "passed_1_of_1",
+  "patch83u_serial_suite": "passed_25_of_25",
+  "trace_har_video_storage_state": "disabled_by_existing_test_configuration",
+  "overall_pass": true
+}

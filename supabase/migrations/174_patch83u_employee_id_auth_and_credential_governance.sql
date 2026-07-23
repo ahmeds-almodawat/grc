@@ -12,9 +12,97 @@ begin;
 -- Protected credential state and append-only evidence
 -- ---------------------------------------------------------------------------
 
+create table if not exists public.patch83u_runtime_control (
+  singleton boolean primary key default true check (singleton),
+  schema_version text not null default '174.2-auth-first'
+    check (schema_version = '174.2-auth-first'),
+  enforcement_state text not null default 'disabled' check (enforcement_state in (
+    'disabled', 'prepared', 'enforced', 'emergency_suspended'
+  )),
+  prepared_at timestamptz,
+  prepared_by uuid references public.profiles(id) on delete restrict,
+  activated_at timestamptz,
+  activated_by uuid references public.profiles(id) on delete restrict,
+  deactivated_at timestamptz,
+  deactivated_by uuid references public.profiles(id) on delete restrict,
+  activation_reason text,
+  last_transition_reason text,
+  expected_edge_contract_version text not null default 'patch83u-edge-auth-first-v1'
+    check (expected_edge_contract_version = 'patch83u-edge-auth-first-v1'),
+  expected_frontend_contract_version text not null default 'patch83u-frontend-auth-first-v1'
+    check (expected_frontend_contract_version = 'patch83u-frontend-auth-first-v1'),
+  compatible_edge_contract_version text,
+  compatible_frontend_contract_version text,
+  compatibility_attested_at timestamptz,
+  compatibility_attested_by uuid references public.profiles(id) on delete restrict,
+  preflight_hash text check (
+    preflight_hash is null or preflight_hash ~ '^[0-9a-f]{64}$'
+  ),
+  designated_super_admin_id uuid references public.profiles(id) on delete restrict,
+  last_transition_request_id text,
+  state_version integer not null default 0 check (state_version >= 0),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint patch83u_runtime_prepared_contract check (
+    enforcement_state = 'disabled'
+    or (
+      preflight_hash is not null
+      and designated_super_admin_id is not null
+      and prepared_at is not null
+      and prepared_by is not null
+    )
+  ),
+  constraint patch83u_runtime_enforced_contract check (
+    enforcement_state <> 'enforced'
+    or (
+      activated_at is not null
+      and activated_by is not null
+      and compatibility_attested_at is not null
+      and compatibility_attested_by = designated_super_admin_id
+      and compatible_edge_contract_version = expected_edge_contract_version
+      and compatible_frontend_contract_version = expected_frontend_contract_version
+    )
+  )
+);
+
+insert into public.patch83u_runtime_control (singleton, enforcement_state)
+values (true, 'disabled')
+on conflict (singleton) do nothing;
+
+create table if not exists public.patch83u_runtime_events (
+  id uuid primary key default gen_random_uuid(),
+  actor_id uuid not null references public.profiles(id) on delete restrict,
+  designated_super_admin_id uuid references public.profiles(id) on delete restrict,
+  event_type text not null check (event_type in (
+    'prepared', 'compatibility_attested', 'enforced', 'disabled',
+    'emergency_suspended'
+  )),
+  previous_state text not null check (previous_state in (
+    'disabled', 'prepared', 'enforced', 'emergency_suspended'
+  )),
+  resulting_state text not null check (resulting_state in (
+    'disabled', 'prepared', 'enforced', 'emergency_suspended'
+  )),
+  request_id text not null unique check (
+    length(request_id) between 1 and 128
+    and request_id ~ '^[A-Za-z0-9._:-]+$'
+  ),
+  confirmation_code text not null check (
+    length(confirmation_code) between 1 and 96
+    and confirmation_code ~ '^[A-Z0-9_]+$'
+  ),
+  reason text not null check (length(btrim(reason)) between 1 and 500),
+  schema_version text not null,
+  edge_contract_version text not null,
+  frontend_contract_version text not null,
+  preflight_hash text,
+  details jsonb not null default '{}'::jsonb check (jsonb_typeof(details) = 'object'),
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.user_credential_states (
-  user_id uuid primary key references public.profiles(id) on delete cascade,
-  organization_id uuid not null references public.organizations(id) on delete cascade,
+  user_id uuid primary key references public.profiles(id) on delete restrict,
+  organization_id uuid not null references public.organizations(id) on delete restrict,
   provisioning_id uuid unique references public.user_account_provisioning(id) on delete set null,
   auth_email text not null,
   identity_mode text not null default 'unverified' check (identity_mode in (
@@ -22,6 +110,8 @@ create table if not exists public.user_credential_states (
   )),
   credential_state text not null default 'active' check (credential_state in (
     'active',
+    'existing_password_rotation_pending',
+    'existing_password_change_required',
     'initial_change_required',
     'admin_reset_change_required',
     'reactivation_change_required',
@@ -29,7 +119,8 @@ create table if not exists public.user_credential_states (
     'reset_in_progress',
     'disabled',
     'recovery_required',
-    'reconciliation_required'
+    'reconciliation_required',
+    'session_revocation_review_required'
   )),
   requested_lifecycle text not null default 'active' check (requested_lifecycle in (
     'active', 'inactive', 'archived', 'invited', 'locked'
@@ -49,12 +140,15 @@ create table if not exists public.user_credential_states (
   ),
   operation_previous_state text check (operation_previous_state is null or operation_previous_state in (
     'active',
+    'existing_password_rotation_pending',
+    'existing_password_change_required',
     'initial_change_required',
     'admin_reset_change_required',
     'reactivation_change_required',
     'disabled',
     'recovery_required',
-    'reconciliation_required'
+    'reconciliation_required',
+    'session_revocation_review_required'
   )),
   operation_previous_lifecycle text check (operation_previous_lifecycle is null or operation_previous_lifecycle in (
     'active', 'inactive', 'archived', 'invited', 'locked'
@@ -85,13 +179,22 @@ create table if not exists public.user_credential_states (
       and pending_operation_id is null
       and pending_credential_version is null
       and pending_session_id is null
-      and (credential_state in ('recovery_required', 'reconciliation_required') or operation_source is null)
+      and (
+        credential_state in (
+          'recovery_required', 'reconciliation_required',
+          'session_revocation_review_required'
+        )
+        or operation_source is null
+      )
     )
   ),
   constraint patch83u_reconciliation_source_consistent check (
     reconciliation_auth_changed = false
     or (
-      credential_state in ('recovery_required', 'reconciliation_required')
+      credential_state in (
+        'recovery_required', 'reconciliation_required',
+        'session_revocation_review_required'
+      )
       and operation_source is not null
     )
   )
@@ -105,7 +208,7 @@ on public.user_credential_states (organization_id, credential_state, updated_at 
 
 create table if not exists public.user_credential_events (
   id uuid primary key default gen_random_uuid(),
-  organization_id uuid not null references public.organizations(id) on delete cascade,
+  organization_id uuid not null references public.organizations(id) on delete restrict,
   user_id uuid references public.profiles(id) on delete set null,
   provisioning_id uuid references public.user_account_provisioning(id) on delete set null,
   actor_id uuid references public.profiles(id) on delete set null,
@@ -120,12 +223,15 @@ create table if not exists public.user_credential_events (
     'password_change_started',
     'password_change_completed',
     'password_change_aborted',
+    'existing_password_rotation_scheduled',
+    'existing_password_rotation_required',
     'admin_reset_started',
     'admin_reset_completed',
     'admin_reset_aborted',
     'roles_suspended',
     'roles_restored',
     'sessions_revoked',
+    'session_revocation_review_required',
     'credential_disabled',
     'credential_reactivation_required',
     'credential_reconciled'
@@ -156,8 +262,8 @@ on public.user_credential_events (provisioning_id, created_at desc);
 create table if not exists public.user_credential_suspended_roles (
   id uuid primary key default gen_random_uuid(),
   suspension_id uuid not null,
-  organization_id uuid not null references public.organizations(id) on delete cascade,
-  user_id uuid not null references public.profiles(id) on delete cascade,
+  organization_id uuid not null references public.organizations(id) on delete restrict,
+  user_id uuid not null references public.profiles(id) on delete restrict,
   source_user_role_id uuid references public.user_roles(id) on delete set null,
   role public.app_role not null,
   scope public.access_scope not null,
@@ -189,6 +295,34 @@ create table if not exists public.user_credential_suspended_roles (
   )
 );
 
+create table if not exists public.patch83u_credential_operations (
+  operation_id uuid primary key default gen_random_uuid(),
+  operation_type text not null check (operation_type in ('password_change', 'admin_reset')),
+  organization_id uuid not null references public.organizations(id) on delete restrict,
+  actor_id uuid not null references public.profiles(id) on delete restrict,
+  target_user_id uuid not null references public.profiles(id) on delete restrict,
+  request_id text not null check (
+    length(request_id) between 1 and 128
+    and request_id ~ '^[A-Za-z0-9._:-]+$'
+  ),
+  operation_status text not null default 'prepared' check (operation_status in (
+    'prepared', 'in_progress', 'auth_changed', 'completed', 'aborted',
+    'recovery_required', 'session_revocation_review_required'
+  )),
+  current_credential_version integer not null check (current_credential_version >= 0),
+  next_credential_version integer not null check (
+    next_credential_version = current_credential_version + 1
+  ),
+  resulting_credential_state text,
+  auth_changed boolean not null default false,
+  session_revocation_confirmed boolean not null default false,
+  safe_result jsonb check (safe_result is null or jsonb_typeof(safe_result) = 'object'),
+  completed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (operation_type, actor_id, target_user_id, request_id)
+);
+
 create index if not exists idx_patch83u_suspended_roles_operation
 on public.user_credential_suspended_roles (suspension_id, suspension_status, id);
 
@@ -201,13 +335,29 @@ alter table public.user_credential_events enable row level security;
 alter table public.user_credential_events force row level security;
 alter table public.user_credential_suspended_roles enable row level security;
 alter table public.user_credential_suspended_roles force row level security;
+alter table public.patch83u_runtime_control enable row level security;
+alter table public.patch83u_runtime_control force row level security;
+alter table public.patch83u_runtime_events enable row level security;
+alter table public.patch83u_runtime_events force row level security;
+alter table public.patch83u_credential_operations enable row level security;
+alter table public.patch83u_credential_operations force row level security;
 
 revoke all on table public.user_credential_states from public, anon, authenticated;
 revoke all on table public.user_credential_events from public, anon, authenticated;
 revoke all on table public.user_credential_suspended_roles from public, anon, authenticated;
-grant select, insert, update on table public.user_credential_states to service_role;
-grant select, insert on table public.user_credential_events to service_role;
-grant select, insert, update on table public.user_credential_suspended_roles to service_role;
+revoke all on table public.patch83u_runtime_control from public, anon, authenticated;
+revoke all on table public.patch83u_runtime_events from public, anon, authenticated;
+revoke all on table public.patch83u_credential_operations from public, anon, authenticated;
+revoke all on table public.user_credential_states from service_role;
+revoke all on table public.user_credential_events from service_role;
+revoke all on table public.user_credential_suspended_roles from service_role;
+grant select on table public.user_credential_states to service_role;
+revoke all on table public.patch83u_runtime_control from service_role;
+revoke all on table public.patch83u_runtime_events from service_role;
+revoke all on table public.patch83u_credential_operations from service_role;
+grant select on table public.patch83u_runtime_control to service_role;
+grant select on table public.patch83u_runtime_events to service_role;
+grant select on table public.patch83u_credential_operations to service_role;
 
 comment on table public.user_credential_states is
 'Patch 83U authoritative credential state. Contains no password, password digest, bearer value, refresh value, or session secret.';
@@ -218,7 +368,13 @@ comment on column public.user_credential_states.password_reset_at is
 comment on table public.user_credential_events is
 'Patch 83U append-only, non-secret credential and provisioning evidence.';
 comment on table public.user_credential_suspended_roles is
-'Patch 83U role snapshots held inactive during a controlled administrator reset and restored only after required password rotation.';
+'Protected historical role-suspension evidence retained for reconciliation compatibility. Patch 83U credential rotation/reset flows preserve live role rows and do not populate this table.';
+comment on table public.patch83u_runtime_control is
+'Patch 83U singleton deployment gate. Direct service-role mutation is revoked; audited exact-confirmation SECURITY DEFINER routines are the only runtime mutation path.';
+comment on table public.patch83u_runtime_events is
+'Patch 83U append-only non-secret runtime transition and compatibility-attestation evidence.';
+comment on table public.patch83u_credential_operations is
+'Patch 83U no-secret idempotency ledger for password changes and administrator resets. Direct service-role mutation is revoked.';
 
 -- ---------------------------------------------------------------------------
 -- Shared validators and guards
@@ -231,7 +387,7 @@ security definer
 set search_path = pg_catalog, public, pg_temp
 as $$
 begin
-  if auth.role() <> 'service_role' then
+  if auth.role() is distinct from 'service_role' then
     raise exception 'PATCH83U_SERVICE_ROLE_REQUIRED';
   end if;
 end;
@@ -271,6 +427,830 @@ begin
   exception when numeric_value_out_of_range then
     return null;
   end;
+end;
+$$;
+
+create or replace function public.patch83u_runtime_enforcement_state()
+returns text
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+  select rc.enforcement_state
+  from public.patch83u_runtime_control rc
+  where rc.singleton = true
+$$;
+
+create or replace function public.patch83u_require_enforced_runtime()
+returns void
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+begin
+  if public.patch83u_runtime_enforcement_state() is distinct from 'enforced' then
+    raise exception 'PATCH83U_RUNTIME_NOT_ENFORCED';
+  end if;
+end;
+$$;
+
+create or replace function public.patch83u_runtime_credential_state_allowed(
+  p_credential_state text,
+  p_identity_mode text
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+  select coalesce(case public.patch83u_runtime_enforcement_state()
+    when 'disabled' then true
+    when 'prepared' then true
+    when 'emergency_suspended' then
+      p_identity_mode = 'legacy_verified'
+      and p_credential_state <> 'disabled'
+    when 'enforced' then
+      p_credential_state = 'active'
+      and p_identity_mode in ('employee_id_managed', 'legacy_verified')
+    else false
+  end, false)
+$$;
+
+create or replace function public.patch83u_request_frontend_contract_compatible()
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+declare
+  v_headers jsonb;
+begin
+  begin
+    v_headers := nullif(current_setting('request.headers', true), '')::jsonb;
+  exception when others then
+    return false;
+  end;
+
+  return coalesce(v_headers ->> 'x-patch83u-frontend-contract-version', '')
+    = 'patch83u-frontend-auth-first-v1';
+end;
+$$;
+
+-- Define canonical role helpers before every SQL-language eligibility caller.
+-- With check_function_bodies enabled, forward references would make migration
+-- 174 fail before the later credential-governance objects can be created.
+create or replace function public.patch83u_role_scope_allowed(
+  p_role public.app_role,
+  p_scope public.access_scope
+)
+returns boolean
+language sql
+immutable
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+  select coalesce(case
+    when p_role in ('super_admin', 'executive', 'governance_admin', 'auditor', 'compliance_officer')
+      then p_scope = 'global'
+    when p_role = 'division_head'
+      then p_scope = 'division'
+    when p_role = 'department_manager'
+      then p_scope = 'department'
+    when p_role in ('project_owner', 'milestone_owner', 'task_owner', 'viewer', 'employee')
+      then p_scope = 'assigned_only'
+    else false
+  end, false);
+$$;
+
+create or replace function public.patch83u_role_assignment_valid(
+  p_organization_id uuid,
+  p_scope public.access_scope,
+  p_role_organization_id uuid,
+  p_division_id uuid,
+  p_department_id uuid,
+  p_unit_id uuid
+)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+begin
+  if p_organization_id is null or p_scope is null then
+    return false;
+  end if;
+
+  if p_scope = 'global' then
+    -- Preserve the canonical legacy global-role convention used by
+    -- patch83u_require_super_admin and Patch 83T: organization_id may be NULL
+    -- or the actor's exact organization, but hierarchy references stay empty.
+    return (p_role_organization_id is null or p_role_organization_id = p_organization_id)
+      and p_division_id is null
+      and p_department_id is null
+      and p_unit_id is null;
+  end if;
+
+  -- Every non-global scope remains strictly organization-bound.
+  if p_role_organization_id is distinct from p_organization_id then
+    return false;
+  end if;
+
+  if p_scope = 'division' then
+    return p_division_id is not null
+      and p_department_id is null
+      and p_unit_id is null
+      and exists (
+        select 1 from public.divisions d
+        where d.id = p_division_id
+          and d.organization_id = p_organization_id
+          and d.is_active = true
+      );
+  elsif p_scope = 'department' then
+    return p_department_id is not null
+      and p_unit_id is null
+      and exists (
+        select 1 from public.departments d
+        where d.id = p_department_id
+          and d.organization_id = p_organization_id
+          and d.is_active = true
+          and d.archived_at is null
+          and (p_division_id is null or d.division_id = p_division_id)
+      );
+  elsif p_scope = 'unit' then
+    return p_unit_id is not null
+      and p_department_id is not null
+      and exists (
+        select 1
+        from public.units u
+        join public.departments d on d.id = u.department_id
+        where u.id = p_unit_id
+          and u.organization_id = p_organization_id
+          and u.is_active = true
+          and d.id = p_department_id
+          and d.organization_id = p_organization_id
+          and d.is_active = true
+          and d.archived_at is null
+          and (p_division_id is null or d.division_id = p_division_id)
+      );
+  end if;
+
+  return p_scope = 'assigned_only'
+    and p_division_id is null
+    and p_department_id is null
+    and p_unit_id is null;
+end;
+$$;
+
+create or replace function public.patch83u_bootstrap_super_admin_eligible(
+  p_user_id uuid
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+  select exists (
+    select 1
+    from public.profiles p
+    join public.user_roles ur on ur.user_id = p.id
+    join public.user_credential_states cs on cs.user_id = p.id
+    join auth.users u on u.id = p.id
+    where p.id = p_user_id
+      and p.organization_id is not null
+      and p.is_active = true
+      and p.user_status = 'active'
+      and ur.is_active = true
+      and ur.role = 'super_admin'
+      and ur.scope = 'global'
+      and public.patch83u_role_assignment_valid(
+        p.organization_id, ur.scope, ur.organization_id,
+        ur.division_id, ur.department_id, ur.unit_id
+      )
+      and cs.organization_id = p.organization_id
+      and cs.identity_mode = 'legacy_verified'
+      and cs.credential_state in (
+        'active', 'existing_password_rotation_pending',
+        'existing_password_change_required', 'password_change_in_progress'
+      )
+      and nullif(btrim(u.email), '') is not null
+      and u.email_confirmed_at is not null
+      and u.deleted_at is null
+      and (u.banned_until is null or u.banned_until <= now())
+      and lower(btrim(u.email)) = cs.auth_email
+      and public.patch83u_auth_credential_version(u.raw_app_meta_data) = cs.credential_version
+      and 1 = (
+        select count(*) from auth.identities ai
+        where ai.user_id = u.id and ai.provider = 'email'
+      )
+      and exists (
+        select 1
+        from auth.identities ai
+        where ai.user_id = u.id
+          and ai.provider = 'email'
+          and lower(btrim(coalesce(ai.identity_data ->> 'email', ''))) = lower(btrim(u.email))
+      )
+  )
+$$;
+
+create or replace function public.patch83u_runtime_activation_blockers(
+  p_designated_super_admin_id uuid
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+declare
+  v_employee_id_collisions bigint;
+  v_synthetic_email_collisions bigint;
+  v_invalid_active_role_assignments bigint;
+  v_invalid_profile_lifecycle_rows bigint;
+  v_orgs_without_bootstrap bigint;
+  v_designated_eligible boolean;
+begin
+  perform public.patch83u_require_service_role();
+
+  select count(*)::bigint into v_employee_id_collisions
+  from (
+    select lower(btrim(p.employee_no))
+    from public.profiles p
+    where nullif(btrim(p.employee_no), '') is not null
+    group by lower(btrim(p.employee_no))
+    having count(*) > 1
+  ) collisions;
+
+  select count(*)::bigint into v_synthetic_email_collisions
+  from public.profiles p
+  join auth.users u
+    on lower(btrim(u.email)) = lower(btrim(p.employee_no)) || '@almodawat.sa'
+   and u.id <> p.id
+  where nullif(btrim(p.employee_no), '') is not null;
+
+  select count(*)::bigint into v_invalid_active_role_assignments
+  from public.user_roles ur
+  join public.profiles p on p.id = ur.user_id
+  where ur.is_active = true
+    and (
+      public.patch83u_role_scope_allowed(ur.role, ur.scope) is distinct from true
+      or public.patch83u_role_assignment_valid(
+        p.organization_id, ur.scope, ur.organization_id,
+        ur.division_id, ur.department_id, ur.unit_id
+      ) is distinct from true
+    );
+
+  select count(*)::bigint into v_invalid_profile_lifecycle_rows
+  from public.profiles p
+  where p.user_status not in ('active', 'inactive', 'archived', 'invited', 'locked')
+    or p.is_active is distinct from (p.user_status in ('active', 'invited'))
+    or (
+      p.user_status in ('active', 'invited')
+      and (
+        p.deactivated_at is not null
+        or p.deactivated_by is not null
+        or p.deactivation_reason is not null
+      )
+    )
+    or (
+      p.user_status in ('inactive', 'archived', 'locked')
+      and (
+        p.deactivated_at is null
+        or p.deactivated_by is null
+        or nullif(btrim(coalesce(p.deactivation_reason, '')), '') is null
+        or not exists (
+          select 1
+          from public.profiles deactivation_actor
+          where deactivation_actor.id = p.deactivated_by
+            and deactivation_actor.organization_id = p.organization_id
+        )
+      )
+    );
+
+  select count(*)::bigint into v_orgs_without_bootstrap
+  from public.organizations o
+  where not exists (
+    select 1
+    from public.profiles p
+    join public.user_roles ur on ur.user_id = p.id
+    join public.user_credential_states cs on cs.user_id = p.id
+    join auth.users u on u.id = p.id
+    where p.organization_id = o.id
+      and p.is_active = true
+      and p.user_status = 'active'
+      and ur.is_active = true
+      and ur.role = 'super_admin'
+      and ur.scope = 'global'
+      and public.patch83u_role_assignment_valid(
+        p.organization_id, ur.scope, ur.organization_id,
+        ur.division_id, ur.department_id, ur.unit_id
+      )
+      and cs.organization_id = p.organization_id
+      and cs.identity_mode = 'legacy_verified'
+      and cs.credential_state in (
+        'active', 'existing_password_rotation_pending',
+        'existing_password_change_required', 'password_change_in_progress'
+      )
+      and nullif(btrim(u.email), '') is not null
+      and u.email_confirmed_at is not null
+      and u.deleted_at is null
+      and (u.banned_until is null or u.banned_until <= now())
+      and lower(btrim(u.email)) = cs.auth_email
+      and public.patch83u_auth_credential_version(u.raw_app_meta_data) = cs.credential_version
+      and 1 = (
+        select count(*) from auth.identities ai
+        where ai.user_id = u.id and ai.provider = 'email'
+      )
+      and exists (
+        select 1 from auth.identities ai
+        where ai.user_id = u.id
+          and ai.provider = 'email'
+          and lower(btrim(coalesce(ai.identity_data ->> 'email', ''))) = lower(btrim(u.email))
+      )
+  );
+
+  v_designated_eligible := public.patch83u_bootstrap_super_admin_eligible(
+    p_designated_super_admin_id
+  );
+
+  return jsonb_build_object(
+    'blocking_count',
+      v_employee_id_collisions + v_synthetic_email_collisions
+      + v_invalid_active_role_assignments + v_invalid_profile_lifecycle_rows
+      + v_orgs_without_bootstrap
+      + case when v_designated_eligible then 0 else 1 end,
+    'employee_id_collision_groups', v_employee_id_collisions,
+    'synthetic_email_collisions', v_synthetic_email_collisions,
+    'invalid_active_role_assignments', v_invalid_active_role_assignments,
+    'invalid_profile_lifecycle_rows', v_invalid_profile_lifecycle_rows,
+    'organizations_without_eligible_bootstrap_super_admin', v_orgs_without_bootstrap,
+    'designated_super_admin_eligible', v_designated_eligible
+  );
+end;
+$$;
+
+create or replace function public.patch83u_break_glass_super_admin_eligible(
+  p_user_id uuid
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+  select exists (
+    select 1
+    from public.profiles p
+    join public.user_credential_states cs on cs.user_id = p.id
+    join public.user_roles ur on ur.user_id = p.id
+    join auth.users u on u.id = p.id
+    where p.id = p_user_id
+      and p.organization_id is not null
+      and p.is_active = true
+      and p.user_status = 'active'
+      and ur.is_active = true
+      and ur.role = 'super_admin'
+      and ur.scope = 'global'
+      and public.patch83u_role_assignment_valid(
+        p.organization_id, ur.scope, ur.organization_id,
+        ur.division_id, ur.department_id, ur.unit_id
+      )
+      and cs.organization_id = p.organization_id
+      and cs.identity_mode = 'legacy_verified'
+      and cs.credential_state <> 'disabled'
+      and nullif(btrim(u.email), '') is not null
+      and u.email_confirmed_at is not null
+      and u.deleted_at is null
+      and (u.banned_until is null or u.banned_until <= now())
+      and lower(btrim(u.email)) = cs.auth_email
+      and public.patch83u_auth_credential_version(u.raw_app_meta_data) = cs.credential_version
+      and 1 = (
+        select count(*) from auth.identities ai
+        where ai.user_id = u.id and ai.provider = 'email'
+      )
+      and exists (
+        select 1 from auth.identities ai
+        where ai.user_id = u.id
+          and ai.provider = 'email'
+          and lower(btrim(coalesce(ai.identity_data ->> 'email', '')))
+            = lower(btrim(u.email))
+      )
+  )
+$$;
+
+create or replace function public.patch83u_effective_super_admin_eligible(
+  p_user_id uuid,
+  p_organization_id uuid
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+  select exists (
+    select 1
+    from public.profiles p
+    join public.user_credential_states cs on cs.user_id = p.id
+    join public.user_roles ur on ur.user_id = p.id
+    join auth.users u on u.id = p.id
+    where p.id = p_user_id
+      and p.organization_id = p_organization_id
+      and p.is_active = true
+      and p.user_status = 'active'
+      and cs.organization_id = p.organization_id
+      and cs.credential_state = 'active'
+      and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
+      and ur.is_active = true
+      and ur.role = 'super_admin'
+      and ur.scope = 'global'
+      and public.patch83u_role_assignment_valid(
+        p.organization_id, ur.scope, ur.organization_id,
+        ur.division_id, ur.department_id, ur.unit_id
+      )
+      and nullif(btrim(u.email), '') is not null
+      and u.email_confirmed_at is not null
+      and u.deleted_at is null
+      and (u.banned_until is null or u.banned_until <= now())
+      and lower(btrim(u.email)) = cs.auth_email
+      and public.patch83u_auth_credential_version(u.raw_app_meta_data) = cs.credential_version
+      and 1 = (
+        select count(*) from auth.identities ai
+        where ai.user_id = u.id and ai.provider = 'email'
+      )
+      and 1 = (
+        select count(*) from auth.identities ai
+        where ai.user_id = u.id
+          and ai.provider = 'email'
+          and lower(btrim(coalesce(ai.identity_data ->> 'email', '')))
+            = lower(btrim(u.email))
+      )
+  )
+$$;
+
+create or replace function public.patch83u_runtime_super_admin_eligible(
+  p_user_id uuid,
+  p_organization_id uuid
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+  select case public.patch83u_runtime_enforcement_state()
+    when 'disabled' then
+      public.patch83u_bootstrap_super_admin_eligible(p_user_id)
+      and exists (
+        select 1 from public.profiles p
+        where p.id = p_user_id and p.organization_id = p_organization_id
+      )
+    when 'prepared' then
+      public.patch83u_bootstrap_super_admin_eligible(p_user_id)
+      and exists (
+        select 1 from public.profiles p
+        where p.id = p_user_id and p.organization_id = p_organization_id
+      )
+    when 'enforced' then
+      public.patch83u_effective_super_admin_eligible(p_user_id, p_organization_id)
+    when 'emergency_suspended' then
+      public.patch83u_break_glass_super_admin_eligible(p_user_id)
+      and exists (
+        select 1 from public.profiles p
+        where p.id = p_user_id and p.organization_id = p_organization_id
+      )
+    else false
+  end
+$$;
+
+create or replace function public.patch83u_transition_runtime(
+  p_actor_id uuid,
+  p_target_state text,
+  p_request_id text,
+  p_reason text,
+  p_confirmation text,
+  p_preflight_hash text,
+  p_designated_super_admin_id uuid,
+  p_edge_contract_version text,
+  p_frontend_contract_version text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+declare
+  v_runtime public.patch83u_runtime_control%rowtype;
+  v_existing public.patch83u_runtime_events%rowtype;
+  v_expected_confirmation text;
+  v_blockers jsonb;
+  v_now timestamptz := clock_timestamp();
+begin
+  perform public.patch83u_require_service_role();
+
+  if p_target_state is null
+    or p_target_state not in ('disabled', 'prepared', 'enforced', 'emergency_suspended')
+  then
+    raise exception 'PATCH83U_RUNTIME_TARGET_STATE_INVALID';
+  end if;
+  if nullif(btrim(coalesce(p_request_id, '')), '') is null
+    or length(p_request_id) > 128
+    or p_request_id !~ '^[A-Za-z0-9._:-]+$'
+  then
+    raise exception 'PATCH83U_REQUEST_ID_INVALID';
+  end if;
+  if nullif(btrim(coalesce(p_reason, '')), '') is null or length(btrim(p_reason)) > 500 then
+    raise exception 'PATCH83U_RUNTIME_REASON_INVALID';
+  end if;
+
+  v_expected_confirmation := case p_target_state
+    when 'prepared' then 'PATCH83U_PREPARE_CREDENTIAL_GOVERNANCE'
+    when 'enforced' then 'PATCH83U_ENFORCE_CREDENTIAL_GOVERNANCE'
+    when 'disabled' then 'PATCH83U_DISABLE_CREDENTIAL_GOVERNANCE'
+    when 'emergency_suspended' then 'PATCH83U_EMERGENCY_SUSPEND_CREDENTIAL_GOVERNANCE'
+  end;
+  if p_confirmation is distinct from v_expected_confirmation then
+    raise exception 'PATCH83U_RUNTIME_CONFIRMATION_REQUIRED';
+  end if;
+
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended('patch83u-runtime-control', 0)
+  );
+  select * into v_runtime
+  from public.patch83u_runtime_control
+  where singleton = true
+  for update;
+  if v_runtime.singleton is null then
+    raise exception 'PATCH83U_RUNTIME_CONTROL_MISSING';
+  end if;
+
+  select * into v_existing
+  from public.patch83u_runtime_events e
+  where e.request_id = p_request_id;
+  if v_existing.id is not null then
+    if v_existing.actor_id = p_actor_id
+      and v_existing.event_type = p_target_state
+      and v_existing.resulting_state = p_target_state
+      and v_existing.confirmation_code = v_expected_confirmation
+      and v_existing.reason = btrim(p_reason)
+      and v_existing.designated_super_admin_id is not distinct from p_designated_super_admin_id
+      and v_existing.preflight_hash is not distinct from p_preflight_hash
+      and v_existing.edge_contract_version = p_edge_contract_version
+      and v_existing.frontend_contract_version = p_frontend_contract_version
+      and jsonb_typeof(v_existing.details -> 'resulting_state_version') = 'number'
+      and (v_existing.details ->> 'resulting_state_version') ~ '^[0-9]+$'
+    then
+      return jsonb_build_object(
+        'enforcement_state', v_existing.resulting_state,
+        'schema_version', v_existing.schema_version,
+        'state_version', (v_existing.details ->> 'resulting_state_version')::integer,
+        'idempotent_replay', true
+      );
+    end if;
+    raise exception 'PATCH83U_REQUEST_ID_CONFLICT';
+  end if;
+
+  if p_target_state in ('prepared', 'enforced') then
+    if p_actor_id is distinct from p_designated_super_admin_id
+      or not public.patch83u_bootstrap_super_admin_eligible(p_actor_id)
+    then
+      raise exception 'PATCH83U_DESIGNATED_SUPER_ADMIN_REQUIRED';
+    end if;
+  else
+    -- Break-glass suspension/disable remains service-only, exact-confirmation,
+    -- and append-only audited, but it must not depend on the actor's current
+    -- credential state. A locked designated bootstrap administrator can still
+    -- suspend enforcement; otherwise another structurally verified global
+    -- Super Admin can perform the same fail-safe transition.
+    if p_designated_super_admin_id is distinct from v_runtime.designated_super_admin_id
+      or not (
+        p_actor_id is not distinct from v_runtime.designated_super_admin_id
+        or public.patch83u_break_glass_super_admin_eligible(p_actor_id)
+      )
+    then
+      raise exception 'PATCH83U_BREAK_GLASS_SUPER_ADMIN_REQUIRED';
+    end if;
+  end if;
+  if p_edge_contract_version is distinct from v_runtime.expected_edge_contract_version then
+    raise exception 'PATCH83U_EDGE_CONTRACT_MISMATCH';
+  end if;
+  if p_frontend_contract_version is distinct from v_runtime.expected_frontend_contract_version then
+    raise exception 'PATCH83U_FRONTEND_CONTRACT_MISMATCH';
+  end if;
+
+  if p_target_state in ('prepared', 'enforced') then
+    if coalesce(p_preflight_hash, '') !~ '^[0-9a-f]{64}$' then
+      raise exception 'PATCH83U_PREFLIGHT_HASH_INVALID';
+    end if;
+    v_blockers := public.patch83u_runtime_activation_blockers(p_designated_super_admin_id);
+    if coalesce((v_blockers ->> 'blocking_count')::bigint, 1) <> 0 then
+      raise exception 'PATCH83U_RUNTIME_ACTIVATION_BLOCKED';
+    end if;
+  end if;
+
+  if p_target_state = 'prepared' then
+    if v_runtime.enforcement_state not in ('disabled', 'prepared', 'emergency_suspended') then
+      raise exception 'PATCH83U_RUNTIME_TRANSITION_INVALID';
+    end if;
+    update public.patch83u_runtime_control
+    set enforcement_state = 'prepared',
+        prepared_at = v_now,
+        prepared_by = p_actor_id,
+        activated_at = null,
+        activated_by = null,
+        activation_reason = btrim(p_reason),
+        last_transition_reason = btrim(p_reason),
+        preflight_hash = p_preflight_hash,
+        designated_super_admin_id = p_designated_super_admin_id,
+        compatible_edge_contract_version = null,
+        compatible_frontend_contract_version = null,
+        compatibility_attested_at = null,
+        compatibility_attested_by = null,
+        last_transition_request_id = p_request_id,
+        state_version = state_version + 1,
+        updated_at = v_now
+    where singleton = true;
+  elsif p_target_state = 'enforced' then
+    if v_runtime.enforcement_state <> 'prepared'
+      or v_runtime.preflight_hash is distinct from p_preflight_hash
+      or v_runtime.designated_super_admin_id is distinct from p_designated_super_admin_id
+      or v_runtime.compatibility_attested_by is distinct from p_designated_super_admin_id
+      or v_runtime.compatibility_attested_at is null
+      or v_runtime.compatible_edge_contract_version is distinct from v_runtime.expected_edge_contract_version
+      or v_runtime.compatible_frontend_contract_version is distinct from v_runtime.expected_frontend_contract_version
+    then
+      raise exception 'PATCH83U_RUNTIME_NOT_PREPARED';
+    end if;
+    update public.patch83u_runtime_control
+    set enforcement_state = 'enforced',
+        activated_at = v_now,
+        activated_by = p_actor_id,
+        deactivated_at = null,
+        deactivated_by = null,
+        activation_reason = btrim(p_reason),
+        last_transition_reason = btrim(p_reason),
+        last_transition_request_id = p_request_id,
+        state_version = state_version + 1,
+        updated_at = v_now
+    where singleton = true;
+  elsif p_target_state = 'emergency_suspended' then
+    if v_runtime.enforcement_state not in ('prepared', 'enforced', 'emergency_suspended') then
+      raise exception 'PATCH83U_RUNTIME_TRANSITION_INVALID';
+    end if;
+    update public.patch83u_runtime_control
+    set enforcement_state = 'emergency_suspended',
+        deactivated_at = v_now,
+        deactivated_by = p_actor_id,
+        last_transition_reason = btrim(p_reason),
+        last_transition_request_id = p_request_id,
+        state_version = state_version + 1,
+        updated_at = v_now
+    where singleton = true;
+  else
+    update public.patch83u_runtime_control
+    set enforcement_state = 'disabled',
+        deactivated_at = v_now,
+        deactivated_by = p_actor_id,
+        last_transition_reason = btrim(p_reason),
+        last_transition_request_id = p_request_id,
+        state_version = state_version + 1,
+        updated_at = v_now
+    where singleton = true;
+  end if;
+
+  insert into public.patch83u_runtime_events (
+    actor_id, designated_super_admin_id, event_type, previous_state,
+    resulting_state, request_id, confirmation_code, reason, schema_version,
+    edge_contract_version, frontend_contract_version, preflight_hash, details
+  ) values (
+    p_actor_id, p_designated_super_admin_id, p_target_state,
+    v_runtime.enforcement_state, p_target_state, p_request_id,
+    v_expected_confirmation, btrim(p_reason), v_runtime.schema_version,
+    p_edge_contract_version, p_frontend_contract_version, p_preflight_hash,
+    coalesce(v_blockers, '{}'::jsonb) || jsonb_build_object(
+      'resulting_state_version', v_runtime.state_version + 1
+    )
+  );
+
+  return jsonb_build_object(
+    'enforcement_state', p_target_state,
+    'schema_version', v_runtime.schema_version,
+    'state_version', v_runtime.state_version + 1,
+    'idempotent_replay', false
+  );
+end;
+$$;
+
+create or replace function public.patch83u_get_capabilities(
+  p_actor_id uuid,
+  p_edge_contract_version text,
+  p_frontend_contract_version text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+declare
+  v_runtime public.patch83u_runtime_control%rowtype;
+  v_compatible boolean;
+  v_status text;
+  v_request_id text;
+  v_snapshot_state_version integer;
+  v_now timestamptz := clock_timestamp();
+begin
+  perform public.patch83u_require_service_role();
+  if p_actor_id is null or not exists (
+    select 1 from auth.users u where u.id = p_actor_id
+  ) then
+    raise exception 'PATCH83U_AUTHENTICATED_ACTOR_REQUIRED';
+  end if;
+
+  select * into v_runtime
+  from public.patch83u_runtime_control
+  where singleton = true;
+  if v_runtime.singleton is null then
+    raise exception 'PATCH83U_RUNTIME_CONTROL_MISSING';
+  end if;
+  v_snapshot_state_version := v_runtime.state_version;
+
+  v_compatible := p_edge_contract_version is not distinct from v_runtime.expected_edge_contract_version
+    and p_frontend_contract_version is not distinct from v_runtime.expected_frontend_contract_version;
+  v_status := case
+    when p_edge_contract_version is distinct from v_runtime.expected_edge_contract_version
+      then 'edge_contract_mismatch'
+    when p_frontend_contract_version is distinct from v_runtime.expected_frontend_contract_version
+      then 'frontend_contract_mismatch'
+    else 'compatible'
+  end;
+
+  if v_runtime.enforcement_state = 'prepared'
+    and v_compatible
+    and p_actor_id = v_runtime.designated_super_admin_id
+    and public.patch83u_bootstrap_super_admin_eligible(p_actor_id)
+  then
+    perform pg_catalog.pg_advisory_xact_lock(
+      pg_catalog.hashtextextended('patch83u-runtime-control', 0)
+    );
+    select * into v_runtime
+    from public.patch83u_runtime_control
+    where singleton = true
+    for update;
+
+    -- Revalidate the snapshot after the narrow attestation lock. A concurrent
+    -- transition wins; this capability read must not attest a different state.
+    if v_runtime.enforcement_state = 'prepared'
+      and v_runtime.state_version = v_snapshot_state_version
+      and p_actor_id = v_runtime.designated_super_admin_id
+      and p_edge_contract_version is not distinct from v_runtime.expected_edge_contract_version
+      and p_frontend_contract_version is not distinct from v_runtime.expected_frontend_contract_version
+      and public.patch83u_bootstrap_super_admin_eligible(p_actor_id)
+      and (
+        v_runtime.compatibility_attested_by is distinct from p_actor_id
+        or v_runtime.compatible_edge_contract_version is distinct from p_edge_contract_version
+        or v_runtime.compatible_frontend_contract_version is distinct from p_frontend_contract_version
+        or v_runtime.compatibility_attested_at is null
+      )
+    then
+      update public.patch83u_runtime_control
+      set compatible_edge_contract_version = p_edge_contract_version,
+          compatible_frontend_contract_version = p_frontend_contract_version,
+          compatibility_attested_at = v_now,
+          compatibility_attested_by = p_actor_id,
+          updated_at = v_now
+      where singleton = true;
+
+      v_request_id := 'capability:' || p_actor_id::text || ':' || v_runtime.state_version::text;
+      insert into public.patch83u_runtime_events (
+        actor_id, designated_super_admin_id, event_type, previous_state,
+        resulting_state, request_id, confirmation_code, reason, schema_version,
+        edge_contract_version, frontend_contract_version, preflight_hash, details
+      ) values (
+        p_actor_id, v_runtime.designated_super_admin_id, 'compatibility_attested',
+        'prepared', 'prepared', v_request_id, 'PATCH83U_COMPATIBILITY_ATTESTED',
+        'Prepared deployment contract compatibility attested.',
+        v_runtime.schema_version, p_edge_contract_version,
+        p_frontend_contract_version, v_runtime.preflight_hash,
+        jsonb_build_object('state_version', v_runtime.state_version)
+      ) on conflict (request_id) do nothing;
+    end if;
+  end if;
+
+  return jsonb_build_object(
+    'edge_contract_version', 'patch83u-edge-auth-first-v1',
+    'installed_schema_version', 174,
+    'runtime_enforcement_state', v_runtime.enforcement_state,
+    'credential_state_action_available', true,
+    'password_change_action_available', v_runtime.enforcement_state = 'enforced' and v_compatible,
+    'provisioning_action_available', v_runtime.enforcement_state = 'enforced' and v_compatible,
+    'reset_action_available', v_runtime.enforcement_state = 'enforced' and v_compatible,
+    'server_time', v_now,
+    'compatibility_status', v_status
+  );
 end;
 $$;
 
@@ -352,14 +1332,13 @@ declare
   v_org_id uuid;
   v_profile public.profiles%rowtype;
   v_state public.user_credential_states%rowtype;
-  v_role public.user_roles%rowtype;
+  v_existing_operation public.patch83u_credential_operations%rowtype;
   v_operation_id uuid := gen_random_uuid();
-  v_suspension_id uuid;
-  v_suspended_count integer := 0;
   v_active_super_admin_count integer := 0;
   v_target_is_active_super_admin boolean := false;
   v_now timestamptz := clock_timestamp();
 begin
+  perform public.patch83u_require_enforced_runtime();
   v_org_id := public.patch83u_require_super_admin(p_actor_id);
 
   if p_confirmation is distinct from 'PATCH83U_RESET_USER_PASSWORD' then
@@ -402,6 +1381,50 @@ begin
   then
     raise exception 'PATCH83U_EMPLOYEE_ID_CONFIRMATION_REQUIRED';
   end if;
+
+  select op.* into v_existing_operation
+  from public.patch83u_credential_operations op
+  where op.operation_type = 'admin_reset'
+    and op.actor_id = p_actor_id
+    and op.target_user_id = p_target_user_id
+    and op.request_id = p_request_id
+  for update;
+  if v_existing_operation.operation_id is not null then
+    if v_existing_operation.operation_status = 'aborted' then
+      raise exception 'PATCH83U_ADMIN_RESET_REQUEST_ALREADY_ABORTED';
+    end if;
+    return jsonb_build_object(
+      'operation_id', v_existing_operation.operation_id,
+      'request_id', v_existing_operation.request_id,
+      'user_id', p_target_user_id,
+      'auth_email', v_state.auth_email,
+      'current_credential_version', v_existing_operation.current_credential_version,
+      'next_credential_version', v_existing_operation.next_credential_version,
+      'credential_version', coalesce(
+        v_existing_operation.safe_result -> 'credential_version',
+        to_jsonb(v_existing_operation.current_credential_version)
+      ),
+      'result_status', case when v_existing_operation.safe_result is not null
+        then coalesce(
+          v_existing_operation.safe_result ->> 'credential_state',
+          v_existing_operation.resulting_credential_state
+        )
+        else v_existing_operation.operation_status
+      end,
+      'completed', v_existing_operation.operation_status in (
+        'completed', 'recovery_required', 'session_revocation_review_required'
+      ),
+      'reconciliation_required', coalesce(
+        v_existing_operation.safe_result -> 'reconciliation_required',
+        'false'::jsonb
+      ),
+      'session_revocation_review_required', coalesce(
+        v_existing_operation.safe_result -> 'session_revocation_review_required',
+        'false'::jsonb
+      ),
+      'idempotent_replay', true
+    );
+  end if;
   if v_profile.user_status not in ('active', 'invited') or v_profile.is_active = false then
     raise exception 'PATCH83U_RESET_TARGET_LIFECYCLE_INVALID';
   end if;
@@ -409,35 +1432,33 @@ begin
     raise exception 'PATCH83U_RESET_IDENTITY_NOT_VERIFIED';
   end if;
   if v_state.credential_state not in (
-    'active', 'initial_change_required',
+    'active', 'existing_password_rotation_pending',
+    'existing_password_change_required', 'initial_change_required',
     'admin_reset_change_required', 'reactivation_change_required',
     'recovery_required',
-    'reconciliation_required'
+    'reconciliation_required', 'session_revocation_review_required'
   ) then
     raise exception 'PATCH83U_RESET_CREDENTIAL_STATE_INVALID';
-  end if;
-  if not (
-    (v_state.credential_state = 'active' and v_profile.user_status = 'active')
-    or (
-      v_state.credential_state in ('initial_change_required', 'admin_reset_change_required')
-      and v_profile.user_status = 'invited'
-    )
-    or (
-      v_state.credential_state = 'reactivation_change_required'
-      and v_profile.user_status = 'active'
-    )
-    or (
-      v_state.credential_state in ('recovery_required', 'reconciliation_required')
-      and v_profile.user_status = 'invited'
-    )
-  ) then
-    raise exception 'PATCH83U_RESET_LIFECYCLE_STATE_MISMATCH';
   end if;
   if not exists (
     select 1 from auth.users u
     where u.id = p_target_user_id
       and lower(btrim(u.email)) = v_state.auth_email
+      and u.email_confirmed_at is not null
+      and u.deleted_at is null
+      and (u.banned_until is null or u.banned_until <= now())
       and public.patch83u_auth_credential_version(u.raw_app_meta_data) = v_state.credential_version
+      and 1 = (
+        select count(*) from auth.identities ai
+        where ai.user_id = u.id and ai.provider = 'email'
+      )
+      and 1 = (
+        select count(*) from auth.identities ai
+        where ai.user_id = u.id
+          and ai.provider = 'email'
+          and lower(btrim(coalesce(ai.identity_data ->> 'email', '')))
+            = v_state.auth_email
+      )
   ) then
     raise exception 'PATCH83U_RESET_AUTH_DATABASE_PROOF_FAILED';
   end if;
@@ -455,9 +1476,9 @@ begin
   end if;
 
   -- Serialize administrator credential resets with Patch 83U's eligibility
-  -- calculation and lock all currently eligible Super Admin identities before
-  -- any role is suspended. A password reset must not remove the organization's
-  -- final usable Super Admin.
+  -- calculation and lock all currently effective Super Admin identities before
+  -- the target credential is locked. A password reset must not make the
+  -- organization's final usable Super Admin ineffective.
   perform 1
   from public.user_roles ur
   join public.profiles p on p.id = ur.user_id
@@ -475,6 +1496,7 @@ begin
     and cs.organization_id = v_org_id
     and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
     and cs.credential_state = 'active'
+    and public.patch83u_effective_super_admin_eligible(ur.user_id, v_org_id)
   for update of ur, p, cs;
 
   select count(distinct ur.user_id)::integer,
@@ -495,82 +1517,31 @@ begin
     and p.user_status = 'active'
     and cs.organization_id = v_org_id
     and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
-    and cs.credential_state = 'active';
+    and cs.credential_state = 'active'
+    and public.patch83u_effective_super_admin_eligible(ur.user_id, v_org_id);
 
   if v_target_is_active_super_admin and v_active_super_admin_count <= 1 then
     raise exception 'PATCH83U_LAST_SUPER_ADMIN_RESET_DENIED';
   end if;
 
-  -- A repeat reset must keep the original suspension set attached to the
-  -- credential state. In particular, replacing an administrator-reset or
-  -- reconciliation suspension with a fresh empty identifier would orphan the
-  -- inactive role snapshots and could later restore access incorrectly.
-  v_suspension_id := coalesce(v_state.role_suspension_id, gen_random_uuid());
-
-  for v_role in
-    select ur.*
-    from public.user_roles ur
-    where ur.user_id = p_target_user_id
-      and ur.is_active = true
-    order by ur.id
-    for update
-  loop
-    -- A partially restored reconciliation can contain an already-snapshotted
-    -- role that is active again. Re-arm that exact protected snapshot instead
-    -- of inserting a duplicate or switching to a different suspension set.
-    update public.user_credential_suspended_roles
-    set suspension_status = 'suspended',
-        suspended_by = p_actor_id,
-        suspended_at = clock_timestamp(),
-        restored_user_role_id = null,
-        restored_at = null,
-        restore_error_code = null,
-        updated_at = clock_timestamp()
-    where suspension_id = v_suspension_id
-      and organization_id = v_org_id
-      and user_id = p_target_user_id
-      and source_user_role_id = v_role.id
-      and role = v_role.role
-      and scope = v_role.scope
-      and role_organization_id is not distinct from v_role.organization_id
-      and division_id is not distinct from v_role.division_id
-      and department_id is not distinct from v_role.department_id
-      and unit_id is not distinct from v_role.unit_id;
-
-    if not found then
-      insert into public.user_credential_suspended_roles (
-        suspension_id, organization_id, user_id, source_user_role_id,
-        role, scope, role_organization_id, division_id, department_id,
-        unit_id, suspended_by
-      ) values (
-        v_suspension_id, v_org_id, p_target_user_id, v_role.id,
-        v_role.role, v_role.scope, v_role.organization_id, v_role.division_id,
-        v_role.department_id, v_role.unit_id, p_actor_id
-      );
-    end if;
-
-    update public.user_roles set is_active = false where id = v_role.id;
-    insert into public.role_change_audit (
-      organization_id, target_user_id, user_role_id, action,
-      old_data, reason, changed_by
-    ) values (
-      v_org_id, p_target_user_id, v_role.id, 'deactivated', to_jsonb(v_role),
-      'Patch 83U administrator reset: ' || btrim(p_reason), p_actor_id
-    );
-    v_suspended_count := v_suspended_count + 1;
-  end loop;
-
-  -- The profile is deliberately invited and every role is inactive before the
-  -- privileged bridge is allowed to change the Auth credential.
-  update public.profiles
-  set user_status = 'invited', is_active = true
-  where id = p_target_user_id;
+  -- Reset state makes normal access ineffective while preserving every existing
+  -- role assignment and the profile lifecycle. The role becomes effective again
+  -- only after the credential state is safely completed.
+  insert into public.patch83u_credential_operations (
+    operation_id, operation_type, organization_id, actor_id, target_user_id,
+    request_id, operation_status, current_credential_version,
+    next_credential_version
+  ) values (
+    v_operation_id, 'admin_reset', v_org_id, p_actor_id, p_target_user_id,
+    p_request_id, 'in_progress', v_state.credential_version,
+    v_state.credential_version + 1
+  );
 
   update public.user_credential_states
   set credential_state = 'reset_in_progress',
       requested_lifecycle = v_state.requested_lifecycle,
       session_valid_after = v_now,
-      role_suspension_id = v_suspension_id,
+      role_suspension_id = null,
       pending_operation_id = v_operation_id,
       operation_source = 'admin_reset',
       reconciliation_auth_changed = false,
@@ -586,14 +1557,7 @@ begin
   insert into public.user_credential_events (
     organization_id, user_id, provisioning_id, actor_id, event_type,
     credential_version, request_id, event_code, details
-  ) values
-  (
-    v_org_id, p_target_user_id, v_state.provisioning_id, p_actor_id,
-    'roles_suspended', v_state.credential_version, btrim(p_request_id),
-    'PATCH83U_ROLES_SUSPENDED',
-    jsonb_build_object('suspension_id', v_suspension_id, 'count', v_suspended_count)
-  ),
-  (
+  ) values (
     v_org_id, p_target_user_id, v_state.provisioning_id, p_actor_id,
     'admin_reset_started', v_state.credential_version, btrim(p_request_id),
     'PATCH83U_ADMIN_RESET_STARTED',
@@ -608,11 +1572,117 @@ begin
   -- this RPC boundary and is never persisted in public schema data.
   return jsonb_build_object(
     'operation_id', v_operation_id,
+    'request_id', p_request_id,
     'user_id', p_target_user_id,
     'auth_email', v_state.auth_email,
     'current_credential_version', v_state.credential_version,
     'next_credential_version', v_state.credential_version + 1,
-    'roles_suspended', v_suspended_count
+    'credential_version', v_state.credential_version,
+    'result_status', 'in_progress',
+    'completed', false,
+    'reconciliation_required', false,
+    'session_revocation_review_required', false,
+    'idempotent_replay', false
+  );
+end;
+$$;
+
+create or replace function public.patch83u_admin_reset_session_revocation_proof(
+  p_actor_id uuid,
+  p_target_user_id uuid,
+  p_operation_id uuid,
+  p_request_id text,
+  p_applied_credential_version integer,
+  p_verified_auth_email text
+)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+declare
+  v_org_id uuid;
+  v_state public.user_credential_states%rowtype;
+  v_operation public.patch83u_credential_operations%rowtype;
+  v_sessions_revoked boolean;
+begin
+  perform public.patch83u_require_enforced_runtime();
+  v_org_id := public.patch83u_require_super_admin(p_actor_id);
+
+  if p_target_user_id = p_actor_id
+    or nullif(btrim(coalesce(p_request_id, '')), '') is null
+    or length(p_request_id) > 128
+    or p_request_id !~ '^[A-Za-z0-9._:-]+$'
+  then
+    raise exception 'PATCH83U_ADMIN_RESET_SESSION_PROOF_INVALID';
+  end if;
+
+  select op.* into v_operation
+  from public.patch83u_credential_operations op
+  where op.operation_id = p_operation_id
+    and op.operation_type = 'admin_reset'
+    and op.organization_id = v_org_id
+    and op.actor_id = p_actor_id
+    and op.target_user_id = p_target_user_id
+    and op.request_id = p_request_id;
+
+  select cs.* into v_state
+  from public.user_credential_states cs
+  where cs.user_id = p_target_user_id
+    and cs.organization_id = v_org_id;
+
+  if v_operation.operation_id is null
+    or v_operation.operation_status <> 'in_progress'
+    or v_operation.current_credential_version is distinct from v_state.credential_version
+    or v_operation.next_credential_version is distinct from p_applied_credential_version
+    or v_state.user_id is null
+    or v_state.credential_state <> 'reset_in_progress'
+    or v_state.pending_operation_id is distinct from p_operation_id
+    or v_state.pending_credential_version is distinct from p_applied_credential_version
+  then
+    raise exception 'PATCH83U_ADMIN_RESET_SESSION_PROOF_INVALID';
+  end if;
+
+  if lower(btrim(coalesce(p_verified_auth_email, ''))) <> v_state.auth_email
+    or not exists (
+      select 1 from auth.users u
+      where u.id = p_target_user_id
+        and lower(btrim(u.email)) = v_state.auth_email
+        and u.email_confirmed_at is not null
+        and u.deleted_at is null
+        and (u.banned_until is null or u.banned_until <= now())
+        and public.patch83u_auth_credential_version(u.raw_app_meta_data)
+          = p_applied_credential_version
+        and 1 = (
+          select count(*) from auth.identities ai
+          where ai.user_id = u.id and ai.provider = 'email'
+        )
+        and 1 = (
+          select count(*) from auth.identities ai
+          where ai.user_id = u.id
+            and ai.provider = 'email'
+            and lower(btrim(coalesce(ai.identity_data ->> 'email', '')))
+              = v_state.auth_email
+        )
+    )
+  then
+    raise exception 'PATCH83U_ADMIN_RESET_DATABASE_PROOF_FAILED';
+  end if;
+
+  -- This service-only RPC is deliberately read-only. It never deletes or
+  -- updates auth.sessions; it reports only whether the supported Auth action
+  -- left zero target session rows for the exact protected reset operation.
+  v_sessions_revoked := not exists (
+    select 1 from auth.sessions s where s.user_id = p_target_user_id
+  );
+
+  return jsonb_build_object(
+    'user_id', p_target_user_id,
+    'operation_id', p_operation_id,
+    'request_id', p_request_id,
+    'credential_version', p_applied_credential_version,
+    'sessions_revoked', v_sessions_revoked
   );
 end;
 $$;
@@ -621,8 +1691,10 @@ create or replace function public.patch83u_finalize_admin_reset(
   p_actor_id uuid,
   p_target_user_id uuid,
   p_operation_id uuid,
+  p_request_id text,
   p_applied_credential_version integer,
-  p_verified_auth_email text
+  p_verified_auth_email text,
+  p_session_revocation_confirmed boolean
 )
 returns jsonb
 language plpgsql
@@ -632,9 +1704,32 @@ as $$
 declare
   v_org_id uuid;
   v_state public.user_credential_states%rowtype;
+  v_operation public.patch83u_credential_operations%rowtype;
+  v_result jsonb;
+  v_next_state text;
   v_now timestamptz := clock_timestamp();
 begin
+  perform public.patch83u_require_enforced_runtime();
   v_org_id := public.patch83u_require_super_admin(p_actor_id);
+
+  select op.* into v_operation
+  from public.patch83u_credential_operations op
+  where op.operation_id = p_operation_id
+    and op.operation_type = 'admin_reset'
+    and op.actor_id = p_actor_id
+    and op.target_user_id = p_target_user_id
+    and op.request_id = p_request_id
+  for update;
+  if v_operation.operation_id is null then
+    raise exception 'PATCH83U_ADMIN_RESET_OPERATION_INVALID';
+  end if;
+  if v_operation.operation_status in (
+    'completed', 'recovery_required', 'session_revocation_review_required'
+  )
+    and v_operation.safe_result is not null
+  then
+    return v_operation.safe_result || jsonb_build_object('idempotent_replay', true);
+  end if;
 
   select cs.* into v_state
   from public.user_credential_states cs
@@ -654,61 +1749,107 @@ begin
       select 1 from auth.users u
       where u.id = p_target_user_id
         and lower(btrim(u.email)) = v_state.auth_email
+        and u.email_confirmed_at is not null
+        and u.deleted_at is null
+        and (u.banned_until is null or u.banned_until <= now())
         and public.patch83u_auth_credential_version(u.raw_app_meta_data) = p_applied_credential_version
+        and 1 = (
+          select count(*) from auth.identities ai
+          where ai.user_id = u.id and ai.provider = 'email'
+        )
+        and 1 = (
+          select count(*) from auth.identities ai
+          where ai.user_id = u.id
+            and ai.provider = 'email'
+            and lower(btrim(coalesce(ai.identity_data ->> 'email', '')))
+              = v_state.auth_email
+        )
     )
   then
     raise exception 'PATCH83U_ADMIN_RESET_DATABASE_PROOF_FAILED';
   end if;
-  if exists (select 1 from auth.sessions s where s.user_id = p_target_user_id) then
+  if coalesce(p_session_revocation_confirmed, false)
+    and exists (select 1 from auth.sessions s where s.user_id = p_target_user_id)
+  then
     raise exception 'PATCH83U_AUTH_SESSIONS_STILL_ACTIVE';
   end if;
 
-  update public.profiles
-  set user_status = 'invited', is_active = true
-  where id = p_target_user_id;
+  v_next_state := case
+    when coalesce(p_session_revocation_confirmed, false)
+      then 'admin_reset_change_required'
+    else 'session_revocation_review_required'
+  end;
 
   update public.user_credential_states
-  set credential_state = 'admin_reset_change_required',
+  set credential_state = v_next_state,
       credential_version = p_applied_credential_version,
       session_valid_after = v_now,
       invalidated_session_id = null,
       pending_operation_id = null,
-      operation_source = null,
-      reconciliation_auth_changed = false,
+      operation_source = case
+        when p_session_revocation_confirmed then null else 'admin_reset'
+      end,
+      reconciliation_auth_changed = not coalesce(p_session_revocation_confirmed, false),
       pending_session_id = null,
       pending_credential_version = null,
       operation_previous_state = null,
       operation_previous_lifecycle = null,
       operation_previous_session_valid_after = null,
       password_reset_at = v_now,
-      sessions_revoked_at = clock_timestamp()
+      sessions_revoked_at = case
+        when p_session_revocation_confirmed then clock_timestamp()
+        else sessions_revoked_at
+      end
   where user_id = p_target_user_id;
+
+  v_result := jsonb_build_object(
+    'user_id', p_target_user_id,
+    'request_id', p_request_id,
+    'credential_state', v_next_state,
+    'credential_version', p_applied_credential_version,
+    'must_change_password', v_next_state = 'admin_reset_change_required',
+    'must_reauthenticate', true,
+    'reconciliation_required', v_next_state = 'session_revocation_review_required',
+    'session_revocation_review_required', v_next_state = 'session_revocation_review_required',
+    'idempotent_replay', false
+  );
+
+  update public.patch83u_credential_operations
+  set operation_status = case
+        when p_session_revocation_confirmed then 'completed'
+        else 'session_revocation_review_required'
+      end,
+      resulting_credential_state = v_next_state,
+      auth_changed = true,
+      session_revocation_confirmed = coalesce(p_session_revocation_confirmed, false),
+      safe_result = v_result,
+      completed_at = v_now,
+      updated_at = v_now
+  where operation_id = p_operation_id;
 
   insert into public.user_credential_events (
     organization_id, user_id, provisioning_id, actor_id, event_type,
     credential_version, event_code, details
   ) values (
     v_org_id, p_target_user_id, v_state.provisioning_id, p_actor_id,
-    'admin_reset_completed', p_applied_credential_version,
-    'PATCH83U_ADMIN_RESET_COMPLETED',
+    case when p_session_revocation_confirmed
+      then 'admin_reset_completed'
+      else 'session_revocation_review_required'
+    end,
+    p_applied_credential_version,
+    case when p_session_revocation_confirmed
+      then 'PATCH83U_ADMIN_RESET_COMPLETED'
+      else 'PATCH83U_SESSION_REVOCATION_REVIEW_REQUIRED'
+    end,
     jsonb_build_object(
       'operation_id', p_operation_id,
-      'roles_remain_suspended', true,
+      'role_rows_preserved', true,
       'session_access_invalidated', true,
-      'direct_auth_session_revocation_confirmed', true
+      'direct_auth_session_revocation_confirmed', coalesce(p_session_revocation_confirmed, false)
     )
   );
 
-  return jsonb_build_object(
-    'user_id', p_target_user_id,
-    'credential_state', 'admin_reset_change_required',
-    'credential_version', p_applied_credential_version,
-    'password_reset_at', v_now,
-    'must_change_password', true,
-    'must_reauthenticate', true,
-    'recovery_required', false,
-    'reconciliation_required', false
-  );
+  return v_result;
 end;
 $$;
 
@@ -716,7 +1857,9 @@ create or replace function public.patch83u_abort_admin_reset(
   p_actor_id uuid,
   p_target_user_id uuid,
   p_operation_id uuid,
+  p_request_id text,
   p_auth_changed boolean,
+  p_session_revocation_confirmed boolean,
   p_error_code text,
   p_error_message text
 )
@@ -728,13 +1871,15 @@ as $$
 declare
   v_org_id uuid;
   v_state public.user_credential_states%rowtype;
-  v_restore jsonb := jsonb_build_object('restored_count', 0, 'blocked_count', 0);
-  v_blocked integer := 0;
+  v_operation public.patch83u_credential_operations%rowtype;
+  v_result jsonb;
   v_next_state text;
-  v_next_lifecycle text;
   v_keep_reconciliation_evidence boolean := false;
   v_safe_message text;
   v_auth_version integer;
+  v_effective_credential_version integer;
+  v_revocation_proven boolean := false;
+  v_now timestamptz := clock_timestamp();
 begin
   v_org_id := public.patch83u_require_super_admin(p_actor_id);
   if nullif(btrim(coalesce(p_error_code, '')), '') is null
@@ -744,6 +1889,24 @@ begin
     raise exception 'PATCH83U_FAILURE_CODE_INVALID';
   end if;
   v_safe_message := public.patch83u_safe_failure_message(p_error_message);
+
+  select op.* into v_operation
+  from public.patch83u_credential_operations op
+  where op.operation_id = p_operation_id
+    and op.operation_type = 'admin_reset'
+    and op.actor_id = p_actor_id
+    and op.target_user_id = p_target_user_id
+    and op.request_id = p_request_id
+  for update;
+  if v_operation.operation_id is null then
+    raise exception 'PATCH83U_ADMIN_RESET_OPERATION_INVALID';
+  end if;
+  if v_operation.operation_status in (
+    'completed', 'aborted', 'recovery_required',
+    'session_revocation_review_required'
+  ) and v_operation.safe_result is not null then
+    return v_operation.safe_result || jsonb_build_object('idempotent_replay', true);
+  end if;
 
   select cs.* into v_state
   from public.user_credential_states cs
@@ -758,33 +1921,6 @@ begin
     raise exception 'PATCH83U_ADMIN_RESET_OPERATION_INVALID';
   end if;
 
-  -- Only an active account may have its role snapshots restored by an abort.
-  -- Forced-change and reconciliation states keep their suspension intact so a
-  -- repeated reset can never re-enable access before the required rotation.
-  if not coalesce(p_auth_changed, false)
-    and v_state.operation_previous_state = 'active'
-  then
-    v_restore := public.patch83u_restore_suspended_roles(
-      p_actor_id, p_target_user_id, v_state.role_suspension_id
-    );
-    v_blocked := coalesce((v_restore ->> 'blocked_count')::integer, 0);
-  end if;
-
-  v_next_state := case
-    when coalesce(p_auth_changed, false) or v_blocked > 0 then 'recovery_required'
-    else v_state.operation_previous_state
-  end;
-  v_next_lifecycle := case
-    when v_next_state = 'recovery_required' then 'invited'
-    else v_state.operation_previous_lifecycle
-  end;
-  v_keep_reconciliation_evidence :=
-    v_next_state = 'recovery_required'
-    and (
-      coalesce(p_auth_changed, false)
-      or v_state.operation_previous_state = 'active'
-    );
-
   if coalesce(p_auth_changed, false) then
     select public.patch83u_auth_credential_version(u.raw_app_meta_data)
     into v_auth_version
@@ -798,32 +1934,40 @@ begin
     -- never stranded in reset_in_progress.
   end if;
 
-  perform set_config('patch83u.controlled_lifecycle_transition', 'on', true);
-  update public.profiles
-  set user_status = v_next_lifecycle,
-      is_active = v_next_lifecycle in ('active', 'invited')
-  where id = p_target_user_id;
-  perform set_config('patch83u.controlled_lifecycle_transition', 'off', true);
+  v_revocation_proven := coalesce(p_session_revocation_confirmed, false)
+    and not exists (
+      select 1 from auth.sessions s where s.user_id = p_target_user_id
+    );
+  v_effective_credential_version := case
+    when coalesce(p_auth_changed, false)
+      and v_auth_version is not null
+      and v_auth_version >= v_state.credential_version
+      then v_auth_version
+    else v_state.credential_version
+  end;
+  v_next_state := case
+    when coalesce(p_auth_changed, false) and not v_revocation_proven
+      then 'session_revocation_review_required'
+    when coalesce(p_auth_changed, false) then 'recovery_required'
+    else v_state.operation_previous_state
+  end;
+  v_keep_reconciliation_evidence :=
+    v_next_state in ('recovery_required', 'session_revocation_review_required')
+    and (
+      coalesce(p_auth_changed, false)
+      or v_state.operation_previous_state = 'active'
+    );
 
   update public.user_credential_states
   set credential_state = v_next_state,
-      credential_version = case
-        when coalesce(p_auth_changed, false)
-          and v_auth_version is not null
-          and v_auth_version >= credential_version
-          then v_auth_version
-        else credential_version
-      end,
+      credential_version = v_effective_credential_version,
       requested_lifecycle = v_state.requested_lifecycle,
       session_valid_after = case
-        when v_next_state = 'recovery_required'
-          then clock_timestamp()
+        when v_next_state in ('recovery_required', 'session_revocation_review_required')
+          then v_now
         else v_state.operation_previous_session_valid_after
       end,
-      role_suspension_id = case
-        when v_next_state = 'active' then null
-        else role_suspension_id
-      end,
+      role_suspension_id = null,
       pending_operation_id = null,
       operation_source = case
         when v_keep_reconciliation_evidence then operation_source else null
@@ -844,33 +1988,62 @@ begin
         when v_keep_reconciliation_evidence then operation_previous_session_valid_after else null
       end,
       reconciliation_checked_at = case
-        when v_next_state = 'recovery_required' then clock_timestamp()
+        when v_next_state in ('recovery_required', 'session_revocation_review_required')
+          then v_now
         else reconciliation_checked_at
-      end
+      end,
+      sessions_revoked_at = case
+        when v_revocation_proven then v_now else sessions_revoked_at end
   where user_id = p_target_user_id;
+
+  v_result := jsonb_build_object(
+    'user_id', p_target_user_id,
+    'request_id', p_request_id,
+    'credential_state', v_next_state,
+    'credential_version', v_effective_credential_version,
+    'recovery_required', v_next_state = 'recovery_required',
+    'reconciliation_required', v_next_state in (
+      'recovery_required', 'reconciliation_required',
+      'session_revocation_review_required'
+    ),
+    'session_revocation_review_required',
+      v_next_state = 'session_revocation_review_required',
+    'idempotent_replay', false
+  );
+
+  update public.patch83u_credential_operations
+  set operation_status = case
+        when v_next_state = 'session_revocation_review_required'
+          then 'session_revocation_review_required'
+        when v_next_state = 'recovery_required' then 'recovery_required'
+        else 'aborted'
+      end,
+      resulting_credential_state = v_next_state,
+      auth_changed = coalesce(p_auth_changed, false),
+      session_revocation_confirmed = v_revocation_proven,
+      safe_result = v_result,
+      completed_at = v_now,
+      updated_at = v_now
+  where operation_id = p_operation_id;
 
   insert into public.user_credential_events (
     organization_id, user_id, provisioning_id, actor_id, event_type,
     credential_version, event_code, details
   ) values (
     v_org_id, p_target_user_id, v_state.provisioning_id, p_actor_id,
-    'admin_reset_aborted', coalesce(v_auth_version, v_state.credential_version), btrim(p_error_code),
+    'admin_reset_aborted', v_effective_credential_version, btrim(p_error_code),
     jsonb_build_object(
       'operation_id', p_operation_id,
+      'request_id', p_request_id,
       'auth_changed', coalesce(p_auth_changed, false),
       'resulting_state', v_next_state,
-      'roles_restored', coalesce((v_restore ->> 'restored_count')::integer, 0),
-      'roles_blocked', v_blocked,
+      'role_rows_preserved', true,
+      'session_revocation_confirmed', v_revocation_proven,
       'message', v_safe_message
     )
   );
 
-  return jsonb_build_object(
-    'user_id', p_target_user_id,
-    'credential_state', v_next_state,
-    'recovery_required', v_next_state = 'recovery_required',
-    'reconciliation_required', v_next_state in ('recovery_required', 'reconciliation_required')
-  );
+  return v_result;
 end;
 $$;
 
@@ -894,6 +2067,7 @@ declare
   v_role_department_id uuid;
   v_role_unit_id uuid;
 begin
+  perform public.patch83u_require_enforced_runtime();
   v_org_id := public.patch83u_require_super_admin(p_actor_id);
 
   select q.*
@@ -1201,107 +2375,6 @@ begin
 end;
 $$;
 
-create or replace function public.patch83u_role_scope_allowed(
-  p_role public.app_role,
-  p_scope public.access_scope
-)
-returns boolean
-language sql
-immutable
-security definer
-set search_path = pg_catalog, public, pg_temp
-as $$
-  select case
-    when p_role in ('super_admin', 'executive', 'governance_admin', 'auditor', 'compliance_officer')
-      then p_scope = 'global'
-    when p_role = 'department_manager'
-      then p_scope = 'department'
-    when p_role in ('project_owner', 'milestone_owner', 'task_owner', 'viewer', 'employee')
-      then p_scope = 'assigned_only'
-    else false -- division_head cannot be represented by the Patch 83T workbook.
-  end;
-$$;
-
-create or replace function public.patch83u_role_assignment_valid(
-  p_organization_id uuid,
-  p_scope public.access_scope,
-  p_role_organization_id uuid,
-  p_division_id uuid,
-  p_department_id uuid,
-  p_unit_id uuid
-)
-returns boolean
-language plpgsql
-stable
-security definer
-set search_path = pg_catalog, public, pg_temp
-as $$
-begin
-  if p_organization_id is null then
-    return false;
-  end if;
-
-  if p_scope = 'global' then
-    -- Preserve the canonical legacy global-role convention used by
-    -- patch83u_require_super_admin and Patch 83T: organization_id may be NULL
-    -- or the actor's exact organization, but hierarchy references stay empty.
-    return (p_role_organization_id is null or p_role_organization_id = p_organization_id)
-      and p_division_id is null
-      and p_department_id is null
-      and p_unit_id is null;
-  end if;
-
-  -- Every non-global scope remains strictly organization-bound.
-  if p_role_organization_id is distinct from p_organization_id then
-    return false;
-  end if;
-
-  if p_scope = 'division' then
-    return p_division_id is not null
-      and p_department_id is null
-      and p_unit_id is null
-      and exists (
-        select 1 from public.divisions d
-        where d.id = p_division_id
-          and d.organization_id = p_organization_id
-          and d.is_active = true
-      );
-  elsif p_scope = 'department' then
-    return p_department_id is not null
-      and p_unit_id is null
-      and exists (
-        select 1 from public.departments d
-        where d.id = p_department_id
-          and d.organization_id = p_organization_id
-          and d.is_active = true
-          and d.archived_at is null
-          and (p_division_id is null or d.division_id = p_division_id)
-      );
-  elsif p_scope = 'unit' then
-    return p_unit_id is not null
-      and p_department_id is not null
-      and exists (
-        select 1
-        from public.units u
-        join public.departments d on d.id = u.department_id
-        where u.id = p_unit_id
-          and u.organization_id = p_organization_id
-          and u.is_active = true
-          and d.id = p_department_id
-          and d.organization_id = p_organization_id
-          and d.is_active = true
-          and d.archived_at is null
-          and (p_division_id is null or d.division_id = p_division_id)
-      );
-  end if;
-
-  return p_scope = 'assigned_only'
-    and p_division_id is null
-    and p_department_id is null
-    and p_unit_id is null;
-end;
-$$;
-
 create or replace function public.patch83u_require_super_admin(p_actor_id uuid)
 returns uuid
 language plpgsql
@@ -1317,13 +2390,30 @@ begin
   into v_org_id
   from public.profiles p
   join public.user_credential_states cs on cs.user_id = p.id
+  join auth.users u on u.id = p.id
   where p.id = p_actor_id
     and p.organization_id is not null
     and p.is_active = true
     and p.user_status = 'active'
     and cs.organization_id = p.organization_id
-    and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
-    and cs.credential_state = 'active';
+    and public.patch83u_runtime_credential_state_allowed(
+      cs.credential_state, cs.identity_mode
+    )
+    and u.email_confirmed_at is not null
+    and u.deleted_at is null
+    and (u.banned_until is null or u.banned_until <= now())
+    and lower(btrim(coalesce(u.email, ''))) = cs.auth_email
+    and public.patch83u_auth_credential_version(u.raw_app_meta_data) = cs.credential_version
+    and 1 = (
+      select count(*) from auth.identities ai
+      where ai.user_id = u.id and ai.provider = 'email'
+    )
+    and 1 = (
+      select count(*) from auth.identities ai
+      where ai.user_id = u.id
+        and ai.provider = 'email'
+        and lower(btrim(coalesce(ai.identity_data ->> 'email', ''))) = cs.auth_email
+    );
 
   if v_org_id is null or not exists (
     select 1
@@ -1360,13 +2450,30 @@ begin
   into v_org_id
   from public.profiles p
   join public.user_credential_states cs on cs.user_id = p.id
+  join auth.users u on u.id = p.id
   where p.id = p_actor_id
     and p.organization_id is not null
     and p.is_active = true
     and p.user_status = 'active'
     and cs.organization_id = p.organization_id
-    and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
-    and cs.credential_state = 'active';
+    and public.patch83u_runtime_credential_state_allowed(
+      cs.credential_state, cs.identity_mode
+    )
+    and u.email_confirmed_at is not null
+    and u.deleted_at is null
+    and (u.banned_until is null or u.banned_until <= now())
+    and lower(btrim(coalesce(u.email, ''))) = cs.auth_email
+    and public.patch83u_auth_credential_version(u.raw_app_meta_data) = cs.credential_version
+    and 1 = (
+      select count(*) from auth.identities ai
+      where ai.user_id = u.id and ai.provider = 'email'
+    )
+    and 1 = (
+      select count(*) from auth.identities ai
+      where ai.user_id = u.id
+        and ai.provider = 'email'
+        and lower(btrim(coalesce(ai.identity_data ->> 'email', ''))) = cs.auth_email
+    );
 
   if v_org_id is null or not exists (
     select 1
@@ -1446,6 +2553,9 @@ begin
   if v_reason is not null and length(v_reason) > 500 then
     raise exception 'PATCH83U_ROLE_REASON_INVALID';
   end if;
+  if not public.patch83u_role_scope_allowed(p_role, p_scope) then
+    raise exception 'PATCH83U_ROLE_SCOPE_NOT_ALLOWED';
+  end if;
   if p_role in ('super_admin', 'executive', 'governance_admin')
     and not v_is_super_admin
   then
@@ -1467,8 +2577,9 @@ begin
   end if;
   if v_target.is_active is distinct from true
     or v_target.user_status <> 'active'
-    or v_state.identity_mode not in ('employee_id_managed', 'legacy_verified')
-    or v_state.credential_state <> 'active'
+    or not public.patch83u_runtime_credential_state_allowed(
+      v_state.credential_state, v_state.identity_mode
+    )
   then
     raise exception 'PATCH83U_ROLE_TARGET_NOT_ACTIVE';
   end if;
@@ -1654,7 +2765,8 @@ begin
     )
     and v_target.is_active = true
     and v_target.user_status = 'active'
-    and v_state.credential_state = 'active'
+    and v_state.identity_mode in ('employee_id_managed', 'legacy_verified')
+    and public.patch83u_runtime_super_admin_eligible(v_role.user_id, v_org_id)
   then
     perform 1
     from public.user_roles ur
@@ -1673,7 +2785,7 @@ begin
       and p.user_status = 'active'
       and cs.organization_id = v_org_id
       and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
-      and cs.credential_state = 'active'
+      and public.patch83u_runtime_super_admin_eligible(ur.user_id, v_org_id)
     for update of ur, p, cs;
 
     select count(distinct ur.user_id)::integer
@@ -1694,7 +2806,7 @@ begin
       and p.user_status = 'active'
       and cs.organization_id = v_org_id
       and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
-      and cs.credential_state = 'active';
+      and public.patch83u_runtime_super_admin_eligible(ur.user_id, v_org_id);
 
     if v_other_super_admin_count < 1 then
       raise exception 'PATCH83U_LAST_SUPER_ADMIN_ROLE_DEACTIVATION_DENIED';
@@ -1726,6 +2838,398 @@ begin
 end;
 $$;
 
+create or replace function public.patch83u_apply_user_lifecycle(
+  p_actor_id uuid,
+  p_target_user_id uuid,
+  p_action text,
+  p_reason text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+declare
+  v_admin jsonb;
+  v_org_id uuid;
+  v_is_super_admin boolean := false;
+  v_target public.profiles%rowtype;
+  v_state public.user_credential_states%rowtype;
+  v_role public.user_roles%rowtype;
+  v_reason text := nullif(pg_catalog.btrim(coalesce(p_reason, '')), '');
+  v_next_status text;
+  v_audit_action text;
+  v_expected_active boolean;
+  v_expected_credential_event text;
+  v_old_profile jsonb;
+  v_new_profile jsonb;
+  v_lifecycle_audit_id uuid;
+  v_linked_count integer := 0;
+  v_role_rows_deactivated integer := 0;
+  v_role_audit_records integer := 0;
+  v_active_role_count_after integer := 0;
+  v_credential_events_before integer := 0;
+  v_credential_events_after integer := 0;
+begin
+  perform public.patch83u_require_service_role();
+
+  if p_action is null or p_action not in (
+    'patch19_deactivate_user',
+    'patch19_reactivate_user',
+    'patch19_archive_user',
+    'patch19_unarchive_user'
+  ) then
+    raise exception 'PATCH83U_LIFECYCLE_ACTION_NOT_ALLOWED';
+  end if;
+  if v_reason is null or length(v_reason) > 500 then
+    raise exception 'PATCH83U_LIFECYCLE_REASON_REQUIRED';
+  end if;
+
+  v_admin := public.patch83u_require_role_admin(p_actor_id);
+  v_org_id := (v_admin ->> 'organization_id')::uuid;
+  v_is_super_admin := (v_admin ->> 'is_super_admin')::boolean;
+
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(
+      'patch83u-super-admin-eligibility:' || v_org_id::text,
+      0
+    )
+  );
+
+  -- Lock every actor proof row before repeating the canonical authorization
+  -- decision. A concurrent lifecycle or role change cannot invalidate the
+  -- actor between authorization and the target mutation.
+  perform 1
+  from public.user_roles ur
+  where ur.user_id = p_actor_id
+  order by ur.id
+  for update;
+  perform 1
+  from public.profiles p
+  where p.id = p_actor_id and p.organization_id = v_org_id
+  for update;
+  if not found then
+    raise exception 'PATCH83U_LIFECYCLE_ACTOR_NOT_FOUND';
+  end if;
+  perform 1
+  from public.user_credential_states cs
+  where cs.user_id = p_actor_id and cs.organization_id = v_org_id
+  for update;
+  if not found then
+    raise exception 'PATCH83U_LIFECYCLE_ACTOR_CREDENTIAL_STATE_REQUIRED';
+  end if;
+  v_admin := public.patch83u_require_role_admin(p_actor_id);
+  if (v_admin ->> 'organization_id')::uuid is distinct from v_org_id then
+    raise exception 'PATCH83U_LIFECYCLE_ADMIN_ORGANIZATION_CHANGED';
+  end if;
+  v_is_super_admin := (v_admin ->> 'is_super_admin')::boolean;
+
+  -- Role updates acquire their row before the role-activation trigger locks the
+  -- profile. Use the same role->profile order to avoid a lifecycle/role-update
+  -- deadlock, then hold the profile row against new role activations.
+  perform 1
+  from public.user_roles ur
+  where ur.user_id = p_target_user_id
+  order by ur.id
+  for update;
+
+  select p.* into v_target
+  from public.profiles p
+  where p.id = p_target_user_id
+    and p.organization_id = v_org_id
+  for update;
+  if v_target.id is null then
+    raise exception 'PATCH83U_LIFECYCLE_TARGET_NOT_FOUND';
+  end if;
+
+  select cs.* into v_state
+  from public.user_credential_states cs
+  where cs.user_id = p_target_user_id
+    and cs.organization_id = v_org_id
+  for update;
+  if v_state.user_id is null then
+    raise exception 'PATCH83U_LIFECYCLE_TARGET_CREDENTIAL_STATE_REQUIRED';
+  end if;
+
+  -- A protected provisioning record owns the profile/credential lifecycle
+  -- until it reaches a terminal queue state. Never mutate that record
+  -- implicitly or allow an administrative lifecycle transition to create
+  -- profile/credential/queue drift while provisioning remains open.
+  if exists (
+    select 1
+    from public.user_account_provisioning q
+    where q.profile_id = p_target_user_id
+      and q.organization_id = v_org_id
+      and q.provisioning_status not in ('completed', 'cancelled')
+  ) then
+    raise exception 'PATCH83U_LIFECYCLE_OPEN_PROVISIONING_DENIED';
+  end if;
+
+  if p_target_user_id = p_actor_id
+    and p_action in ('patch19_deactivate_user', 'patch19_archive_user')
+  then
+    raise exception 'PATCH83U_SELF_LIFECYCLE_DEACTIVATION_DENIED';
+  end if;
+  if not v_is_super_admin and exists (
+    select 1
+    from public.user_roles ur
+    where ur.user_id = p_target_user_id
+      and ur.is_active = true
+      and ur.role in ('super_admin', 'executive', 'governance_admin')
+  ) then
+    raise exception 'PATCH83U_PRIVILEGED_LIFECYCLE_REQUIRES_SUPER_ADMIN';
+  end if;
+  if v_target.user_status not in ('active', 'inactive', 'archived', 'invited', 'locked')
+    or v_target.is_active is distinct from (
+      v_target.user_status in ('active', 'invited')
+    )
+    or (
+      v_target.user_status in ('active', 'invited')
+      and (
+        v_target.deactivated_at is not null
+        or v_target.deactivated_by is not null
+        or v_target.deactivation_reason is not null
+      )
+    )
+    or (
+      v_target.user_status in ('inactive', 'archived', 'locked')
+      and (
+        v_target.deactivated_at is null
+        or v_target.deactivated_by is null
+        or nullif(pg_catalog.btrim(coalesce(v_target.deactivation_reason, '')), '') is null
+        or not exists (
+          select 1
+          from public.profiles deactivation_actor
+          where deactivation_actor.id = v_target.deactivated_by
+            and deactivation_actor.organization_id = v_target.organization_id
+        )
+      )
+    )
+  then
+    raise exception 'PATCH83U_PROFILE_LIFECYCLE_INCONSISTENT';
+  end if;
+
+  if p_action = 'patch19_deactivate_user' then
+    if v_target.user_status not in ('active', 'invited')
+      or v_target.is_active is distinct from true
+    then
+      raise exception 'PATCH83U_LIFECYCLE_SOURCE_STATE_INVALID';
+    end if;
+    v_next_status := 'inactive';
+    v_audit_action := 'deactivated';
+    v_expected_active := false;
+    v_expected_credential_event := 'PATCH83U_PROFILE_LIFECYCLE_BLOCKED';
+  elsif p_action = 'patch19_reactivate_user' then
+    if v_target.user_status not in ('inactive', 'locked')
+      or v_target.is_active is distinct from false
+    then
+      raise exception 'PATCH83U_LIFECYCLE_SOURCE_STATE_INVALID';
+    end if;
+    v_next_status := 'active';
+    v_audit_action := 'reactivated';
+    v_expected_active := true;
+    v_expected_credential_event := case
+      when v_state.identity_mode in ('employee_id_managed', 'legacy_verified')
+        then 'PATCH83U_PROFILE_REACTIVATED'
+      else null
+    end;
+  elsif p_action = 'patch19_archive_user' then
+    if v_target.user_status = 'archived' then
+      raise exception 'PATCH83U_LIFECYCLE_SOURCE_STATE_INVALID';
+    end if;
+    v_next_status := 'archived';
+    v_audit_action := 'archived';
+    v_expected_active := false;
+    v_expected_credential_event := 'PATCH83U_PROFILE_LIFECYCLE_BLOCKED';
+  else
+    if v_target.user_status <> 'archived'
+      or v_target.is_active is distinct from false
+    then
+      raise exception 'PATCH83U_LIFECYCLE_SOURCE_STATE_INVALID';
+    end if;
+    v_next_status := 'active';
+    v_audit_action := 'unarchived';
+    v_expected_active := true;
+    v_expected_credential_event := case
+      when v_state.identity_mode in ('employee_id_managed', 'legacy_verified')
+        then 'PATCH83U_PROFILE_REACTIVATED'
+      else null
+    end;
+  end if;
+
+  -- Reactivation/unarchive never makes a historical active role effective by
+  -- implication. The target role set is already locked above, so any drift is
+  -- stable for this decision and must be reconciled before profile activation.
+  if v_expected_active and exists (
+    select 1
+    from public.user_roles ur
+    where ur.user_id = p_target_user_id
+      and ur.is_active = true
+  ) then
+    raise exception 'PATCH83U_LIFECYCLE_ACTIVE_ROLE_DRIFT';
+  end if;
+
+  v_old_profile := to_jsonb(v_target);
+  select (
+    (select count(*) from public.projects pr
+      where pr.owner_id = p_target_user_id or pr.sponsor_id = p_target_user_id) +
+    (select count(*) from public.tasks t
+      where t.owner_id = p_target_user_id or t.assigned_to = p_target_user_id) +
+    (select count(*) from public.approvals a
+      where a.requested_by = p_target_user_id or a.approver_id = p_target_user_id) +
+    (select count(*) from public.evidence_files e
+      where e.uploaded_by = p_target_user_id or e.reviewed_by = p_target_user_id)
+  )::integer into v_linked_count;
+
+  if v_expected_credential_event is not null then
+    select count(*)::integer into v_credential_events_before
+    from public.user_credential_events e
+    where e.user_id = p_target_user_id
+      and e.actor_id = p_actor_id
+      and e.event_code = v_expected_credential_event;
+  end if;
+
+  -- Preserve the service-role claim for the trigger boundary. Set only the
+  -- canonical actor subject so lifecycle credential events retain attribution.
+  perform pg_catalog.set_config('request.jwt.claim.sub', p_actor_id::text, true);
+  update public.profiles
+  set user_status = v_next_status,
+      is_active = v_expected_active,
+      deactivated_at = case
+        when v_expected_active then null else pg_catalog.statement_timestamp() end,
+      deactivated_by = case when v_expected_active then null else p_actor_id end,
+      deactivation_reason = case when v_expected_active then null else v_reason end,
+      last_reviewed_at = pg_catalog.statement_timestamp(),
+      updated_at = pg_catalog.statement_timestamp()
+  where id = p_target_user_id
+    and organization_id = v_org_id;
+  if not found then
+    raise exception 'PATCH83U_LIFECYCLE_PROFILE_UPDATE_FAILED';
+  end if;
+
+  select p.* into v_target
+  from public.profiles p where p.id = p_target_user_id;
+  select cs.* into v_state
+  from public.user_credential_states cs where cs.user_id = p_target_user_id;
+  v_new_profile := to_jsonb(v_target);
+
+  if v_target.user_status is distinct from v_next_status
+    or v_target.is_active is distinct from v_expected_active
+    or v_state.requested_lifecycle is distinct from v_next_status
+    or (
+      not v_expected_active
+      and (
+        v_target.deactivated_by is distinct from p_actor_id
+        or v_target.deactivation_reason is distinct from v_reason
+        or v_state.credential_state <> 'disabled'
+      )
+    )
+    or (
+      v_expected_active
+      and (
+        v_target.deactivated_at is not null
+        or v_target.deactivated_by is not null
+        or v_target.deactivation_reason is not null
+        or v_state.credential_state is distinct from case
+          when v_state.identity_mode in ('employee_id_managed', 'legacy_verified')
+            then 'reactivation_change_required'
+          else 'reconciliation_required'
+        end
+      )
+    )
+  then
+    raise exception 'PATCH83U_LIFECYCLE_CREDENTIAL_PROOF_FAILED';
+  end if;
+
+  if v_expected_credential_event is not null then
+    select count(*)::integer into v_credential_events_after
+    from public.user_credential_events e
+    where e.user_id = p_target_user_id
+      and e.actor_id = p_actor_id
+      and e.event_code = v_expected_credential_event;
+    if v_credential_events_after <> v_credential_events_before + 1 then
+      raise exception 'PATCH83U_LIFECYCLE_CREDENTIAL_EVENT_PROOF_FAILED';
+    end if;
+  end if;
+
+  if not v_expected_active then
+    for v_role in
+      select ur.*
+      from public.user_roles ur
+      where ur.user_id = p_target_user_id and ur.is_active = true
+      order by ur.id
+      for update
+    loop
+      update public.user_roles
+      set is_active = false
+      where id = v_role.id and is_active = true;
+      if not found then
+        raise exception 'PATCH83U_LIFECYCLE_ROLE_DEACTIVATION_FAILED';
+      end if;
+
+      insert into public.role_change_audit (
+        organization_id, target_user_id, user_role_id, action,
+        old_data, new_data, reason, changed_by
+      ) values (
+        v_org_id, p_target_user_id, v_role.id, 'deactivated',
+        to_jsonb(v_role),
+        pg_catalog.jsonb_set(to_jsonb(v_role), '{is_active}', 'false'::jsonb, true),
+        v_reason, p_actor_id
+      );
+      v_role_rows_deactivated := v_role_rows_deactivated + 1;
+      v_role_audit_records := v_role_audit_records + 1;
+    end loop;
+
+    if exists (
+      select 1 from public.user_roles ur
+      where ur.user_id = p_target_user_id and ur.is_active = true
+    ) then
+      raise exception 'PATCH83U_LIFECYCLE_ACTIVE_ROLE_PROOF_FAILED';
+    end if;
+  end if;
+
+  select count(*)::integer into v_active_role_count_after
+  from public.user_roles ur
+  where ur.user_id = p_target_user_id and ur.is_active = true;
+  if v_expected_active and v_active_role_count_after <> 0 then
+    raise exception 'PATCH83U_LIFECYCLE_ACTIVE_ROLE_PROOF_FAILED';
+  end if;
+
+  insert into public.user_management_audit_history (
+    organization_id, target_user_id, actor_id, action, reason,
+    old_data, new_data, linked_record_count
+  ) values (
+    v_org_id, p_target_user_id, p_actor_id, v_audit_action, v_reason,
+    v_old_profile, v_new_profile, v_linked_count
+  ) returning id into v_lifecycle_audit_id;
+
+  if v_lifecycle_audit_id is null then
+    raise exception 'PATCH83U_LIFECYCLE_AUDIT_PROOF_FAILED';
+  end if;
+
+  return jsonb_build_object(
+    'updated', true,
+    'user_id', p_target_user_id,
+    'organization_id', v_org_id,
+    'action', p_action,
+    'audit_action', v_audit_action,
+    'user_status', v_target.user_status,
+    'is_active', v_target.is_active,
+    'credential_state', v_state.credential_state,
+    'requested_lifecycle', v_state.requested_lifecycle,
+    'deactivated_role_count', v_role_rows_deactivated,
+    'role_audit_record_count', v_role_audit_records,
+    'remaining_active_role_count', v_active_role_count_after,
+    'reactivated_role_count', 0,
+    'audit_id', v_lifecycle_audit_id,
+    'audit_record_count', 1,
+    'credential_event_records', case
+      when v_expected_credential_event is null then 0 else 1 end,
+    'linked_record_count', v_linked_count
+  );
+end;
+$$;
+
 create or replace function public.patch83u_safe_failure_message(p_message text)
 returns text
 language sql
@@ -1733,12 +3237,11 @@ immutable
 security definer
 set search_path = pg_catalog, public, pg_temp
 as $$
-  select case
-    when nullif(btrim(coalesce(p_message, '')), '') is null then null
-    when p_message ~* '(password|passwd|secret|bearer|authorization|refresh[_ -]?token|access[_ -]?token|service[_ -]?role)'
-      then 'The server-side identity operation failed. No credential detail was retained.'
-    else left(regexp_replace(btrim(p_message), '[[:cntrl:]]', ' ', 'g'), 500)
-  end;
+  -- Caller-supplied failure text is never audit-safe: a credential can be any
+  -- string and does not need to contain a recognizable keyword. Persist only
+  -- this fixed message; the separately validated error code carries the useful
+  -- operational classification without retaining caller-controlled content.
+  select 'The server-side identity operation failed. No credential detail was retained.'::text;
 $$;
 
 create or replace function public.patch83t_update_user_profile(
@@ -1792,8 +3295,9 @@ begin
     and p.is_active = true
     and p.user_status = 'active'
     and cs.organization_id = p.organization_id
-    and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
-    and cs.credential_state = 'active';
+    and public.patch83u_runtime_credential_state_allowed(
+      cs.credential_state, cs.identity_mode
+    );
 
   if v_org_id is null or not exists (
     select 1
@@ -2030,6 +3534,11 @@ create trigger trg_patch83u_events_append_only
 before update or delete on public.user_credential_events
 for each row execute function public.patch83u_guard_event_append_only();
 
+drop trigger if exists trg_patch83u_runtime_events_append_only on public.patch83u_runtime_events;
+create trigger trg_patch83u_runtime_events_append_only
+before update or delete on public.patch83u_runtime_events
+for each row execute function public.patch83u_guard_event_append_only();
+
 create or replace function public.patch83u_set_updated_at()
 returns trigger
 language plpgsql
@@ -2104,14 +3613,67 @@ set search_path = pg_catalog, public, pg_temp
 as $$
 declare
   v_actor_org_id uuid;
+  v_deactivation_metadata_changed boolean := false;
+  v_lifecycle_changed boolean := false;
+  v_target_was_eligible_super_admin boolean := false;
+  v_marker text;
 begin
-  if new.organization_id is distinct from old.organization_id then
-    if not (
-      auth.role() = 'service_role'
-      and coalesce(current_setting('patch83u.controlled_organization_change', true), '') = 'on'
-    ) then
-      raise exception 'PATCH83U_PROFILE_ORGANIZATION_IMMUTABLE';
+  if tg_op = 'INSERT' then
+    -- Profiles are tenant identity roots. Legacy self-insert policies must not
+    -- let an authenticated Auth identity choose an organization before the
+    -- controlled server-side provisioning flow has established its identity.
+    if auth.role() is distinct from 'service_role' then
+      raise exception 'PATCH83U_PROFILE_INSERT_SERVICE_ROLE_REQUIRED';
     end if;
+
+    if new.user_status not in ('active', 'inactive', 'archived', 'invited', 'locked')
+      or new.is_active is distinct from (new.user_status in ('active', 'invited'))
+    then
+      raise exception 'PATCH83U_PROFILE_LIFECYCLE_INCONSISTENT';
+    end if;
+
+    if new.user_status in ('active', 'invited') then
+      new.deactivated_at := null;
+      new.deactivated_by := null;
+      new.deactivation_reason := null;
+    else
+      if auth.role() is distinct from 'service_role' then
+        new.deactivated_at := pg_catalog.statement_timestamp();
+        new.deactivated_by := auth.uid();
+      else
+        new.deactivated_at := coalesce(
+          new.deactivated_at,
+          pg_catalog.statement_timestamp()
+        );
+      end if;
+      new.deactivation_reason := nullif(
+        pg_catalog.btrim(coalesce(new.deactivation_reason, '')),
+        ''
+      );
+
+      if new.deactivated_at is null
+        or new.deactivated_by is null
+        or new.deactivation_reason is null
+        or not exists (
+          select 1
+          from public.profiles deactivation_actor
+          where deactivation_actor.id = new.deactivated_by
+            and deactivation_actor.organization_id = new.organization_id
+        )
+      then
+        raise exception 'PATCH83U_PROFILE_DEACTIVATION_METADATA_INCONSISTENT';
+      end if;
+    end if;
+
+    return new;
+  end if;
+
+  if new.organization_id is distinct from old.organization_id then
+    -- No Patch 83U operation owns the coordinated profile/credential/role
+    -- rewrite that an organization transfer would require. Deny it even to a
+    -- service-role caller so the last-Super-Admin and tenant joins cannot be
+    -- bypassed through an incomplete profile-only move.
+    raise exception 'PATCH83U_PROFILE_ORGANIZATION_IMMUTABLE';
   end if;
 
   if new.user_status not in ('active', 'inactive', 'archived', 'invited', 'locked')
@@ -2120,15 +3682,120 @@ begin
     raise exception 'PATCH83U_PROFILE_LIFECYCLE_INCONSISTENT';
   end if;
 
-  if new.user_status is not distinct from old.user_status
-    and new.is_active is not distinct from old.is_active
+  v_lifecycle_changed := new.user_status is distinct from old.user_status
+    or new.is_active is distinct from old.is_active;
+  v_deactivation_metadata_changed :=
+    new.deactivated_at is distinct from old.deactivated_at
+    or new.deactivated_by is distinct from old.deactivated_by
+    or new.deactivation_reason is distinct from old.deactivation_reason;
+
+  -- Direct authenticated writes may request a lifecycle transition, but they
+  -- must not rewrite its audit metadata independently. For a transition into
+  -- a blocked lifecycle, the database supplies the actor and timestamp. The
+  -- service role remains available to the controlled Patch 83T/83U routines
+  -- that repair or synchronize an existing lifecycle record.
+  if auth.role() is distinct from 'service_role'
+    and not v_lifecycle_changed
+    and v_deactivation_metadata_changed
   then
+    raise exception 'PATCH83U_DIRECT_DEACTIVATION_METADATA_CHANGE_DENIED';
+  end if;
+
+  if new.user_status in ('active', 'invited') then
+    new.deactivated_at := null;
+    new.deactivated_by := null;
+    new.deactivation_reason := null;
+  elsif v_lifecycle_changed or v_deactivation_metadata_changed then
+    if auth.role() is distinct from 'service_role' then
+      new.deactivated_at := pg_catalog.statement_timestamp();
+      new.deactivated_by := auth.uid();
+    else
+      new.deactivated_at := coalesce(
+        new.deactivated_at,
+        pg_catalog.statement_timestamp()
+      );
+    end if;
+    new.deactivation_reason := nullif(
+      pg_catalog.btrim(coalesce(new.deactivation_reason, '')),
+      ''
+    );
+
+    if new.deactivated_at is null
+      or new.deactivated_by is null
+      or new.deactivation_reason is null
+      or not exists (
+        select 1
+        from public.profiles deactivation_actor
+        where deactivation_actor.id = new.deactivated_by
+          and deactivation_actor.organization_id = new.organization_id
+      )
+    then
+      raise exception 'PATCH83U_PROFILE_DEACTIVATION_METADATA_INCONSISTENT';
+    end if;
+  end if;
+
+  if not v_lifecycle_changed then
     return new;
   end if;
 
+  -- Lifecycle removal must protect the last runtime-eligible global Super
+  -- Admin regardless of whether the write came from browser RLS or a
+  -- service-role routine. Patch 83T is the sole batch exception: it first
+  -- proves the complete replacement set under the same organization lock and
+  -- sets the exact organization:actor transaction marker used below.
+  if old.is_active = true
+    and old.user_status = 'active'
+    and (new.is_active = false or new.user_status <> 'active')
+  then
+    v_target_was_eligible_super_admin :=
+      public.patch83u_runtime_super_admin_eligible(old.id, old.organization_id);
+
+    if v_target_was_eligible_super_admin then
+      perform pg_catalog.pg_advisory_xact_lock(
+        pg_catalog.hashtextextended(
+          'patch83u-super-admin-eligibility:' || old.organization_id::text,
+          0
+        )
+      );
+
+      v_marker := coalesce(
+        current_setting('patch83u.super_admin_batch_guard_verified', true),
+        ''
+      );
+      if v_marker <> old.organization_id::text || ':' || coalesce(auth.uid()::text, '') then
+        perform 1
+        from public.user_roles ur
+        join public.profiles p on p.id = ur.user_id
+        join public.user_credential_states cs on cs.user_id = p.id
+        where ur.user_id <> old.id
+          and ur.is_active = true
+          and ur.role = 'super_admin'
+          and ur.scope = 'global'
+          and public.patch83u_role_assignment_valid(
+            old.organization_id, ur.scope, ur.organization_id,
+            ur.division_id, ur.department_id, ur.unit_id
+          )
+          and p.organization_id = old.organization_id
+          and p.is_active = true
+          and p.user_status = 'active'
+          and cs.organization_id = old.organization_id
+          and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
+          and public.patch83u_runtime_super_admin_eligible(
+            ur.user_id, old.organization_id
+          )
+        for update of ur, p, cs;
+
+        if not found then
+          raise exception 'PATCH83U_LAST_SUPER_ADMIN_PROFILE_DEACTIVATION_DENIED';
+        end if;
+      end if;
+    end if;
+  end if;
+
   -- Server-only Patch 83T/83U functions already perform their operation-specific
-  -- actor, scope, confirmation, and last-Super-Admin checks. Browser-originated
-  -- changes must never be self lifecycle changes and require an active canonical
+  -- actor, scope, and confirmation checks. The trigger above independently
+  -- enforces the last-Super-Admin invariant. Browser-originated changes must
+  -- never be self lifecycle changes and require an active canonical
   -- same-organization role administrator.
   if auth.role() = 'service_role' then
     return new;
@@ -2147,8 +3814,7 @@ begin
     and p.organization_id = old.organization_id
     and p.is_active = true
     and p.user_status = 'active'
-    and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
-    and cs.credential_state = 'active';
+    and public.patch83u_credential_access_allowed();
 
   if v_actor_org_id is null or not exists (
     select 1
@@ -2226,9 +3892,17 @@ begin
     and (
       p.user_status = 'active'
       or (v_controlled_restore and p.user_status = 'invited')
-    );
+    )
+  -- Serialize the lifecycle decision with profile UPDATE. A role INSERT/active
+  -- UPDATE that started before deactivation must wait, re-read the committed
+  -- lifecycle, and fail instead of committing an active role afterward.
+  for share;
   if v_profile_org_id is null then
     raise exception 'PATCH83U_ACTIVE_ROLE_PROFILE_LIFECYCLE_INVALID';
+  end if;
+
+  if not public.patch83u_role_scope_allowed(new.role, new.scope) then
+    raise exception 'PATCH83U_ACTIVE_ROLE_SCOPE_NOT_ALLOWED';
   end if;
 
   if not public.patch83u_role_assignment_valid(
@@ -2244,8 +3918,12 @@ begin
 
   if not coalesce(v_has_credential_state, false)
     or v_credential_org_id is distinct from v_profile_org_id
-    or v_identity_mode not in ('employee_id_managed', 'legacy_verified')
-    or (v_credential_state <> 'active' and not v_controlled_restore)
+    or (
+      not public.patch83u_runtime_credential_state_allowed(
+        v_credential_state, v_identity_mode
+      )
+      and not v_controlled_restore
+    )
   then
     raise exception 'PATCH83U_ACTIVE_ROLE_CREDENTIAL_LOCKED';
   end if;
@@ -2274,7 +3952,7 @@ begin
            and p.user_status = 'active'
            and cs.organization_id = p.organization_id
            and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
-           and cs.credential_state = 'active'
+           and public.patch83u_runtime_super_admin_eligible(old.user_id, p.organization_id)
   into v_org_id, v_target_eligible
   from public.profiles p
   left join public.user_credential_states cs on cs.user_id = p.id
@@ -2332,7 +4010,7 @@ begin
     and p.user_status = 'active'
     and cs.organization_id = v_org_id
     and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
-    and cs.credential_state = 'active'
+    and public.patch83u_runtime_super_admin_eligible(ur.user_id, v_org_id)
   for update of ur, p, cs;
 
   if not found then
@@ -2349,121 +4027,10 @@ language plpgsql
 security definer
 set search_path = pg_catalog, public, pg_temp
 as $$
-declare
-  v_org_id uuid;
-  v_actor_id uuid;
-  v_suspension_id uuid;
-  v_role public.user_roles%rowtype;
-  v_suspended_count integer := 0;
 begin
-  if new.credential_state = 'active' or not exists (
-    select 1 from public.user_roles ur
-    where ur.user_id = new.user_id and ur.is_active = true
-  ) then
-    return new;
-  end if;
-
-  select p.organization_id into v_org_id
-  from public.profiles p
-  where p.id = new.user_id;
-  if v_org_id is null or new.organization_id is distinct from v_org_id then
-    raise exception 'PATCH83U_CREDENTIAL_LOCK_ORGANIZATION_INVALID';
-  end if;
-
-  v_actor_id := coalesce(auth.uid(), new.user_id);
-  v_suspension_id := coalesce(new.role_suspension_id, gen_random_uuid());
-
-  perform pg_catalog.pg_advisory_xact_lock(
-    pg_catalog.hashtextextended('patch83u-super-admin-eligibility:' || v_org_id::text, 0)
-  );
-
-  if exists (
-    select 1 from public.user_roles ur
-    where ur.user_id = new.user_id
-      and ur.is_active = true
-      and ur.role = 'super_admin'
-      and ur.scope = 'global'
-      and public.patch83u_role_assignment_valid(
-        v_org_id, ur.scope, ur.organization_id,
-        ur.division_id, ur.department_id, ur.unit_id
-      )
-  ) and not exists (
-    select 1
-    from public.user_roles ur
-    join public.profiles p on p.id = ur.user_id
-    join public.user_credential_states cs on cs.user_id = p.id
-    where ur.user_id <> new.user_id
-      and ur.is_active = true
-      and ur.role = 'super_admin'
-      and ur.scope = 'global'
-      and public.patch83u_role_assignment_valid(
-        v_org_id, ur.scope, ur.organization_id,
-        ur.division_id, ur.department_id, ur.unit_id
-      )
-      and p.organization_id = v_org_id
-      and p.is_active = true
-      and p.user_status = 'active'
-      and cs.organization_id = v_org_id
-      and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
-      and cs.credential_state = 'active'
-  ) and coalesce(
-    current_setting('patch83u.super_admin_batch_guard_verified', true), ''
-  ) <> (v_org_id::text || ':' || coalesce(auth.uid()::text, ''))
-  then
-    raise exception 'PATCH83U_LAST_SUPER_ADMIN_CREDENTIAL_LOCK_DENIED';
-  end if;
-
-  for v_role in
-    select ur.*
-    from public.user_roles ur
-    where ur.user_id = new.user_id
-      and ur.is_active = true
-    order by ur.id
-    for update
-  loop
-    insert into public.user_credential_suspended_roles (
-      suspension_id, organization_id, user_id, source_user_role_id,
-      role, scope, role_organization_id, division_id, department_id,
-      unit_id, suspension_status, suspended_by
-    ) values (
-      v_suspension_id, v_org_id, new.user_id, v_role.id,
-      v_role.role, v_role.scope, v_role.organization_id, v_role.division_id,
-      v_role.department_id, v_role.unit_id, 'suspended', v_actor_id
-    )
-    on conflict (suspension_id, source_user_role_id) do update
-    set suspension_status = 'suspended',
-        restored_user_role_id = null,
-        restored_at = null,
-        restore_error_code = null,
-        suspended_by = excluded.suspended_by,
-        suspended_at = clock_timestamp();
-
-    update public.user_roles set is_active = false where id = v_role.id;
-    insert into public.role_change_audit (
-      organization_id, target_user_id, user_role_id, action,
-      old_data, reason, changed_by
-    ) values (
-      v_org_id, new.user_id, v_role.id, 'deactivated', to_jsonb(v_role),
-      'Patch 83U automatic role suspension for credential lock', v_actor_id
-    );
-    v_suspended_count := v_suspended_count + 1;
-  end loop;
-
-  new.role_suspension_id := v_suspension_id;
-  insert into public.user_credential_events (
-    organization_id, user_id, provisioning_id, actor_id, event_type,
-    credential_version, event_code, details
-  ) values (
-    v_org_id, new.user_id, new.provisioning_id, v_actor_id,
-    'roles_suspended', new.credential_version,
-    'PATCH83U_CREDENTIAL_LOCK_ROLES_SUSPENDED',
-    jsonb_build_object(
-      'suspension_id', v_suspension_id,
-      'count', v_suspended_count,
-      'credential_state', new.credential_state
-    )
-  );
-
+  -- Credential state makes an existing assignment ineffective while enforcement
+  -- is active. It never rewrites or deletes the canonical user_roles row.
+  new.role_suspension_id := null;
   return new;
 end;
 $$;
@@ -2475,7 +4042,9 @@ for each row execute function public.patch83u_guard_managed_profile_employee_id(
 
 drop trigger if exists trg_patch83u_guard_profile_security_boundary on public.profiles;
 create trigger trg_patch83u_guard_profile_security_boundary
-before update of organization_id, user_status, is_active on public.profiles
+before insert or update of organization_id, user_status, is_active,
+  deactivated_at, deactivated_by, deactivation_reason
+on public.profiles
 for each row execute function public.patch83u_guard_profile_security_boundary();
 
 drop trigger if exists trg_patch83u_guard_credential_identity on public.user_credential_states;
@@ -2508,6 +4077,16 @@ create trigger trg_patch83u_suspended_roles_updated_at
 before update on public.user_credential_suspended_roles
 for each row execute function public.patch83u_set_updated_at();
 
+drop trigger if exists trg_patch83u_runtime_control_updated_at on public.patch83u_runtime_control;
+create trigger trg_patch83u_runtime_control_updated_at
+before update on public.patch83u_runtime_control
+for each row execute function public.patch83u_set_updated_at();
+
+drop trigger if exists trg_patch83u_credential_operations_updated_at on public.patch83u_credential_operations;
+create trigger trg_patch83u_credential_operations_updated_at
+before update on public.patch83u_credential_operations
+for each row execute function public.patch83u_set_updated_at();
+
 -- ---------------------------------------------------------------------------
 -- Legacy compatibility and lifecycle synchronization
 -- ---------------------------------------------------------------------------
@@ -2535,6 +4114,23 @@ select
     when u.id is not null
       and nullif(btrim(u.email), '') is not null
       and u.email_confirmed_at is not null
+      and u.deleted_at is null
+      and (u.banned_until is null or u.banned_until <= now())
+      and public.patch83u_auth_credential_version(u.raw_app_meta_data) = 0
+      and 1 = (
+        select count(*)
+        from auth.identities ai
+        where ai.user_id = u.id
+          and ai.provider = 'email'
+      )
+      and 1 = (
+        select count(*)
+        from auth.identities ai
+        where ai.user_id = u.id
+          and ai.provider = 'email'
+          and lower(btrim(coalesce(ai.identity_data ->> 'email', '')))
+            = lower(btrim(u.email))
+      )
       then 'legacy_verified'
     else 'unverified'
   end,
@@ -2544,8 +4140,24 @@ select
       and u.id is not null
       and nullif(btrim(u.email), '') is not null
       and u.email_confirmed_at is not null
+      and u.deleted_at is null
+      and (u.banned_until is null or u.banned_until <= now())
       and public.patch83u_auth_credential_version(u.raw_app_meta_data) = 0
-      then 'active'
+      and 1 = (
+        select count(*)
+        from auth.identities ai
+        where ai.user_id = u.id
+          and ai.provider = 'email'
+      )
+      and 1 = (
+        select count(*)
+        from auth.identities ai
+        where ai.user_id = u.id
+          and ai.provider = 'email'
+          and lower(btrim(coalesce(ai.identity_data ->> 'email', '')))
+            = lower(btrim(u.email))
+      )
+      then 'existing_password_rotation_pending'
     when p.user_status = 'active' and p.is_active = true
       then 'reconciliation_required'
     when p.user_status = 'invited' then 'reconciliation_required'
@@ -2589,26 +4201,24 @@ where not exists (
     and e.event_type = 'legacy_state_backfilled'
 );
 
--- Install credential-lock suspension only after every legacy credential row is
--- present. The deterministic pass then evaluates last-admin eligibility against
--- the complete state set instead of depending on INSERT order.
-create trigger trg_patch83u_suspend_roles_for_credential_lock
-before insert or update of credential_state, role_suspension_id
-on public.user_credential_states
-for each row execute function public.patch83u_suspend_roles_for_credential_lock();
+insert into public.user_credential_events (
+  organization_id, user_id, event_type, credential_version, event_code, details
+)
+select cs.organization_id, cs.user_id, 'existing_password_rotation_scheduled',
+  cs.credential_version, 'PATCH83U_EXISTING_ROTATION_SCHEDULED',
+  jsonb_build_object('role_rows_preserved', true, 'password_preserved', true)
+from public.user_credential_states cs
+where cs.credential_state = 'existing_password_rotation_pending'
+  and not exists (
+    select 1 from public.user_credential_events e
+    where e.user_id = cs.user_id
+      and e.event_type = 'existing_password_rotation_scheduled'
+  );
 
-update public.user_credential_states cs
-set credential_state = cs.credential_state
-where cs.credential_state <> 'active';
-
--- Re-run the universal activation guard against every surviving legacy active
--- assignment. Invalid tenant/hierarchy references, missing credential rows, or
--- unverified identities fail the unapplied migration closed instead of remaining
--- usable through legacy role-only authorizers. Generic role/scope combinations
--- remain governed by the existing scope-driven authorization model.
-update public.user_roles ur
-set is_active = ur.is_active
-where ur.is_active = true;
+-- Credential rotation never rewrites existing user_roles rows. Runtime-aware RLS
+-- makes those rows ineffective only after controlled enforcement.
+drop trigger if exists trg_patch83u_suspend_roles_for_credential_lock
+on public.user_credential_states;
 
 create or replace function public.patch83u_sync_profile_credential_lifecycle()
 returns trigger
@@ -2619,6 +4229,7 @@ as $$
 declare
   v_auth_email text;
   v_next_state text;
+  v_controlled_update_count integer := 0;
 begin
   if new.organization_id is null then
     return new;
@@ -2649,8 +4260,33 @@ begin
     return new;
   end if;
 
+  -- Password-change finalization and protected reconciliation already proved
+  -- and wrote the terminal credential state before activating the profile.
+  -- Their exact service-only marker suppresses only the generic reactivation
+  -- rewrite; it still keeps the requested lifecycle aligned to this profile.
+  if coalesce(
+    current_setting('patch83u.controlled_lifecycle_transition', true),
+    ''
+  ) = 'on' then
+    if auth.role() is distinct from 'service_role'
+      or new.user_status <> 'active'
+      or new.is_active is distinct from true
+    then
+      raise exception 'PATCH83U_CONTROLLED_LIFECYCLE_TRANSITION_INVALID';
+    end if;
+
+    update public.user_credential_states
+    set requested_lifecycle = 'active'
+    where user_id = new.id
+      and organization_id = new.organization_id;
+    get diagnostics v_controlled_update_count = row_count;
+    if v_controlled_update_count <> 1 then
+      raise exception 'PATCH83U_CONTROLLED_LIFECYCLE_STATE_PROOF_FAILED';
+    end if;
+    return new;
+  end if;
+
   if (new.user_status is distinct from old.user_status or new.is_active is distinct from old.is_active)
-    and coalesce(current_setting('patch83u.controlled_lifecycle_transition', true), '') <> 'on'
     and exists (
       select 1
       from public.user_credential_states cs
@@ -2697,7 +4333,6 @@ begin
     update public.user_credential_states
     set credential_state = case
           when identity_mode in ('employee_id_managed', 'legacy_verified')
-            and nullif(btrim(coalesce(new.employee_no, '')), '') is not null
             then 'initial_change_required'
           else 'reconciliation_required'
         end,
@@ -2720,7 +4355,6 @@ begin
     update public.user_credential_states
     set credential_state = case
           when identity_mode in ('employee_id_managed', 'legacy_verified')
-            and nullif(btrim(coalesce(new.employee_no, '')), '') is not null
             then 'reactivation_change_required'
           else 'reconciliation_required'
         end,
@@ -2768,38 +4402,69 @@ stable
 security definer
 set search_path = pg_catalog, public, pg_temp
 as $$
-  select exists (
-    select 1
-    from public.user_credential_states cs
-    join public.profiles p
-      on p.id = cs.user_id
-     and p.organization_id = cs.organization_id
-    where cs.user_id = auth.uid()
-      and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
-      and cs.credential_state = 'active'
-      and p.is_active = true
-      and p.user_status = 'active'
-      and lower(coalesce(auth.jwt() ->> 'email', '')) = cs.auth_email
-      and public.patch83u_auth_credential_version(
-        auth.jwt() -> 'app_metadata'
-      ) = cs.credential_version
-      and coalesce(auth.jwt() ->> 'session_id', '') ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+  select case public.patch83u_runtime_enforcement_state()
+    when 'disabled' then auth.uid() is not null
+    when 'prepared' then auth.uid() is not null
+    when 'emergency_suspended' then exists (
+      select 1
+      from public.user_credential_states cs
+      join public.profiles p
+        on p.id = cs.user_id
+       and p.organization_id = cs.organization_id
+      where cs.user_id = auth.uid()
+        and cs.identity_mode = 'legacy_verified'
+        and cs.credential_state <> 'disabled'
+        and p.is_active = true
+        and p.user_status = 'active'
+        and lower(coalesce(auth.jwt() ->> 'email', '')) = cs.auth_email
+        and public.patch83u_auth_credential_version(
+          auth.jwt() -> 'app_metadata'
+        ) = cs.credential_version
+        and coalesce(auth.jwt() ->> 'session_id', '') ~
+          '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+        and (
+          cs.invalidated_session_id is null
+          or cs.invalidated_session_id <> (auth.jwt() ->> 'session_id')::uuid
+        )
+        and exists (
+          select 1 from auth.sessions s
+          where s.id = (auth.jwt() ->> 'session_id')::uuid
+            and s.user_id = cs.user_id
+            and s.created_at >= cs.session_valid_after
+        )
+    )
+    when 'enforced' then
+      public.patch83u_request_frontend_contract_compatible()
       and exists (
         select 1
-        from auth.sessions s
-        where s.id = case
-            when coalesce(auth.jwt() ->> 'session_id', '') ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-              then (auth.jwt() ->> 'session_id')::uuid
-            else null
-          end
-          and s.user_id = cs.user_id
-          and s.created_at >= cs.session_valid_after
+        from public.user_credential_states cs
+        join public.profiles p
+          on p.id = cs.user_id
+         and p.organization_id = cs.organization_id
+        where cs.user_id = auth.uid()
+          and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
+          and cs.credential_state = 'active'
+          and p.is_active = true
+          and p.user_status = 'active'
+          and lower(coalesce(auth.jwt() ->> 'email', '')) = cs.auth_email
+          and public.patch83u_auth_credential_version(
+            auth.jwt() -> 'app_metadata'
+          ) = cs.credential_version
+          and coalesce(auth.jwt() ->> 'session_id', '') ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+          and exists (
+            select 1
+            from auth.sessions s
+            where s.id = (auth.jwt() ->> 'session_id')::uuid
+              and s.user_id = cs.user_id
+              and s.created_at >= cs.session_valid_after
+          )
+          and (
+            cs.invalidated_session_id is null
+            or auth.jwt() ->> 'session_id' <> cs.invalidated_session_id::text
+          )
       )
-      and (
-        cs.invalidated_session_id is null
-        or auth.jwt() ->> 'session_id' <> cs.invalidated_session_id::text
-      )
-  );
+    else false
+  end;
 $$;
 
 create or replace function public.patch83u_profile_update_allowed(
@@ -2822,8 +4487,7 @@ as $$
       and actor.organization_id = p_target_organization_id
       and actor.is_active = true
       and actor.user_status = 'active'
-      and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
-      and cs.credential_state = 'active'
+      and public.patch83u_credential_access_allowed()
       and (
         p_target_user_id = actor.id
         or exists (
@@ -2879,8 +4543,8 @@ as $$
       and actor.id <> p_target_user_id
       and actor.is_active = true
       and actor.user_status = 'active'
-      and actor_state.identity_mode in ('employee_id_managed', 'legacy_verified')
-      and actor_state.credential_state = 'active'
+      and public.patch83u_credential_access_allowed()
+      and public.patch83u_role_scope_allowed(p_role, p_scope)
       and public.patch83u_role_assignment_valid(
         target.organization_id, p_scope, p_role_organization_id,
         p_division_id, p_department_id, p_unit_id
@@ -3172,7 +4836,10 @@ using (public.patch83u_credential_access_allowed());
 drop policy if exists patch83u_profile_credential_insert_gate on public.profiles;
 create policy patch83u_profile_credential_insert_gate
 on public.profiles as restrictive for insert to authenticated
-with check (public.patch83u_credential_access_allowed());
+-- Profile creation is a protected provisioning operation. The service role
+-- bypasses authenticated RLS only after Edge/database actor validation; a
+-- browser identity can never self-create a tenant profile in any runtime state.
+with check (false);
 
 drop policy if exists patch83u_profile_credential_update_gate on public.profiles;
 create policy patch83u_profile_credential_update_gate
@@ -3234,8 +4901,13 @@ declare
   v_result jsonb;
   v_token_matches boolean := false;
   v_verified_session_id uuid;
+  v_runtime_state text;
+  v_profile public.profiles%rowtype;
+  v_state public.user_credential_states%rowtype;
+  v_access_allowed boolean := false;
 begin
   perform public.patch83u_require_service_role();
+  v_runtime_state := public.patch83u_runtime_enforcement_state();
 
   if p_actor_id is null
     or p_token_credential_version is null
@@ -3255,71 +4927,17 @@ begin
     into v_token_matches;
   end if;
 
-  select jsonb_build_object(
-    'managed', true,
-    'user_id', p.id,
-    'organization_id', p.organization_id,
-    'auth_email', cs.auth_email,
-    'identity_mode', cs.identity_mode,
-    'credential_state', cs.credential_state,
-    'credential_version', cs.credential_version,
-    'password_reset_at', cs.password_reset_at,
-    'requested_lifecycle', cs.requested_lifecycle,
-    'user_status', p.user_status,
-    'is_active', p.is_active,
-    'access_allowed', (
-      cs.credential_state = 'active'
-      and cs.identity_mode in ('employee_id_managed', 'legacy_verified')
-      and cs.organization_id = p.organization_id
-      and p.user_status = 'active'
-      and p.is_active = true
-      and v_token_matches
-      and cs.credential_version = p_token_credential_version
-      and cs.auth_email = lower(btrim(coalesce(p_token_email, '')))
-      and (cs.invalidated_session_id is null or cs.invalidated_session_id <> v_verified_session_id)
-      and exists (
-        select 1
-        from auth.sessions s
-        where s.id = v_verified_session_id
-          and s.user_id = p.id
-          and s.created_at >= cs.session_valid_after
-      )
-    ),
-    'change_required', cs.credential_state in (
-      'initial_change_required',
-      'admin_reset_change_required',
-      'reactivation_change_required',
-      'password_change_in_progress'
-    ),
-    'recovery_required', cs.credential_state = 'recovery_required',
-    'reconciliation_required', cs.credential_state in ('recovery_required', 'reconciliation_required'),
-    'session_valid_after', cs.session_valid_after,
-    'message', case
-      when cs.credential_state in ('initial_change_required', 'admin_reset_change_required', 'reactivation_change_required')
-        then 'A password change is required before application access is allowed.'
-      when cs.credential_state = 'recovery_required'
-        then 'A partially completed password change requires controlled recovery before application access is allowed.'
-      when cs.credential_state = 'reconciliation_required'
-        then 'Credential reconciliation is required before application access is allowed.'
-      when cs.credential_state = 'disabled'
-        then 'This account is disabled.'
-      when not v_token_matches
-        then 'This session is no longer valid.'
-      when cs.credential_version <> p_token_credential_version
-        then 'This session uses a stale credential version.'
-      when cs.auth_email <> lower(btrim(coalesce(p_token_email, '')))
-        then 'This session does not match the managed sign-in identity.'
-      else null
-    end
-  )
-  into v_result
+  select p.* into v_profile
   from public.profiles p
-  join public.user_credential_states cs
-    on cs.user_id = p.id
-   and cs.organization_id = p.organization_id
-  where p.id = p_actor_id;
+  where p.id = p_actor_id
+  for update;
+  select cs.* into v_state
+  from public.user_credential_states cs
+  where cs.user_id = p_actor_id
+    and cs.organization_id = v_profile.organization_id
+  for update;
 
-  if v_result is null then
+  if v_profile.id is null or v_state.user_id is null then
     return jsonb_build_object(
       'managed', false,
       'user_id', p_actor_id,
@@ -3334,6 +4952,133 @@ begin
       'message', 'This account does not have a managed credential record.'
     );
   end if;
+
+  if v_runtime_state = 'enforced'
+    and v_state.credential_state = 'existing_password_rotation_pending'
+    and v_state.identity_mode = 'legacy_verified'
+    and v_profile.is_active = true
+    and v_profile.user_status = 'active'
+    and v_token_matches
+    and v_state.credential_version = p_token_credential_version
+    and v_state.auth_email = lower(btrim(coalesce(p_token_email, '')))
+    and exists (
+      select 1 from auth.sessions s
+      where s.id = v_verified_session_id
+        and s.user_id = p_actor_id
+        and s.created_at >= v_state.session_valid_after
+    )
+  then
+    update public.user_credential_states
+    set credential_state = 'existing_password_change_required'
+    where user_id = p_actor_id
+      and credential_state = 'existing_password_rotation_pending';
+    if found then
+      insert into public.user_credential_events (
+        organization_id, user_id, actor_id, event_type, credential_version,
+        session_id, event_code, details
+      ) values (
+        v_state.organization_id, p_actor_id, p_actor_id,
+        'existing_password_rotation_required', v_state.credential_version,
+        v_verified_session_id, 'PATCH83U_EXISTING_ROTATION_REQUIRED',
+        jsonb_build_object('role_rows_preserved', true, 'lazy_transition', true)
+      );
+      v_state.credential_state := 'existing_password_change_required';
+    end if;
+  end if;
+
+  v_access_allowed := case v_runtime_state
+    when 'disabled' then
+      v_token_matches and v_profile.is_active and v_profile.user_status = 'active'
+    when 'prepared' then
+      v_token_matches and v_profile.is_active and v_profile.user_status = 'active'
+    when 'emergency_suspended' then
+      v_token_matches
+      and v_profile.is_active
+      and v_profile.user_status = 'active'
+      and v_state.identity_mode = 'legacy_verified'
+      and v_state.credential_state <> 'disabled'
+      and v_state.credential_version = p_token_credential_version
+      and v_state.auth_email = lower(btrim(coalesce(p_token_email, '')))
+      and (
+        v_state.invalidated_session_id is null
+        or v_state.invalidated_session_id <> v_verified_session_id
+      )
+      and exists (
+        select 1 from auth.sessions s
+        where s.id = v_verified_session_id
+          and s.user_id = p_actor_id
+          and s.created_at >= v_state.session_valid_after
+      )
+    when 'enforced' then
+      v_state.credential_state = 'active'
+      and v_state.identity_mode in ('employee_id_managed', 'legacy_verified')
+      and v_profile.is_active
+      and v_profile.user_status = 'active'
+      and v_token_matches
+      and v_state.credential_version = p_token_credential_version
+      and v_state.auth_email = lower(btrim(coalesce(p_token_email, '')))
+      and (v_state.invalidated_session_id is null or v_state.invalidated_session_id <> v_verified_session_id)
+      and exists (
+        select 1 from auth.sessions s
+        where s.id = v_verified_session_id
+          and s.user_id = p_actor_id
+          and s.created_at >= v_state.session_valid_after
+      )
+    else false
+  end;
+
+  select jsonb_build_object(
+    'managed', true,
+    'user_id', v_profile.id,
+    'organization_id', v_profile.organization_id,
+    'auth_email', v_state.auth_email,
+    'identity_mode', v_state.identity_mode,
+    'credential_state', v_state.credential_state,
+    'credential_version', v_state.credential_version,
+    'password_reset_at', v_state.password_reset_at,
+    'requested_lifecycle', v_state.requested_lifecycle,
+    'user_status', v_profile.user_status,
+    'is_active', v_profile.is_active,
+    'access_allowed', v_access_allowed,
+    'change_required', v_state.credential_state in (
+      'existing_password_change_required',
+      'initial_change_required',
+      'admin_reset_change_required',
+      'reactivation_change_required',
+      'password_change_in_progress'
+    ),
+    'recovery_required', v_state.credential_state = 'recovery_required',
+    'reconciliation_required', v_state.credential_state in (
+      'recovery_required', 'reconciliation_required',
+      'session_revocation_review_required'
+    ),
+    'session_revocation_review_required',
+      v_state.credential_state = 'session_revocation_review_required',
+    'session_valid_after', v_state.session_valid_after,
+    'message', case
+      when v_state.credential_state in (
+        'existing_password_change_required', 'initial_change_required',
+        'admin_reset_change_required', 'reactivation_change_required'
+      )
+        then 'A password change is required before application access is allowed.'
+      when v_state.credential_state = 'recovery_required'
+        then 'A partially completed password change requires controlled recovery before application access is allowed.'
+      when v_state.credential_state = 'session_revocation_review_required'
+        then 'Session revocation requires administrator review before application access is allowed.'
+      when v_state.credential_state = 'reconciliation_required'
+        then 'Credential reconciliation is required before application access is allowed.'
+      when v_state.credential_state = 'disabled'
+        then 'This account is disabled.'
+      when not v_token_matches
+        then 'This session is no longer valid.'
+      when v_state.credential_version <> p_token_credential_version
+        then 'This session uses a stale credential version.'
+      when v_state.auth_email <> lower(btrim(coalesce(p_token_email, '')))
+        then 'This session does not match the managed sign-in identity.'
+      else null
+    end
+  )
+  into v_result;
 
   return v_result;
 end;
@@ -3409,6 +5154,7 @@ declare
   v_auth_create_required boolean;
   v_existing_auth_user_id uuid;
 begin
+  perform public.patch83u_require_enforced_runtime();
   v_org_id := public.patch83u_require_super_admin(p_actor_id);
 
   if nullif(btrim(coalesce(p_request_id, '')), '') is null
@@ -3817,10 +5563,11 @@ begin
 end;
 $$;
 
-create or replace function public.patch83u_begin_required_password_change(
+create or replace function public.patch83u_prepare_required_password_change(
   p_actor_id uuid,
   p_session_id text,
-  p_token_credential_version integer
+  p_token_credential_version integer,
+  p_request_id text
 )
 returns jsonb
 language plpgsql
@@ -3829,12 +5576,213 @@ set search_path = pg_catalog, public, pg_temp
 as $$
 declare
   v_state public.user_credential_states%rowtype;
+  v_profile public.profiles%rowtype;
+  v_operation public.patch83u_credential_operations%rowtype;
+  v_session_id uuid;
+  v_employee_id text;
+  v_terminal boolean := false;
+begin
+  perform public.patch83u_require_service_role();
+  perform public.patch83u_require_enforced_runtime();
+  if nullif(btrim(coalesce(p_request_id, '')), '') is null
+    or length(p_request_id) > 128
+    or p_request_id !~ '^[A-Za-z0-9._:-]+$'
+  then
+    raise exception 'PATCH83U_REQUEST_ID_INVALID';
+  end if;
+
+  select cs.* into v_state
+  from public.user_credential_states cs
+  where cs.user_id = p_actor_id;
+  select p.* into v_profile
+  from public.profiles p
+  where p.id = p_actor_id
+    and p.organization_id = v_state.organization_id;
+  if v_state.user_id is null or v_profile.id is null then
+    raise exception 'PATCH83U_CREDENTIAL_STATE_NOT_FOUND';
+  end if;
+  v_employee_id := nullif(btrim(v_profile.employee_no), '');
+
+  select op.* into v_operation
+  from public.patch83u_credential_operations op
+  where op.operation_type = 'password_change'
+    and op.actor_id = p_actor_id
+    and op.target_user_id = p_actor_id
+    and op.request_id = p_request_id;
+  if v_operation.operation_id is not null then
+    if v_operation.operation_status = 'aborted' then
+      raise exception 'PATCH83U_PASSWORD_CHANGE_REQUEST_ALREADY_ABORTED';
+    end if;
+    if v_operation.operation_status = 'in_progress' then
+      raise exception 'PATCH83U_PASSWORD_CHANGE_RECONCILIATION_REQUIRED';
+    end if;
+    v_terminal := v_operation.operation_status in (
+      'completed', 'recovery_required', 'session_revocation_review_required'
+    );
+    return jsonb_build_object(
+      'user_id', p_actor_id,
+      'request_id', p_request_id,
+      'auth_email', v_state.auth_email,
+      'employee_id', v_employee_id,
+      'identity_mode', v_state.identity_mode,
+      'current_credential_version', case when v_terminal
+        then v_state.credential_version
+        else v_operation.current_credential_version
+      end,
+      'completed', v_terminal,
+      'result_status', case when v_terminal
+        then coalesce(
+          v_operation.safe_result ->> 'credential_state',
+          v_operation.resulting_credential_state
+        )
+        else v_operation.operation_status
+      end,
+      'must_reauthenticate', true
+    );
+  end if;
+
+  if coalesce(p_session_id, '') !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+  then
+    raise exception 'PATCH83U_SESSION_ID_INVALID';
+  end if;
+  v_session_id := p_session_id::uuid;
+  if v_state.credential_state not in (
+    'existing_password_change_required', 'initial_change_required',
+    'admin_reset_change_required', 'reactivation_change_required'
+  ) then
+    raise exception 'PATCH83U_PASSWORD_CHANGE_STATE_INVALID';
+  end if;
+  if v_state.credential_version is distinct from p_token_credential_version then
+    raise exception 'PATCH83U_CREDENTIAL_VERSION_STALE';
+  end if;
+  if v_state.invalidated_session_id = v_session_id or not exists (
+    select 1 from auth.sessions s
+    where s.id = v_session_id
+      and s.user_id = p_actor_id
+      and s.created_at >= v_state.session_valid_after
+  ) then
+    raise exception 'PATCH83U_SESSION_NOT_ACTIVE';
+  end if;
+  if v_profile.is_active = false
+    or v_profile.user_status not in ('active', 'invited')
+    or v_state.identity_mode not in ('employee_id_managed', 'legacy_verified')
+    or not exists (
+      select 1 from auth.users u
+      where u.id = p_actor_id
+        and lower(btrim(u.email)) = v_state.auth_email
+        and public.patch83u_auth_credential_version(u.raw_app_meta_data) = v_state.credential_version
+        and 1 = (
+          select count(*) from auth.identities ai
+          where ai.user_id = u.id and ai.provider = 'email'
+        )
+        and 1 = (
+          select count(*) from auth.identities ai
+          where ai.user_id = u.id
+            and ai.provider = 'email'
+            and lower(btrim(coalesce(ai.identity_data ->> 'email', '')))
+              = v_state.auth_email
+        )
+    )
+    or (
+      v_state.identity_mode = 'employee_id_managed'
+      and (
+        v_employee_id is null
+        or v_state.auth_email <> public.patch83u_expected_auth_email(v_employee_id)
+      )
+    )
+  then
+    raise exception 'PATCH83U_PASSWORD_CHANGE_IDENTITY_PROOF_FAILED';
+  end if;
+
+  return jsonb_build_object(
+    'user_id', p_actor_id,
+    'request_id', p_request_id,
+    'auth_email', v_state.auth_email,
+    'employee_id', v_employee_id,
+    'identity_mode', v_state.identity_mode,
+    'current_credential_version', v_state.credential_version,
+    'completed', false,
+    'result_status', 'ready',
+    'must_reauthenticate', true
+  );
+end;
+$$;
+
+create or replace function public.patch83u_begin_required_password_change(
+  p_actor_id uuid,
+  p_session_id text,
+  p_token_credential_version integer,
+  p_request_id text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = pg_catalog, public, pg_temp
+as $$
+declare
+  v_state public.user_credential_states%rowtype;
+  v_profile public.profiles%rowtype;
+  v_operation public.patch83u_credential_operations%rowtype;
   v_operation_id uuid := gen_random_uuid();
   v_session_id uuid;
   v_employee_id text;
   v_now timestamptz := clock_timestamp();
 begin
   perform public.patch83u_require_service_role();
+  perform public.patch83u_require_enforced_runtime();
+
+  if nullif(btrim(coalesce(p_request_id, '')), '') is null
+    or length(p_request_id) > 128
+    or p_request_id !~ '^[A-Za-z0-9._:-]+$'
+  then
+    raise exception 'PATCH83U_REQUEST_ID_INVALID';
+  end if;
+
+  select cs.* into v_state
+  from public.user_credential_states cs
+  where cs.user_id = p_actor_id
+  for update;
+
+  select p.* into v_profile
+  from public.profiles p
+  where p.id = p_actor_id
+    and p.organization_id = v_state.organization_id
+  for update;
+
+  if v_state.user_id is null or v_profile.id is null then
+    raise exception 'PATCH83U_CREDENTIAL_STATE_NOT_FOUND';
+  end if;
+  v_employee_id := nullif(btrim(v_profile.employee_no), '');
+
+  -- A repeated request is resolved before reauthentication/session checks. This
+  -- makes a lost response safe: the caller receives the original operation and
+  -- never performs a second Auth password update or version increment.
+  select op.* into v_operation
+  from public.patch83u_credential_operations op
+  where op.operation_type = 'password_change'
+    and op.actor_id = p_actor_id
+    and op.target_user_id = p_actor_id
+    and op.request_id = p_request_id
+  for update;
+  if v_operation.operation_id is not null then
+    if v_operation.operation_status = 'aborted' then
+      raise exception 'PATCH83U_PASSWORD_CHANGE_REQUEST_ALREADY_ABORTED';
+    end if;
+    if v_operation.operation_status = 'in_progress' then
+      raise exception 'PATCH83U_PASSWORD_CHANGE_RECONCILIATION_REQUIRED';
+    end if;
+    return jsonb_build_object(
+      'user_id', p_actor_id,
+      'request_id', p_request_id,
+      'operation_id', v_operation.operation_id,
+      'auth_email', v_state.auth_email,
+      'employee_id', v_employee_id,
+      'identity_mode', v_state.identity_mode,
+      'current_credential_version', v_operation.current_credential_version,
+      'next_credential_version', v_operation.next_credential_version,
+      'idempotent_replay', true
+    );
+  end if;
 
   if coalesce(p_session_id, '') !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
   then
@@ -3842,15 +5790,8 @@ begin
   end if;
   v_session_id := p_session_id::uuid;
 
-  select cs.* into v_state
-  from public.user_credential_states cs
-  where cs.user_id = p_actor_id
-  for update;
-
-  if v_state.user_id is null then
-    raise exception 'PATCH83U_CREDENTIAL_STATE_NOT_FOUND';
-  end if;
   if v_state.credential_state not in (
+    'existing_password_change_required',
     'initial_change_required',
     'admin_reset_change_required',
     'reactivation_change_required'
@@ -3864,30 +5805,6 @@ begin
     raise exception 'PATCH83U_SESSION_NOT_ACTIVE';
   end if;
   if not exists (
-    select 1
-    from auth.users u
-    join public.profiles p on p.id = u.id
-    where u.id = p_actor_id
-      and p.organization_id = v_state.organization_id
-      and p.is_active = true
-      and (
-        (v_state.credential_state in ('initial_change_required', 'admin_reset_change_required') and p.user_status = 'invited')
-        or (v_state.credential_state = 'reactivation_change_required' and p.user_status = 'active')
-      )
-      and lower(btrim(u.email)) = v_state.auth_email
-      and public.patch83u_auth_credential_version(u.raw_app_meta_data) = v_state.credential_version
-  ) then
-    raise exception 'PATCH83U_PASSWORD_CHANGE_IDENTITY_PROOF_FAILED';
-  end if;
-  select p.employee_no
-  into v_employee_id
-  from public.profiles p
-  where p.id = p_actor_id
-    and p.organization_id = v_state.organization_id;
-  if nullif(btrim(coalesce(v_employee_id, '')), '') is null then
-    raise exception 'PATCH83U_PASSWORD_CHANGE_EMPLOYEE_ID_REQUIRED';
-  end if;
-  if not exists (
     select 1 from auth.sessions s
     where s.id = v_session_id
       and s.user_id = p_actor_id
@@ -3895,6 +5812,50 @@ begin
   ) then
     raise exception 'PATCH83U_SESSION_NOT_ACTIVE';
   end if;
+  if v_profile.is_active = false
+    or v_profile.user_status not in ('active', 'invited')
+    or v_state.identity_mode not in ('employee_id_managed', 'legacy_verified')
+    or not exists (
+      select 1
+      from auth.users u
+      where u.id = p_actor_id
+        and lower(btrim(u.email)) = v_state.auth_email
+        and u.email_confirmed_at is not null
+        and u.deleted_at is null
+        and (u.banned_until is null or u.banned_until <= now())
+        and public.patch83u_auth_credential_version(u.raw_app_meta_data) = v_state.credential_version
+        and 1 = (
+          select count(*) from auth.identities ai
+          where ai.user_id = u.id and ai.provider = 'email'
+        )
+        and 1 = (
+          select count(*) from auth.identities ai
+          where ai.user_id = u.id
+            and ai.provider = 'email'
+            and lower(btrim(coalesce(ai.identity_data ->> 'email', '')))
+              = v_state.auth_email
+        )
+    )
+    or (
+      v_state.identity_mode = 'employee_id_managed'
+      and (
+        v_employee_id is null
+        or v_state.auth_email <> public.patch83u_expected_auth_email(v_employee_id)
+      )
+    )
+  then
+    raise exception 'PATCH83U_PASSWORD_CHANGE_IDENTITY_PROOF_FAILED';
+  end if;
+
+  insert into public.patch83u_credential_operations (
+    operation_id, operation_type, organization_id, actor_id, target_user_id,
+    request_id, operation_status, current_credential_version,
+    next_credential_version
+  ) values (
+    v_operation_id, 'password_change', v_state.organization_id,
+    p_actor_id, p_actor_id, p_request_id, 'in_progress',
+    v_state.credential_version, v_state.credential_version + 1
+  );
 
   update public.user_credential_states
   set credential_state = 'password_change_in_progress',
@@ -3911,11 +5872,11 @@ begin
 
   insert into public.user_credential_events (
     organization_id, user_id, provisioning_id, actor_id, event_type,
-    credential_version, session_id, event_code, details
+    credential_version, session_id, request_id, event_code, details
   ) values (
     v_state.organization_id, p_actor_id, v_state.provisioning_id, p_actor_id,
     'password_change_started', v_state.credential_version, v_session_id,
-    'PATCH83U_PASSWORD_CHANGE_STARTED',
+    p_request_id, 'PATCH83U_PASSWORD_CHANGE_STARTED',
     jsonb_build_object(
       'operation_id', v_operation_id,
       'next_credential_version', v_state.credential_version + 1,
@@ -3924,13 +5885,15 @@ begin
   );
 
   return jsonb_build_object(
-    'operation_id', v_operation_id,
     'user_id', p_actor_id,
+    'request_id', p_request_id,
+    'operation_id', v_operation_id,
     'employee_id', v_employee_id,
     'auth_email', v_state.auth_email,
     'identity_mode', v_state.identity_mode,
     'current_credential_version', v_state.credential_version,
-    'next_credential_version', v_state.credential_version + 1
+    'next_credential_version', v_state.credential_version + 1,
+    'idempotent_replay', false
   );
 end;
 $$;
@@ -3938,8 +5901,10 @@ $$;
 create or replace function public.patch83u_finalize_required_password_change(
   p_actor_id uuid,
   p_operation_id uuid,
+  p_request_id text,
   p_applied_credential_version integer,
-  p_verified_auth_email text
+  p_verified_auth_email text,
+  p_session_revocation_confirmed boolean
 )
 returns jsonb
 language plpgsql
@@ -3949,12 +5914,42 @@ as $$
 declare
   v_state public.user_credential_states%rowtype;
   v_queue public.user_account_provisioning%rowtype;
+  v_operation public.patch83u_credential_operations%rowtype;
+  v_result jsonb;
   v_role_id uuid;
-  v_restore jsonb := jsonb_build_object('restored_count', 0, 'blocked_count', 0);
-  v_blocked integer := 0;
+  v_matching_role_count integer := 0;
+  v_role_update_count integer := 0;
+  v_next_state text;
+  v_role_activation_required boolean := false;
+  v_role_activation_failed boolean := false;
   v_now timestamptz := clock_timestamp();
 begin
   perform public.patch83u_require_service_role();
+  perform public.patch83u_require_enforced_runtime();
+
+  if nullif(btrim(coalesce(p_request_id, '')), '') is null
+    or length(p_request_id) > 128
+    or p_request_id !~ '^[A-Za-z0-9._:-]+$'
+  then
+    raise exception 'PATCH83U_REQUEST_ID_INVALID';
+  end if;
+
+  select op.* into v_operation
+  from public.patch83u_credential_operations op
+  where op.operation_id = p_operation_id
+    and op.operation_type = 'password_change'
+    and op.actor_id = p_actor_id
+    and op.target_user_id = p_actor_id
+    and op.request_id = p_request_id
+  for update;
+  if v_operation.operation_id is null then
+    raise exception 'PATCH83U_PASSWORD_CHANGE_OPERATION_INVALID';
+  end if;
+  if v_operation.operation_status in (
+    'completed', 'recovery_required', 'session_revocation_review_required'
+  ) and v_operation.safe_result is not null then
+    return v_operation.safe_result || jsonb_build_object('idempotent_replay', true);
+  end if;
 
   select cs.* into v_state
   from public.user_credential_states cs
@@ -3965,6 +5960,8 @@ begin
     or v_state.credential_state <> 'password_change_in_progress'
     or v_state.pending_operation_id is distinct from p_operation_id
     or v_state.pending_credential_version is distinct from p_applied_credential_version
+    or v_operation.current_credential_version is distinct from v_state.credential_version
+    or v_operation.next_credential_version is distinct from p_applied_credential_version
   then
     raise exception 'PATCH83U_PASSWORD_CHANGE_OPERATION_INVALID';
   end if;
@@ -3973,189 +5970,274 @@ begin
       select 1 from auth.users u
       where u.id = p_actor_id
         and lower(btrim(u.email)) = v_state.auth_email
+        and u.email_confirmed_at is not null
+        and u.deleted_at is null
+        and (u.banned_until is null or u.banned_until <= now())
         and public.patch83u_auth_credential_version(u.raw_app_meta_data) = p_applied_credential_version
+        and 1 = (
+          select count(*) from auth.identities ai
+          where ai.user_id = u.id and ai.provider = 'email'
+        )
+        and 1 = (
+          select count(*) from auth.identities ai
+          where ai.user_id = u.id
+            and ai.provider = 'email'
+            and lower(btrim(coalesce(ai.identity_data ->> 'email', '')))
+              = v_state.auth_email
+        )
     )
   then
     raise exception 'PATCH83U_PASSWORD_CHANGE_DATABASE_PROOF_FAILED';
   end if;
-  if exists (select 1 from auth.sessions s where s.user_id = p_actor_id) then
+  if coalesce(p_session_revocation_confirmed, false)
+    and exists (select 1 from auth.sessions s where s.user_id = p_actor_id)
+  then
     raise exception 'PATCH83U_AUTH_SESSIONS_STILL_ACTIVE';
   end if;
 
-  if v_state.role_suspension_id is not null then
-    v_restore := public.patch83u_restore_suspended_roles(
-      p_actor_id, p_actor_id, v_state.role_suspension_id
-    );
-    v_blocked := coalesce((v_restore ->> 'blocked_count')::integer, 0);
-  end if;
-
-  if v_state.provisioning_id is not null
-    and exists (
-      select 1
-      from public.user_account_provisioning q0
-      where q0.id = v_state.provisioning_id
-        and q0.profile_id = p_actor_id
-        and q0.organization_id = v_state.organization_id
-        and q0.provisioning_status = 'initial_change_required'
-    )
-  then
+  -- Existing users retain their exact role rows throughout rotation. The only
+  -- role mutation permitted here is the one-time activation of the exact
+  -- inactive role precreated for a newly provisioned account.
+  v_role_activation_required :=
+    v_state.operation_previous_state = 'initial_change_required';
+  if v_role_activation_required then
     select q.* into v_queue
     from public.user_account_provisioning q
     where q.id = v_state.provisioning_id
-      and q.profile_id = p_actor_id
-      and q.organization_id = v_state.organization_id
     for update;
 
-    if v_queue.id is null or v_queue.provisioning_status <> 'initial_change_required' then
-      v_blocked := v_blocked + 1;
+    if v_queue.id is null
+      or v_queue.organization_id is distinct from v_state.organization_id
+      or v_queue.auth_user_id is distinct from p_actor_id
+      or v_queue.profile_id is distinct from p_actor_id
+      or v_queue.auth_email is distinct from v_state.auth_email
+      or v_queue.provisioning_status <> 'initial_change_required'
+      or not public.patch83u_role_scope_allowed(
+        v_queue.requested_role, v_queue.requested_scope
+      )
+      or not public.patch83u_role_assignment_valid(
+        v_state.organization_id,
+        v_queue.requested_scope,
+        v_state.organization_id,
+        null,
+        case when v_queue.requested_scope = 'department'
+          then v_queue.department_id else null end,
+        null
+      )
+      or not exists (
+        select 1
+        from public.profiles p
+        where p.id = p_actor_id
+          and p.organization_id = v_state.organization_id
+          and p.employee_no = v_queue.employee_id
+          and lower(btrim(p.email)) = v_queue.auth_email
+          and p.is_active = true
+          and p.user_status = 'invited'
+      )
+    then
+      v_role_activation_failed := true;
     else
-      select ur.id into v_role_id
+      -- Lock the complete matching set before proving there is exactly one row.
+      perform 1
       from public.user_roles ur
       where ur.user_id = p_actor_id
         and ur.role = v_queue.requested_role
         and ur.scope = v_queue.requested_scope
-        and ur.organization_id is not distinct from v_queue.organization_id
+        and ur.organization_id is not distinct from v_state.organization_id
         and ur.division_id is null
         and ur.department_id is not distinct from (
           case when v_queue.requested_scope = 'department' then v_queue.department_id else null end
         )
         and ur.unit_id is null
-      order by ur.assigned_at, ur.id
-      limit 1
+      order by ur.id
       for update;
 
-      if v_role_id is null
-        or exists (select 1 from public.user_roles ur where ur.id = v_role_id and ur.is_active)
-        or not public.patch83u_role_scope_allowed(v_queue.requested_role, v_queue.requested_scope)
-        or not public.patch83u_role_assignment_valid(
-          v_queue.organization_id,
-          v_queue.requested_scope,
-          v_queue.organization_id,
-          null,
-          case when v_queue.requested_scope = 'department' then v_queue.department_id else null end,
-          null
+      select count(*)::integer
+      into v_matching_role_count
+      from public.user_roles ur
+      where ur.user_id = p_actor_id
+        and ur.role = v_queue.requested_role
+        and ur.scope = v_queue.requested_scope
+        and ur.organization_id is not distinct from v_state.organization_id
+        and ur.division_id is null
+        and ur.department_id is not distinct from (
+          case when v_queue.requested_scope = 'department' then v_queue.department_id else null end
+        )
+        and ur.unit_id is null;
+
+      select ur.id into v_role_id
+      from public.user_roles ur
+      where ur.user_id = p_actor_id
+        and ur.role = v_queue.requested_role
+        and ur.scope = v_queue.requested_scope
+        and ur.organization_id is not distinct from v_state.organization_id
+        and ur.division_id is null
+        and ur.department_id is not distinct from (
+          case when v_queue.requested_scope = 'department' then v_queue.department_id else null end
+        )
+        and ur.unit_id is null
+      order by ur.id
+      limit 1;
+
+      if v_matching_role_count <> 1
+        or exists (
+          select 1 from public.user_roles ur
+          where ur.id = v_role_id and ur.is_active = true
         )
       then
-        v_blocked := v_blocked + 1;
-      else
+        v_role_activation_failed := true;
+      elsif coalesce(p_session_revocation_confirmed, false) then
         perform set_config('patch83u.controlled_role_restore', 'on', true);
         update public.user_roles
         set is_active = true,
             assigned_by = p_actor_id,
             assigned_at = clock_timestamp()
-        where id = v_role_id;
+        where id = v_role_id
+          and is_active = false;
+        get diagnostics v_role_update_count = row_count;
         perform set_config('patch83u.controlled_role_restore', 'off', true);
 
-        insert into public.role_change_audit (
-          organization_id, target_user_id, user_role_id, action,
-          new_data, reason, changed_by
-        )
-        select v_queue.organization_id, p_actor_id, v_role_id, 'reactivated',
-          to_jsonb(ur), 'Patch 83U initial password change completed', p_actor_id
-        from public.user_roles ur where ur.id = v_role_id;
+        if v_role_update_count <> 1 then
+          v_role_activation_failed := true;
+        else
+          insert into public.role_change_audit (
+            organization_id, target_user_id, user_role_id, action,
+            new_data, reason, changed_by
+          )
+          select v_state.organization_id, p_actor_id, v_role_id, 'reactivated',
+            to_jsonb(ur), 'Patch 83U initial password change completed', p_actor_id
+          from public.user_roles ur where ur.id = v_role_id;
+        end if;
       end if;
     end if;
   end if;
 
-  perform set_config('patch83u.controlled_lifecycle_transition', 'on', true);
-  if v_blocked > 0 then
-    update public.profiles
-    set user_status = 'invited', is_active = true
-    where id = p_actor_id;
+  v_next_state := case
+    when v_role_activation_failed then 'recovery_required'
+    when not coalesce(p_session_revocation_confirmed, false)
+      then 'session_revocation_review_required'
+    else 'active'
+  end;
 
-    update public.user_credential_states
-    set credential_state = 'recovery_required',
-        credential_version = p_applied_credential_version,
-        session_valid_after = v_now,
-        invalidated_session_id = v_state.pending_session_id,
-        pending_operation_id = null,
-        reconciliation_auth_changed = true,
-        pending_session_id = null,
-        pending_credential_version = null,
-        password_changed_at = clock_timestamp(),
-        sessions_revoked_at = clock_timestamp(),
-        reconciliation_checked_at = clock_timestamp()
-    where user_id = p_actor_id;
+  update public.user_credential_states
+  set credential_state = v_next_state,
+      credential_version = p_applied_credential_version,
+      session_valid_after = v_now,
+      invalidated_session_id = v_state.pending_session_id,
+      role_suspension_id = null,
+      pending_operation_id = null,
+      operation_source = case when v_next_state = 'active'
+        then null else 'password_change' end,
+      reconciliation_auth_changed = v_next_state <> 'active',
+      pending_session_id = null,
+      pending_credential_version = null,
+      operation_previous_state = case when v_next_state = 'active'
+        then null else operation_previous_state end,
+      operation_previous_lifecycle = case when v_next_state = 'active'
+        then null else operation_previous_lifecycle end,
+      operation_previous_session_valid_after = case when v_next_state = 'active'
+        then null else operation_previous_session_valid_after end,
+      password_changed_at = v_now,
+      sessions_revoked_at = case
+        when p_session_revocation_confirmed then v_now else sessions_revoked_at end,
+      reconciliation_checked_at = case when v_next_state <> 'active'
+        then v_now else reconciliation_checked_at end
+  where user_id = p_actor_id;
 
-    if v_queue.id is not null then
-      update public.user_account_provisioning
-      set provisioning_status = 'reconciliation_required',
-          completed_at = null,
-          last_error_code = 'PATCH83U_ROLE_RESTORE_RECONCILIATION_REQUIRED',
-          last_error_message = 'Credential changed, but the protected role state requires reconciliation.'
-      where id = v_queue.id;
-    end if;
-  else
+  if v_role_activation_required and v_next_state = 'active' then
+    perform set_config('patch83u.controlled_lifecycle_transition', 'on', true);
     update public.profiles
     set user_status = 'active', is_active = true
-    where id = p_actor_id;
-
-    update public.user_credential_states
-    set credential_state = 'active',
-        credential_version = p_applied_credential_version,
-        session_valid_after = v_now,
-        invalidated_session_id = v_state.pending_session_id,
-        -- Historical protected rows remain as audit evidence, but an active
-        -- credential state must not point at the completed suspension set.
-        role_suspension_id = null,
-        pending_operation_id = null,
-        operation_source = null,
-        reconciliation_auth_changed = false,
-        pending_session_id = null,
-        pending_credential_version = null,
-        operation_previous_state = null,
-        operation_previous_lifecycle = null,
-        operation_previous_session_valid_after = null,
-        password_changed_at = clock_timestamp(),
-        sessions_revoked_at = clock_timestamp()
-    where user_id = p_actor_id;
-
-    if v_queue.id is not null then
-      update public.user_account_provisioning
-      set provisioning_status = 'completed',
-          completed_at = clock_timestamp(),
-          last_error_code = null,
-          last_error_message = null
-      where id = v_queue.id;
+    where id = p_actor_id
+      and organization_id = v_state.organization_id
+      and user_status = 'invited'
+      and is_active = true;
+    if not found then
+      raise exception 'PATCH83U_PROVISIONED_PROFILE_ACTIVATION_FAILED';
     end if;
+    perform set_config('patch83u.controlled_lifecycle_transition', 'off', true);
   end if;
-  perform set_config('patch83u.controlled_lifecycle_transition', 'off', true);
+
+  if v_queue.id is not null and v_next_state = 'active' then
+    update public.user_account_provisioning
+    set provisioning_status = 'completed',
+        completed_at = v_now,
+        last_error_code = null,
+        last_error_message = null
+    where id = v_queue.id;
+  elsif v_queue.id is not null and v_next_state = 'recovery_required' then
+    update public.user_account_provisioning
+    set provisioning_status = 'reconciliation_required',
+        completed_at = null,
+        last_error_code = 'PATCH83U_PROVISIONED_ROLE_ACTIVATION_FAILED',
+        last_error_message = 'The protected newly provisioned role could not be activated exactly once.'
+    where id = v_queue.id;
+  end if;
+
+  v_result := jsonb_build_object(
+    'user_id', p_actor_id,
+    'request_id', p_request_id,
+    'credential_state', v_next_state,
+    'credential_version', p_applied_credential_version,
+    'must_reauthenticate', true,
+    'reconciliation_required', v_next_state = 'recovery_required',
+    'session_revocation_review_required',
+      v_next_state = 'session_revocation_review_required',
+    'idempotent_replay', false
+  );
+
+  update public.patch83u_credential_operations
+  set operation_status = case
+        when v_next_state = 'active' then 'completed'
+        when v_next_state = 'session_revocation_review_required'
+          then 'session_revocation_review_required'
+        else 'recovery_required'
+      end,
+      resulting_credential_state = v_next_state,
+      auth_changed = true,
+      session_revocation_confirmed = coalesce(p_session_revocation_confirmed, false),
+      safe_result = v_result,
+      completed_at = v_now,
+      updated_at = v_now
+  where operation_id = p_operation_id;
 
   insert into public.user_credential_events (
     organization_id, user_id, provisioning_id, actor_id, event_type,
-    credential_version, session_id, event_code, details
+    credential_version, session_id, request_id, event_code, details
   ) values (
     v_state.organization_id, p_actor_id, v_state.provisioning_id, p_actor_id,
-    'password_change_completed', p_applied_credential_version,
-    v_state.pending_session_id,
-    case when v_blocked > 0
-      then 'PATCH83U_PASSWORD_CHANGE_RECOVERY_REQUIRED'
-      else 'PATCH83U_PASSWORD_CHANGE_COMPLETED'
+    case when v_next_state = 'session_revocation_review_required'
+      then 'session_revocation_review_required'
+      else 'password_change_completed'
+    end,
+    p_applied_credential_version, v_state.pending_session_id, p_request_id,
+    case
+      when v_next_state = 'active' then 'PATCH83U_PASSWORD_CHANGE_COMPLETED'
+      when v_next_state = 'session_revocation_review_required'
+        then 'PATCH83U_SESSION_REVOCATION_REVIEW_REQUIRED'
+      else 'PATCH83U_PASSWORD_CHANGE_RECOVERY_REQUIRED'
     end,
     jsonb_build_object(
       'operation_id', p_operation_id,
-      'roles_restored', coalesce((v_restore ->> 'restored_count')::integer, 0),
-      'roles_blocked', v_blocked,
+      'new_provisioned_role_activation_required', v_role_activation_required,
+      'new_provisioned_role_activated', v_role_update_count = 1,
+      'existing_role_rows_preserved', not v_role_activation_required,
       'session_access_invalidated', true,
-      'direct_auth_session_revocation_confirmed', true
+      'direct_auth_session_revocation_confirmed',
+        coalesce(p_session_revocation_confirmed, false)
     )
   );
 
-  return jsonb_build_object(
-    'user_id', p_actor_id,
-    'credential_state', case when v_blocked > 0 then 'recovery_required' else 'active' end,
-    'credential_version', p_applied_credential_version,
-    'must_reauthenticate', true,
-    'recovery_required', v_blocked > 0,
-    'reconciliation_required', v_blocked > 0
-  );
+  return v_result;
 end;
 $$;
 
 create or replace function public.patch83u_abort_required_password_change(
   p_actor_id uuid,
   p_operation_id uuid,
+  p_request_id text,
   p_auth_changed boolean,
+  p_session_revocation_confirmed boolean,
   p_error_code text,
   p_error_message text
 )
@@ -4166,11 +6248,22 @@ set search_path = pg_catalog, public, pg_temp
 as $$
 declare
   v_state public.user_credential_states%rowtype;
+  v_operation public.patch83u_credential_operations%rowtype;
+  v_result jsonb;
   v_next_state text;
   v_safe_message text;
   v_auth_version integer;
+  v_effective_credential_version integer;
+  v_revocation_proven boolean := false;
+  v_now timestamptz := clock_timestamp();
 begin
   perform public.patch83u_require_service_role();
+  if nullif(btrim(coalesce(p_request_id, '')), '') is null
+    or length(p_request_id) > 128
+    or p_request_id !~ '^[A-Za-z0-9._:-]+$'
+  then
+    raise exception 'PATCH83U_REQUEST_ID_INVALID';
+  end if;
   if nullif(btrim(coalesce(p_error_code, '')), '') is null
     or length(p_error_code) > 80
     or p_error_code !~ '^[A-Z0-9_]+$'
@@ -4178,6 +6271,24 @@ begin
     raise exception 'PATCH83U_FAILURE_CODE_INVALID';
   end if;
   v_safe_message := public.patch83u_safe_failure_message(p_error_message);
+
+  select op.* into v_operation
+  from public.patch83u_credential_operations op
+  where op.operation_id = p_operation_id
+    and op.operation_type = 'password_change'
+    and op.actor_id = p_actor_id
+    and op.target_user_id = p_actor_id
+    and op.request_id = p_request_id
+  for update;
+  if v_operation.operation_id is null then
+    raise exception 'PATCH83U_PASSWORD_CHANGE_OPERATION_INVALID';
+  end if;
+  if v_operation.operation_status in (
+    'completed', 'aborted', 'recovery_required',
+    'session_revocation_review_required'
+  ) and v_operation.safe_result is not null then
+    return v_operation.safe_result || jsonb_build_object('idempotent_replay', true);
+  end if;
 
   select cs.* into v_state
   from public.user_credential_states cs
@@ -4187,11 +6298,17 @@ begin
   if v_state.user_id is null
     or v_state.credential_state <> 'password_change_in_progress'
     or v_state.pending_operation_id is distinct from p_operation_id
+    or v_operation.current_credential_version is distinct from v_state.credential_version
+    or v_operation.next_credential_version is distinct from v_state.pending_credential_version
   then
     raise exception 'PATCH83U_PASSWORD_CHANGE_OPERATION_INVALID';
   end if;
 
+  v_revocation_proven := coalesce(p_session_revocation_confirmed, false)
+    and not exists (select 1 from auth.sessions s where s.user_id = p_actor_id);
   v_next_state := case
+    when coalesce(p_auth_changed, false) and not v_revocation_proven
+      then 'session_revocation_review_required'
     when coalesce(p_auth_changed, false) then 'recovery_required'
     else v_state.operation_previous_state
   end;
@@ -4203,27 +6320,32 @@ begin
     where u.id = p_actor_id
       and lower(btrim(u.email)) = v_state.auth_email;
 
-    perform set_config('patch83u.controlled_lifecycle_transition', 'on', true);
-    update public.profiles
-    set user_status = 'invited', is_active = true
-    where id = p_actor_id;
-    perform set_config('patch83u.controlled_lifecycle_transition', 'off', true);
   end if;
+
+  v_effective_credential_version := case
+    when coalesce(p_auth_changed, false)
+      and v_auth_version is not null
+      and v_auth_version >= v_state.credential_version
+      then v_auth_version
+    else v_state.credential_version
+  end;
 
   update public.user_credential_states
   set credential_state = v_next_state,
-      credential_version = case
-        when coalesce(p_auth_changed, false)
-          and v_auth_version is not null
-          and v_auth_version >= credential_version
-          then v_auth_version
-        else credential_version
-      end,
+      credential_version = v_effective_credential_version,
       session_valid_after = case
-        when p_auth_changed then clock_timestamp()
+        when coalesce(p_auth_changed, false) then v_now
         else operation_previous_session_valid_after
       end,
-      reconciliation_checked_at = case when p_auth_changed then clock_timestamp() else reconciliation_checked_at end,
+      invalidated_session_id = case
+        when coalesce(p_auth_changed, false) then pending_session_id
+        else invalidated_session_id
+      end,
+      role_suspension_id = null,
+      reconciliation_checked_at = case
+        when coalesce(p_auth_changed, false) then v_now
+        else reconciliation_checked_at
+      end,
       pending_operation_id = null,
       operation_source = case
         when coalesce(p_auth_changed, false) then operation_source else null
@@ -4239,29 +6361,57 @@ begin
       end,
       operation_previous_session_valid_after = case
         when coalesce(p_auth_changed, false) then operation_previous_session_valid_after else null
-      end
+      end,
+      sessions_revoked_at = case
+        when v_revocation_proven then v_now else sessions_revoked_at end
   where user_id = p_actor_id;
+
+  v_result := jsonb_build_object(
+    'user_id', p_actor_id,
+    'request_id', p_request_id,
+    'credential_state', v_next_state,
+    'credential_version', v_effective_credential_version,
+    'recovery_required', v_next_state = 'recovery_required',
+    'reconciliation_required', v_next_state in (
+      'recovery_required', 'reconciliation_required'
+    ),
+    'session_revocation_review_required',
+      v_next_state = 'session_revocation_review_required',
+    'idempotent_replay', false
+  );
+
+  update public.patch83u_credential_operations
+  set operation_status = case
+        when v_next_state = 'session_revocation_review_required'
+          then 'session_revocation_review_required'
+        when v_next_state = 'recovery_required' then 'recovery_required'
+        else 'aborted'
+      end,
+      resulting_credential_state = v_next_state,
+      auth_changed = coalesce(p_auth_changed, false),
+      session_revocation_confirmed = v_revocation_proven,
+      safe_result = v_result,
+      completed_at = v_now,
+      updated_at = v_now
+  where operation_id = p_operation_id;
 
   insert into public.user_credential_events (
     organization_id, user_id, provisioning_id, actor_id, event_type,
-    credential_version, session_id, event_code, details
+    credential_version, session_id, request_id, event_code, details
   ) values (
     v_state.organization_id, p_actor_id, v_state.provisioning_id, p_actor_id,
-    'password_change_aborted', coalesce(v_auth_version, v_state.credential_version), v_state.pending_session_id,
-    btrim(p_error_code), jsonb_build_object(
+    'password_change_aborted', v_effective_credential_version, v_state.pending_session_id,
+    p_request_id, btrim(p_error_code), jsonb_build_object(
       'operation_id', p_operation_id,
       'auth_changed', coalesce(p_auth_changed, false),
       'resulting_state', v_next_state,
+      'role_rows_preserved', true,
+      'session_revocation_confirmed', v_revocation_proven,
       'message', v_safe_message
     )
   );
 
-  return jsonb_build_object(
-    'user_id', p_actor_id,
-    'credential_state', v_next_state,
-    'recovery_required', v_next_state = 'recovery_required',
-    'reconciliation_required', v_next_state in ('recovery_required', 'reconciliation_required')
-  );
+  return v_result;
 end;
 $$;
 
@@ -4542,12 +6692,13 @@ declare
   v_state public.user_credential_states%rowtype;
   v_queue public.user_account_provisioning%rowtype;
   v_auth_version integer;
-  v_restore jsonb := jsonb_build_object('restored_count', 0, 'blocked_count', 0);
   v_blocked integer := 0;
   v_role_id uuid;
+  v_matching_role_count integer := 0;
   v_result jsonb;
   v_outcome text;
   v_result_state text;
+  v_operation_request_id text;
 begin
   v_org_id := public.patch83u_require_super_admin(p_actor_id);
   if nullif(btrim(coalesce(p_request_id, '')), '') is null
@@ -4586,12 +6737,27 @@ begin
     raise exception 'PATCH83U_RECONCILIATION_AUTH_PROOF_FAILED';
   end if;
 
+  if v_state.credential_state in ('reset_in_progress', 'password_change_in_progress') then
+    select op.request_id into v_operation_request_id
+    from public.patch83u_credential_operations op
+    where op.operation_id = v_state.pending_operation_id
+      and op.target_user_id = p_target_user_id
+      and op.operation_type = case v_state.credential_state
+        when 'reset_in_progress' then 'admin_reset'
+        else 'password_change'
+      end;
+    if v_operation_request_id is null then
+      raise exception 'PATCH83U_CREDENTIAL_OPERATION_LEDGER_MISSING';
+    end if;
+  end if;
+
   -- Crash recovery is deterministic: unchanged Auth metadata means abort the
   -- stale begin; the exact pending version means finish the proven Auth write.
   if v_state.credential_state = 'reset_in_progress' then
     if v_auth_version = v_state.credential_version then
       v_result := public.patch83u_abort_admin_reset(
-        p_actor_id, p_target_user_id, v_state.pending_operation_id, false,
+        p_actor_id, p_target_user_id, v_state.pending_operation_id,
+        v_operation_request_id, false, false,
         'PATCH83U_STALE_OPERATION_RECOVERED',
         'No Auth credential change was found; the stale reset was safely aborted.'
       );
@@ -4603,7 +6769,8 @@ begin
         -- in-progress state; a fresh manual reset can then establish a target
         -- session and perform the required global sign-out.
         v_result := public.patch83u_abort_admin_reset(
-          p_actor_id, p_target_user_id, v_state.pending_operation_id, true,
+          p_actor_id, p_target_user_id, v_state.pending_operation_id,
+          v_operation_request_id, true, false,
           'PATCH83U_RECOVERY_SESSIONS_STILL_ACTIVE',
           'The Auth credential changed, but active sessions still require a fresh administrator reset.'
         );
@@ -4613,7 +6780,7 @@ begin
       else
         v_result := public.patch83u_finalize_admin_reset(
           p_actor_id, p_target_user_id, v_state.pending_operation_id,
-          v_auth_version, v_state.auth_email
+          v_operation_request_id, v_auth_version, v_state.auth_email, true
         );
         return v_result || jsonb_build_object('outcome', 'admin_reset_finalized_from_proof');
       end if;
@@ -4621,7 +6788,8 @@ begin
   elsif v_state.credential_state = 'password_change_in_progress' then
     if v_auth_version = v_state.credential_version then
       v_result := public.patch83u_abort_required_password_change(
-        p_target_user_id, v_state.pending_operation_id, false,
+        p_target_user_id, v_state.pending_operation_id,
+        v_operation_request_id, false, false,
         'PATCH83U_STALE_OPERATION_RECOVERED',
         'No Auth credential change was found; the stale password change was safely aborted.'
       );
@@ -4629,7 +6797,8 @@ begin
     elsif v_auth_version = v_state.pending_credential_version then
       if exists (select 1 from auth.sessions s where s.user_id = p_target_user_id) then
         v_result := public.patch83u_abort_required_password_change(
-          p_target_user_id, v_state.pending_operation_id, true,
+          p_target_user_id, v_state.pending_operation_id,
+          v_operation_request_id, true, false,
           'PATCH83U_RECOVERY_SESSIONS_STILL_ACTIVE',
           'The Auth credential changed, but active sessions still require a fresh administrator reset.'
         );
@@ -4639,7 +6808,7 @@ begin
       else
         v_result := public.patch83u_finalize_required_password_change(
           p_target_user_id, v_state.pending_operation_id,
-          v_auth_version, v_state.auth_email
+          v_operation_request_id, v_auth_version, v_state.auth_email, true
         );
         return v_result || jsonb_build_object('outcome', 'password_change_finalized_from_proof');
       end if;
@@ -4647,12 +6816,6 @@ begin
   end if;
 
   if v_state.credential_state in ('reset_in_progress', 'password_change_in_progress') then
-    perform set_config('patch83u.controlled_lifecycle_transition', 'on', true);
-    update public.profiles
-    set user_status = 'invited', is_active = true
-    where id = p_target_user_id;
-    perform set_config('patch83u.controlled_lifecycle_transition', 'off', true);
-
     update public.user_credential_states
     set credential_state = 'recovery_required',
         session_valid_after = clock_timestamp(),
@@ -4664,27 +6827,25 @@ begin
     v_state.credential_state := 'recovery_required';
   end if;
 
-  if v_state.credential_state not in ('recovery_required', 'reconciliation_required') then
+  if v_state.credential_state not in (
+    'recovery_required', 'reconciliation_required',
+    'session_revocation_review_required'
+  ) then
     raise exception 'PATCH83U_RECONCILIATION_STATE_INVALID';
   end if;
   if v_auth_version <> v_state.credential_version then
     raise exception 'PATCH83U_RECONCILIATION_VERSION_AMBIGUOUS';
   end if;
 
-  -- A proven administrator reset always remains forced-change with its role
-  -- snapshots suspended. Reconciliation must never silently activate it.
+  -- A proven administrator reset always remains forced-change. Existing role
+  -- and profile rows stay unchanged; reconciliation must never silently grant
+  -- application access before session revocation is proven.
   if v_state.operation_source = 'admin_reset'
     and v_state.reconciliation_auth_changed = true
   then
     if exists (select 1 from auth.sessions s where s.user_id = p_target_user_id) then
       raise exception 'PATCH83U_AUTH_SESSIONS_STILL_ACTIVE';
     end if;
-    perform set_config('patch83u.controlled_lifecycle_transition', 'on', true);
-    update public.profiles
-    set user_status = 'invited', is_active = true
-    where id = p_target_user_id;
-    perform set_config('patch83u.controlled_lifecycle_transition', 'off', true);
-
     update public.user_credential_states
     set credential_state = 'admin_reset_change_required',
         session_valid_after = clock_timestamp(),
@@ -4698,26 +6859,26 @@ begin
     where user_id = p_target_user_id;
     v_outcome := 'admin_reset_change_required_restored';
     v_result_state := 'admin_reset_change_required';
-  -- An unchanged administrator-reset reconciliation may restore roles only for
-  -- an account that was active before the reset began. Forced-change and prior
-  -- reconciliation states must remain suspended even if malformed historical
-  -- operation evidence reaches this recovery path.
+  -- Reset never physically suspended roles. An unchanged-Auth reconciliation
+  -- may restore the prior credential state only when the preserved profile and
+  -- role rows still prove the same valid active lifecycle.
   elsif v_state.operation_source = 'admin_reset'
     and v_state.operation_previous_state = 'active'
   then
-    v_restore := public.patch83u_restore_suspended_roles(
-      p_actor_id, p_target_user_id, v_state.role_suspension_id
-    );
-    v_blocked := coalesce((v_restore ->> 'blocked_count')::integer, 0);
+    v_blocked := case when v_profile.is_active = true
+      and v_profile.user_status = v_state.operation_previous_lifecycle
+      and not exists (
+        select 1 from public.user_roles ur
+        where ur.user_id = p_target_user_id
+          and ur.is_active = true
+          and not public.patch83u_role_assignment_valid(
+            v_org_id, ur.scope, ur.organization_id,
+            ur.division_id, ur.department_id, ur.unit_id
+          )
+      )
+      then 0 else 1 end;
 
     if v_blocked = 0 then
-      perform set_config('patch83u.controlled_lifecycle_transition', 'on', true);
-      update public.profiles
-      set user_status = v_state.operation_previous_lifecycle,
-          is_active = v_state.operation_previous_lifecycle in ('active', 'invited')
-      where id = p_target_user_id;
-      perform set_config('patch83u.controlled_lifecycle_transition', 'off', true);
-
       update public.user_credential_states
       set credential_state = v_state.operation_previous_state,
           session_valid_after = v_state.operation_previous_session_valid_after,
@@ -4738,18 +6899,12 @@ begin
   elsif v_state.operation_source = 'password_change'
     and v_state.reconciliation_auth_changed = true
     and v_state.operation_previous_state in (
-    'initial_change_required', 'admin_reset_change_required', 'reactivation_change_required'
+    'existing_password_change_required', 'initial_change_required',
+    'admin_reset_change_required', 'reactivation_change_required'
   ) then
     if exists (select 1 from auth.sessions s where s.user_id = p_target_user_id) then
       raise exception 'PATCH83U_AUTH_SESSIONS_STILL_ACTIVE';
     end if;
-    if v_state.role_suspension_id is not null then
-      v_restore := public.patch83u_restore_suspended_roles(
-        p_actor_id, p_target_user_id, v_state.role_suspension_id
-      );
-      v_blocked := coalesce((v_restore ->> 'blocked_count')::integer, 0);
-    end if;
-
     if v_state.provisioning_id is not null
       and exists (
         select 1
@@ -4767,6 +6922,32 @@ begin
         and q.profile_id = p_target_user_id
       for update;
 
+      perform 1
+      from public.user_roles ur
+      where ur.user_id = p_target_user_id
+        and ur.role = v_queue.requested_role
+        and ur.scope = v_queue.requested_scope
+        and ur.organization_id is not distinct from v_org_id
+        and ur.division_id is null
+        and ur.department_id is not distinct from (
+          case when v_queue.requested_scope = 'department' then v_queue.department_id else null end
+        )
+        and ur.unit_id is null
+      order by ur.id
+      for update;
+
+      select count(*)::integer into v_matching_role_count
+      from public.user_roles ur
+      where ur.user_id = p_target_user_id
+        and ur.role = v_queue.requested_role
+        and ur.scope = v_queue.requested_scope
+        and ur.organization_id is not distinct from v_org_id
+        and ur.division_id is null
+        and ur.department_id is not distinct from (
+          case when v_queue.requested_scope = 'department' then v_queue.department_id else null end
+        )
+        and ur.unit_id is null;
+
       select ur.id into v_role_id
       from public.user_roles ur
       where ur.user_id = p_target_user_id
@@ -4778,11 +6959,14 @@ begin
           case when v_queue.requested_scope = 'department' then v_queue.department_id else null end
         )
         and ur.unit_id is null
-      order by ur.assigned_at, ur.id
-      limit 1
-      for update;
+      order by ur.id
+      limit 1;
 
-      if v_queue.id is null or v_role_id is null
+      if v_queue.id is null
+        or v_queue.auth_user_id is distinct from p_target_user_id
+        or v_queue.auth_email is distinct from v_state.auth_email
+        or v_matching_role_count <> 1
+        or v_role_id is null
         or not public.patch83u_role_scope_allowed(v_queue.requested_role, v_queue.requested_scope)
         or not public.patch83u_role_assignment_valid(
           v_org_id,
@@ -4841,9 +7025,9 @@ begin
       v_outcome := 'credential_access_restored_from_database_proof';
       v_result_state := 'active';
     else
-      -- Reassert the locked credential state after any blocked restoration
-      -- attempt. Its trigger re-suspends a role if historical partial state had
-      -- left one active, so recovery cannot commit with access enabled.
+      -- Reassert the locked credential state after any blocked activation
+      -- proof. Runtime-aware credential RLS keeps the preserved role rows
+      -- ineffective, so recovery cannot commit with application access enabled.
       update public.user_credential_states
       set credential_state = 'recovery_required',
           session_valid_after = clock_timestamp(),
@@ -4875,8 +7059,8 @@ begin
     end,
     jsonb_build_object(
       'outcome', v_outcome,
-      'roles_restored', coalesce((v_restore ->> 'restored_count')::integer, 0),
-      'roles_blocked', v_blocked
+      'existing_role_rows_preserved', true,
+      'new_provisioned_role_activation_blocked', v_blocked > 0
     )
   );
 
@@ -4936,18 +7120,32 @@ comment on function public.patch83u_claim_provisioning(uuid, uuid, text, text) i
 'Service-only claim with exact Employee ID confirmation. Returns a complete server-only provisioning snapshot; callers must never forward it to a browser.';
 comment on function public.patch83u_finalize_provisioning(uuid, uuid, uuid, uuid, text) is
 'Service-only finalization after exact auth.users email, ownership metadata, credential version, and confirmation proof.';
-comment on function public.patch83u_begin_required_password_change(uuid, text, integer) is
-'Service-only first phase of required password change; immediately invalidates application access and records no credential material.';
-comment on function public.patch83u_finalize_required_password_change(uuid, uuid, integer, text) is
-'Service-only finalization requiring exact auth.users version/email proof and zero remaining auth.sessions rows before roles are restored.';
+comment on function public.patch83u_prepare_required_password_change(uuid, text, integer, text) is
+'Read-only service-role preparation. Returns exact non-secret identity/version context or the terminal idempotent outcome before current-password reauthentication.';
+comment on function public.patch83u_begin_required_password_change(uuid, text, integer, text) is
+'Service-only idempotent begin after successful current-password reauthentication; invalidates application access and records no credential material.';
+comment on function public.patch83u_finalize_required_password_change(uuid, uuid, text, integer, text, boolean) is
+'Service-only finalization with exact operation/request/Auth proof. Existing role rows are preserved; only an exact newly provisioned inactive role may be activated once. Unproven revocation remains fail-closed for review.';
+comment on function public.patch83u_abort_required_password_change(uuid, uuid, text, boolean, boolean, text, text) is
+'Service-only total abort with no-secret safe result. No-Auth-change restores the prior required state; changed Auth enters recovery or session-revocation review and the request ID is terminal.';
 comment on function public.patch83u_begin_admin_reset(uuid, uuid, text, text, text, text) is
-'Service-only Super Admin reset begin; requires PATCH83U_RESET_USER_PASSWORD, exact Employee ID confirmation, organization scope, non-self target, and last-Super-Admin protection before roles are suspended.';
+'Service-only Super Admin reset begin; requires PATCH83U_RESET_USER_PASSWORD, exact Employee ID confirmation, organization scope, non-self target, and effective last-Super-Admin protection while preserving profile and role rows.';
+comment on function public.patch83u_admin_reset_session_revocation_proof(uuid, uuid, uuid, text, integer, text) is
+'Read-only service-role proof for one exact administrator-reset operation. It returns only whether zero target auth.sessions rows remain and never mutates Auth session storage.';
 comment on function public.patch83t_update_user_profile(uuid, uuid, jsonb) is
 'Service-only, organization-scoped controlled profile update with nullable contact email, normalized phone, managed Employee ID immutability, and old/new audit snapshots.';
-comment on function public.patch83u_finalize_admin_reset(uuid, uuid, uuid, integer, text) is
-'Service-only reset finalization requiring exact Auth proof and zero target auth.sessions rows; profile remains invited and roles remain suspended.';
+comment on function public.patch83u_finalize_admin_reset(uuid, uuid, uuid, text, integer, text, boolean) is
+'Service-only reset finalization requiring exact operation/request/Auth proof. It preserves profile/role rows and transitions to required change or fail-closed session-revocation review.';
+comment on function public.patch83u_abort_admin_reset(uuid, uuid, uuid, text, boolean, boolean, text, text) is
+'Service-only total reset abort with a no-secret idempotent result; unchanged Auth restores prior state and changed Auth remains locked for recovery or session-revocation review.';
+comment on function public.patch83u_get_capabilities(uuid, text, text) is
+'Service-only non-secret schema/Edge/frontend/runtime handshake. Normal reads do not lock the singleton; prepared designated-Super-Admin attestation is narrowly locked and idempotent.';
+comment on function public.patch83u_transition_runtime(uuid, text, text, text, text, text, uuid, text, text) is
+'Sole service-role runtime mutation path with exact confirmation, idempotent request ID, protected preflight/contract/bootstrap checks, and append-only audit. Disable/emergency are credential-independent break-glass operations for the stored designated or another verified global Super Admin.';
 comment on function public.patch83u_reconcile_provisioning(uuid, uuid, text, text) is
 'Service-only, organization-scoped reconciliation against the exact canonical auth.users identity and immutable provisioning snapshot.';
+comment on function public.patch83u_apply_user_lifecycle(uuid, uuid, text, text) is
+'Service-only canonical User Management lifecycle transition with exact action/reason, same-organization role administration, protected provisioning, profile/credential/role synchronization, and database audit proof. Reactivation never restores roles.';
 comment on function public.patch83u_reconcile_credential_state(uuid, uuid, text, text) is
 'Service-only recovery for stale or partially completed credential operations; exact Auth version/email and operation-source evidence determine the only permitted transition.';
 comment on function public.patch83u_assign_user_role(uuid, uuid, public.app_role, public.access_scope, uuid, uuid, uuid, text) is

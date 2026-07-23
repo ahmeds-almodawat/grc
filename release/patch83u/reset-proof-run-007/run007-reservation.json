@@ -1,0 +1,33 @@
+{
+  "schema_version": "patch83u-reset-proof-run007-reservation-v1",
+  "run": 7,
+  "execution_authorized": false,
+  "workspace": "release/patch83u/reset-proof-run-007",
+  "checkpoint_directory": "release/patch83u/reset-proof-run-007/checkpoints",
+  "checkpoint_files_expected": [
+    "01-before-employee-sessions.json",
+    "02-immediately-before-reset.json",
+    "03-immediately-after-reset.json",
+    "04-before-required-password-change.json",
+    "05-immediately-after-password-change-finalization.json",
+    "06-after-fresh-employee-login.json"
+  ],
+  "checkpoint_files_created_during_preparation": false,
+  "success_evidence_created_during_preparation": false,
+  "fresh_after_future_harness_start_required": true,
+  "operator_confirmation_contract_id": "patch83u-run007-reset-confirmation-v1",
+  "operator_confirmation_phrase": "EXECUTE RUN 007 RESET NOW",
+  "operator_confirmation_case_sensitive": true,
+  "operator_confirmation_cli_override_supported": false,
+  "expected_final_session_count": 1,
+  "expected_final_unrevoked_refresh_token_count": 1,
+  "prior_runs_preserved": true,
+  "initial_credential_version": 4,
+  "post_reset_credential_version": 5,
+  "final_credential_version": 6,
+  "initial_session_count": 0,
+  "initial_unrevoked_refresh_token_count": 0,
+  "staging_project_ref": "zghsgzrdwbqdrpuxanac",
+  "production_project_ref": "zbrjjecpsrzposhuarcn",
+  "production_accessed": false
+}

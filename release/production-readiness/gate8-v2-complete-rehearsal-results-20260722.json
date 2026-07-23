@@ -1,0 +1,82 @@
+{
+  "schema_version": "production-gate8-v2-complete-rehearsal-result-v1",
+  "decision": "PRODUCTION GATE 8 PASSED — STAGING REHEARSAL COMPLETE",
+  "attempt_id": "6447c686-7ae1-4166-9b47-ab22de82ced7",
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "prohibited_project_ref": "zbrjjecpsrzposhuarcn",
+  "repository": {
+    "branch": "patch83t-controlled-user-excel-import",
+    "head": "a9989b1e8d95a6bb775316a2d9e709ef84514c42",
+    "staged_file_count": 0,
+    "deleted_tracked_file_count": 0
+  },
+  "freeze_aggregate_sha256": "583877a205e075614a903035dd634bd43839d83c00ca49452d826f9eb4051db9",
+  "recovery_point": {
+    "timestamp_utc": "2026-07-21T21:04:40.156Z",
+    "status": "COMPLETED",
+    "restore_available_confirmed": true,
+    "staging_only_rpo_accepted": true,
+    "post_backup_database_activity": 0
+  },
+  "preflight": "passed",
+  "dry_run_pending_order": [178,179,180,181,182],
+  "authorization_phrase_received_and_matched": true,
+  "execution": {
+    "attempt_count": 1,
+    "exit_code": 0,
+    "result": "execution_completed",
+    "applied_order": [178,179,180,181,182],
+    "automatic_retry": false
+  },
+  "migration_state": {
+    "latest": 182,
+    "history_and_catalog_agree": true,
+    "unexpected_above_182": 0
+  },
+  "postflight": {
+    "result": "passed",
+    "attestation_overall_pass": true,
+    "runtime_enforced_state_version": 5,
+    "legacy_tables_rls_enabled_and_forced": 18,
+    "legacy_tables_with_browser_grants": 0,
+    "runtime_action_browser_dml_grants": 0
+  },
+  "fingerprint": {
+    "expected_catalog_sha256": "5feba35fc324214c45f728f61fb6556aa76cff1a97f470395830e0b8191f1f10",
+    "actual_catalog_sha256": "78ab27d7b8d86232285e2bf26a2be92f9966aad35cc53812ff208b55eea32c08",
+    "semantic_contract_match": true,
+    "unexplained_differences": 0,
+    "documented_difference": "Gate 7R serialized the authenticated role's environment-specific OID in four policy records; stable role identity and all policy contracts match."
+  },
+  "staging_smoke": {
+    "signed_out_login": "passed",
+    "production_requests": 0,
+    "unknown_and_unsigned_actions_denied": true,
+    "unauthorized_attestation_denied": true,
+    "service_role_attestation_passed": true,
+    "auth_accounts_modified": false,
+    "business_data_modified": false
+  },
+  "local_validation": {
+    "unit": "1151/1151 passed",
+    "focused": "55/55 passed",
+    "typescript": "passed",
+    "deno_edge_check": "passed",
+    "production_build": "passed",
+    "playwright_final_serial": "25/25 passed",
+    "playwright_initial_environment_contaminated_attempt": "23 passed, 1 sub-pixel failure, 1 not run; staging Vite occupying test server port was stopped before clean rerun",
+    "disposable_sql_upgrade": "passed",
+    "sql_governance_and_adversarial": "passed",
+    "exact_state_reapplication": "passed",
+    "json_parse": "52/52 parsed before final result creation",
+    "secret_scan": "passed",
+    "skip_only_scan": "0 hits",
+    "git_diff_check": "passed"
+  },
+  "controls": {
+    "source_or_migration_changed_during_gate8": false,
+    "auth_account_modified": false,
+    "production_accessed": false,
+    "commit_push_tag_or_deployment": false
+  }
+}

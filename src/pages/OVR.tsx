@@ -252,7 +252,7 @@ export function OVR() {
       return;
     }
     if (!organizationId) {
-      setMessage('No active organization is available for this signed-in user.');
+      setMessage(t('ovr.noActiveOrganization'));
       return;
     }
     setSaving(true);
@@ -413,17 +413,7 @@ export function OVR() {
     setSeverityFilter('all');
     setSelectedDashboardReport(null);
   };
-  const ovrFilterLabel = activeFilter === 'all'
-    ? 'All reports'
-    : activeFilter === 'open'
-      ? 'Open reports'
-      : activeFilter === 'quality'
-        ? 'Quality review'
-        : activeFilter === 'corrective'
-          ? 'Corrective actions'
-          : activeFilter === 'sentinel'
-            ? 'Sentinel events'
-            : 'Near miss';
+  const ovrFilterLabel = t(`ovr.filter.${activeFilter}`);
   const ovrDashboardCards = summaryData ? [
     { key: 'all' as const, label: t('ovr.totalReports'), value: summaryData.total_reports, tone: 'normal' as const },
     { key: 'open' as const, label: t('ovr.openReports'), value: summaryData.open_reports, tone: 'warning' as const },
@@ -460,8 +450,8 @@ export function OVR() {
         loading={summary.loading}
         error={summary.error}
         empty={!summaryData}
-        emptyTitle="OVR summary is not available"
-        emptyMessage="Connect Supabase and apply the OVR summary view to display live, role-scoped counts."
+        emptyTitle={t('ovr.summaryUnavailable')}
+        emptyMessage={t('ovr.summaryUnavailableHint')}
       >
         {summaryData ? (
           <div className="stats-grid">
@@ -483,20 +473,20 @@ export function OVR() {
       <div className="panel">
         <div className="split-header">
           <div className="panel-header">
-            <h4>OVR dashboard filters</h4>
-            <p>Click a KPI card or search the visible incident list. Showing {filteredReports.length} of {(reports.data || []).length} records.</p>
+            <h4>{t('ovr.dashboardFilters')}</h4>
+            <p>{t('ovr.dashboardFiltersHint').replace('{shown}', String(filteredReports.length)).replace('{total}', String((reports.data || []).length))}</p>
           </div>
-          <button className="ghost-button" type="button" onClick={resetOvrFilters}>Reset filters</button>
+          <button className="ghost-button" type="button" onClick={resetOvrFilters}>{t('common.resetFilters')}</button>
         </div>
         <div className="toolbar">
-          <span className="status-badge status-info">Active filter: {ovrFilterLabel}</span>
-          <input value={reportSearch} onChange={event => setReportSearch(event.target.value)} placeholder="Search OVR number, department, category, owner, status" />
+          <span className="status-badge status-info">{t('common.activeFilter')}: {ovrFilterLabel}</span>
+          <input value={reportSearch} onChange={event => setReportSearch(event.target.value)} placeholder={t('ovr.searchPlaceholder')} />
           <select value={statusFilter} onChange={event => setStatusFilter(event.target.value as typeof statusFilter)}>
-            <option value="all">All statuses</option>
-            {Array.from(new Set((reports.data || []).map(row => row.status))).map(status => <option key={status} value={status}>{cleanLabel(status)}</option>)}
+            <option value="all">{t('common.allStatuses')}</option>
+            {Array.from(new Set((reports.data || []).map(row => row.status))).map(status => <option key={status} value={status}>{t(`status.${status}`, cleanLabel(status))}</option>)}
           </select>
           <select value={severityFilter} onChange={event => setSeverityFilter(event.target.value as typeof severityFilter)}>
-            <option value="all">All severity</option>
+            <option value="all">{t('ovr.allSeverity')}</option>
             {(['level_1', 'level_2', 'level_3', 'level_4', 'sentinel'] as OvrSeverityLevel[]).map(level => <option key={level} value={level}>{t(`ovr.severity.${level}`)}</option>)}
           </select>
         </div>
@@ -506,8 +496,8 @@ export function OVR() {
         loading={workflowSummary.loading}
         error={workflowSummary.error}
         empty={!workflowSummaryData}
-        emptyTitle="OVR workflow controls are not available"
-        emptyMessage="Workflow counts will appear after the control views are applied and permitted records exist."
+        emptyTitle={t('ovr.controlsUnavailable')}
+        emptyMessage={t('ovr.controlsUnavailableHint')}
       >
         {workflowSummaryData ? (
           <div className="panel">
@@ -571,7 +561,7 @@ export function OVR() {
                 {(['level_1', 'level_2', 'level_3', 'level_4', 'sentinel'] as OvrSeverityLevel[]).map(level => <option key={level} value={level}>{t(`ovr.severity.${level}`)}</option>)}
               </select>
             </label>
-            <label>{t('ovr.injury')}<input value={form.injury_type} onChange={event => update('injury_type', event.target.value)} placeholder="None observed / Abrasion / Burn..." /></label>
+            <label>{t('ovr.injury')}<input value={form.injury_type} onChange={event => update('injury_type', event.target.value)} placeholder={t('ovr.injuryPlaceholder')} /></label>
           </div>
 
           <div className="form-grid two">
@@ -583,7 +573,7 @@ export function OVR() {
             {preOccurrenceFlags.map(flag => (
               <label key={flag} className="check-chip">
                 <input type="checkbox" checked={form.pre_occurrence_condition_flags.includes(flag)} onChange={() => toggleFlag(flag)} />
-                <span>{cleanLabel(flag)}</span>
+                <span>{t(`ovr.condition.${flag}`, cleanLabel(flag))}</span>
               </label>
             ))}
           </div>
@@ -608,8 +598,8 @@ export function OVR() {
         loading={workflowQueue.loading}
         error={workflowQueue.error}
         empty={!workflowQueue.data?.length}
-        emptyTitle="No OVR workflow items"
-        emptyMessage="No incident in your current scope is waiting for manager, Quality, referral or closure action."
+        emptyTitle={t('ovr.workflowEmptyTitle')}
+        emptyMessage={t('ovr.workflowEmptyMessage')}
       >
         <WorkflowQueue rows={workflowQueue.data || []} />
       </DataState>
@@ -623,13 +613,13 @@ export function OVR() {
           loading={reports.loading}
           error={reports.error}
           empty={!filteredReports.length}
-          emptyTitle="No OVR reports in your scope"
+          emptyTitle={t('ovr.reportsEmptyTitle')}
           emptyMessage={
             activeFilter !== 'all' || reportSearch || statusFilter !== 'all' || severityFilter !== 'all'
-              ? `No OVR records match ${ovrFilterLabel}. Reset filters or broaden the search.`
+              ? t('ovr.reportsNoMatch').replace('{filter}', ovrFilterLabel)
               : isReadOnly
-              ? 'No readable OVR records are available for this account.'
-              : 'Create a controlled-pilot OVR when authorized.'
+              ? t('ovr.reportsReadonlyEmpty')
+              : t('ovr.reportsCreateHint')
           }
         >
           <EntityTable<OvrReportRow>
@@ -651,17 +641,17 @@ export function OVR() {
           <div className="detail-panel">
             <div className="split-header">
               <div>
-                <h4>Selected OVR detail</h4>
-                <p>{selectedDashboardReport.ovr_number || selectedDashboardReport.logging_number || 'OVR record'} · {cleanLabel(selectedDashboardReport.status)}</p>
+                <h4>{t('ovr.selectedDetail')}</h4>
+                <p>{selectedDashboardReport.ovr_number || selectedDashboardReport.logging_number || t('ovr.record')} · {t(`status.${selectedDashboardReport.status}`, cleanLabel(selectedDashboardReport.status))}</p>
               </div>
-              <button className="ghost-button small" type="button" onClick={() => setSelectedDashboardReport(null)}>Clear selection</button>
+              <button className="ghost-button small" type="button" onClick={() => setSelectedDashboardReport(null)}>{t('common.clearSelection')}</button>
             </div>
             <div className="detail-grid">
-              <div><span>Department</span><strong>{language === 'ar' && selectedDashboardReport.departments?.name_ar ? selectedDashboardReport.departments.name_ar : selectedDashboardReport.departments?.name_en || '—'}</strong></div>
-              <div><span>Owner</span><strong>{language === 'ar' && selectedDashboardReport.owner?.full_name_ar ? selectedDashboardReport.owner.full_name_ar : selectedDashboardReport.owner?.full_name_en || '—'}</strong></div>
-              <div><span>Category</span><strong>{t(`ovr.category.${selectedDashboardReport.occurrence_category}`, cleanLabel(selectedDashboardReport.occurrence_category))}</strong></div>
-              <div><span>Severity</span><strong>{selectedDashboardReport.severity_level ? t(`ovr.severity.${selectedDashboardReport.severity_level}`) : '—'}</strong></div>
-              <div><span>Next action</span><strong>{['closed', 'cancelled', 'rejected'].includes(selectedDashboardReport.status) ? 'No active dashboard action.' : 'Review the source workflow before taking action.'}</strong></div>
+              <div><span>{t('common.department')}</span><strong>{language === 'ar' && selectedDashboardReport.departments?.name_ar ? selectedDashboardReport.departments.name_ar : selectedDashboardReport.departments?.name_en || '—'}</strong></div>
+              <div><span>{t('common.owner')}</span><strong>{language === 'ar' && selectedDashboardReport.owner?.full_name_ar ? selectedDashboardReport.owner.full_name_ar : selectedDashboardReport.owner?.full_name_en || '—'}</strong></div>
+              <div><span>{t('ovr.category')}</span><strong>{t(`ovr.category.${selectedDashboardReport.occurrence_category}`, cleanLabel(selectedDashboardReport.occurrence_category))}</strong></div>
+              <div><span>{t('ovr.severity')}</span><strong>{selectedDashboardReport.severity_level ? t(`ovr.severity.${selectedDashboardReport.severity_level}`) : '—'}</strong></div>
+              <div><span>{t('ovr.nextAction')}</span><strong>{['closed', 'cancelled', 'rejected'].includes(selectedDashboardReport.status) ? t('ovr.noDashboardAction') : t('ovr.reviewSourceWorkflow')}</strong></div>
             </div>
           </div>
         ) : null}

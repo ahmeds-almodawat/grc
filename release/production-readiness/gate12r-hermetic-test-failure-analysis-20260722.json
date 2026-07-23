@@ -1,0 +1,12 @@
+{
+  "schema_version":"gate12r-hermetic-test-failure-analysis-v1",
+  "candidate_unit_before":{"passed":723,"failed":472,"total":1195,"failed_files":4},
+  "files":[
+    {"path":"tests/unit/patch83uExecutionFreezeContract.test.ts","cause":"ignored Run 003 checkpoint was read while constructing synthetic prior-evidence integrity","stack":"localFileManifest -> priorEvidenceManifest -> validFreezeFixture","product_source_implicated":false,"classification":"test-only fixture dependency"},
+    {"path":"tests/unit/patch83uRun008ExecutionFreezeContract.test.ts","cause":"ignored Run 003 checkpoint was read while constructing synthetic prior-evidence integrity","stack":"localFileManifest -> priorEvidenceManifest -> validFreezeFixture","product_source_implicated":false,"classification":"test-only fixture dependency"},
+    {"path":"tests/unit/patch83uRun009ExecutionFreezeContract.test.ts","cause":"ignored Run 003 checkpoint was read while constructing synthetic prior-evidence integrity","stack":"localFileManifest -> priorEvidenceManifest -> validFreezeFixture","product_source_implicated":false,"classification":"test-only fixture dependency"},
+    {"path":"tests/unit/patch83uStagingMultisessionResetProof.test.ts","cause":"precredential adapter omitted browser-configuration injection and defaulted to ignored .env.staging.local","stack":"runPreCredentialReadiness -> loadRun008BrowserConfiguration","product_source_implicated":false,"classification":"test adapter dependency"}
+  ],
+  "hosted_calls_performed":false,
+  "credentials_used":false
+}

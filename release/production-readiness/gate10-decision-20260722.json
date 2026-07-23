@@ -1,0 +1,56 @@
+{
+  "schema_version": "gate10-decision-v1",
+  "captured_at": "2026-07-22T16:40:52.5362101Z",
+  "decision": "PRODUCTION GATE 10 PASSED — STAGING SECURITY REMEDIATION COMPLETE",
+  "staging_project_ref": "zghsgzrdwbqdrpuxanac",
+  "production_project_ref": "zbrjjecpsrzposhuarcn",
+  "production_access": "prohibited_and_not_accessed",
+  "freeze_aggregate_sha256": "f3da08ac6aedcdf5f56e5d4a0c5be307c737b108448fcf85f8b96ba0aaf106cd",
+  "execution_attempt_id": "a5d40d5b-5001-4e44-bd3f-c2837005c759",
+  "migration_execution": {
+    "attempt_count": 1,
+    "applied_order": [183, 184],
+    "migration_183_count": 1,
+    "migration_184_count": 1,
+    "latest_migration": 184,
+    "unexpected_above_184": 0
+  },
+  "postflight": {
+    "overall_pass": true,
+    "catalog_attestation_overall_pass": true,
+    "runtime_enforced": true,
+    "runtime_state_version": 5
+  },
+  "catalog_fingerprint": {
+    "classification": "exact_match",
+    "canonical_line_count": 77,
+    "mismatch_count": 0,
+    "catalog_sha256": "15984ffb01170702380a6c1e92c0636faffc47e0958367f64323acf0584c67bb",
+    "fingerprint_file_sha256": "8dcd166ad7e53556369cad8f5681526adfb35317d2b92b606e7d213ddf4dcb09"
+  },
+  "leaked_password_protection": {
+    "separately_authorized": true,
+    "enabled": true,
+    "persisted_state_verified": true,
+    "security_advisor_warning_closed": true
+  },
+  "final_security_advisor": {
+    "total": 21,
+    "info": 18,
+    "warn": 3,
+    "unexpected_application_findings": 0,
+    "residual_classification": "18 intentional deny-all RLS notices and 3 accepted Patch83U boolean-helper warnings"
+  },
+  "staging_security_smoke": "passed",
+  "local_validation": "passed",
+  "full_unit_tests": "1174/1174 passed",
+  "final_playwright_serial": "25/25 passed",
+  "auth_users_modified": false,
+  "passwords_modified": false,
+  "sessions_modified": false,
+  "business_data_modified_by_smoke": false,
+  "source_or_migration_changed_during_gate10": false,
+  "staged_file_count": 0,
+  "remaining_gate10_blockers": [],
+  "overall_pass": true
+}

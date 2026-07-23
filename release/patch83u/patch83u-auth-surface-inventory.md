@@ -2,7 +2,7 @@
 
 Status: **PASS**
 
-This is a deterministic static replay of the ordered migration chain plus actual browser call sites. It does not claim that unapplied migrations 173/174 or the resulting catalog state have been deployed.
+This is a deterministic static replay of the ordered migration chain through reviewed migration 177 plus actual browser call sites. Supplied evidence records migration 176 as applied to staging, but this static artifact is not live-catalog proof and does not claim migration-177 application or the resulting final catalog state.
 
 ## Summary
 
@@ -11,6 +11,7 @@ This is a deterministic static replay of the ordered migration chain plus actual
 - Direct browser materialized views: 0
 - Unsafe surfaces: 0
 - Search transport: authenticated_edge_bridge
+- Reviewed restricted migration 176–177 SECURITY DEFINER routines: 3
 - Target credential-gate migration present: yes
 
 ## search_grc_global
@@ -19,15 +20,25 @@ Disposition: **authenticated_edge_bridge_with_caller_jwt_rls**. The accepted des
 
 ## ACL-reachable SECURITY DEFINER routines
 
-The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–174 permit exactly three Patch 83U RLS decision helpers; the dynamic Patch 83U revoke denies browser execution on every other Patch 83U routine.
+The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–174 permit exactly three Patch 83U RLS decision helpers. Every SECURITY DEFINER routine introduced, replaced, or renamed by migrations 176–177 must contain its own explicit revoke from PUBLIC/anon/authenticated plus either an explicit service_role-only grant or an explicit owner-only service_role revoke; migration 174's earlier dynamic revoke is not accepted as evidence for migrations 176–177.
 
 | Signature | Evidence source | PUBLIC | anon | authenticated | Disposition | Purpose |
 |---|---|---:|---:|---:|---|---|
 | `public.current_user_org_id()` | retained_patch83q_live_catalog | no | no | yes | allowed | Read-only caller organization identity helper retained by Patch 83Q. |
 | `public.has_any_role(text[])` | retained_patch83q_live_catalog | yes | yes | yes | allowed | Read-only RLS role decision helper retained by Patch 83Q. |
-| `public.patch83u_credential_access_allowed()` | target_migrations_171_174 | no | no | yes | allowed | Credential version, state, email, and session freshness decision used by restrictive RLS. |
-| `public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)` | target_migrations_171_174 | no | no | yes | allowed | Same-organization credential-active profile update decision used by restrictive RLS. |
-| `public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)` | target_migrations_171_174 | no | no | yes | allowed | Credential-active canonical role/scope mutation decision used by restrictive RLS. |
+| `public.patch83u_credential_access_allowed()` | target_migrations_171_177 | no | no | yes | allowed | Credential version, state, email, and session freshness decision used by restrictive RLS. |
+| `public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)` | target_migrations_171_177 | no | no | yes | allowed | Same-organization credential-active profile update decision used by restrictive RLS. |
+| `public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)` | target_migrations_171_177 | no | no | yes | allowed | Credential-active canonical role/scope mutation decision used by restrictive RLS. |
+
+### Reviewed restricted routines from migrations 176–177
+
+These routines are not reachable by browser roles. They are listed explicitly so migration 177's stable finalizer name and in-migration ACL proof remain visible.
+
+| Signature | Evidence source | service_role | Disposition | Definition evidence |
+|---|---|---:|---|---|
+| `public.patch83u_finalize_password_change_after_revocation(p_actor_id uuid, p_operation_id uuid, p_request_id text, p_applied_credential_version integer, p_verified_auth_email text)` | migration177_service_role_acl_review | yes | service_role_only | `supabase/migrations/177_patch83u_explicit_password_finalizer_rpc_name.sql:68` |
+| `public.patch83u_reconcile_credential_state_standard_impl(p_actor_id uuid, p_target_user_id uuid, p_request_id text, p_employee_id_confirmation text)` | migration176_service_role_acl_review | no | owner_only | `supabase/migrations/176_patch83u_last_super_admin_recovery.sql:125` |
+| `public.patch83u_reconcile_last_super_admin_recovery(p_actor_id uuid, p_target_user_id uuid, p_request_id text, p_employee_id_confirmation text)` | migration176_service_role_acl_review | no | owner_only | `supabase/migrations/176_patch83u_last_super_admin_recovery.sql:133` |
 
 ## Materialized views
 

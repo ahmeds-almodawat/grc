@@ -1,0 +1,138 @@
+{
+  "artifact": "patch83u-staging-pg-service-readiness-20260719",
+  "captured_at_utc": "2026-07-19T10:20:24.936Z",
+  "decision": "PG_SERVICE PREPARED — INTERACTIVE PASSWORD VALIDATION REQUIRED",
+  "decision_scope": "pg_service_only",
+  "scope": {
+    "allowed_project_ref": "zghsgzrdwbqdrpuxanac",
+    "linked_project_ref_verified": true,
+    "production_project_ref_detected": false,
+    "production_accessed": false
+  },
+  "connection_metadata": {
+    "mode": "session_pooler",
+    "host_redacted": "aws-0-***.pooler.supabase.com",
+    "host_sha256_prefix": "06eb5f60fd044994",
+    "port": 5432,
+    "database": "postgres",
+    "username_classification": "project-scoped Supabase pooler database role",
+    "password_present_in_linked_metadata": false,
+    "metadata_source": "existing linked-project CLI metadata verified against the allowed staging project"
+  },
+  "service": {
+    "path": "C:\\Users\\molte\\AppData\\Roaming\\postgresql\\.pg_service.conf",
+    "name": "grc_patch83u_staging_readonly",
+    "application_name": "patch83u_staging_reset_evidence_readonly",
+    "ssl_mode": "require",
+    "hosted_server_ssl_enforcement": false,
+    "ca_or_client_certificate_configured": false,
+    "default_transaction_read_only_requested": true,
+    "target_session_attrs_read_only": true,
+    "password_or_passfile_field_present": false,
+    "pgpass_created_or_modified": false,
+    "production_reference_present": false,
+    "static_validation": "passed"
+  },
+  "connection_validation": {
+    "psql_available": false,
+    "secure_interactive_password_prompt_used": false,
+    "status": "not_run",
+    "reason": "psql is unavailable and the required secure interactive password entry is unavailable in this automation channel",
+    "connection_opened": false,
+    "current_database": "not_queried",
+    "current_user_classification": "not_queried",
+    "server_version": "not_queried",
+    "transaction_read_only": "not_queried",
+    "hosted_project_identity": "not_queried",
+    "migration_versions": {
+      "174": "not_queried",
+      "176": "not_queried",
+      "177": "not_queried"
+    },
+    "runtime_state": "not_queried",
+    "runtime_state_version": "not_queried",
+    "explicit_rollback": "not_executed_no_transaction_opened"
+  },
+  "approved_alternate_evidence_channel": {
+    "channel": "manually_operated_staging_sql_editor",
+    "status": "approved_and_operator_validated",
+    "project_ref": "zghsgzrdwbqdrpuxanac",
+    "runtime": {
+      "schema_version": "174.2-auth-first",
+      "enforcement_state": "enforced",
+      "state_version": 5,
+      "edge_contract": "patch83u-edge-auth-first-v1",
+      "frontend_contract": "patch83u-frontend-auth-first-v1"
+    },
+    "applied_migrations": [
+      "174",
+      "176",
+      "177"
+    ],
+    "finalizer": {
+      "name": "patch83u_finalize_password_change_after_revocation",
+      "name_bytes": 50,
+      "security_definer": true,
+      "service_role_execute": true,
+      "authenticated_execute": false,
+      "anon_execute": false,
+      "public_execute": false
+    },
+    "checkpoint_query_pack": "scripts/patch83u-staging-sql-editor-evidence.sql",
+    "checkpoint_count": 6,
+    "each_checkpoint_begin_read_only": true,
+    "each_checkpoint_explicit_rollback": true,
+    "operator_project_confirmation_hidden_and_required": true,
+    "sql_claims_database_derived_project_ref": false,
+    "stale_or_future_checkpoint_refused": true,
+    "post_mutation_request_correlation_uses_hash_only": true,
+    "database_password_stored": false,
+    "mutation_performed": false,
+    "source": "operator-confirmed staging SQL Editor validation"
+  },
+  "evidence_sql": {
+    "path": "scripts/patch83u-staging-reset-evidence.sql",
+    "static_review": "passed",
+    "on_error_stop_line": 4,
+    "begin_read_only_line": 6,
+    "rollback_line": 331,
+    "mutation_statements_detected": false,
+    "sensitive_values_selected": false,
+    "execution": "not_run_psql_helper",
+    "sql_editor_query_pack": {
+      "path": "scripts/patch83u-staging-sql-editor-evidence.sql",
+      "static_review": "passed",
+      "checkpoint_count": 6,
+      "all_begin_read_only": true,
+      "all_explicit_rollback": true,
+      "mutation_statements_detected": false,
+      "sensitive_values_selected": false
+    }
+  },
+  "repository": {
+    "branch": "patch83t-controlled-user-excel-import",
+    "head": "a9989b1e8d95a6bb775316a2d9e709ef84514c42",
+    "dirty": true,
+    "tracked_modified_count": 63,
+    "untracked_count": 61,
+    "porcelain_entry_count_all_untracked": 124,
+    "staged_file_count": 0
+  },
+  "safety": {
+    "password_or_secret_requested": false,
+    "password_or_secret_displayed": false,
+    "password_or_secret_stored": false,
+    "login_performed": false,
+    "reset_performed": false,
+    "password_change_performed": false,
+    "database_connection_opened": false,
+    "hosted_mutation_performed": false,
+    "deployment_performed": false,
+    "migration_performed": false,
+    "staging_data_changed": false,
+    "production_accessed": false,
+    "files_staged": false,
+    "commit_performed": false,
+    "push_performed": false
+  }
+}

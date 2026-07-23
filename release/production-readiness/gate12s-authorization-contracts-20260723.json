@@ -1,0 +1,26 @@
+{
+  "schema_version": "gate12s-authorization-contracts-v1",
+  "status": "awaiting_revised_release_candidate_authorization",
+  "release_version": "1.0.0-rc.1",
+  "release_branch": "release/grc-platform-1.0.0-rc.1",
+  "release_tag": "v1.0.0-rc.1",
+  "staged_path_count": 355,
+  "payload_aggregate_sha256": "ec8afdf84b63bf5e48e90728548e80d5055e70c3f82aaf0b4d62abb2b357ab97",
+  "control_manifest_sha256": "52cb10327baedec0112ba70f62e4c17e35fa7e32c43e2f174662a3767b82ece3",
+  "baseline_v2_sha256": "6b1b0f814bf7d8414ace4303912f303f1a71a1e8913489db77a30ddd94c7846a",
+  "migration185_sha256": "780efe381ac90a5ae4d8cf256f95246966e9b42c91adcd9a6dc7a13030e0ec65",
+  "git_release_phrase": "AUTHORIZE GATE 12S COMMIT TAG AND PUSH RC 1.0.0-RC.1 PAYLOAD EC8AFDF84B63BF5E48E90728548E80D5055E70C3F82AAF0B4D62ABB2B357AB97 CONTROL 52CB10327BAEDEC0112BA70F62E4C17E35FA7E32C43E2F174662A3767B82ECE3 PATHS 355 BASELINE 6B1B0F814BF7D8414ACE4303912F303F1A71A1E8913489DB77A30DDD94C7846A MIGRATION185 780EFE381AC90A5AE4D8CF256F95246966E9B42C91ADCD9A6DC7A13030E0EC65",
+  "git_release_scope": [
+    "commit the already staged exact candidate",
+    "create annotated tag v1.0.0-rc.1",
+    "push only the RC branch and tag"
+  ],
+  "hosted_staging_phrase": "AUTHORIZE GATE 12S DEPLOY RC 1.0.0-RC.1 PAYLOAD EC8AFDF84B63BF5E48E90728548E80D5055E70C3F82AAF0B4D62ABB2B357AB97 CONTROL 52CB10327BAEDEC0112BA70F62E4C17E35FA7E32C43E2F174662A3767B82ECE3 PATHS 355 TO VERCEL grc-staging FOR zghsgzrdwbqdrpuxanac",
+  "hosted_staging_scope": [
+    "deploy the exact committed and tagged candidate to grc-staging",
+    "run non-destructive hosted staging acceptance tests"
+  ],
+  "production_authorized": false,
+  "database_write_authorized": false,
+  "previous_gate12_and_gate12r_authorizations_valid": false
+}

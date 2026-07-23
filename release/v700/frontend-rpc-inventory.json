@@ -1,17 +1,17 @@
 {
   "summary": {
-    "generated_at": "2026-07-12T23:01:38.814Z",
+    "generated_at": "2026-07-17T21:12:58.404Z",
     "source": "src/**/*.{ts,tsx,js,jsx}",
-    "frontend_rpc_call_count": 1,
-    "authenticated_edge_bridge_call_count": 83,
-    "unique_frontend_rpc_count": 82,
+    "frontend_rpc_call_count": 0,
+    "authenticated_edge_bridge_call_count": 85,
+    "unique_frontend_rpc_count": 83,
     "classification_counts": {
       "accreditation_assurance": 8,
       "read_only_search": 1,
       "production_readiness": 28,
       "workflow_runtime": 14,
       "privileged_admin": 16,
-      "user_management": 11,
+      "user_management": 12,
       "evidence_governance": 3,
       "scenario_lab": 3
     },
@@ -109,8 +109,8 @@
         "locations": [
           {
             "file": "src/lib/commandCenterApi.ts",
-            "line": 180,
-            "transport": "direct_browser_rpc",
+            "line": 181,
+            "transport": "authenticated_edge_bridge",
             "classification": "read_only_search"
           }
         ]
@@ -230,7 +230,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1705,
+            "line": 1709,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           }
@@ -241,13 +241,13 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1819,
+            "line": 1823,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           },
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 674,
+            "line": 700,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           }
@@ -258,13 +258,13 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1834,
+            "line": 1838,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           },
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 689,
+            "line": 715,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           }
@@ -275,18 +275,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1848,
-            "transport": "authenticated_edge_bridge",
-            "classification": "user_management"
-          }
-        ]
-      },
-      {
-        "rpc": "create_user",
-        "locations": [
-          {
-            "file": "src/lib/grcApi.ts",
-            "line": 1873,
+            "line": 1852,
             "transport": "authenticated_edge_bridge",
             "classification": "user_management"
           }
@@ -297,7 +286,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 2041,
+            "line": 2014,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -308,7 +297,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 2068,
+            "line": 2041,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -832,22 +821,44 @@
         ]
       },
       {
-        "rpc": "list_user_management_roster",
+        "rpc": "patch83t_get_user_import_capabilities",
         "locations": [
           {
-            "file": "src/lib/userManagementApi.ts",
-            "line": 440,
+            "file": "src/lib/userImportCompatibility.ts",
+            "line": 239,
             "transport": "authenticated_edge_bridge",
             "classification": "user_management"
           }
         ]
       },
       {
-        "rpc": "patch19_apply_import_batch",
+        "rpc": "list_user_management_roster",
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 953,
+            "line": 452,
+            "transport": "authenticated_edge_bridge",
+            "classification": "user_management"
+          }
+        ]
+      },
+      {
+        "rpc": "patch83t_user_import_identity_references",
+        "locations": [
+          {
+            "file": "src/lib/userManagementApi.ts",
+            "line": 883,
+            "transport": "authenticated_edge_bridge",
+            "classification": "user_management"
+          }
+        ]
+      },
+      {
+        "rpc": "patch83t_apply_user_excel_import",
+        "locations": [
+          {
+            "file": "src/lib/userManagementApi.ts",
+            "line": 1005,
             "transport": "authenticated_edge_bridge",
             "classification": "user_management"
           }
@@ -858,7 +869,7 @@
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 1017,
+            "line": 1083,
             "transport": "authenticated_edge_bridge",
             "classification": "user_management"
           }
@@ -869,7 +880,7 @@
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 1034,
+            "line": 1098,
             "transport": "authenticated_edge_bridge",
             "classification": "user_management"
           }
@@ -880,7 +891,7 @@
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 1053,
+            "line": 1117,
             "transport": "authenticated_edge_bridge",
             "classification": "user_management"
           }
@@ -891,7 +902,7 @@
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 1069,
+            "line": 1133,
             "transport": "authenticated_edge_bridge",
             "classification": "user_management"
           }
@@ -902,7 +913,7 @@
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 1079,
+            "line": 1143,
             "transport": "authenticated_edge_bridge",
             "classification": "user_management"
           }
@@ -913,7 +924,7 @@
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 1088,
+            "line": 1152,
             "transport": "authenticated_edge_bridge",
             "classification": "user_management"
           }
@@ -924,7 +935,7 @@
         "locations": [
           {
             "file": "src/lib/userManagementApi.ts",
-            "line": 1098,
+            "line": 1162,
             "transport": "authenticated_edge_bridge",
             "classification": "user_management"
           }
@@ -999,11 +1010,11 @@
     },
     {
       "file": "src/lib/commandCenterApi.ts",
-      "line": 180,
+      "line": 181,
       "rpc": "search_grc_global",
-      "transport": "direct_browser_rpc",
+      "transport": "authenticated_edge_bridge",
       "classification": "read_only_search",
-      "note": "Direct frontend RPC inventory; runtime authorization must be confirmed with DB grants and authenticated workflow tests."
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
     },
     {
       "file": "src/lib/enterpriseApi.ts",
@@ -1087,7 +1098,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1705,
+      "line": 1709,
       "rpc": "department_import_execute",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -1095,7 +1106,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1819,
+      "line": 1823,
       "rpc": "assign_user_role",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -1103,7 +1114,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1834,
+      "line": 1838,
       "rpc": "deactivate_user_role",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -1111,7 +1122,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1848,
+      "line": 1852,
       "rpc": "create_department",
       "transport": "authenticated_edge_bridge",
       "classification": "user_management",
@@ -1119,15 +1130,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1873,
-      "rpc": "create_user",
-      "transport": "authenticated_edge_bridge",
-      "classification": "user_management",
-      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
-    },
-    {
-      "file": "src/lib/grcApi.ts",
-      "line": 2041,
+      "line": 2014,
       "rpc": "update_ovr_workflow",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -1135,7 +1138,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 2068,
+      "line": 2041,
       "rpc": "create_ovr_corrective_action_project",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -1518,8 +1521,16 @@
       "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
     },
     {
+      "file": "src/lib/userImportCompatibility.ts",
+      "line": 239,
+      "rpc": "patch83t_get_user_import_capabilities",
+      "transport": "authenticated_edge_bridge",
+      "classification": "user_management",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
       "file": "src/lib/userManagementApi.ts",
-      "line": 440,
+      "line": 452,
       "rpc": "list_user_management_roster",
       "transport": "authenticated_edge_bridge",
       "classification": "user_management",
@@ -1527,7 +1538,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 674,
+      "line": 700,
       "rpc": "assign_user_role",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -1535,7 +1546,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 689,
+      "line": 715,
       "rpc": "deactivate_user_role",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -1543,15 +1554,23 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 953,
-      "rpc": "patch19_apply_import_batch",
+      "line": 883,
+      "rpc": "patch83t_user_import_identity_references",
       "transport": "authenticated_edge_bridge",
       "classification": "user_management",
       "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 1017,
+      "line": 1005,
+      "rpc": "patch83t_apply_user_excel_import",
+      "transport": "authenticated_edge_bridge",
+      "classification": "user_management",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/userManagementApi.ts",
+      "line": 1083,
       "rpc": "patch19_update_user_profile",
       "transport": "authenticated_edge_bridge",
       "classification": "user_management",
@@ -1559,7 +1578,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 1034,
+      "line": 1098,
       "rpc": "patch19_update_user_department",
       "transport": "authenticated_edge_bridge",
       "classification": "user_management",
@@ -1567,7 +1586,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 1053,
+      "line": 1117,
       "rpc": "patch19_assign_user_role",
       "transport": "authenticated_edge_bridge",
       "classification": "user_management",
@@ -1575,7 +1594,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 1069,
+      "line": 1133,
       "rpc": "patch19_deactivate_user",
       "transport": "authenticated_edge_bridge",
       "classification": "user_management",
@@ -1583,7 +1602,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 1079,
+      "line": 1143,
       "rpc": "patch19_reactivate_user",
       "transport": "authenticated_edge_bridge",
       "classification": "user_management",
@@ -1591,7 +1610,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 1088,
+      "line": 1152,
       "rpc": "patch19_archive_user",
       "transport": "authenticated_edge_bridge",
       "classification": "user_management",
@@ -1599,7 +1618,7 @@
     },
     {
       "file": "src/lib/userManagementApi.ts",
-      "line": 1098,
+      "line": 1162,
       "rpc": "patch19_unarchive_user",
       "transport": "authenticated_edge_bridge",
       "classification": "user_management",

@@ -1,0 +1,13 @@
+{
+  "schema_version": "patch83u-staging-network-console-stop-v1",
+  "captured_at": "2026-07-19T11:55:24.9750365Z",
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "execution_status": "stopped_fail_closed",
+  "checkpoint": "phase_1_edge_metadata",
+  "staging_edge_metadata_read_only_check": true,
+  "production_request_count": 0,
+  "application_request_count": 0,
+  "browser_started": false,
+  "console_collection_performed": false,
+  "hosted_mutation_performed": false
+}

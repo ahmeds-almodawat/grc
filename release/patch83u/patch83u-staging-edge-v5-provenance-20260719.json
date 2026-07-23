@@ -1,0 +1,106 @@
+{
+  "schema_version": "patch83u-staging-edge-v5-provenance-v1",
+  "captured_at_utc": "2026-07-19T12:17:25.1499459Z",
+  "classification": "VERSION 5 SOURCE IDENTICAL TO FROZEN REVIEWED SOURCE",
+  "scope": {
+    "project_ref": "zghsgzrdwbqdrpuxanac",
+    "function_name": "privileged-action",
+    "production_project_ref": "zbrjjecpsrzposhuarcn",
+    "production_accessed": false,
+    "mutation_performed": false
+  },
+  "active_metadata": {
+    "source": "Supabase CLI 2.72.7 functions list with an explicit staging project ref",
+    "version": 5,
+    "status": "ACTIVE",
+    "verify_jwt": true,
+    "hosted_ezbr_sha256": "7fee99f2d77590f48026ddb0aaec5d540403d7c85fda462aece5154492852762",
+    "created_at_unix_ms": 1784213509236,
+    "created_at_utc": "2026-07-16T14:51:49.2360000Z",
+    "updated_at_unix_ms": 1784325647510,
+    "updated_at_utc": "2026-07-17T22:00:47.5100000Z"
+  },
+  "version_history": {
+    "supported_cli_history_command_available": false,
+    "supported_management_metadata_history_available": false,
+    "active_metadata_includes_deployment_actor": false,
+    "active_metadata_includes_deployment_message": false,
+    "version_4_creation_metadata_available": false,
+    "version_5_creation_cause_available": false,
+    "cause": "Deployment cause is not available from the supported read-only active-function metadata or repository evidence inspected.",
+    "safe_observation": "The active version counter advanced from the previously recorded 3 to 5 while the hosted metadata hash and downloaded entry source remained unchanged."
+  },
+  "downloaded_source": {
+    "mechanism": "supabase functions download privileged-action --project-ref zghsgzrdwbqdrpuxanac --use-api",
+    "temporary_directory_outside_repository": true,
+    "repository_source_overwritten": false,
+    "entrypoint": "index.ts",
+    "sha256": "f4a53ddfd0167ca62661c3c9acc6b7b320a0e43f4b96efc821308e1db73caf87",
+    "bytes": 157176
+  },
+  "local_source": {
+    "path": "supabase/functions/privileged-action/index.ts",
+    "sha256": "f4a53ddfd0167ca62661c3c9acc6b7b320a0e43f4b96efc821308e1db73caf87",
+    "bytes": 157176,
+    "matches_previously_frozen_hash": true
+  },
+  "comparison": {
+    "byte_identical": true,
+    "sha256_identical": true,
+    "size_identical": true,
+    "deployment_sequence_advanced_while_entry_source_unchanged": true
+  },
+  "security_contract": {
+    "edge_contract": "patch83u-edge-auth-first-v1",
+    "admin_reset_action_present": true,
+    "required_password_change_action_present": true,
+    "stable_finalizer_present": true,
+    "runtime_enforcement_present": true,
+    "credential_version_checks_present": true,
+    "session_revocation_proof_present": true,
+    "service_role_environment_access_is_server_side": true,
+    "fail_closed_paths_present": true,
+    "verify_jwt_true_in_hosted_metadata": true,
+    "verify_jwt_true_in_local_config": true,
+    "production_ref_absent": true,
+    "deployed_secret_value_patterns_absent": true,
+    "required_markers_pass": true
+  },
+  "hosted_hash_interpretation": {
+    "hosted_ezbr_sha256_unchanged_from_prior_attestation": true,
+    "hosted_ezbr_sha256_equals_raw_index_sha256": false,
+    "hosted_hash_meaning_as_raw_source_hash_proven": false
+  },
+  "bundle_binding": {
+    "raw_entrypoint_binding_proven": true,
+    "complete_deployment_bundle_binding_proven": false,
+    "reason": "The supported download returned index.ts, but did not cryptographically bind every bundled dependency, runtime artifact, or hosted gateway configuration to the reviewed repository."
+  },
+  "runtime_catalog_evidence": {
+    "source": "Previously approved and operator-validated manual staging SQL Editor evidence captured after the active Edge updated_at timestamp.",
+    "captured_at_utc": "2026-07-19T10:20:24.936Z",
+    "postdates_active_edge_update": true,
+    "schema_version": "174.2-auth-first",
+    "enforcement_state": "enforced",
+    "state_version": 5,
+    "edge_contract": "patch83u-edge-auth-first-v1",
+    "frontend_contract": "patch83u-frontend-auth-first-v1",
+    "applied_migrations": [
+      "174",
+      "176",
+      "177"
+    ],
+    "stable_finalizer_service_role_only": true,
+    "new_database_query_performed": false
+  },
+  "safety": {
+    "credentials_entered": false,
+    "login_performed": false,
+    "reset_performed": false,
+    "password_change_performed": false,
+    "refresh_replay_performed": false,
+    "deployment_performed": false,
+    "migration_performed": false,
+    "hosted_mutation_performed": false
+  }
+}

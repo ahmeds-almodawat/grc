@@ -50,85 +50,13 @@ import {
 } from "../auth/authAccess";
 import { isScenarioLabEnabled } from "../lib/scenarioLab";
 import { ControlledPilotBanner } from "./ControlledPilotBanner";
+import type { PageKey, PageNavigator } from "../routes/pageLocation";
 
-export type PageKey =
-  | "home"
-  | "executiveHub"
-  | "workHub"
-  | "dailyOperationsHub"
-  | "grcHub"
-  | "qualityHub"
-  | "accreditationHub"
-  | "evidenceHub"
-  | "reportsHub"
-  | "adminHub"
-  | "productionOperatorConsole"
-  | "productionEvidenceClosure"
-  | "finishFast"
-  | "productionFinish"
-  | "releaseFactory"
-  | "productionProof"
-  | "dashboard"
-  | "analytics"
-  | "myWork"
-  | "projects"
-  | "departments"
-  | "risks"
-  | "compliance"
-  | "audit"
-  | "ovr"
-  | "ovrRisk"
-  | "governance"
-  | "escalations"
-  | "approvals"
-  | "evidence"
-  | "importExport"
-  | "accessControl"
-  | "setupCenter"
-  | "userGuide"
-  | "operations"
-  | "testing"
-  | "performance"
-  | "security"
-  | "commandCenter"
-  | "globalSearch"
-  | "documents"
-  | "relationships"
-  | "releaseCandidate"
-  | "productionRelease"
-  | "migrationVerifier"
-  | "restoreDryRun"
-  | "adminSafety"
-  | "bilingualDictionary"
-  | "boardPacks"
-  | "reportBuilder"
-  | "evidenceVault"
-  | "departmentScorecards"
-  | "backupScheduler"
-  | "scenarioPlanning"
-  | "mobileCommand"
-  | "automationIntelligence"
-  | "riskAppetiteKri"
-  | "smartReviews"
-  | "committeeAutomation"
-  | "stagingValidation"
-  | "rlsPersonaLab"
-  | "translationCoverage"
-  | "loadSeedCenter"
-  | "productionBackupStrategy"
-  | "migrationRunbook"
-  | "controlledUatWorkbench"
-  | "scenarioTestConsole"
-  | "uatIssueCapture"
-  | "trainingGovernance"
-  | "executiveTruth"
-  | "productionReadiness"
-  | "admin"
-  | "scaleBackupRestoreCenter";
+export type { PageKey, PageNavigator } from "../routes/pageLocation";
 
 interface LayoutProps {
   page: PageKey;
-  setPage: (page: PageKey) => void;
+  navigateToPage: PageNavigator;
   children: ReactNode;
 }
 
@@ -751,6 +679,7 @@ function NavTreeButton({
   page: PageKey;
   setPage: (page: PageKey) => void;
 }) {
+  const { t } = useI18n();
   return (
     <button
       className={`nav-child-item ${page === item.key ? "active" : ""}`}
@@ -758,12 +687,12 @@ function NavTreeButton({
       type="button"
     >
       {item.icon}
-      <span>{item.label}</span>
+      <span>{t(`navTree.item.${item.key}`, item.label)}</span>
     </button>
   );
 }
 
-export function Layout({ page, setPage, children }: LayoutProps) {
+export function Layout({ page, navigateToPage, children }: LayoutProps) {
   const { language, direction, toggleLanguage, t } = useI18n();
   const auth = useAuth();
   const organizationName = auth.profile?.organizationName;
@@ -806,6 +735,9 @@ export function Layout({ page, setPage, children }: LayoutProps) {
       return next;
     });
   };
+  // Keep the legacy one-argument child contract without exposing React's raw
+  // state setter. Every call still flows through the typed URL navigator.
+  const setPage = (targetPage: PageKey) => navigateToPage(targetPage);
 
   return (
     <div
@@ -837,9 +769,9 @@ export function Layout({ page, setPage, children }: LayoutProps) {
 
         <nav
           className="nav-list nav-list-modern sidebar-nav-tree"
-          aria-label="Primary navigation"
+          aria-label={t("nav.primaryNavigation")}
         >
-          <div className="nav-section-label">Navigation</div>
+          <div className="nav-section-label">{t("nav.navigation")}</div>
           {allowedNavTree.map((group) => {
             const groupActive =
               group.page === page ||
@@ -858,8 +790,8 @@ export function Layout({ page, setPage, children }: LayoutProps) {
                 >
                   {group.icon}
                   <span>
-                    <strong>{group.label}</strong>
-                    {group.hint ? <small>{group.hint}</small> : null}
+                    <strong>{t(`navTree.group.${group.id}`, group.label)}</strong>
+                    {group.hint ? <small>{t(`navTree.group.${group.id}.hint`, group.hint)}</small> : null}
                   </span>
                 </button>
               );
@@ -881,8 +813,8 @@ export function Layout({ page, setPage, children }: LayoutProps) {
                 >
                   {group.icon}
                   <span>
-                    <strong>{group.label}</strong>
-                    {group.hint ? <small>{group.hint}</small> : null}
+                    <strong>{t(`navTree.group.${group.id}`, group.label)}</strong>
+                    {group.hint ? <small>{t(`navTree.group.${group.id}.hint`, group.hint)}</small> : null}
                   </span>
                   <ChevronDown
                     className={`nav-group-chevron ${expanded ? "expanded" : ""}`}
@@ -911,7 +843,7 @@ export function Layout({ page, setPage, children }: LayoutProps) {
             </div>
           ) : null}
           <div className="sidebar-footnote">
-            Use the expandable groups above to open subsidiary control pages.
+            {t("nav.expandableGroupsHelp")}
           </div>
 
           {isLegacyPage ? (
@@ -953,10 +885,10 @@ export function Layout({ page, setPage, children }: LayoutProps) {
             </button>
             <div className="auth-user-pill" title={auth.profile?.email}>
               <span>{displayName}</span>
-              <small>{auth.primaryRole}</small>
+              <small>{auth.primaryRole ? t(`role.${auth.primaryRole}`, auth.primaryRole.replaceAll("_", " ")) : t("common.unknown")}</small>
             </div>
             {auth.isLocalBypass ? (
-              <div className="topbar-pill topbar-pill--warning">DEV AUTH</div>
+              <div className="topbar-pill topbar-pill--warning">{t("auth.developmentMode")}</div>
             ) : null}
             <button
               className="ghost-button"
@@ -964,7 +896,7 @@ export function Layout({ page, setPage, children }: LayoutProps) {
               type="button"
             >
               <LogOut size={16} />
-              {language === "ar" ? "خروج" : "Sign out"}
+              {t("common.signOut")}
             </button>
           </div>
         </header>

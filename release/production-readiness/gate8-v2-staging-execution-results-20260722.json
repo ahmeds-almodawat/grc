@@ -1,0 +1,29 @@
+{
+  "gate": "production_gate_8_v2",
+  "attempt_id": "6447c686-7ae1-4166-9b47-ab22de82ced7",
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "prohibited_project_ref": "zbrjjecpsrzposhuarcn",
+  "freeze_aggregate_sha256": "583877a205e075614a903035dd634bd43839d83c00ca49452d826f9eb4051db9",
+  "authorization_phrase_matched_exactly": true,
+  "execution": {
+    "attempt_count": 1,
+    "started_at_utc": "2026-07-22T09:26:03.4Z",
+    "completed_at_utc": "2026-07-22T09:26:10.4Z",
+    "wall_time_seconds": 7.0,
+    "exit_code": 0,
+    "classification": "execution_completed",
+    "automatic_retry_performed": false,
+    "applied_order_reported": [178, 179, 180, 181, 182],
+    "sanitized_notices": [
+      "Canonical migration-178 expression indexes already existed and were retained.",
+      "Migrations 178 through 182 were each reported applied in exact order."
+    ]
+  },
+  "credentials_recorded": false,
+  "auth_accounts_modified": false,
+  "business_data_intentionally_modified": false,
+  "production_accessed": false,
+  "read_only_state_determination_pending": false,
+  "read_only_state_determination": "history_and_catalog_agree_through_182",
+  "postflight_result": "passed"
+}

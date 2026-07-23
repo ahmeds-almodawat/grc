@@ -1,0 +1,21 @@
+{
+  "schema_version": "patch83u-run009-reservation-v1",
+  "run_number": 9,
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "production_project_ref": "zbrjjecpsrzposhuarcn",
+  "execution_authorized": false,
+  "exact_confirmation_phrase": "EXECUTE RUN 009 RESET NOW",
+  "confirmation_cli_override_supported": false,
+  "sql_editor_project_ref_option": "--sql-editor-project-ref",
+  "sql_editor_project_confirmation_gate_id": "patch83u-sql-editor-project-confirmation-v1",
+  "initial_credential_version": 4,
+  "post_reset_credential_version": 5,
+  "final_credential_version": 6,
+  "initial_session_count": 0,
+  "initial_unrevoked_refresh_token_count": 0,
+  "prior_runs_preserved": true,
+  "output_policy": "create_only",
+  "credential_source": "CurrentUser DPAPI exact-name bundle",
+  "credentials_present_during_preparation": false,
+  "preparation_only": true
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": "gate11r-baseline-v2-staging-comparison-v1",
+  "captured_at": "2026-07-22T19:57:26.6547335Z",
+  "staging_project_ref": "zghsgzrdwbqdrpuxanac",
+  "migration_ceiling": 185,
+  "baseline_catalog_sha256": "edac07deb655aba711cd2bc7e834010449be42f36f27863326ce0a41d22a3485",
+  "hosted_catalog_sha256": "edac07deb655aba711cd2bc7e834010449be42f36f27863326ce0a41d22a3485",
+  "canonical_statement_count_baseline": 12488,
+  "canonical_statement_count_hosted": 12488,
+  "only_baseline": 0,
+  "only_hosted": 0,
+  "exact_normalized_equality": true,
+  "staging_access_after_migration185": "read_only_catalog_metadata",
+  "production_accessed": false,
+  "overall_pass": true
+}

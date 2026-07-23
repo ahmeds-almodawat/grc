@@ -1,0 +1,25 @@
+{
+  "gate": "production_gate_8_v2",
+  "expected_catalog_sha256": "5feba35fc324214c45f728f61fb6556aa76cff1a97f470395830e0b8191f1f10",
+  "actual_catalog_sha256": "78ab27d7b8d86232285e2bf26a2be92f9966aad35cc53812ff208b55eea32c08",
+  "expected_fingerprint_file_sha256": "89c22016a6159d7cf51db29b4ae65260fe359b0259c1ae588d22a36be0f9827a",
+  "actual_fingerprint_file_sha256": "f3a37b20c989c4d6ec8fae42c103c397d74237243685348de0202c516735c738",
+  "canonical_line_count_expected": 31,
+  "canonical_line_count_actual": 31,
+  "semantic_contract_match": true,
+  "byte_hash_match": false,
+  "differences": [
+    {
+      "classification": "normalization_defect",
+      "records": 4,
+      "field": "policy role identifier",
+      "expected_fixture_value": "authenticated role OID 16444",
+      "hosted_value": "authenticated role OID 16485",
+      "explanation": "The Gate 7R fingerprint serialized environment-specific PostgreSQL role OIDs rather than stable role names. All four policies resolve to authenticated in both environments; policy names, commands, permissiveness, USING and WITH CHECK expressions match exactly."
+    }
+  ],
+  "unexplained_differences": 0,
+  "security_difference": false,
+  "result": "passed_with_documented_normalization_defect",
+  "production_accessed": false
+}

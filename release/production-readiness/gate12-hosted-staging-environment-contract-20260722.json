@@ -1,0 +1,14 @@
+{
+  "schema_version":"gate12-hosted-staging-environment-contract-v1",
+  "supabase_project_ref":"zghsgzrdwbqdrpuxanac",
+  "prohibited_project_ref":"zbrjjecpsrzposhuarcn",
+  "required_public_variables":["VITE_SUPABASE_URL","VITE_SUPABASE_ANON_KEY","VITE_PATCH83U_CREDENTIAL_GOVERNANCE_ENABLED","VITE_AUTH_CAPTCHA_REQUIRED","VITE_AUTH_CAPTCHA_SITE_KEY"],
+  "required_values":{"VITE_PATCH83U_CREDENTIAL_GOVERNANCE_ENABLED":"true"},
+  "frontend_contract":"patch83u-frontend-auth-first-v1",
+  "auth_storage_key":"grc-control-center-auth",
+  "public_browser_key_only":true,
+  "service_role_or_secret_frontend_key_prohibited":true,
+  "production_fallback_prohibited":true,
+  "commit_sha_metadata_required":true,
+  "provider_configuration_verified":false
+}

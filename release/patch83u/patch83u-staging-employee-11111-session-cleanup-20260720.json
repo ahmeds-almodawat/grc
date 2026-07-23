@@ -1,0 +1,92 @@
+{
+  "schema_version": "patch83u-staging-employee-session-cleanup-evidence-v1",
+  "captured_at_utc": "2026-07-20T13:35:52.7032641Z",
+  "decision": "PATCH83U STAGING SESSION CLEANUP STOPPED FAIL-CLOSED",
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "employee_uuid": "2a276bdb-cf51-4303-846e-6b7fecf38b0c",
+  "before": {
+    "captured_at_utc": "2026-07-20T13:11:55.056976Z",
+    "transaction_read_only": true,
+    "session_count": 1,
+    "unrevoked_refresh_token_count": 1,
+    "credential_state": "active",
+    "credential_version": 2,
+    "auth_credential_version": 2,
+    "requested_lifecycle": "active",
+    "role": "employee",
+    "scope": "assigned_only",
+    "pending_operation": false
+  },
+  "cleanup_attempt": {
+    "login_attempt_count": 1,
+    "login_succeeded": false,
+    "login_safe_http_status": 400,
+    "login_safe_error_code": "EMPLOYEE_LOGIN_REJECTED",
+    "authenticated_uuid_matches": false,
+    "global_sign_out_invoked": false,
+    "global_sign_out_invocation_count": 0,
+    "global_sign_out_status": "not_invoked",
+    "manual_retry_offered": true,
+    "manual_retry_submitted": false,
+    "cleanup_idempotent_no_action": false,
+    "context_nonpersistent": true,
+    "context_closed": true,
+    "tracing_enabled": false,
+    "har_enabled": false,
+    "video_enabled": false,
+    "storage_state_exported": false,
+    "screenshots_taken": false,
+    "production_request_attempted": false,
+    "unknown_supabase_request_attempted": false
+  },
+  "after": {
+    "captured_at_utc": "2026-07-20T13:26:12.427700Z",
+    "transaction_read_only": true,
+    "session_count": 1,
+    "unrevoked_refresh_token_count": 1,
+    "credential_state": "active",
+    "credential_version": 2,
+    "auth_credential_version": 2,
+    "requested_lifecycle": "active",
+    "role": "employee",
+    "scope": "assigned_only",
+    "pending_operation": false,
+    "pending_operation_count": 0,
+    "recovery_or_reconciliation_required": false
+  },
+  "runtime": {
+    "schema_version": "174.2-auth-first",
+    "enforcement_state": "enforced",
+    "state_version": 5
+  },
+  "super_admin": {
+    "user_uuid": "83d92a59-6909-44e7-80f3-aff60a6734fb",
+    "credential_state": "active",
+    "credential_version": 1,
+    "auth_credential_version": 1,
+    "role": "super_admin",
+    "scope": "global",
+    "pending_operation": false,
+    "eligible_super_admin_count": 1,
+    "unchanged": true
+  },
+  "repository": {
+    "branch": "patch83t-controlled-user-excel-import",
+    "head": "a9989b1e8d95a6bb775316a2d9e709ef84514c42",
+    "staged_file_count": 0
+  },
+  "safety": {
+    "password_displayed_or_persisted": false,
+    "password_reset_performed": false,
+    "password_change_performed": false,
+    "credential_version_changed": false,
+    "direct_auth_table_write_performed": false,
+    "deployment_performed": false,
+    "migration_performed": false,
+    "production_accessed": false,
+    "commit_performed": false,
+    "push_performed": false,
+    "files_staged": false
+  },
+  "operator_action_required": "Provide the verified current permanent password through a newly authorized hidden/manual prompt, or use another separately authorized supported session-termination path. Do not write directly to Auth tables and do not restart Run 006 until read-only evidence proves session_count and unrevoked_refresh_token_count are both zero."
+}

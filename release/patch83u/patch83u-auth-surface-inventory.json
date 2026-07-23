@@ -3,10 +3,10 @@
   "status": "pass",
   "evidence": {
     "browser_source": "src/**/*.{ts,tsx}",
-    "target_schema": "ordered supabase/migrations/*.sql including unapplied 173/174",
+    "target_schema": "ordered supabase/migrations/*.sql through reviewed migration 177",
     "deployed_function_catalog": "release/patch83q/patch83q-live-security-definer-inventory.json",
     "deployed_search_entries": 0,
-    "note": "Static target-schema proof. Runtime catalog verification remains required after authorized migration deployment."
+    "note": "Static target-schema proof. Runtime catalog verification of migration 177 remains required after authorized staging application."
   },
   "summary": {
     "direct_browser_rpc_count": 0,
@@ -23,8 +23,10 @@
     "views_without_explicit_migration_grant_count": 194,
     "retained_live_broad_security_definer_count": 2,
     "target_broad_security_definer_count": 3,
+    "reviewed_restricted_security_definer_count": 3,
     "acl_reachable_materialized_view_count": 0,
-    "legacy_browser_base_table_hardening_count": 29
+    "legacy_browser_base_table_hardening_count": 29,
+    "reviewed_patch83u_migration_ceiling": 177
   },
   "search_grc_global": {
     "disposition": "authenticated_edge_bridge_with_caller_jwt_rls",
@@ -45,6 +47,7 @@
       "after_credential_access_check": true,
       "anon_key_client": true,
       "caller_bearer_forwarded": true,
+      "frontend_contract_forwarded": true,
       "search_rpc_uses_rls_client": true,
       "service_client_not_used_for_search": true
     },
@@ -167,7 +170,7 @@
         },
         {
           "file": "src/lib/userManagementApi.ts",
-          "line": 436,
+          "line": 442,
           "evidence": "literal .from()"
         }
       ],
@@ -182,7 +185,7 @@
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
         "src/lib/grcApi.ts:1781 intentional browser read contract; live ACL must be verified after deployment",
-        "src/lib/userManagementApi.ts:436 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/userManagementApi.ts:442 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
       "base_tables": [
@@ -954,7 +957,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "automation_run_log",
@@ -962,7 +965,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "executive_exception_rules",
@@ -970,7 +973,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "kri_observations",
@@ -978,7 +981,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "organizations",
@@ -994,7 +997,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -1030,7 +1033,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "departments",
@@ -1534,7 +1537,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -2985,7 +2988,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -3379,7 +3382,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -3640,7 +3643,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "profiles",
@@ -3884,7 +3887,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -4092,7 +4095,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -20000,7 +20003,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -20915,7 +20918,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "staging_validation_cycles",
@@ -20923,7 +20926,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -20959,7 +20962,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "organizations",
@@ -20975,7 +20978,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "staging_validation_cycles",
@@ -20983,7 +20986,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -21219,7 +21222,7 @@
       "call_sites": [
         {
           "file": "src/lib/userManagementApi.ts",
-          "line": 717,
+          "line": 734,
           "evidence": "literal .from()"
         }
       ],
@@ -21319,7 +21322,7 @@
       "call_sites": [
         {
           "file": "src/lib/userManagementApi.ts",
-          "line": 761,
+          "line": 778,
           "evidence": "literal .from()"
         }
       ],
@@ -21447,7 +21450,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "production_support_handover",
@@ -21455,7 +21458,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -21527,7 +21530,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -21563,7 +21566,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -21599,7 +21602,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -21671,7 +21674,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -21715,7 +21718,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "production_proof_gates",
@@ -21723,7 +21726,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "production_release_artifacts",
@@ -21767,7 +21770,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "organizations",
@@ -21783,7 +21786,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "pilot_waves",
@@ -21791,7 +21794,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "real_data_import_controls",
@@ -21843,7 +21846,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "pilot_waves",
@@ -21851,7 +21854,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "profiles",
@@ -21895,7 +21898,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "pilot_participants",
@@ -21903,7 +21906,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "pilot_signoffs",
@@ -21911,7 +21914,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "pilot_wave_departments",
@@ -21927,7 +21930,7 @@
           "organization_scoped": true,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -22051,7 +22054,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -22131,7 +22134,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -22409,7 +22412,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "consolidation_patch_manifest",
@@ -22417,7 +22420,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "go_live_sop_steps",
@@ -22425,7 +22428,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "real_data_repair_queue",
@@ -22433,7 +22436,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -22469,7 +22472,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -22505,7 +22508,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "consolidation_patch_manifest",
@@ -22513,7 +22516,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "go_live_sop_steps",
@@ -22521,7 +22524,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "real_data_repair_queue",
@@ -22529,7 +22532,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -22568,7 +22571,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "consolidation_patch_manifest",
@@ -22576,7 +22579,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "cutover_freeze_windows",
@@ -22584,7 +22587,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "go_live_sop_steps",
@@ -22592,7 +22595,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "pilot_fix_sprints",
@@ -22600,7 +22603,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "production_operator_daily_log",
@@ -22608,7 +22611,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         },
         {
           "name": "real_data_repair_queue",
@@ -22616,7 +22619,7 @@
           "organization_scoped": false,
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-          "evidence_line": 2908
+          "evidence_line": 4572
         }
       ],
       "unresolved_dependencies": [],
@@ -22654,7 +22657,7 @@
     ],
     "target_migrations_171_plus": [
       {
-        "source": "target_migrations_171_174",
+        "source": "target_migrations_171_177",
         "schema": "public",
         "name": "patch83u_credential_access_allowed",
         "signature": "public.patch83u_credential_access_allowed()",
@@ -22662,10 +22665,10 @@
         "anon_execute": false,
         "authenticated_execute": true,
         "definition_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-        "definition_line": 2764,
+        "definition_line": 4398,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
-          "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql:4922 grant execute authenticated",
+          "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql:7106 grant execute authenticated",
           "migration174 dynamic patch83u_* revoke from public, anon, authenticated",
           "migration174 explicit authenticated RLS-helper grant"
         ],
@@ -22673,7 +22676,7 @@
         "allowed_purpose": "Credential version, state, email, and session freshness decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_174",
+        "source": "target_migrations_171_177",
         "schema": "public",
         "name": "patch83u_profile_update_allowed",
         "signature": "public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)",
@@ -22681,10 +22684,10 @@
         "anon_execute": false,
         "authenticated_execute": true,
         "definition_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-        "definition_line": 2805,
+        "definition_line": 4470,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
-          "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql:4924 grant execute authenticated",
+          "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql:7108 grant execute authenticated",
           "migration174 dynamic patch83u_* revoke from public, anon, authenticated",
           "migration174 explicit authenticated RLS-helper grant"
         ],
@@ -22692,7 +22695,7 @@
         "allowed_purpose": "Same-organization credential-active profile update decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_174",
+        "source": "target_migrations_171_177",
         "schema": "public",
         "name": "patch83u_user_role_mutation_allowed",
         "signature": "public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)",
@@ -22700,15 +22703,74 @@
         "anon_execute": false,
         "authenticated_execute": true,
         "definition_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-        "definition_line": 2845,
+        "definition_line": 4509,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
-          "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql:4926 grant execute authenticated",
+          "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql:7110 grant execute authenticated",
           "migration174 dynamic patch83u_* revoke from public, anon, authenticated",
           "migration174 explicit authenticated RLS-helper grant"
         ],
         "allowed": true,
         "allowed_purpose": "Credential-active canonical role/scope mutation decision used by restrictive RLS."
+      }
+    ],
+    "reviewed_restricted_migrations_176_177": [
+      {
+        "source": "migration177_service_role_acl_review",
+        "schema": "public",
+        "name": "patch83u_finalize_password_change_after_revocation",
+        "signature": "public.patch83u_finalize_password_change_after_revocation(p_actor_id uuid, p_operation_id uuid, p_request_id text, p_applied_credential_version integer, p_verified_auth_email text)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/177_patch83u_explicit_password_finalizer_rpc_name.sql",
+        "definition_line": 68,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/176_patch83u_last_super_admin_recovery.sql:107 revoke execute public, anon, authenticated",
+          "supabase/migrations/176_patch83u_last_super_admin_recovery.sql:110 grant execute service_role",
+          "supabase/migrations/177_patch83u_explicit_password_finalizer_rpc_name.sql:92 revoke execute public, anon, authenticated",
+          "supabase/migrations/177_patch83u_explicit_password_finalizer_rpc_name.sql:108 grant execute service_role",
+          "migration174 dynamic patch83u_* revoke from public, anon, authenticated"
+        ]
+      },
+      {
+        "source": "migration176_service_role_acl_review",
+        "schema": "public",
+        "name": "patch83u_reconcile_credential_state_standard_impl",
+        "signature": "public.patch83u_reconcile_credential_state_standard_impl(p_actor_id uuid, p_target_user_id uuid, p_request_id text, p_employee_id_confirmation text)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": false,
+        "disposition": "owner_only",
+        "definition_file": "supabase/migrations/176_patch83u_last_super_admin_recovery.sql",
+        "definition_line": 125,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/176_patch83u_last_super_admin_recovery.sql:129 revoke execute public, anon, authenticated, service_role",
+          "migration174 dynamic patch83u_* revoke from public, anon, authenticated"
+        ]
+      },
+      {
+        "source": "migration176_service_role_acl_review",
+        "schema": "public",
+        "name": "patch83u_reconcile_last_super_admin_recovery",
+        "signature": "public.patch83u_reconcile_last_super_admin_recovery(p_actor_id uuid, p_target_user_id uuid, p_request_id text, p_employee_id_confirmation text)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": false,
+        "disposition": "owner_only",
+        "definition_file": "supabase/migrations/176_patch83u_last_super_admin_recovery.sql",
+        "definition_line": 133,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/176_patch83u_last_super_admin_recovery.sql:668 revoke execute public, anon, authenticated, service_role",
+          "migration174 dynamic patch83u_* revoke from public, anon, authenticated"
+        ]
       }
     ],
     "retained_live_allowlist": [
@@ -22746,7 +22808,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "automation_run_log",
@@ -22755,7 +22817,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "consolidation_defect_log",
@@ -22764,7 +22826,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "consolidation_defects",
@@ -22773,7 +22835,7 @@
       "credential_policy": "credential_active_global_release_metadata",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "consolidation_patch_manifest",
@@ -22782,7 +22844,7 @@
       "credential_policy": "credential_active_global_release_metadata",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "cutover_freeze_windows",
@@ -22791,7 +22853,7 @@
       "credential_policy": "credential_active_global_release_metadata",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "executive_exception_rules",
@@ -22800,7 +22862,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "final_handover_signoffs",
@@ -22809,7 +22871,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "go_live_rehearsals",
@@ -22818,7 +22880,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "go_live_sop_steps",
@@ -22827,7 +22889,7 @@
       "credential_policy": "credential_active_global_release_metadata",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "kri_observations",
@@ -22836,7 +22898,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "load_test_seed_batches",
@@ -22845,7 +22907,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "migration_runbook_entries",
@@ -22854,7 +22916,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "pilot_fix_sprints",
@@ -22863,7 +22925,7 @@
       "credential_policy": "credential_active_global_release_metadata",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "pilot_issues",
@@ -22872,7 +22934,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "pilot_participants",
@@ -22881,7 +22943,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "pilot_rollout_acceptance",
@@ -22890,7 +22952,7 @@
       "credential_policy": "credential_active_global_release_metadata",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "pilot_signoffs",
@@ -22899,7 +22961,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "pilot_waves",
@@ -22908,7 +22970,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "production_operator_daily_log",
@@ -22917,7 +22979,7 @@
       "credential_policy": "credential_active_global_release_metadata",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "production_pilot_waves",
@@ -22926,7 +22988,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "production_proof_gates",
@@ -22935,7 +22997,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "production_support_handover",
@@ -22944,7 +23006,7 @@
       "credential_policy": "credential_active_global_release_metadata",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "real_data_repair_queue",
@@ -22953,7 +23015,7 @@
       "credential_policy": "credential_active_global_release_metadata",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "recurring_reviews",
@@ -22962,7 +23024,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "staging_validation_check_results",
@@ -22971,7 +23033,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "staging_validation_cycles",
@@ -22980,7 +23042,7 @@
       "credential_policy": "credential_active_and_current_user_org_id",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "v50_query_optimization_items",
@@ -22989,7 +23051,7 @@
       "credential_policy": "credential_active_global_release_metadata",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     },
     {
       "name": "v50_scale_test_plans",
@@ -22998,7 +23060,7 @@
       "credential_policy": "credential_active_global_release_metadata",
       "authenticated_select_grant": true,
       "evidence_file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
-      "evidence_line": 2908
+      "evidence_line": 4572
     }
   ],
   "target_hardening_evidence": {

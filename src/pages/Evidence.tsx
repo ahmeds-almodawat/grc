@@ -41,6 +41,7 @@ import {
   supersedeEvidence,
 } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
+import { useI18n } from '../i18n/I18nContext';
 import type {
   EvidenceChainOfCustodyRow,
   EvidenceClosureGateStatusRow,
@@ -79,8 +80,8 @@ function evidenceTitle(row: EvidenceSelection) {
   return row.evidence_title || row.file_name || row.evidence_code || row.evidence_file_id;
 }
 
-function compactActionLabel(label: string, busy: boolean) {
-  return busy ? 'Working' : label;
+function compactActionLabel(label: string, busy: boolean, workingLabel: string) {
+  return busy ? workingLabel : label;
 }
 
 function MetricCard({
@@ -110,22 +111,23 @@ function DetailValue({ label, value }: { label: string; value: string | number |
 }
 
 function ChainOfCustodyTable({ rows }: { rows: EvidenceChainOfCustodyRow[] }) {
+  const { t } = useI18n();
   return (
     <DataState
       loading={false}
       empty={!rows.length}
-      emptyTitle="No chain of custody events"
-      emptyMessage="Review, link, lock, waiver and pack events will appear here after governed evidence actions run."
+      emptyTitle={t('evidence.chainEmptyTitle')}
+      emptyMessage={t('evidence.chainEmptyMessage')}
     >
       <EntityTable<EvidenceChainOfCustodyRow>
         rows={rows}
         getRowKey={row => row.event_id || row.id || `${row.evidence_file_id}:${row.event_type}:${row.created_at}`}
         columns={[
-          { key: 'event', header: 'Event', render: row => humanize(row.event_type) },
-          { key: 'status', header: 'Status', render: row => `${humanize(row.from_status)} -> ${humanize(row.to_status)}` },
-          { key: 'actor', header: 'Actor', render: row => row.actor_id || '-' },
-          { key: 'note', header: 'Note', render: row => row.note || '-' },
-          { key: 'date', header: 'Date', render: row => formatDate(row.created_at) },
+          { key: 'event', header: t('common.event'), render: row => t(`evidence.event.${row.event_type}`, humanize(row.event_type)) },
+          { key: 'status', header: t('common.status'), render: row => `${t(`status.${row.from_status}`, humanize(row.from_status))} ← ${t(`status.${row.to_status}`, humanize(row.to_status))}` },
+          { key: 'actor', header: t('common.actor'), render: row => row.actor_id || '-' },
+          { key: 'note', header: t('common.note'), render: row => row.note || '-' },
+          { key: 'date', header: t('common.date'), render: row => formatDate(row.created_at) },
         ]}
       />
     </DataState>
@@ -133,6 +135,7 @@ function ChainOfCustodyTable({ rows }: { rows: EvidenceChainOfCustodyRow[] }) {
 }
 
 export function Evidence() {
+  const { t } = useI18n();
   const auth = useAuth();
   const legacyEvidence = useAsyncData(getEvidenceQueue, []);
   const reviewQueue = useAsyncData(getEvidenceReviewQueue, []);
@@ -170,36 +173,36 @@ export function Evidence() {
       {
         id: 'overdue-review',
         show: queueRows.some(row => row.queue_reason === 'overdue_review' || isPast(row.review_due_date)),
-        title: 'Evidence overdue for review',
-        body: 'One or more files are waiting past their review date and should not be relied on for closure.',
+        title: t('evidence.warning.overdueTitle'),
+        body: t('evidence.warning.overdueBody'),
       },
       {
         id: 'rejected-revision',
         show: queueRows.some(row => row.review_status === 'rejected' || row.revision_required),
-        title: 'Evidence rejected or revision required',
-        body: 'Rejected evidence must be revised or superseded before it can satisfy a governed gate.',
+        title: t('evidence.warning.revisionTitle'),
+        body: t('evidence.warning.revisionBody'),
       },
       {
         id: 'expired-evidence',
         show: queueRows.some(row => isPast(row.expiry_date)) || sensitiveRows.some(row => isPast(row.expiry_date)),
-        title: 'Evidence expired',
-        body: 'Expired evidence does not satisfy closure, approval, treatment, or audit gates unless a valid waiver exists.',
+        title: t('evidence.warning.expiredTitle'),
+        body: t('evidence.warning.expiredBody'),
       },
       {
         id: 'missing-closure',
         show: Boolean(gaps.data?.length),
-        title: 'Evidence required for closure missing',
-        body: 'Some workflow items have active evidence requirements that are not satisfied by accepted evidence.',
+        title: t('evidence.warning.missingTitle'),
+        body: t('evidence.warning.missingBody'),
       },
       {
         id: 'sensitive-review',
         show: Boolean(sensitiveRows.length),
-        title: 'Sensitive evidence requires controlled review',
-        body: 'Sensitive or highly sensitive evidence needs ownership, reviewer separation, classification reason, and expiry tracking.',
+        title: t('evidence.warning.sensitiveTitle'),
+        body: t('evidence.warning.sensitiveBody'),
       },
     ];
     return warningRows.filter(row => row.show);
-  }, [gaps.data?.length, reviewQueue.data, sensitiveRegister.data]);
+  }, [gaps.data?.length, reviewQueue.data, sensitiveRegister.data, t]);
 
   const selectedLinks = useMemo(() => {
     if (!selectedEvidence) return [];
@@ -245,10 +248,10 @@ export function Evidence() {
     setActionModal(null);
     try {
       await reviewEvidence(row.id, status, note || undefined);
-      setMessage(`Evidence ${humanize(status)}.`);
+      setMessage(t('evidence.reviewCompleted').replace('{status}', t(`status.${status}`, humanize(status))));
       await refreshGovernanceData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to review evidence.');
+      setError(err instanceof Error ? err.message : t('evidence.reviewFailed'));
     } finally {
       setBusyId(null);
     }
@@ -286,10 +289,10 @@ export function Evidence() {
         if (!note) return;
         await lockEvidence({ evidence_file_id: evidenceId, note });
       }
-      setMessage(`${humanize(action)} action completed for ${evidenceTitle(row)}.`);
+      setMessage(t('evidence.actionCompleted').replace('{action}', t(`evidence.action.${action}`, humanize(action))).replace('{evidence}', evidenceTitle(row)));
       await refreshGovernanceData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Evidence action failed.');
+      setError(err instanceof Error ? err.message : t('evidence.actionFailed'));
     } finally {
       setBusyId(null);
     }
@@ -322,10 +325,10 @@ export function Evidence() {
           await rejectEvidenceGateWaiver({ waiver_id: waiverId, audit_note: auditNote });
         }
       }
-      setMessage(`Evidence waiver ${action} action completed.`);
+      setMessage(t('evidence.waiverCompleted').replace('{action}', t(`evidence.action.${action}`, humanize(action))));
       await refreshGovernanceData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Evidence waiver action failed.');
+      setError(err instanceof Error ? err.message : t('evidence.waiverFailed'));
     } finally {
       setBusyId(null);
     }
@@ -336,10 +339,10 @@ async function handleGeneratePackIndex() {
     setBusyId('generate-pack');
     try {
       await generateEvidencePackIndex();
-      setMessage('Evidence pack index generated.');
+      setMessage(t('evidence.packGenerated'));
       await refreshGovernanceData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate evidence pack index.');
+      setError(err instanceof Error ? err.message : t('evidence.packFailed'));
     } finally {
       setBusyId(null);
     }
@@ -350,9 +353,9 @@ async function handleGeneratePackIndex() {
   return (
     <section className="page-section">
       <ModuleHeader
-        eyebrow="Evidence Library"
-        title="Evidence Library"
-        subtitle="Review, classify, accept and track evidence used for audits, risks, compliance and approvals."
+        eyebrow={t('evidence.eyebrow')}
+        title={t('evidence.title')}
+        subtitle={t('evidence.subtitle')}
         action={(
           <div className="inline-actions">
             <button
@@ -361,7 +364,7 @@ async function handleGeneratePackIndex() {
               disabled={busyId === 'generate-pack'}
               onClick={() => void handleGeneratePackIndex()}
             >
-              <PackageCheck size={16} /> {compactActionLabel('Generate pack index', busyId === 'generate-pack')}
+              <PackageCheck size={16} /> {compactActionLabel(t('evidence.generatePack'), busyId === 'generate-pack', t('common.working'))}
             </button>          </div>
         )}
       />
@@ -369,10 +372,10 @@ async function handleGeneratePackIndex() {
       {message ? <div className="notice-banner">{message}</div> : null}
 
       <div className="module-grid">
-        <div className="module-card warning"><strong>Review queue</strong><span>{metrics.queue} queued</span></div>
-        <div className="module-card danger"><strong>Closure blocked</strong><span>{metrics.closureBlocked} blocked</span></div>
-        <div className="module-card good"><strong>Accepted pack candidates</strong><span>{metrics.acceptedCandidates} accepted</span></div>
-        <div className="module-card danger"><strong>Sensitive evidence</strong><span>{metrics.sensitive} sensitive</span></div>
+        <div className="module-card warning"><strong>{t('evidence.reviewQueue')}</strong><span>{metrics.queue} {t('status.queued')}</span></div>
+        <div className="module-card danger"><strong>{t('evidence.closureBlocked')}</strong><span>{metrics.closureBlocked} {t('status.blocked')}</span></div>
+        <div className="module-card good"><strong>{t('evidence.acceptedCandidates')}</strong><span>{metrics.acceptedCandidates} {t('status.accepted')}</span></div>
+        <div className="module-card danger"><strong>{t('evidence.sensitiveEvidence')}</strong><span>{metrics.sensitive} {t('evidence.sensitive')}</span></div>
       </div>
 
 
@@ -387,41 +390,41 @@ async function handleGeneratePackIndex() {
         </div>
       ) : (
         <div className="notice-banner">
-          No governed evidence warnings are currently visible in your RLS scope.
+          {t('evidence.noWarnings')}
         </div>
       )}
       <div className="panel">
         <div className="panel-header">
-          <h4><FileCheck2 size={18} /> Evidence review queue</h4>
+          <h4><FileCheck2 size={18} /> {t('evidence.reviewQueue')}</h4>
         </div>
         <DataState
           loading={reviewQueue.loading}
           error={reviewQueue.error}
           empty={!reviewQueue.data?.length}
-          emptyTitle="No governed evidence in review"
-          emptyMessage="Files waiting for review, overdue review, revision, expiry or renewal will appear here after migration is applied."
+          emptyTitle={t('evidence.reviewEmptyTitle')}
+          emptyMessage={t('evidence.reviewEmptyMessage')}
         >
           <EntityTable<EvidenceReviewQueueRow>
             rows={reviewQueue.data || []}
             getRowKey={row => row.evidence_file_id}
             columns={[
-              { key: 'title', header: 'Evidence', render: row => <button className="link-button" type="button" onClick={() => setSelectedEvidence(row)}>{evidenceTitle(row)}</button> },
-              { key: 'type', header: 'Type', render: row => humanize(row.evidence_type) },
-              { key: 'sensitivity', header: 'Sensitivity', render: row => <StatusBadge status={humanize(row.sensitivity_level)} /> },
-              { key: 'status', header: 'Review', render: row => <StatusBadge status={humanize(row.review_status)} /> },
-              { key: 'due', header: 'Review due', render: row => formatDate(row.review_due_date) },
-              { key: 'expiry', header: 'Expiry', render: row => formatDate(row.expiry_date) },
-              { key: 'reason', header: 'Queue reason', render: row => humanize(row.queue_reason) },
+              { key: 'title', header: t('common.evidence'), render: row => <button className="link-button" type="button" onClick={() => setSelectedEvidence(row)}>{evidenceTitle(row)}</button> },
+              { key: 'type', header: t('common.type'), render: row => t(`evidence.type.${row.evidence_type}`, humanize(row.evidence_type)) },
+              { key: 'sensitivity', header: t('evidence.sensitivity'), render: row => <StatusBadge status={t(`evidence.sensitivity.${row.sensitivity_level}`, humanize(row.sensitivity_level))} /> },
+              { key: 'status', header: t('evidence.review'), render: row => <StatusBadge status={t(`status.${row.review_status}`, humanize(row.review_status))} /> },
+              { key: 'due', header: t('evidence.reviewDue'), render: row => formatDate(row.review_due_date) },
+              { key: 'expiry', header: t('evidence.expiry'), render: row => formatDate(row.expiry_date) },
+              { key: 'reason', header: t('evidence.queueReason'), render: row => t(`evidence.queueReason.${row.queue_reason}`, humanize(row.queue_reason)) },
               {
                 key: 'actions',
-                header: 'Actions',
+                header: t('common.actions'),
                 render: row => canGovernEvidence ? (
                   <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Submit for review" onClick={() => openActionModal('evidence', 'submit', row)}><Send size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Accept evidence" onClick={() => openActionModal('evidence', 'accept', row)}><ThumbsUp size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Request revision" onClick={() => openActionModal('evidence', 'revision', row)}><RotateCcw size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Reject evidence" onClick={() => openActionModal('evidence', 'reject', row)}><XCircle size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled || Boolean(row.locked_at)} title="Lock evidence" onClick={() => openActionModal('evidence', 'lock', row)}><Lock size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('evidence.submitForReview')} onClick={() => openActionModal('evidence', 'submit', row)}><Send size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('evidence.acceptEvidence')} onClick={() => openActionModal('evidence', 'accept', row)}><ThumbsUp size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('evidence.requestRevision')} onClick={() => openActionModal('evidence', 'revision', row)}><RotateCcw size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('evidence.rejectEvidence')} onClick={() => openActionModal('evidence', 'reject', row)}><XCircle size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled || Boolean(row.locked_at)} title={t('evidence.lockEvidence')} onClick={() => openActionModal('evidence', 'lock', row)}><Lock size={14} /></button>
                   </div>
                 ) : '-'
               },
@@ -432,31 +435,31 @@ async function handleGeneratePackIndex() {
 
       <div className="panel">
         <div className="panel-header">
-          <h4><ShieldAlert size={18} /> Evidence gap dashboard</h4>
+          <h4><ShieldAlert size={18} /> {t('evidence.gapDashboard')}</h4>
         </div>
         <DataState
           loading={gaps.loading}
           error={gaps.error}
           empty={!gaps.data?.length}
-          emptyTitle="No evidence gaps"
-          emptyMessage="All visible active evidence requirements are satisfied or waived."
+          emptyTitle={t('evidence.gapsEmptyTitle')}
+          emptyMessage={t('evidence.gapsEmptyMessage')}
         >
           <EntityTable<EvidenceGapDashboardRow>
             rows={gaps.data || []}
             getRowKey={row => row.requirement_id}
             columns={[
-              { key: 'item', header: 'Item', render: row => `${humanize(row.linked_item_type)} ${row.linked_item_id.slice(0, 8)}` },
-              { key: 'requirement', header: 'Requirement', render: row => <strong>{row.requirement_title}</strong> },
-              { key: 'gate', header: 'Gate', render: row => humanize(row.required_for_gate) },
-              { key: 'count', header: 'Accepted', render: row => `${row.accepted_evidence_count} / ${row.minimum_accepted_files}` },
-              { key: 'status', header: 'Gate status', render: row => <StatusBadge status={humanize(row.gate_status)} /> },
-              { key: 'gap', header: 'Gap', render: row => humanize(row.gap_reason) },
+              { key: 'item', header: t('common.item'), render: row => `${t(`itemType.${row.linked_item_type}`, humanize(row.linked_item_type))} ${row.linked_item_id.slice(0, 8)}` },
+              { key: 'requirement', header: t('evidence.requirement'), render: row => <strong>{row.requirement_title}</strong> },
+              { key: 'gate', header: t('evidence.gate'), render: row => t(`evidence.gate.${row.required_for_gate}`, humanize(row.required_for_gate)) },
+              { key: 'count', header: t('status.accepted'), render: row => `${row.accepted_evidence_count} / ${row.minimum_accepted_files}` },
+              { key: 'status', header: t('evidence.gateStatus'), render: row => <StatusBadge status={t(`status.${row.gate_status}`, humanize(row.gate_status))} /> },
+              { key: 'gap', header: t('evidence.gap'), render: row => t(`evidence.gap.${row.gap_reason}`, humanize(row.gap_reason)) },
               {
                 key: 'waiver',
-                header: 'Waiver',
+                header: t('evidence.waiver'),
                 render: row => canGovernEvidence ? (
                   <button className="ghost-button compact-button" disabled={actionDisabled} onClick={() => openActionModal('waiver', 'request', row)}>
-                    <Link2 size={14} /> Request
+                    <Link2 size={14} /> {t('common.request')}
                   </button>
                 ) : '-',
               },
@@ -467,32 +470,32 @@ async function handleGeneratePackIndex() {
 
       <div className="panel">
         <div className="panel-header">
-          <h4><FileSearch size={18} /> Evidence closure gate status</h4>
+          <h4><FileSearch size={18} /> {t('evidence.closureGateStatus')}</h4>
         </div>
         <DataState
           loading={gates.loading}
           error={gates.error}
           empty={!gates.data?.length}
-          emptyTitle="No active evidence gates"
-          emptyMessage="Closure, approval, acceptance, treatment and audit gates appear once requirements are created."
+          emptyTitle={t('evidence.gatesEmptyTitle')}
+          emptyMessage={t('evidence.gatesEmptyMessage')}
         >
           <EntityTable<EvidenceClosureGateStatusRow>
             rows={gates.data || []}
             getRowKey={row => row.requirement_id}
             columns={[
-              { key: 'item', header: 'Item', render: row => humanize(row.linked_item_type) },
-              { key: 'requirement', header: 'Requirement', render: row => row.requirement_title },
-              { key: 'gate', header: 'Gate', render: row => humanize(row.required_for_gate) },
-              { key: 'accepted', header: 'Accepted', render: row => `${row.accepted_evidence_count} / ${row.minimum_accepted_files}` },
-              { key: 'waiver', header: 'Waiver', render: row => row.waiver_active ? <StatusBadge status="Waived" /> : '-' },
-              { key: 'close', header: 'Allowed', render: row => <StatusBadge status={row.can_close ? 'Can close' : 'Blocked'} /> },
+              { key: 'item', header: t('common.item'), render: row => t(`itemType.${row.linked_item_type}`, humanize(row.linked_item_type)) },
+              { key: 'requirement', header: t('evidence.requirement'), render: row => row.requirement_title },
+              { key: 'gate', header: t('evidence.gate'), render: row => t(`evidence.gate.${row.required_for_gate}`, humanize(row.required_for_gate)) },
+              { key: 'accepted', header: t('status.accepted'), render: row => `${row.accepted_evidence_count} / ${row.minimum_accepted_files}` },
+              { key: 'waiver', header: t('evidence.waiver'), render: row => row.waiver_active ? <StatusBadge status={t('status.waived')} /> : '-' },
+              { key: 'close', header: t('evidence.allowed'), render: row => <StatusBadge status={row.can_close ? t('evidence.canClose') : t('status.blocked')} /> },
               {
                 key: 'actions',
-                header: 'Actions',
+                header: t('common.actions'),
                 render: row => canGovernEvidence ? (
                   <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Approve waiver by id" onClick={() => openActionModal('waiver', 'approve', row)}><ThumbsUp size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Reject waiver by id" onClick={() => openActionModal('waiver', 'reject', row)}><XCircle size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('evidence.approveWaiver')} onClick={() => openActionModal('waiver', 'approve', row)}><ThumbsUp size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('evidence.rejectWaiver')} onClick={() => openActionModal('waiver', 'reject', row)}><XCircle size={14} /></button>
                   </div>
                 ) : '-',
               },
@@ -502,36 +505,36 @@ async function handleGeneratePackIndex() {
       </div>
 
       <div className="panel">
-        <div className="panel-header"><h4>Legacy evidence queue compatibility</h4></div>
+        <div className="panel-header"><h4>{t('evidence.legacyQueue')}</h4></div>
         <DataState
           loading={legacyEvidence.loading}
           error={legacyEvidence.error}
           empty={!legacyEvidence.data?.length}
-          emptyTitle="No legacy evidence items in your scope"
+          emptyTitle={t('evidence.legacyEmptyTitle')}
           emptyMessage={
             canGovernEvidence
-              ? 'Evidence will appear after controlled work submits files for review.'
-              : 'No evidence records are currently assigned or visible to this read-only account.'
+              ? t('evidence.legacyEmptyGovern')
+              : t('evidence.legacyEmptyReadonly')
           }
         >
           <EntityTable<EvidenceRow>
             rows={legacyEvidence.data || []}
             getRowKey={row => row.id}
             columns={[
-              { key: 'type', header: 'Type', render: row => humanize(row.item_type) },
-              { key: 'item', header: 'Related Item', render: row => <strong>{row.item_title}</strong> },
-              { key: 'file', header: 'File', render: row => row.file_name },
-              { key: 'uploaded', header: 'Uploaded By', render: row => row.uploaded_by_name || '-' },
-              { key: 'date', header: 'Date', render: row => formatDate(row.created_at) },
-              { key: 'status', header: 'Status', render: row => <StatusBadge status={humanize(row.status)} /> },
+              { key: 'type', header: t('common.type'), render: row => t(`itemType.${row.item_type}`, humanize(row.item_type)) },
+              { key: 'item', header: t('evidence.relatedItem'), render: row => <strong>{row.item_title}</strong> },
+              { key: 'file', header: t('common.file'), render: row => row.file_name },
+              { key: 'uploaded', header: t('evidence.uploadedBy'), render: row => row.uploaded_by_name || '-' },
+              { key: 'date', header: t('common.date'), render: row => formatDate(row.created_at) },
+              { key: 'status', header: t('common.status'), render: row => <StatusBadge status={t(`status.${row.status}`, humanize(row.status))} /> },
               {
                 key: 'review',
-                header: 'Review',
+                header: t('evidence.review'),
                 render: row => canGovernEvidence && (row.status === 'submitted' || row.status === 'needs_revision') ? (
                   <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => openActionModal('legacy', 'accepted', row)}>Accept</button>
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => openActionModal('legacy', 'needs_revision', row)}>Revise</button>
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => openActionModal('legacy', 'rejected', row)}>Reject</button>
+                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => openActionModal('legacy', 'accepted', row)}>{t('evidence.accept')}</button>
+                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => openActionModal('legacy', 'needs_revision', row)}>{t('evidence.revise')}</button>
+                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => openActionModal('legacy', 'rejected', row)}>{t('evidence.reject')}</button>
                   </div>
                 ) : '-'
               }
@@ -542,62 +545,62 @@ async function handleGeneratePackIndex() {
 
       <Modal
         open={Boolean(selectedEvidence)}
-        title="Evidence detail"
+        title={t('evidence.detail')}
         onClose={() => setSelectedEvidence(null)}
       >
         {selectedEvidence ? (
           <div className="form-grid">
             <div className="detail-grid full-width">
-              <DetailValue label="Evidence" value={evidenceTitle(selectedEvidence)} />
-              <DetailValue label="Code" value={selectedEvidence.evidence_code} />
-              <DetailValue label="File" value={selectedEvidence.file_name} />
-              <DetailValue label="Type" value={humanize(selectedEvidence.evidence_type)} />
-              <DetailValue label="Sensitivity" value={humanize(selectedEvidence.sensitivity_level)} />
-              <DetailValue label="Review status" value={humanize(selectedEvidence.review_status)} />
-              <DetailValue label="Owner" value={selectedEvidence.owner_name} />
-              <DetailValue label="Reviewer" value={selectedEvidence.reviewer_name} />
-              <DetailValue label="Revision" value={selectedEvidence.revision_required ? 'Required' : 'Not required'} />
-              <DetailValue label="Expiry" value={formatDate(selectedEvidence.expiry_date)} />
-              <DetailValue label="Renewal" value={selectedEvidence.renewal_required ? 'Required' : 'Not required'} />
-              <DetailValue label="Lock" value={selectedEvidence.locked_at ? `Locked ${formatDate(selectedEvidence.locked_at)}` : 'Unlocked'} />
+              <DetailValue label={t('common.evidence')} value={evidenceTitle(selectedEvidence)} />
+              <DetailValue label={t('common.code')} value={selectedEvidence.evidence_code} />
+              <DetailValue label={t('common.file')} value={selectedEvidence.file_name} />
+              <DetailValue label={t('common.type')} value={t(`evidence.type.${selectedEvidence.evidence_type}`, humanize(selectedEvidence.evidence_type))} />
+              <DetailValue label={t('evidence.sensitivity')} value={t(`evidence.sensitivity.${selectedEvidence.sensitivity_level}`, humanize(selectedEvidence.sensitivity_level))} />
+              <DetailValue label={t('evidence.reviewStatus')} value={t(`status.${selectedEvidence.review_status}`, humanize(selectedEvidence.review_status))} />
+              <DetailValue label={t('common.owner')} value={selectedEvidence.owner_name} />
+              <DetailValue label={t('evidence.reviewer')} value={selectedEvidence.reviewer_name} />
+              <DetailValue label={t('evidence.revision')} value={selectedEvidence.revision_required ? t('common.required') : t('common.notRequired')} />
+              <DetailValue label={t('evidence.expiry')} value={formatDate(selectedEvidence.expiry_date)} />
+              <DetailValue label={t('evidence.renewal')} value={selectedEvidence.renewal_required ? t('common.required') : t('common.notRequired')} />
+              <DetailValue label={t('evidence.lock')} value={selectedEvidence.locked_at ? `${t('status.locked')} ${formatDate(selectedEvidence.locked_at)}` : t('status.unlocked')} />
             </div>
 
             <div className="panel full-width">
-              <div className="panel-header"><h4>Linked items</h4></div>
+              <div className="panel-header"><h4>{t('evidence.linkedItems')}</h4></div>
               <DataState
                 loading={false}
                 empty={!selectedLinks.length}
-                emptyTitle="No linked items"
-                emptyMessage="Use the link action from workflow modules or the API bridge to link this file."
+                emptyTitle={t('evidence.linksEmptyTitle')}
+                emptyMessage={t('evidence.linksEmptyMessage')}
               >
                 <EntityTable<EvidencePackIndexRow>
                   rows={selectedLinks}
                   getRowKey={row => `${row.linked_item_type}:${row.linked_item_id}`}
                   columns={[
-                    { key: 'type', header: 'Type', render: row => humanize(row.linked_item_type) },
-                    { key: 'title', header: 'Title', render: row => row.linked_item_title || row.linked_item_id },
-                    { key: 'required', header: 'Required for', render: row => [row.required_for_closure && 'closure', row.required_for_acceptance && 'acceptance', row.required_for_approval && 'approval', row.required_for_treatment && 'treatment'].filter(Boolean).join(', ') || '-' },
+                    { key: 'type', header: t('common.type'), render: row => t(`itemType.${row.linked_item_type}`, humanize(row.linked_item_type)) },
+                    { key: 'title', header: t('common.title'), render: row => row.linked_item_title || row.linked_item_id },
+                    { key: 'required', header: t('evidence.requiredFor'), render: row => [row.required_for_closure && t('evidence.gate.closure'), row.required_for_acceptance && t('evidence.gate.acceptance'), row.required_for_approval && t('evidence.gate.approval'), row.required_for_treatment && t('evidence.gate.treatment')].filter(Boolean).join('، ') || '-' },
                   ]}
                 />
               </DataState>
             </div>
 
             <div className="panel full-width">
-              <div className="panel-header"><h4>Waiver and closure gate status</h4></div>
+              <div className="panel-header"><h4>{t('evidence.waiverGateStatus')}</h4></div>
               <DataState
                 loading={false}
                 empty={!selectedGates.length}
-                emptyTitle="No linked gates"
-                emptyMessage="Evidence gate rows appear after requirements exist for linked workflow items."
+                emptyTitle={t('evidence.linkedGatesEmptyTitle')}
+                emptyMessage={t('evidence.linkedGatesEmptyMessage')}
               >
                 <EntityTable<EvidenceClosureGateStatusRow>
                   rows={selectedGates}
                   getRowKey={row => row.requirement_id}
                   columns={[
-                    { key: 'requirement', header: 'Requirement', render: row => row.requirement_title },
-                    { key: 'gate', header: 'Gate', render: row => humanize(row.required_for_gate) },
-                    { key: 'status', header: 'Status', render: row => <StatusBadge status={humanize(row.gate_status)} /> },
-                    { key: 'close', header: 'Allowed', render: row => row.can_close ? 'Yes' : 'No' },
+                    { key: 'requirement', header: t('evidence.requirement'), render: row => row.requirement_title },
+                    { key: 'gate', header: t('evidence.gate'), render: row => t(`evidence.gate.${row.required_for_gate}`, humanize(row.required_for_gate)) },
+                    { key: 'status', header: t('common.status'), render: row => <StatusBadge status={t(`status.${row.gate_status}`, humanize(row.gate_status))} /> },
+                    { key: 'close', header: t('evidence.allowed'), render: row => row.can_close ? t('common.yes') : t('common.no') },
                   ]}
                 />
               </DataState>
@@ -605,21 +608,21 @@ async function handleGeneratePackIndex() {
 
             <div className="panel full-width">
               <div className="panel-header">
-                <h4>Action controls</h4>
+                <h4>{t('evidence.actionControls')}</h4>
               </div>
               <div className="inline-actions">
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'submit', selectedEvidence)}><Send size={16} /> Submit</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'accept', selectedEvidence)}><ThumbsUp size={16} /> Accept</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'reject', selectedEvidence)}><XCircle size={16} /> Reject</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'revision', selectedEvidence)}><RotateCcw size={16} /> Revision</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'supersede', selectedEvidence)}><RefreshCw size={16} /> Supersede</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled || Boolean(selectedEvidence.locked_at)} onClick={() => openActionModal('evidence', 'lock', selectedEvidence)}><Lock size={16} /> Lock</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'submit', selectedEvidence)}><Send size={16} /> {t('evidence.submit')}</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'accept', selectedEvidence)}><ThumbsUp size={16} /> {t('evidence.accept')}</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'reject', selectedEvidence)}><XCircle size={16} /> {t('evidence.reject')}</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'revision', selectedEvidence)}><RotateCcw size={16} /> {t('evidence.revision')}</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('evidence', 'supersede', selectedEvidence)}><RefreshCw size={16} /> {t('evidence.supersede')}</button>
+                <button className="ghost-button" type="button" disabled={actionDisabled || Boolean(selectedEvidence.locked_at)} onClick={() => openActionModal('evidence', 'lock', selectedEvidence)}><Lock size={16} /> {t('evidence.lock')}</button>
               </div>
-              {!canGovernEvidence ? <p className="muted">Your current role can view governed evidence but cannot perform state transitions.</p> : null}
+              {!canGovernEvidence ? <p className="muted">{t('evidence.readonlyRole')}</p> : null}
             </div>
 
             <div className="panel full-width">
-              <div className="panel-header"><h4>Chain of custody</h4></div>
+              <div className="panel-header"><h4>{t('evidence.chainOfCustody')}</h4></div>
               <DataState
                 loading={chainOfCustody.loading}
                 error={chainOfCustody.error}
@@ -638,103 +641,104 @@ async function handleGeneratePackIndex() {
 
 
 function EvidenceActionForm({ state, evidenceList, onClose, onConfirm }: { state: any, evidenceList: any[], onClose: () => void, onConfirm: (p: Record<string, any>) => void }) {
+  const { t } = useI18n();
   const [payload, setPayload] = useState<Record<string, any>>({});
 
   const isReject = state.action === 'rejected' || state.action === 'reject' || state.action === 'needs_revision' || state.action === 'revision';
 
   const missingFields: string[] = [];
-  if (state.scope === 'legacy' && !payload.note) missingFields.push('Review Note');
-  if (state.scope === 'evidence' && state.action === 'reject' && !payload.reason) missingFields.push('Rejection Reason');
-  if (state.scope === 'evidence' && state.action === 'revision' && !payload.reason) missingFields.push('Revision Reason');
-  if (state.scope === 'evidence' && state.action === 'supersede' && !payload.newEvidenceId) missingFields.push('Replacement Evidence');
-  if (state.scope === 'evidence' && state.action === 'lock' && !payload.note) missingFields.push('Lock Note');
-  if (state.scope === 'waiver' && state.action === 'request' && !payload.reason) missingFields.push('Waiver Reason');
-  if (state.scope === 'evidence' && state.action === 'classify' && !payload.sensitivity) missingFields.push('Sensitivity Level');
+  if (state.scope === 'legacy' && !payload.note) missingFields.push(t('evidence.reviewNote'));
+  if (state.scope === 'evidence' && state.action === 'reject' && !payload.reason) missingFields.push(t('evidence.rejectionReason'));
+  if (state.scope === 'evidence' && state.action === 'revision' && !payload.reason) missingFields.push(t('evidence.revisionReason'));
+  if (state.scope === 'evidence' && state.action === 'supersede' && !payload.newEvidenceId) missingFields.push(t('evidence.replacementEvidence'));
+  if (state.scope === 'evidence' && state.action === 'lock' && !payload.note) missingFields.push(t('evidence.lockNote'));
+  if (state.scope === 'waiver' && state.action === 'request' && !payload.reason) missingFields.push(t('evidence.waiverReason'));
+  if (state.scope === 'evidence' && state.action === 'classify' && !payload.sensitivity) missingFields.push(t('evidence.sensitivityLevel'));
 
   const isValid = missingFields.length === 0;
 
-  const evidenceTitle = state.row ? `${state.row.evidence_code ? state.row.evidence_code + ' - ' : ''}${state.row.evidence_title || state.row.item_title || state.row.file_name}` : 'Unknown';
+  const selectedTitle = state.row ? `${state.row.evidence_code ? state.row.evidence_code + ' - ' : ''}${state.row.evidence_title || state.row.item_title || state.row.file_name}` : t('common.unknown');
 
   return (
     <div className="panel" style={{ padding: '24px', border: 'none', margin: 0 }}>
        <div style={{ marginBottom: '16px' }}>
-         <strong>Action: {humanize(state.action)}</strong><br/>
-         <small>Evidence: {evidenceTitle}</small>
+         <strong>{t('common.action')}: {t(`evidence.action.${state.action}`, humanize(state.action))}</strong><br/>
+         <small>{t('common.evidence')}: {selectedTitle}</small>
        </div>
 
        {state.scope === 'legacy' && (
          <div className="field-group">
-           <label>Review Note *</label>
+           <label>{t('evidence.reviewNote')} *</label>
            <textarea autoFocus value={payload.note || ''} onChange={e => setPayload({...payload, note: e.target.value})} />
          </div>
        )}
        {state.scope === 'evidence' && state.action === 'reject' && (
          <div className="field-group">
-           <label>Rejection Reason *</label>
+           <label>{t('evidence.rejectionReason')} *</label>
            <input autoFocus value={payload.reason || ''} onChange={e => setPayload({...payload, reason: e.target.value})} />
          </div>
        )}
        {state.scope === 'evidence' && state.action === 'revision' && (
          <div className="field-group">
-           <label>Revision Reason *</label>
+           <label>{t('evidence.revisionReason')} *</label>
            <input autoFocus value={payload.reason || ''} onChange={e => setPayload({...payload, reason: e.target.value})} />
          </div>
        )}
        {state.scope === 'evidence' && state.action === 'supersede' && (
          <div className="field-group">
-           <label>Replacement Evidence *</label>
+           <label>{t('evidence.replacementEvidence')} *</label>
            <select autoFocus value={payload.newEvidenceId || ''} onChange={e => setPayload({...payload, newEvidenceId: e.target.value})}>
-             <option value="">-- Select replacement evidence --</option>
+             <option value="">{t('evidence.selectReplacement')}</option>
              {evidenceList.filter(e => e.id !== state.row.evidence_file_id).map(e => <option key={e.id} value={e.id}>{e.evidence_code ? e.evidence_code + ' - ' : ''}{e.evidence_title || e.item_title || e.file_name}</option>)}
            </select>
          </div>
        )}
        {state.scope === 'evidence' && state.action === 'lock' && (
          <div className="field-group">
-           <label>Lock Note *</label>
+           <label>{t('evidence.lockNote')} *</label>
            <input autoFocus value={payload.note || ''} onChange={e => setPayload({...payload, note: e.target.value})} />
          </div>
        )}
        {state.scope === 'evidence' && state.action === 'classify' && (
          <div className="field-group">
-           <label>Sensitivity Classification *</label>
+           <label>{t('evidence.sensitivityClassification')} *</label>
            <select autoFocus value={payload.sensitivity || ''} onChange={e => setPayload({...payload, sensitivity: e.target.value})}>
-             <option value="">-- Select sensitivity --</option>
-             <option value="public">Public</option>
-             <option value="internal">Internal</option>
-             <option value="confidential">Confidential</option>
-             <option value="restricted">Restricted</option>
+             <option value="">{t('evidence.selectSensitivity')}</option>
+             <option value="public">{t('evidence.sensitivity.public')}</option>
+             <option value="internal">{t('evidence.sensitivity.internal')}</option>
+             <option value="confidential">{t('evidence.sensitivity.confidential')}</option>
+             <option value="restricted">{t('evidence.sensitivity.restricted')}</option>
            </select>
          </div>
        )}
        {state.scope === 'waiver' && state.action === 'request' && (
          <div className="field-group">
-           <label>Waiver Reason *</label>
+           <label>{t('evidence.waiverReason')} *</label>
            <input autoFocus value={payload.reason || ''} onChange={e => setPayload({...payload, reason: e.target.value})} />
          </div>
        )}
        {state.scope === 'waiver' && (state.action === 'approve' || state.action === 'reject') && (
          <>
            <div className="field-group">
-             <label>Waiver ID *</label>
-             <div className="notice-banner warning">No selectable records are available in your current scope.</div>
+             <label>{t('evidence.waiverId')} *</label>
+             <div className="notice-banner warning">{t('evidence.noSelectableRecords')}</div>
            </div>
            <div className="field-group">
-             <label>Audit Note *</label>
+             <label>{t('evidence.auditNote')} *</label>
              <input value={payload.auditNote || ''} onChange={e => setPayload({...payload, auditNote: e.target.value})} />
            </div>
          </>
        )}
-       {isReject && <div className="notice-banner danger" style={{ marginTop: '16px' }}>This is a destructive or negative action. Please provide a clear reason.</div>}
+       {isReject && <div className="notice-banner danger" style={{ marginTop: '16px' }}>{t('evidence.negativeActionWarning')}</div>}
 
-       {!isValid && <div className="notice-banner warning" style={{ marginTop: '16px' }}>Please fill out all required fields. Missing: {missingFields.join(', ')}</div>}
+       {!isValid && <div className="notice-banner warning" style={{ marginTop: '16px' }}>{t('evidence.missingFields')}: {missingFields.join('، ')}</div>}
 
        <div className="form-actions" style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-         <button className="ghost-button" onClick={onClose}>Cancel</button>
+         <button className="ghost-button" onClick={onClose}>{t('common.cancel')}</button>
          {(state.scope === 'waiver' && (state.action === 'approve' || state.action === 'reject')) || !isValid ? (
-           <button className="primary-button" disabled>Confirm Action</button>
+           <button className="primary-button" disabled>{t('evidence.confirmAction')}</button>
          ) : (
-           <button className="primary-button" onClick={() => onConfirm(payload)}>Confirm Action</button>
+           <button className="primary-button" onClick={() => onConfirm(payload)}>{t('evidence.confirmAction')}</button>
          )}
        </div>
     </div>

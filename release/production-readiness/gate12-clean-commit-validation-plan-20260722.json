@@ -1,0 +1,7 @@
+{
+  "schema_version":"gate12-clean-commit-validation-plan-v1",
+  "status":"prepared_not_executed",
+  "steps":["verify approved commit SHA","create unique detached worktree outside repository","compare commit-tree manifest with approved candidate aggregate","npm ci","run full Gate 12 validation","remove only the temporary worktree"],
+  "precondition":"gate12-clean-candidate-validation overall_pass must be true",
+  "current_precondition_met":false
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": "gate11r-migration-lineage-validation-v1",
+  "captured_at": "2026-07-22T19:57:26.6547335Z",
+  "contract_path": "release/production-readiness/gate11r-baseline-deployment-contract-20260722.json",
+  "baseline_manifest_sha256": "052f81c85ce4de2e86a91ef21d13e7ea0071c2d97b8a09f2bbcf7b97505aedac",
+  "baseline_sql_sha256": "6b1b0f814bf7d8414ace4303912f303f1a71a1e8913489db77a30ddd94c7846a",
+  "normalized_catalog_sha256": "edac07deb655aba711cd2bc7e834010449be42f36f27863326ce0a41d22a3485",
+  "tracks": {
+    "existing_legacy": {
+      "classification": "legacy_upgrade_lineage",
+      "history_before_future_count": 140,
+      "future_migration": 186,
+      "history_after_future_count": 141,
+      "future_object_count": 1,
+      "catalog_before_future_exact": true,
+      "simulation": "synthetic_structural_history_fixture_not_historical_sql_replay"
+    },
+    "empty_baseline": {
+      "classification": "baseline_v2_lineage",
+      "history_before_future": [185],
+      "history_after_future": [185, 186],
+      "future_object_count": 1,
+      "catalog_before_future_exact": true
+    }
+  },
+  "negative_gates": {
+    "wrong_manifest_hash_refused": true,
+    "wrong_catalog_hash_refused": true,
+    "wrong_baseline_sql_hash_refused": true,
+    "unknown_history_refused": true,
+    "production_reference_refused": true
+  },
+  "manual_history_writes": false,
+  "migration_repair_used": false,
+  "db_reset_used": false,
+  "overall_pass": true
+}

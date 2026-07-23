@@ -1,0 +1,18 @@
+{
+  "schema_version":"gate12r-hermetic-clean-candidate-validation-v1",
+  "overall_pass":true,
+  "candidate_environment":{"env_staging_local_present":false,"ignored_checkpoint_present":false,"real_credentials_present":false,"network_calls_from_unit_tests":0},
+  "previously_failing_cluster":{"files":"5/5 passed including new regression file","tests":"566/566 passed"},
+  "full_unit":{"files":"44/44 passed","tests":"1198/1198 passed"},
+  "focused_release":{"files":"7/7 passed","tests":"56/56 passed"},
+  "sql_governance_baseline_lineage":{"result":"passed_by_byte-identical_Gate12_disposable_artifacts_and_focused_contracts","database_artifacts_changed":false},
+  "typecheck":"passed",
+  "deno_edge_check":"passed",
+  "production_build":"passed",
+  "patch83u_playwright_serial":"25/25 passed",
+  "npm_ci":"passed",
+  "dependency_audit":{"vulnerabilities":0,"critical_or_high":0},
+  "skip_only":{"only":0,"added_skip":0},
+  "external_network_from_unit_tests":false,
+  "hosted_mutation":false
+}

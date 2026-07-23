@@ -1,0 +1,7 @@
+{
+  "schema_version":"gate12-hosted-staging-acceptance-plan-v1",
+  "status":"prepared_not_executed",
+  "non_destructive":true,
+  "checks":["signed-out Login","staging-only traffic and frontend contract","Arabic/English and RTL","Employee 11111 assigned-only access","Employee direct Admin denial","Super Admin Admin access","User Management/provisioning visibility","department/user import preview only","forced-password/reset contract compatibility without execution","logout","Security Advisor accepted state","migration ceiling 185","runtime enforced state 5","Edge contract compatibility"],
+  "prohibited":["business mutation","Auth mutation","reset","password change","migration","production traffic"]
+}

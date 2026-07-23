@@ -1,4 +1,38 @@
 import { supabase } from './supabase';
+import {
+  isPatch83uCredentialGovernanceEnabled,
+  PATCH83U_FRONTEND_CONTRACT_VERSION,
+} from '../config/featureFlags';
+
+export interface PrivilegedActionOptions {
+  signal?: AbortSignal;
+  accessToken?: string;
+  headers?: Record<string, string>;
+  timeout?: number;
+}
+
+export class PrivilegedActionError extends Error {
+  readonly code: string | null;
+  readonly status: number | null;
+  readonly detail: string | null;
+  readonly retryable: boolean;
+
+  constructor(input: {
+    message: string;
+    code?: string | null;
+    status?: number | null;
+    detail?: string | null;
+    retryable?: boolean;
+    cause?: unknown;
+  }) {
+    super(input.message);
+    this.name = 'PrivilegedActionError';
+    this.code = input.code ?? null;
+    this.status = input.status ?? null;
+    this.detail = input.detail ?? null;
+    this.retryable = input.retryable ?? false;
+  }
+}
 
 export class ServerBridgeRequiredError extends Error {
   readonly code = 'SERVER_BRIDGE_REQUIRED';
@@ -19,37 +53,87 @@ export function requireServerBridge(action: string, rpcName: string): never {
 export async function invokePrivilegedAction<T>(
   action: string,
   payload: Record<string, unknown>,
+  options: PrivilegedActionOptions = {},
 ): Promise<T> {
   if (!supabase) {
-    throw new Error('Supabase is not configured. The privileged server bridge is unavailable.');
+    throw new PrivilegedActionError({
+      message: 'Supabase is not configured. The privileged server bridge is unavailable.',
+      code: 'SUPABASE_NOT_CONFIGURED',
+    });
   }
 
-  const { data, error } = await supabase.functions.invoke('privileged-action', {
-    body: { action, payload },
-  });
+  const headers: Record<string, string> = {
+    ...(isPatch83uCredentialGovernanceEnabled()
+      ? { 'x-patch83u-frontend-contract-version': PATCH83U_FRONTEND_CONTRACT_VERSION }
+      : {}),
+    ...options.headers,
+  };
+  const accessToken = options.accessToken?.trim();
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+
+  let data: any;
+  let error: any;
+  try {
+    const response = await supabase.functions.invoke('privileged-action', {
+      body: { action, payload },
+      ...(Object.keys(headers).length > 0 ? { headers } : {}),
+      ...(options.signal ? { signal: options.signal } : {}),
+      ...(options.timeout ? { timeout: options.timeout } : {}),
+    });
+    data = response.data;
+    error = response.error;
+  } catch (invokeError) {
+    const aborted = options.signal?.aborted === true
+      || (invokeError instanceof DOMException && invokeError.name === 'AbortError');
+    throw new PrivilegedActionError({
+      message: aborted
+        ? 'The privileged action was cancelled.'
+        : 'The privileged server bridge could not be reached.',
+      code: aborted ? 'REQUEST_ABORTED' : 'PRIVILEGED_ACTION_TRANSPORT_ERROR',
+      retryable: !aborted,
+      cause: invokeError,
+    });
+  }
 
   if (error) {
     let message = error.message;
+    let code: string | null = null;
+    let detail: string | null = null;
+    let status: number | null = null;
     const context = 'context' in error ? error.context : null;
     if (context instanceof Response) {
+      status = context.status;
       try {
         const body = await context.clone().json() as {
           error?: string;
           code?: string;
           detail?: string;
         };
-        const safeError = body.error || message;
-        const safeDetail = body.detail ? ` ${body.detail}` : '';
-        const safeCode = body.code ? ` [${body.code}]` : '';
-        message = `${safeError}${safeCode}${safeDetail}`.trim();
+        message = body.error || message;
+        code = typeof body.code === 'string' && body.code.trim() ? body.code.trim() : null;
+        detail = typeof body.detail === 'string' && body.detail.trim() ? body.detail.trim() : null;
       } catch {
         // Keep the SDK error when the response is not JSON.
       }
     }
-    throw new Error(message);
+    throw new PrivilegedActionError({
+      message,
+      code,
+      status,
+      detail,
+      retryable: status === null || status === 408 || status === 425 || status === 429 || status >= 500,
+      cause: error,
+    });
   }
   if (!data?.ok) {
-    throw new Error(data?.error || `Privileged action ${action} failed.`);
+    const status = typeof data?.status === 'number' ? data.status : null;
+    throw new PrivilegedActionError({
+      message: data?.error || `Privileged action ${action} failed.`,
+      code: typeof data?.code === 'string' ? data.code : null,
+      status,
+      detail: typeof data?.detail === 'string' ? data.detail : null,
+      retryable: status === null || status === 408 || status === 425 || status === 429 || status >= 500,
+    });
   }
   return data.result as T;
 }

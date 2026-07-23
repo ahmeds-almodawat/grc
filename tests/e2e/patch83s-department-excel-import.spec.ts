@@ -94,7 +94,9 @@ async function installQaSessionAndSupabaseMocks(
     const edgeAction = isEdgeRequest
       ? (request.postDataJSON() as { action?: string } | null)?.action ?? ''
       : '';
-    const isEdgeWrite = isEdgeRequest && edgeAction !== 'patch83u_get_credential_state';
+    const isEdgeWrite = isEdgeRequest
+      && edgeAction !== 'patch83u_get_capabilities'
+      && edgeAction !== 'patch83u_get_credential_state';
     if (isRestWrite || isEdgeWrite) telemetry.previewWriteRequests.push(`${method} ${url}`);
   });
 
@@ -113,8 +115,20 @@ async function installQaSessionAndSupabaseMocks(
 
   await page.route('**/functions/v1/**', async (route) => {
     const body = route.request().postDataJSON() as { action?: string } | null;
-    const result = body?.action === 'patch83u_get_credential_state'
+    const result = body?.action === 'patch83u_get_capabilities'
       ? {
+          edge_contract_version: 'patch83u-edge-auth-first-v1',
+          installed_schema_version: 174,
+          runtime_enforcement_state: 'enforced',
+          credential_state_action_available: true,
+          password_change_action_available: true,
+          provisioning_action_available: true,
+          reset_action_available: true,
+          server_time: '2026-07-17T00:00:00.000Z',
+          compatibility_status: 'compatible',
+        }
+      : body?.action === 'patch83u_get_credential_state'
+        ? {
           managed: true,
           credential_state: 'active',
           credential_version: 0,
@@ -122,7 +136,7 @@ async function installQaSessionAndSupabaseMocks(
           access_allowed: true,
           message: null,
         }
-      : [];
+        : [];
     await route.fulfill({
       status: 200,
       contentType: 'application/json',

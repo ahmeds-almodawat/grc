@@ -1,0 +1,31 @@
+{
+  "schema_version": "production-gate10-staging-migration-execution-v1",
+  "gate": "production_gate_10",
+  "phase": "single_staging_migration_attempt",
+  "attempt_id": "a5d40d5b-5001-4e44-bd3f-c2837005c759",
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "prohibited_project_ref": "zbrjjecpsrzposhuarcn",
+  "authorization_phrase_exact_match": true,
+  "freeze_aggregate_sha256": "f3da08ac6aedcdf5f56e5d4a0c5be307c737b108448fcf85f8b96ba0aaf106cd",
+  "started_at_utc": "2026-07-22T14:15:13.5265212Z",
+  "ended_at_utc": "2026-07-22T14:15:19.3748728Z",
+  "duration_seconds": 5.844,
+  "exit_code": 0,
+  "result": "execution_completed",
+  "applied_order": [183, 184],
+  "attempt_count": 1,
+  "automatic_retry": false,
+  "combined_output_sanitized": [
+    "Initialising login role...",
+    "Connecting to remote database...",
+    "Confirmed pending migrations: 183_security_advisor_rls_reconciliation.sql, 184_security_definer_search_path_and_acl_hardening.sql",
+    "Applying migration 183_security_advisor_rls_reconciliation.sql...",
+    "Ten expected DROP POLICY IF EXISTS notices reported the new Patch 183 policies absent before creation.",
+    "Applying migration 184_security_definer_search_path_and_acl_hardening.sql...",
+    "Finished supabase db push."
+  ],
+  "credentials_in_output": false,
+  "source_changed_during_execution": false,
+  "auth_setting_changed": false,
+  "production_project_targeted": false
+}

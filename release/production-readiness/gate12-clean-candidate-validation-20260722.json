@@ -1,0 +1,19 @@
+{
+  "schema_version":"gate12-clean-candidate-validation-v1",
+  "overall_pass":false,
+  "npm_ci":{"passed":true,"packages":225},
+  "unit":{"files_total":43,"files_passed":39,"files_failed":4,"tests_total":1195,"tests_passed":723,"tests_failed":472},
+  "unit_root_causes":[
+    {"type":"ignored_checkpoint_dependency","path":"release/patch83u/reset-proof-run-003/checkpoints/01-before-employee-sessions.json"},
+    {"type":"ignored_environment_dependency","path":".env.staging.local"}
+  ],
+  "focused_release_tests":"56/56 passed",
+  "typecheck":"passed",
+  "deno_edge_check":"passed",
+  "production_build":"passed",
+  "patch83u_playwright_serial":"25/25 passed",
+  "sql_and_disposable_baseline_contracts":"passed",
+  "dependency_audit":{"vulnerabilities":0,"production_critical_or_high":0,"direct_dependencies":16,"missing_licenses":0},
+  "secret_scan":{"real_secrets":0,"synthetic_prohibited_key_fixture_classified":true},
+  "release_blocker":"tests are not hermetic in a credential-free clean candidate"
+}

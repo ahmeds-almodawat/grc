@@ -1,0 +1,10 @@
+{
+  "schema_version":"gate12-evidence-authority-v1",
+  "release_authoritative":["gate8-v2 successful staging migration/postflight/fingerprint evidence","gate10 successful security-remediation and advisor evidence","gate11r baseline V2, migration 185, lineage, catalog, advisor and validation evidence","gate12 release manifests and plans"],
+  "supporting":["Gate 5-7R design, security and disposable validation evidence","current Patch 83T/U governance summaries"],
+  "historical_superseded":["baseline V1","superseded Gate 8 freezes","older current-state readiness snapshots"],
+  "failed_attempt":["stopped reset-proof attempts and failed migration rehearsal attempts"],
+  "local_only":["review ZIPs","temporary command exports","browser profiles","ignored SQL checkpoint captures"],
+  "excluded_sensitive":[".env.staging.local","DPAPI credential files","cookies, tokens and browser storage"],
+  "historical_files_modified": false
+}

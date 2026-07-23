@@ -57,7 +57,14 @@ export function getLoginCaptchaSubmissionError(
   return null;
 }
 
+// Hosted Auth CAPTCHA applies to every password authentication, including the
+// forced current-password reauthentication performed by Patch 83U.
+export const getAuthCaptchaSubmissionError = getLoginCaptchaSubmissionError;
+export const normalizeAuthCaptchaToken = normalizeLoginCaptchaToken;
+
 export const loginCaptchaConfig = resolveLoginCaptchaConfig({
   requiredFlag: import.meta.env.VITE_AUTH_CAPTCHA_REQUIRED,
   siteKey: import.meta.env.VITE_AUTH_CAPTCHA_SITE_KEY,
 });
+
+export const authCaptchaConfig = loginCaptchaConfig;

@@ -1,0 +1,68 @@
+{
+  "schema_version": "gate12r-vercel-staging-configuration-v1",
+  "captured_at_utc": "2026-07-22T21:50:42.8851944Z",
+  "authorization": {
+    "exact_phrase_received": true,
+    "phrase_sha256": "98a8f14b21a8e014d7f98f0312e3c07892e5f4cb3a4c33c90eee2c54a063d13f",
+    "scope": "dedicated Vercel staging configuration only; no deployment or production change"
+  },
+  "repository": {
+    "root": "C:/Users/molte/Downloads/grc-control-center",
+    "branch": "patch83t-controlled-user-excel-import",
+    "head": "a9989b1e8d95a6bb775316a2d9e709ef84514c42",
+    "staged_file_count": 0,
+    "deleted_tracked_file_count": 0
+  },
+  "target": {
+    "provider": "Vercel",
+    "account_classification": "authenticated personal account",
+    "project": "grc-staging",
+    "dedicated_staging_project": true,
+    "framework": "vite",
+    "build_command": "npm run build",
+    "output_directory": "dist",
+    "install_command": "npm ci",
+    "node_version": "24.x",
+    "git_repository_linked": false,
+    "origin": "https://grc-staging-lilac.vercel.app",
+    "origin_verified": true,
+    "custom_domain_attached": false,
+    "deployment_count": 0
+  },
+  "protection": {
+    "sso_deployment_protection": "all_except_custom_domains",
+    "git_fork_protection": true
+  },
+  "environment": {
+    "configured_target": "preview",
+    "configured_names": [
+      "VITE_PATCH83U_CREDENTIAL_GOVERNANCE_ENABLED",
+      "VITE_SUPABASE_ANON_KEY",
+      "VITE_SUPABASE_URL"
+    ],
+    "all_configured_values_encrypted": true,
+    "supabase_project_ref_validated_before_write": "zghsgzrdwbqdrpuxanac",
+    "production_project_ref_rejected": "zbrjjecpsrzposhuarcn",
+    "public_browser_key_classification": "publishable_or_legacy_anon_only",
+    "secret_or_service_role_key_used": false,
+    "values_logged_or_persisted_by_gate": false,
+    "captcha_required_flag_configured": false,
+    "captcha_site_key_configured": false
+  },
+  "linkage": {
+    "clean_temporary_candidate_used": true,
+    "source_repository_linkage_created": false,
+    "temporary_linkage_contained_provider_generated_local_state": true,
+    "temporary_linkage_cleanup_completed": true,
+    "temporary_candidate_removed": true,
+    "temporary_archive_removed": true
+  },
+  "result": {
+    "configuration_status": "partially_complete",
+    "dedicated_target_created": true,
+    "staging_supabase_binding_configured": true,
+    "deployment_performed": false,
+    "production_changed_or_accessed": false,
+    "remaining_blocker": "CAPTCHA provider settings must be established through a secure provider mechanism before hosted staging deployment authorization. No value may be supplied in chat."
+  }
+}

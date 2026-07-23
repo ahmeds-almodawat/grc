@@ -15,6 +15,12 @@ import {
   type UserImportProfileIdentity,
 } from '../utils/userImportValidation';
 import { invokePrivilegedAction } from './privilegedAction';
+import {
+  patch83tPrivilegedActionOptions,
+  requireCompatiblePatch83tUserImportCapability,
+  rethrowPatch83tDeploymentCompatibilityError,
+  type Patch83tUserImportCapabilities,
+} from './userImportCompatibility';
 import { isSupabaseConfigured, supabase } from './supabase';
 import {
   configurationErrorResult,
@@ -663,11 +669,22 @@ async function updateLifecycleViaCompatibility(userId: string, action: Lifecycle
   const active = action === 'reactivate' || action === 'unarchive';
   const status: UserStatus = action === 'archive' ? 'archived' : active ? 'active' : 'inactive';
   const legacyPatch = { is_active: active };
+  const normalizedReason = reason.trim();
+  let deactivatedBy: string | null = null;
+  if (!active) {
+    if (!normalizedReason) throw new Error('A deactivation reason is required.');
+    if (!supabase) throw new Error('Supabase is not configured for user management updates.');
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user?.id) throw new Error('Unable to verify the lifecycle action actor.');
+    deactivatedBy = data.user.id;
+  }
   await updateProfilePatchViaRls(userId, {
     ...legacyPatch,
     user_status: status,
-    deactivated_at: active ? null : new Date().toISOString(),
-    deactivation_reason: active ? null : reason,
+    // The profile trigger supplies a database timestamp for blocked states.
+    deactivated_at: null,
+    deactivated_by: deactivatedBy,
+    deactivation_reason: active ? null : normalizedReason,
   }, legacyPatch);
 }
 
@@ -850,8 +867,10 @@ export async function readAuditHistory(userId?: string): Promise<LiveResult<User
 
 export async function validateImportRows(
   rows: ParsedUserImportRow[],
-  parserErrorsByRow: Record<number, string[]> = {},
+  parserErrorsByRow: Record<number, string[]>,
+  capabilityProof: Patch83tUserImportCapabilities,
 ): Promise<UserImportValidationResult> {
+  requireCompatiblePatch83tUserImportCapability(capabilityProof);
   const employeeIds = [
     ...new Map(
       rows
@@ -863,6 +882,8 @@ export async function validateImportRows(
   const identityReferencesPromise = employeeIds.length
     ? invokePrivilegedAction<UserImportIdentityReferenceResult>('patch83t_user_import_identity_references', {
         employee_ids: employeeIds,
+      }, patch83tPrivilegedActionOptions()).catch((error) => {
+        rethrowPatch83tDeploymentCompatibilityError(error);
       })
     : Promise.resolve<UserImportIdentityReferenceResult>({
         auth_identities: [],
@@ -963,7 +984,9 @@ export async function applyImportBatch(
   fileName: string,
   validation: UserImportValidationResult,
   executionConfirmation: string,
+  capabilityProof: Patch83tUserImportCapabilities,
 ): Promise<ApplyImportResult> {
+  requireCompatiblePatch83tUserImportCapability(capabilityProof);
   if (executionConfirmation !== USER_IMPORT_EXECUTION_CONFIRMATION) {
     throw new Error(`Type ${USER_IMPORT_EXECUTION_CONFIRMATION} exactly before executing the import.`);
   }
@@ -1016,6 +1039,8 @@ export async function applyImportBatch(
       existing_user_update_count: validation.existingUserUpdateCount,
       pending_account_creation_count: validation.pendingAccountCreationCount,
     },
+  }, patch83tPrivilegedActionOptions()).catch((error) => {
+    rethrowPatch83tDeploymentCompatibilityError(error);
   });
   const proof = result?.database_proof;
   const provisioningIds = Array.isArray(result?.provisioning_ids) ? result.provisioning_ids : [];

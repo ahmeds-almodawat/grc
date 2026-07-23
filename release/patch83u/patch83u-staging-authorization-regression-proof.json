@@ -1,0 +1,12 @@
+{
+  "schema_version": "patch83u-staging-authorization-proof-stop-v1",
+  "captured_at": "2026-07-19T11:55:24.9750365Z",
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "subject_user_id": "2a276bdb-cf51-4303-846e-6b7fecf38b0c",
+  "execution_status": "not_run_due_to_phase_1_gate",
+  "fresh_employee_login_performed": false,
+  "employee_role_scope_revalidated": false,
+  "admin_route_denied": null,
+  "reset_submitted": false,
+  "hosted_mutation_performed": false
+}

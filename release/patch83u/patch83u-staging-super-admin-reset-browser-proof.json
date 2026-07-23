@@ -1,0 +1,16 @@
+{
+  "schema_version": "patch83u-staging-reset-browser-proof-stop-v1",
+  "captured_at": "2026-07-19T11:55:24.9750365Z",
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "subject_user_id": "2a276bdb-cf51-4303-846e-6b7fecf38b0c",
+  "execution_status": "stopped_fail_closed",
+  "checkpoint": "phase_1_edge_metadata",
+  "browser_started": false,
+  "administrator_reauthentication_performed": false,
+  "reset_modal_opened": false,
+  "reset_submitted": false,
+  "submission_count": 0,
+  "request_id_hash": null,
+  "hosted_mutation_performed": false,
+  "production_accessed": false
+}

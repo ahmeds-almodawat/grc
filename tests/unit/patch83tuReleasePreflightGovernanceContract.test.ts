@@ -49,6 +49,8 @@ describe('Patch 83T/83U release preflight and governance contracts', () => {
       'predicted_unverified_count',
       'active_users_predicted_reconciliation_required',
       'active_roles_with_invalid_tenant_or_hierarchy_shape',
+      'invalid_active_role_assignments',
+      'invalid_profile_lifecycle_rows',
       'active_roles_without_valid_credential_identity',
       'predicted_eligible_global_super_admin_count',
       'would_lose_last_eligible_super_admin',
@@ -67,6 +69,15 @@ describe('Patch 83T/83U release preflight and governance contracts', () => {
     expect(sql).toContain("when ur.scope = 'department'");
     expect(sql).toContain("when ur.scope = 'unit'");
     expect(sql).toContain("when ur.scope = 'assigned_only'");
+    expect(sql).toContain("when ur.role = 'division_head' then ur.scope = 'division'");
+    expect(sql).toContain('role_scope_valid');
+    expect(sql).toMatch(/where r\.role_scope_valid is distinct from true[\s\S]*or r\.reference_shape_valid is distinct from true/);
+    expect(sql).toContain('PATCH83U_INVALID_ACTIVE_ROLE_ASSIGNMENT');
+    expect(sql).toContain('PATCH83U_INVALID_PROFILE_LIFECYCLE');
+    expect(sql.match(/invalid_active_role_assignments as/g)).toHaveLength(2);
+    expect(sql.match(/invalid_profile_lifecycle_rows as/g)).toHaveLength(2);
+    expect(sql).toContain("'invalid_profile_lifecycle_summary'::text");
+    expect(sql).toContain("'invalid_profile_lifecycle_detail'::text");
     expect(sql).toContain("u.email_confirmed_at is not null");
     expect(sql).toContain("u.raw_app_meta_data ->> 'credential_version'");
   });

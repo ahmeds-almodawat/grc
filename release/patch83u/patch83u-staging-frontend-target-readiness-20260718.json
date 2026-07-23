@@ -1,0 +1,176 @@
+{
+  "schema_version": "patch83u-staging-frontend-target-readiness-v1",
+  "captured_at_utc": "2026-07-18T17:33:16.0004579Z",
+  "decision": "STAGING FRONTEND TARGET NOT READY",
+  "decision_is_not_reset_authorization": true,
+  "repository": {
+    "branch": "patch83t-controlled-user-excel-import",
+    "head": "a9989b1e8d95a6bb775316a2d9e709ef84514c42",
+    "dirty": true,
+    "expected_status_entry_count_after_evidence": 116,
+    "expected_modified_entry_count_after_evidence": 63,
+    "expected_untracked_entry_count_after_evidence": 53,
+    "staged_file_count": 0
+  },
+  "target": {
+    "local_origin": "http://localhost:5173",
+    "vite_mode": "staging",
+    "staging_project_ref": "zghsgzrdwbqdrpuxanac",
+    "prohibited_production_project_ref": "zbrjjecpsrzposhuarcn",
+    "derived_project_ref": "zghsgzrdwbqdrpuxanac",
+    "environment_file": ".env.staging.local",
+    "launch_command": "npm run dev:staging"
+  },
+  "previous_root_cause": {
+    "default_command": "vite",
+    "default_mode": "development",
+    "environment_files_considered_in_precedence_order": [
+      ".env",
+      ".env.local",
+      ".env.development",
+      ".env.development.local"
+    ],
+    "present_automatically_loaded_files": [
+      ".env"
+    ],
+    "files_not_automatically_loaded": [
+      ".env.example",
+      ".env.production.example"
+    ],
+    "browser_url_variable": "VITE_SUPABASE_URL",
+    "browser_key_variable": "VITE_SUPABASE_ANON_KEY",
+    "unused_present_variable": "VITE_SUPABASE_PUBLISHABLE_KEY",
+    "production_derivation": "The root .env supplies VITE_SUPABASE_URL for the prohibited production project. The source reads VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY directly.",
+    "hardcoded_production_url_or_fallback_in_src": false,
+    "existing_separate_vite_mode_before_task": false,
+    "reset_harness_starts_vite": false,
+    "reset_harness_expectation": "An already-running explicitly supplied local origin."
+  },
+  "environment_safety": {
+    "staging_env_ignored_by_git": true,
+    "ignore_rule": ".env.*.local",
+    "gitignore_changed": false,
+    "production_env_modified": false,
+    "production_env_sha256": "557ab4fa0bc7e9b92f724e2351e58ae560701c74aeadf97fa472d36fe6aace77",
+    "default_dev_command_changed": false,
+    "staging_or_production_key_added_to_tracked_files": false,
+    "service_role_key_requested_or_used": false,
+    "staging_public_browser_key_available": false,
+    "staging_public_browser_key_fingerprint": null,
+    "missing_prerequisite": "A valid public browser key for staging project zghsgzrdwbqdrpuxanac must be entered locally into ignored .env.staging.local as VITE_SUPABASE_ANON_KEY through an approved local secret-handling channel."
+  },
+  "startup_guard": {
+    "script": "scripts/start-patch83u-staging-frontend.mjs",
+    "loads_only": ".env.staging.local",
+    "clears_inherited_vite_values": true,
+    "vite_environment_file_loading_disabled_in_staging_mode": true,
+    "startup_marker_required_by_vite_config": true,
+    "exact_project_ref_required": true,
+    "production_ref_rejected_recursively": true,
+    "unknown_project_rejected": true,
+    "missing_or_malformed_url_rejected": true,
+    "public_browser_key_required": true,
+    "service_role_or_secret_key_rejected": true,
+    "safe_success_message": "Verified staging Supabase project: zghsgzrdwbqdrpuxanac",
+    "observed_result": "BLOCKED_BEFORE_VITE_MISSING_PUBLIC_BROWSER_KEY",
+    "vite_started": false
+  },
+  "harness_integration": {
+    "required_application_origin": "http://localhost:5173",
+    "unreachable_origin_refused_before_credential_prompts": true,
+    "loaded_bundle_staging_ref_required_before_credential_entry": true,
+    "production_ref_in_bundle_refused": true,
+    "non_staging_supabase_network_request_refused": true,
+    "production_network_request_refused": true,
+    "existing_gates_weakened": false,
+    "hosted_proof_executed": false
+  },
+  "validation": {
+    "javascript_syntax": "PASS",
+    "focused_unit_tests": {
+      "result": "PASS",
+      "files": 2,
+      "tests_passed": 31,
+      "tests_failed": 0,
+      "hosted_requests": 0
+    },
+    "missing_key_pre_start_refusal": "PASS",
+    "production_ref_rejection": "PASS",
+    "unknown_ref_rejection": "PASS",
+    "malformed_and_missing_url_rejection": "PASS",
+    "hidden_production_ref_rejection": "PASS",
+    "default_env_isolation": "PASS",
+    "secret_serialization_and_logging_guard": "PASS",
+    "typecheck": "PASS",
+    "production_build": {
+      "result": "PASS",
+      "vite_version": "8.0.16",
+      "modules_transformed": 2003,
+      "warning": "Existing large-chunk warning only."
+    },
+    "json_parse": "PASS",
+    "git_diff_check": "PASS_WITH_EXISTING_LINE_ENDING_WARNINGS",
+    "local_vite_smoke_test_performed": false,
+    "smoke_skip_reason": "The staging public browser key is unavailable.",
+    "application_network_request_left_local_process": false
+  },
+  "file_hashes": [
+    {
+      "path": "scripts/start-patch83u-staging-frontend.mjs",
+      "sha256": "e5ced674c7b791b23ac602065563d9ab125509bffb1046246778ac311bf08579",
+      "bytes": 8337
+    },
+    {
+      "path": "vite.config.ts",
+      "sha256": "ad4807d5842c861c2d39392994ce3b3a3021455c6c91102b49dd901717e7661b",
+      "bytes": 4129
+    },
+    {
+      "path": "package.json",
+      "sha256": "bd940adb14e7afb37fe8e7e40678dd4a4d264723beae0448c19b3f02e9ad8007",
+      "bytes": 59000
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "feeae89860fde2ee0a690374f0ee36fd86080617f2a812e9cd5fdab438bbb53c",
+      "bytes": 360
+    },
+    {
+      "path": ".env.staging.local",
+      "sha256": "6d7407724084d0864e3b1a8933e05e29ce6a83b9b0d9e0cea09b120f8149d2ca",
+      "bytes": 266,
+      "git_ignored": true,
+      "contains_public_browser_key": false
+    },
+    {
+      "path": "scripts/patch83u-staging-multisession-reset-proof.mjs",
+      "sha256": "649da662188e3345ad9ea41be66f0fe53f11fb8aff02f183c006ee81a2f66602",
+      "bytes": 52397
+    },
+    {
+      "path": "tests/unit/patch83uStagingFrontendTarget.test.ts",
+      "sha256": "a2456c06085e5c6806a3f65bcf027d1032c0d5e685a4c3b68f5327c88c187a8a",
+      "bytes": 4626
+    },
+    {
+      "path": "tests/unit/patch83uStagingMultisessionResetProof.test.ts",
+      "sha256": "eb78dfe9384c23634b63a3900c476e23dc9b97c3f5d2d30085092c0eb938e287",
+      "bytes": 14013
+    }
+  ],
+  "safety_confirmation": {
+    "credentials_entered": false,
+    "login_performed": false,
+    "password_reset_performed": false,
+    "password_change_performed": false,
+    "database_connection_opened": false,
+    "deployment_performed": false,
+    "migration_applied": false,
+    "hosted_mutation_performed": false,
+    "production_access_performed": false,
+    "staged": false,
+    "committed": false,
+    "pushed": false,
+    "pg_service_blocker_addressed": false
+  }
+}

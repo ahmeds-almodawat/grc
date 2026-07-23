@@ -1,0 +1,16 @@
+{
+  "schema_version":"gate12-residual-risk-register-v1",
+  "risks":[
+    {"id":"G12-R1","severity":"High","risk":"clean candidate unit tests depend on ignored local state","owner":"Engineering/Test Governance","control":"focused/build/E2E/database suites pass; release remains blocked","recommendation":"remediate with committed synthetic fixtures and process-only test config","review_by":"before RC creation","executive_acceptance":false},
+    {"id":"G12-R2","severity":"Medium","risk":"dedicated hosted staging target not proven","owner":"Platform","control":"no deployment authorized","recommendation":"approve isolated Vercel staging linkage and origin","review_by":"before hosted deployment","executive_acceptance":false},
+    {"id":"G12-R3","severity":"Medium","risk":"historical migration 173/174 applied-byte lineage uncertainty","owner":"Database Governance","control":"immutable baseline V2 and normalized catalog binding","recommendation":"accept with baseline controls","review_by":"production go/no-go","executive_acceptance":true},
+    {"id":"G12-R4","severity":"Medium","risk":"complete deployed Edge bundle cryptographic binding unavailable","owner":"Platform Security","control":"reviewed local hashes and contract attestation","recommendation":"retain as accepted limitation","review_by":"next Edge deployment","executive_acceptance":true},
+    {"id":"G12-R5","severity":"Medium","risk":"baseline versus legacy lineage operational complexity","owner":"Database Release","control":"lineage verifier rejects mixed/unknown environments","recommendation":"dual-runbook review","review_by":"every deployment","executive_acceptance":true},
+    {"id":"G12-R6","severity":"Low","risk":"18 intentional deny-all/no-policy advisor informationals and 3 Patch83U helper warnings","owner":"Security","control":"deny-by-default and service-role-only contracts","recommendation":"accept","review_by":"2026-10-22","executive_acceptance":false},
+    {"id":"G12-R7","severity":"Low","risk":"four inherited legacy database-lint findings","owner":"Database Governance","control":"documented compensating controls","recommendation":"accept and track","review_by":"2026-10-22","executive_acceptance":false},
+    {"id":"G12-R8","severity":"Informational","risk":"deprecated transitive packages reported during install","owner":"Engineering","control":"npm audit reports zero vulnerabilities","recommendation":"routine dependency refresh","review_by":"next dependency cycle","executive_acceptance":false}
+  ],
+  "unresolved_critical":0,
+  "unresolved_high":1,
+  "release_blocked":true
+}

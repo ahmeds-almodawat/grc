@@ -1,0 +1,28 @@
+{
+  "gate": "production_gate_8_v2",
+  "checkpoint": "gate8_v2_postflight",
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "transaction_read_only": true,
+  "explicit_rollback": true,
+  "result": "passed",
+  "migration_state": {
+    "latest_migration": 182,
+    "unexpected_above_182": 0,
+    "history": [
+      {"version":178,"name":"expression_uniqueness_reconciliation","history_present":true,"principal_objects_present":true},
+      {"version":179,"name":"real_data_activation_view_reconciliation","history_present":true,"principal_objects_present":true},
+      {"version":180,"name":"runtime_action_authorization_reconciliation","history_present":true,"principal_objects_present":true},
+      {"version":181,"name":"patch83tu_catalog_contract_attestation","history_present":true,"principal_objects_present":true},
+      {"version":182,"name":"legacy_public_table_rls_and_privilege_hardening","history_present":true,"principal_objects_present":true}
+    ]
+  },
+  "duplicates": {"relationship_groups":0,"classification_groups":0},
+  "activation_view": {"security_invoker":true,"security_barrier":true,"authenticated_select":true,"anon_select":false},
+  "runtime_actions": {"tables_rls_enabled_and_forced":true,"browser_dml_grants":0,"browser_write_policies":0,"service_authorizer_execute":true,"authenticated_authorizer_execute":false},
+  "attestation": {"overall_pass":true,"safe_metadata_only":true,"edge_service_rpc_count":24,"service_role_execute":true,"authenticated_execute":false,"anon_execute":false},
+  "last_super_admin": {"owner_only_recovery_exists":true,"wrapper_calls_owner_only_recovery":true,"synthetic_count_helper_absent":true,"browser_execute":false},
+  "legacy_tables": {"present":18,"rls_enabled":18,"rls_forced":18,"tables_with_browser_grants":0,"tables_with_policies":0},
+  "runtime": {"schema_version":"174.2-auth-first","enforcement_state":"enforced","state_version":5,"contracts_compatible":true},
+  "business_data_selected": false,
+  "production_accessed": false
+}

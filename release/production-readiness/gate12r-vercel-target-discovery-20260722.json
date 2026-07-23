@@ -1,0 +1,14 @@
+{
+  "schema_version":"gate12r-vercel-target-discovery-v1",
+  "classification":"B. DEDICATED STAGING PROJECT MUST BE CREATED",
+  "cli_version":"54.18.0",
+  "authenticated_account_classification":"personal_account_authenticated",
+  "repository_linked":false,
+  "local_project_file_present":false,
+  "dedicated_grc_staging_project_present":false,
+  "existing_grc":{"present":true,"framework":"Vite","root_directory":".","node_version":"24.x","production_domain_attached":true,"production_and_preview_deployments_present":true,"sso_protection":"all_except_custom_domains","git_fork_protection":true},
+  "existing_grc_safe_as_dedicated_staging":false,
+  "reason":"the existing project has production domains/deployments and is not an independently isolated staging target",
+  "environment_values_read":false,
+  "vercel_mutation_performed":false
+}

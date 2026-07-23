@@ -1,0 +1,42 @@
+{
+  "schema_version": "patch83u-staging-reset-proof-stop-v1",
+  "generated_at": "2026-07-19T11:55:24.9750365Z",
+  "execution_status": "stopped_fail_closed",
+  "decision": "PATCH83U HOSTED STAGING RESET PROOF STOPPED FAIL-CLOSED",
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "subject_user_id": "2a276bdb-cf51-4303-846e-6b7fecf38b0c",
+  "checkpoint": "phase_1_edge_metadata",
+  "reason_code": "PATCH83U_EDGE_VERSION_MISMATCH",
+  "freeze": {
+    "json_sha256_match": true,
+    "aggregate_sha256_match": true,
+    "frozen_file_count": 57,
+    "frozen_file_mismatch_count": 0
+  },
+  "edge": {
+    "expected_version": 3,
+    "observed_version": 5,
+    "status": "ACTIVE",
+    "verify_jwt": true,
+    "hosted_artifact_hash_matches_frozen_metadata": true
+  },
+  "reset_submitted": false,
+  "submission_count": 0,
+  "request_id_hash": null,
+  "credentials_entered": false,
+  "browser_login_performed": false,
+  "employee_sessions_created": 0,
+  "refresh_replay_attempts": 0,
+  "credential_or_auth_changed": false,
+  "recovery_required": false,
+  "reconciliation_required": false,
+  "designated_super_admin_action_performed": false,
+  "designated_super_admin_availability": "not_revalidated_no_action_performed",
+  "production_accessed": false,
+  "hosted_mutation_performed": false,
+  "operator_guidance": [
+    "Investigate and attest the staging Edge version advancement from 3 to 5.",
+    "If version 5 is intended, create a new reviewed source/deployment attestation and execution freeze before requesting a new execution window.",
+    "Do not reuse the stopped authorization and do not relax the version gate."
+  ]
+}

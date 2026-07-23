@@ -1,0 +1,22 @@
+{
+  "schema_version": "patch83u-reset-proof-run004-reservation-v1",
+  "run": 4,
+  "execution_authorized": false,
+  "workspace": "release/patch83u/reset-proof-run-004",
+  "checkpoint_directory": "release/patch83u/reset-proof-run-004/checkpoints",
+  "checkpoint_files_expected": [
+    "01-before-employee-sessions.json",
+    "02-immediately-before-reset.json",
+    "03-immediately-after-reset.json",
+    "04-before-required-password-change.json",
+    "05-immediately-after-password-change-finalization.json",
+    "06-after-fresh-employee-login.json"
+  ],
+  "checkpoint_files_created_during_preparation": false,
+  "success_evidence_created_during_preparation": false,
+  "fresh_after_future_harness_start_required": true,
+  "operator_confirmation_contract_id": "patch83u-run004-reset-confirmation-v1",
+  "staging_project_ref": "zghsgzrdwbqdrpuxanac",
+  "production_project_ref": "zbrjjecpsrzposhuarcn",
+  "production_accessed": false
+}

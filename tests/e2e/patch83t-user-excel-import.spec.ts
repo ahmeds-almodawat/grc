@@ -3,9 +3,13 @@ import ExcelJS from 'exceljs';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { USER_IMPORT_COLUMNS } from '../../src/utils/userWorkbook';
+import { startPatch83uTestServer, type Patch83uTestServer } from './patch83uTestServer';
 
 const organizationId = '00000000-0000-4000-8000-000000000083';
 const userId = '00000000-0000-4000-8000-000000000084';
+
+let server: Patch83uTestServer | null = null;
+let baseUrl = '';
 
 type Telemetry = {
   mutationRequests: string[];
@@ -160,12 +164,24 @@ async function installMocks(page: Page, telemetry: Telemetry, role = 'super_admi
     if (
       action === 'list_user_management_roster'
       || action === 'patch83u_get_credential_state'
+      || action === 'patch83t_get_user_import_capabilities'
       || action === 'patch83t_user_import_identity_references'
     ) telemetry.readActions.push(action);
     else telemetry.mutationRequests.push(`${request.method()} ${action}`);
     telemetry.actionPayloads.push({ action, payload: body?.payload ?? {} });
-    const result = action === 'list_user_management_roster'
-      ? rosterRows()
+    const result = action === 'patch83t_get_user_import_capabilities'
+      ? {
+          edge_contract_version: 'patch83t-edge-user-import-v1',
+          migration_173_available: true,
+          identity_reference_action_available: true,
+          import_execution_action_available: true,
+          maximum_rows: 5000,
+          runtime_status: 'compatible',
+          compatible: true,
+          server_time: '2026-07-16T00:00:00.000Z',
+        }
+      : action === 'list_user_management_roster'
+        ? rosterRows()
       : action === 'patch83u_get_credential_state'
         ? { managed: true, credential_state: 'active', credential_version: 0, auth_email: 'patch83t.qa@example.test', access_allowed: true }
         : action === 'patch83t_user_import_identity_references'
@@ -281,7 +297,7 @@ async function installMocks(page: Page, telemetry: Telemetry, role = 'super_admi
 }
 
 async function openUserImport(page: Page) {
-  await page.goto('/');
+  await page.goto(`${baseUrl}/`);
   await expect(page.getByText('Patch 83T Browser QA')).toBeVisible();
   await page.locator('.nav-child-item').filter({ hasText: 'User Management' }).click();
   await expect(page.getByRole('heading', { name: 'User Management Center' })).toBeVisible();
@@ -296,6 +312,20 @@ function kpiValue(modal: Locator, label: string) {
 }
 
 test.describe('Patch 83T controlled User Excel Import', () => {
+  test.describe.configure({ mode: 'serial' });
+
+  test.beforeAll(async () => {
+    server = await startPatch83uTestServer({
+      VITE_PATCH83T_USER_EXCEL_IMPORT_ENABLED: 'true',
+    });
+    baseUrl = server.baseUrl;
+  });
+
+  test.afterAll(() => {
+    server?.stop();
+    server = null;
+  });
+
   test('downloads the template and previews a real 27-row workbook without writes', async ({ page }) => {
     test.setTimeout(90_000);
     const telemetry: Telemetry = { mutationRequests: [], readActions: [], authCreationRequests: [], consoleProblems: [], pageErrors: [], actionPayloads: [] };
@@ -490,7 +520,7 @@ test.describe('Patch 83T controlled User Excel Import', () => {
   test('keeps User Excel Import unavailable to unauthorized roles', async ({ page }) => {
     const telemetry: Telemetry = { mutationRequests: [], readActions: [], authCreationRequests: [], consoleProblems: [], pageErrors: [], actionPayloads: [] };
     await installMocks(page, telemetry, 'viewer');
-    await page.goto('/');
+    await page.goto(`${baseUrl}/`);
     await expect(page.getByText('Patch 83T Browser QA')).toBeVisible();
     await expect(page.locator('.nav-child-item').filter({ hasText: 'User Management' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Import Excel' })).toHaveCount(0);
@@ -501,7 +531,7 @@ test.describe('Patch 83T controlled User Excel Import', () => {
   test('leaves Department Excel Import controls unchanged', async ({ page }) => {
     const telemetry: Telemetry = { mutationRequests: [], readActions: [], authCreationRequests: [], consoleProblems: [], pageErrors: [], actionPayloads: [] };
     await installMocks(page, telemetry);
-    await page.goto('/');
+    await page.goto(`${baseUrl}/`);
     await expect(page.getByText('Patch 83T Browser QA')).toBeVisible();
     await page.locator('.nav-child-item').filter({ hasText: 'Departments' }).click();
     await page.getByRole('button', { name: 'Prepare Import Batch' }).click();

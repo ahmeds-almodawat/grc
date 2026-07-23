@@ -7,11 +7,13 @@ import { decideApproval } from '../lib/grcApi';
 import { formatDate, humanize } from '../lib/format';
 import { getApprovals } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
+import { useI18n } from '../i18n/I18nContext';
 import type { ApprovalRow } from '../types/domain';
 
 type ApprovalFilter = 'all' | 'pending' | 'approved' | 'rejected';
 
 export function Approvals() {
+  const { t } = useI18n();
   const approvals = useAsyncData(getApprovals, []);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -40,8 +42,8 @@ export function Approvals() {
   };
 
   async function handleDecision(row: ApprovalRow, status: 'approved' | 'rejected') {
-    const defaultNote = status === 'approved' ? 'Approved from approval center.' : 'Rejected from approval center.';
-    const note = status === 'rejected' ? window.prompt('Rejection reason', defaultNote) : window.prompt('Approval note', defaultNote);
+    const defaultNote = status === 'approved' ? t('approvals.defaultApprovalNote') : t('approvals.defaultRejectionNote');
+    const note = status === 'rejected' ? window.prompt(t('approvals.rejectionReason'), defaultNote) : window.prompt(t('approvals.approvalNote'), defaultNote);
     if (note === null) return;
     setError(null);
     setBusyId(row.id);
@@ -49,7 +51,7 @@ export function Approvals() {
       await decideApproval(row.id, status, note || defaultNote);
       void approvals.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update approval.');
+      setError(err instanceof Error ? err.message : t('approvals.updateFailed'));
     } finally {
       setBusyId(null);
     }
@@ -58,9 +60,9 @@ export function Approvals() {
   return (
     <section className="page-section">
       <ModuleHeader
-        eyebrow="Approval center"
-        title="Pending approvals for closure, evidence, projects and governance actions"
-        subtitle="Controlled work should not close by itself. Approval decisions are recorded and auditable."
+        eyebrow={t('approvals.eyebrow')}
+        title={t('approvals.title')}
+        subtitle={t('approvals.subtitle')}
       />
 
       {error ? <div className="panel error-panel">{error}</div> : null}
@@ -68,10 +70,10 @@ export function Approvals() {
       {rows.length ? (
         <div className="stats-grid">
           {([
-            ['all', 'All approvals', rows.length, 'normal'],
-            ['pending', 'Pending decisions', rows.filter(row => row.status === 'pending').length, 'warning'],
-            ['approved', 'Approved', rows.filter(row => row.status === 'approved').length, 'success'],
-            ['rejected', 'Rejected', rows.filter(row => row.status === 'rejected').length, 'danger']
+            ['all', t('approvals.all'), rows.length, 'normal'],
+            ['pending', t('approvals.pendingDecisions'), rows.filter(row => row.status === 'pending').length, 'warning'],
+            ['approved', t('status.approved'), rows.filter(row => row.status === 'approved').length, 'success'],
+            ['rejected', t('status.rejected'), rows.filter(row => row.status === 'rejected').length, 'danger']
           ] as const).map(card => (
             <button key={card[0]} type="button" className={`stat-card ${card[3]} ${activeFilter === card[0] ? 'active' : ''}`} onClick={() => setActiveFilter(card[0])}>
               <div className="stat-value">{card[2]}</div>
@@ -84,33 +86,33 @@ export function Approvals() {
       <div className="panel">
         <div className="split-header">
           <div className="panel-header">
-            <h4>Approval queue</h4>
-            <p>Showing {filteredRows.length} of {rows.length} approvals. Card filters do not approve or reject work.</p>
+            <h4>{t('approvals.queue')}</h4>
+            <p>{t('approvals.showing', `${filteredRows.length} of ${rows.length}`).replace('{shown}', String(filteredRows.length)).replace('{total}', String(rows.length))}</p>
           </div>
           <div className="toolbar">
-            <span className="status-badge status-info">Active filter: {humanize(activeFilter)}</span>
-            <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search item, requester, approver, status" />
-            <button className="ghost-button" type="button" onClick={resetApprovalFilters}>Reset filters</button>
+            <span className="status-badge status-info">{t('common.activeFilter')}: {t(`approvals.filter.${activeFilter}`, humanize(activeFilter))}</span>
+            <input value={search} onChange={event => setSearch(event.target.value)} placeholder={t('approvals.searchPlaceholder')} />
+            <button className="ghost-button" type="button" onClick={resetApprovalFilters}>{t('common.resetFilters')}</button>
           </div>
         </div>
-        <DataState loading={approvals.loading} error={approvals.error} empty={!filteredRows.length} emptyTitle="No approvals match the selected filter" emptyMessage="Reset filters or broaden the search to review the approval queue.">
+        <DataState loading={approvals.loading} error={approvals.error} empty={!filteredRows.length} emptyTitle={t('approvals.emptyTitle')} emptyMessage={t('approvals.emptyMessage')}>
           <EntityTable<ApprovalRow>
             rows={filteredRows}
             getRowKey={row => row.id}
             columns={[
-              { key: 'type', header: 'Type', render: row => humanize(row.item_type) },
-              { key: 'item', header: 'Item', render: row => <button className="link-button" type="button" onClick={() => setSelectedApproval(row)}><strong>{row.item_title}</strong></button> },
-              { key: 'requested', header: 'Requested By', render: row => row.requested_by_name || '—' },
-              { key: 'approver', header: 'Approver', render: row => row.approver_name || '—' },
-              { key: 'date', header: 'Requested', render: row => formatDate(row.requested_at) },
-              { key: 'status', header: 'Status', render: row => <StatusBadge status={humanize(row.status)} /> },
+              { key: 'type', header: t('common.type'), render: row => t(`itemType.${row.item_type}`, humanize(row.item_type)) },
+              { key: 'item', header: t('common.item'), render: row => <button className="link-button" type="button" onClick={() => setSelectedApproval(row)}><strong>{row.item_title}</strong></button> },
+              { key: 'requested', header: t('approvals.requestedBy'), render: row => row.requested_by_name || '—' },
+              { key: 'approver', header: t('approvals.approver'), render: row => row.approver_name || '—' },
+              { key: 'date', header: t('approvals.requested'), render: row => formatDate(row.requested_at) },
+              { key: 'status', header: t('common.status'), render: row => <StatusBadge status={t(`status.${row.status}`, humanize(row.status))} /> },
               {
                 key: 'actions',
-                header: 'Decision',
+                header: t('approvals.decision'),
                 render: row => row.status === 'pending' ? (
                   <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => void handleDecision(row, 'approved')}>Approve</button>
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => void handleDecision(row, 'rejected')}>Reject</button>
+                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => void handleDecision(row, 'approved')}>{t('approvals.approve')}</button>
+                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => void handleDecision(row, 'rejected')}>{t('approvals.reject')}</button>
                   </div>
                 ) : '—'
               }
@@ -121,18 +123,18 @@ export function Approvals() {
           <div className="detail-panel">
             <div className="split-header">
               <div>
-                <h4>Selected approval detail</h4>
+                <h4>{t('approvals.selectedDetail')}</h4>
                 <p>{selectedApproval.item_title}</p>
               </div>
-              <button className="ghost-button small" type="button" onClick={() => setSelectedApproval(null)}>Clear selection</button>
+              <button className="ghost-button small" type="button" onClick={() => setSelectedApproval(null)}>{t('common.clearSelection')}</button>
             </div>
             <div className="detail-grid">
-              <div><span>Type</span><strong>{humanize(selectedApproval.item_type)}</strong></div>
-              <div><span>Status</span><strong>{humanize(selectedApproval.status)}</strong></div>
-              <div><span>Requested by</span><strong>{selectedApproval.requested_by_name || '—'}</strong></div>
-              <div><span>Approver</span><strong>{selectedApproval.approver_name || '—'}</strong></div>
-              <div><span>Requested</span><strong>{formatDate(selectedApproval.requested_at)}</strong></div>
-              <div><span>Decision path</span><strong>{selectedApproval.status === 'pending' ? 'Decision must be made through the approval action buttons.' : 'Decision is already recorded.'}</strong></div>
+              <div><span>{t('common.type')}</span><strong>{t(`itemType.${selectedApproval.item_type}`, humanize(selectedApproval.item_type))}</strong></div>
+              <div><span>{t('common.status')}</span><strong>{t(`status.${selectedApproval.status}`, humanize(selectedApproval.status))}</strong></div>
+              <div><span>{t('approvals.requestedBy')}</span><strong>{selectedApproval.requested_by_name || '—'}</strong></div>
+              <div><span>{t('approvals.approver')}</span><strong>{selectedApproval.approver_name || '—'}</strong></div>
+              <div><span>{t('approvals.requested')}</span><strong>{formatDate(selectedApproval.requested_at)}</strong></div>
+              <div><span>{t('approvals.decisionPath')}</span><strong>{selectedApproval.status === 'pending' ? t('approvals.decisionPending') : t('approvals.decisionRecorded')}</strong></div>
             </div>
           </div>
         ) : null}
