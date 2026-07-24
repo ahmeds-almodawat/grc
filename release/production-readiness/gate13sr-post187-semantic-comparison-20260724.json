@@ -1,0 +1,33 @@
+{
+  "schema_version": "gate13sr-post187-semantic-comparison-v1",
+  "contract_version": "gate13sr-canonical-post187-catalog-v1",
+  "hosted_project_ref": "zghsgzrdwbqdrpuxanac",
+  "expected_source": "disposable modern post185 -> exact 186 -> exact corrected 187",
+  "hosted_record_count": 26257,
+  "expected_record_count": 26257,
+  "hosted_catalog_sha256": "923091c6786e115d20b328ace3c191d71024762fae4564a8d2793ec9a0b8deae",
+  "expected_catalog_sha256": "923091c6786e115d20b328ace3c191d71024762fae4564a8d2793ec9a0b8deae",
+  "exact_match": true,
+  "difference_count": 0,
+  "classifications": {
+    "A_environment_only_normalization": 0,
+    "B_normalization_implementation_defect": 0,
+    "C_missing_hosted_object": 0,
+    "D_missing_expected_object": 0,
+    "E_rls_policy_drift": 0,
+    "F_acl_grant_drift": 0,
+    "G_function_signature_definition_drift": 0,
+    "H_index_constraint_drift": 0,
+    "I_lineage_attestation_drift": 0,
+    "J_other_semantic_drift": 0
+  },
+  "precanonical_differences_resolved": {
+    "platform_supabase_admin_default_privileges": 12,
+    "dump_only_statement": 1,
+    "postgresql_deparse_table_definitions": 4,
+    "postgresql_deparse_view_definitions": 2
+  },
+  "security_drift": false,
+  "table_data_compared": false,
+  "production_accessed": false
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": "gate13sr-baseline-v3-canonical-binding-v1",
+  "status": "superseding_release_control",
+  "baseline_v3_sql": "supabase/baselines/grc_platform_baseline_v3_through_187.sql",
+  "baseline_v3_sql_sha256": "a607d9ff445ee991a80fa5b6c212ff8a2e293910ad91919a19947f7c2b5c1857",
+  "baseline_v3_bytes_changed": false,
+  "migrations_001_187_changed": false,
+  "obsolete_post187_catalog_sha256": "5e5f685f3d9af33ed98c6cf8436d98e1c63f0d4bc82b98d0bb45d9d3d4ac36f7",
+  "canonical_post187_catalog_sha256": "923091c6786e115d20b328ace3c191d71024762fae4564a8d2793ec9a0b8deae",
+  "canonical_fingerprint_file_sha256": "bb47d56b07ae3e452dd10a9b65bee432a1b8b96a3a236bd0fa018f8a83bcfe34",
+  "canonical_record_count": 26257,
+  "semantic_difference_count": 0,
+  "binding_rule": "This record supersedes only the obsolete postflight fingerprint expectation. It does not alter or replace baseline V3 SQL, migration history, or the RC2 tag.",
+  "release_effect": "minimal_rc3_required",
+  "production_accessed": false,
+  "staging_mutated_by_gate13sr": false
+}

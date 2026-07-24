@@ -1,0 +1,12 @@
+{
+  "schema_version": "gate13sr-fingerprint-supersession-v1",
+  "status": "superseded_evidence_only",
+  "obsolete_catalog_sha256": "5e5f685f3d9af33ed98c6cf8436d98e1c63f0d4bc82b98d0bb45d9d3d4ac36f7",
+  "obsolete_direct_hosted_sha256": "280a2848439f820780d2d67572b57b490162d86ab330fa297e7673231e566559",
+  "canonical_catalog_sha256": "923091c6786e115d20b328ace3c191d71024762fae4564a8d2793ec9a0b8deae",
+  "reason": "The obsolete hashes used different source/dump and PostgreSQL deparse paths. Canonical hosted and disposable semantic records match exactly.",
+  "historical_files_modified": false,
+  "old_gate13s_freeze_valid_for_deployment": false,
+  "new_release_binding_required": true,
+  "migrations_rerun": false
+}

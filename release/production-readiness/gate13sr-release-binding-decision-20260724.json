@@ -1,0 +1,26 @@
+{
+  "schema_version": "gate13sr-release-binding-decision-v1",
+  "classification": "B_MINIMAL_RC3_REQUIRED",
+  "rc2_runtime_and_database_artifacts_valid": true,
+  "rc2_deployment_binding_valid": false,
+  "reasons": [
+    "The obsolete hash is embedded in immutable baseline V3 SQL metadata and its manifest.",
+    "The obsolete hash is embedded in committed release-control and lineage evidence.",
+    "Canonical fingerprint tooling and adversarial regression tests must be release-bound."
+  ],
+  "rc2_tag_moved_or_modified": false,
+  "migrations_001_187_change_required": false,
+  "product_behavior_change_required": false,
+  "minimal_rc3": {
+    "version": "1.0.0-rc.3",
+    "branch": "release/grc-platform-1.0.0-rc.3",
+    "tag": "v1.0.0-rc.3",
+    "scope": [
+      "canonical fingerprint tooling", "adversarial tests",
+      "fingerprint supersession and canonical binding evidence",
+      "release control and explicit staging plan"
+    ]
+  },
+  "staging_remediation_required": false,
+  "frontend_deployment_authorized": false
+}

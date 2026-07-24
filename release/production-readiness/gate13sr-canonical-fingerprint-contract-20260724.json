@@ -1,0 +1,34 @@
+{
+  "schema_version": "gate13sr-canonical-post187-catalog-v1",
+  "implementation": "scripts/gate13sr-canonical-catalog-fingerprint.mjs",
+  "postgresql_canonicalizer": "17.6",
+  "scope": "application-managed public schema metadata only",
+  "categories": [
+    "schema", "type", "domain", "table", "column", "column_default",
+    "constraint", "index", "view", "materialized_view", "trigger",
+    "function", "procedure", "owner", "rls", "policy", "grant",
+    "revoke", "default_privilege", "comment", "sequence", "other"
+  ],
+  "security_attributes_bound": [
+    "role names", "owner names", "function signatures and definitions",
+    "SECURITY DEFINER/INVOKER", "function search_path", "RLS enabled/forced",
+    "policy command and roles", "policy USING/WITH CHECK", "grants and revokes",
+    "index expressions and predicates", "constraints", "lineage and attestation definitions"
+  ],
+  "allowed_normalization": [
+    "OID-free stable role/owner names from pg_dump", "deterministic record sorting",
+    "CREATE versus CREATE OR REPLACE dump rewrite", "IF NOT EXISTS dump rewrite",
+    "outer whitespace and line endings", "pg_dump placeholder view replaced by final view definition",
+    "Supabase-managed supabase_admin default privileges excluded symmetrically"
+  ],
+  "prohibited_normalization": [
+    "role-name removal", "policy-expression removal", "privilege removal",
+    "function-signature or definition removal", "search-path removal",
+    "RLS/FORCE RLS removal", "index expression/predicate removal",
+    "lineage-marker removal"
+  ],
+  "unresolved_numeric_role_identifier": "fail_closed",
+  "duplicate_stable_identity": "fail_closed_except_pg_dump_placeholder_view_finalization",
+  "canonical_hash": "SHA-256 of LF-delimited sorted semantic record JSON",
+  "contains_table_data": false
+}

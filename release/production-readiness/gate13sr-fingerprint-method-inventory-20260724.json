@@ -1,0 +1,56 @@
+{
+  "schema_version": "gate13sr-fingerprint-method-inventory-v1",
+  "methods": [
+    {
+      "gate": "9",
+      "implementation": "scripts/gate9-normalized-catalog-fingerprint.mjs",
+      "input": "selected catalog-line contract",
+      "normalization": "role/owner identifiers resolved to stable role names; sorted canonical lines",
+      "coverage": "31 then 77 selected security records",
+      "hash": "SHA-256 of LF-joined stable lines"
+    },
+    {
+      "gate": "10",
+      "implementation": "Gate 9R deterministic 77-line contract",
+      "input": "read-only hosted catalog metadata",
+      "normalization": "Gate 9 stable role-name normalization",
+      "coverage": "migration 183-184 affected security objects",
+      "hash": "SHA-256 of canonical lines"
+    },
+    {
+      "gate": "11R",
+      "implementation": "scripts/gate11-immutable-baseline.mjs",
+      "input": "schema-only pg_dump",
+      "normalization": "PG17.6 single parse/dump roundtrip with creation-time default ACL neutralization",
+      "coverage": "complete public-schema DDL statements including ACLs",
+      "hash": "SHA-256 of ordered normalized SQL statements"
+    },
+    {
+      "gate": "13B-R3",
+      "implementation": "scripts/gate11-immutable-baseline.mjs over synthetic fixture/baseline text",
+      "input": "disposable modern and bridge schema sources",
+      "normalization": "source-text normalization without the hosted Supabase CLI dump rewrite/ACL path",
+      "coverage": "8090 source-derived statements",
+      "hash": "5e5f685f3d9af33ed98c6cf8436d98e1c63f0d4bc82b98d0bb45d9d3d4ac36f7"
+    },
+    {
+      "gate": "13S",
+      "implementation": "scripts/gate11-immutable-baseline.mjs over direct linked supabase db dump",
+      "input": "hosted schema-only Supabase CLI dump",
+      "normalization": "quoted/rewritten pg_dump statements including application ACL/default-privilege output",
+      "coverage": "12514 dump-derived statements",
+      "hash": "280a2848439f820780d2d67572b57b490162d86ab330fa297e7673231e566559"
+    },
+    {
+      "gate": "13S-R",
+      "implementation": "scripts/gate13sr-canonical-catalog-fingerprint.mjs",
+      "input": "both hosted and disposable schema-only dumps after one identical PG17.6 replay",
+      "normalization": "stable object identity, role names, deterministic sorting, dump keyword normalization; platform-owned supabase_admin defaults excluded symmetrically",
+      "coverage": "26257 semantic records including columns/defaults, owners, ACLs, RLS, policies, functions, triggers, indexes and lineage objects",
+      "hash": "SHA-256 of sorted record JSON lines"
+    }
+  ],
+  "root_cause": "Gate 13B-R3 hashed source/fixture SQL while Gate 13S hashed Supabase CLI pg_dump output. Quoting, CREATE rewrite, ACL/default-privilege inclusion and one-pass PostgreSQL deparse state differed.",
+  "security_significant_data_removed": false,
+  "production_accessed": false
+}

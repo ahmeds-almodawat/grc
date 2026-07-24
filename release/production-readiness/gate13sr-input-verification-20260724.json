@@ -1,0 +1,39 @@
+{
+  "schema_version": "gate13sr-input-verification-v1",
+  "captured_at_utc": "2026-07-24T20:16:00Z",
+  "repository": {
+    "branch": "release/grc-platform-1.0.0-rc.2",
+    "head": "578315455642a1c1d006eb77d1f2b089cd41e6a6",
+    "remote_branch_head": "578315455642a1c1d006eb77d1f2b089cd41e6a6",
+    "tag": "v1.0.0-rc.2",
+    "tag_commit": "578315455642a1c1d006eb77d1f2b089cd41e6a6",
+    "payload_sha256": "f624115241f8e88b638ae9c1d19bfca7a7c3120907a209309c03d30aaec931bb",
+    "control_sha256": "b4605ab92687e41428ebe6318b992984060f4f57c5322a68ba6ee6e36a85c146",
+    "staged_file_count": 0,
+    "deleted_tracked_file_count": 0,
+    "git_diff_check": "passed"
+  },
+  "artifacts": {
+    "migration_186_sha256": "9a9b57a5b3183e866431ab33fc43d2be277f02a208baaece38d48ddb25539a41",
+    "migration_187_sha256": "d05f77454294228498ffce6a4db9ec2250135926533648d318e382d2f25c30f6",
+    "baseline_v3_sha256": "a607d9ff445ee991a80fa5b6c212ff8a2e293910ad91919a19947f7c2b5c1857"
+  },
+  "staging": {
+    "project_ref": "zghsgzrdwbqdrpuxanac",
+    "transaction_read_only": true,
+    "explicit_rollback": true,
+    "latest_migration": 187,
+    "migration_186_count": 1,
+    "migration_187_count": 1,
+    "migrations_above_187": 0,
+    "lineage": "modern_legacy_lineage",
+    "runtime_enforcement": "enforced",
+    "runtime_state_version": 5,
+    "catalog_attestation_pass": true,
+    "release_lineage_attestation_pass": true,
+    "super_admin": "active / database-auth 1/1 / super_admin / global",
+    "hosted_catalog_mutation_after_gate13s_detected": false
+  },
+  "migrations_rerun": false,
+  "production_accessed": false
+}

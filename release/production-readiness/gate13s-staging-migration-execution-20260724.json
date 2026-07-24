@@ -1,0 +1,30 @@
+{
+  "schema_version": "gate13s-staging-migration-execution-v1",
+  "attempt_id": "GATE13S-MIGRATE-20260724-192749-39493A77",
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "production_project_prohibited": "zbrjjecpsrzposhuarcn",
+  "freeze_aggregate_sha256": "e31e5a38f650a3d043294d4e0402da8b0f408ee7949370d798699c5121a02e04",
+  "authorization_phrase_validated": true,
+  "authorization_phrase_sha256": "a49a5d91e6a04dece66de4fa57febd416c2a5ba322b6de6f601d2aabc4dd9d29",
+  "execution_started_at_utc": "2026-07-24T19:37:50Z",
+  "duration_seconds": 9.7,
+  "exit_code": 0,
+  "attempt_count": 1,
+  "automatic_retry_count": 0,
+  "migration_order": [186, 187],
+  "migration_186": {
+    "sha256": "9a9b57a5b3183e866431ab33fc43d2be277f02a208baaece38d48ddb25539a41",
+    "status": "applied"
+  },
+  "migration_187": {
+    "sha256": "d05f77454294228498ffce6a4db9ec2250135926533648d318e382d2f25c30f6",
+    "status": "applied"
+  },
+  "safe_cli_result": "Finished supabase db push; migrations 186 and 187 applied in the frozen order.",
+  "credentials_exposed": false,
+  "auth_users_modified": false,
+  "business_data_modified": false,
+  "edge_function_deployed": false,
+  "frontend_deployed": false,
+  "production_accessed": false
+}

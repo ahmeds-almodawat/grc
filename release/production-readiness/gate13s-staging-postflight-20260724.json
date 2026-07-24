@@ -1,0 +1,93 @@
+{
+  "schema_version": "gate13s-staging-postflight-v1",
+  "captured_at_utc": "2026-07-24T19:47:46.3996880Z",
+  "project_ref": "zghsgzrdwbqdrpuxanac",
+  "transaction_read_only": true,
+  "migration_state": {
+    "latest_migration": 187,
+    "migration_186_count": 1,
+    "migration_187_count": 1,
+    "migrations_above_187": 0
+  },
+  "runtime": {
+    "schema_version": "174.2-auth-first",
+    "enforcement_state": "enforced",
+    "state_version": 5,
+    "activation_provenance": "edge_authenticated",
+    "legacy_bridge_bound": false,
+    "edge_contract": "patch83u-edge-auth-first-v1",
+    "frontend_contract": "patch83u-frontend-auth-first-v1",
+    "contracts_compatible": true
+  },
+  "designated_super_admin": {
+    "is_active": true,
+    "user_status": "active",
+    "credential_state": "active",
+    "database_credential_version": 1,
+    "auth_credential_version": 1,
+    "role": "super_admin",
+    "scope": "global",
+    "session_count": 0,
+    "unrevoked_refresh_token_count": 0,
+    "pending_operation": false,
+    "reconciliation_auth_changed": false
+  },
+  "safe_counts": {
+    "eligible_super_admin_count": 1,
+    "invalid_active_role_count": 0,
+    "pending_operation_count": 0,
+    "recovery_or_reconciliation_count": 0,
+    "total_session_count": 0,
+    "total_unrevoked_refresh_token_count": 0
+  },
+  "lineage": {
+    "classification": "modern_legacy_lineage",
+    "attestation_version": "gate13br3-release-lineage-v2",
+    "overall_pass": true,
+    "patch83tu_attestation_pass": true,
+    "mandatory_super_admin_password_rotation": "not_applicable",
+    "bridge_row_count": 0
+  },
+  "migration_events": [
+    {
+      "migration_version": 186,
+      "event_type": "modern_role_contract_validation",
+      "status": "completed",
+      "affected_count": 0
+    },
+    {
+      "migration_version": 187,
+      "event_type": "post187_catalog_attestation",
+      "status": "completed",
+      "affected_count": 0
+    }
+  ],
+  "security_contract": {
+    "lineage_attestation_public_execute": false,
+    "lineage_attestation_anon_execute": false,
+    "lineage_attestation_authenticated_execute": false,
+    "lineage_attestation_service_role_execute": true,
+    "release_event_rls_enabled_and_forced": true,
+    "legacy_bridge_rls_enabled_and_forced": true
+  },
+  "security_advisor": {
+    "critical": 0,
+    "high": 0,
+    "warning": 3,
+    "informational": 20,
+    "new_expected_informational": 2,
+    "new_expected_tables": [
+      "public.patch83b_release_migration_events",
+      "public.patch83b_legacy_runtime_bridges"
+    ]
+  },
+  "catalog_fingerprint": {
+    "expected_sha256": "5e5f685f3d9af33ed98c6cf8436d98e1c63f0d4bc82b98d0bb45d9d3d4ac36f7",
+    "actual_sha256": "280a2848439f820780d2d67572b57b490162d86ab330fa297e7673231e566559",
+    "exact_match": false,
+    "classification": "normalization_contract_mismatch",
+    "gate_result": "blocked"
+  },
+  "hosted_frontend_deployment_authorized": false,
+  "production_accessed": false
+}
