@@ -1,0 +1,27 @@
+{
+  "schema_version": "gate13br3-baseline-v3-validation-v1",
+  "status": "passed",
+  "baseline": {
+    "path": "supabase/baselines/grc_platform_baseline_v3_through_187.sql",
+    "sha256": "a607d9ff445ee991a80fa5b6c212ff8a2e293910ad91919a19947f7c2b5c1857",
+    "bytes": 4547781,
+    "manifest_path": "supabase/baselines/grc_platform_baseline_v3_through_187.manifest.json",
+    "manifest_sha256": "c37cfdd8ba32ed9d31f83049d46b0c4a0916e7636d2804a86d41404136cc8831",
+    "release_status": "release_approved"
+  },
+  "bootstrap": {
+    "empty_application_schema": true,
+    "platform_prerequisites_only": true,
+    "result": "passed",
+    "fail_closed_runtime_seed": true,
+    "real_admin_created": false,
+    "sensitive_data": false
+  },
+  "catalog": {
+    "expected_sha256": "5e5f685f3d9af33ed98c6cf8436d98e1c63f0d4bc82b98d0bb45d9d3d4ac36f7",
+    "actual_sha256": "5e5f685f3d9af33ed98c6cf8436d98e1c63f0d4bc82b98d0bb45d9d3d4ac36f7",
+    "exact_match": true,
+    "canonical_statements": 8090
+  },
+  "first_future_migration": 188
+}

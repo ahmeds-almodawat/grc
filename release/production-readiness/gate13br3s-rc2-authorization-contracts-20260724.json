@@ -1,0 +1,46 @@
+{
+  "schema_version": "gate13br3s-rc2-authorization-contract-v1",
+  "status": "awaiting_revised_authorization",
+  "exact_phrase": "AUTHORIZE GATE 13B-R3S GIT RC2 1.0.0-RC.2 PAYLOAD F624115241F8E88B638AE9C1D19BFCA7A7C3120907A209309C03D30AAEC931BB CONTROL B4605AB92687E41428EBE6318B992984060F4F57C5322A68BA6EE6E36A85C146 PATHS 66 BASELINE A607D9FF445EE991A80FA5B6C212FF8A2E293910AD91919A19947F7C2B5C1857 MIGRATION187 D05F77454294228498FFCE6A4DB9EC2250135926533648D318E382D2F25C30F6",
+  "phrase_sha256": "19bd08c3593b17e54581e66589e3acacc5fb29a784541caeb13e7a2cefcf224d",
+  "payload_aggregate_sha256": "f624115241f8e88b638ae9c1d19bfca7a7c3120907a209309c03d30aaec931bb",
+  "control_manifest": {
+    "format": "gate13br3s-control-manifest-v1",
+    "canonicalization": "UTF-8 JSON.stringify({format,files}) plus one LF; files sorted by path and populated from stage-0 Git blobs",
+    "input_file_count": 16,
+    "sha256": "b4605ab92687e41428ebe6318b992984060f4f57c5322a68ba6ee6e36a85c146",
+    "authorization_files_excluded_to_avoid_self_reference": true,
+    "input_paths": [
+      "release/production-readiness/gate13br3-rc2-authorization-contracts-20260724.json",
+      "release/production-readiness/gate13br3-rc2-authorization-contracts-20260724.md",
+      "release/production-readiness/gate13br3-rc2-candidate-content-manifest-20260724.json",
+      "release/production-readiness/gate13br3-rc2-candidate-content-manifest-20260724.md",
+      "release/production-readiness/gate13br3-rc2-explicit-staging-plan-20260724.md",
+      "release/production-readiness/gate13br3-rc2-explicit-staging-plan-20260724.ps1",
+      "release/production-readiness/gate13br3-rc2-release-file-manifest-20260724.json",
+      "release/production-readiness/gate13br3-rc2-release-file-manifest-20260724.md",
+      "release/production-readiness/gate13br3s-git-normalization-analysis-20260724.json",
+      "release/production-readiness/gate13br3s-git-normalization-analysis-20260724.md",
+      "release/production-readiness/gate13br3s-git-normalized-rc2-manifest-20260724.json",
+      "release/production-readiness/gate13br3s-git-normalized-rc2-manifest-20260724.md",
+      "release/production-readiness/gate13br3s-git-normalized-rc2-validation-20260724.json",
+      "release/production-readiness/gate13br3s-git-normalized-rc2-validation-20260724.md",
+      "release/production-readiness/gate13br3s-rc2-release-file-manifest-20260724.json",
+      "release/production-readiness/gate13br3s-rc2-release-file-manifest-20260724.md"
+    ]
+  },
+  "final_staged_path_count": 66,
+  "baseline_v3_sha256": "a607d9ff445ee991a80fa5b6c212ff8a2e293910ad91919a19947f7c2b5c1857",
+  "migration_187_sha256": "d05f77454294228498ffce6a4db9ec2250135926533648d318e382d2f25c30f6",
+  "authorizes": [
+    "commit the exact currently staged 66-path RC2 payload with the approved commit message",
+    "create annotated tag v1.0.0-rc.2",
+    "push the RC2 branch and tag"
+  ],
+  "does_not_authorize": [
+    "hosted deployment",
+    "clone creation",
+    "staging or production access or write",
+    "credential action"
+  ]
+}

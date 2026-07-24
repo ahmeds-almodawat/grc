@@ -1,0 +1,24 @@
+{
+  "schema_version": "gate13br3-final-clone-rehearsal-plan-v1",
+  "status": "prepared_not_authorized",
+  "prerequisites": [
+    "RC2 committed and tagged",
+    "newest production backup",
+    "new isolated clone",
+    "fresh freeze and one-attempt reservation"
+  ],
+  "sequence": [
+    "restore newest backup",
+    "verify fidelity",
+    "reconcile collation if required",
+    "apply 173-180",
+    "apply 186",
+    "apply corrected 187",
+    "verify pending enforced transition",
+    "manually complete mandatory Super Admin rotation",
+    "verify active 1/1 and zero sessions",
+    "run catalog/Security Advisor/authorization/fingerprint postflight",
+    "delete clone after evidence review"
+  ],
+  "writes_to_current_production_or_staging": false
+}

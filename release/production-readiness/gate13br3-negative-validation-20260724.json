@@ -1,0 +1,82 @@
+{
+  "schema_version": "gate13br3-negative-validation-v1",
+  "status": "passed",
+  "cases_total": 17,
+  "cases_passed": 17,
+  "cases": [
+    {
+      "name": "zero candidate",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "multiple candidates",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "wrong role/scope",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "inactive lifecycle",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "wrong credential state",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "mismatched DB/Auth versions",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "active session",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "unrevoked refresh",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "pending operation",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "recovery state",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "partial 181",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "partial 182-185",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "wrong runtime",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "invalid active role",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "mixed history",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "fabricated governance event",
+      "result": "failed_closed_as_expected"
+    },
+    {
+      "name": "skip 186",
+      "result": "failed_closed_as_expected"
+    }
+  ],
+  "additional_static_contracts": [
+    "normal Admin before rotation denied",
+    "privileged RPC before rotation denied",
+    "181-185 after 187 refused",
+    "altered 187 hash refused"
+  ]
+}

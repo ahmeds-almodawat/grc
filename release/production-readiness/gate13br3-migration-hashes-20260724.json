@@ -1,0 +1,20 @@
+{
+  "schema_version": "gate13b-migration-hashes-v1",
+  "release_manifest_sha256": "c37cfdd8ba32ed9d31f83049d46b0c4a0916e7636d2804a86d41404136cc8831",
+  "normalized_target_catalog_sha256": "5e5f685f3d9af33ed98c6cf8436d98e1c63f0d4bc82b98d0bb45d9d3d4ac36f7",
+  "migrations": [
+    {
+      "version": 186,
+      "path": "supabase/migrations/186_legacy_role_scope_reconciliation.sql",
+      "sha256": "9a9b57a5b3183e866431ab33fc43d2be277f02a208baaece38d48ddb25539a41",
+      "bytes": 9978
+    },
+    {
+      "version": 187,
+      "path": "supabase/migrations/187_legacy_runtime_and_post185_reconciliation.sql",
+      "sha256": "d05f77454294228498ffce6a4db9ec2250135926533648d318e382d2f25c30f6",
+      "bytes": 97892
+    }
+  ],
+  "migration_187_old_sha256": "f8dc1cd44f668d2f03e35d126054a44abf5674d655282b507d1b3bb82b7af055"
+}

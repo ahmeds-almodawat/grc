@@ -1,0 +1,66 @@
+{
+  "schema_version": "gate13br3-control-traceability-v1",
+  "coverage_percent": 100,
+  "controls": [
+    {
+      "source": "181",
+      "requirement": "catalog attestation and exact RPC/ACL/search-path binding",
+      "implementation": "embedded 181 section; attestation v2",
+      "sql_test": "tests/sql/gate7_catalog_attestation_adversarial.sql",
+      "typescript_test": "tests/unit/gate13bLegacyBridgeContract.test.ts",
+      "modern": "validate/no mutation",
+      "legacy": "install/validate",
+      "fail_closed": true
+    },
+    {
+      "source": "182",
+      "requirement": "18 legacy tables RLS/FORCE RLS and browser privilege removal",
+      "implementation": "embedded 182 section",
+      "sql_test": "tests/sql/gate5_forward_migration_governance.sql",
+      "typescript_test": "tests/unit/gate13bLegacyBridgeContract.test.ts",
+      "modern": "validate/no mutation",
+      "legacy": "install/validate",
+      "fail_closed": true
+    },
+    {
+      "source": "183",
+      "requirement": "remaining public-table RLS closure",
+      "implementation": "embedded 183 section",
+      "sql_test": "tests/sql/gate13b_post187_governance.sql",
+      "typescript_test": "tests/unit/gate13bLegacyBridgeContract.test.ts",
+      "modern": "validate/no mutation",
+      "legacy": "install/validate",
+      "fail_closed": true
+    },
+    {
+      "source": "184",
+      "requirement": "function search-path and ACL hardening",
+      "implementation": "embedded 184 section",
+      "sql_test": "tests/sql/gate13b_post187_governance.sql",
+      "typescript_test": "tests/unit/gate13bLegacyBridgeContract.test.ts",
+      "modern": "validate/no mutation",
+      "legacy": "install/validate",
+      "fail_closed": true
+    },
+    {
+      "source": "185",
+      "requirement": "anonymous pilot policy removal",
+      "implementation": "embedded 185 section",
+      "sql_test": "tests/sql/gate13b_post187_governance.sql",
+      "typescript_test": "tests/unit/gate13bLegacyBridgeContract.test.ts",
+      "modern": "validate/no mutation",
+      "legacy": "install/validate",
+      "fail_closed": true
+    },
+    {
+      "source": "Patch83U",
+      "requirement": "pending credential denies normal access and permits forced change",
+      "implementation": "transitional attestation and marker",
+      "sql_test": "tests/sql/gate13br3_forced_rotation_flow.sql",
+      "typescript_test": "tests/unit/gate13bLegacyBridgeContract.test.ts",
+      "modern": "validate/no mutation",
+      "legacy": "install/validate",
+      "fail_closed": true
+    }
+  ]
+}

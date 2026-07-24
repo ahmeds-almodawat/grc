@@ -1,0 +1,49 @@
+{
+  "schema_version": "gate13br3-baseline-manifest-v3",
+  "baseline_id": "grc-platform-post187-v3",
+  "baseline_version": "3.0.0",
+  "filename": "supabase/baselines/grc_platform_baseline_v3_through_187.sql",
+  "release_status": "release_approved",
+  "immutable": true,
+  "candidate_only": false,
+  "approved_at": "2026-07-24T00:00:00.000Z",
+  "sql_sha256": "a607d9ff445ee991a80fa5b6c212ff8a2e293910ad91919a19947f7c2b5c1857",
+  "sql_bytes": 4547781,
+  "normalized_target_catalog_sha256": "5e5f685f3d9af33ed98c6cf8436d98e1c63f0d4bc82b98d0bb45d9d3d4ac36f7",
+  "normalized_expected_fingerprint_file_sha256": "9488deebcebb9ead770ba56d5e768ac4e0c1a3ae8c24faf16d544405a80ed5c1",
+  "source_staging_classification": "disposable_dual_lineage_convergence; no hosted source data",
+  "source_migration_ceiling": 187,
+  "included_schemas": ["public"],
+  "excluded_schemas": [
+    "auth",
+    "storage",
+    "realtime",
+    "graphql",
+    "graphql_public",
+    "vault",
+    "supabase_functions",
+    "pg_catalog",
+    "information_schema"
+  ],
+  "extension_prerequisites": ["pgcrypto", "uuid-ossp"],
+  "seed_policy": "one fail-closed structural patch83u_runtime_control row; no real administrator, business, user, tenant, session, credential, or environment data",
+  "first_admin_bootstrap_contract": "separately authorized protected provisioning followed by mandatory credential establishment; baseline creates no identity",
+  "first_future_migration_number": 188,
+  "deployment_lineage_contract": "verified_three_lineages",
+  "supported_lineages": [
+    "modern_legacy_lineage",
+    "production_bridge_lineage",
+    "baseline_v3_lineage"
+  ],
+  "toolchain": {
+    "postgresql": "17.6",
+    "node": "24.12.0"
+  },
+  "blocking_findings": [],
+  "validation_evidence_paths": [
+    "release/production-readiness/gate13br3-dual-lineage-validation-20260724.json",
+    "release/production-readiness/gate13br3-forced-rotation-validation-20260724.json",
+    "release/production-readiness/gate13br3-negative-validation-20260724.json",
+    "release/production-readiness/gate13br3-baseline-v3-validation-20260724.json"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": "gate13br3-validation-results-v1",
+  "status": "passed",
+  "unit": {
+    "passed": 1208,
+    "failed": 0,
+    "files": 45
+  },
+  "focused_lineage": {
+    "passed": 18,
+    "failed": 0
+  },
+  "sql_governance": "passed",
+  "dual_lineage": "passed",
+  "negative_cases": "17/17",
+  "baseline_v3_bootstrap": "passed",
+  "typecheck": "passed",
+  "deno_edge_check": "passed",
+  "production_build": "passed",
+  "playwright_patch83u_serial": "25/25 passed",
+  "captcha": "7/7 included",
+  "exact_clean_candidate": {
+    "unit": "1208/1208 passed",
+    "focused_lineage": "18/18 passed",
+    "typecheck": "passed",
+    "deno_edge_check": "passed",
+    "production_build": "passed",
+    "playwright_patch83u_serial": "25/25 passed"
+  },
+  "secret_scan": "passed; no real credential in RC2 overlay or compiled output",
+  "project_reference_scan": "passed; production ref appears only in explicit refusal controls/evidence, never compiled output",
+  "json_parse": "487/487 candidate JSON files parsed, including final control-plane evidence and lockfile",
+  "skip_only_scan": "0 occurrences",
+  "npm_audit": "0 vulnerabilities",
+  "git_diff_check": "passed"
+}

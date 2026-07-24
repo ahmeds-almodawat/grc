@@ -1,0 +1,10 @@
+{
+  "schema_version": "gate13br3-rc1-supersession-v1",
+  "rc1_commit": "87074faa9476a6d158199426871167ae30cd5a55",
+  "rc1_tag": "v1.0.0-rc.1",
+  "preserved": true,
+  "production_database_compatibility": "superseded_by_rc2",
+  "reason": "old migration 187 rejected truthful legacy pending-rotation state",
+  "hosted_staging_acceptance": "historically valid and preserved",
+  "rc2_required": true
+}

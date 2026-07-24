@@ -1,0 +1,49 @@
+{
+  "schema_version": "gate13br3s-git-normalization-analysis-v1",
+  "status": "passed",
+  "repository": "C:/Users/molte/Downloads/grc-control-center",
+  "branch": "release/grc-platform-1.0.0-rc.2",
+  "head": "87074faa9476a6d158199426871167ae30cd5a55",
+  "git_configuration": {
+    "core_autocrlf": true,
+    "core_eol": "unset",
+    "core_safecrlf": "unset",
+    "explicit_attributes": false
+  },
+  "comparisons": [
+    {
+      "path": "package-lock.json",
+      "working_bytes": 122692,
+      "working_sha256": "337746a1ee2e06e596a7092a8e77d5918ff84784bf976560480af5f23f538c22",
+      "working_crlf_count": 3446,
+      "git_blob_bytes": 119246,
+      "git_blob_sha256": "1c71c6b1be43f55a67009452db0629e696eaa61ea67f8c150a98930cdf411dd8",
+      "git_object_id": "aea1662eb079fb20857f7b180fb4ea9a5733a861",
+      "git_blob_crlf_count": 0,
+      "single_trailing_lf": true,
+      "normalization_only": true,
+      "semantic_json_equal": true,
+      "lockfile_version": 3,
+      "dependency_versions_changed": false
+    },
+    {
+      "path": "release/production-readiness/gate13br3-expected-post187-catalog-fingerprint-20260724.sha256",
+      "working_bytes": 128,
+      "working_sha256": "762090be1fee86acc28919c100481cace22d6b68fbc8326318cdef4d0b4f5262",
+      "working_crlf_count": 1,
+      "git_blob_bytes": 127,
+      "git_blob_sha256": "ffd0d5fbaf61bf20fd6c57f80f4c0038b3a5c3ef6846cb1fb4cd59ba585e5928",
+      "git_object_id": "a94b77dce0fa92e1f8e27d5b45f272e92c3c3068",
+      "git_blob_crlf_count": 0,
+      "single_trailing_lf": true,
+      "normalization_only": true,
+      "text_value_equal": true
+    }
+  ],
+  "unexpected_transformations": 0,
+  "migrations_001_185_changed": 0,
+  "migration_186_sha256": "9a9b57a5b3183e866431ab33fc43d2be277f02a208baaece38d48ddb25539a41",
+  "migration_187_sha256": "d05f77454294228498ffce6a4db9ec2250135926533648d318e382d2f25c30f6",
+  "baseline_v3_sha256": "a607d9ff445ee991a80fa5b6c212ff8a2e293910ad91919a19947f7c2b5c1857",
+  "hosted_access": false
+}

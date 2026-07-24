@@ -1,0 +1,26 @@
+{
+  "schema_version": "gate13br3-input-verification-v1",
+  "status": "passed",
+  "captured_at": "2026-07-24T19:30:00+03:00",
+  "identity": {
+    "repository": "grc-control-center",
+    "branch": "release/grc-platform-1.0.0-rc.2",
+    "head": "87074faa9476a6d158199426871167ae30cd5a55",
+    "rc1_commit": "87074faa9476a6d158199426871167ae30cd5a55"
+  },
+  "rc1_tag_binding": true,
+  "staged_files": 0,
+  "deleted_tracked_files": 0,
+  "merge_rebase_cherry_pick_in_progress": false,
+  "immutable_inputs": {
+    "migrations_001_186_unchanged": true,
+    "migration_186": {
+      "path": "supabase/migrations/186_legacy_role_scope_reconciliation.sql",
+      "sha256": "9a9b57a5b3183e866431ab33fc43d2be277f02a208baaece38d48ddb25539a41",
+      "bytes": 9978
+    },
+    "baseline_v2_sha256": "6b1b0f814bf7d8414ace4303912f303f1a71a1e8913489db77a30ddd94c7846a",
+    "baseline_v2_manifest_sha256": "052f81c85ce4de2e86a91ef21d13e7ea0071c2d97b8a09f2bbcf7b97505aedac"
+  },
+  "hosted_write": false
+}

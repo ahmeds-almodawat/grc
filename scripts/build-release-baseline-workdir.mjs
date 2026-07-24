@@ -38,8 +38,10 @@ export function buildReleaseBaselineWorkdir(options) {
   const manifestText = readFileSync(manifestPath, 'utf8');
   const manifest = JSON.parse(manifestText);
   const baselineHash = sha256(baseline);
-  if (manifest.sql_sha256 !== baselineHash || manifest.source_migration_ceiling !== 185
-      || manifest.first_future_migration_number !== 186) {
+  const ceiling = Number(manifest.source_migration_ceiling);
+  const firstFuture = Number(manifest.first_future_migration_number);
+  if (manifest.sql_sha256 !== baselineHash || ![185, 187].includes(ceiling)
+      || firstFuture !== ceiling + 1) {
     throw new Error('GATE11R_BASELINE_MANIFEST_BINDING_FAILED');
   }
   if (manifest.release_status !== 'release_approved' && !options.allowCandidate) {
@@ -56,28 +58,32 @@ export function buildReleaseBaselineWorkdir(options) {
   const migrationsDir = join(supabaseDir, 'migrations');
   mkdirSync(migrationsDir, { recursive: true });
   writeFileSync(join(supabaseDir, 'config.toml'), config, 'utf8');
-  copyFileSync(baselinePath, join(migrationsDir, '185_grc_platform_baseline_v2.sql'));
+  const baselineVersion = ceiling === 187 ? 3 : 2;
+  copyFileSync(baselinePath, join(migrationsDir, `${ceiling}_grc_platform_baseline_v${baselineVersion}.sql`));
 
   const copiedFuture = [];
   if (options.futureMigrationsDir) {
     for (const name of readdirSync(options.futureMigrationsDir).sort()) {
       const match = name.match(/^(\d+).*\.sql$/i);
-      if (!match || Number(match[1]) < 186) continue;
+      if (!match || Number(match[1]) < firstFuture) continue;
       copyFileSync(join(options.futureMigrationsDir, name), join(migrationsDir, name));
       copiedFuture.push(name);
     }
   }
   const names = readdirSync(migrationsDir).sort();
-  if (names.some((name) => Number(name.match(/^(\d+)/)?.[1]) < 185)
-      || names.filter((name) => name.startsWith('185_')).length !== 1) {
+  if (names.some((name) => Number(name.match(/^(\d+)/)?.[1]) < ceiling)
+      || names.filter((name) => name.startsWith(`${ceiling}_`)).length !== 1) {
     throw new Error('GATE11R_HISTORICAL_MIGRATION_LEAK_IN_BASELINE_WORKDIR');
   }
 
   const lineage = {
-    schema_version: 'gate11r-release-baseline-workdir-v1',
+    schema_version: baselineVersion === 3
+      ? 'gate13br3-release-baseline-workdir-v1'
+      : 'gate11r-release-baseline-workdir-v1',
     project_id: options.projectId,
-    lineage: 'baseline_v2_lineage',
-    baseline_migration_version: '185',
+    lineage: baselineVersion === 3 ? 'baseline_v3_lineage' : 'baseline_v2_lineage',
+    baseline_migration_version: String(ceiling),
+    first_future_migration: firstFuture,
     baseline_sql_sha256: baselineHash,
     baseline_manifest_sha256: sha256(Buffer.from(manifestText, 'utf8')),
     normalized_catalog_sha256: manifest.normalized_target_catalog_sha256,

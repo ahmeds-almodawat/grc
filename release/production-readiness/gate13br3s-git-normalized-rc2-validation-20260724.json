@@ -1,0 +1,66 @@
+{
+  "schema_version": "gate13br3s-git-normalized-rc2-validation-v1",
+  "status": "passed",
+  "candidate": {
+    "source": "exact Git index export with core.autocrlf disabled for export",
+    "files": 2621,
+    "payload_files": 2613,
+    "payload_bytes": 36477927,
+    "payload_aggregate_sha256": "f624115241f8e88b638ae9c1d19bfca7a7c3120907a209309c03d30aaec931bb",
+    "unexpected_blob_transformations": 0,
+    "forbidden_environment_files": 0,
+    "runtime_checkpoint_files": 0
+  },
+  "validation": {
+    "npm_ci": "passed",
+    "unit": {
+      "passed": 1208,
+      "failed": 0,
+      "pending": 0
+    },
+    "focused_legacy_bridge": {
+      "passed": 10,
+      "failed": 0
+    },
+    "sql_governance_adversarial": "passed in disposable PostgreSQL 17.6 Supabase-compatible container",
+    "modern_lineage_186_187": "passed",
+    "bridge_lineage_186_187": "passed",
+    "forced_rotation_flow": "passed; final active version 1/1, sessions 0, refresh tokens 0",
+    "baseline_v3_bootstrap": "passed; disabled/state 0 with zero profiles and roles",
+    "migration_lineage_contracts": "passed",
+    "typescript": "passed",
+    "deno_edge_check": "passed",
+    "production_build": "passed",
+    "playwright_patch83u_serial": {
+      "passed": 25,
+      "failed": 0,
+      "captcha_passed": 7
+    },
+    "npm_audit": {
+      "critical": 0,
+      "high": 0,
+      "moderate": 0,
+      "low": 0,
+      "total": 0
+    },
+    "json_parse": "487/487 passed",
+    "skip_only_scan": 0,
+    "conflict_marker_scan": 0,
+    "real_secret_hits": 0,
+    "synthetic_secret_rejection_fixtures": 2,
+    "compiled_production_project_references": 0,
+    "compiled_staging_project_references": 0,
+    "git_diff_check": "passed"
+  },
+  "integrity": {
+    "migrations_001_185_changed": 0,
+    "migration_186_sha256": "9a9b57a5b3183e866431ab33fc43d2be277f02a208baaece38d48ddb25539a41",
+    "migration_187_sha256": "d05f77454294228498ffce6a4db9ec2250135926533648d318e382d2f25c30f6",
+    "baseline_v3_sha256": "a607d9ff445ee991a80fa5b6c212ff8a2e293910ad91919a19947f7c2b5c1857"
+  },
+  "network": {
+    "staging_access": false,
+    "production_access": false,
+    "hosted_mutation": false
+  }
+}

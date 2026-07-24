@@ -1,0 +1,45 @@
+{
+  "schema_version": "gate13br3-transitional-super-admin-contract-v1",
+  "status": "approved",
+  "candidate_count": 1,
+  "designated_super_admin_count": 1,
+  "profile_lifecycle": "active",
+  "role": "super_admin",
+  "scope": "global",
+  "credential_state": "existing_password_rotation_pending",
+  "database_credential_version": 0,
+  "auth_credential_version": 0,
+  "pending_operations": 0,
+  "recovery_or_reconciliation": false,
+  "active_sessions": 0,
+  "unrevoked_refresh_tokens": 0,
+  "migration_186_reconciliation": "passed",
+  "runtime_prestate": {
+    "enforcement_state": "disabled",
+    "state_version": 0
+  },
+  "allowed": [
+    "forced-password-change route rendering",
+    "required password-change action",
+    "stable finalizer",
+    "supported global session revocation"
+  ],
+  "denied": [
+    "normal Admin application",
+    "User Management",
+    "Access Control",
+    "provisioning",
+    "imports",
+    "other privileged runtime actions",
+    "business data"
+  ],
+  "final": {
+    "credential_state": "active",
+    "database_credential_version": 1,
+    "auth_credential_version": 1,
+    "sessions": 0,
+    "unrevoked_refresh_tokens": 0,
+    "runtime": "enforced",
+    "runtime_state_version": 5
+  }
+}

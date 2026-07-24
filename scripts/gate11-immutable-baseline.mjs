@@ -17,7 +17,7 @@ const SESSION_PREFIXES = [
 ];
 
 const OWNER_STATEMENT = /^ALTER\s+(?:SCHEMA|TYPE|TABLE|FUNCTION|PROCEDURE|VIEW|MATERIALIZED\s+VIEW|SEQUENCE)\s+[\s\S]+?\s+OWNER\s+TO\s+[^;]+;$/i;
-const PUBLIC_SCHEMA_SCAFFOLD = /^(?:CREATE SCHEMA IF NOT EXISTS "public"|COMMENT ON SCHEMA "public")/i;
+const PUBLIC_SCHEMA_SCAFFOLD = /^(?:CREATE SCHEMA (?:IF NOT EXISTS )?"?public"?|COMMENT ON SCHEMA "?public"?)/i;
 
 export function sha256(value) {
   return createHash('sha256').update(value, 'utf8').digest('hex');
@@ -25,6 +25,13 @@ export function sha256(value) {
 
 export function normalizeText(value) {
   return value.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').replace(/[ \t]+$/gm, '').trim() + '\n';
+}
+
+export function normalizeSchemaDump(value) {
+  // PostgreSQL 17 emits a fresh random client-side \restrict token for every
+  // pg_dump invocation. It is not catalog state and must never influence an
+  // immutable catalog fingerprint or baseline payload.
+  return normalizeText(value).replace(/^\\(?:un)?restrict\s+[^\n]+\n/gm, '');
 }
 
 export function splitSqlStatements(sql) {
@@ -130,10 +137,10 @@ export function classifyStatement(statement) {
 }
 
 export function buildCatalogFingerprint(rawSql) {
-  const normalized = normalizeText(rawSql);
+  const normalized = normalizeSchemaDump(rawSql);
   const statements = splitSqlStatements(normalized)
     .filter(isCatalogStatement)
-    .map((statement) => normalizeText(statement).trim());
+    .map((statement) => normalizeCatalogStatement(statement));
   const records = statements.map((statement, ordinal) => ({
     ordinal: ordinal + 1,
     kind: classifyStatement(statement),
@@ -155,8 +162,28 @@ export function buildCatalogFingerprint(rawSql) {
   };
 }
 
+function normalizeCatalogStatement(statement) {
+  const normalized = normalizeText(statement).trim();
+  // PostgreSQL 17 may flatten associative AND nodes after a schema-only dump is
+  // replayed. These two generated identifier checks are semantically identical
+  // before and after replay, but pg_dump renders one additional pair of
+  // parentheses on the first pass. Canonicalize only these named constraints so
+  // the catalog fingerprint is stable without weakening expression comparison
+  // for any authorization, RLS, ACL, or general CHECK contract.
+  const identifierChecks = [
+    ['patch83b_legacy_runtime_bridges_bridge_id_check', 'bridge_id'],
+    ['patch83b_release_migration_events_event_key_check', 'event_key'],
+  ];
+  return identifierChecks.reduce((sql, [constraint, column]) => {
+    const line = `    CONSTRAINT ${constraint} CHECK (((length(${column}) >= 1) AND (length(${column}) <= 160) AND (${column} ~ '^[a-z0-9:._-]+$'::text)))`;
+    const pattern = new RegExp(`^\\s*CONSTRAINT ${constraint} CHECK .*$`, 'm');
+    return sql.replace(pattern, line);
+  }, normalized);
+}
+
 export function countCreatedObjectIdentities(rawSql) {
-  const statements = splitSqlStatements(normalizeText(rawSql));
+  const statements = splitSqlStatements(normalizeSchemaDump(rawSql));
+  const qualifiedPublicName = String.raw`(?:"public"|public)\.(?:"[^"]+"|[A-Za-z_][A-Za-z0-9_$]*)`;
   const identities = {
     table: new Set(),
     view: new Set(),
@@ -165,15 +192,15 @@ export function countCreatedObjectIdentities(rawSql) {
   };
   for (const statement of statements) {
     const head = statementHead(statement).replace(/\s+/g, ' ');
-    let match = head.match(/^CREATE TABLE (?:IF NOT EXISTS )?("public"\."[^"]+")/i);
+    let match = head.match(new RegExp(`^CREATE TABLE (?:IF NOT EXISTS )?(${qualifiedPublicName})`, 'i'));
     if (match) { identities.table.add(match[1]); continue; }
-    match = head.match(/^CREATE OR REPLACE VIEW ("public"\."[^"]+")/i);
+    match = head.match(new RegExp(`^CREATE (?:OR REPLACE )?VIEW (${qualifiedPublicName})`, 'i'));
     if (match) { identities.view.add(match[1]); continue; }
-    match = head.match(/^CREATE MATERIALIZED VIEW ("public"\."[^"]+")/i);
+    match = head.match(new RegExp(`^CREATE MATERIALIZED VIEW (${qualifiedPublicName})`, 'i'));
     if (match) { identities.view.add(match[1]); continue; }
-    match = head.match(/^CREATE OR REPLACE FUNCTION ("public"\."[^"]+"\s*\([^)]*\))/i);
+    match = head.match(new RegExp(`^CREATE (?:OR REPLACE )?FUNCTION (${qualifiedPublicName}\\s*\\([^)]*\\))`, 'i'));
     if (match) { identities.function.add(match[1]); continue; }
-    match = head.match(/^CREATE POLICY ("[^"]+") ON ("public"\."[^"]+")/i);
+    match = head.match(new RegExp(`^CREATE POLICY ("[^"]+"|[A-Za-z_][A-Za-z0-9_$]*) ON (${qualifiedPublicName})`, 'i'));
     if (match) identities.policy.add(`${match[2]}:${match[1]}`);
   }
   return Object.fromEntries(Object.entries(identities).map(([kind, values]) => [kind, values.size]));
@@ -206,7 +233,7 @@ export function buildBaseline(rawSql, metadata) {
   const baselineVersion = metadata.baselineVersion ?? 1;
   const migrationCeiling = metadata.migrationCeiling ?? 184;
   const firstFutureMigration = metadata.firstFutureMigration ?? (migrationCeiling + 1);
-  const source = normalizeText(rawSql);
+  const source = normalizeSchemaDump(rawSql);
   const bodyStatements = splitSqlStatements(source).filter((statement) => {
     const head = statementHead(statement);
     if (OWNER_STATEMENT.test(head)) return false;

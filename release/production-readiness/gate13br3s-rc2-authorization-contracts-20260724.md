@@ -1,0 +1,7 @@
+# Gate 13B-R3S revised RC2 authorization contract
+
+Exact future phrase:
+
+`AUTHORIZE GATE 13B-R3S GIT RC2 1.0.0-RC.2 PAYLOAD F624115241F8E88B638AE9C1D19BFCA7A7C3120907A209309C03D30AAEC931BB CONTROL B4605AB92687E41428EBE6318B992984060F4F57C5322A68BA6EE6E36A85C146 PATHS 66 BASELINE A607D9FF445EE991A80FA5B6C212FF8A2E293910AD91919A19947F7C2B5C1857 MIGRATION187 D05F77454294228498FFCE6A4DB9EC2250135926533648D318E382D2F25C30F6`
+
+This phrase authorizes only the exact staged RC2 commit, annotated tag, and branch/tag push. It does not authorize deployment, clone creation, hosted access, or credential actions. The prior authorization phrase and binary-working-tree aggregate are invalid.

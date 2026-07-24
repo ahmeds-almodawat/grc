@@ -1,0 +1,34 @@
+{
+  "schema_version": "gate13br3-dual-lineage-validation-v1",
+  "status": "passed",
+  "environment": {
+    "postgresql": "17.6",
+    "supabase_compatible_image": "public.ecr.aws/supabase/postgres:17.6.1.063",
+    "synthetic_only": true
+  },
+  "modern": {
+    "path": "post185 -> 186 -> 187",
+    "runtime": "enforced",
+    "state_version": 5,
+    "credential_state": "active",
+    "database_auth_versions": "0/0",
+    "sessions_refresh": "0/0",
+    "credential_mutated": false,
+    "attestation": true,
+    "rotation": "not_applicable"
+  },
+  "legacy_transitional": {
+    "path": "post180 -> 186 -> 187",
+    "runtime": "enforced",
+    "state_version": 5,
+    "credential_state": "existing_password_rotation_pending",
+    "database_auth_versions": "0/0",
+    "sessions_refresh": "0/0",
+    "normal_admin_denied": true,
+    "forced_change_available": true,
+    "attestation": true,
+    "rotation": "required"
+  },
+  "normalized_catalog_sha256": "5e5f685f3d9af33ed98c6cf8436d98e1c63f0d4bc82b98d0bb45d9d3d4ac36f7",
+  "catalog_equal": true
+}

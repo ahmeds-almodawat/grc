@@ -1,0 +1,43 @@
+{
+  "schema_version": "gate13br3s-rc2-release-file-manifest-v1",
+  "status": "validated_awaiting_authorization",
+  "version": "1.0.0-rc.2",
+  "base_commit": "87074faa9476a6d158199426871167ae30cd5a55",
+  "branch": "release/grc-platform-1.0.0-rc.2",
+  "future_tag": "v1.0.0-rc.2",
+  "future_commit_message": "release: GRC Platform 1.0.0-rc.2 (legacy bridge 187)",
+  "legacy_approved_path_manifest": "release/production-readiness/gate13br3-rc2-release-file-manifest-20260724.json",
+  "legacy_approved_path_count": 56,
+  "candidate_path_count": 2613,
+  "candidate_bytes": 36477927,
+  "payload_overlay_path_count": 48,
+  "payload_aggregate_sha256": "f624115241f8e88b638ae9c1d19bfca7a7c3120907a209309c03d30aaec931bb",
+  "superseded_payload_aggregate_sha256": "09b151ff8f24166202827816c0db27ee71314d5a59ec04e8d3521a4a12962f1b",
+  "new_control_paths": [
+    "release/production-readiness/gate13br3s-git-normalization-analysis-20260724.json",
+    "release/production-readiness/gate13br3s-git-normalization-analysis-20260724.md",
+    "release/production-readiness/gate13br3s-git-normalized-rc2-manifest-20260724.json",
+    "release/production-readiness/gate13br3s-git-normalized-rc2-manifest-20260724.md",
+    "release/production-readiness/gate13br3s-git-normalized-rc2-validation-20260724.json",
+    "release/production-readiness/gate13br3s-git-normalized-rc2-validation-20260724.md",
+    "release/production-readiness/gate13br3s-rc2-release-file-manifest-20260724.json",
+    "release/production-readiness/gate13br3s-rc2-release-file-manifest-20260724.md",
+    "release/production-readiness/gate13br3s-rc2-authorization-contracts-20260724.json",
+    "release/production-readiness/gate13br3s-rc2-authorization-contracts-20260724.md"
+  ],
+  "control_hash_excludes": [
+    "release/production-readiness/gate13br3s-rc2-authorization-contracts-20260724.json",
+    "release/production-readiness/gate13br3s-rc2-authorization-contracts-20260724.md"
+  ],
+  "final_staged_path_count": 66,
+  "forbidden_paths": [
+    ".env",
+    ".env.staging.local",
+    "supabase/.temp/cli-latest",
+    "DPAPI credential files",
+    "temporary workspaces"
+  ],
+  "migration_186_sha256": "9a9b57a5b3183e866431ab33fc43d2be277f02a208baaece38d48ddb25539a41",
+  "migration_187_sha256": "d05f77454294228498ffce6a4db9ec2250135926533648d318e382d2f25c30f6",
+  "baseline_v3_sha256": "a607d9ff445ee991a80fa5b6c212ff8a2e293910ad91919a19947f7c2b5c1857"
+}

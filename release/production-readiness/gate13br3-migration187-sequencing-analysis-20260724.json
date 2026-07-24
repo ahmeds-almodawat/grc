@@ -1,0 +1,28 @@
+{
+  "schema_version": "gate13br3-migration187-sequencing-analysis-v1",
+  "status": "resolved",
+  "pre_failure": {
+    "credential_state": "existing_password_rotation_pending",
+    "database_credential_version": 0,
+    "auth_credential_version": 0,
+    "role": "super_admin",
+    "scope": "global",
+    "sessions": 0,
+    "unrevoked_refresh_tokens": 0,
+    "runtime": "disabled",
+    "runtime_state_version": 0
+  },
+  "rejected_check": "migration 187 required an immediately runtime-eligible active Super Admin",
+  "sequencing_cycle": "forced rotation required enforced controls; old migration required completed rotation before installing/enforcing those controls",
+  "resolution": "install and attest 181-185-equivalent controls, enforce runtime state 5, preserve pending credential state, and permit only protected forced-change boundaries",
+  "truthful_claims": [
+    "migration 186 role reconciliation",
+    "catalog controls installed",
+    "mandatory password rotation required"
+  ],
+  "prohibited_claims": [
+    "password rotation completed",
+    "historical Edge compatibility execution",
+    "historical access-review signoff"
+  ]
+}

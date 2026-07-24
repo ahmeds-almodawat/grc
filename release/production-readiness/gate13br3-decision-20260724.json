@@ -1,0 +1,13 @@
+{
+  "schema_version": "gate13br3-decision-v1",
+  "decision": "PRODUCTION FAST-TRACK 13B-R3 READY — AWAITING RC2 RELEASE AUTHORIZATION",
+  "migration_187_safe": true,
+  "local_validation_passed": true,
+  "hosted_writes": false,
+  "clone_created": false,
+  "remaining_technical_blockers": [],
+  "remaining_operational_blockers": [
+    "RC2 Git authorization",
+    "separate final clone rehearsal authorization after RC2 publish"
+  ]
+}

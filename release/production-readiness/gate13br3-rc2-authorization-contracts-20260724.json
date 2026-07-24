@@ -1,0 +1,20 @@
+{
+  "schema_version": "gate13br3-rc2-authorization-contract-v1",
+  "status": "awaiting_authorization",
+  "exact_phrase": "AUTHORIZE GATE 13B-R3 GIT RC2 1.0.0-RC.2 PAYLOAD 09B151FF8F24166202827816C0DB27EE71314D5A59EC04E8D3521A4A12962F1B PATHS 56 BASELINE A607D9FF445EE991A80FA5B6C212FF8A2E293910AD91919A19947F7C2B5C1857 MIGRATION187 D05F77454294228498FFCE6A4DB9EC2250135926533648D318E382D2F25C30F6",
+  "phrase_sha256": "fe9693d3de7051ba50311c13596cd8ff70cbfde3e2e41d756ca35b6a39f5c38b",
+  "authorizes": [
+    "stage exactly the approved change paths",
+    "commit with exact RC2 message",
+    "create annotated v1.0.0-rc.2 tag",
+    "push RC2 branch and tag"
+  ],
+  "does_not_authorize": [
+    "hosted deployment",
+    "clone creation",
+    "staging or production write",
+    "credential action"
+  ],
+  "payload_aggregate_sha256": "09b151ff8f24166202827816c0db27ee71314d5a59ec04e8d3521a4a12962f1b",
+  "approved_change_path_count": 56
+}

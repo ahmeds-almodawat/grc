@@ -1,0 +1,54 @@
+{
+  "schema_version": "gate13br3-forced-rotation-validation-v1",
+  "status": "passed",
+  "synthetic_only": true,
+  "auth_runtime": {
+    "implementation": "Supabase GoTrue",
+    "version": "v2.192.0",
+    "persistence": "disposable local PostgreSQL only"
+  },
+  "protected_flow": [
+    "supported password authentication",
+    "credential-state lazy transition",
+    "prepare operation",
+    "supported password reauthentication",
+    "begin operation",
+    "supported global Auth sign-out",
+    "supported Auth Admin password update",
+    "stable finalizer",
+    "fresh password authentication",
+    "final global sign-out"
+  ],
+  "before": {
+    "credential_state": "existing_password_rotation_pending",
+    "versions": "0/0",
+    "sessions_refresh": "0/0",
+    "normal_admin_allowed": false
+  },
+  "after": {
+    "credential_state": "active",
+    "versions": "1/1",
+    "password_changed_at_set": true,
+    "sessions_revoked_at_set": true,
+    "sessions_refresh": "0/0",
+    "pending_recovery_reconciliation": false,
+    "fresh_access_allowed": true
+  },
+  "password_values": {
+    "generated_in_process": true,
+    "persisted": false,
+    "printed": false,
+    "included_in_evidence": false
+  },
+  "supported_auth_calls": {
+    "initial_login": true,
+    "reauthentication": true,
+    "global_sign_out_before_update": true,
+    "password_update": true,
+    "fresh_login": true,
+    "final_global_sign_out": true
+  },
+  "password_value_exposed": false,
+  "catalog_sha256_after": "5e5f685f3d9af33ed98c6cf8436d98e1c63f0d4bc82b98d0bb45d9d3d4ac36f7",
+  "limitation": "The validation used only synthetic local identities and a disposable local GoTrue/PostgreSQL stack. The production-derived clone rehearsal remains separately authorized."
+}
