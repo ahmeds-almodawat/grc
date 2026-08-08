@@ -562,7 +562,7 @@ export function analyzePatch83uAuthSurface({
     .sort((a, b) => a.signature.localeCompare(b.signature));
   const targetBroadSecurityDefiners = [];
   const reviewedRestrictedSecurityDefiners = [];
-  const reviewedPatch83uMigrationCeiling = 177;
+  const reviewedPatch83uMigrationCeiling = 189;
   const explicitServiceOnlyAclFloor = 176;
   for (const [name, definitions] of state.functions) {
     for (const definition of definitions) {
@@ -589,7 +589,7 @@ export function analyzePatch83uAuthSurface({
       const explicitRevokeEvidence = recordedAcl.evidence
         .filter((item) =>
           item.includes(migrationEvidencePrefix)
-          && item.includes('revoke execute'))
+          && (item.includes('revoke execute') || item.includes('revoke all')))
         .join(' ');
       const hasExplicitBrowserRevoke = requiresExplicitServiceOnlyAcl
         && /\bpublic\b/.test(explicitRevokeEvidence)
@@ -730,10 +730,10 @@ export function analyzePatch83uAuthSurface({
     status: findings.length ? 'fail' : 'pass',
     evidence: {
       browser_source: 'src/**/*.{ts,tsx}',
-      target_schema: 'ordered supabase/migrations/*.sql through reviewed migration 177',
+      target_schema: 'ordered supabase/migrations/*.sql through reviewed migration 189',
       deployed_function_catalog: deployedFunctionInventory ? 'release/patch83q/patch83q-live-security-definer-inventory.json' : 'not supplied',
       deployed_search_entries: deployedSearch.length,
-      note: 'Static target-schema proof. Runtime catalog verification of migration 177 remains required after authorized staging application.',
+      note: 'Static target-schema proof. Runtime catalog verification of migration 189 remains required after authorized application.',
     },
     summary: {
       direct_browser_rpc_count: directRpcs.length,
@@ -857,7 +857,7 @@ function renderMarkdown(report) {
     + `- Direct browser materialized views: ${report.summary.direct_browser_materialized_view_count}\n`
     + `- Unsafe surfaces: ${report.summary.unsafe_surface_count}\n`
     + `- Search transport: ${report.summary.search_transport}\n`
-    + `- Reviewed restricted migration 176–177 SECURITY DEFINER routines: ${report.summary.reviewed_restricted_security_definer_count}\n`
+    + `- Reviewed restricted migration 176–189 SECURITY DEFINER routines: ${report.summary.reviewed_restricted_security_definer_count}\n`
     + `- Target credential-gate migration present: ${report.summary.credential_gate_target_present ? 'yes' : 'no'}\n\n`
     + `## search_grc_global\n\n`
     + `Disposition: **${report.search_grc_global.disposition}**. The accepted design is the authenticated Edge bridge using an anon-key Supabase client carrying the caller Bearer token; the RPC remains SECURITY INVOKER and its complete view/base-table chain must remain security-invoker and credential-gated by RLS.\n\n`

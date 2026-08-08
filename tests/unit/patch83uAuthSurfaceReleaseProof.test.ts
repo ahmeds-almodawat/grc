@@ -164,7 +164,7 @@ describe('Patch 83U authenticated surface release proof', () => {
   it('fails closed when a future migration introduces an unaudited SECURITY DEFINER routine', () => {
     const report = analyzePatch83uAuthSurface({
       migrationFiles: [{
-        path: 'supabase/migrations/178_future_fixture.sql',
+        path: 'supabase/migrations/190_future_fixture.sql',
         text: `
           create function public.future_browser_helper()
           returns integer language sql security definer as $$ select 1 $$;
@@ -208,6 +208,18 @@ describe('Patch 83U authenticated surface release proof', () => {
     expect(report.search_grc_global.disposition).toBe('authenticated_edge_bridge_with_caller_jwt_rls');
     expect(report.summary.retained_live_broad_security_definer_count).toBe(2);
     expect(report.summary.target_broad_security_definer_count).toBe(3);
+    expect(report.summary.reviewed_patch83u_migration_ceiling).toBe(189);
+    expect(report.acl_reachable_security_definer_rpcs.reviewed_restricted_migrations_176_177)
+      .toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          name: 'patch83u_finalize_required_password_change',
+          disposition: 'service_role_only',
+        }),
+        expect.objectContaining({
+          name: 'patch83u_reconcile_provisioning',
+          disposition: 'service_role_only',
+        }),
+      ]));
     expect(report.acl_reachable_security_definer_rpcs.retained_live.every(
       (rpc: { allowed: boolean }) => rpc.allowed,
     )).toBe(true);

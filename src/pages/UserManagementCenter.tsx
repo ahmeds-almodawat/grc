@@ -140,6 +140,44 @@ function activeRoleTotal(user: UserManagementUserRow): number {
   return Math.max(user.active_role_count ?? 0, activeRoles);
 }
 
+export function isPostPasswordRoleActivationRecoveryCandidate(
+  row: UserProvisioningRow,
+  user: UserManagementUserRow | null | undefined,
+  organizationId: string | null | undefined,
+): boolean {
+  if (!user || !organizationId) return false;
+  const matchingRoles = user.roles.filter((role) =>
+    role.role === "employee" &&
+    role.scope === "assigned_only" &&
+    role.organization_id === organizationId &&
+    role.division_id === null &&
+    role.department_id === null &&
+    role.unit_id === null,
+  );
+
+  return row.provisioning_status === "initial_change_required" &&
+    row.requested_role === "employee" &&
+    row.requested_scope === "assigned_only" &&
+    row.requested_lifecycle === "active" &&
+    row.profile_id === user.user_id &&
+    row.employee_id === user.employee_no &&
+    row.auth_email === user.auth_email &&
+    row.last_error_code === null &&
+    row.last_error_message === null &&
+    user.organization_id === organizationId &&
+    user.user_status === "invited" &&
+    user.is_active === true &&
+    user.credential_proof_available === true &&
+    user.credential_state === "active" &&
+    Number.isInteger(user.credential_version) &&
+    Number(user.credential_version) >= 1 &&
+    user.must_change_password === false &&
+    user.provisioning_state === "initial_change_required" &&
+    activeRoleTotal(user) === 0 &&
+    matchingRoles.length === 1 &&
+    matchingRoles[0].is_active === false;
+}
+
 function linkedRecordCount(user: UserManagementUserRow): number {
   return (
     user.linked_project_count +
@@ -2300,16 +2338,26 @@ export function UserManagementCenter() {
                 </thead>
                 <tbody>
                   {provisioningRows.map((row) => {
+                    const linkedUser = users.data?.find(
+                      (user) => user.user_id === row.profile_id,
+                    );
                     const canProvision = [
                       "queued",
                       "retryable_failed",
                       "policy_blocked",
                       "auth_created_pending_finalize",
                     ].includes(row.provisioning_status);
+                    const canReconcilePostPasswordRoleActivation =
+                      isPostPasswordRoleActivationRecoveryCandidate(
+                        row,
+                        linkedUser,
+                        auth.profile?.organizationId,
+                      );
                     const canReconcile = [
                       "provisioning",
                       "reconciliation_required",
-                    ].includes(row.provisioning_status);
+                    ].includes(row.provisioning_status) ||
+                      canReconcilePostPasswordRoleActivation;
                     return (
                       <tr key={row.id}>
                         <td className="provisioning-queue-employee">
@@ -2391,11 +2439,17 @@ export function UserManagementCenter() {
                           {row.attempt_count}
                         </td>
                         <td className="provisioning-queue-controlled-action">
-                          {canProvision ? (
+                          {!canUsePatch83uProvisioning ? (
+                            <span className="muted">
+                              {t(
+                                "userManagement.provisioningQueue.action.none",
+                              )}
+                            </span>
+                          ) : canProvision ? (
                             <button
                               type="button"
                               className="ghost-button small"
-                              disabled={saving || !canUsePatch83uProvisioning}
+                              disabled={saving}
                               onClick={() => chooseProvisioningAction(row, "provision")}
                             >
                               {t(
@@ -2406,7 +2460,7 @@ export function UserManagementCenter() {
                             <button
                               type="button"
                               className="ghost-button small"
-                              disabled={saving || !canUsePatch83uProvisioning}
+                              disabled={saving}
                               onClick={() => chooseProvisioningAction(row, "reconcile")}
                             >
                               {t(
