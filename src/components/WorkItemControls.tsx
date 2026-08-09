@@ -9,6 +9,11 @@ import {
 import { useI18n } from '../i18n/I18nContext';
 
 export type ControllableItemType = 'project' | 'milestone' | 'task';
+export type EvidenceUploadItemType =
+  | 'project'
+  | 'milestone'
+  | 'task'
+  | 'ovr_report';
 
 const workStatusOptions: WorkStatus[] = [
   'not_started',
@@ -105,7 +110,7 @@ export function StatusUpdateForm({ itemType, itemId, currentStatus, currentProgr
 
 interface EvidenceUploadFormProps {
   organizationId: string;
-  itemType: ControllableItemType;
+  itemType: EvidenceUploadItemType;
   itemId: string;
   onCancel: () => void;
   onUploaded: () => void;

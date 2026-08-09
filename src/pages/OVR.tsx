@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, FilePlus2, GitBranch, ShieldCheck, Workflow } from 'lucide-react';
+import { AlertTriangle, FilePlus2, GitBranch, ShieldCheck, Upload, Workflow } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { EmptySupabaseNotice } from '../components/EmptySupabaseNotice';
@@ -7,6 +7,7 @@ import { EntityTable } from '../components/EntityTable';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
+import { EvidenceUploadForm } from '../components/WorkItemControls';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { formatDate, humanize } from '../lib/format';
 import { isEmptyLiveObject } from '../lib/liveData';
@@ -47,6 +48,36 @@ const occurrenceCategories = [
 const preOccurrenceFlags = ['bedridden', 'active', 'post_op_procedure', 'intra_procedure', 'alert', 'sedated', 'anesthetized', 'disoriented', 'unconscious'];
 const majorLevels: Array<OvrSeverityLevel | null> = ['level_4', 'sentinel'];
 type OvrDashboardFilter = 'all' | 'open' | 'quality' | 'corrective' | 'sentinel' | 'nearMiss';
+
+const ovrEvidenceUploadRoles: ReadonlySet<string> = new Set([
+  'super_admin',
+  'governance_admin',
+  'compliance_officer',
+]);
+const ovrEvidenceUploadStatuses: ReadonlySet<OvrStatus> = new Set([
+  'quality_final_review',
+  'evidence_submitted',
+  'quality_closure_review',
+]);
+
+interface OvrEvidenceUploadAccess {
+  status: OvrStatus;
+  evidenceRequired: boolean;
+  organizationMatches: boolean;
+  roles: readonly string[];
+}
+
+export function canUploadOvrEvidence({
+  status,
+  evidenceRequired,
+  organizationMatches,
+  roles,
+}: OvrEvidenceUploadAccess): boolean {
+  return evidenceRequired
+    && organizationMatches
+    && ovrEvidenceUploadStatuses.has(status)
+    && roles.some(role => ovrEvidenceUploadRoles.has(role));
+}
 
 function cleanLabel(value: string) {
   return humanize(value.replaceAll('_', ' '));
@@ -138,6 +169,7 @@ export function OVR() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [selectedReport, setSelectedReport] = useState<OvrReportRow | null>(null);
+  const [evidenceUploadReport, setEvidenceUploadReport] = useState<OvrReportRow | null>(null);
   const [selectedDashboardReport, setSelectedDashboardReport] = useState<OvrReportRow | null>(null);
   const [activeFilter, setActiveFilter] = useState<OvrDashboardFilter>('all');
   const [reportSearch, setReportSearch] = useState('');
@@ -402,6 +434,30 @@ export function OVR() {
   );
 
   const isReporterFor = (report: OvrReportRow) => report.reported_by === currentUserId;
+  const canUploadEvidenceFor = (report: OvrReportRow) => canUploadOvrEvidence({
+    status: report.status,
+    evidenceRequired: report.evidence_required === true,
+    organizationMatches: Boolean(organizationId) && report.organization_id === organizationId,
+    roles: auth.roles.map(role => role.role),
+  });
+  const openOvrEvidenceUpload = () => {
+    if (!selectedReport || !canUploadEvidenceFor(selectedReport)) return;
+    setEvidenceUploadReport(selectedReport);
+    setSelectedReport(null);
+  };
+  const cancelOvrEvidenceUpload = () => {
+    const report = evidenceUploadReport;
+    setEvidenceUploadReport(null);
+    if (report) setSelectedReport(report);
+  };
+  const completeOvrEvidenceUpload = () => {
+    setEvidenceUploadReport(null);
+    void Promise.all([
+      reports.refresh(),
+      workflowSummary.refresh(),
+      workflowQueue.refresh(),
+    ]);
+  };
   const referredProfiles = (profiles.data || []).filter(profile =>
     !workflowForm.referred_department_id
     || profile.department_id === workflowForm.referred_department_id
@@ -747,6 +803,11 @@ export function OVR() {
                   <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('disputed')}>{t('ovr.disputeVerdict')}</button>
                 </>
               ) : null}
+              {canUploadEvidenceFor(selectedReport) ? (
+                <button className="ghost-button" type="button" disabled={workflowSaving} onClick={openOvrEvidenceUpload}>
+                  <Upload size={16} />{t('workControl.uploadEvidence')}
+                </button>
+              ) : null}
               {selectedReport.status === 'disputed' && isQuality ? (
                 <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('reopened')}>{t('ovr.reopenOvr')}</button>
               ) : null}
@@ -761,6 +822,22 @@ export function OVR() {
               ) : null}
             </div>
           </div>
+        ) : null}
+      </Modal>
+
+      <Modal
+        title={t('workControl.uploadEvidence')}
+        open={Boolean(evidenceUploadReport)}
+        onClose={cancelOvrEvidenceUpload}
+      >
+        {evidenceUploadReport ? (
+          <EvidenceUploadForm
+            organizationId={organizationId}
+            itemType="ovr_report"
+            itemId={evidenceUploadReport.id}
+            onCancel={cancelOvrEvidenceUpload}
+            onUploaded={completeOvrEvidenceUpload}
+          />
         ) : null}
       </Modal>
     </section>
