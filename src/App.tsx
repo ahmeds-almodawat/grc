@@ -161,7 +161,7 @@ function initialPageFromLocation(): PageKey {
   return pageKeyFromLocation(window.location) ?? "home";
 }
 
-function ExecutiveHub() {
+function ExecutiveHub({ setPage }: { setPage: (page: PageKey) => void }) {
   const { t } = useI18n();
   return (
     <TabbedHub hideTabRail
@@ -181,7 +181,7 @@ function ExecutiveHub() {
           label: t("hub.tab.dashboard"),
           description: t("hub.tab.dashboard.desc"),
           icon: <BarChart3 size={17} />,
-          content: <Dashboard />,
+          content: <Dashboard setPage={setPage} />,
         },
         {
           id: "analytics",
@@ -262,7 +262,7 @@ function DailyOperationsHub({ setPage }: { setPage: (page: PageKey) => void }) {
           label: t("hub.tab.projects"),
           description: t("hub.tab.projects.desc"),
           icon: <GanttChartSquare size={17} />,
-          content: <Projects />,
+          content: <Projects setPage={setPage} />,
         },
         {
           id: "departments",
@@ -1279,7 +1279,7 @@ export default function App() {
       case "home":
         return <WorkspaceHome setPage={setPage} />;
       case "executiveHub":
-        return <ExecutiveHub />;
+        return <ExecutiveHub setPage={setPage} />;
       case "workHub":
       case "dailyOperationsHub" as any:
         return <DailyOperationsHub setPage={setPage} />;
@@ -1308,13 +1308,13 @@ export default function App() {
       case "productionProof":
         return <ProductionProofCenter />;
       case "dashboard":
-        return <Dashboard />;
+        return <Dashboard setPage={setPage} />;
       case "analytics":
         return <Analytics />;
       case "myWork":
         return <MyWork />;
       case "projects":
-        return <Projects />;
+        return <Projects setPage={setPage} />;
       case "departments":
         return <Departments setPage={(page) => setPage(page as PageKey)} />;
       case "risks":
@@ -1422,7 +1422,7 @@ export default function App() {
       case "scaleBackupRestoreCenter":
         return <ScaleBackupRestoreCenter />;
       default:
-        return <ExecutiveHub />;
+        return <ExecutiveHub setPage={setPage} />;
     }
   };
 
