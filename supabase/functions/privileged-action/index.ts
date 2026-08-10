@@ -2904,12 +2904,19 @@ Deno.serve(async (request) => {
     if (snapshotError) {
       const authorizationFailure = /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|EXECUTIVE|ENTITLEMENT|CREDENTIAL|IDENTITY/i
         .test(snapshotError.message);
-      return jsonResponse({
-        ok: false,
-        error: snapshotError.message,
-        code: snapshotError.code,
+      console.error('OVR executive analytics snapshot refresh failed', {
         action,
-      }, authorizationFailure ? 403 : 409);
+        phase: 'snapshot_refresh',
+        code: snapshotError.code,
+        message: snapshotError.message,
+      });
+      return errorResponse(
+        authorizationFailure ? 'Executive analytics access is restricted.' : 'Executive analytics are temporarily unavailable.',
+        authorizationFailure ? 403 : 409,
+        authorizationFailure ? 'OVR_EXECUTIVE_ANALYTICS_ACCESS_RESTRICTED' : 'OVR_EXECUTIVE_ANALYTICS_UNAVAILABLE',
+        authorizationFailure ? 'Use an active Executive-authorized account.' : 'Retry later or contact an administrator.',
+        { action },
+      );
     }
 
     const [headlineResult, trendResult] = await Promise.all([
@@ -2932,12 +2939,19 @@ Deno.serve(async (request) => {
     if (analyticsError) {
       const authorizationFailure = /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|EXECUTIVE|ENTITLEMENT|CREDENTIAL|IDENTITY|FILTER|QUERY_SHAPE/i
         .test(analyticsError.message);
-      return jsonResponse({
-        ok: false,
-        error: analyticsError.message,
-        code: analyticsError.code,
+      console.error('OVR executive analytics query failed', {
         action,
-      }, authorizationFailure ? 403 : 409);
+        phase: 'fixed_query_family',
+        code: analyticsError.code,
+        message: analyticsError.message,
+      });
+      return errorResponse(
+        authorizationFailure ? 'Executive analytics access is restricted.' : 'Executive analytics are temporarily unavailable.',
+        authorizationFailure ? 403 : 409,
+        authorizationFailure ? 'OVR_EXECUTIVE_ANALYTICS_ACCESS_RESTRICTED' : 'OVR_EXECUTIVE_ANALYTICS_UNAVAILABLE',
+        authorizationFailure ? 'Use an active Executive-authorized account.' : 'Retry later or contact an administrator.',
+        { action },
+      );
     }
 
     const snapshotRecord = asObject(snapshot);

@@ -85,7 +85,7 @@ describe('GRC v1.1 governed dashboard contract', () => {
   });
 
   it('declares every Executive KPI destination', () => {
-    expect(EXECUTIVE_WIDGETS.map(item => item.destination)).toEqual(['ovr', 'risks', 'projects', 'audit', 'compliance', 'accreditationHub']);
+    expect(EXECUTIVE_WIDGETS.map(item => item.destination)).toEqual(['ovr', 'risks', null, 'audit', 'compliance', 'accreditationHub']);
   });
 
   it('marks OVR analytics aggregate-only', () => {
@@ -112,6 +112,20 @@ describe('GRC v1.1 governed dashboard contract', () => {
     expect(dashboard).toContain('onRetry={() => void analytics.refresh()}');
     expect(dashboard).toContain('onRetry={() => void portfolio.refresh()}');
     expect(dashboard).toContain('onRetry={() => void assurance.refresh()}');
+    expect(dashboard).toContain('onRetry={() => void auditFindings.refresh()}');
+  });
+
+  it('uses the canonical responsible-department relationship for Audit findings', () => {
+    expect(api).toContain("AUDIT_FINDINGS_DEPARTMENT_RELATIONSHIP = 'audit_findings_responsible_department_id_fkey'");
+    expect(api).toContain('departments!${AUDIT_FINDINGS_DEPARTMENT_RELATIONSHIP}(name_en,name_ar)');
+    expect(api).not.toContain(".select('*, departments(name_en,name_ar), owner:profiles!audit_findings_owner_id_fkey");
+  });
+
+  it('keeps Audit KPI and coverage on one filtered population and preserves source failure', () => {
+    expect(dashboard.match(/const filteredAudit =/g)).toHaveLength(1);
+    expect(dashboard.match(/const openAudit = filteredAudit/g)).toHaveLength(1);
+    expect(dashboard).toContain('auditDashboardMetricState(openAudit, auditFindings.loading, auditFindings.error)');
+    expect(dashboard).toContain('auditFindings.error ? <DashboardWidgetState state="unavailable"');
   });
 
   it('parses allowlisted filter values and rejects an invalid period', () => {
@@ -120,10 +134,11 @@ describe('GRC v1.1 governed dashboard contract', () => {
     expect(readDashboardFilters('?status=sql&severity=unknown&department=%3Cscript%3E')).toEqual(DEFAULT_DASHBOARD_FILTERS);
   });
 
-  it('implements URL-backed reset and context preservation', () => {
+  it('implements URL-backed reset without leaking dashboard route state', () => {
     expect(framework).toContain('window.history.replaceState');
     expect(dashboard).toContain('writeDashboardFilters(next)');
-    expect(dashboard).toContain('const next = new URLSearchParams(window.location.search)');
+    expect(dashboard).toContain('dashboardDestinationUrl(page, window.location.pathname, routeFilters)');
+    expect(dashboard).toContain('window.history.pushState');
     expect(projects).toContain('writeDashboardFilters(next)');
   });
 
@@ -161,10 +176,10 @@ describe('GRC v1.1 governed dashboard contract', () => {
     expect(components).toContain('CalendarDays');
   });
 
-  it('keeps risk heatmap, CAPA, compliance, and activity destinations interactive', () => {
-    expect(dashboard).toContain("navigate('risks', { likelihood:");
-    expect(dashboard).toContain("navigate('projects', { status:");
-    expect(dashboard).toContain("navigate('compliance', { domain })");
+  it('keeps governed module destinations interactive without a false CAPA destination', () => {
+    expect(dashboard).toContain("navigate('risks'");
+    expect(dashboard).not.toContain("navigate('projects', { status:");
+    expect(dashboard).toContain("navigate('compliance'");
     expect(dashboard).toContain("navigate('approvals')");
   });
 
@@ -174,8 +189,15 @@ describe('GRC v1.1 governed dashboard contract', () => {
   });
 
   it('keeps period filtering deterministic', () => {
-    expect(projectInPeriod(project({ target_end_date: '2026-06-01' }), '30d', new Date('2026-05-15T12:00:00Z'))).toBe(true);
+    expect(projectInPeriod(project({ start_date: '2026-05-01', target_end_date: '2026-06-01' }), '30d', new Date('2026-05-15T12:00:00Z'))).toBe(true);
     expect(projectInPeriod(project({ target_end_date: '2025-01-01' }), 'ytd', new Date('2026-05-15T12:00:00Z'))).toBe(false);
+  });
+
+  it('maps the new analytics action to generic client errors while retaining server diagnostics', () => {
+    const handler = edge.slice(edge.indexOf("if (action === 'ovr_executive_dashboard_analytics')"), edge.indexOf('if (patch22RiskActions.has(action))'));
+    expect(handler).toContain('OVR_EXECUTIVE_ANALYTICS_UNAVAILABLE');
+    expect(handler).toContain("console.error('OVR executive analytics");
+    expect(handler).not.toMatch(/error:\s*(?:snapshotError|analyticsError)\.message/);
   });
 
   it('keeps active and attention Project KPI drill filters aligned with their definitions', () => {

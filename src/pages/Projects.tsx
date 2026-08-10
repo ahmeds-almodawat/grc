@@ -13,9 +13,9 @@ import { ModuleHeader } from '../components/ModuleHeader';
 import { ProjectDetail } from '../components/ProjectDetail';
 import {
   DEFAULT_DASHBOARD_FILTERS,
+  dashboardDestinationUrl,
+  filterDashboardProjects,
   projectHealth,
-  projectInPeriod,
-  projectMatchesStatus,
   readDashboardFilters,
   writeDashboardFilters,
 } from '../dashboard/dashboardFramework';
@@ -61,12 +61,7 @@ export function Projects({ setPage }: ProjectsProps) {
     setFilters(next);
     writeDashboardFilters(next);
   };
-  const filteredProjects = useMemo(() => (portfolio.data?.projects ?? []).filter(project =>
-    projectInPeriod(project, filters.period)
-    && (filters.department === 'all' || project.department_id === filters.department)
-    && projectMatchesStatus(project, filters.status)
-    && (filters.severity === 'all' || project.risk_level === filters.severity)
-  ), [portfolio.data, filters]);
+  const filteredProjects = useMemo(() => filterDashboardProjects(portfolio.data?.projects ?? [], filters), [portfolio.data, filters]);
   const projectIds = useMemo(() => new Set(filteredProjects.map(project => project.id)), [filteredProjects]);
   const milestones = useMemo(() => (portfolio.data?.milestones ?? []).filter(item => projectIds.has(item.project_id)), [portfolio.data, projectIds]);
   const tasks = useMemo(() => (portfolio.data?.tasks ?? []).filter(item => projectIds.has(item.project_id)), [portfolio.data, projectIds]);
@@ -96,6 +91,10 @@ export function Projects({ setPage }: ProjectsProps) {
   const selectMilestone = (milestone: MilestoneRow) => {
     const project = filteredProjects.find(item => item.id === milestone.project_id);
     if (project) setSelectedProject(project);
+  };
+  const navigate = (page: PageKey) => {
+    window.history.pushState(null, '', dashboardDestinationUrl(page, window.location.pathname));
+    setPage(page);
   };
 
   return (
@@ -131,9 +130,9 @@ export function Projects({ setPage }: ProjectsProps) {
               <div><dt>{t('common.dueDate', 'Target date')}</dt><dd>{currentProject.target_end_date ? new Date(currentProject.target_end_date).toLocaleDateString() : '—'}</dd></div>
               <div><dt>{t('common.owner', 'Owner')}</dt><dd>{currentProject.owner?.full_name_en || t('common.notConfigured', 'Not configured')}</dd></div>
               <div className={`is-health is-${currentHealth}`}><dt>{t('projects.v11.health', 'Health')}</dt><dd>{t(`projects.v11.health.${currentHealth}`, currentHealth?.replaceAll('_', ' ') || '')}</dd></div>
-              <div><dt>{t('projects.v11.linkedRisks', 'Linked risks')}</dt><dd><button type="button" onClick={() => setPage('risks')}>{linkedRisks.length}</button></dd></div>
+              <div><dt>{t('projects.v11.linkedRisks', 'Linked risks')}</dt><dd><button type="button" onClick={() => navigate('risks')}>{linkedRisks.length}</button></dd></div>
               <div><dt>{t('projects.v11.milestones', 'Milestones')}</dt><dd>{currentMilestones.length}</dd></div>
-              <div><dt>{t('projects.v11.actions', 'Actions / CAPAs')}</dt><dd>{currentTasks.length}</dd></div>
+              <div><dt>{t('projects.v11.actions', 'Actions / tasks')}</dt><dd>{currentTasks.length}</dd></div>
             </dl>
           </div>}
         </DashboardSection></div>
@@ -147,7 +146,7 @@ export function Projects({ setPage }: ProjectsProps) {
           {!overdueTasks.length ? <DashboardWidgetState state={portfolio.loading ? 'loading' : portfolio.error ? 'unavailable' : 'empty'} message={portfolio.error || t('projects.v11.noExceptions', 'No overdue actions are visible.')} /> : <div className="grc-dashboard-list">{overdueTasks.slice(0, 6).map(item => <button type="button" key={item.id} onClick={() => { const project = filteredProjects.find(row => row.id === item.project_id); if (project) openProject(project); }}><span><strong>{item.title}</strong><small>{item.assignee?.full_name_en || t('common.notConfigured', 'Not configured')}</small></span><em>{item.due_date ? new Date(item.due_date).toLocaleDateString() : '—'}</em></button>)}</div>}
         </DashboardSection></div>
         <div className="span-4"><DashboardSection title={t('projects.v11.dependencies', 'Governance dependencies')}>
-          {!currentProject ? <DashboardWidgetState state="empty" message={t('projects.v11.selectProject', 'Select a project to view its governed dependencies.')} /> : <div className="grc-dashboard-list"><button type="button" onClick={() => setPage('risks')}><strong>{t('projects.v11.linkedRisks', 'Linked risks')}</strong><em>{linkedRisks.length}</em></button><button type="button" onClick={() => openProject(currentProject)}><strong>{t('projects.v11.openMilestones', 'Open milestones')}</strong><em>{currentMilestones.filter(item => !CLOSED_WORK.has(item.status)).length}</em></button><button type="button" onClick={() => openProject(currentProject)}><strong>{t('projects.v11.openActions', 'Open actions')}</strong><em>{currentTasks.filter(item => !CLOSED_WORK.has(item.status)).length}</em></button></div>}
+          {!currentProject ? <DashboardWidgetState state="empty" message={t('projects.v11.selectProject', 'Select a project to view its governed dependencies.')} /> : <div className="grc-dashboard-list"><button type="button" onClick={() => navigate('risks')}><strong>{t('projects.v11.linkedRisks', 'Linked risks')}</strong><em>{linkedRisks.length}</em></button><button type="button" onClick={() => openProject(currentProject)}><strong>{t('projects.v11.openMilestones', 'Open milestones')}</strong><em>{currentMilestones.filter(item => !CLOSED_WORK.has(item.status)).length}</em></button><button type="button" onClick={() => openProject(currentProject)}><strong>{t('projects.v11.openActions', 'Open actions')}</strong><em>{currentTasks.filter(item => !CLOSED_WORK.has(item.status)).length}</em></button></div>}
         </DashboardSection></div>
         <div className="span-12"><DashboardSection title={t('projects.v11.recentActivity', 'Recent project activity')}><DashboardWidgetState state="unavailable" message={t('projects.v11.activityUnavailable', 'No trustworthy cross-project activity feed is configured; open a project control file for its governed detail.')} /></DashboardSection></div>
       </div>

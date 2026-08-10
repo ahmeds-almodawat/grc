@@ -306,6 +306,7 @@ export interface TaskRow {
 export interface RiskRow {
   id: string;
   organization_id?: string;
+  department_id?: string | null;
   risk_code: string | null;
   title: string;
   description: string | null;
@@ -536,6 +537,7 @@ export interface RiskWorkflowEventRow {
 export interface ComplianceRow {
   id: string;
   organization_id?: string;
+  department_id?: string | null;
   compliance_code: string | null;
   title: string;
   description?: string | null;
@@ -552,6 +554,7 @@ export interface ComplianceRow {
 export interface AuditFindingRow {
   id: string;
   organization_id?: string;
+  department_id?: string | null;
   finding_code: string | null;
   audit_title: string | null;
   title: string;
@@ -853,6 +856,7 @@ export interface MyWorkRow {
   milestone_id: string | null;
   project_title?: string | null;
   department_name?: string | null;
+  departments?: { name_en: string | null; name_ar: string | null } | null;
 }
 
 export interface ApprovalRow {
