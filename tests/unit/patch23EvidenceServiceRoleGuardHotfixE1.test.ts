@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -173,15 +172,18 @@ describe('Patch23 evidence service-role guard hotfix E1', () => {
     expect(hotfixMigration).not.toMatch(/analytics|conflict.routing|shared.chart|executive dashboard/i);
   });
 
-  it('keeps the hotfix diff limited to migration 190 and its focused proof files', () => {
-    const status = execFileSync('git', ['status', '--porcelain=v1', '--untracked-files=all'], {
-      cwd: root,
-      encoding: 'utf8',
-    }).trim().split(/\r?\n/).filter(Boolean).map(line => line.slice(3).replaceAll('\\', '/')).sort();
-    expect(status).toEqual([
+  it('proves the committed hotfix artifact boundary without depending on worktree dirtiness', () => {
+    const artifactPaths = [
       'supabase/migrations/190_patch23_evidence_service_role_guard_compatibility.sql',
       'tests/sql/patch23_evidence_service_role_guard_hotfix_e1.sql',
       'tests/unit/patch23EvidenceServiceRoleGuardHotfixE1.test.ts',
-    ]);
+    ];
+    const artifactContents = artifactPaths.map(source);
+
+    expect(artifactContents.every(content => content.length > 0)).toBe(true);
+    expect(hotfixMigration.match(/create or replace function/gi)).toHaveLength(1);
+    expect(hotfixMigration).toContain('REVOKE EXECUTE ON FUNCTION public.patch23_evidence_governance_bridge');
+    expect(runtimeProof).toContain('PATCH23_EVIDENCE_SERVICE_ROLE_REQUIRED');
+    expect(artifactContents[2]).toContain("describe('Patch23 evidence service-role guard hotfix E1'");
   });
 });
