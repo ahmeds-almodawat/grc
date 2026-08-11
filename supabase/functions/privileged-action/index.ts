@@ -125,6 +125,7 @@ const patch83rDepartmentLifecycleActions = new Set([
 ]);
 
 const allowedActions = new Set([
+  'ovr_executive_dashboard_analytics',
   'search_grc_global',
   'list_user_management_roster',
   'create_board_pack_snapshot',
@@ -2883,6 +2884,92 @@ Deno.serve(async (request) => {
     }
 
     return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'ovr_executive_dashboard_analytics') {
+    const requestId = String(requestPayload.request_id ?? '').trim();
+    if (!/^[A-Za-z0-9._:-]{8,96}$/.test(requestId)) {
+      return errorResponse(
+        'A valid analytics request ID is required.',
+        400,
+        'OVR_ANALYTICS_REQUEST_ID_INVALID',
+        'Use a non-sensitive 8-96 character request ID.',
+      );
+    }
+
+    const { data: snapshot, error: snapshotError } = await serviceClient.rpc(
+      'refresh_ovr_executive_analytics_snapshot_v1',
+      { p_actor_id: userData.user.id },
+    );
+    if (snapshotError) {
+      const authorizationFailure = /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|EXECUTIVE|ENTITLEMENT|CREDENTIAL|IDENTITY/i
+        .test(snapshotError.message);
+      console.error('OVR executive analytics snapshot refresh failed', {
+        action,
+        phase: 'snapshot_refresh',
+        code: snapshotError.code,
+        message: snapshotError.message,
+      });
+      return errorResponse(
+        authorizationFailure ? 'Executive analytics access is restricted.' : 'Executive analytics are temporarily unavailable.',
+        authorizationFailure ? 403 : 409,
+        authorizationFailure ? 'OVR_EXECUTIVE_ANALYTICS_ACCESS_RESTRICTED' : 'OVR_EXECUTIVE_ANALYTICS_UNAVAILABLE',
+        authorizationFailure ? 'Use an active Executive-authorized account.' : 'Retry later or contact an administrator.',
+        { action },
+      );
+    }
+
+    const [headlineResult, trendResult] = await Promise.all([
+      serviceClient.rpc('ovr_executive_analytics_v1', {
+        p_actor_id: userData.user.id,
+        p_query_shape: 'headline_current_period',
+        p_department_filter_id: null,
+        p_category_filter: null,
+        p_idempotency_key: `${requestId}:headline`,
+      }),
+      serviceClient.rpc('ovr_executive_analytics_v1', {
+        p_actor_id: userData.user.id,
+        p_query_shape: 'monthly_trend_12',
+        p_department_filter_id: null,
+        p_category_filter: null,
+        p_idempotency_key: `${requestId}:trend`,
+      }),
+    ]);
+    const analyticsError = headlineResult.error ?? trendResult.error;
+    if (analyticsError) {
+      const authorizationFailure = /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|EXECUTIVE|ENTITLEMENT|CREDENTIAL|IDENTITY|FILTER|QUERY_SHAPE/i
+        .test(analyticsError.message);
+      console.error('OVR executive analytics query failed', {
+        action,
+        phase: 'fixed_query_family',
+        code: analyticsError.code,
+        message: analyticsError.message,
+      });
+      return errorResponse(
+        authorizationFailure ? 'Executive analytics access is restricted.' : 'Executive analytics are temporarily unavailable.',
+        authorizationFailure ? 403 : 409,
+        authorizationFailure ? 'OVR_EXECUTIVE_ANALYTICS_ACCESS_RESTRICTED' : 'OVR_EXECUTIVE_ANALYTICS_UNAVAILABLE',
+        authorizationFailure ? 'Use an active Executive-authorized account.' : 'Retry later or contact an administrator.',
+        { action },
+      );
+    }
+
+    const snapshotRecord = asObject(snapshot);
+    return jsonResponse({
+      ok: true,
+      action,
+      result: {
+        snapshot: {
+          snapshot_id: snapshotRecord.snapshot_id,
+          snapshot_date: snapshotRecord.snapshot_date,
+          generated_at: snapshotRecord.generated_at,
+          definition_version: snapshotRecord.definition_version,
+          privacy_model: snapshotRecord.privacy_model,
+        },
+        headline: headlineResult.data,
+        trend: trendResult.data,
+      },
+    }, 200);
   }
 
   if (patch22RiskActions.has(action)) {

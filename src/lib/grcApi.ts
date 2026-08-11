@@ -150,6 +150,7 @@ import type {
   OvrRiskDepartmentIndicator,
   OvrRepeatedCategoryAlert,
   OvrRiskIndicatorSummary,
+  OvrExecutiveDashboardAnalytics,
   OvrWorkflowControlSummary,
   OvrWorkflowQueueRow,
   PriorityLevel,
@@ -324,6 +325,14 @@ export async function getExecutiveSummary(): Promise<ExecutiveSummary> {
   }
 }
 
+export async function getOvrExecutiveDashboardAnalytics(): Promise<OvrExecutiveDashboardAnalytics> {
+  requireLiveSupabase();
+  return invokePrivilegedAction<OvrExecutiveDashboardAnalytics>(
+    'ovr_executive_dashboard_analytics',
+    { request_id: `dashboard-${crypto.randomUUID()}` },
+  );
+}
+
 export async function getCriticalAttentionItems(): Promise<CriticalAttentionItem[]> {
   if (!supabase) return emptyLiveArray<any>();
 
@@ -388,6 +397,17 @@ export async function getProjectMilestones(projectId: string): Promise<Milestone
   }
 }
 
+export async function getPortfolioMilestones(): Promise<MilestoneRow[]> {
+  const client = requireLiveSupabase();
+  const { data, error } = await client
+    .from('milestones')
+    .select('*, owner:profiles!milestones_owner_id_fkey(full_name_en,full_name_ar)')
+    .order('due_date', { ascending: true, nullsFirst: false })
+    .limit(1000);
+  if (error) throw error;
+  return filterScenarioLabRows((data as unknown as MilestoneRow[]) || []);
+}
+
 export async function getProjectTasks(projectId: string): Promise<TaskRow[]> {
   if (!supabase) return filterScenarioLabRows(liveEmptyTasks.filter(item => item.project_id === projectId));
 
@@ -404,6 +424,17 @@ export async function getProjectTasks(projectId: string): Promise<TaskRow[]> {
     logFallback('project tasks', error);
     return filterScenarioLabRows(liveEmptyTasks.filter(item => item.project_id === projectId));
   }
+}
+
+export async function getPortfolioTasks(): Promise<TaskRow[]> {
+  const client = requireLiveSupabase();
+  const { data, error } = await client
+    .from('tasks')
+    .select('*, owner:profiles!tasks_owner_id_fkey(full_name_en,full_name_ar), assignee:profiles!tasks_assigned_to_fkey(full_name_en,full_name_ar)')
+    .order('due_date', { ascending: true, nullsFirst: false })
+    .limit(2000);
+  if (error) throw error;
+  return filterScenarioLabRows((data as unknown as TaskRow[]) || []);
 }
 
 export async function getRisks(): Promise<RiskRow[]> {
@@ -530,21 +561,21 @@ export async function getComplianceItems(): Promise<ComplianceRow[]> {
   }
 }
 
-export async function getAuditFindings(): Promise<AuditFindingRow[]> {
-  if (!supabase) return emptyLiveArray<any>();
+export const AUDIT_FINDINGS_DEPARTMENT_RELATIONSHIP = 'audit_findings_responsible_department_id_fkey';
 
-  try {
-    const { data, error } = await supabase
-      .from('audit_findings')
-      .select('*, departments(name_en,name_ar), owner:profiles!audit_findings_owner_id_fkey(full_name_en,full_name_ar)')
-      .order('due_date', { ascending: true, nullsFirst: false })
-      .limit(100);
-    if (error) throw error;
-    return filterScenarioLabRows((data as unknown as AuditFindingRow[])?.length ? (data as unknown as AuditFindingRow[]) : liveEmptyAuditFindings);
-  } catch (error) {
+export async function getAuditFindings(): Promise<AuditFindingRow[]> {
+  if (!supabase) throw new Error('Audit findings source is unavailable.');
+
+  const { data, error } = await supabase
+    .from('audit_findings')
+    .select(`*, departments!${AUDIT_FINDINGS_DEPARTMENT_RELATIONSHIP}(name_en,name_ar), owner:profiles!audit_findings_owner_id_fkey(full_name_en,full_name_ar)`)
+    .order('due_date', { ascending: true, nullsFirst: false })
+    .limit(100);
+  if (error) {
     logFallback('audit findings', error);
-    return emptyLiveArray<any>();
+    throw new Error('Audit findings source is unavailable.');
   }
+  return filterScenarioLabRows((data as unknown as AuditFindingRow[]) || []);
 }
 
 async function readPatch24View<T>(view: string, label: string, orderColumn = 'due_date'): Promise<T[]> {

@@ -6,6 +6,11 @@ on:
       - main
   pull_request:
   workflow_dispatch:
+    inputs:
+      rls_base_sha:
+        description: Exact base commit for the fail-closed RLS regression proof
+        required: true
+        type: string
 
 jobs:
   validation:
@@ -16,6 +21,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -44,5 +51,7 @@ jobs:
       - name: Security audit
         run: npm audit --audit-level=high
 
-      - name: Full proof suite
-        run: npm run proof:all
+      - name: Hermetic proof suite
+        env:
+          GRC_RLS_BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || inputs.rls_base_sha }}
+        run: npm run proof:ci

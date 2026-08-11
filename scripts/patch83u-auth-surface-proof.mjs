@@ -562,7 +562,7 @@ export function analyzePatch83uAuthSurface({
     .sort((a, b) => a.signature.localeCompare(b.signature));
   const targetBroadSecurityDefiners = [];
   const reviewedRestrictedSecurityDefiners = [];
-  const reviewedPatch83uMigrationCeiling = 189;
+  const reviewedPatch83uMigrationCeiling = 194;
   const explicitServiceOnlyAclFloor = 176;
   for (const [name, definitions] of state.functions) {
     for (const definition of definitions) {
@@ -730,10 +730,10 @@ export function analyzePatch83uAuthSurface({
     status: findings.length ? 'fail' : 'pass',
     evidence: {
       browser_source: 'src/**/*.{ts,tsx}',
-      target_schema: 'ordered supabase/migrations/*.sql through reviewed migration 189',
+      target_schema: 'ordered supabase/migrations/*.sql through reviewed migration 194',
       deployed_function_catalog: deployedFunctionInventory ? 'release/patch83q/patch83q-live-security-definer-inventory.json' : 'not supplied',
       deployed_search_entries: deployedSearch.length,
-      note: 'Static target-schema proof. Runtime catalog verification of migration 189 remains required after authorized application.',
+      note: 'Static target-schema proof through reviewed migration 194. No hosted catalog state is claimed.',
     },
     summary: {
       direct_browser_rpc_count: directRpcs.length,
@@ -772,7 +772,7 @@ export function analyzePatch83uAuthSurface({
     acl_reachable_security_definer_rpcs: {
       retained_live: liveBroadSecurityDefiners,
       target_migrations_171_plus: targetBroadSecurityDefiners,
-      reviewed_restricted_migrations_176_177: reviewedRestrictedSecurityDefiners,
+      reviewed_restricted_security_definers: reviewedRestrictedSecurityDefiners,
       retained_live_allowlist: [...retainedLiveHelperAllowlist.entries()].map(([signature, purpose]) => ({ signature, purpose })),
       target_rls_helper_allowlist: [...targetRlsHelperAllowlist.entries()].map(([name, purpose]) => ({ name, purpose })),
       patch83u_dynamic_revoke_proven: state.patch83uDynamicRevoke,
@@ -841,7 +841,7 @@ function renderMarkdown(report) {
   ].map((rpc) =>
     `| \`${rpc.signature}\` | ${rpc.source} | ${rpc.public_execute ? 'yes' : 'no'} | ${rpc.anon_execute ? 'yes' : 'no'} | ${rpc.authenticated_execute ? 'yes' : 'no'} | ${rpc.allowed ? 'allowed' : 'UNSAFE'} | ${rpc.allowed_purpose || ''} |`,
   ).join('\n');
-  const restrictedRpcRows = report.acl_reachable_security_definer_rpcs.reviewed_restricted_migrations_176_177
+  const restrictedRpcRows = report.acl_reachable_security_definer_rpcs.reviewed_restricted_security_definers
     .map((rpc) =>
       `| \`${rpc.signature}\` | ${rpc.source} | ${rpc.service_role_execute ? 'yes' : 'no'} | ${rpc.disposition} | \`${rpc.definition_file}:${rpc.definition_line}\` |`,
     ).join('\n');
@@ -850,23 +850,23 @@ function renderMarkdown(report) {
   ).join('\n');
   return `# Patch 83U authenticated browser surface inventory\n\n`
     + `Status: **${report.status.toUpperCase()}**\n\n`
-    + `This is a deterministic static replay of the ordered migration chain through reviewed migration 177 plus actual browser call sites. Supplied evidence records migration 176 as applied to staging, but this static artifact is not live-catalog proof and does not claim migration-177 application or the resulting final catalog state.\n\n`
+    + `This is a deterministic static replay of the ordered migration chain through reviewed migration 194 plus actual browser call sites. It is not live-catalog proof and does not claim any hosted catalog state.\n\n`
     + `## Summary\n\n`
     + `- Direct browser RPCs: ${report.summary.direct_browser_rpc_count}\n`
     + `- Direct browser views: ${report.summary.direct_browser_view_count}\n`
     + `- Direct browser materialized views: ${report.summary.direct_browser_materialized_view_count}\n`
     + `- Unsafe surfaces: ${report.summary.unsafe_surface_count}\n`
     + `- Search transport: ${report.summary.search_transport}\n`
-    + `- Reviewed restricted migration 176–189 SECURITY DEFINER routines: ${report.summary.reviewed_restricted_security_definer_count}\n`
+    + `- Reviewed restricted migration 176–194 SECURITY DEFINER routines: ${report.summary.reviewed_restricted_security_definer_count}\n`
     + `- Target credential-gate migration present: ${report.summary.credential_gate_target_present ? 'yes' : 'no'}\n\n`
     + `## search_grc_global\n\n`
     + `Disposition: **${report.search_grc_global.disposition}**. The accepted design is the authenticated Edge bridge using an anon-key Supabase client carrying the caller Bearer token; the RPC remains SECURITY INVOKER and its complete view/base-table chain must remain security-invoker and credential-gated by RLS.\n\n`
     + `## ACL-reachable SECURITY DEFINER routines\n\n`
-    + `The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–174 permit exactly three Patch 83U RLS decision helpers. Every SECURITY DEFINER routine introduced, replaced, or renamed by migrations 176–177 must contain its own explicit revoke from PUBLIC/anon/authenticated plus either an explicit service_role-only grant or an explicit owner-only service_role revoke; migration 174's earlier dynamic revoke is not accepted as evidence for migrations 176–177.\n\n`
+    + `The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–174 permit exactly three Patch 83U RLS decision helpers. Every SECURITY DEFINER routine introduced, replaced, or renamed by migrations 176–194 must contain its own explicit revoke from PUBLIC/anon/authenticated plus either an explicit service_role-only grant or an explicit owner-only service_role revoke; migration 174's earlier dynamic revoke is not accepted as evidence for later migrations. Migration 195 and later fail closed until separately reviewed.\n\n`
     + `| Signature | Evidence source | PUBLIC | anon | authenticated | Disposition | Purpose |\n`
     + `|---|---|---:|---:|---:|---|---|\n${rpcRows || '| _none_ | | | | | | |'}\n\n`
-    + `### Reviewed restricted routines from migrations 176–177\n\n`
-    + `These routines are not reachable by browser roles. They are listed explicitly so migration 177's stable finalizer name and in-migration ACL proof remain visible.\n\n`
+    + `### Reviewed restricted routines from migrations 176–194\n\n`
+    + `These routines are not reachable by browser roles. They are listed explicitly so every reviewed definition and its migration-local ACL proof remain visible.\n\n`
     + `| Signature | Evidence source | service_role | Disposition | Definition evidence |\n`
     + `|---|---|---:|---|---|\n${restrictedRpcRows || '| _none_ | | | | |'}\n\n`
     + `## Materialized views\n\n`

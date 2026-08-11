@@ -121,6 +121,74 @@ export interface ExecutiveSummary {
   pendingEvidenceReviews: number;
 }
 
+export interface PrivacySafeMetricBand {
+  state: 'zero' | 'suppressed' | 'banded' | 'unavailable';
+  label: string;
+  suppressed: boolean;
+  lower_bound?: number;
+  upper_bound?: number;
+}
+
+export interface OvrExecutiveHeadlineAnalytics {
+  definition_version: string;
+  query_shape: 'headline_current_period';
+  generated_at: string;
+  snapshot_date: string;
+  timezone: string;
+  scope: 'organization';
+  allowed_filters: Record<string, never>;
+  metrics: {
+    open_ovr: PrivacySafeMetricBand;
+    new_this_month: PrivacySafeMetricBand;
+    overdue_ovr: {
+      count: PrivacySafeMetricBand;
+      unknown_due: PrivacySafeMetricBand;
+    };
+    major_sentinel: PrivacySafeMetricBand;
+    average_closure_time: PrivacySafeMetricBand & { denominator?: PrivacySafeMetricBand };
+    closure_within_sla: PrivacySafeMetricBand & { denominator?: PrivacySafeMetricBand };
+    potential_repeat: PrivacySafeMetricBand;
+    corrective_action_required: PrivacySafeMetricBand;
+  };
+  privacy: {
+    model: 'deterministic-bands-daily-v1';
+    minimum_cell_size: number;
+    exact_values_returned: false;
+    arbitrary_filters_allowed: false;
+    dimension_drilldown_allowed: false;
+    daily_snapshot_immutable: true;
+    suppression_applied: boolean;
+  };
+}
+
+export interface OvrExecutiveTrendAnalytics {
+  definition_version: string;
+  query_shape: 'monthly_trend_12';
+  generated_at: string;
+  snapshot_date: string;
+  timezone: string;
+  scope: 'organization';
+  allowed_filters: Record<string, never>;
+  buckets: Array<{
+    bucket_key: string;
+    new_reports: PrivacySafeMetricBand;
+    closed_reports: PrivacySafeMetricBand;
+  }>;
+  privacy: OvrExecutiveHeadlineAnalytics['privacy'];
+}
+
+export interface OvrExecutiveDashboardAnalytics {
+  snapshot: {
+    snapshot_id: string;
+    snapshot_date: string;
+    generated_at: string;
+    definition_version: string;
+    privacy_model: 'deterministic-bands-daily-v1';
+  };
+  headline: OvrExecutiveHeadlineAnalytics;
+  trend: OvrExecutiveTrendAnalytics;
+}
+
 export interface CriticalAttentionItem {
   id: string;
   itemType: string;
@@ -180,6 +248,7 @@ export interface ManagementControlSummary {
 export interface ProjectRow {
   id: string;
   organization_id?: string;
+  department_id?: string | null;
   title: string;
   description: string | null;
   category: string;
@@ -237,6 +306,7 @@ export interface TaskRow {
 export interface RiskRow {
   id: string;
   organization_id?: string;
+  department_id?: string | null;
   risk_code: string | null;
   title: string;
   description: string | null;
@@ -467,6 +537,7 @@ export interface RiskWorkflowEventRow {
 export interface ComplianceRow {
   id: string;
   organization_id?: string;
+  department_id?: string | null;
   compliance_code: string | null;
   title: string;
   description?: string | null;
@@ -483,6 +554,7 @@ export interface ComplianceRow {
 export interface AuditFindingRow {
   id: string;
   organization_id?: string;
+  department_id?: string | null;
   finding_code: string | null;
   audit_title: string | null;
   title: string;
@@ -784,6 +856,7 @@ export interface MyWorkRow {
   milestone_id: string | null;
   project_title?: string | null;
   department_name?: string | null;
+  departments?: { name_en: string | null; name_ar: string | null } | null;
 }
 
 export interface ApprovalRow {
