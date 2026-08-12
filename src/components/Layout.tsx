@@ -50,6 +50,7 @@ import {
 } from "../auth/authAccess";
 import { isScenarioLabEnabled } from "../lib/scenarioLab";
 import { ControlledPilotBanner } from "./ControlledPilotBanner";
+import { BrandLogo } from "./BrandLogo";
 import type { PageKey, PageNavigator } from "../routes/pageLocation";
 
 export type { PageKey, PageNavigator } from "../routes/pageLocation";
@@ -745,12 +746,8 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
       dir={direction}
     >
       <aside className="sidebar modern-sidebar">
-        <div className="brand-block brand-block-modern">
-          <div className="brand-mark">GRC</div>
-          <div>
-            <h1>{t("app.shortTitle")}</h1>
-            <p>{t("app.tagline")}</p>
-          </div>
+        <div className="brand-block brand-block-modern brand-block--acc">
+          <BrandLogo variant="sidebar" />
         </div>
 
         <button
