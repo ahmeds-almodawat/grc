@@ -12,9 +12,30 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: read
+
 jobs:
+  deployment-control:
+    name: Vercel deployment control
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify fail-closed policy
+        run: npm run v700:vercel-deployment-policy
+
   validation:
     name: Build, Test, Security, Proof
+    needs: deployment-control
     runs-on: ubuntu-latest
     timeout-minutes: 30
 

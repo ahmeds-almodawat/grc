@@ -1,0 +1,8 @@
+# Fail-closed Production deployment controls require repository-owner review.
+/vercel.json @ahmeds-almodawat
+/scripts/verify-vercel-deployment-control.mjs @ahmeds-almodawat
+/tests/unit/vercelDeploymentControl.test.ts @ahmeds-almodawat
+/scripts/v700-proof-suite.mjs @ahmeds-almodawat
+/.github/workflows/ @ahmeds-almodawat
+/.github/CODEOWNERS @ahmeds-almodawat
+/package.json @ahmeds-almodawat

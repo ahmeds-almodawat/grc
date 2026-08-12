@@ -189,6 +189,7 @@ describe('R6 proof-suite and GitHub workflow contract', () => {
       'v64:persona-sql',
       'v700:rpc-inventory',
       'v700:v65-audit-strict',
+      'v700:vercel-deployment-policy',
     ]);
     for (const command of proofGroups.ci) {
       expect(proofCommandContracts[command]).toMatchObject({ hermetic: true });
