@@ -5,6 +5,7 @@ import { TurnstileLoginCaptcha } from '../auth/TurnstileLoginCaptcha';
 import { getLoginCaptchaSubmissionError, loginCaptchaConfig } from '../auth/loginCaptcha';
 import { useI18n } from '../i18n/I18nContext';
 import { isSupabaseConfigured } from '../lib/supabase';
+import { BrandLogo } from '../components/BrandLogo';
 
 const EMPLOYEE_ID_LOGIN_DOMAIN = 'almodawat.sa';
 
@@ -67,12 +68,9 @@ export function LoginPage() {
   return (
     <main className={`auth-screen ${direction === 'rtl' ? 'rtl-shell' : ''}`} dir={direction}>
       <section className="auth-card">
-        <div className="auth-brand">
-          <div className="brand-mark">GRC</div>
-          <div>
-            <p>{isArabic ? 'مركز التحكم المؤسسي' : 'Governance Control Center'}</p>
-            <h1>{title}</h1>
-          </div>
+        <div className="auth-brand auth-brand--acc">
+          <BrandLogo variant="auth" />
+          <h1>{title}</h1>
         </div>
 
         <p className="auth-subtitle">{subtitle}</p>

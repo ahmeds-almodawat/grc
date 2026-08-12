@@ -8539,6 +8539,63 @@ table tbody tr:hover {
   overflow-y: auto;
 }
 
+/* ACC platform branding. The approved artwork remains intact and is only
+   responsively contained within the existing brand surfaces. */
+.acc-brand-logo {
+  display: block;
+  flex: 0 0 auto;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.auth-screen {
+  max-width: 100vw;
+  overflow-x: clip;
+  width: 100%;
+}
+
+.brand-block--acc {
+  display: grid;
+  justify-items: center;
+  padding: 0 0 8px;
+}
+
+.acc-brand-logo--sidebar {
+  width: min(100%, 190px);
+}
+
+.auth-brand--acc {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  text-align: center;
+}
+
+.acc-brand-logo--auth {
+  width: min(100%, 240px);
+}
+
+.acc-brand-logo--loading {
+  margin: 0 auto 14px;
+  width: min(100%, 170px);
+}
+
+@media (max-width: 640px) {
+  .acc-brand-logo--sidebar {
+    width: min(100%, 170px);
+  }
+
+  .acc-brand-logo--auth {
+    width: min(100%, 210px);
+  }
+
+  .acc-brand-logo--loading {
+    width: min(100%, 150px);
+  }
+}
+
 /* PATCH 82J: Risk Register sizing pass — the modal, cards and queue tables on
    this page reuse generic .panel/.mini-card/.module-card/.form-grid rules that
    are tuned (with !important) for full-page layouts, which made this page and

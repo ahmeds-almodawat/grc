@@ -39,6 +39,7 @@ import {
   WandSparkles,
 } from "lucide-react";
 import { Layout } from "./components/Layout";
+import { BrandLogo } from "./components/BrandLogo";
 import { useAuth } from "./auth/AuthProvider";
 import {
   canAccessPageForUser,
@@ -1246,7 +1247,7 @@ export default function App() {
     return (
       <main className="auth-screen">
         <section className="auth-card auth-card--compact">
-          <div className="brand-mark">GRC</div>
+          <BrandLogo variant="loading" />
           <h1>{t("auth.loadingSecureSession")}</h1>
           <p>{t("auth.loadingSecureSessionHint")}</p>
         </section>
