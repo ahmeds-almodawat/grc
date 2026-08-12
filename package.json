@@ -8,6 +8,7 @@
     "dev:staging": "node scripts/start-patch83u-staging-frontend.mjs",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "v700:vercel-deployment-policy": "node scripts/verify-vercel-deployment-control.mjs",
     "typecheck": "tsc --noEmit",
     "lint:types": "tsc --noEmit",
     "supabase:local:start": "supabase start",

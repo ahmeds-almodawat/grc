@@ -20,6 +20,7 @@ export const proofGroups = Object.freeze({
     'v64:persona-sql',
     'v700:rpc-inventory',
     'v700:v65-audit-strict',
+    'v700:vercel-deployment-policy',
   ]),
   technical: Object.freeze([
     'typecheck',
@@ -63,6 +64,7 @@ export const proofCommandContracts = Object.freeze({
   'v64:persona-sql': { hermetic: true, classification: 'repository-static', proves: 'Committed persona SQL exists and can be packaged without executing it.' },
   'v700:rpc-inventory': { hermetic: true, classification: 'repository-static', proves: 'Current frontend direct-RPC and authenticated-edge-bridge inventory.' },
   'v700:v65-audit-strict': { hermetic: true, classification: 'repository-static', proves: 'Canonical v65 SQL security assertions and committed copies remain complete and synchronized.' },
+  'v700:vercel-deployment-policy': { hermetic: true, classification: 'repository-static', proves: 'Main cannot create a Git deployment and repository automation cannot deploy or move Vercel Production traffic.' },
   'v64:strict-all': { hermetic: true, classification: 'absolute-release-proof', proves: 'Absolute current-tree RLS/function/view release posture; inherited blockers remain blocking.' },
   'v673:security-definer-audit': { hermetic: false, classification: 'local-runtime-proof', proves: 'Effective PostgreSQL SECURITY DEFINER execute ACLs in a running local Supabase database.' },
   'v700:v65-audit': { hermetic: true, classification: 'repository-static-report', proves: 'Non-strict v65 SQL contract report.' },
