@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, FilePlus2, GitBranch, ShieldCheck, Upload, Workflow } from 'lucide-react';
+import { AlertTriangle, FilePlus2, GitBranch, Printer, ShieldCheck, Upload, Workflow } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { EmptySupabaseNotice } from '../components/EmptySupabaseNotice';
@@ -8,6 +8,7 @@ import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
 import { EvidenceUploadForm } from '../components/WorkItemControls';
+import { OvrPrintableReport } from '../components/OvrPrintableReport';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { formatDate, humanize } from '../lib/format';
 import { isEmptyLiveObject } from '../lib/liveData';
@@ -15,6 +16,7 @@ import {
   createOvrCorrectiveActionProject,
   createOvrReport,
   getDepartments,
+  getEvidenceForItem,
   getOrganizations,
   getOvrReports,
   getOvrSummary,
@@ -177,6 +179,10 @@ export function OVR() {
   const [severityFilter, setSeverityFilter] = useState<'all' | OvrSeverityLevel>('all');
   const [workflowSaving, setWorkflowSaving] = useState(false);
   const [workflowMessage, setWorkflowMessage] = useState<string | null>(null);
+  const printableEvidence = useAsyncData(
+    () => selectedReport ? getEvidenceForItem('ovr_report', selectedReport.id) : Promise.resolve([]),
+    [selectedReport?.id],
+  );
   const [workflowForm, setWorkflowForm] = useState({
     supervisor_investigation: '',
     corrective_action: '',
@@ -779,6 +785,14 @@ export function OVR() {
             </div>
 
             <div className="workflow-actions">
+              <button
+                className="ghost-button"
+                type="button"
+                disabled={printableEvidence.loading || Boolean(printableEvidence.error)}
+                onClick={() => window.print()}
+              >
+                <Printer size={16} />{t('ovr.print.action', 'Print OVR')}
+              </button>
               {selectedReport.status === 'submitted' && (isManagerFor(selectedReport) || isQuality) ? (
                 <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('manager_review')}><Workflow size={16} />{t('ovr.completeManagerReview')}</button>
               ) : null}
@@ -821,6 +835,12 @@ export function OVR() {
                 <button className="ghost-button" disabled={workflowSaving || Boolean(selectedReport.linked_project_id)} onClick={createLinkedProject}><GitBranch size={16} />{selectedReport.linked_project_id ? t('ovr.projectAlreadyLinked') : t('ovr.createLinkedProject')}</button>
               ) : null}
             </div>
+            {printableEvidence.error ? (
+              <div className="form-error">
+                {t('ovr.print.evidenceUnavailable', 'Authorized evidence could not be loaded, so printing is temporarily unavailable.')}
+              </div>
+            ) : null}
+            <OvrPrintableReport report={selectedReport} evidence={printableEvidence.data || []} />
           </div>
         ) : null}
       </Modal>
