@@ -1230,63 +1230,10 @@ button.grc-metric-card:focus-visible .grc-metric-card__arrow {
   --grc-shadow: 0 16px 38px rgba(0, 0, 0, 0.22);
 }
 
+/* Progressive fallback before the theme provider mounts. Explicit Light/Dark
+   preferences always win because they set data-theme synchronously. */
 @media (prefers-color-scheme:dark) {
-  .grc-dashboard {
-    --grc-text: #dfe8f2;
-    --grc-heading: #f5f8fb;
-    --grc-muted: #9dadbf;
-    --grc-surface: #07111d;
-    --grc-surface-strong: #101c2c;
-    --grc-surface-muted: #142335;
-    --grc-border: #2b3a4d;
-    --grc-border-strong: #3b4b5f;
-    --grc-primary: #52b8aa;
-    --grc-primary-soft: #173a3a;
-    --grc-danger: #ef6c75;
-    --grc-danger-soft: #41252d;
-    --grc-warning: #e5a34d;
-    --grc-warning-soft: #3d3222;
-    --grc-good: #56bf8f;
-    --grc-good-soft: #18372e;
-    --grc-info: #70a7df;
-    --grc-shadow: 0 16px 38px rgba(0, 0, 0, 0.22);
-  }
-
-  .modern-main-content:has(> .grc-dashboard) {
-    background: #07111d;
-  }
-
-  .modern-main-content:has(> .grc-dashboard) .modern-topbar {
-    color: #dfe8f2;
-    border-color: #2b3a4d;
-    background: rgba(16, 28, 44, 0.92);
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
-  }
-
-  .modern-main-content:has(> .grc-dashboard) .modern-topbar h2 {
-    color: #f5f8fb;
-  }
-
-  .modern-main-content:has(> .grc-dashboard) .modern-topbar .eyebrow,
-  .modern-main-content:has(> .grc-dashboard) .auth-user-pill small {
-    color: #9dadbf;
-  }
-
-  .modern-main-content:has(> .grc-dashboard) .topbar-actions .ghost-button,
-  .modern-main-content:has(> .grc-dashboard) .auth-user-pill,
-  .modern-main-content:has(> .grc-dashboard) .controlled-pilot-banner {
-    color: #dfe8f2;
-    border-color: #3b4b5f;
-    background: #142335;
-  }
-
-  .modern-main-content:has(> .grc-dashboard) .controlled-pilot-banner strong {
-    color: #f5f8fb;
-  }
-
-  .modern-main-content:has(> .grc-dashboard) .controlled-pilot-banner span {
-    border-color: #3b4b5f;
-  }
+  :root:not([data-theme]) .grc-dashboard { color-scheme: dark; }
 }
 
 @media (max-width:1100px) {

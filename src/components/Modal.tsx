@@ -10,6 +10,8 @@ interface ModalProps {
   closeLabel?: string;
   direction?: 'ltr' | 'rtl';
   headerDescription?: ReactNode;
+  size?: 'small' | 'medium' | 'large' | 'xl' | 'workspace';
+  footer?: ReactNode;
 }
 
 export function Modal({
@@ -21,6 +23,8 @@ export function Modal({
   closeLabel,
   direction,
   headerDescription,
+  size = 'medium',
+  footer,
 }: ModalProps) {
   const i18n = useI18n();
   if (!open) return null;
@@ -30,7 +34,7 @@ export function Modal({
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
       <div
-        className={`modal-card ${className}`.trim()}
+        className={`modal-card modal-card--${size} ${className}`.trim()}
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -55,7 +59,8 @@ export function Modal({
             {resolvedCloseLabel}
           </button>
         </div>
-        {children}
+        <div className="modal-body">{children}</div>
+        {footer ? <div className="modal-footer">{footer}</div> : null}
       </div>
     </div>
   );

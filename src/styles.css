@@ -417,20 +417,116 @@ td {
   z-index: 50;
 }
 .modal-card {
-  width: min(920px, 100%);
+  width: min(720px, 100%);
   max-height: min(92vh, 860px);
-  overflow: auto;
-  background: white;
+  overflow: hidden;
+  background: var(--ui-surface-solid, white);
   border-radius: 24px;
   box-shadow: 0 30px 80px rgba(15, 23, 42, 0.35);
   padding: 22px;
 }
+.modal-card--small { width: min(440px, 100%); }
+.modal-card--medium { width: min(720px, 100%); }
+.modal-card--large { width: min(980px, 100%); }
+.modal-card--xl { width: min(1200px, 100%); }
+.modal-card--workspace { width: min(1440px, 100%); height: min(92vh, 960px); }
+.modal-body { min-height: 0; overflow: auto; padding: 2px; }
+.modal-footer { position: sticky; bottom: 0; z-index: 2; margin: 18px -22px -22px; padding: 14px 22px; border-top: 1px solid var(--ui-border, #dbe3ef); background: var(--ui-surface-solid, #fff); }
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 18px;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--ui-border, #dbe3ef);
+  background: var(--ui-surface-solid, #fff);
+}
+
+.theme-control {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 1px solid var(--ui-border, #dbe3ef);
+  border-radius: var(--ui-radius, 12px);
+  color: var(--ui-ink, #172033);
+  background: var(--ui-surface-solid, #fff);
+}
+.theme-control select { border: 0; color: inherit; background: transparent; font: inherit; font-weight: 700; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+:root {
+  color-scheme: light;
+  --ui-page: #f3f6fa;
+  --ui-surface-solid: #ffffff;
+  --ui-surface: rgba(255,255,255,.94);
+  --ui-ink: #172033;
+  --ui-muted: #64748b;
+  --ui-border: #dbe3ef;
+  --surface: var(--ui-surface-solid);
+  --surface-muted: #eef2f7;
+  --surface-subtle: #f8fafc;
+  --text-primary: var(--ui-ink);
+  --text-muted: var(--ui-muted);
+  --border-color: var(--ui-border);
+  --primary-color: #176b61;
+  --danger-color: #b42318;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ui-page: #07111d;
+  --ui-surface-solid: #101c2c;
+  --ui-surface: rgba(16,28,44,.94);
+  --ui-ink: #f5f8fb;
+  --ui-muted: #9dadbf;
+  --ui-border: #2b3a4d;
+  --surface: var(--ui-surface-solid);
+  --surface-muted: #142335;
+  --surface-subtle: #101c2c;
+  --text-primary: var(--ui-ink);
+  --text-muted: var(--ui-muted);
+  --border-color: var(--ui-border);
+  --primary-color: #52b8aa;
+  --danger-color: #ef6c75;
+}
+:root[data-theme="dark"] body,
+:root[data-theme="dark"] .modern-main-content { background: var(--ui-page); color: var(--ui-ink); }
+:root[data-theme="dark"] .modern-topbar,
+:root[data-theme="dark"] .modal-card,
+:root[data-theme="dark"] .panel,
+:root[data-theme="dark"] .modern-card,
+:root[data-theme="dark"] .kpi-tile,
+:root[data-theme="dark"] .module-card,
+:root[data-theme="dark"] .workspace-card { background: var(--ui-surface); color: var(--ui-ink); border-color: var(--ui-border); }
+:root[data-theme="dark"] h1,
+:root[data-theme="dark"] h2,
+:root[data-theme="dark"] h3,
+:root[data-theme="dark"] h4,
+:root[data-theme="dark"] strong { color: var(--ui-ink); }
+:root[data-theme="dark"] p,
+:root[data-theme="dark"] small,
+:root[data-theme="dark"] .muted,
+:root[data-theme="dark"] .section-subtitle { color: var(--ui-muted); }
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] .ghost-button,
+:root[data-theme="dark"] .auth-user-pill { color: var(--ui-ink); background: var(--ui-surface-solid); border-color: var(--ui-border); }
+
+@media (max-width: 720px) {
+  .modal-backdrop { padding: 0; place-items: stretch; }
+  .modal-card--large,
+  .modal-card--xl,
+  .modal-card--workspace { width: 100%; height: 100dvh; max-height: none; border-radius: 0; }
+  .modal-card--small,
+  .modal-card--medium { width: calc(100% - 24px); margin: auto; max-height: calc(100dvh - 24px); }
+  .modal-header { align-items: flex-start; }
+  .theme-control select { max-width: 82px; }
 }
 .modal-header h4 {
   margin: 0;
@@ -511,8 +607,9 @@ td {
   gap: 18px;
 }
 .detail-hero {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--ui-surface-solid, #f8fafc);
+  border: 1px solid var(--ui-border, #e2e8f0);
+  color: var(--ui-ink, #172033);
   border-radius: 20px;
   padding: 20px;
   display: flex;
@@ -533,8 +630,24 @@ td {
 }
 .inner-panel {
   box-shadow: none;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--ui-border, #e2e8f0);
 }
+.project-detail .mini-card span,
+.project-detail .panel-header p { color: var(--ui-muted, #64748b); }
+.project-detail .mini-card strong,
+.project-detail .detail-hero h3,
+.project-detail .panel-header h4 { color: var(--ui-ink, #172033); }
+.governed-evidence-list { display: grid; gap: 10px; }
+.governed-evidence-file { display: grid; grid-template-columns: minmax(180px, 1fr) auto; gap: 10px 16px; align-items: center; padding: 12px; border: 1px solid var(--ui-border, #dbe3ef); border-radius: 12px; background: var(--ui-surface-solid, #fff); }
+.governed-evidence-file__name { display: inline-flex; align-items: center; gap: 7px; min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
+.governed-evidence-file__details { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--ui-muted, #64748b); }
+.governed-evidence-file__details small { flex-basis: 100%; }
+.roster-refreshing { color: var(--ui-muted, #64748b); font-size: 12px; font-weight: 700; }
+.roster-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding-top: 12px; color: var(--ui-muted, #64748b); }
+.roster-skeleton-bar { display: block; min-width: 48px; height: 13px; border-radius: 999px; background: linear-gradient(90deg, var(--ui-border, #e2e8f0), var(--ui-surface-solid, #fff), var(--ui-border, #e2e8f0)); background-size: 220% 100%; animation: roster-shimmer 1.2s linear infinite; }
+@keyframes roster-shimmer { to { background-position: -220% 0; } }
+.route-loading-shell { min-height: 180px; display: grid; place-items: center; }
+@media (max-width: 720px) { .governed-evidence-file { grid-template-columns: 1fr; } .governed-evidence-file__details { grid-column: 1; } }
 .split-header {
   display: flex;
   align-items: flex-start;
@@ -8919,6 +9032,57 @@ table tbody tr:hover {
 
 .user-workbook-file strong {
   overflow-wrap: anywhere;
+}
+
+/* ACC v1.3 semantic theme bridge for legacy surfaces. The navigation rail
+   intentionally remains dark in both modes; application work surfaces follow
+   the explicit root theme. */
+:root[data-theme="dark"] code,
+:root[data-theme="dark"] .topbar,
+:root[data-theme="dark"] .stat-card,
+:root[data-theme="dark"] .panel,
+:root[data-theme="dark"] .mini-card,
+:root[data-theme="dark"] .work-card,
+:root[data-theme="dark"] .module-card,
+:root[data-theme="dark"] .template-card,
+:root[data-theme="dark"] .detail-grid > div,
+:root[data-theme="dark"] .check-chip,
+:root[data-theme="dark"] .check-line,
+:root[data-theme="dark"] .workflow-step,
+:root[data-theme="dark"] .table-wrapper,
+:root[data-theme="dark"] .field input,
+:root[data-theme="dark"] .field select,
+:root[data-theme="dark"] .field textarea,
+:root[data-theme="dark"] .form-grid input,
+:root[data-theme="dark"] .form-grid select,
+:root[data-theme="dark"] .form-grid textarea,
+:root[data-theme="dark"] .toolbar input,
+:root[data-theme="dark"] .toolbar select {
+  color: var(--ui-ink);
+  background: var(--ui-surface-solid);
+  border-color: var(--ui-border);
+}
+
+:root[data-theme="dark"] table,
+:root[data-theme="dark"] th,
+:root[data-theme="dark"] td {
+  color: var(--ui-ink);
+  border-color: var(--ui-border);
+}
+
+:root[data-theme="dark"] th,
+:root[data-theme="dark"] tr:nth-child(even) td {
+  background: #0d1928;
+}
+
+:root[data-theme="dark"] .stat-label,
+:root[data-theme="dark"] .mini-card span,
+:root[data-theme="dark"] .work-card p,
+:root[data-theme="dark"] .module-card span,
+:root[data-theme="dark"] .template-card span,
+:root[data-theme="dark"] .detail-grid span,
+:root[data-theme="dark"] .eyebrow {
+  color: var(--ui-muted);
 }
 
 .user-import-kpis {

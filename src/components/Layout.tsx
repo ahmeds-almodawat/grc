@@ -23,6 +23,7 @@ import {
   KeyRound,
   Landmark,
   Languages,
+  MonitorCog,
   LogOut,
   LockKeyhole,
   Network,
@@ -41,6 +42,7 @@ import {
   GraduationCap,
   FileSpreadsheet,
 } from "lucide-react";
+import { useTheme, type ThemePreference } from "../theme/ThemeContext";
 import { useI18n } from "../i18n/I18nContext";
 import { useAuth } from "../auth/AuthProvider";
 import {
@@ -696,6 +698,7 @@ function NavTreeButton({
 export function Layout({ page, navigateToPage, children }: LayoutProps) {
   const { language, direction, toggleLanguage, t } = useI18n();
   const auth = useAuth();
+  const { preference, setPreference } = useTheme();
   const organizationName = auth.profile?.organizationName;
   const canOpen = (targetPage: PageKey) =>
     canAccessPageForUser(targetPage, auth.roles, organizationName);
@@ -880,6 +883,19 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
               <Languages size={16} />
               {language === "en" ? "AR" : "EN"}
             </button>
+            <label className="theme-control" title={t("theme.control", "Appearance theme")}>
+              <MonitorCog size={16} aria-hidden="true" />
+              <span className="sr-only">{t("theme.control", "Appearance theme")}</span>
+              <select
+                aria-label={t("theme.control", "Appearance theme")}
+                value={preference}
+                onChange={(event) => setPreference(event.target.value as ThemePreference)}
+              >
+                <option value="light">{t("theme.light", "Light")}</option>
+                <option value="dark">{t("theme.dark", "Dark")}</option>
+                <option value="system">{t("theme.system", "System")}</option>
+              </select>
+            </label>
             <div className="auth-user-pill" title={auth.profile?.email}>
               <span>{displayName}</span>
               <small>{auth.primaryRole ? t(`role.${auth.primaryRole}`, auth.primaryRole.replaceAll("_", " ")) : t("common.unknown")}</small>

@@ -713,7 +713,7 @@ export function OVR() {
         ) : null}
       </div>
 
-      <Modal title={selectedReport?.ovr_number || selectedReport?.logging_number || t('ovr.detailTitle')} open={Boolean(selectedReport)} onClose={() => setSelectedReport(null)}>
+      <Modal size="workspace" title={selectedReport?.ovr_number || selectedReport?.logging_number || t('ovr.detailTitle')} open={Boolean(selectedReport)} onClose={() => setSelectedReport(null)}>
         {selectedReport ? (
           <div className="ovr-detail">
             <WorkflowSteps status={selectedReport.status} />
@@ -826,6 +826,7 @@ export function OVR() {
       </Modal>
 
       <Modal
+        size="large"
         title={t('workControl.uploadEvidence')}
         open={Boolean(evidenceUploadReport)}
         onClose={cancelOvrEvidenceUpload}
