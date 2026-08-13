@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.108.2';
+import { normalizeRosterPageRequest } from '../_shared/accV13RosterPaging.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -136,6 +137,10 @@ const allowedActions = new Set([
   'create_department',
   'update_ovr_workflow',
   'create_ovr_corrective_action_project',
+  'acc_v13_update_work_item_status',
+  'acc_v13_evidence_access',
+  'acc_v13_list_eligible_approvers',
+  'acc_v13_request_approval',
   'v99_create_scenario',
   'v99_cleanup_scenarios',
   'v99_scenario_status',
@@ -655,7 +660,7 @@ function normalizedDepartmentValue(value: unknown) {
     : '';
 }
 
-async function readUserManagementRoster(serviceClient: any, actorId: string) {
+async function readUserManagementRoster(serviceClient: any, actorId: string, filters: Record<string, unknown> = {}) {
   const { data: actorProfile, error: actorProfileError } = await serviceClient
     .from('profiles')
     .select('id,organization_id,is_active,user_status')
@@ -690,36 +695,63 @@ async function readUserManagementRoster(serviceClient: any, actorId: string) {
   );
   if (!authorized) throw new Error('USER_MANAGEMENT_ADMIN_REQUIRED');
 
+  const { paged, pageSize, offset } = normalizeRosterPageRequest(filters);
+  const search = safeString(filters.search).trim().replaceAll('%', '').replaceAll(',', ' ');
+  const departmentId = safeString(filters.department_id).trim();
+  const status = safeString(filters.status).trim();
+  const userType = safeString(filters.user_type).trim();
+  const requestedUserId = safeString(filters.user_id).trim();
+  const roleFilter = safeString(filters.role).trim();
+  let roleUserIds: string[] | null = null;
+  let excludedRoleUserIds: string[] = [];
+  if (roleFilter && roleFilter !== 'all') {
+    let roleFilterQuery = serviceClient
+      .from('user_roles')
+      .select('user_id')
+      .eq('is_active', true)
+      .or(`organization_id.is.null,organization_id.eq.${actorProfile.organization_id}`)
+      .limit(10000);
+    if (roleFilter !== 'missing') roleFilterQuery = roleFilterQuery.eq('role', roleFilter);
+    const roleFilterResult = await roleFilterQuery;
+    if (roleFilterResult.error) throw new Error(roleFilterResult.error.message);
+    const ids = Array.from(new Set<string>((roleFilterResult.data ?? []).reduce((result: string[], row: any) => {
+      const userId = safeString(row.user_id);
+      if (userId) result.push(userId);
+      return result;
+    }, [])));
+    if (roleFilter === 'missing') excludedRoleUserIds = ids;
+    else roleUserIds = ids;
+  }
+  const applyRosterFilters = (query: any) => {
+    let filtered = query.eq('organization_id', actorProfile.organization_id).order('full_name_en', { ascending: true });
+    if (departmentId) filtered = filtered.eq('department_id', departmentId);
+    if (status && status !== 'all') filtered = filtered.eq('user_status', status);
+    if (userType && userType !== 'all') filtered = filtered.eq('user_type', userType);
+    if (requestedUserId) filtered = filtered.eq('id', requestedUserId);
+    if (filters.missing_department === true) filtered = filtered.is('department_id', null);
+    if (filters.never_logged_in === true) filtered = filtered.is('last_login_at', null);
+    if (search) filtered = filtered.or(`full_name_en.ilike.%${search}%,full_name_ar.ilike.%${search}%,email.ilike.%${search}%,employee_no.ilike.%${search}%`);
+    if (roleUserIds) filtered = roleUserIds.length ? filtered.in('id', roleUserIds) : filtered.eq('id', '00000000-0000-0000-0000-000000000000');
+    if (excludedRoleUserIds.length) filtered = filtered.not('id', 'in', `(${excludedRoleUserIds.join(',')})`);
+    return paged ? filtered.range(offset, offset + pageSize - 1) : filtered.limit(pageSize);
+  };
+
   const patch83tSelect = 'id,organization_id,employee_no,full_name_en,full_name_ar,email,contact_email,phone,job_title,division_id,department_id,unit_id,is_active,created_at,updated_at,user_status,user_type,last_login_at,last_reviewed_at,deactivated_at,deactivated_by,deactivation_reason';
   const patch19Select = 'id,organization_id,employee_no,full_name_en,full_name_ar,email,phone,job_title,division_id,department_id,unit_id,is_active,created_at,updated_at,user_status,user_type,last_login_at,last_reviewed_at,deactivated_at,deactivated_by,deactivation_reason';
   const legacySelect = 'id,organization_id,employee_no,full_name_en,full_name_ar,email,phone,job_title,division_id,department_id,unit_id,is_active,created_at,updated_at';
-  let profileResult = await serviceClient
-    .from('profiles')
-    .select(patch83tSelect)
-    .eq('organization_id', actorProfile.organization_id)
-    .order('full_name_en', { ascending: true })
-    .limit(5000);
+  let profileResult = await applyRosterFilters(serviceClient.from('profiles').select(patch83tSelect));
 
   if (profileResult.error) {
-    profileResult = await serviceClient
-      .from('profiles')
-      .select(patch19Select)
-      .eq('organization_id', actorProfile.organization_id)
-      .order('full_name_en', { ascending: true })
-      .limit(5000);
+    profileResult = await applyRosterFilters(serviceClient.from('profiles').select(patch19Select));
   }
   if (profileResult.error) {
-    profileResult = await serviceClient
-      .from('profiles')
-      .select(legacySelect)
-      .eq('organization_id', actorProfile.organization_id)
-      .order('full_name_en', { ascending: true })
-      .limit(5000);
+    profileResult = await applyRosterFilters(serviceClient.from('profiles').select(legacySelect));
   }
   if (profileResult.error) throw new Error(profileResult.error.message);
 
   const profiles = profileResult.data ?? [];
   const userIds = profiles.map((profile: any) => safeString(profile.id)).filter(Boolean);
+  if (!userIds.length) return [];
   const [departmentResult, divisionResult, unitResult, roleResult, credentialResult, provisioningResult] = await Promise.all([
     serviceClient.from('departments').select('id,code,name_en,name_ar').eq('organization_id', actorProfile.organization_id).limit(5000),
     serviceClient.from('divisions').select('id,name_en').eq('organization_id', actorProfile.organization_id).limit(5000),
@@ -728,6 +760,7 @@ async function readUserManagementRoster(serviceClient: any, actorId: string) {
       ? serviceClient
         .from('user_roles')
         .select('id,user_id,role,scope,organization_id,division_id,department_id,unit_id,is_active,assigned_at')
+        .in('user_id', userIds)
         .or(`organization_id.is.null,organization_id.eq.${actorProfile.organization_id}`)
         .limit(20000)
       : Promise.resolve({ data: [], error: null }),
@@ -735,13 +768,12 @@ async function readUserManagementRoster(serviceClient: any, actorId: string) {
       .from('user_credential_states')
       .select('user_id,auth_email,identity_mode,credential_state,credential_version,password_changed_at,password_reset_at,provisioning_id')
       .eq('organization_id', actorProfile.organization_id)
-      .limit(5000),
+      .in('user_id', userIds),
     serviceClient
       .from('user_account_provisioning')
       .select('id,profile_id,auth_user_id,provisioning_status,updated_at')
       .eq('organization_id', actorProfile.organization_id)
-      .not('profile_id', 'is', null)
-      .limit(5000),
+      .in('profile_id', userIds),
   ]);
 
   if (departmentResult.error) throw new Error(departmentResult.error.message);
@@ -2464,7 +2496,7 @@ Deno.serve(async (request) => {
 
   if (action === 'list_user_management_roster') {
     try {
-      const roster = await readUserManagementRoster(serviceClient, userData.user.id);
+      const roster = await readUserManagementRoster(serviceClient, userData.user.id, requestPayload);
       return jsonResponse({ ok: true, action, result: roster }, 200);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to load user management roster.';
@@ -2992,6 +3024,119 @@ Deno.serve(async (request) => {
     }
 
     return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'acc_v13_update_work_item_status') {
+    const itemType = safeString(requestPayload.item_type).trim().toLowerCase();
+    const itemId = safeString(requestPayload.item_id).trim();
+    const status = safeString(requestPayload.status).trim().toLowerCase();
+    const progress = Number(requestPayload.progress_percent);
+    if (!['project', 'milestone', 'task'].includes(itemType) || !itemId || !status || !Number.isFinite(progress)) {
+      return errorResponse(
+        'The work-item status request is invalid.',
+        400,
+        'ACC_V13_STATUS_PAYLOAD_INVALID',
+        'Select a supported work item, status, and progress from 0 through 100.',
+        { action },
+      );
+    }
+    const { data, error } = await serviceClient.rpc('acc_v13_update_work_item_status', {
+      p_actor_id: userData.user.id,
+      p_item_type: itemType,
+      p_item_id: itemId,
+      p_status: status,
+      p_progress_percent: progress,
+      p_delay_reason: safeString(requestPayload.delay_reason).trim() || null,
+    });
+    if (error) {
+      return errorResponse(
+        'The status update was not applied.',
+        403,
+        'ACC_V13_STATUS_UPDATE_DENIED',
+        safeString(error.message).startsWith('ACC_V13_')
+          ? 'Your current assignment does not authorize this status update, or the request no longer matches the controlled record.'
+          : 'The controlled status update failed safely.',
+        { action },
+      );
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'acc_v13_list_eligible_approvers') {
+    const itemType = safeString(requestPayload.item_type).trim().toLowerCase();
+    const itemId = safeString(requestPayload.item_id).trim();
+    if (!['project', 'milestone', 'task'].includes(itemType) || !itemId) {
+      return errorResponse('The approval context is invalid.', 400, 'ACC_V13_APPROVAL_CONTEXT_INVALID', 'Select a supported work item before choosing an approver.', { action });
+    }
+    const { data, error } = await serviceClient.rpc('acc_v13_list_eligible_approvers', {
+      p_actor_id: userData.user.id,
+      p_item_type: itemType,
+      p_item_id: itemId,
+    });
+    if (error) {
+      return errorResponse('Unable to load eligible approvers.', 403, 'ACC_V13_APPROVER_LOOKUP_DENIED', 'The work item or its governed approver scope is unavailable.', { action });
+    }
+    return jsonResponse({ ok: true, action, result: data ?? [] }, 200);
+  }
+
+  if (action === 'acc_v13_request_approval') {
+    const itemType = safeString(requestPayload.item_type).trim().toLowerCase();
+    const itemId = safeString(requestPayload.item_id).trim();
+    const organizationId = safeString(requestPayload.organization_id).trim();
+    const approverId = safeString(requestPayload.approver_id).trim();
+    if (!['project', 'milestone', 'task'].includes(itemType) || !itemId || !organizationId || !approverId) {
+      return errorResponse('The approval request is invalid.', 400, 'ACC_V13_APPROVAL_REQUEST_INVALID', 'Select a supported work item and eligible approver.', { action });
+    }
+    const { data, error } = await serviceClient.rpc('acc_v13_request_approval', {
+      p_actor_id: userData.user.id,
+      p_organization_id: organizationId,
+      p_item_type: itemType,
+      p_item_id: itemId,
+      p_approver_id: approverId,
+      p_request_note: safeString(requestPayload.request_note).trim() || null,
+    });
+    if (error) {
+      return errorResponse('The approval request was not created.', 403, 'ACC_V13_APPROVAL_REQUEST_DENIED', 'The requester, work item, or approver no longer satisfies the governed approval scope.', { action });
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'acc_v13_evidence_access') {
+    const evidenceFileId = safeString(requestPayload.evidence_file_id).trim();
+    const intent = safeString(requestPayload.intent, 'view').trim().toLowerCase();
+    if (!evidenceFileId || !['view', 'download'].includes(intent)) {
+      return errorResponse('The evidence access request is invalid.', 400, 'ACC_V13_EVIDENCE_REQUEST_INVALID', 'Select an evidence record and a supported access action.', { action });
+    }
+    const { data: accessProof, error: accessError } = await serviceClient.rpc('acc_v13_authorize_evidence_access', {
+      p_actor_id: userData.user.id,
+      p_evidence_file_id: evidenceFileId,
+      p_intent: intent,
+    });
+    if (accessError || !accessProof?.file_path || !accessProof?.file_name) {
+      return errorResponse('Evidence access was denied.', 403, 'ACC_V13_EVIDENCE_ACCESS_DENIED', 'The evidence record is unavailable in your current assignment and authorization scope.', { action });
+    }
+    const { data: signed, error: signedError } = await serviceClient.storage
+      .from('grc-evidence')
+      .createSignedUrl(
+        String(accessProof.file_path),
+        60,
+        intent === 'download' ? { download: String(accessProof.file_name) } : undefined,
+      );
+    if (signedError || !signed?.signedUrl) {
+      return errorResponse('Evidence access could not be prepared.', 503, 'ACC_V13_EVIDENCE_SIGNING_FAILED', 'The private evidence link could not be issued.', { action });
+    }
+    return jsonResponse({
+      ok: true,
+      action,
+      result: {
+        evidence_file_id: evidenceFileId,
+        file_name: accessProof.file_name,
+        file_type: accessProof.file_type ?? null,
+        intent,
+        expires_in_seconds: 60,
+        signed_url: signed.signedUrl,
+      },
+    }, 200);
   }
 
   if (patch23EvidenceActions.has(action)) {

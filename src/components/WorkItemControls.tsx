@@ -1,12 +1,13 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import type { PriorityLevel, ProfileOption, ProjectStatus, WorkStatus } from '../types/domain';
-import { requestApproval, updateMilestoneStatus, updateProjectStatus, updateTaskStatus, uploadEvidenceForItem } from '../lib/grcApi';
+import { getEligibleApprovers, requestApproval, updateMilestoneStatus, updateProjectStatus, updateTaskStatus, uploadEvidenceForItem } from '../lib/grcApi';
 import { ScenarioFillButton } from './ScenarioFillButton';
 import {
   createScenarioLabScenario,
   V99_SCENARIO_TAG,
 } from '../lib/scenarioLab';
 import { useI18n } from '../i18n/I18nContext';
+import { useAuth } from '../auth/AuthProvider';
 
 export type ControllableItemType = 'project' | 'milestone' | 'task';
 export type EvidenceUploadItemType =
@@ -201,16 +202,41 @@ interface ApprovalRequestFormProps {
 
 export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles, onCancel, onRequested }: ApprovalRequestFormProps) {
   const { t, language } = useI18n();
+  const auth = useAuth();
   const [approverId, setApproverId] = useState('');
+  const [eligibleApprovers, setEligibleApprovers] = useState<ProfileOption[]>([]);
+  const [approversLoading, setApproversLoading] = useState(true);
   const [note, setNote] = useState(() => t('workControl.defaultRequestNote'));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setApproversLoading(true);
+    void getEligibleApprovers({ itemType, itemId })
+      .then(rows => {
+        if (!active) return;
+        const visibleIds = new Set(profiles.map(profile => profile.id));
+        setEligibleApprovers(rows.filter(person => person.id !== auth.session?.user.id && visibleIds.has(person.id)));
+      })
+      .catch(() => {
+        if (active) setError(t('workControl.approverListUnavailable'));
+      })
+      .finally(() => {
+        if (active) setApproversLoading(false);
+      });
+    return () => { active = false; };
+  }, [auth.session?.user.id, itemId, itemType, profiles, t]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     if (!approverId) {
       setError(t('workControl.selectApproverError'));
+      return;
+    }
+    if (approverId === auth.session?.user.id) {
+      setError(t('workControl.selfApprovalBlocked', 'You cannot approve your own request. Select another authorized approver.'));
       return;
     }
     setSaving(true);
@@ -231,8 +257,9 @@ export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles
         <span>{t('approvals.approver')} *</span>
         <select value={approverId} onChange={event => setApproverId(event.target.value)}>
           <option value="">{t('workControl.selectApprover')}</option>
-          {profiles.map(person => <option key={person.id} value={person.id}>{language === 'ar' && person.full_name_ar ? person.full_name_ar : person.full_name_en}</option>)}
+          {eligibleApprovers.map(person => <option key={person.id} value={person.id}>{language === 'ar' && person.full_name_ar ? person.full_name_ar : person.full_name_en}</option>)}
         </select>
+        {approversLoading ? <span className="muted">{t('workControl.loadingApprovers')}</span> : null}
       </label>
       <label className="field full-width">
         <span>{t('workControl.requestNote')}</span>
@@ -240,7 +267,7 @@ export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles
       </label>
       <div className="form-actions full-width">
         <button className="ghost-button" type="button" onClick={onCancel}>{t('common.cancel')}</button>
-        <button className="primary-button" disabled={saving || !approverId}>{saving ? t('common.sending') : t('workControl.requestApproval')}</button>
+        <button className="primary-button" disabled={saving || approversLoading || !approverId}>{saving ? t('common.sending') : t('workControl.requestApproval')}</button>
       </div>
     </form>
   );

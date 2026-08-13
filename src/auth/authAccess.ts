@@ -237,6 +237,14 @@ export function canAccessPageForUser(
   organizationName?: string | null,
 ): boolean {
   if (
+    page === 'projects'
+    && roles.some((role) => ['employee', 'task_owner', 'project_owner', 'milestone_owner'].includes(role.role))
+  ) {
+    // The page is only a shell; project, milestone, and task visibility remains
+    // governed by assignment-aware RLS. This does not grant portfolio scope.
+    return true;
+  }
+  if (
     SUPER_ADMIN_ONLY_PAGES.includes(page) &&
     !roles.some((role) => role.role === "super_admin")
   ) {

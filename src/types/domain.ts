@@ -255,6 +255,7 @@ export interface ProjectRow {
   source_type: SourceType;
   owner_id: string | null;
   sponsor_id: string | null;
+  created_by?: string | null;
   start_date: string | null;
   target_end_date: string | null;
   priority: PriorityLevel;
@@ -847,10 +848,10 @@ export interface GovernanceDecisionRow {
 export interface MyWorkRow {
   id: string;
   organization_id: string;
-  item_type: 'task' | 'milestone';
+  item_type: 'project' | 'task' | 'milestone';
   title: string;
   due_date: string | null;
-  status: WorkStatus;
+  status: ProjectStatus | WorkStatus;
   progress_percent: number;
   project_id: string | null;
   milestone_id: string | null;
@@ -880,6 +881,8 @@ export interface EvidenceRow {
   item_title: string;
   file_name: string;
   file_path: string;
+  file_type?: string | null;
+  file_size?: number | null;
   description: string | null;
   status: EvidenceStatus;
   evidence_code?: string | null;

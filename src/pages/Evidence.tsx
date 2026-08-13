@@ -6,6 +6,7 @@ import {
   Link2,
   Lock,
   PackageCheck,
+  Printer,
   RefreshCw,
   RotateCcw,
   Send,
@@ -19,11 +20,11 @@ import { EntityTable } from '../components/EntityTable';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
+import { GovernedEvidenceAccess } from '../components/GovernedEvidenceAccess';
 import { formatDate, humanize } from '../lib/format';
 import {
   acceptEvidence,
   approveEvidenceGateWaiver,
-  generateEvidencePackIndex,
   getEvidenceChainOfCustody,
   getEvidenceClosureGateStatus,
   getEvidenceGapDashboard,
@@ -80,8 +81,36 @@ function evidenceTitle(row: EvidenceSelection) {
   return row.evidence_title || row.file_name || row.evidence_code || row.evidence_file_id;
 }
 
-function compactActionLabel(label: string, busy: boolean, workingLabel: string) {
-  return busy ? workingLabel : label;
+export interface EvidencePackGroup {
+  key: string;
+  linkedItemType: EvidencePackIndexRow['linked_item_type'];
+  linkedItemId: string;
+  linkedItemTitle: string | null;
+  rows: EvidencePackIndexRow[];
+}
+
+export function groupEvidencePackRows(rows: EvidencePackIndexRow[]): EvidencePackGroup[] {
+  const groups = new Map<string, EvidencePackGroup>();
+  for (const row of rows) {
+    const key = `${row.linked_item_type}:${row.linked_item_id}:${row.linked_item_title || ''}`;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.rows.push(row);
+    } else {
+      groups.set(key, {
+        key,
+        linkedItemType: row.linked_item_type,
+        linkedItemId: row.linked_item_id,
+        linkedItemTitle: row.linked_item_title,
+        rows: [row],
+      });
+    }
+  }
+  return [...groups.values()].sort((left, right) =>
+    `${left.linkedItemType}:${left.linkedItemTitle || left.linkedItemId}`.localeCompare(
+      `${right.linkedItemType}:${right.linkedItemTitle || right.linkedItemId}`,
+    )
+  );
 }
 
 function MetricCard({
@@ -144,6 +173,7 @@ export function Evidence() {
   const packIndex = useAsyncData(getEvidencePackIndex, []);
   const sensitiveRegister = useAsyncData(getSensitiveEvidenceRegister, []);
   const [selectedEvidence, setSelectedEvidence] = useState<EvidenceSelection | null>(null);
+  const [selectedPackKey, setSelectedPackKey] = useState<string | null>(null);
   const chainOfCustody = useAsyncData(
     () => selectedEvidence ? getEvidenceChainOfCustody(selectedEvidence.evidence_file_id) : Promise.resolve([]),
     [selectedEvidence?.evidence_file_id]
@@ -165,6 +195,8 @@ export function Evidence() {
       sensitive: sensitiveRows.length,
     };
   }, [gates.data, packIndex.data, reviewQueue.data, sensitiveRegister.data]);
+  const packGroups = useMemo(() => groupEvidencePackRows(packIndex.data || []), [packIndex.data]);
+  const selectedPack = packGroups.find(group => group.key === selectedPackKey) || null;
 
   const warnings = useMemo(() => {
     const queueRows = reviewQueue.data || [];
@@ -333,19 +365,9 @@ export function Evidence() {
       setBusyId(null);
     }
   }
-async function handleGeneratePackIndex() {
-    setError(null);
-    setMessage(null);
-    setBusyId('generate-pack');
-    try {
-      await generateEvidencePackIndex();
-      setMessage(t('evidence.packGenerated'));
-      await refreshGovernanceData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('evidence.packFailed'));
-    } finally {
-      setBusyId(null);
-    }
+  function printPack(group: EvidencePackGroup) {
+    setSelectedPackKey(group.key);
+    window.requestAnimationFrame(() => window.print());
   }
 
   const actionDisabled = !canGovernEvidence || Boolean(busyId);
@@ -356,17 +378,6 @@ async function handleGeneratePackIndex() {
         eyebrow={t('evidence.eyebrow')}
         title={t('evidence.title')}
         subtitle={t('evidence.subtitle')}
-        action={(
-          <div className="inline-actions">
-            <button
-              className="ghost-button"
-              type="button"
-              disabled={busyId === 'generate-pack'}
-              onClick={() => void handleGeneratePackIndex()}
-            >
-              <PackageCheck size={16} /> {compactActionLabel(t('evidence.generatePack'), busyId === 'generate-pack', t('common.working'))}
-            </button>          </div>
-        )}
       />
       {error ? <div className="panel error-panel">{error}</div> : null}
       {message ? <div className="notice-banner">{message}</div> : null}
@@ -393,6 +404,103 @@ async function handleGeneratePackIndex() {
           {t('evidence.noWarnings')}
         </div>
       )}
+      <div className="panel evidence-pack-panel">
+        <div className="panel-header">
+          <div>
+            <h4><PackageCheck size={18} /> {t('evidence.pack.title', 'Evidence packs')}</h4>
+            <p>{t('evidence.pack.subtitle', 'Governed metadata grouped by the linked work item. File access remains private and individually authorized.')}</p>
+          </div>
+        </div>
+        <DataState
+          loading={packIndex.loading}
+          error={packIndex.error}
+          empty={!packGroups.length}
+          emptyTitle={t('evidence.pack.emptyTitle', 'No evidence packs')}
+          emptyMessage={t('evidence.pack.empty', 'No linked evidence is available for this pack.')}
+        >
+          <div className="evidence-pack-grid">
+            {packGroups.map(group => (
+              <article className="evidence-pack-card" key={group.key}>
+                <header>
+                  <div>
+                    <span>{t(`itemType.${group.linkedItemType}`, humanize(group.linkedItemType))}</span>
+                    <h5>{group.linkedItemTitle || group.linkedItemId}</h5>
+                  </div>
+                  <button className="ghost-button compact-button" type="button" onClick={() => printPack(group)}>
+                    <Printer size={14} /> {t('evidence.pack.printIndex', 'Print Index')}
+                  </button>
+                </header>
+                <div className="evidence-pack-files">
+                  {group.rows.map(row => (
+                    <div className="evidence-pack-file" key={`${group.key}:${row.evidence_file_id}`}>
+                      <div className="evidence-pack-file__meta">
+                        <strong>{row.evidence_title || row.file_name}</strong>
+                        <span>{row.evidence_code} · {t(`status.${row.review_status}`, humanize(row.review_status))}</span>
+                      </div>
+                      <dl className="evidence-pack-file__details">
+                        <div><dt>{t('evidence.pack.fileType', 'File type')}</dt><dd>{humanize(row.evidence_type)}</dd></div>
+                        <div><dt>{t('evidence.pack.sensitivity', 'Sensitivity')}</dt><dd>{t(`evidence.sensitivity.${row.sensitivity_level}`, humanize(row.sensitivity_level))}</dd></div>
+                        <div><dt>{t('evidence.pack.reviewer', 'Reviewer')}</dt><dd>{row.reviewer_name || '—'}</dd></div>
+                        <div><dt>{t('evidence.pack.reviewedAt', 'Reviewed')}</dt><dd>{formatDate(row.reviewed_at)}</dd></div>
+                        <div><dt>{t('evidence.pack.primary', 'Primary evidence')}</dt><dd>{row.is_primary ? t('common.yes') : t('common.no')}</dd></div>
+                        <div><dt>{t('evidence.pack.requiredClosure', 'Required for closure')}</dt><dd>{row.required_for_closure ? t('common.yes') : t('common.no')}</dd></div>
+                        <div><dt>{t('evidence.pack.requiredAcceptance', 'Required for acceptance')}</dt><dd>{row.required_for_acceptance ? t('common.yes') : t('common.no')}</dd></div>
+                        <div><dt>{t('evidence.pack.requiredApproval', 'Required for approval')}</dt><dd>{row.required_for_approval ? t('common.yes') : t('common.no')}</dd></div>
+                        <div><dt>{t('evidence.pack.requiredTreatment', 'Required for treatment')}</dt><dd>{row.required_for_treatment ? t('common.yes') : t('common.no')}</dd></div>
+                      </dl>
+                      <GovernedEvidenceAccess
+                        evidenceId={row.evidence_file_id}
+                        fileName={row.file_name}
+                        fileType={row.evidence_type}
+                        description={row.evidence_title}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        </DataState>
+      </div>
+
+      {selectedPack ? (
+        <article className="governed-print-root evidence-pack-print" aria-hidden="true">
+          <header className="governed-print-header">
+            <img src="/brand/almodawat-acc-logo.png" alt="Almodawat Assurance Control Center" />
+            <div>
+              <p>{t('evidence.pack.printBrand', 'Almodawat Assurance Control Center')}</p>
+              <h1>{t('evidence.pack.printTitle', 'Governed Evidence Pack Index')}</h1>
+              <strong>{selectedPack.linkedItemTitle || selectedPack.linkedItemId}</strong>
+            </div>
+          </header>
+          <section className="governed-print-meta">
+            <DetailValue label={t('common.type')} value={t(`itemType.${selectedPack.linkedItemType}`, humanize(selectedPack.linkedItemType))} />
+            <DetailValue label={t('evidence.pack.recordCount', 'Evidence records')} value={selectedPack.rows.length} />
+          </section>
+          <div className="evidence-pack-print__records">
+            {selectedPack.rows.map(row => (
+              <section className="governed-print-break-safe evidence-pack-print__record" key={row.evidence_file_id}>
+                <h2>{row.evidence_code} · {row.evidence_title}</h2>
+                <div className="governed-print-grid">
+                  <DetailValue label={t('common.file')} value={row.file_name} />
+                  <DetailValue label={t('evidence.pack.fileType', 'File type')} value={humanize(row.evidence_type)} />
+                  <DetailValue label={t('common.status')} value={t(`status.${row.review_status}`, humanize(row.review_status))} />
+                  <DetailValue label={t('evidence.pack.sensitivity', 'Sensitivity')} value={t(`evidence.sensitivity.${row.sensitivity_level}`, humanize(row.sensitivity_level))} />
+                  <DetailValue label={t('evidence.pack.reviewer', 'Reviewer')} value={row.reviewer_name || '—'} />
+                  <DetailValue label={t('evidence.pack.reviewedAt', 'Reviewed')} value={formatDate(row.reviewed_at)} />
+                  <DetailValue label={t('evidence.pack.linkedAt', 'Linked')} value={formatDate(row.linked_at)} />
+                  <DetailValue label={t('evidence.pack.primary', 'Primary evidence')} value={row.is_primary ? t('common.yes') : t('common.no')} />
+                  <DetailValue label={t('evidence.pack.requiredClosure', 'Required for closure')} value={row.required_for_closure ? t('common.yes') : t('common.no')} />
+                  <DetailValue label={t('evidence.pack.requiredAcceptance', 'Required for acceptance')} value={row.required_for_acceptance ? t('common.yes') : t('common.no')} />
+                  <DetailValue label={t('evidence.pack.requiredApproval', 'Required for approval')} value={row.required_for_approval ? t('common.yes') : t('common.no')} />
+                  <DetailValue label={t('evidence.pack.requiredTreatment', 'Required for treatment')} value={row.required_for_treatment ? t('common.yes') : t('common.no')} />
+                </div>
+              </section>
+            ))}
+          </div>
+          <p>{t('evidence.pack.metadataOnly', 'This index contains governed metadata only. It does not include evidence file contents.')}</p>
+        </article>
+      ) : null}
       <div className="panel">
         <div className="panel-header">
           <h4><FileCheck2 size={18} /> {t('evidence.reviewQueue')}</h4>
@@ -523,7 +631,7 @@ async function handleGeneratePackIndex() {
             columns={[
               { key: 'type', header: t('common.type'), render: row => t(`itemType.${row.item_type}`, humanize(row.item_type)) },
               { key: 'item', header: t('evidence.relatedItem'), render: row => <strong>{row.item_title}</strong> },
-              { key: 'file', header: t('common.file'), render: row => row.file_name },
+              { key: 'file', header: t('common.file'), render: row => <GovernedEvidenceAccess evidenceId={row.id} fileName={row.file_name} fileType={row.file_type} fileSize={row.file_size} description={row.description} /> },
               { key: 'uploaded', header: t('evidence.uploadedBy'), render: row => row.uploaded_by_name || '-' },
               { key: 'date', header: t('common.date'), render: row => formatDate(row.created_at) },
               { key: 'status', header: t('common.status'), render: row => <StatusBadge status={t(`status.${row.status}`, humanize(row.status))} /> },
@@ -544,6 +652,7 @@ async function handleGeneratePackIndex() {
       </div>
 
       <Modal
+        size="xl"
         open={Boolean(selectedEvidence)}
         title={t('evidence.detail')}
         onClose={() => setSelectedEvidence(null)}
@@ -554,6 +663,7 @@ async function handleGeneratePackIndex() {
               <DetailValue label={t('common.evidence')} value={evidenceTitle(selectedEvidence)} />
               <DetailValue label={t('common.code')} value={selectedEvidence.evidence_code} />
               <DetailValue label={t('common.file')} value={selectedEvidence.file_name} />
+              {selectedEvidence.file_name ? <div className="full-width"><GovernedEvidenceAccess evidenceId={selectedEvidence.evidence_file_id} fileName={selectedEvidence.file_name} /></div> : null}
               <DetailValue label={t('common.type')} value={t(`evidence.type.${selectedEvidence.evidence_type}`, humanize(selectedEvidence.evidence_type))} />
               <DetailValue label={t('evidence.sensitivity')} value={t(`evidence.sensitivity.${selectedEvidence.sensitivity_level}`, humanize(selectedEvidence.sensitivity_level))} />
               <DetailValue label={t('evidence.reviewStatus')} value={t(`status.${selectedEvidence.review_status}`, humanize(selectedEvidence.review_status))} />

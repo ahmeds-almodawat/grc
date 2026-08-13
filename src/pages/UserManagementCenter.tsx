@@ -37,6 +37,7 @@ import {
   deactivateUser,
   getUserManagementDepartments,
   getUserManagementSummary,
+  getUserManagementUser,
   listUsersWithFilters,
   readAuditHistory,
   reactivateUser,
@@ -226,6 +227,8 @@ export function UserManagementCenter() {
     useState<LiveResult<DepartmentLookup[]>>(emptyDepartments);
   const [auditRows, setAuditRows] = useState<UserManagementAuditRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -382,23 +385,73 @@ export function UserManagementCenter() {
     && resetDraft.reason.includes(resetDraft.temporaryPassword),
   );
 
-  const load = async () => {
+  const rosterFilters = {
+    search,
+    departmentId: departmentFilter,
+    role: roleFilter,
+    status: statusFilter,
+    userType: typeFilter,
+    missingDepartment,
+    missingRole,
+    neverLoggedIn,
+    page,
+    pageSize,
+  };
+
+  const loadRoster = async () => {
     setLoading(true);
     setActionError(null);
-    const [summaryResult, usersResult, departmentResult] = await Promise.all([
-      getUserManagementSummary(),
-      listUsersWithFilters({}),
-      getUserManagementDepartments(),
-    ]);
-    setSummary(summaryResult);
+    const usersResult = await listUsersWithFilters(rosterFilters);
     setUsers(usersResult);
-    setDepartments(departmentResult);
     setLoading(false);
   };
 
+  const loadReferences = async () => {
+    const [summaryResult, departmentResult] = await Promise.all([
+      getUserManagementSummary(),
+      getUserManagementDepartments(),
+    ]);
+    setSummary(summaryResult);
+    setDepartments(departmentResult);
+  };
+
+  const load = async () => {
+    await Promise.all([loadRoster(), loadReferences()]);
+  };
+
+  const refreshAffectedRows = async (userIds: string[]) => {
+    const uniqueUserIds = [...new Set(userIds.filter(Boolean))];
+    if (!uniqueUserIds.length || uniqueUserIds.length > 10) {
+      await load();
+      return;
+    }
+    const [freshRows, summaryResult] = await Promise.all([
+      Promise.all(uniqueUserIds.map(userId => getUserManagementUser(userId))),
+      getUserManagementSummary(),
+    ]);
+    if (freshRows.some(row => !row)) {
+      await load();
+      return;
+    }
+    const replacements = new Map(freshRows.filter(Boolean).map(row => [row!.user_id, row!]));
+    setUsers(current => isLive(current)
+      ? { ...current, data: current.data.map(row => replacements.get(row.user_id) ?? row), generatedAt: new Date().toISOString() }
+      : current);
+    setSummary(summaryResult);
+  };
+
   useEffect(() => {
-    void load();
+    void loadReferences();
   }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadRoster(), search.trim() ? 250 : 0);
+    return () => window.clearTimeout(timer);
+  }, [search, departmentFilter, roleFilter, statusFilter, typeFilter, missingDepartment, missingRole, neverLoggedIn, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, departmentFilter, roleFilter, statusFilter, typeFilter, missingDepartment, missingRole, neverLoggedIn]);
 
   const userRows = isLive(users) ? users.data : [];
   const departmentRows = isLive(departments) ? departments.data : [];
@@ -546,6 +599,7 @@ export function UserManagementCenter() {
   const runAction = async (
     operation: () => Promise<void>,
     success: string,
+    affectedUserIds: string[] = [],
   ): Promise<boolean> => {
     setSaving(true);
     setActionError(null);
@@ -553,7 +607,7 @@ export function UserManagementCenter() {
     try {
       await operation();
       setMessage(success);
-      await load();
+      await refreshAffectedRows(affectedUserIds);
       return true;
     } catch (error) {
       setActionError(
@@ -583,6 +637,7 @@ export function UserManagementCenter() {
           reason,
         }),
       "Profile updated.",
+      [editUser.user_id],
     );
     if (saved) setEditUser(null);
   };
@@ -606,6 +661,7 @@ export function UserManagementCenter() {
         );
       },
       `${targets.length} department assignment${targets.length === 1 ? "" : "s"} updated.`,
+      targets.map(user => user.user_id),
     );
     if (saved) setDepartmentUser(null);
   };
@@ -634,6 +690,7 @@ export function UserManagementCenter() {
         );
       },
       `${targets.length} role assignment${targets.length === 1 ? "" : "s"} updated.`,
+      targets.map(user => user.user_id),
     );
     if (saved) setRoleUser(null);
   };
@@ -664,6 +721,7 @@ export function UserManagementCenter() {
         );
       },
       `${targets.length} user${targets.length === 1 ? "" : "s"} ${action}d.`,
+      targets.map(user => user.user_id),
     );
     if (saved) {
       setLifecycle(null);
@@ -1183,6 +1241,7 @@ export function UserManagementCenter() {
           >
             <RefreshCw size={16} /> Refresh
           </button>
+          {loading && isLive(users) ? <span className="roster-refreshing" role="status">Refreshing…</span> : null}
           <button
             type="button"
             className="ghost-button"
@@ -1254,7 +1313,7 @@ export function UserManagementCenter() {
       {actionError ? <div className="form-error">{actionError}</div> : null}
 
       <DataState
-        loading={loading}
+        loading={loading && !summaryData}
         empty={!loading && !summaryData}
         emptyTitle="User management summary is not available"
         emptyMessage={getLiveResultMessage(summary)}
@@ -1505,6 +1564,7 @@ export function UserManagementCenter() {
                     );
                   },
                   `${selectedUsers.length} department assignment${selectedUsers.length === 1 ? "" : "s"} updated.`,
+                  selectedUsers.map(user => user.user_id),
                 );
               }}
             >
@@ -1531,6 +1591,7 @@ export function UserManagementCenter() {
                     );
                   },
                   `${selectedUsers.length} role assignment${selectedUsers.length === 1 ? "" : "s"} updated.`,
+                  selectedUsers.map(user => user.user_id),
                 );
               }}
             >
@@ -1566,7 +1627,7 @@ export function UserManagementCenter() {
         className="user-roster-card"
       >
         <DataState
-          loading={loading}
+          loading={false}
           empty={!loading && visibleUsers.length === 0}
           emptyTitle="No users match the selected filters"
           emptyMessage={getLiveResultMessage(users)}
@@ -1599,6 +1660,11 @@ export function UserManagementCenter() {
                 </tr>
               </thead>
               <tbody>
+                {loading && !isLive(users) ? Array.from({ length: 8 }, (_, index) => (
+                  <tr className="roster-skeleton-row" key={`skeleton-${index}`} aria-hidden="true">
+                    {Array.from({ length: 11 }, (__, cell) => <td key={cell}><span className="roster-skeleton-bar" /></td>)}
+                  </tr>
+                )) : null}
                 {visibleUsers.map((user) => (
                   <tr key={user.user_id}>
                     <td>
@@ -1697,6 +1763,11 @@ export function UserManagementCenter() {
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="roster-pagination" aria-label="User roster pagination">
+            <button className="ghost-button compact-button" type="button" disabled={loading || page === 1} onClick={() => setPage(value => Math.max(1, value - 1))}>Previous</button>
+            <span>Page {page} · up to {pageSize} users</span>
+            <button className="ghost-button compact-button" type="button" disabled={loading || userRows.length < pageSize} onClick={() => setPage(value => value + 1)}>Next</button>
           </div>
         </DataState>
       </ModernCard>

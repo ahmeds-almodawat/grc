@@ -23,6 +23,7 @@ describe('Patch 83U Employee Arabic localization contract', () => {
     expect(employeePages).toEqual([
       'home',
       'myWork',
+      'projects',
       'ovr',
       'approvals',
       'evidence',
@@ -32,6 +33,7 @@ describe('Patch 83U Employee Arabic localization contract', () => {
     expect(employeePages.map((page) => pageGroups[page])).toEqual([
       'home',
       'personal',
+      'work',
       'personal',
       'personal',
       'personal',
@@ -56,7 +58,10 @@ describe('Patch 83U Employee Arabic localization contract', () => {
   it('records the pre-edit inventory before the localized source correction', () => {
     const audit = source('release/patch83u/employee-arabic-localization-audit.md');
 
-    for (const page of employeePages) {
+    // This file is an immutable pre-v1.3 inventory. Projects entered the
+    // assigned Employee surface later through ACC-05 and is covered by the
+    // current stabilization contract instead of rewriting historical evidence.
+    for (const page of employeePages.filter(page => page !== 'projects')) {
       expect(audit).toContain(`\`${page}\``);
     }
     expect(audit).toContain('**268**');
