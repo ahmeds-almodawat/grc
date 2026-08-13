@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import {
   Activity,
   ArchiveRestore,
@@ -65,29 +65,29 @@ import { AssuranceGoLiveCenter } from "./pages/AssuranceGoLiveCenter";
 import { RealDataUatReadinessCenter } from "./pages/RealDataUatReadinessCenter";
 import { RealDataActivationCenter } from "./pages/RealDataActivationCenter";
 import { RealDataImportCenter } from "./pages/RealDataImportCenter";
-import { ProductionHardeningLaunchCenter } from "./pages/ProductionHardeningLaunchCenter";
+const ProductionHardeningLaunchCenter = lazy(() => import("./pages/ProductionHardeningLaunchCenter").then(module => ({ default: module.ProductionHardeningLaunchCenter })));
 import { ProductionGoNoGoCenter } from "./pages/ProductionGoNoGoCenter";
 import { Dashboard } from "./pages/Dashboard";
 import { Analytics } from "./pages/Analytics";
-import { Projects } from "./pages/Projects";
+const Projects = lazy(() => import("./pages/Projects").then(module => ({ default: module.Projects })));
 import { Departments } from "./pages/Departments";
 import { Risks } from "./pages/Risks";
 import { Compliance } from "./pages/Compliance";
 import { Audit } from "./pages/Audit";
-import { OVR } from "./pages/OVR";
+const OVR = lazy(() => import("./pages/OVR").then(module => ({ default: module.OVR })));
 import { OvrRiskIndicators } from "./pages/OvrRiskIndicators";
-import { AccreditationCenter } from "./pages/AccreditationCenter";
-import { QualityAccreditationOperatingCenter } from "./pages/QualityAccreditationOperatingCenter";
+const AccreditationCenter = lazy(() => import("./pages/AccreditationCenter").then(module => ({ default: module.AccreditationCenter })));
+const QualityAccreditationOperatingCenter = lazy(() => import("./pages/QualityAccreditationOperatingCenter").then(module => ({ default: module.QualityAccreditationOperatingCenter })));
 import { EvidenceBridgeCenter } from "./pages/EvidenceBridgeCenter";
-import { AccreditationWorkflowCenter } from "./pages/AccreditationWorkflowCenter";
-import { AccreditationWarRoomCenter } from "./pages/AccreditationWarRoomCenter";
+const AccreditationWorkflowCenter = lazy(() => import("./pages/AccreditationWorkflowCenter").then(module => ({ default: module.AccreditationWorkflowCenter })));
+const AccreditationWarRoomCenter = lazy(() => import("./pages/AccreditationWarRoomCenter").then(module => ({ default: module.AccreditationWarRoomCenter })));
 import { ClinicalGovernanceCenter } from "./pages/ClinicalGovernanceCenter";
 import { HospitalGovernanceCenter } from "./pages/HospitalGovernanceCenter";
 import { MyWorkCenter } from "./pages/MyWorkCenter";
 import { HospitalMasterDataCenter } from "./pages/HospitalMasterDataCenter";
 import { RealStandardsMasterDataCenter } from "./pages/RealStandardsMasterDataCenter";
-import { UatAccreditationEvidenceCenter } from "./pages/UatAccreditationEvidenceCenter";
-import { RealUatExecutionCenter } from "./pages/RealUatExecutionCenter";
+const UatAccreditationEvidenceCenter = lazy(() => import("./pages/UatAccreditationEvidenceCenter").then(module => ({ default: module.UatAccreditationEvidenceCenter })));
+const RealUatExecutionCenter = lazy(() => import("./pages/RealUatExecutionCenter").then(module => ({ default: module.RealUatExecutionCenter })));
 import { LiveGrcOperatingCore } from "./pages/LiveGrcOperatingCore";
 import { WorkflowKernelCenter } from "./pages/WorkflowKernelCenter";
 import { ProfessionalWorkbenchesCenter } from "./pages/ProfessionalWorkbenchesCenter";
@@ -95,37 +95,37 @@ import { RealWorkflowExecutionCenter } from "./pages/RealWorkflowExecutionCenter
 import { RuntimeWorkflowActionsCenter } from "./pages/RuntimeWorkflowActionsCenter";
 import { Governance } from "./pages/Governance";
 import { Admin } from "./pages/Admin";
-import { UserManagementCenter } from "./pages/UserManagementCenter";
+const UserManagementCenter = lazy(() => import("./pages/UserManagementCenter").then(module => ({ default: module.UserManagementCenter })));
 import { MyWork } from "./pages/MyWork";
 import { Approvals } from "./pages/Approvals";
-import { Evidence } from "./pages/Evidence";
+const Evidence = lazy(() => import("./pages/Evidence").then(module => ({ default: module.Evidence })));
 import { Escalations } from "./pages/Escalations";
 import { ImportExport } from "./pages/ImportExport";
 import { AccessControl } from "./pages/AccessControl";
 import { SetupCenter } from "./pages/SetupCenter";
 import { UserGuide } from "./pages/UserGuide";
 import { OperationsCenter } from "./pages/OperationsCenter";
-import { TestingCenter } from "./pages/TestingCenter";
+const TestingCenter = lazy(() => import("./pages/TestingCenter").then(module => ({ default: module.TestingCenter })));
 import { PerformanceCenter } from "./pages/PerformanceCenter";
-import { SecurityAuditCenter } from "./pages/SecurityAuditCenter";
+const SecurityAuditCenter = lazy(() => import("./pages/SecurityAuditCenter").then(module => ({ default: module.SecurityAuditCenter })));
 import { ExecutiveCommandCenter } from "./pages/ExecutiveCommandCenter";
 import { GlobalSearch } from "./pages/GlobalSearch";
 import { PolicyDocumentCenter } from "./pages/PolicyDocumentCenter";
 import { RelationshipMap } from "./pages/RelationshipMap";
 import { ReleaseCandidateCenter } from "./pages/ReleaseCandidateCenter";
 import { ProductionReleaseCenter } from "./pages/ProductionReleaseCenter";
-import { MigrationVerifierCenter } from "./pages/MigrationVerifierCenter";
-import { RestoreDryRunCenter } from "./pages/RestoreDryRunCenter";
+const MigrationVerifierCenter = lazy(() => import("./pages/MigrationVerifierCenter").then(module => ({ default: module.MigrationVerifierCenter })));
+const RestoreDryRunCenter = lazy(() => import("./pages/RestoreDryRunCenter").then(module => ({ default: module.RestoreDryRunCenter })));
 import { AdminSafetyConsole } from "./pages/AdminSafetyConsole";
 import { BilingualDictionaryCenter } from "./pages/BilingualDictionaryCenter";
 import { BoardPackCenter } from "./pages/BoardPackCenter";
 import { AdvancedReportBuilder } from "./pages/AdvancedReportBuilder";
-import { EvidenceVault } from "./pages/EvidenceVault";
+const EvidenceVault = lazy(() => import("./pages/EvidenceVault").then(module => ({ default: module.EvidenceVault })));
 import { DepartmentScorecards } from "./pages/DepartmentScorecards";
-import { BackupSchedulerCenter } from "./pages/BackupSchedulerCenter";
+const BackupSchedulerCenter = lazy(() => import("./pages/BackupSchedulerCenter").then(module => ({ default: module.BackupSchedulerCenter })));
 import { TrainingGovernanceCenter } from "./pages/TrainingGovernanceCenter";
 import { ExecutiveTruthCenter } from "./pages/ExecutiveTruthCenter";
-import { ProductionReadinessCenter } from "./pages/ProductionReadinessCenter";
+const ProductionReadinessCenter = lazy(() => import("./pages/ProductionReadinessCenter").then(module => ({ default: module.ProductionReadinessCenter })));
 import { ProductionOperatorConsole } from "./pages/ProductionOperatorConsole";
 import { ProductionEvidenceClosureCenter } from "./pages/ProductionEvidenceClosureCenter";
 import { ScenarioPlanningCenter } from "./pages/ScenarioPlanningCenter";
@@ -134,18 +134,18 @@ import { AutomationIntelligenceCenter } from "./pages/AutomationIntelligenceCent
 import { RiskAppetiteKriCenter } from "./pages/RiskAppetiteKriCenter";
 import { SmartReviewCalendar } from "./pages/SmartReviewCalendar";
 import { CommitteeActionAutomationCenter } from "./pages/CommitteeActionAutomationCenter";
-import { StagingValidationCenter } from "./pages/StagingValidationCenter";
+const StagingValidationCenter = lazy(() => import("./pages/StagingValidationCenter").then(module => ({ default: module.StagingValidationCenter })));
 import { RlsPersonaLab } from "./pages/RlsPersonaLab";
 import { TranslationCoverageCenter } from "./pages/TranslationCoverageCenter";
 import { LoadSeedCenter } from "./pages/LoadSeedCenter";
-import { ProductionBackupStrategyCenter } from "./pages/ProductionBackupStrategyCenter";
-import { MigrationRunbookCenter } from "./pages/MigrationRunbookCenter";
-import BackupHealthCheck from "./pages/BackupHealthCheck";
-import ScaleBackupRestoreCenter from "./pages/ScaleBackupRestoreCenter";
+const ProductionBackupStrategyCenter = lazy(() => import("./pages/ProductionBackupStrategyCenter").then(module => ({ default: module.ProductionBackupStrategyCenter })));
+const MigrationRunbookCenter = lazy(() => import("./pages/MigrationRunbookCenter").then(module => ({ default: module.MigrationRunbookCenter })));
+const BackupHealthCheck = lazy(() => import("./pages/BackupHealthCheck"));
+const ScaleBackupRestoreCenter = lazy(() => import("./pages/ScaleBackupRestoreCenter"));
 import CustomReports from "./pages/CustomReports";
-import { ScenarioTestConsole } from "./pages/ScenarioTestConsole";
-import { UatIssueCapture } from "./pages/UatIssueCapture";
-import { ControlledUatWorkbench } from "./pages/ControlledUatWorkbench";
+const ScenarioTestConsole = lazy(() => import("./pages/ScenarioTestConsole").then(module => ({ default: module.ScenarioTestConsole })));
+const UatIssueCapture = lazy(() => import("./pages/UatIssueCapture").then(module => ({ default: module.UatIssueCapture })));
+const ControlledUatWorkbench = lazy(() => import("./pages/ControlledUatWorkbench").then(module => ({ default: module.ControlledUatWorkbench })));
 import { isScenarioLabEnabled } from "./lib/scenarioLab";
 import {
   isCanonicalPageLocation,
@@ -1439,7 +1439,9 @@ export default function App() {
 
   return (
     <Layout page={page} navigateToPage={navigateToPage}>
-      {content}
+      <Suspense fallback={<section className="page-section"><div className="panel route-loading-shell"><strong>{t("common.loading", "Loading workspace…")}</strong></div></section>}>
+        {content}
+      </Suspense>
     </Layout>
   );
 }

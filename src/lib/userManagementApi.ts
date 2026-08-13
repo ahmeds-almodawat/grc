@@ -132,6 +132,9 @@ export type UserManagementFilters = {
   missingDepartment?: boolean;
   missingRole?: boolean;
   neverLoggedIn?: boolean;
+  page?: number;
+  pageSize?: number;
+  userId?: string;
 };
 
 export type DepartmentLookup = {
@@ -447,13 +450,30 @@ async function readRowsFromAccessMatrix(): Promise<UserManagementUserRow[] | nul
   return (data as any[]).map(accessMatrixRowToUserManagementRow);
 }
 
-async function readRowsFromServerBridge(): Promise<UserManagementUserRow[] | null> {
+async function readRowsFromServerBridge(filters: UserManagementFilters = {}): Promise<UserManagementUserRow[] | null> {
   try {
-    const rows = await invokePrivilegedAction<unknown[]>('list_user_management_roster', {});
+    const rows = await invokePrivilegedAction<unknown[]>('list_user_management_roster', {
+      search: filters.search?.trim() || null,
+      department_id: filters.departmentId || null,
+      status: filters.status && filters.status !== 'all' ? filters.status : null,
+      user_type: filters.userType && filters.userType !== 'all' ? filters.userType : null,
+      user_id: filters.userId || null,
+      role: filters.missingRole
+        ? 'missing'
+        : filters.role && filters.role !== 'all' ? filters.role : null,
+      missing_department: filters.missingDepartment === true,
+      never_logged_in: filters.neverLoggedIn === true,
+      ...(filters.pageSize ? { page: filters.page ?? 1, page_size: Math.min(filters.pageSize, 50) } : {}),
+    });
     return Array.isArray(rows) ? rows.map(bridgeRowToUserManagementRow) : null;
   } catch {
     return null;
   }
+}
+
+export async function getUserManagementUser(userId: string): Promise<UserManagementUserRow | null> {
+  const rows = await readRowsFromServerBridge({ userId, page: 1, pageSize: 1 });
+  return rows?.[0] ?? null;
 }
 
 async function readLookupRows() {
@@ -722,7 +742,7 @@ export async function listUsersWithFilters(filters: UserManagementFilters = {}):
   const notConfigured = configuredOrResult<UserManagementUserRow[]>('Supabase is not configured for user management.');
   if (notConfigured) return notConfigured;
 
-  const bridgeRows = await readRowsFromServerBridge();
+  const bridgeRows = await readRowsFromServerBridge(filters);
   if (bridgeRows) {
     const rows = applyClientFilters(bridgeRows, filters);
     return rows.length
@@ -771,15 +791,16 @@ export async function getUserManagementSummary(): Promise<LiveResult<UserManagem
   const notConfigured = configuredOrResult<UserManagementSummary>('Supabase is not configured for user management summary.');
   if (notConfigured) return notConfigured;
 
-  const bridgeRows = await readRowsFromServerBridge();
-  if (bridgeRows) return liveResult(summaryFromRows(bridgeRows), 'supabase', 'Showing admin user summary through the authenticated server bridge.');
-
   const { data, error } = await supabase!
     .from('v_user_management_summary')
     .select('*')
     .limit(1);
 
-  if (error) return getSummaryFromCompatibilitySources(error);
+  if (error) {
+    const bridgeRows = await readRowsFromServerBridge();
+    if (bridgeRows) return liveResult(summaryFromRows(bridgeRows), 'supabase', 'Showing admin user summary through the authenticated server bridge.');
+    return getSummaryFromCompatibilitySources(error);
+  }
   const row = data?.[0] as UserManagementSummary | undefined;
   if (row && row.missing_role_users > 0) {
     const compatibilitySummary = await getSummaryFromCompatibilitySources();
