@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   CalendarClock,
@@ -24,6 +24,7 @@ import {
   Landmark,
   Languages,
   MonitorCog,
+  Menu,
   LogOut,
   LockKeyhole,
   Network,
@@ -39,6 +40,7 @@ import {
   UserCheck,
   Users,
   WandSparkles,
+  X,
   GraduationCap,
   FileSpreadsheet,
 } from "lucide-react";
@@ -54,6 +56,7 @@ import { isScenarioLabEnabled } from "../lib/scenarioLab";
 import { ControlledPilotBanner } from "./ControlledPilotBanner";
 import { BrandLogo } from "./BrandLogo";
 import type { PageKey, PageNavigator } from "../routes/pageLocation";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 
 export type { PageKey, PageNavigator } from "../routes/pageLocation";
 
@@ -705,6 +708,11 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
   const [openGroups, setOpenGroups] = useState<Set<string>>(
     () => new Set(["workspace", "admin"]),
   );
+  const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const mobileMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuCloseRef = useRef<HTMLButtonElement>(null);
+  const navigationDrawerRef = useRef<HTMLElement>(null);
+  useBodyScrollLock(mobileNavigationOpen);
   const allowedNavTree = useMemo(
     () =>
       navTree
@@ -741,14 +749,71 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
   };
   // Keep the legacy one-argument child contract without exposing React's raw
   // state setter. Every call still flows through the typed URL navigator.
-  const setPage = (targetPage: PageKey) => navigateToPage(targetPage);
+  const setPage = (targetPage: PageKey) => {
+    navigateToPage(targetPage);
+    setMobileNavigationOpen(false);
+  };
+
+  useEffect(() => {
+    if (!mobileNavigationOpen) return undefined;
+    const frame = window.requestAnimationFrame(() => mobileMenuCloseRef.current?.focus());
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMobileNavigationOpen(false);
+        return;
+      }
+      if (event.key !== "Tab" || !navigationDrawerRef.current) return;
+      const focusable = Array.from(navigationDrawerRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
+      )).filter(element => !element.hasAttribute("hidden"));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener("keydown", handleKeyDown);
+      mobileMenuTriggerRef.current?.focus();
+    };
+  }, [mobileNavigationOpen]);
 
   return (
     <div
       className={`app-shell modern-app-shell ${direction === "rtl" ? "rtl-shell" : ""}`}
       dir={direction}
     >
-      <aside className="sidebar modern-sidebar">
+      <div
+        className={`mobile-nav-backdrop ${mobileNavigationOpen ? "is-open" : ""}`}
+        role="presentation"
+        aria-hidden="true"
+        onClick={() => setMobileNavigationOpen(false)}
+      />
+      <aside
+        ref={navigationDrawerRef}
+        id="primary-navigation-drawer"
+        className={`sidebar modern-sidebar ${mobileNavigationOpen ? "mobile-nav-open" : ""}`}
+        aria-label={t("nav.primaryNavigation")}
+        data-mobile-open={mobileNavigationOpen ? "true" : "false"}
+      >
+        <button
+          ref={mobileMenuCloseRef}
+          className="mobile-nav-close"
+          type="button"
+          aria-label={t("nav.closeMenu", "Close navigation")}
+          onClick={() => setMobileNavigationOpen(false)}
+        >
+          <X size={20} aria-hidden="true" />
+          <span>{t("common.close")}</span>
+        </button>
         <div className="brand-block brand-block-modern brand-block--acc">
           <BrandLogo variant="sidebar" />
         </div>
@@ -805,7 +870,7 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
                 <button
                   className={`nav-group-trigger ${groupActive ? "active" : ""}`}
                   onClick={() => {
-                    if (group.page && !expanded) setPage(group.page);
+                    if (group.page && !expanded && !mobileNavigationOpen) setPage(group.page);
                     toggleGroup(group.id);
                   }}
                   type="button"
@@ -864,6 +929,18 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
             <h2>{t("app.title")}</h2>
           </div>
           <div className="topbar-actions">
+            <button
+              ref={mobileMenuTriggerRef}
+              className="ghost-button mobile-nav-trigger"
+              type="button"
+              aria-label={t("nav.openMenu", "Open navigation")}
+              aria-controls="primary-navigation-drawer"
+              aria-expanded={mobileNavigationOpen}
+              onClick={() => setMobileNavigationOpen(true)}
+            >
+              <Menu size={18} aria-hidden="true" />
+              <span>{t("nav.menu", "Menu")}</span>
+            </button>
             {SUPER_ADMIN_ONLY_PAGES.includes(page as any) ? <ControlledPilotBanner compact context="internal" /> : <ControlledPilotBanner compact />}
             {canOpen("globalSearch") ? (
               <button
