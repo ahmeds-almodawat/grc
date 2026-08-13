@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Download, Eye, FileText, Info } from 'lucide-react';
 import { requestGovernedEvidenceAccess } from '../lib/grcApi';
+import { useI18n } from '../i18n/I18nContext';
 
 interface GovernedEvidenceAccessProps {
   evidenceId: string;
@@ -10,14 +11,15 @@ interface GovernedEvidenceAccessProps {
   description?: string | null;
 }
 
-function formatBytes(value?: number | null) {
-  if (!value) return 'Size unavailable';
+function formatBytes(value: number | null | undefined, unavailable: string) {
+  if (!value) return unavailable;
   if (value < 1024) return `${value} B`;
   if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
   return `${(value / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export function GovernedEvidenceAccess({ evidenceId, fileName, fileType, fileSize, description }: GovernedEvidenceAccessProps) {
+  const { t } = useI18n();
   const [busy, setBusy] = useState<'view' | 'download' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [details, setDetails] = useState(false);
@@ -36,7 +38,7 @@ export function GovernedEvidenceAccess({ evidenceId, fileName, fileType, fileSiz
       link.click();
       link.remove();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Evidence access failed safely.');
+      setError(cause instanceof Error ? cause.message : t('evidenceAccess.failed'));
     } finally {
       setBusy(null);
     }
@@ -46,11 +48,11 @@ export function GovernedEvidenceAccess({ evidenceId, fileName, fileType, fileSiz
     <div className="governed-evidence-file">
       <span className="governed-evidence-file__name"><FileText size={15} /> {fileName}</span>
       <div className="inline-actions">
-        <button className="ghost-button compact-button" type="button" disabled={Boolean(busy)} onClick={() => void open('view')}><Eye size={14} /> {busy === 'view' ? 'Opening…' : 'View'}</button>
-        <button className="ghost-button compact-button" type="button" disabled={Boolean(busy)} onClick={() => void open('download')}><Download size={14} /> {busy === 'download' ? 'Preparing…' : 'Download'}</button>
-        <button className="ghost-button compact-button" type="button" onClick={() => setDetails(value => !value)} aria-expanded={details}><Info size={14} /> Details</button>
+        <button className="ghost-button compact-button" type="button" disabled={Boolean(busy)} onClick={() => void open('view')}><Eye size={14} /> {busy === 'view' ? t('evidenceAccess.opening') : t('evidenceAccess.view')}</button>
+        <button className="ghost-button compact-button" type="button" disabled={Boolean(busy)} onClick={() => void open('download')}><Download size={14} /> {busy === 'download' ? t('evidenceAccess.preparing') : t('evidenceAccess.download')}</button>
+        <button className="ghost-button compact-button" type="button" onClick={() => setDetails(value => !value)} aria-expanded={details}><Info size={14} /> {t('evidenceAccess.details')}</button>
       </div>
-      {details ? <div className="governed-evidence-file__details"><span>{fileType || 'Unknown file type'}</span><span>{formatBytes(fileSize)}</span>{description ? <span>{description}</span> : null}<small>Private access is authorized per evidence record and expires after 60 seconds.</small></div> : null}
+      {details ? <div className="governed-evidence-file__details"><span>{fileType || t('evidenceAccess.unknownType')}</span><span>{formatBytes(fileSize, t('evidenceAccess.sizeUnavailable'))}</span>{description ? <span>{description}</span> : null}<small>{t('evidenceAccess.privateExpiry', 'Private access is authorized per evidence record and expires after 60 seconds.')}</small></div> : null}
       {error ? <div className="form-error">{error}</div> : null}
     </div>
   );

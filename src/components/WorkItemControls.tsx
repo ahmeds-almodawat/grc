@@ -220,13 +220,13 @@ export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles
         setEligibleApprovers(rows.filter(person => person.id !== auth.session?.user.id && visibleIds.has(person.id)));
       })
       .catch(() => {
-        if (active) setError('The authorized approver list is unavailable. No approval request has been created.');
+        if (active) setError(t('workControl.approverListUnavailable'));
       })
       .finally(() => {
         if (active) setApproversLoading(false);
       });
     return () => { active = false; };
-  }, [auth.session?.user.id, profiles]);
+  }, [auth.session?.user.id, profiles, t]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -236,7 +236,7 @@ export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles
       return;
     }
     if (approverId === auth.session?.user.id) {
-      setError('You cannot approve your own request. Select another authorized approver.');
+      setError(t('workControl.selfApprovalBlocked', 'You cannot approve your own request. Select another authorized approver.'));
       return;
     }
     setSaving(true);
@@ -259,7 +259,7 @@ export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles
           <option value="">{t('workControl.selectApprover')}</option>
           {eligibleApprovers.map(person => <option key={person.id} value={person.id}>{language === 'ar' && person.full_name_ar ? person.full_name_ar : person.full_name_en}</option>)}
         </select>
-        {approversLoading ? <span className="muted">Loading authorized approvers…</span> : null}
+        {approversLoading ? <span className="muted">{t('workControl.loadingApprovers')}</span> : null}
       </label>
       <label className="field full-width">
         <span>{t('workControl.requestNote')}</span>
