@@ -19,6 +19,7 @@ import { EntityTable } from '../components/EntityTable';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
+import { GovernedEvidenceAccess } from '../components/GovernedEvidenceAccess';
 import { formatDate, humanize } from '../lib/format';
 import {
   acceptEvidence,
@@ -523,7 +524,7 @@ async function handleGeneratePackIndex() {
             columns={[
               { key: 'type', header: t('common.type'), render: row => t(`itemType.${row.item_type}`, humanize(row.item_type)) },
               { key: 'item', header: t('evidence.relatedItem'), render: row => <strong>{row.item_title}</strong> },
-              { key: 'file', header: t('common.file'), render: row => row.file_name },
+              { key: 'file', header: t('common.file'), render: row => <GovernedEvidenceAccess evidenceId={row.id} fileName={row.file_name} fileType={row.file_type} fileSize={row.file_size} description={row.description} /> },
               { key: 'uploaded', header: t('evidence.uploadedBy'), render: row => row.uploaded_by_name || '-' },
               { key: 'date', header: t('common.date'), render: row => formatDate(row.created_at) },
               { key: 'status', header: t('common.status'), render: row => <StatusBadge status={t(`status.${row.status}`, humanize(row.status))} /> },
@@ -544,6 +545,7 @@ async function handleGeneratePackIndex() {
       </div>
 
       <Modal
+        size="xl"
         open={Boolean(selectedEvidence)}
         title={t('evidence.detail')}
         onClose={() => setSelectedEvidence(null)}
@@ -554,6 +556,7 @@ async function handleGeneratePackIndex() {
               <DetailValue label={t('common.evidence')} value={evidenceTitle(selectedEvidence)} />
               <DetailValue label={t('common.code')} value={selectedEvidence.evidence_code} />
               <DetailValue label={t('common.file')} value={selectedEvidence.file_name} />
+              {selectedEvidence.file_name ? <div className="full-width"><GovernedEvidenceAccess evidenceId={selectedEvidence.evidence_file_id} fileName={selectedEvidence.file_name} /></div> : null}
               <DetailValue label={t('common.type')} value={t(`evidence.type.${selectedEvidence.evidence_type}`, humanize(selectedEvidence.evidence_type))} />
               <DetailValue label={t('evidence.sensitivity')} value={t(`evidence.sensitivity.${selectedEvidence.sensitivity_level}`, humanize(selectedEvidence.sensitivity_level))} />
               <DetailValue label={t('evidence.reviewStatus')} value={t(`status.${selectedEvidence.review_status}`, humanize(selectedEvidence.review_status))} />

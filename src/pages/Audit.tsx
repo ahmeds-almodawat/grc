@@ -527,7 +527,7 @@ const actionDisabled = !canManageFindings || Boolean(busyAction);
         </DataState>
       </div>
 
-      <Modal open={Boolean(selectedFindingId)} title="Audit finding detail" onClose={() => setSelectedFindingId(null)}>
+      <Modal size="xl" open={Boolean(selectedFindingId)} title="Audit finding detail" onClose={() => setSelectedFindingId(null)}>
         {selectedFinding ? (
           <div className="form-grid">
             <div className="detail-grid full-width">
@@ -603,7 +603,7 @@ const actionDisabled = !canManageFindings || Boolean(busyAction);
 
         </div>
       </details>
-<Modal open={formOpen} title="Create audit finding" onClose={() => setFormOpen(false)}>
+<Modal size="large" open={formOpen} title="Create audit finding" onClose={() => setFormOpen(false)}>
         <AuditFindingForm organizationId={organizationId} departments={departments.data || []} profiles={profiles.data || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void refreshAuditWorkflow(); }} />
       </Modal>
     </section>
