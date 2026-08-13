@@ -1489,10 +1489,6 @@ export async function checkEvidenceGateStatus(input: EvidenceGateStatusInput) {
   return patch23EvidenceAction('check_evidence_gate_status', input as unknown as Record<string, unknown>);
 }
 
-export async function generateEvidencePackIndex(input: EvidenceGateStatusInput = {}) {
-  return patch23EvidenceAction('generate_evidence_pack_index', input as unknown as Record<string, unknown>);
-}
-
 export async function reviewEvidence(evidenceId: string, status: 'accepted' | 'rejected' | 'needs_revision', rejection_reason?: string) {
   if (status === 'accepted') return acceptEvidence({ evidence_file_id: evidenceId, note: rejection_reason });
   if (status === 'rejected') return rejectEvidence({ evidence_file_id: evidenceId, reason: rejection_reason, note: rejection_reason });
@@ -1590,35 +1586,24 @@ export async function uploadEvidenceForItem(input: UploadEvidenceInput) {
 
 export interface RequestApprovalInput {
   organization_id: string;
-  item_type: ApprovalItemType;
+  item_type: 'project' | 'milestone' | 'task';
   item_id: string;
   approver_id: string;
   request_note?: string;
 }
 
 export async function requestApproval(input: RequestApprovalInput) {
-  const client = requireLiveSupabase();
-  const userId = await currentUserId();
-  if (input.approver_id === userId) {
-    throw new Error('You cannot approve your own request. Select another authorized approver.');
-  }
-  const linkColumn = itemLinkColumn(input.item_type);
-  const payload = {
-    organization_id: input.organization_id,
-    [linkColumn]: input.item_id,
-    requested_by: userId,
-    approver_id: input.approver_id,
-    status: 'pending',
-    request_note: input.request_note || null
-  };
-
-  const { data, error } = await client.from('approvals').insert(payload).select('id,status').single();
-  if (error) throw error;
-  return data;
+  return invokePrivilegedAction<{ id: string; status: string }>('acc_v13_request_approval', { ...input });
 }
 
-export async function getEligibleApprovers(): Promise<ProfileOption[]> {
-  return invokePrivilegedAction<ProfileOption[]>('acc_v13_list_eligible_approvers', {});
+export async function getEligibleApprovers(input: {
+  itemType: 'project' | 'milestone' | 'task';
+  itemId: string;
+}): Promise<ProfileOption[]> {
+  return invokePrivilegedAction<ProfileOption[]>('acc_v13_list_eligible_approvers', {
+    item_type: input.itemType,
+    item_id: input.itemId,
+  });
 }
 
 export interface GovernedEvidenceAccessResult {
@@ -1641,7 +1626,7 @@ export async function requestGovernedEvidenceAccess(
 }
 
 export async function getEvidenceForItem(
-  itemType: 'project' | 'milestone' | 'task',
+  itemType: ApprovalItemType,
   itemId: string,
 ): Promise<EvidenceRow[]> {
   if (!supabase) return [];

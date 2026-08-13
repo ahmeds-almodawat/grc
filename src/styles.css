@@ -1358,6 +1358,233 @@ html[dir="rtl"] body {
   }
 }
 
+.evidence-pack-panel .panel-header p {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+}
+
+.evidence-pack-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr));
+}
+
+.evidence-pack-card {
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  background: var(--surface);
+  padding: 1rem;
+  min-width: 0;
+}
+
+.evidence-pack-card > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.evidence-pack-card h5 {
+  margin: 0.2rem 0 0;
+  font-size: 1rem;
+}
+
+.evidence-pack-card header span,
+.evidence-pack-file__meta span {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.evidence-pack-files {
+  display: grid;
+  gap: 0.8rem;
+  padding-top: 0.85rem;
+}
+
+.evidence-pack-file {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--surface-subtle);
+}
+
+.evidence-pack-file__meta {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.evidence-pack-file__details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.evidence-pack-file__details div {
+  display: grid;
+  gap: 0.12rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--surface-muted) 82%, transparent);
+}
+
+.evidence-pack-file__details dt {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.evidence-pack-file__details dd {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.governed-print-root {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .governed-print-root,
+  .governed-print-root * {
+    visibility: visible !important;
+  }
+
+  .governed-print-root {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    min-height: 100%;
+    box-sizing: border-box;
+    color: #111827;
+    background: #fff;
+    font-family: Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.45;
+  }
+
+  .governed-print-header {
+    display: flex;
+    align-items: center;
+    gap: 16mm;
+    padding-bottom: 7mm;
+    border-bottom: 2px solid #1f4f5f;
+    break-after: avoid;
+  }
+
+  .governed-print-header img {
+    width: 24mm;
+    height: 24mm;
+    object-fit: contain;
+  }
+
+  .governed-print-header p,
+  .governed-print-header h1 {
+    margin: 0 0 1.5mm;
+  }
+
+  .governed-print-header h1 {
+    color: #153946;
+    font-size: 18pt;
+  }
+
+  .governed-print-meta,
+  .governed-print-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4mm;
+  }
+
+  .governed-print-meta {
+    padding: 5mm 0;
+  }
+
+  .governed-print-section {
+    margin-top: 6mm;
+  }
+
+  .evidence-pack-print__records {
+    display: grid;
+    gap: 5mm;
+  }
+
+  .evidence-pack-print__record {
+    padding: 4mm;
+    border: 1px solid #cbd5e1;
+    border-radius: 2mm;
+  }
+
+  .evidence-pack-print__record h2 {
+    margin: 0 0 3mm;
+    color: #153946;
+    font-size: 11pt;
+  }
+
+  .governed-print-section h2 {
+    margin: 0 0 3mm;
+    padding-bottom: 1.5mm;
+    color: #153946;
+    border-bottom: 1px solid #94a3b8;
+    font-size: 12pt;
+    break-after: avoid;
+  }
+
+  .ovr-print-field {
+    display: grid;
+    gap: 1mm;
+    padding: 2.5mm;
+    border: 1px solid #d5dce2;
+    border-radius: 2mm;
+    break-inside: avoid;
+  }
+
+  .ovr-print-field--wide {
+    grid-column: 1 / -1;
+  }
+
+  .ovr-print-field span,
+  .governed-print-meta span {
+    color: #52616b;
+    font-size: 8.5pt;
+  }
+
+  .governed-print-root table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 3mm;
+  }
+
+  .governed-print-root th,
+  .governed-print-root td {
+    padding: 2.5mm;
+    border: 1px solid #cbd5e1;
+    text-align: start;
+    vertical-align: top;
+  }
+
+  .governed-print-root thead {
+    display: table-header-group;
+    background: #eaf1f3;
+  }
+
+  .governed-print-root tr,
+  .governed-print-break-safe {
+    break-inside: avoid;
+  }
+}
+
 /* v1.2 export center, backups and custom report packs */
 .tab-strip {
   display: flex;
