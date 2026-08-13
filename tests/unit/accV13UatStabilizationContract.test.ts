@@ -18,6 +18,9 @@ const edge = source('supabase/functions/privileged-action/index.ts');
 const migration = source('supabase/migrations/195_acc_uat_stabilization_controls.sql');
 const users = source('src/pages/UserManagementCenter.tsx');
 const app = source('src/App.tsx');
+const ovr = source('src/pages/OVR.tsx');
+const printableOvr = source('src/components/OvrPrintableReport.tsx');
+const evidence = source('src/pages/Evidence.tsx');
 
 function role(roleName: AuthRoleAssignment['role']): AuthRoleAssignment[] {
   return [{ role: roleName, scope: 'assigned_only' }];
@@ -63,6 +66,20 @@ describe('ACC v1.3 UAT stabilization contracts', () => {
     expect(detail).toContain('actorId === project.owner_id || actorId === project.sponsor_id || actorId === project.created_by');
   });
 
+  it('limits parent-linked child-table access to SELECT and INSERT without adding direct UPDATE or DELETE', () => {
+    expect(migration).toContain('create policy milestones_acc_v13_parent_project_read');
+    expect(migration).toContain('create policy milestones_acc_v13_parent_project_insert');
+    expect(migration).toContain('create policy tasks_acc_v13_parent_project_read');
+    expect(migration).toContain('create policy tasks_acc_v13_parent_project_insert');
+    const childPolicies = migration.slice(
+      migration.indexOf('drop policy if exists milestones_acc_v13_parent_project_control'),
+      migration.indexOf('create or replace view public.v_my_open_work_expanded'),
+    );
+    expect(childPolicies).not.toContain('for all');
+    expect(childPolicies).not.toContain('for update');
+    expect(childPolicies).not.toContain('for delete');
+  });
+
   it('places directly assigned and corrective projects into My Work without disclosing OVR data', () => {
     expect(migration).toContain("'project'::text as item_type");
     expect(migration).toContain('auth.uid() in (p.owner_id, p.sponsor_id, p.created_by)');
@@ -91,10 +108,37 @@ describe('ACC v1.3 UAT stabilization contracts', () => {
   it('blocks self-approval in the client and on insert/update in the database', () => {
     const message = 'You cannot approve your own request. Select another authorized approver.';
     expect(controls).toContain(message);
-    expect(api).toContain(message);
     expect(migration).toContain(message);
-    expect(migration).toContain('before insert or update of requested_by, approver_id');
+    expect(migration).toContain('before insert or update of organization_id, project_id, milestone_id, task_id, requested_by, approver_id');
     expect(edge).toContain("action === 'acc_v13_list_eligible_approvers'");
+  });
+
+  it('binds approver discovery and creation to the exact project or child context', () => {
+    expect(controls).toContain('getEligibleApprovers({ itemType, itemId })');
+    expect(api).toContain("invokePrivilegedAction<ProfileOption[]>('acc_v13_list_eligible_approvers'");
+    expect(api).toContain("invokePrivilegedAction<{ id: string; status: string }>('acc_v13_request_approval'");
+    expect(api).not.toContain("client.from('approvals').insert");
+    expect(edge).toContain("action === 'acc_v13_request_approval'");
+    expect(edge).toContain("serviceClient.rpc('acc_v13_list_eligible_approvers'");
+    expect(edge).toContain("serviceClient.rpc('acc_v13_request_approval'");
+  });
+
+  it('includes only relationship and scope-qualified approvers and excludes unrelated governance roles', () => {
+    const eligibility = migration.slice(
+      migration.indexOf('create or replace function public.acc_v13_is_eligible_approver'),
+      migration.indexOf('create or replace function public.acc_v13_list_eligible_approvers'),
+    );
+    expect(eligibility).toContain("v_item_type = 'project' and p_approver_id = v_project.sponsor_id");
+    expect(eligibility).toContain("v_item_type in ('milestone','task') and p_approver_id in (v_project.owner_id, v_project.sponsor_id)");
+    expect(eligibility).toContain("ur.role::text in ('super_admin','governance_admin','executive') and ur.scope::text = 'global'");
+    expect(eligibility).toContain("ur.role::text = 'division_head'");
+    expect(eligibility).toContain('ur.division_id = v_project.division_id');
+    expect(eligibility).toContain("ur.role::text = 'department_manager'");
+    expect(eligibility).toContain('ur.department_id = v_project.department_id');
+    expect(eligibility).not.toContain('auditor');
+    expect(eligibility).not.toContain('compliance_officer');
+    expect(eligibility).not.toContain('project_owner');
+    expect(eligibility).not.toContain('milestone_owner');
   });
 
   it('authorizes private evidence per record before issuing a short-lived URL', () => {
@@ -117,6 +161,43 @@ describe('ACC v1.3 UAT stabilization contracts', () => {
     expect(migration).toContain("'acc_v13_evidence_' || v_intent");
     expect(edge).not.toMatch(/result:\s*\{[\s\S]*?file_path:/);
     expect(api).toContain("intent: 'view' | 'download'");
+  });
+
+  it('prints only the already-authorized selected OVR and its governed evidence metadata', () => {
+    expect(ovr).toContain('<OvrPrintableReport report={selectedReport}');
+    expect(ovr).toContain("getEvidenceForItem('ovr_report', selectedReport.id)");
+    expect(ovr).toContain('onClick={() => window.print()}');
+    expect(ovr).toContain('disabled={printableEvidence.loading || Boolean(printableEvidence.error)}');
+    expect(printableOvr).toContain('Occurrence Variance Report');
+    expect(printableOvr).toContain('supervisor_investigation');
+    expect(printableOvr).toContain('quality_manager_comments');
+    expect(printableOvr).toContain('referred_response');
+    expect(printableOvr).toContain('corrective_action');
+    expect(printableOvr).toContain('final_verdict');
+    expect(printableOvr).not.toContain('person_involved_name');
+    expect(printableOvr).not.toContain('mrn_or_id_no');
+    expect(styles).toContain('@page');
+    expect(styles).toContain('size: A4');
+  });
+
+  it('renders governed evidence packs from the existing metadata view without a generating write action', () => {
+    expect(evidence).toContain('groupEvidencePackRows(packIndex.data || [])');
+    expect(evidence).toContain('No linked evidence is available for this pack.');
+    expect(evidence).toContain('evidenceId={row.evidence_file_id}');
+    expect(evidence).toContain("t('evidence.pack.printIndex', 'Print Index')");
+    expect(evidence).toContain('This index contains governed metadata only.');
+    expect(evidence).toContain('row.evidence_type');
+    expect(evidence).toContain('row.sensitivity_level');
+    expect(evidence).toContain('row.reviewer_name');
+    expect(evidence).toContain('row.reviewed_at');
+    expect(evidence).toContain('row.is_primary');
+    expect(evidence).toContain('row.required_for_closure');
+    expect(evidence).toContain('row.required_for_acceptance');
+    expect(evidence).toContain('row.required_for_approval');
+    expect(evidence).toContain('row.required_for_treatment');
+    expect(evidence).not.toContain('handleGeneratePackIndex');
+    expect(evidence).not.toContain('generateEvidencePackIndex');
+    expect(api).not.toContain('export async function generateEvidencePackIndex');
   });
 
   it('pages the roster at 50 and retains current content while refreshing', () => {
@@ -168,11 +249,16 @@ describe('ACC v1.3 UAT stabilization contracts', () => {
   });
 
   it('declares migration 195 as service-role only with controlled search paths', () => {
+    expect(migration.match(/security invoker/g)?.length).toBe(9);
     expect(migration).not.toContain('security definer');
-    expect(migration.match(/security invoker/g)?.length).toBe(3);
     expect(migration.match(/set search_path = public, pg_temp/g)?.length).toBeGreaterThanOrEqual(4);
     expect(migration).toContain('grant execute on function public.acc_v13_update_work_item_status');
     expect(migration).toContain('grant execute on function public.acc_v13_authorize_evidence_access');
+    expect(migration).toContain('grant execute on function public.acc_v13_list_eligible_approvers');
+    expect(migration).toContain('grant execute on function public.acc_v13_request_approval');
+    expect(migration).toContain('revoke all on function public.acc_v13_is_eligible_approver');
+    expect(migration).not.toMatch(/coalesce\([^\n]*user_status[^\n]*['"]active['"]\)/);
     expect(migration).not.toContain('grant execute on function public.acc_v13_update_work_item_status(uuid, text, uuid, text, numeric, text) to authenticated');
+    expect(migration).not.toContain('grant execute on function public.acc_v13_request_approval(uuid, uuid, text, uuid, uuid, text) to authenticated');
   });
 });

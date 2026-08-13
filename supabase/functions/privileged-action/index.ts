@@ -140,6 +140,7 @@ const allowedActions = new Set([
   'acc_v13_update_work_item_status',
   'acc_v13_evidence_access',
   'acc_v13_list_eligible_approvers',
+  'acc_v13_request_approval',
   'v99_create_scenario',
   'v99_cleanup_scenarios',
   'v99_scenario_status',
@@ -3062,34 +3063,42 @@ Deno.serve(async (request) => {
   }
 
   if (action === 'acc_v13_list_eligible_approvers') {
-    const { data: actor, error: actorError } = await serviceClient
-      .from('profiles')
-      .select('organization_id,is_active,user_status')
-      .eq('id', userData.user.id)
-      .maybeSingle();
-    if (actorError || !actor?.organization_id || !actor.is_active || actor.user_status !== 'active') {
-      return errorResponse('Active requester required.', 403, 'ACC_V13_ACTIVE_REQUESTER_REQUIRED', 'The approval requester is not active.', { action });
+    const itemType = safeString(requestPayload.item_type).trim().toLowerCase();
+    const itemId = safeString(requestPayload.item_id).trim();
+    if (!['project', 'milestone', 'task'].includes(itemType) || !itemId) {
+      return errorResponse('The approval context is invalid.', 400, 'ACC_V13_APPROVAL_CONTEXT_INVALID', 'Select a supported work item before choosing an approver.', { action });
     }
-    const { data: roleRows, error: rolesError } = await serviceClient
-      .from('user_roles')
-      .select('user_id,role,organization_id')
-      .eq('is_active', true)
-      .in('role', ['super_admin','executive','governance_admin','division_head','department_manager','project_owner','milestone_owner','auditor','compliance_officer'])
-      .or(`organization_id.is.null,organization_id.eq.${actor.organization_id}`)
-      .limit(5000);
-    if (rolesError) return errorResponse('Unable to load eligible approvers.', 500, 'ACC_V13_APPROVER_LOOKUP_FAILED', 'The governed approver directory is unavailable.', { action });
-    const ids = [...new Set((roleRows ?? []).map((row: any) => safeString(row.user_id)).filter((id: string) => id && id !== userData.user.id))];
-    if (!ids.length) return jsonResponse({ ok: true, action, result: [] }, 200);
-    const { data: profiles, error: profilesError } = await serviceClient
-      .from('profiles')
-      .select('id,full_name_en,full_name_ar')
-      .eq('organization_id', actor.organization_id)
-      .eq('is_active', true)
-      .eq('user_status', 'active')
-      .in('id', ids)
-      .order('full_name_en', { ascending: true });
-    if (profilesError) return errorResponse('Unable to load eligible approvers.', 500, 'ACC_V13_APPROVER_LOOKUP_FAILED', 'The governed approver directory is unavailable.', { action });
-    return jsonResponse({ ok: true, action, result: profiles ?? [] }, 200);
+    const { data, error } = await serviceClient.rpc('acc_v13_list_eligible_approvers', {
+      p_actor_id: userData.user.id,
+      p_item_type: itemType,
+      p_item_id: itemId,
+    });
+    if (error) {
+      return errorResponse('Unable to load eligible approvers.', 403, 'ACC_V13_APPROVER_LOOKUP_DENIED', 'The work item or its governed approver scope is unavailable.', { action });
+    }
+    return jsonResponse({ ok: true, action, result: data ?? [] }, 200);
+  }
+
+  if (action === 'acc_v13_request_approval') {
+    const itemType = safeString(requestPayload.item_type).trim().toLowerCase();
+    const itemId = safeString(requestPayload.item_id).trim();
+    const organizationId = safeString(requestPayload.organization_id).trim();
+    const approverId = safeString(requestPayload.approver_id).trim();
+    if (!['project', 'milestone', 'task'].includes(itemType) || !itemId || !organizationId || !approverId) {
+      return errorResponse('The approval request is invalid.', 400, 'ACC_V13_APPROVAL_REQUEST_INVALID', 'Select a supported work item and eligible approver.', { action });
+    }
+    const { data, error } = await serviceClient.rpc('acc_v13_request_approval', {
+      p_actor_id: userData.user.id,
+      p_organization_id: organizationId,
+      p_item_type: itemType,
+      p_item_id: itemId,
+      p_approver_id: approverId,
+      p_request_note: safeString(requestPayload.request_note).trim() || null,
+    });
+    if (error) {
+      return errorResponse('The approval request was not created.', 403, 'ACC_V13_APPROVAL_REQUEST_DENIED', 'The requester, work item, or approver no longer satisfies the governed approval scope.', { action });
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
   }
 
   if (action === 'acc_v13_evidence_access') {

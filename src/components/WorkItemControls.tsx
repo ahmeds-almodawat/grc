@@ -213,7 +213,7 @@ export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles
   useEffect(() => {
     let active = true;
     setApproversLoading(true);
-    void getEligibleApprovers()
+    void getEligibleApprovers({ itemType, itemId })
       .then(rows => {
         if (!active) return;
         const visibleIds = new Set(profiles.map(profile => profile.id));
@@ -226,7 +226,7 @@ export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles
         if (active) setApproversLoading(false);
       });
     return () => { active = false; };
-  }, [auth.session?.user.id, profiles, t]);
+  }, [auth.session?.user.id, itemId, itemType, profiles, t]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
