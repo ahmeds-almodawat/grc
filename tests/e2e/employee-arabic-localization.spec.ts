@@ -11,11 +11,12 @@ const employeeRoles: AuthRoleAssignment[] = [{ role: 'employee', scope: 'assigne
 const employeePages = (Object.keys(PAGE_LOCATION_REGISTRY) as PageKey[])
   .filter((page) => canAccessPageForUser(page, employeeRoles));
 
-type EmployeePage = 'home' | 'myWork' | 'ovr' | 'approvals' | 'evidence' | 'userGuide' | 'globalSearch';
+type EmployeePage = 'home' | 'myWork' | 'projects' | 'ovr' | 'approvals' | 'evidence' | 'userGuide' | 'globalSearch';
 
 const expectedArabicHeadings: Record<EmployeePage, string> = {
   home: 'مدخل موحد ونظيف للحوكمة والمخاطر والجودة والتنفيذ.',
   myWork: 'المراحل والمهام وتواريخ الاستحقاق ومتطلبات الأدلة المسندة إليّ',
+  projects: 'المشاريع والبرامج والتنفيذ المنضبط',
   ovr: 'إدارة بلاغات OVR والحوادث',
   approvals: 'الموافقات المعلقة للإغلاق والأدلة والمشاريع وإجراءات الحوكمة',
   evidence: 'مكتبة الأدلة',
@@ -327,8 +328,8 @@ test.describe('Patch 83U Phase 1 Employee Arabic localization', () => {
     const proof: BrowserProof = { actions: [], mutationRequests: [], consoleProblems: [], pageErrors: [], responseErrors: [] };
     await installEmployeeMocks(page, proof, 'ar');
 
-    expect(employeePages).toEqual(['home', 'myWork', 'ovr', 'approvals', 'evidence', 'userGuide', 'globalSearch']);
-    expect(employeePages.every((pageKey) => ['home', 'personal'].includes(pageGroups[pageKey]))).toBe(true);
+    expect(employeePages).toEqual(['home', 'myWork', 'projects', 'ovr', 'approvals', 'evidence', 'userGuide', 'globalSearch']);
+    expect(employeePages.every((pageKey) => ['home', 'personal', 'work'].includes(pageGroups[pageKey]))).toBe(true);
 
     for (const viewport of viewports) {
       await page.setViewportSize(viewport);

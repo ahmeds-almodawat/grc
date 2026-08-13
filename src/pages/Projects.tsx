@@ -21,6 +21,7 @@ import {
 } from '../dashboard/dashboardFramework';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { useI18n } from '../i18n/I18nContext';
+import { useAuth } from '../auth/AuthProvider';
 import {
   getDepartments,
   getOrganizations,
@@ -40,6 +41,8 @@ const CLOSED_WORK = new Set(['closed', 'approved', 'cancelled']);
 
 export function Projects({ setPage }: ProjectsProps) {
   const { t } = useI18n();
+  const auth = useAuth();
+  const canCreateProject = auth.roles.some(role => ['super_admin', 'executive', 'governance_admin', 'division_head', 'department_manager'].includes(role.role));
   const [filters, setFilters] = useState(readDashboardFilters);
   const [formOpen, setFormOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -104,7 +107,7 @@ export function Projects({ setPage }: ProjectsProps) {
           eyebrow={t('projects.v11.eyebrow', 'Portfolio command center')}
           title={t('projects.v11.title', 'Projects, programs and controlled delivery')}
           subtitle={t('projects.v11.subtitle', 'Role-scoped delivery intelligence from governed project, milestone, task and risk records.')}
-          action={<button type="button" className="primary-button" onClick={() => setFormOpen(true)}>{t('projects.v11.newActionPlan', 'New action plan')}</button>}
+          action={canCreateProject ? <button type="button" className="primary-button" onClick={() => setFormOpen(true)}>{t('projects.v11.newActionPlan', 'New action plan')}</button> : undefined}
         />
       </header>
       <DashboardFilters filters={filters} departments={departments} onChange={changeFilters} onReset={() => changeFilters(DEFAULT_DASHBOARD_FILTERS)} t={t} />
@@ -151,10 +154,10 @@ export function Projects({ setPage }: ProjectsProps) {
         <div className="span-12"><DashboardSection title={t('projects.v11.recentActivity', 'Recent project activity')}><DashboardWidgetState state="unavailable" message={t('projects.v11.activityUnavailable', 'No trustworthy cross-project activity feed is configured; open a project control file for its governed detail.')} /></DashboardSection></div>
       </div>
 
-      <Modal open={formOpen} title={t('projects.v11.createActionPlan', 'Create controlled action plan')} onClose={() => setFormOpen(false)}>
+      <Modal size="large" open={formOpen} title={t('projects.v11.createActionPlan', 'Create controlled action plan')} onClose={() => setFormOpen(false)}>
         <ActionPlanForm organizationId={organizationId} departments={references.data?.departments || []} profiles={references.data?.profiles || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void portfolio.refresh(); }} />
       </Modal>
-      <Modal open={detailOpen} title={t('projects.v11.controlFile', 'Project control file')} onClose={() => setDetailOpen(false)}>
+      <Modal size="workspace" open={detailOpen} title={t('projects.v11.controlFile', 'Project control file')} onClose={() => setDetailOpen(false)}>
         {selectedProject ? <ProjectDetail project={selectedProject} profiles={references.data?.profiles || []} /> : null}
       </Modal>
     </section>

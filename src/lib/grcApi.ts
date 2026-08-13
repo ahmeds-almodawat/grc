@@ -1357,13 +1357,7 @@ export async function createTask(input: CreateTaskInput) {
 }
 
 export async function updateTaskStatus(taskId: string, status: WorkStatus, progress_percent: number, delay_reason?: string) {
-  const client = requireLiveSupabase();
-  const userId = await currentUserId();
-  const { error } = await client
-    .from('tasks')
-    .update({ status, progress_percent, delay_reason: delay_reason || null, updated_by: userId })
-    .eq('id', taskId);
-  if (error) throw error;
+  return updateGovernedWorkItemStatus('task', taskId, status, progress_percent, delay_reason);
 }
 
 export async function decideApproval(approvalId: string, status: 'approved' | 'rejected', decision_note?: string) {
@@ -1531,23 +1525,30 @@ function safeFileName(name: string) {
 }
 
 export async function updateProjectStatus(projectId: string, status: ProjectStatus, progress_percent: number, delay_reason?: string) {
-  const client = requireLiveSupabase();
-  const userId = await currentUserId();
-  const { error } = await client
-    .from('projects')
-    .update({ status, progress_percent, delay_reason: delay_reason || null, updated_by: userId })
-    .eq('id', projectId);
-  if (error) throw error;
+  return updateGovernedWorkItemStatus('project', projectId, status, progress_percent, delay_reason);
 }
 
 export async function updateMilestoneStatus(milestoneId: string, status: WorkStatus, progress_percent: number, delay_reason?: string) {
-  const client = requireLiveSupabase();
-  const userId = await currentUserId();
-  const { error } = await client
-    .from('milestones')
-    .update({ status, progress_percent, delay_reason: delay_reason || null, updated_by: userId })
-    .eq('id', milestoneId);
-  if (error) throw error;
+  return updateGovernedWorkItemStatus('milestone', milestoneId, status, progress_percent, delay_reason);
+}
+
+async function updateGovernedWorkItemStatus(
+  itemType: 'project' | 'milestone' | 'task',
+  itemId: string,
+  status: ProjectStatus | WorkStatus,
+  progressPercent: number,
+  delayReason?: string,
+) {
+  if (!Number.isFinite(progressPercent) || progressPercent < 0 || progressPercent > 100) {
+    throw new Error('Progress must be between 0 and 100.');
+  }
+  return invokePrivilegedAction('acc_v13_update_work_item_status', {
+    item_type: itemType,
+    item_id: itemId,
+    status,
+    progress_percent: progressPercent,
+    delay_reason: delayReason?.trim() || null,
+  });
 }
 
 export interface UploadEvidenceInput {
@@ -1598,6 +1599,9 @@ export interface RequestApprovalInput {
 export async function requestApproval(input: RequestApprovalInput) {
   const client = requireLiveSupabase();
   const userId = await currentUserId();
+  if (input.approver_id === userId) {
+    throw new Error('You cannot approve your own request. Select another authorized approver.');
+  }
   const linkColumn = itemLinkColumn(input.item_type);
   const payload = {
     organization_id: input.organization_id,
@@ -1611,6 +1615,51 @@ export async function requestApproval(input: RequestApprovalInput) {
   const { data, error } = await client.from('approvals').insert(payload).select('id,status').single();
   if (error) throw error;
   return data;
+}
+
+export async function getEligibleApprovers(): Promise<ProfileOption[]> {
+  return invokePrivilegedAction<ProfileOption[]>('acc_v13_list_eligible_approvers', {});
+}
+
+export interface GovernedEvidenceAccessResult {
+  evidence_file_id: string;
+  file_name: string;
+  file_type: string | null;
+  intent: 'view' | 'download';
+  expires_in_seconds: number;
+  signed_url: string;
+}
+
+export async function requestGovernedEvidenceAccess(
+  evidenceFileId: string,
+  intent: 'view' | 'download',
+) {
+  return invokePrivilegedAction<GovernedEvidenceAccessResult>('acc_v13_evidence_access', {
+    evidence_file_id: evidenceFileId,
+    intent,
+  });
+}
+
+export async function getEvidenceForItem(
+  itemType: 'project' | 'milestone' | 'task',
+  itemId: string,
+): Promise<EvidenceRow[]> {
+  if (!supabase) return [];
+  const linkColumn = itemLinkColumn(itemType);
+  const { data, error } = await supabase
+    .from('evidence_files')
+    .select('id,organization_id,file_name,file_path,file_type,file_size,description,status,uploaded_by,reviewed_by,created_at')
+    .eq(linkColumn, itemId)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  return (data ?? []).map((row: any) => ({
+    ...row,
+    item_type: itemType,
+    item_title: '',
+    uploaded_by_name: null,
+    reviewed_by_name: null,
+  })) as EvidenceRow[];
 }
 
 export async function getDepartmentExecutionSummary(): Promise<DepartmentExecutionSummary[]> {
