@@ -1358,6 +1358,7 @@ html[dir="rtl"] body {
   }
 }
 
+
 .evidence-pack-panel .panel-header p {
   margin: 0.35rem 0 0;
   color: var(--text-muted);
@@ -9685,5 +9686,620 @@ table tbody tr:hover {
 
   .modern-main-content .table-wrapper {
     width: 100%;
+  }
+}
+
+/* GRC v1.3 D2 visual stabilization
+   Purpose-based tokens and shared primitives replace the former hybrid-theme
+   bridge. Deliberately white print surfaces remain governed by @media print. */
+:root {
+  --color-page: #f3f6fa;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  --color-surface-muted: #eef2f7;
+  --color-surface-subtle: #f8fafc;
+  --color-surface-inset: #e8eef6;
+  --color-overlay: rgba(7, 17, 31, 0.72);
+  --color-backdrop: rgba(7, 17, 31, 0.64);
+  --color-text-primary: #0b1220;
+  --color-text-secondary: #334155;
+  --color-text-muted: #64748b;
+  --color-text-disabled: #94a3b8;
+  --color-border: #d8e1ec;
+  --color-border-strong: #94a3b8;
+  --color-input-background: #ffffff;
+  --color-input-border: #cbd5e1;
+  --color-input-placeholder: #64748b;
+  --color-table-background: #ffffff;
+  --color-table-header: #eef3f8;
+  --color-table-row-alt: #f8fafc;
+  --color-table-hover: #edf6f5;
+  --color-table-selected: #dff4f0;
+  --color-focus-ring: #0f766e;
+  --color-success-fg: #166534;
+  --color-success-bg: #dcfce7;
+  --color-success-border: #86efac;
+  --color-warning-fg: #92400e;
+  --color-warning-bg: #fef3c7;
+  --color-warning-border: #fcd34d;
+  --color-danger-fg: #991b1b;
+  --color-danger-bg: #fee2e2;
+  --color-danger-border: #fca5a5;
+  --color-info-fg: #1e40af;
+  --color-info-bg: #dbeafe;
+  --color-info-border: #93c5fd;
+  --color-neutral-fg: #334155;
+  --color-neutral-bg: #e2e8f0;
+  --color-neutral-border: #cbd5e1;
+
+  /* Compatibility aliases consumed by established shared components. */
+  --ui-bg: var(--color-page);
+  --ui-bg-strong: var(--color-surface-muted);
+  --ui-page: var(--color-page);
+  --ui-surface: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  --ui-surface-solid: var(--color-surface);
+  --ui-surface-muted: var(--color-surface-subtle);
+  --ui-border: var(--color-border);
+  --ui-border-strong: var(--color-border-strong);
+  --ui-ink: var(--color-text-primary);
+  --ui-muted: var(--color-text-muted);
+  --surface: var(--color-surface);
+  --surface-muted: var(--color-surface-muted);
+  --surface-subtle: var(--color-surface-subtle);
+  --text-primary: var(--color-text-primary);
+  --text-muted: var(--color-text-muted);
+  --border-color: var(--color-border);
+}
+
+:root[data-theme="dark"] {
+  --color-page: #06111f;
+  --color-surface: #0f1c2c;
+  --color-surface-elevated: #142438;
+  --color-surface-muted: #17283b;
+  --color-surface-subtle: #102033;
+  --color-surface-inset: #091624;
+  --color-overlay: rgba(2, 8, 18, 0.88);
+  --color-backdrop: rgba(1, 7, 16, 0.78);
+  --color-text-primary: #f4f8fc;
+  --color-text-secondary: #d8e3ef;
+  --color-text-muted: #a8b8ca;
+  --color-text-disabled: #718197;
+  --color-border: #30445a;
+  --color-border-strong: #57708a;
+  --color-input-background: #0b1828;
+  --color-input-border: #405873;
+  --color-input-placeholder: #91a3b8;
+  --color-table-background: #0f1c2c;
+  --color-table-header: #1b3045;
+  --color-table-row-alt: #132338;
+  --color-table-hover: #183849;
+  --color-table-selected: #155148;
+  --color-focus-ring: #63d6c7;
+  --color-success-fg: #b9f6ce;
+  --color-success-bg: #123c2b;
+  --color-success-border: #2d7651;
+  --color-warning-fg: #ffe1a8;
+  --color-warning-bg: #4a3110;
+  --color-warning-border: #8c6224;
+  --color-danger-fg: #ffc7cc;
+  --color-danger-bg: #4a2028;
+  --color-danger-border: #8e3d4d;
+  --color-info-fg: #c9ddff;
+  --color-info-bg: #18365c;
+  --color-info-border: #3d6596;
+  --color-neutral-fg: #d8e3ef;
+  --color-neutral-bg: #24364a;
+  --color-neutral-border: #4a6078;
+}
+
+:root[data-theme="dark"] .modern-app-shell,
+:root[data-theme="dark"] .modern-main-content {
+  background: var(--color-page);
+  color: var(--color-text-primary);
+}
+
+/* Shared semantic surface convention. Specialized cards retain their layout,
+   accent strip, and data visualization; only application-surface paint maps. */
+:root[data-theme="dark"] .modern-main-content :where(
+  .panel,
+  .modern-card,
+  .hero-panel,
+  .page-section,
+  .workspace-card,
+  .hub-hero,
+  .modal-card,
+  [class$="-panel"],
+  [class$="-card"]
+):not(.governed-print-root):not([class*="print-"]) {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  [class*="-card"] strong,
+  [class*="-panel"] strong,
+  [class*="-card"] h1,
+  [class*="-card"] h2,
+  [class*="-card"] h3,
+  [class*="-card"] h4,
+  [class*="-panel"] h1,
+  [class*="-panel"] h2,
+  [class*="-panel"] h3,
+  [class*="-panel"] h4
+) {
+  color: var(--color-text-primary);
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  [class*="-card"] p,
+  [class*="-card"] small,
+  [class*="-panel"] p,
+  [class*="-panel"] small,
+  .muted,
+  .section-subtitle,
+  .stat-label
+) {
+  color: var(--color-text-muted);
+}
+
+/* Bounded compatibility bridge for legacy inline application surfaces. Print,
+   document-preview, chart and brand surfaces are intentionally excluded. */
+:root[data-theme="dark"] .modern-main-content :where(
+  [style*="background: white"],
+  [style*="background-color: white"],
+  [style*="background: #fff"],
+  [style*="background-color: #fff"],
+  [style*="background: rgb(255, 255, 255)"],
+  [style*="background-color: rgb(255, 255, 255)"]
+):not(.governed-print-root):not([class*="print"]):not([class*="chart"]):not([class*="logo"]) {
+  color: var(--color-text-primary) !important;
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* Shared fields and controls. */
+:where(.modern-main-content, .modal-card) :where(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select,
+  .search-control,
+  .filter-control,
+  [role="combobox"]
+) {
+  color: var(--color-text-primary);
+  background-color: var(--color-input-background);
+  border-color: var(--color-input-border);
+}
+
+:where(.modern-main-content, .modal-card) :where(input, textarea)::placeholder {
+  color: var(--color-input-placeholder);
+  opacity: 1;
+}
+
+:where(.modern-main-content, .modal-card) :where(input, textarea, select, button, [href], [tabindex]):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-focus-ring) 72%, transparent);
+  outline-offset: 2px;
+}
+
+:where(.modern-main-content, .modal-card) :where(input, textarea, select):disabled,
+:where(.modern-main-content, .modal-card) :where(input, textarea, select)[readonly] {
+  color: var(--color-text-disabled);
+  background: var(--color-surface-inset);
+  border-color: var(--color-border);
+  cursor: not-allowed;
+}
+
+:where(.modern-main-content, .modal-card) :where(input, textarea, select)[aria-invalid="true"] {
+  border-color: var(--color-danger-border);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger-border) 35%, transparent);
+}
+
+:root[data-theme="dark"] :where(.modern-main-content, .modal-card) select option {
+  color: var(--color-text-primary);
+  background: var(--color-input-background);
+}
+
+:root[data-theme="dark"] :where(.modern-main-content, .modal-card) input:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-text-primary);
+  box-shadow: 0 0 0 1000px var(--color-input-background) inset;
+}
+
+/* Shared table system. */
+:where(.modern-main-content, .modal-card) :where(
+  .table-wrapper,
+  .modern-table-wrap,
+  .entity-table-container,
+  .controlled-uat-issue-table,
+  [class$="-table-wrap"]
+) {
+  max-width: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--color-table-background);
+  border-color: var(--color-border);
+  scrollbar-gutter: stable;
+}
+
+:where(.modern-main-content, .modal-card) table {
+  color: var(--color-text-primary) !important;
+  background: var(--color-table-background) !important;
+  border-color: var(--color-border) !important;
+}
+
+:where(.modern-main-content, .modal-card) thead th {
+  color: var(--color-text-secondary) !important;
+  background: var(--color-table-header) !important;
+  border-color: var(--color-border) !important;
+}
+
+:where(.modern-main-content, .modal-card) tbody td {
+  color: var(--color-text-primary) !important;
+  background: var(--color-table-background) !important;
+  border-color: var(--color-border) !important;
+}
+
+:where(.modern-main-content, .modal-card) tbody tr:nth-child(even) td {
+  background: var(--color-table-row-alt) !important;
+}
+
+:where(.modern-main-content, .modal-card) tbody tr:hover td {
+  background: var(--color-table-hover) !important;
+}
+
+:where(.modern-main-content, .modal-card) tbody tr[aria-selected="true"] td,
+:where(.modern-main-content, .modal-card) tbody tr.is-selected td {
+  background: var(--color-table-selected) !important;
+}
+
+/* Semantic status tones preserve meaning instead of flattening every badge. */
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill)[class*="success"],
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill).active,
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill).closed {
+  color: var(--color-success-fg);
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+}
+
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill)[class*="warning"],
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill).pending {
+  color: var(--color-warning-fg);
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+}
+
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill)[class*="danger"],
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill).critical,
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill).high {
+  color: var(--color-danger-fg);
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+}
+
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill)[class*="info"] {
+  color: var(--color-info-fg);
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+}
+
+.controlled-pilot-banner {
+  color: var(--color-info-fg);
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+}
+
+.controlled-pilot-banner strong {
+  color: var(--color-info-fg);
+}
+
+.controlled-pilot-banner span {
+  border-inline-start-color: var(--color-info-border);
+}
+
+.controlled-pilot-banner--internal {
+  color: var(--color-warning-fg);
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+}
+
+.controlled-pilot-banner--internal strong {
+  color: var(--color-warning-fg);
+}
+
+.controlled-pilot-banner--internal span {
+  border-inline-start-color: var(--color-warning-border);
+}
+
+/* Shared Home/workspace sub-surfaces must inherit the semantic screen theme,
+   not the historical translucent-white paint used by the Light-only shell. */
+:where(
+  .workspace-hero__metrics div,
+  .workspace-card__badge,
+  .workspace-card__metric,
+  .workspace-card__icon,
+  .daily-control-row,
+  .quick-action-stack button,
+  .principle-grid span
+) {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+
+:root[data-theme="dark"] .workspace-hero__metrics div,
+:root[data-theme="dark"] .workspace-card__badge,
+:root[data-theme="dark"] .workspace-card__metric,
+:root[data-theme="dark"] .workspace-card__icon,
+:root[data-theme="dark"] .daily-control-row,
+:root[data-theme="dark"] .quick-action-stack button,
+:root[data-theme="dark"] .principle-grid span {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+
+.workspace-hero__metrics strong,
+.workspace-card strong,
+.daily-control-row strong,
+.quick-action-stack button,
+.principle-grid span {
+  color: var(--color-text-primary);
+}
+
+.workspace-hero__metrics span,
+.workspace-card small,
+.daily-control-row small {
+  color: var(--color-text-muted);
+}
+
+:where(.modern-main-content, .modal-card) .ghost-button,
+:where(.modern-main-content, .modal-card) .secondary-action {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+
+/* Shared modal/workspace sizing and internal scroll ownership (ACC-02A). */
+.modal-backdrop {
+  background: var(--color-backdrop);
+  overscroll-behavior: contain;
+}
+
+.modal-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: min(92dvh, 960px);
+  overflow: hidden;
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+}
+
+.modal-card--workspace {
+  height: min(92dvh, 960px);
+}
+
+.modal-header,
+.modal-footer {
+  flex: 0 0 auto;
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+
+.modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+body[data-scroll-locked="true"] {
+  overflow: hidden;
+}
+
+/* Mobile navigation reuses the authorized desktop tree as an overlay drawer. */
+.topbar-actions .mobile-nav-trigger,
+.mobile-nav-close,
+.mobile-nav-backdrop {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .modern-app-shell {
+    display: block;
+    min-width: 0;
+  }
+
+  .modern-main-content {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    padding: 12px;
+    overflow-x: clip;
+  }
+
+  .modern-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .modern-topbar > div:first-child {
+    min-width: 0;
+  }
+
+  .topbar-actions {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .topbar-actions .mobile-nav-trigger {
+    display: inline-flex !important;
+    flex: 0 0 auto;
+  }
+
+  .mobile-nav-close {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: absolute;
+    inset-block-start: 12px;
+    inset-inline-end: 12px;
+    z-index: 2;
+    min-height: 42px;
+    padding: 8px 12px;
+    color: #f8fbff;
+    background: #142438;
+    border: 1px solid #405873;
+    border-radius: var(--ui-radius);
+  }
+
+  .modern-sidebar {
+    position: fixed !important;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 70;
+    width: min(88vw, 360px) !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    padding-block-start: 62px;
+    transform: translateX(-105%);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 180ms ease-out;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    box-shadow: 22px 0 60px rgba(0, 0, 0, 0.42);
+  }
+
+  .rtl-shell .modern-sidebar {
+    inset-inline-start: 0;
+    inset-inline-end: auto;
+    transform: translateX(105%);
+    box-shadow: -22px 0 60px rgba(0, 0, 0, 0.42);
+  }
+
+  .modern-sidebar.mobile-nav-open,
+  .rtl-shell .modern-sidebar.mobile-nav-open {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .mobile-nav-backdrop.is-open {
+    display: block !important;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: var(--color-backdrop);
+  }
+
+  .modern-sidebar .sidebar-nav-tree {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 4px;
+  }
+
+  .modern-sidebar .nav-tree-group {
+    min-width: 0;
+  }
+
+  .nav-group-trigger,
+  .nav-child-item {
+    width: 100%;
+  }
+
+  .nav-group-trigger > span,
+  .nav-child-item > span {
+    min-width: 0 !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+  }
+
+  .modern-sidebar .nav-group-trigger strong,
+  .modern-sidebar .nav-group-trigger small,
+  .modern-sidebar .nav-child-item span {
+    overflow: visible !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+  }
+
+  .modal-backdrop {
+    padding: 0;
+    place-items: stretch;
+  }
+
+  .modal-card--large,
+  .modal-card--xl,
+  .modal-card--workspace {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  /* Dense governance tables remain complete and gain a recognizable sticky
+     row identity without introducing document-level horizontal overflow. */
+  :where(.modern-main-content, .modal-card) :where(
+    .table-wrapper,
+    .modern-table-wrap,
+    .entity-table-container,
+    .controlled-uat-issue-table,
+    [class$="-table-wrap"]
+  ) table {
+    min-width: max(100%, 720px);
+  }
+
+  :where(.modern-main-content, .modal-card) :where(
+    .table-wrapper,
+    .modern-table-wrap,
+    .entity-table-container,
+    .controlled-uat-issue-table,
+    [class$="-table-wrap"]
+  ) :where(th:first-child, td:first-child) {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 2;
+    box-shadow: 1px 0 0 var(--color-border);
+  }
+
+  :where(.modern-main-content, .modal-card) :where(
+    .table-wrapper,
+    .modern-table-wrap,
+    .entity-table-container,
+    .controlled-uat-issue-table,
+    [class$="-table-wrap"]
+  ) thead th:first-child {
+    z-index: 3;
+    background: var(--color-table-header) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modern-sidebar {
+    transition: none;
+  }
+}
+
+/* Print remains intentional white A4 output regardless of screen theme. */
+@media print {
+  .governed-print-root,
+  .governed-print-root * {
+    color: #111827 !important;
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: none !important;
   }
 }

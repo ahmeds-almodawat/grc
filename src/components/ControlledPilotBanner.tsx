@@ -6,11 +6,11 @@ export function ControlledPilotBanner({ compact = false, context = 'hospital' }:
 
   if (context === 'internal') {
     return (
-      <div className={`controlled-pilot-banner ${compact ? 'controlled-pilot-banner--compact' : ''}`} style={{ background: 'rgba(254, 243, 199, 0.92)', border: '1px solid #fcd34d', color: '#b45309' }}>
+      <div className={`controlled-pilot-banner controlled-pilot-banner--internal ${compact ? 'controlled-pilot-banner--compact' : ''}`}>
         <AlertTriangle size={compact ? 14 : 17} />
-        <strong style={{ color: '#92400e' }}>Internal readiness tool</strong>
-        <span style={{ borderInlineStart: '1px solid #fcd34d' }}>Requires authorized review before operational reliance</span>
-        <span style={{ borderInlineStart: '1px solid #fcd34d' }}>Evidence and signoff must be verified before operational use</span>
+        <strong>Internal readiness tool</strong>
+        <span>Requires authorized review before operational reliance</span>
+        <span>Evidence and signoff must be verified before operational use</span>
       </div>
     );
   }
