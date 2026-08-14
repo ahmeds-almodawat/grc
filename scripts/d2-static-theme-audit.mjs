@@ -10,9 +10,9 @@ const sourceExemptions = new Set([
   'src/components/OvrPrintableReport.tsx',
   'src/dashboard/dashboardFramework.ts',
 ]);
-const cssExceptionSelector = /(?:print|pdf|paper|document-preview|governed-print|brand|logo|chart|graph|sparkline|::before|::after|\bbutton\b|\.nav-)/i;
-const surfaceClassPattern = /(?:card|panel|tile|container|hero|banner|row|item|strip|frame|state|filters|header|preview|check|rule|workbench|workflow|capability|list|chain|assurance|gap|metric|table)/i;
-const semanticBackground = /\bbackground(?:-color)?\s*:[^;]*(?:var\(--color-(?:surface|input|table|warning|danger|success|info|neutral)|var\(--ui-surface|var\(--surface)/i;
+const cssExceptionSelector = /(?:print|pdf|paper|document-preview|governed-print|brand|logo|chart|graph|sparkline|::before|::after|\bbutton\b)/i;
+const surfaceClassPattern = /(?:card|panel|tile|container|hero|banner|row|item|strip|frame|state|filters|header|preview|check|rule|workbench|workflow|capability|list|chain|assurance|gap|metric|table|scenario|search|navigation|sidebar|drawer)/i;
+const semanticBackground = /\bbackground(?:-color)?\s*:[^;]*(?:var\(--color-(?:surface|input|table|warning|danger|success|info|neutral)|var\(--ui-surface|var\(--surface|var\(--nav-(?:background|surface|hover|active-background|control-background))/i;
 
 function hasRiskySurfaceBackground(declarations) {
   const backgroundValues = [...declarations.matchAll(/\bbackground(?:-color)?\s*:\s*([^;]+)/gi)]

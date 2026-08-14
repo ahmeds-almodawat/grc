@@ -9731,6 +9731,16 @@ table tbody tr:hover {
   --color-neutral-fg: #334155;
   --color-neutral-bg: #e2e8f0;
   --color-neutral-border: #cbd5e1;
+  --nav-background: #eef4f8;
+  --nav-surface: #ffffff;
+  --nav-text: #172033;
+  --nav-text-muted: #64748b;
+  --nav-border: #d8e1ec;
+  --nav-hover: #e8f2f3;
+  --nav-active-background: #dff4f0;
+  --nav-active-text: #0f4c45;
+  --nav-focus: #0f766e;
+  --nav-control-background: #f8fafc;
 
   /* Compatibility aliases consumed by established shared components. */
   --ui-bg: var(--color-page);
@@ -9790,6 +9800,107 @@ table tbody tr:hover {
   --color-neutral-fg: #d8e3ef;
   --color-neutral-bg: #24364a;
   --color-neutral-border: #4a6078;
+  --nav-background: #08111f;
+  --nav-surface: #111827;
+  --nav-text: #e2edf8;
+  --nav-text-muted: #a8b5c7;
+  --nav-border: #30445a;
+  --nav-hover: #172b42;
+  --nav-active-background: #1d3d68;
+  --nav-active-text: #ffffff;
+  --nav-focus: #63d6c7;
+  --nav-control-background: #142438;
+}
+
+/* The navigation shell follows the resolved theme. Desktop and mobile reuse
+   the same authorized tree, so these semantic tokens paint both surfaces. */
+.modern-sidebar {
+  color: var(--nav-text);
+  background: linear-gradient(180deg, var(--nav-surface), var(--nav-background)) !important;
+  border-inline-end: 1px solid var(--nav-border) !important;
+  border-inline-start: 0 !important;
+  box-shadow: 12px 0 32px color-mix(in srgb, var(--nav-background) 18%, transparent);
+}
+
+.rtl-shell .modern-sidebar {
+  border-inline-start: 1px solid var(--nav-border) !important;
+  border-inline-end: 0 !important;
+}
+
+.modern-sidebar .brand-block-modern h1,
+.modern-sidebar .nav-section-label {
+  color: var(--nav-text) !important;
+}
+
+.modern-sidebar .brand-block-modern p,
+.modern-sidebar .nav-group-trigger small,
+.modern-sidebar .nav-item small,
+.modern-sidebar .sidebar-footnote {
+  color: var(--nav-text-muted) !important;
+}
+
+.modern-sidebar .nav-group-trigger,
+.modern-sidebar .nav-child-item,
+.modern-sidebar .nav-item {
+  color: var(--nav-text) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.modern-sidebar .nav-group-trigger:hover,
+.modern-sidebar .nav-child-item:hover,
+.modern-sidebar .nav-item:hover {
+  color: var(--nav-active-text) !important;
+  background: var(--nav-hover) !important;
+  border-color: var(--nav-border) !important;
+}
+
+.modern-sidebar .nav-group-trigger.active,
+.modern-sidebar .nav-child-item.active,
+.modern-sidebar .nav-item.active,
+.modern-sidebar .nav-tree-group.active > .nav-group-trigger {
+  color: var(--nav-active-text) !important;
+  background: var(--nav-active-background) !important;
+  border-color: color-mix(in srgb, var(--nav-focus) 45%, var(--nav-border)) !important;
+}
+
+.modern-sidebar .nav-group-trigger.active small,
+.modern-sidebar .nav-child-item.active small,
+.modern-sidebar .nav-item.active small,
+.modern-sidebar .nav-tree-group.active > .nav-group-trigger small {
+  color: color-mix(in srgb, var(--nav-active-text) 74%, var(--nav-text-muted)) !important;
+}
+
+.modern-sidebar .nav-child-list {
+  border-inline-start-color: var(--nav-border) !important;
+}
+
+.modern-sidebar .language-toggle,
+.modern-sidebar .mobile-nav-close,
+.modern-sidebar .sidebar-footnote,
+.modern-sidebar .legacy-active-banner {
+  color: var(--nav-text);
+  background: var(--nav-control-background);
+  border-color: var(--nav-border);
+}
+
+.modern-sidebar .language-toggle:focus-visible,
+.modern-sidebar .mobile-nav-close:focus-visible,
+.modern-sidebar .nav-group-trigger:focus-visible,
+.modern-sidebar .nav-child-item:focus-visible,
+.modern-sidebar .nav-item:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--nav-focus) 72%, transparent);
+  outline-offset: 2px;
+}
+
+:root[data-theme="dark"] .modern-sidebar {
+  background: linear-gradient(180deg, var(--nav-surface), var(--nav-background)) !important;
+}
+
+:root[data-theme="dark"] .modern-sidebar .nav-group-trigger.active,
+:root[data-theme="dark"] .modern-sidebar .nav-child-item.active,
+:root[data-theme="dark"] .modern-sidebar .nav-item.active {
+  background: var(--nav-active-background) !important;
 }
 
 :root[data-theme="dark"] .modern-app-shell,
@@ -9872,9 +9983,65 @@ table tbody tr:hover {
   border-color: var(--color-input-border);
 }
 
+/* Legacy unclassed/text-input fields have a more specific historical white
+   background rule. In Dark mode they still consume the same shared field
+   tokens; this includes the Production Operator Console filter. */
+:root[data-theme="dark"] .modern-main-content input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+:root[data-theme="dark"] .modal-card input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+:root[data-theme="dark"] .modern-main-content textarea,
+:root[data-theme="dark"] .modal-card textarea,
+:root[data-theme="dark"] .modern-main-content select,
+:root[data-theme="dark"] .modal-card select {
+  color: var(--color-text-primary) !important;
+  background: var(--color-input-background) !important;
+  border-color: var(--color-input-border) !important;
+}
+
 :where(.modern-main-content, .modal-card) :where(input, textarea)::placeholder {
   color: var(--color-input-placeholder);
   opacity: 1;
+}
+
+/* Search wrappers are shared application fields, not white document chrome. */
+:where(.modern-main-content, .modal-card) :where(.search-input-wrap, .search-mini) {
+  color: var(--color-text-primary);
+  background: var(--color-input-background);
+  border-color: var(--color-input-border);
+}
+
+:where(.modern-main-content, .modal-card) :where(.search-input-wrap, .search-mini) input {
+  color: var(--color-text-primary) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+:where(.modern-main-content, .modal-card) :where(.search-input-wrap, .search-mini):focus-within {
+  border-color: var(--color-focus-ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus-ring) 28%, transparent);
+}
+
+:root[data-theme="dark"] .modern-main-content :where(.search-input-wrap, .search-mini) {
+  background: var(--color-input-background) !important;
+  border-color: var(--color-input-border) !important;
+}
+
+/* Guided UAT scenarios retain hierarchy and status accents while following
+   the active screen surface palette. */
+.modern-main-content .controlled-uat-scenario {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+
+:root[data-theme="dark"] .modern-main-content .controlled-uat-scenario {
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content .controlled-uat-scenario__actions select {
+  color: var(--color-text-primary);
+  background: var(--color-input-background) !important;
+  border-color: var(--color-input-border) !important;
 }
 
 :where(.modern-main-content, .modal-card) :where(input, textarea, select, button, [href], [tabindex]):focus-visible {
@@ -10562,9 +10729,9 @@ body[data-scroll-locked="true"] {
     z-index: 2;
     min-height: 42px;
     padding: 8px 12px;
-    color: #f8fbff;
-    background: #142438;
-    border: 1px solid #405873;
+    color: var(--nav-text);
+    background: var(--nav-control-background);
+    border: 1px solid var(--nav-border);
     border-radius: var(--ui-radius);
   }
 
