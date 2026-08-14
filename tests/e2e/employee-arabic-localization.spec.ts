@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Request } from '@playwright/test';
+import { join } from 'node:path';
 import { canAccessPageForUser, pageGroups } from '../../src/auth/authAccess';
 import type { AuthRoleAssignment } from '../../src/auth/authTypes';
 import type { PageKey } from '../../src/components/Layout';
@@ -154,6 +155,25 @@ async function installEmployeeMocks(
         access_allowed: true,
         message: null,
       };
+    } else if (action === 'f1r2_list_my_work') {
+      result = includeFixtures ? [{
+        assignment_id: '00000000-0000-4000-8000-000000000199',
+        organization_id: organizationId,
+        item_type: 'task',
+        item_id: '00000000-0000-4000-8000-000000000195',
+        title: 'مهمة مراجعة عربية',
+        project_id: '00000000-0000-4000-8000-000000000190',
+        project_title: 'مشروع الحوكمة',
+        due_date: '2026-07-30',
+        status: 'in_progress',
+        progress_percent: 25,
+        assignment_status: 'accepted',
+        assigned_at: '2026-07-18T00:00:00.000Z',
+        responded_at: '2026-07-18T00:05:00.000Z',
+        decline_reason: null,
+        assigned_by_name: 'مدير المشروع',
+        assignee_name: 'موظف اختبار العربية',
+      }] : [];
     }
 
     await route.fulfill({
@@ -348,6 +368,7 @@ test.describe('Patch 83U Phase 1 Employee Arabic localization', () => {
     expect(proof.actions.filter(Boolean).every((action) => [
       'patch83u_get_capabilities',
       'patch83u_get_credential_state',
+      'f1r2_list_my_work',
     ].includes(action))).toBe(true);
     expect(proof.mutationRequests).toEqual([]);
     expect(proof.consoleProblems).toEqual([]);
@@ -418,5 +439,33 @@ test.describe('Patch 83U Phase 1 Employee Arabic localization', () => {
     await expect(page.getByText(expectedArabicHeadings.home, { exact: true })).toBeVisible();
     await expect(page.locator('.user-management-center')).toHaveCount(0);
     expect(proof.mutationRequests).toEqual([]);
+  });
+
+  test('renders accepted F1-R2 work in mobile Arabic RTL across governed themes', async ({ page }) => {
+    const proof: BrowserProof = { actions: [], mutationRequests: [], consoleProblems: [], pageErrors: [], responseErrors: [] };
+    await installEmployeeMocks(page, proof, 'ar', true);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.myWork}`);
+
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(page.getByText('تم قبول الإسناد', { exact: true })).toBeVisible();
+    await expect(page.getByText('مهمة مراجعة عربية', { exact: true })).toBeVisible();
+    await expect(page.locator('body')).not.toContainText('legacy_unverified');
+    await expect(page.locator('body')).not.toContainText('corrective_action_in_progress');
+
+    const theme = page.getByLabel('مظهر الواجهة');
+    await theme.selectOption('dark');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    const evidenceDir = process.env.F1R2_EVIDENCE_DIR;
+    if (evidenceDir) await page.screenshot({ path: join(evidenceDir, 'f1r2-my-work-mobile-ar-dark.png'), fullPage: true });
+
+    await theme.selectOption('light');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    if (evidenceDir) await page.screenshot({ path: join(evidenceDir, 'f1r2-my-work-mobile-ar-light.png'), fullPage: true });
+
+    await theme.selectOption('system');
+    expect(proof.mutationRequests).toEqual([]);
+    expect(proof.pageErrors).toEqual([]);
+    expect(proof.responseErrors).toEqual([]);
   });
 });
