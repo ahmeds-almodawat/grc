@@ -10038,6 +10038,413 @@ table tbody tr:hover {
   border-color: var(--color-border);
 }
 
+/* D2-R shared legacy-surface adapters. These are primitive families rather
+   than route selectors: many pre-token components add state classes after
+   `-card`/`-panel`, so suffix matching alone cannot reach them. */
+:root[data-theme="dark"] .modern-main-content :where(
+  .stat-card,
+  .module-card,
+  .mini-card,
+  .content-card,
+  .table-card,
+  .rule-tile,
+  .release-score-card,
+  .dataset-card,
+  .dataset-check,
+  .setup-check-card,
+  .training-card,
+  .guide-card,
+  .department-scorecard,
+  .scenario-card,
+  .template-card,
+  .backup-plan-card,
+  .vault-card,
+  .automation-rule-card,
+  .exception-card,
+  .review-card,
+  .committee-action-card,
+  .appetite-card,
+  .mobile-action-card,
+  .mobile-command-item,
+  .mobile-done-rules,
+  .issue-row,
+  .module-pressure-row,
+  .professional-empty-state
+) {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .stat-card,
+  .module-card,
+  .mini-card,
+  .content-card,
+  .table-card,
+  .rule-tile,
+  .release-score-card,
+  .dataset-card,
+  .dataset-check,
+  .setup-check-card,
+  .training-card,
+  .guide-card,
+  .department-scorecard,
+  .scenario-card,
+  .template-card,
+  .backup-plan-card,
+  .vault-card,
+  .automation-rule-card,
+  .exception-card,
+  .review-card,
+  .committee-action-card,
+  .appetite-card,
+  .mobile-action-card,
+  .mobile-command-item,
+  .mobile-done-rules,
+  .issue-row,
+  .module-pressure-row,
+  .professional-empty-state
+) :where(h1, h2, h3, h4, strong) {
+  color: var(--color-text-primary) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .stat-card,
+  .module-card,
+  .mini-card,
+  .content-card,
+  .table-card,
+  .rule-tile,
+  .release-score-card,
+  .dataset-card,
+  .dataset-check,
+  .setup-check-card,
+  .training-card,
+  .guide-card,
+  .department-scorecard,
+  .scenario-card,
+  .template-card,
+  .backup-plan-card,
+  .vault-card,
+  .automation-rule-card,
+  .exception-card,
+  .review-card,
+  .committee-action-card,
+  .appetite-card,
+  .mobile-action-card,
+  .mobile-command-item,
+  .mobile-done-rules,
+  .issue-row,
+  .module-pressure-row,
+  .professional-empty-state
+) :where(p, small, .stat-label, .muted, .muted-text) {
+  color: var(--color-text-muted) !important;
+}
+
+/* Shared gradient/featured hero primitive. The decorative gradients remain,
+   but their canvas is derived from the active semantic screen surfaces. */
+:root[data-theme="dark"] .modern-main-content :where(
+  .modern-gradient-panel,
+  .workspace-hero,
+  .production-finish-hero
+) {
+  color: var(--color-text-primary);
+  background:
+    radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 36%),
+    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.14), transparent 32%),
+    linear-gradient(135deg, var(--color-surface-elevated), var(--color-surface)) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .modern-gradient-panel,
+  .workspace-hero,
+  .production-finish-hero
+) :where(h1, h2, h3, h4, strong) {
+  color: var(--color-text-primary) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .modern-gradient-panel,
+  .workspace-hero,
+  .production-finish-hero
+) :where(p, small, .section-subtitle) {
+  color: var(--color-text-muted) !important;
+}
+
+/* Dense control-page primitives. These historical declarations use
+   `!important`, so their semantic Dark mappings must match that precedence. */
+:root[data-theme="dark"] .modern-main-content :where(
+  .compact-page-header,
+  .reference-kpi-card,
+  .compact-filters-container
+) {
+  color: var(--color-text-primary) !important;
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+  box-shadow: var(--ui-shadow-soft) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content .compact-page-header h1,
+:root[data-theme="dark"] .modern-main-content .reference-kpi-card strong {
+  color: var(--color-text-primary) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .compact-breadcrumb,
+  .reference-kpi-label,
+  .reference-kpi-card small,
+  .compact-filters-toggle small
+) {
+  color: var(--color-text-muted) !important;
+}
+
+/* Embedded metric/search primitives are normal application chrome, not
+   document previews, and therefore follow the screen theme. */
+:root[data-theme="dark"] .modern-main-content :where(
+  .mobile-kpi-strip > div,
+  .mini-metric-grid > div,
+  .device-card-grid > span,
+  .search-mini,
+  .readiness-ring
+) {
+  color: var(--color-text-primary);
+  background: var(--color-surface-inset) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .mobile-kpi-strip > div,
+  .mini-metric-grid > div,
+  .search-mini
+) :where(strong, input) {
+  color: var(--color-text-primary) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .mobile-kpi-strip > div,
+  .mini-metric-grid > div
+) span {
+  color: var(--color-text-muted) !important;
+}
+
+/* Preserve the semantic meaning of accented states on a dark canvas. */
+:root[data-theme="dark"] .modern-main-content :where(.stat-card.warning, .department-scorecard.at_risk, .department-scorecard.watch, .scenario-card.high) {
+  color: var(--color-warning-fg);
+  background: var(--color-warning-bg) !important;
+  border-color: var(--color-warning-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(.stat-card.danger, .department-scorecard.critical, .scenario-card.critical) {
+  color: var(--color-danger-fg);
+  background: var(--color-danger-bg) !important;
+  border-color: var(--color-danger-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content .stat-card.success {
+  color: var(--color-success-fg);
+  background: var(--color-success-bg) !important;
+  border-color: var(--color-success-border) !important;
+}
+
+/* Secondary screen primitives discovered by the CSS-inclusive D2-R audit. */
+:root[data-theme="dark"] .modern-main-content :where(
+  .analytics-card,
+  .analytics-panel,
+  .heatmap-row-label,
+  .timeline-item > div:last-child,
+  .relationship-row,
+  .ultra-list-row,
+  .persona-card,
+  .seed-card,
+  .coverage-row,
+  .hub-active-strip,
+  .uat-issue-list__item,
+  .final-score-panel,
+  .production-blocker-row,
+  .production-fast-step,
+  .production-module-row,
+  .production-pilot-row,
+  .production-handover-card,
+  .production-commandment-grid > div,
+  .production-proof-row,
+  .production-proof-step,
+  .controlled-uat-issue-table__row,
+  .empty-state,
+  .row-more-actions-menu,
+  .row-more-actions-menu--overlay
+) {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .setup-check-icon,
+  .timeline-marker,
+  .production-blocker-icon
+) {
+  color: var(--color-text-primary);
+  background: var(--color-surface-inset) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content .readiness-ring {
+  background:
+    radial-gradient(circle, var(--color-surface-inset) 55%, transparent 57%),
+    conic-gradient(var(--color-focus-ring) calc(var(--score) * 1%), var(--color-border) 0) !important;
+}
+
+:root[data-theme="dark"] .auth-card {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .final-gate-row--warning,
+  .production-proof-row--warning
+) {
+  color: var(--color-warning-fg);
+  background: var(--color-warning-bg) !important;
+  border-color: var(--color-warning-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .final-gate-row--danger,
+  .production-proof-row--danger
+) {
+  color: var(--color-danger-fg);
+  background: var(--color-danger-bg) !important;
+  border-color: var(--color-danger-border) !important;
+}
+
+/* Versioned feature styles are imported by lazy page modules after this
+   stylesheet. The higher-specificity semantic adapters below keep those
+   shared screen primitives theme-correct without changing their Light-mode
+   definitions or the deliberately white print/document surfaces. */
+:root[data-theme="dark"] .modern-main-content :where(
+  .v130-workbench,
+  .v130-workbench__card,
+  .v130-workbench__support-grid > section,
+  .v160-workflow-card,
+  .v160-capability-card,
+  .v160-list-card,
+  .v180-chain-node,
+  .v180-assurance-row,
+  .v180-gap-card,
+  .v190-card,
+  .v190-alert,
+  .v190-management-view,
+  .v220-workflow-card,
+  .v220-capa-card,
+  .v220-metric-card,
+  .v220-evidence-strip span
+) {
+  color: var(--color-text-primary) !important;
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+  box-shadow: var(--ui-shadow-soft) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .v130-workbench__header p,
+  .v130-workbench__card p,
+  .v130-workbench__card dd,
+  .v130-workbench__support-grid li,
+  .v160-workflow-card p,
+  .v160-capability-card p,
+  .v160-list-card p,
+  .v160-metric-grid p,
+  .v160-list-card small,
+  .v160-capability-card small,
+  .v180-chain-node p,
+  .v180-gap-card p,
+  .v180-assurance-row small,
+  .v180-metric small,
+  .v190-card p,
+  .v190-card small,
+  .v190-alert p,
+  .v190-management-view p,
+  .v190-card ul,
+  .v190-management-view ul
+) {
+  color: var(--color-text-muted) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .v130-workbench__card dt,
+  .v160-workflow-card dd,
+  .v160-card-header strong,
+  .v180-badge,
+  .v180-node-index,
+  .v180-gap-remediation,
+  .v190-rule
+) {
+  color: var(--color-text-primary) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .v130-workbench__card-head span,
+  .v180-badge,
+  .v180-node-index,
+  .v190-card-head span,
+  .v190-management-view span,
+  .v190-rule
+) {
+  background: var(--color-surface-inset) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .v120-card,
+  .v120-empty-state,
+  .scenario-status-list span,
+  .table-wrapper,
+  .modern-table,
+  .modern-table-wrap,
+  .controlled-uat-issue-table,
+  .v35-panel,
+  .v35-table-card,
+  .v35-form-card,
+  .v35-radar-card,
+  .v35-stat,
+  .v35-empty,
+  .v35-tabs button
+) {
+  color: var(--color-text-primary) !important;
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .modern-table th,
+  .v35-table-card th
+) {
+  color: var(--color-text-secondary) !important;
+  background: var(--color-table-header) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .v35-form-card input,
+  .v35-form-card textarea
+) {
+  color: var(--color-text-primary) !important;
+  background: var(--color-input-background) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .v120-muted,
+  .v35-stat span,
+  .v35-table-card small,
+  .v35-form-card label,
+  .v35-radar-card p
+) {
+  color: var(--color-text-muted) !important;
+}
+
 .workspace-hero__metrics strong,
 .workspace-card strong,
 .daily-control-row strong,

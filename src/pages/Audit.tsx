@@ -56,6 +56,7 @@ import {
   validateAuditFindingClosure,
 } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
+import { useI18n } from '../i18n/I18nContext';
 import type {
   AuditClosureGateStatusRow,
   AuditClosurePackIndexRow,
@@ -129,6 +130,7 @@ function EventTable({ rows }: { rows: AuditFindingValidationEventRow[] }) {
 
 export function Audit() {
   const auth = useAuth();
+  const { t } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
@@ -322,23 +324,23 @@ const actionDisabled = !canManageFindings || Boolean(busyAction);
   return (
     <section className="page-section">
       <ModuleHeader
-        eyebrow="Audit"
-        title="Audit Findings Register"
-        subtitle="Track audit findings, responses, corrective actions, evidence and closure."
+        eyebrow={t('audit.eyebrow')}
+        title={t('audit.title')}
+        subtitle={t('audit.subtitle')}
         action={canManageFindings ? (
           <div className="inline-actions">
-            <button className="primary-button" onClick={() => setFormOpen(true)}>New Finding</button>
+            <button className="primary-button" onClick={() => setFormOpen(true)}>{t('audit.newFinding')}</button>
           </div>
         ) : null}
       />
             {error ? <div className="panel error-panel">{error}</div> : null}
       {message ? <div className="notice-banner">{message}</div> : null}
       <div className="module-grid">
-        <div className="module-card"><strong>Findings</strong><span>{metrics.register} active</span></div>
-        <div className="module-card warning"><strong>Workflow queue</strong><span>{metrics.queue} queued</span></div>
-        <div className="module-card danger"><strong>Overdue findings</strong><span>{metrics.overdue} overdue</span></div>
-        <div className="module-card warning"><strong>Closure blocked</strong><span>{metrics.blocked} blocked</span></div>
-        <div className="module-card danger"><strong>Escalations</strong><span>{metrics.escalations} escalations</span></div>
+        <div className="module-card"><strong>{t('audit.findings')}</strong><span>{metrics.register} {t('audit.active')}</span></div>
+        <div className="module-card warning"><strong>{t('audit.workflowQueue')}</strong><span>{metrics.queue} {t('audit.queued')}</span></div>
+        <div className="module-card danger"><strong>{t('audit.overdueFindings')}</strong><span>{metrics.overdue} {t('audit.overdue')}</span></div>
+        <div className="module-card warning"><strong>{t('audit.closureBlocked')}</strong><span>{metrics.blocked} {t('audit.blocked')}</span></div>
+        <div className="module-card danger"><strong>{t('audit.escalations')}</strong><span>{metrics.escalations} {t('audit.escalations')}</span></div>
       </div>
 
 
@@ -357,7 +359,7 @@ const actionDisabled = !canManageFindings || Boolean(busyAction);
 
 
       <div className="panel">
-        <div className="panel-header"><h4><ClipboardCheck size={18} /> Audit findings register</h4></div>
+        <div className="panel-header"><h4><ClipboardCheck size={18} /> {t('audit.register')}</h4></div>
         <DataState
           loading={findings.loading}
           error={findings.error}
@@ -373,21 +375,21 @@ const actionDisabled = !canManageFindings || Boolean(busyAction);
             rows={findings.data || []}
             getRowKey={row => row.id}
             columns={[
-              { key: 'code', header: 'Code', render: row => row.finding_code || '-' },
-              { key: 'title', header: 'Finding', render: row => <button className="link-button" type="button" onClick={() => setSelectedFindingId(row.id)}><strong>{row.title}</strong></button> },
-              { key: 'department', header: 'Department', render: row => departmentName(row.departments) },
-              { key: 'owner', header: 'Owner', render: row => ownerName(row.owner) },
-              { key: 'due', header: 'Due', render: row => formatDate(row.due_date) },
-              { key: 'status', header: 'Lifecycle', render: row => <StatusBadge status={humanize(row.finding_status || row.status)} /> },
-              { key: 'severity', header: 'Severity', render: row => <span className={`risk-pill ${row.severity_level || row.risk_level}`}>{row.severity_level || row.risk_level}</span> },
+              { key: 'code', header: t('common.code'), render: row => row.finding_code || '-' },
+              { key: 'title', header: t('audit.finding'), render: row => <button className="link-button" type="button" onClick={() => setSelectedFindingId(row.id)}><strong>{row.title}</strong></button> },
+              { key: 'department', header: t('common.department'), render: row => departmentName(row.departments) },
+              { key: 'owner', header: t('common.owner'), render: row => ownerName(row.owner) },
+              { key: 'due', header: t('common.due'), render: row => formatDate(row.due_date) },
+              { key: 'status', header: t('audit.lifecycle'), render: row => <StatusBadge status={t(`status.${row.finding_status || row.status}`, humanize(row.finding_status || row.status))} /> },
+              { key: 'severity', header: t('common.severity'), render: row => <span className={`risk-pill ${row.severity_level || row.risk_level}`}>{t(`risk.${row.severity_level || row.risk_level}`, row.severity_level || row.risk_level)}</span> },
               {
                 key: 'actions',
-                header: 'Actions',
+                header: t('common.actions'),
                 render: row => canManageFindings ? (
                   <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Issue finding" onClick={() => openActionModal('issue', row.id)}><Send size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Request closure" onClick={() => openActionModal('request_closure', row.id)}><FileCheck2 size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title="Escalate" onClick={() => openActionModal('escalate', row.id)}><Flag size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('audit.issueFinding')} onClick={() => openActionModal('issue', row.id)}><Send size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('audit.requestClosure')} onClick={() => openActionModal('request_closure', row.id)}><FileCheck2 size={14} /></button>
+                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('audit.escalate')} onClick={() => openActionModal('escalate', row.id)}><Flag size={14} /></button>
                   </div>
                 ) : '-',
               },

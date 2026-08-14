@@ -9,10 +9,12 @@ import { StatusBadge } from '../components/StatusBadge';
 import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
 import { getComplianceItems, getDepartments, getOrganizations, getProfiles } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
+import { useI18n } from '../i18n/I18nContext';
 import type { ComplianceRow } from '../types/domain';
 
 export function Compliance() {
   const auth = useAuth();
+  const { t } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
   const compliance = useAsyncData(getComplianceItems, []);
   const departments = useAsyncData(getDepartments, []);
@@ -34,18 +36,18 @@ export function Compliance() {
   return (
     <section className="page-section">
       <ModuleHeader
-        eyebrow="Compliance"
-        title="Compliance Obligations Register"
-        subtitle="Track regulatory obligations, owners, expiry dates, evidence and status."
-        action={canManageCompliance ? <button className="primary-button" onClick={() => setFormOpen(true)}>New Obligation</button> : null}
+        eyebrow={t('compliance.eyebrow')}
+        title={t('compliance.title')}
+        subtitle={t('compliance.subtitle')}
+        action={canManageCompliance ? <button className="primary-button" onClick={() => setFormOpen(true)}>{t('compliance.new')}</button> : null}
       />
 
       <div className="module-grid">
-        <div className="module-card"><strong>Total obligations</strong><span>{metrics.register} active</span></div>
-        <div className="module-card warning"><strong>Expiring soon</strong><span>{metrics.expiring} within 90 days</span></div>
-        <div className="module-card danger"><strong>High risk</strong><span>{metrics.highRisk} critical/high</span></div>
-        <div className="module-card warning"><strong>Evidence needed</strong><span>{metrics.evidenceNeeded} pending</span></div>
-        <div className="module-card danger"><strong>Overdue</strong><span>{metrics.overdue} overdue</span></div>
+        <div className="module-card"><strong>{t('compliance.total')}</strong><span>{metrics.register} {t('compliance.active')}</span></div>
+        <div className="module-card warning"><strong>{t('compliance.expiringSoon')}</strong><span>{metrics.expiring} {t('compliance.within90Days')}</span></div>
+        <div className="module-card danger"><strong>{t('compliance.highRisk')}</strong><span>{metrics.highRisk} {t('compliance.criticalHigh')}</span></div>
+        <div className="module-card warning"><strong>{t('compliance.evidenceNeeded')}</strong><span>{metrics.evidenceNeeded} {t('compliance.pending')}</span></div>
+        <div className="module-card danger"><strong>{t('compliance.overdue')}</strong><span>{metrics.overdue} {t('compliance.overdue')}</span></div>
       </div>
 
 
@@ -53,31 +55,31 @@ export function Compliance() {
       <div className="panel">
         <div className="panel-header">
           <div>
-            <h4>Compliance obligations register</h4>
-            <p className="muted">Operational register for regulatory obligations, expiry warnings, responsible owner, risk level and evidence status.</p>
+            <h4>{t('compliance.register')}</h4>
+            <p className="muted">{t('compliance.registerHint')}</p>
           </div>
-          <span className="status-chip neutral">Evidence-based CMS</span>
+          <span className="status-chip neutral">{t('compliance.recordSource')}</span>
         </div>
         <DataState loading={compliance.loading} error={compliance.error} empty={!compliance.data?.length}>
           <EntityTable<ComplianceRow>
             rows={compliance.data || []}
             getRowKey={row => row.id}
             columns={[
-              { key: 'code', header: 'Code', render: row => row.compliance_code || '—' },
-              { key: 'title', header: 'Requirement', render: row => <strong>{row.title}</strong> },
-              { key: 'body', header: 'Regulator', render: row => row.regulatory_body || '—' },
-              { key: 'department', header: 'Department', render: row => departmentName(row.departments) },
-              { key: 'owner', header: 'Owner', render: row => ownerName(row.owner) },
-              { key: 'due', header: 'Due', render: row => formatDate(row.due_date) },
-              { key: 'expiry', header: 'Expiry', render: row => formatDate(row.expiry_date) },
-              { key: 'status', header: 'Status', render: row => <StatusBadge status={humanize(row.status)} /> },
-              { key: 'risk', header: 'Risk', render: row => <span className={`risk-pill ${row.risk_level}`}>{row.risk_level}</span> }
+              { key: 'code', header: t('common.code'), render: row => row.compliance_code || '—' },
+              { key: 'title', header: t('compliance.requirement'), render: row => <strong>{row.title}</strong> },
+              { key: 'body', header: t('compliance.regulator'), render: row => row.regulatory_body || '—' },
+              { key: 'department', header: t('common.department'), render: row => departmentName(row.departments) },
+              { key: 'owner', header: t('common.owner'), render: row => ownerName(row.owner) },
+              { key: 'due', header: t('common.due'), render: row => formatDate(row.due_date) },
+              { key: 'expiry', header: t('compliance.expiry'), render: row => formatDate(row.expiry_date) },
+              { key: 'status', header: t('common.status'), render: row => <StatusBadge status={t(`status.${row.status}`, humanize(row.status))} /> },
+              { key: 'risk', header: t('common.risk'), render: row => <span className={`risk-pill ${row.risk_level}`}>{t(`risk.${row.risk_level}`, row.risk_level)}</span> }
             ]}
           />
         </DataState>
       </div>
 
-      <Modal open={formOpen} title="Create compliance obligation" onClose={() => setFormOpen(false)}>
+      <Modal open={formOpen} title={t('compliance.create')} onClose={() => setFormOpen(false)}>
         <ComplianceForm organizationId={organizationId} departments={departments.data || []} profiles={profiles.data || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void compliance.refresh(); }} />
       </Modal></section>
   );

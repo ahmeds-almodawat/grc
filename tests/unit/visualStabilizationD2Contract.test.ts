@@ -8,6 +8,12 @@ const styles = source('src/styles.css');
 const layout = source('src/components/Layout.tsx');
 const modal = source('src/components/Modal.tsx');
 const i18n = source('src/i18n/I18nContext.tsx');
+const finalizer = source('scripts/d2-finalize-visual-evidence.mjs');
+const staticAudit = source('scripts/d2-static-theme-audit.mjs');
+const risks = source('src/pages/Risks.tsx');
+const compliance = source('src/pages/Compliance.tsx');
+const audit = source('src/pages/Audit.tsx');
+const users = source('src/pages/UserManagementCenter.tsx');
 
 describe('GRC v1.3 D2 visual-stabilization contracts', () => {
   it('defines complete purpose-based Light and Dark surface tokens', () => {
@@ -33,6 +39,22 @@ describe('GRC v1.3 D2 visual-stabilization contracts', () => {
     expect(styles).toContain('--ui-ink: var(--color-text-primary)');
     expect(styles).toContain('--surface: var(--color-surface)');
     expect(styles).toContain('background: var(--color-surface-elevated) !important');
+    for (const primitive of [
+      '.reference-kpi-card',
+      '.compact-filters-container',
+      '.modern-gradient-panel',
+      '.dataset-card',
+      '.committee-action-card',
+      '.mobile-done-rules',
+      '.professional-empty-state',
+    ]) {
+      expect(styles).toContain(primitive);
+    }
+  });
+
+  it('exposes the rendered page identity required by the capture harness', () => {
+    expect(layout).toContain('data-page-key={page}');
+    expect(layout).toContain('data-page-location={PAGE_LOCATION_REGISTRY[page]}');
   });
 
   it('governs forms, focus, disabled state and browser autofill in both themes', () => {
@@ -95,6 +117,38 @@ describe('GRC v1.3 D2 visual-stabilization contracts', () => {
     }
     expect(i18n).toContain("'navTree.group.internal'");
     expect(i18n).toContain("'navTree.group.admin'");
+  });
+
+  it('routes the rejected Arabic page chrome through audited i18n keys', () => {
+    expect(risks).toContain("title={t('risks.title')}");
+    expect(compliance).toContain("title={t('compliance.title')}");
+    expect(audit).toContain("title={t('audit.title')}");
+    expect(users).toContain("<h1>{t('userManagement.title')}</h1>");
+    expect(risks).not.toContain('title="Enterprise Risk Register"');
+    expect(compliance).not.toContain('title="Compliance Obligations Register"');
+    expect(audit).not.toContain('title="Audit Findings Register"');
+    for (const key of ['risks.title', 'compliance.title', 'audit.title', 'userManagement.title']) {
+      expect(i18n).toContain(`'${key}': { en:`);
+      expect(i18n).toContain("ar: '");
+    }
+  });
+
+  it('does not let the evidence finalizer manufacture visual acceptance', () => {
+    expect(finalizer).toContain("reviewed-visual-findings.json");
+    expect(finalizer).toContain("OPERATOR_VISUAL_ACCEPTANCE_PENDING");
+    expect(finalizer).toContain("AUTOMATED_VISUAL_REGRESSION_PASS");
+    expect(finalizer).not.toContain('critical: []');
+    expect(finalizer).not.toContain('Remaining Critical / High / Medium / Low: **0 / 0 / 0 / 0**');
+    expect(finalizer).not.toContain("'RTL-01': 'PASS'");
+  });
+
+  it('audits screen CSS as supporting evidence while excluding print and governed artwork', () => {
+    expect(staticAudit).toContain('const stylesheetFiles = walk(sourceRoot, new Set([stylesheetExtension]))');
+    expect(staticAudit).toContain("scannedRoots: ['src/**/*.ts', 'src/**/*.tsx', 'src/**/*.css']");
+    expect(staticAudit).toContain('stripMediaPrint');
+    expect(staticAudit).toContain('screen-css-light-surface-without-dark-mapping');
+    expect(staticAudit).toContain('supportingEvidenceOnly: true');
+    expect(staticAudit).toContain('brand/logo artwork');
   });
 
   it('has an audited translation entry for every authorized navigation child', () => {

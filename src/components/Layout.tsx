@@ -55,7 +55,11 @@ import {
 import { isScenarioLabEnabled } from "../lib/scenarioLab";
 import { ControlledPilotBanner } from "./ControlledPilotBanner";
 import { BrandLogo } from "./BrandLogo";
-import type { PageKey, PageNavigator } from "../routes/pageLocation";
+import {
+  PAGE_LOCATION_REGISTRY,
+  type PageKey,
+  type PageNavigator,
+} from "../routes/pageLocation";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 
 export type { PageKey, PageNavigator } from "../routes/pageLocation";
@@ -922,7 +926,11 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
         </nav>
       </aside>
 
-      <main className="main-content modern-main-content">
+      <main
+        className="main-content modern-main-content"
+        data-page-key={page}
+        data-page-location={PAGE_LOCATION_REGISTRY[page]}
+      >
         <header className="topbar modern-topbar">
           <div>
             <p className="eyebrow">{t("app.company")}</p>

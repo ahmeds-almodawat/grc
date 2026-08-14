@@ -1224,12 +1224,11 @@ export function UserManagementCenter() {
       <section className="compact-page-header user-management-compact-header">
         <div className="compact-page-heading">
           <p className="compact-breadcrumb">
-            Admin & Organization / User Management
+            {t('userManagement.breadcrumb')}
           </p>
-          <h1>User Management Center</h1>
+          <h1>{t('userManagement.title')}</h1>
           <p className="section-subtitle">
-            Manage users, departments, role assignments, and controlled
-            import/export without wasting page space.
+            {t('userManagement.subtitle')}
           </p>
         </div>
         <div className="inline-actions compact-header-actions">
@@ -1239,15 +1238,15 @@ export function UserManagementCenter() {
             onClick={() => void load()}
             disabled={loading}
           >
-            <RefreshCw size={16} /> Refresh
+            <RefreshCw size={16} /> {t('userManagement.refresh')}
           </button>
-          {loading && isLive(users) ? <span className="roster-refreshing" role="status">Refreshing…</span> : null}
+          {loading && isLive(users) ? <span className="roster-refreshing" role="status">{t('userManagement.refreshing')}</span> : null}
           <button
             type="button"
             className="ghost-button"
             onClick={() => void downloadUserTemplate()}
           >
-            <FileDown size={16} /> Excel template
+            <FileDown size={16} /> {t('userManagement.excelTemplate')}
           </button>
           {hasAuthorizedSuperAdmin && auth.patch83uCapabilities ? (
             <button
@@ -1276,7 +1275,7 @@ export function UserManagementCenter() {
                 : PATCH83T_USER_IMPORT_FEATURE_DISABLED_MESSAGE
             }
           >
-            <UploadCloud size={16} /> Import Excel
+            <UploadCloud size={16} /> {t('userManagement.importExcel')}
           </button>
         </div>
       </section>
@@ -1294,10 +1293,7 @@ export function UserManagementCenter() {
       ) : null}
       {compatibilityMode ? (
         <div className="notice-banner">
-          Showing existing People/profile records because Patch 19 user
-          management views are not available yet. Actions use compatibility mode
-          through existing profile RLS and role bridges; apply migration 080 to
-          enable Patch 19 lifecycle audit history and import batch tracking.
+          {t('userManagement.compatibilityNotice')}
         </div>
       ) : null}
       {blockedLifecycleCount > 0 ? (
@@ -1323,46 +1319,46 @@ export function UserManagementCenter() {
             <span className="reference-kpi-icon">
               <Users size={19} />
             </span>
-            <span className="reference-kpi-label">Total Users</span>
+            <span className="reference-kpi-label">{t('userManagement.totalUsers')}</span>
             <strong>{summaryData?.total_users ?? 0}</strong>
-            <small>All imported accounts</small>
+            <small>{t('userManagement.totalUsersHint')}</small>
           </article>
           <article className="reference-kpi-card kpi-green">
             <span className="reference-kpi-icon">
               <CheckCircle2 size={19} />
             </span>
-            <span className="reference-kpi-label">Active Users</span>
+            <span className="reference-kpi-label">{t('userManagement.activeUsers')}</span>
             <strong>{summaryData?.active_users ?? 0}</strong>
-            <small>Can participate in workflows</small>
+            <small>{t('userManagement.activeUsersHint')}</small>
           </article>
           <article className="reference-kpi-card kpi-orange">
             <span className="reference-kpi-icon">
               <AlertTriangle size={19} />
             </span>
-            <span className="reference-kpi-label">Inactive Users</span>
+            <span className="reference-kpi-label">{t('userManagement.inactiveUsers')}</span>
             <strong>{summaryData?.inactive_users ?? 0}</strong>
-            <small>Review before reactivation</small>
+            <small>{t('userManagement.inactiveUsersHint')}</small>
           </article>
           <article className="reference-kpi-card kpi-purple">
             <span className="reference-kpi-icon">
               <Building2 size={19} />
             </span>
-            <span className="reference-kpi-label">Users Without Dept.</span>
+            <span className="reference-kpi-label">{t('userManagement.withoutDepartment')}</span>
             <strong>{summaryData?.missing_department_users ?? 0}</strong>
-            <small>Needs assignment</small>
+            <small>{t('userManagement.withoutDepartmentHint')}</small>
           </article>
           <article className="reference-kpi-card kpi-red">
             <span className="reference-kpi-icon">
               <ShieldCheck size={19} />
             </span>
-            <span className="reference-kpi-label">Users Without Role</span>
+            <span className="reference-kpi-label">{t('userManagement.withoutRole')}</span>
             <strong>{summaryData?.missing_role_users ?? 0}</strong>
-            <small>Access incomplete</small>
+            <small>{t('userManagement.withoutRoleHint')}</small>
           </article>
         </div>
       </DataState>
 
-      <section className="compact-filters-container" aria-label="User filters">
+      <section className="compact-filters-container" aria-label={t('userManagement.filters')}>
         <button
           className="compact-filters-toggle"
           type="button"
@@ -1370,33 +1366,30 @@ export function UserManagementCenter() {
           aria-expanded={filtersOpen}
         >
           <span>
-            <strong>Advanced filters</strong>
-            <small>
-              Search, department, role, status, setup gaps, and login
-              availability.
-            </small>
+            <strong>{t('userManagement.filters')}</strong>
+            <small>{t('userManagement.filtersHint')}</small>
           </span>
           <span className="compact-filter-count">
-            {visibleUsers.length} shown
+            {visibleUsers.length} {t('userManagement.shown')}
           </span>
         </button>
         {filtersOpen ? (
           <div className="compact-filters-grid">
             <label className="field">
-              Search
+              {t('common.search')}
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Name, Employee ID, Auth email, contact email, phone, department, role"
+                placeholder={t('userManagement.searchPlaceholder')}
               />
             </label>
             <label className="field">
-              Department
+              {t('common.department')}
               <select
                 value={departmentFilter}
                 onChange={(event) => setDepartmentFilter(event.target.value)}
               >
-                <option value="">All departments</option>
+                <option value="">{t('userManagement.allDepartments')}</option>
                 {departmentRows.map((department) => (
                   <option key={department.id} value={department.id}>
                     {department.name_en}
@@ -1405,7 +1398,7 @@ export function UserManagementCenter() {
               </select>
             </label>
             <label className="field">
-              Role
+              {t('userManagement.role')}
               <select
                 value={roleFilter}
                 onChange={(event) =>
@@ -1414,40 +1407,40 @@ export function UserManagementCenter() {
                   )
                 }
               >
-                <option value="all">All roles</option>
-                <option value="missing">Missing role</option>
+                <option value="all">{t('userManagement.allRoles')}</option>
+                <option value="missing">{t('userManagement.missingRole')}</option>
                 {userRoleOptions.map((role) => (
                   <option key={role} value={role}>
-                    {humanize(role)}
+                    {t(`role.${role}`, humanize(role))}
                   </option>
                 ))}
               </select>
             </label>
             <label className="field">
-              Status
+              {t('common.status')}
               <select
                 value={statusFilter}
                 onChange={(event) =>
                   setStatusFilter(event.target.value as UserStatus | "all")
                 }
               >
-                <option value="all">All statuses</option>
+                <option value="all">{t('userManagement.allStatuses')}</option>
                 {userStatusOptions.map((status) => (
                   <option key={status} value={status}>
-                    {humanize(status)}
+                    {t(`status.${status}`, humanize(status))}
                   </option>
                 ))}
               </select>
             </label>
             <label className="field">
-              User type
+              {t('userManagement.userType')}
               <select
                 value={typeFilter}
                 onChange={(event) =>
                   setTypeFilter(event.target.value as UserType | "all")
                 }
               >
-                <option value="all">All types</option>
+                <option value="all">{t('userManagement.allTypes')}</option>
                 {userTypeOptions.map((type) => (
                   <option key={type} value={type}>
                     {humanize(type)}
@@ -1464,7 +1457,7 @@ export function UserManagementCenter() {
                     setMissingDepartment(event.target.checked)
                   }
                 />{" "}
-                Missing department
+                {t('userManagement.missingDepartment')}
               </label>
               <label>
                 <input
@@ -1472,7 +1465,7 @@ export function UserManagementCenter() {
                   checked={missingRole}
                   onChange={(event) => setMissingRole(event.target.checked)}
                 />{" "}
-                Missing role
+                {t('userManagement.missingRole')}
               </label>
               <label>
                 <input
@@ -1480,7 +1473,7 @@ export function UserManagementCenter() {
                   checked={neverLoggedIn}
                   onChange={(event) => setNeverLoggedIn(event.target.checked)}
                 />{" "}
-                Never logged in
+                {t('userManagement.neverLoggedIn')}
               </label>
             </div>
           </div>
@@ -1488,20 +1481,20 @@ export function UserManagementCenter() {
       </section>
 
       <ModernCard
-        title="Bulk actions"
-        subtitle="Selected users can be exported or updated through safe app-level actions."
+        title={t('userManagement.bulkActions')}
+        subtitle={t('userManagement.bulkActionsHint')}
         className="user-management-bulk-card"
       >
         <div className="bulk-actions-toolbar">
           <div className="bulk-actions-selects">
             <label className="field">
-              Bulk department
+              {t('userManagement.bulkDepartment')}
               <select
                 value={bulkDepartment}
                 onChange={(event) => setBulkDepartment(event.target.value)}
                 disabled={writeDisabled}
               >
-                <option value="">No department</option>
+                <option value="">{t('userManagement.noDepartment')}</option>
                 {departmentRows.map((department) => (
                   <option key={department.id} value={department.id}>
                     {department.name_en}
@@ -1510,7 +1503,7 @@ export function UserManagementCenter() {
               </select>
             </label>
             <label className="field">
-              Bulk role
+              {t('userManagement.bulkRole')}
               <select
                 value={bulkRole}
                 onChange={(event) => setBulkRole(event.target.value as AppRole)}
@@ -1518,7 +1511,7 @@ export function UserManagementCenter() {
               >
                 {userRoleOptions.map((role) => (
                   <option key={role} value={role}>
-                    {humanize(role)}
+                    {t(`role.${role}`, humanize(role))}
                   </option>
                 ))}
               </select>
@@ -1533,19 +1526,19 @@ export function UserManagementCenter() {
                 )
               }
             >
-              Select filtered
+              {t('userManagement.selectFiltered')}
             </button>
             <button
               className="ghost-button"
               onClick={() => setSelectedIds(new Set())}
             >
-              Clear
+              {t('userManagement.clear')}
             </button>
             <button
               className="ghost-button"
               onClick={() => exportSelected(selectedUsers)}
             >
-              <Download size={16} /> Export selected
+              <Download size={16} /> {t('userManagement.exportSelected')}
             </button>
             <button
               className="ghost-button"
@@ -1568,7 +1561,7 @@ export function UserManagementCenter() {
                 );
               }}
             >
-              Bulk assign department
+              {t('userManagement.assignDepartment')}
             </button>
             <button
               className="ghost-button"
@@ -1595,7 +1588,7 @@ export function UserManagementCenter() {
                 );
               }}
             >
-              Bulk assign role
+              {t('userManagement.assignRole')}
             </button>
             <button
               className="ghost-button"
@@ -1605,7 +1598,7 @@ export function UserManagementCenter() {
                 setLifecycle({ action: "deactivate", users: selectedUsers });
               }}
             >
-              <ShieldOff size={16} /> Bulk deactivate
+              <ShieldOff size={16} /> {t('userManagement.deactivate')}
             </button>
             <button
               className="ghost-button"
@@ -1615,21 +1608,21 @@ export function UserManagementCenter() {
                 setLifecycle({ action: "archive", users: selectedUsers });
               }}
             >
-              <Archive size={16} /> Bulk archive
+              <Archive size={16} /> {t('userManagement.archive')}
             </button>
           </div>
         </div>
       </ModernCard>
 
       <ModernCard
-        title="User roster"
-        subtitle={`${visibleUsers.length} user${visibleUsers.length === 1 ? "" : "s"} shown.`}
+        title={t('userManagement.userRoster')}
+        subtitle={`${visibleUsers.length} ${t('userManagement.shown')}.`}
         className="user-roster-card"
       >
         <DataState
           loading={false}
           empty={!loading && visibleUsers.length === 0}
-          emptyTitle="No users match the selected filters"
+          emptyTitle={t('userManagement.noMatch')}
           emptyMessage={getLiveResultMessage(users)}
         >
           <div className="user-roster-scroll" tabIndex={0}>
@@ -1642,21 +1635,21 @@ export function UserManagementCenter() {
                         type="checkbox"
                         checked={allVisibleSelected}
                         onChange={toggleAllVisible}
-                        aria-label="Select all visible users"
+                        aria-label={t('userManagement.selectAll')}
                       />
-                      All
+                      {t('userManagement.all')}
                     </label>
                   </th>
-                  <th>Name</th>
-                  <th>Sign-in identity</th>
-                  <th>Contact / Phone</th>
-                  <th>Department</th>
-                  <th>Job title</th>
-                  <th>Role(s)</th>
-                  <th>Status</th>
-                  <th>Last login</th>
-                  <th>Created</th>
-                  <th>Actions</th>
+                  <th>{t('userManagement.name')}</th>
+                  <th>{t('userManagement.signInIdentity')}</th>
+                  <th>{t('userManagement.contactPhone')}</th>
+                  <th>{t('common.department')}</th>
+                  <th>{t('userManagement.jobTitle')}</th>
+                  <th>{t('userManagement.roles')}</th>
+                  <th>{t('common.status')}</th>
+                  <th>{t('userManagement.lastLogin')}</th>
+                  <th>{t('userManagement.created')}</th>
+                  <th>{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1680,7 +1673,7 @@ export function UserManagementCenter() {
                       <span className="muted">
                         {user.full_name_ar ||
                           user.employee_no ||
-                          "No Arabic name / employee ID"}
+                          t('userManagement.noArabicOrEmployeeId')}
                       </span>
                     </td>
                     <td className="user-roster-email">
@@ -1704,52 +1697,52 @@ export function UserManagementCenter() {
                       </div>
                     </td>
                     <td>
-                      <div>{user.contact_email ?? "No contact email"}</div>
-                      <div className="muted">{user.phone ?? "No phone"}</div>
+                      <div>{user.contact_email ?? t('userManagement.provisioningQueue.noContactEmail')}</div>
+                      <div className="muted">{user.phone ?? t('userManagement.provisioningQueue.noPhone')}</div>
                     </td>
                     <td>
                       {user.department_name ?? (
-                        <span className="warning-text">Missing department</span>
+                        <span className="warning-text">{t('userManagement.missingDepartment')}</span>
                       )}
                     </td>
-                    <td>{user.job_title ?? "Not set"}</td>
+                    <td>{user.job_title ?? t('userManagement.noJobTitle')}</td>
                     <td>
                       {activeRoleTotal(user) ? (
                         roleSummary(user)
                       ) : (
-                        <span className="warning-text">Missing role</span>
+                        <span className="warning-text">{t('userManagement.missingRole')}</span>
                       )}
                     </td>
                     <td>
                       <StatusPill tone={statusTone(user.user_status)}>
-                        {humanize(user.user_status)}
+                        {t(`status.${user.user_status}`, humanize(user.user_status))}
                       </StatusPill>
                     </td>
-                    <td>{user.last_login_at ?? "Never / unavailable"}</td>
+                    <td>{user.last_login_at ?? t('userManagement.neverAvailable')}</td>
                     <td>{user.created_at?.slice(0, 10)}</td>
                     <td className="user-roster-actions-cell">
                       <div className="user-row-actions user-row-actions--compact">
                         <button
                           className="ghost-button compact-button row-primary-action"
-                          title="View details"
+                          title={t('userManagement.view')}
                           aria-label={`View ${user.full_name_en}`}
                           onClick={() => void openDetails(user)}
                         >
-                          <Eye size={14} /> View
+                          <Eye size={14} /> {t('userManagement.view')}
                         </button>
                         <button
                           className="ghost-button compact-button row-primary-action"
-                          title="Edit profile"
+                          title={t('userManagement.edit')}
                           aria-label={`Edit ${user.full_name_en}`}
                           disabled={writeDisabled}
                           onClick={() => openEdit(user)}
                         >
-                          <UserCog size={14} /> Edit
+                          <UserCog size={14} /> {t('userManagement.edit')}
                         </button>
                         <div className="row-more-actions-wrap">
                           <button
                             className="ghost-button compact-button icon-button row-more-actions-button"
-                            title="More actions"
+                            title={t('userManagement.moreActions')}
                             aria-label={`More actions for ${user.full_name_en}`}
                             onClick={() => setActionMenuUser(user)}
                             type="button"
