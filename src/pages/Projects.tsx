@@ -27,9 +27,9 @@ import {
   getOrganizations,
   getPortfolioMilestones,
   getPortfolioTasks,
-  getProfiles,
   getProjects,
   getRisks,
+  searchEligibleWorkParticipants,
 } from '../lib/grcApi';
 import type { MilestoneRow, ProjectRow } from '../types/domain';
 
@@ -55,7 +55,7 @@ export function Projects({ setPage }: ProjectsProps) {
   }, []);
   const references = useAsyncData(async () => {
     const [departments, profiles, organizations] = await Promise.all([
-      getDepartments(), getProfiles(), getOrganizations(),
+      getDepartments(), searchEligibleWorkParticipants(), getOrganizations(),
     ]);
     return { departments, profiles, organizations };
   }, []);
@@ -158,7 +158,17 @@ export function Projects({ setPage }: ProjectsProps) {
         <ActionPlanForm organizationId={organizationId} departments={references.data?.departments || []} profiles={references.data?.profiles || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void portfolio.refresh(); }} />
       </Modal>
       <Modal size="workspace" open={detailOpen} title={t('projects.v11.controlFile', 'Project control file')} onClose={() => setDetailOpen(false)}>
-        {selectedProject ? <ProjectDetail project={selectedProject} profiles={references.data?.profiles || []} /> : null}
+        {selectedProject ? <ProjectDetail
+          project={selectedProject}
+          profiles={references.data?.profiles || []}
+          onProjectUpdated={() => {
+            void (async () => {
+              await portfolio.refresh();
+              const refreshed = await getProjects();
+              setSelectedProject(refreshed.find(row => row.id === selectedProject.id) || null);
+            })();
+          }}
+        /> : null}
       </Modal>
     </section>
   );

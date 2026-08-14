@@ -58,6 +58,10 @@ export function ActionPlanForm({ organizationId, departments, profiles, onCreate
       setError('Title and organization are required.');
       return;
     }
+    if (startDate && targetEndDate && targetEndDate < startDate) {
+      setError('Target end date cannot precede the project start date.');
+      return;
+    }
 
     setSaving(true);
     try {

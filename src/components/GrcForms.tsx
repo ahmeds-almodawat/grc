@@ -338,6 +338,7 @@ export function MilestoneForm({ organizationId, projectId, profiles, onCreated, 
     event.preventDefault();
     setError(null);
     if (!title.trim()) return setError('Milestone title is required.');
+    if (startDate && dueDate && dueDate < startDate) return setError('Milestone due date cannot precede its start date.');
     setSaving(true);
     try {
       await createMilestone({ organization_id: organizationId, project_id: projectId, title: title.trim(), description: description.trim() || undefined, owner_id: ownerId || undefined, start_date: startDate || undefined, due_date: dueDate || undefined, evidence_required: evidenceRequired });
@@ -379,6 +380,7 @@ export function TaskForm({ organizationId, projectId, milestones = [], profiles,
     event.preventDefault();
     setError(null);
     if (!title.trim()) return setError('Task title is required.');
+    if (startDate && dueDate && dueDate < startDate) return setError('Task due date cannot precede its start date.');
     setSaving(true);
     try {
       await createTask({ organization_id: organizationId, project_id: projectId, milestone_id: milestoneId || undefined, title: title.trim(), description: description.trim() || undefined, owner_id: ownerId || undefined, assigned_to: assignedTo || undefined, start_date: startDate || undefined, due_date: dueDate || undefined, evidence_required: evidenceRequired });

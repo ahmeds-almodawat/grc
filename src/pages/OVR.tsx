@@ -15,6 +15,7 @@ import { isEmptyLiveObject } from '../lib/liveData';
 import {
   createOvrCorrectiveActionProject,
   createOvrReport,
+  finalizeCorrectiveOvr,
   getDepartments,
   getEvidenceForItem,
   getOrganizations,
@@ -22,7 +23,7 @@ import {
   getOvrSummary,
   getOvrWorkflowControlSummary,
   getOvrWorkflowQueue,
-  getProfiles,
+  searchEligibleWorkParticipants,
   updateOvrWorkflow
 } from '../lib/grcApi';
 import { useI18n } from '../i18n/I18nContext';
@@ -57,6 +58,7 @@ const ovrEvidenceUploadRoles: ReadonlySet<string> = new Set([
   'compliance_officer',
 ]);
 const ovrEvidenceUploadStatuses: ReadonlySet<OvrStatus> = new Set([
+  'corrective_action_in_progress',
   'quality_final_review',
   'evidence_submitted',
   'quality_closure_review',
@@ -166,13 +168,15 @@ export function OVR() {
   const reports = useAsyncData(getOvrReports, []);
   const organizations = useAsyncData(getOrganizations, []);
   const departments = useAsyncData(getDepartments, []);
-  const profiles = useAsyncData(getProfiles, []);
+  const profiles = useAsyncData(() => searchEligibleWorkParticipants(), []);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [selectedReport, setSelectedReport] = useState<OvrReportRow | null>(null);
   const [evidenceUploadReport, setEvidenceUploadReport] = useState<OvrReportRow | null>(null);
   const [selectedDashboardReport, setSelectedDashboardReport] = useState<OvrReportRow | null>(null);
+  const [correctiveProjectReport, setCorrectiveProjectReport] = useState<OvrReportRow | null>(null);
+  const [correctiveProjectForm, setCorrectiveProjectForm] = useState({ owner_id: '', sponsor_id: '', start_date: '', target_end_date: '', title: '', description: '' });
   const [activeFilter, setActiveFilter] = useState<OvrDashboardFilter>('all');
   const [reportSearch, setReportSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | OvrStatus>('all');
@@ -321,7 +325,7 @@ export function OVR() {
         age: form.age ? Number(form.age) : undefined,
         sex: form.sex,
         department_id: form.department_id,
-        notification_at: form.notification_at ? new Date(form.notification_at).toISOString() : undefined,
+        notification_at: form.notification_at || undefined,
         physical_condition: form.physical_condition,
         mental_condition: form.mental_condition,
         pre_occurrence_condition_flags: form.pre_occurrence_condition_flags,
@@ -395,10 +399,11 @@ export function OVR() {
       });
       setWorkflowMessage(t('ovr.workflowUpdated'));
       await reports.refresh();
+      const authoritative = (await getOvrReports()).find(report => report.id === selectedReport.id);
+      if (authoritative) openReport(authoritative);
       workflowSummary.refresh();
       workflowQueue.refresh();
       summary.refresh();
-      setSelectedReport(null);
     } catch (error) {
       setWorkflowMessage(error instanceof Error ? error.message : t('ovr.workflowFailed'));
     } finally {
@@ -408,11 +413,55 @@ export function OVR() {
 
   const createLinkedProject = async () => {
     if (!selectedReport) return;
+    setCorrectiveProjectReport(selectedReport);
+    setCorrectiveProjectForm({ owner_id: '', sponsor_id: '', start_date: '', target_end_date: '', title: `Corrective action for ${selectedReport.ovr_number || selectedReport.logging_number || ''}`, description: '' });
+  };
+
+  const submitLinkedProject = async () => {
+    if (!correctiveProjectReport) return;
+    if (!correctiveProjectForm.owner_id || !correctiveProjectForm.sponsor_id || !correctiveProjectForm.start_date || !correctiveProjectForm.target_end_date) {
+      setWorkflowMessage(t('ovr.correctiveProjectRequiredFields', 'Owner, sponsor, start date, and target end date are required.'));
+      return;
+    }
+    if (correctiveProjectForm.target_end_date < correctiveProjectForm.start_date) {
+      setWorkflowMessage(t('ovr.correctiveProjectDateOrder', 'Target end date cannot precede the start date.'));
+      return;
+    }
     setWorkflowSaving(true);
     try {
-      await createOvrCorrectiveActionProject(selectedReport.id);
+      await createOvrCorrectiveActionProject({ ovr_report_id: correctiveProjectReport.id, ...correctiveProjectForm });
       setWorkflowMessage(t('ovr.linkedProjectCreated'));
-      reports.refresh();
+      setCorrectiveProjectReport(null);
+      await reports.refresh();
+      const authoritative = (await getOvrReports()).find(report => report.id === correctiveProjectReport.id);
+      if (authoritative) openReport(authoritative);
+    } catch (error) {
+      setWorkflowMessage(error instanceof Error ? error.message : t('ovr.workflowFailed'));
+    } finally {
+      setWorkflowSaving(false);
+    }
+  };
+
+  const finalizeCorrectiveClosure = async () => {
+    if (!selectedReport) return;
+    if (!workflowForm.final_verdict.trim() || !workflowForm.quality_manager_comments.trim()) {
+      setWorkflowMessage(t('ovr.validationFinalVerdictRequired'));
+      return;
+    }
+    setWorkflowSaving(true);
+    try {
+      await finalizeCorrectiveOvr({
+        ovr_report_id: selectedReport.id,
+        final_verdict: workflowForm.final_verdict,
+        final_severity: workflowForm.confirmed_severity_level,
+        closure_comment: workflowForm.quality_manager_comments,
+        idempotency_key: `f1r2-close-${selectedReport.id}-${crypto.randomUUID()}`,
+      });
+      setWorkflowMessage(t('ovr.workflowUpdated'));
+      await reports.refresh();
+      const authoritative = (await getOvrReports()).find(report => report.id === selectedReport.id);
+      if (authoritative) openReport(authoritative);
+      workflowSummary.refresh(); workflowQueue.refresh(); summary.refresh();
     } catch (error) {
       setWorkflowMessage(error instanceof Error ? error.message : t('ovr.workflowFailed'));
     } finally {
@@ -811,6 +860,9 @@ export function OVR() {
               {['quality_final_review', 'reopened', 'escalated'].includes(selectedReport.status) && isQuality ? (
                 <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('quality_final_review')}>{t('ovr.issueFinalVerdict')}</button>
               ) : null}
+              {selectedReport.status === 'corrective_action_in_progress' && isQuality ? (
+                <button className="primary-button" disabled={workflowSaving} onClick={finalizeCorrectiveClosure}>{t('ovr.issueFinalVerdict', 'Issue final verdict')}</button>
+              ) : null}
               {selectedReport.status === 'quality_final_review' && isReporterFor(selectedReport) ? (
                 <>
                   <button className="primary-button" disabled={workflowSaving} onClick={() => runWorkflowAction('closed')}>{t('ovr.acceptVerdict')}</button>
@@ -843,6 +895,18 @@ export function OVR() {
             <OvrPrintableReport report={selectedReport} evidence={printableEvidence.data || []} />
           </div>
         ) : null}
+      </Modal>
+
+      <Modal size="large" title={t('ovr.createLinkedProject', 'Create corrective project')} open={Boolean(correctiveProjectReport)} onClose={() => setCorrectiveProjectReport(null)}>
+        <form className="form-grid" onSubmit={event => { event.preventDefault(); void submitLinkedProject(); }}>
+          <label className="field full-width"><span>{t('common.title', 'Title')}</span><input value={correctiveProjectForm.title} onChange={event => setCorrectiveProjectForm(current => ({ ...current, title: event.target.value }))} /></label>
+          <label className="field full-width"><span>{t('common.description')}</span><textarea value={correctiveProjectForm.description} onChange={event => setCorrectiveProjectForm(current => ({ ...current, description: event.target.value }))} /></label>
+          <label className="field"><span>{t('common.owner', 'Owner')} *</span><select value={correctiveProjectForm.owner_id} onChange={event => setCorrectiveProjectForm(current => ({ ...current, owner_id: event.target.value }))}><option value="">—</option>{(profiles.data || []).map(profile => <option key={profile.id} value={profile.id}>{language === 'ar' && profile.full_name_ar ? profile.full_name_ar : profile.full_name_en}</option>)}</select></label>
+          <label className="field"><span>{t('common.sponsor', 'Sponsor')} *</span><select value={correctiveProjectForm.sponsor_id} onChange={event => setCorrectiveProjectForm(current => ({ ...current, sponsor_id: event.target.value }))}><option value="">—</option>{(profiles.data || []).map(profile => <option key={profile.id} value={profile.id}>{language === 'ar' && profile.full_name_ar ? profile.full_name_ar : profile.full_name_en}</option>)}</select></label>
+          <label className="field"><span>{t('common.startDate', 'Start date')} *</span><input type="date" value={correctiveProjectForm.start_date} onChange={event => setCorrectiveProjectForm(current => ({ ...current, start_date: event.target.value }))} /></label>
+          <label className="field"><span>{t('common.targetEndDate', 'Target end date')} *</span><input type="date" value={correctiveProjectForm.target_end_date} onChange={event => setCorrectiveProjectForm(current => ({ ...current, target_end_date: event.target.value }))} /></label>
+          <div className="form-actions full-width"><button className="ghost-button" type="button" onClick={() => setCorrectiveProjectReport(null)}>{t('common.cancel')}</button><button className="primary-button" disabled={workflowSaving}>{workflowSaving ? t('common.saving') : t('common.create', 'Create')}</button></div>
+        </form>
       </Modal>
 
       <Modal

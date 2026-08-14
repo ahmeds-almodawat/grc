@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import type { PriorityLevel, ProfileOption, ProjectStatus, WorkStatus } from '../types/domain';
-import { getEligibleApprovers, requestApproval, updateMilestoneStatus, updateProjectStatus, updateTaskStatus, uploadEvidenceForItem } from '../lib/grcApi';
+import { assignWorkItem, cancelWorkItemAssignment, getEligibleApprovers, requestApproval, respondToWorkItemAssignment, updateMilestoneStatus, updateProjectStatus, updateTaskStatus, uploadEvidenceForItem, type WorkItemAssignmentSummary } from '../lib/grcApi';
 import { ScenarioFillButton } from './ScenarioFillButton';
 import {
   createScenarioLabScenario,
@@ -8,6 +8,7 @@ import {
 } from '../lib/scenarioLab';
 import { useI18n } from '../i18n/I18nContext';
 import { useAuth } from '../auth/AuthProvider';
+import { humanize } from '../lib/format';
 
 export type ControllableItemType = 'project' | 'milestone' | 'task';
 export type EvidenceUploadItemType =
@@ -195,12 +196,11 @@ interface ApprovalRequestFormProps {
   organizationId: string;
   itemType: ControllableItemType;
   itemId: string;
-  profiles: ProfileOption[];
   onCancel: () => void;
   onRequested: () => void;
 }
 
-export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles, onCancel, onRequested }: ApprovalRequestFormProps) {
+export function ApprovalRequestForm({ organizationId, itemType, itemId, onCancel, onRequested }: ApprovalRequestFormProps) {
   const { t, language } = useI18n();
   const auth = useAuth();
   const [approverId, setApproverId] = useState('');
@@ -216,8 +216,7 @@ export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles
     void getEligibleApprovers({ itemType, itemId })
       .then(rows => {
         if (!active) return;
-        const visibleIds = new Set(profiles.map(profile => profile.id));
-        setEligibleApprovers(rows.filter(person => person.id !== auth.session?.user.id && visibleIds.has(person.id)));
+        setEligibleApprovers(rows.filter(person => person.id !== auth.session?.user.id));
       })
       .catch(() => {
         if (active) setError(t('workControl.approverListUnavailable'));
@@ -226,7 +225,7 @@ export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles
         if (active) setApproversLoading(false);
       });
     return () => { active = false; };
-  }, [auth.session?.user.id, itemId, itemType, profiles, t]);
+  }, [auth.session?.user.id, itemId, itemType, t]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -273,17 +272,119 @@ export function ApprovalRequestForm({ organizationId, itemType, itemId, profiles
   );
 }
 
+interface AssignmentResponseFormProps {
+  assignmentId: string;
+  onCancel: () => void;
+  onResponded: () => void;
+}
+
+export function AssignmentResponseForm({ assignmentId, onCancel, onResponded }: AssignmentResponseFormProps) {
+  const { t } = useI18n();
+  const [decision, setDecision] = useState<'accepted' | 'declined'>('accepted');
+  const [reason, setReason] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    if (decision === 'declined' && !reason.trim()) {
+      setError(t('workControl.declineReasonRequired', 'A decline reason is required.'));
+      return;
+    }
+    setSaving(true);
+    try {
+      await respondToWorkItemAssignment({ assignment_id: assignmentId, decision, decline_reason: reason.trim() || undefined });
+      onResponded();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('workControl.assignmentResponseFailed', 'The assignment response was not recorded.'));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form className="form-grid" onSubmit={handleSubmit}>
+      {error ? <div className="form-error full-width">{error}</div> : null}
+      <label className="field full-width">
+        <span>{t('workControl.assignmentDecision', 'Assignment decision')}</span>
+        <select value={decision} onChange={event => setDecision(event.target.value as 'accepted' | 'declined')}>
+          <option value="accepted">{t('assignment.accept', 'Accept assignment')}</option>
+          <option value="declined">{t('assignment.decline', 'Decline assignment')}</option>
+        </select>
+      </label>
+      {decision === 'declined' ? (
+        <label className="field full-width">
+          <span>{t('workControl.declineReason', 'Decline reason')} *</span>
+          <textarea value={reason} onChange={event => setReason(event.target.value)} />
+        </label>
+      ) : null}
+      <div className="form-actions full-width">
+        <button className="ghost-button" type="button" onClick={onCancel}>{t('common.cancel')}</button>
+        <button className="primary-button" disabled={saving}>{saving ? t('common.saving') : t('common.confirm', 'Confirm')}</button>
+      </div>
+    </form>
+  );
+}
+
+interface AssignmentManagementFormProps {
+  itemType: ControllableItemType;
+  itemId: string;
+  profiles: ProfileOption[];
+  currentAssignment?: WorkItemAssignmentSummary;
+  onCancel: () => void;
+  onCompleted: () => void;
+}
+
+export function AssignmentManagementForm({ itemType, itemId, profiles, currentAssignment, onCancel, onCompleted }: AssignmentManagementFormProps) {
+  const { t, language } = useI18n();
+  const [assigneeId, setAssigneeId] = useState(currentAssignment?.assignee_id || '');
+  const [reason, setReason] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function assign(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!assigneeId) return setError(t('assignment.assigneeRequired', 'Select an assignee.'));
+    setSaving(true); setError(null);
+    try {
+      await assignWorkItem({ item_type: itemType, item_id: itemId, assignee_id: assigneeId, reason: reason.trim() || undefined });
+      onCompleted();
+    } catch (err) { setError(err instanceof Error ? err.message : t('assignment.updateFailed', 'The assignment was not updated.')); }
+    finally { setSaving(false); }
+  }
+
+  async function cancelPending() {
+    if (!currentAssignment || !reason.trim()) return setError(t('assignment.cancelReasonRequired', 'A cancellation reason is required.'));
+    setSaving(true); setError(null);
+    try {
+      await cancelWorkItemAssignment({ assignment_id: currentAssignment.assignment_id, reason: reason.trim() });
+      onCompleted();
+    } catch (err) { setError(err instanceof Error ? err.message : t('assignment.cancelFailed', 'The pending assignment was not cancelled.')); }
+    finally { setSaving(false); }
+  }
+
+  return <form className="form-grid" onSubmit={assign}>
+    {error ? <div className="form-error full-width">{error}</div> : null}
+    {currentAssignment ? <div className="notice-banner full-width">{currentAssignment.assignee_name} · {t(`assignment.${currentAssignment.assignment_status}`, humanize(currentAssignment.assignment_status))}</div> : null}
+    <label className="field full-width"><span>{t('common.assignee', 'Assignee')}</span><select value={assigneeId} onChange={event => setAssigneeId(event.target.value)}><option value="">—</option>{profiles.map(profile => <option key={profile.id} value={profile.id}>{language === 'ar' && profile.full_name_ar ? profile.full_name_ar : profile.full_name_en}</option>)}</select></label>
+    <label className="field full-width"><span>{t('common.reason', 'Reason')}</span><textarea value={reason} onChange={event => setReason(event.target.value)} /></label>
+    <div className="form-actions full-width"><button className="ghost-button" type="button" onClick={onCancel}>{t('common.cancel')}</button>{currentAssignment?.assignment_status === 'pending' ? <button className="ghost-button" type="button" disabled={saving} onClick={cancelPending}>{t('assignment.cancelPending', 'Cancel pending')}</button> : null}<button className="primary-button" disabled={saving || !assigneeId}>{saving ? t('common.saving') : t(currentAssignment ? 'assignment.reassign' : 'assignment.assign', currentAssignment ? 'Reassign' : 'Assign')}</button></div>
+  </form>;
+}
+
 interface WorkControlButtonsProps {
   onStatus: () => void;
   onEvidence: () => void;
   onApproval: () => void;
+  canUpdateStatus?: boolean;
 }
 
-export function WorkControlButtons({ onStatus, onEvidence, onApproval }: WorkControlButtonsProps) {
+export function WorkControlButtons({ onStatus, onEvidence, onApproval, canUpdateStatus = true }: WorkControlButtonsProps) {
   const { t } = useI18n();
   return (
     <div className="inline-actions">
-      <button className="ghost-button compact-button" type="button" onClick={onStatus}>{t('common.status')}</button>
+      {canUpdateStatus ? <button className="ghost-button compact-button" type="button" onClick={onStatus}>{t('common.status')}</button> : null}
       <button className="ghost-button compact-button" type="button" onClick={onEvidence}>{t('common.evidence')}</button>
       <button className="ghost-button compact-button" type="button" onClick={onApproval}>{t('common.approval')}</button>
     </div>

@@ -4,9 +4,9 @@ import { EntityTable } from '../components/EntityTable';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
-import { ApprovalRequestForm, EvidenceUploadForm, StatusUpdateForm, WorkControlButtons } from '../components/WorkItemControls';
+import { ApprovalRequestForm, AssignmentResponseForm, EvidenceUploadForm, StatusUpdateForm, WorkControlButtons } from '../components/WorkItemControls';
 import { formatDate, humanize } from '../lib/format';
-import { getMyWork, getProfiles } from '../lib/grcApi';
+import { getMyWork } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { useI18n } from '../i18n/I18nContext';
 import type { MyWorkRow } from '../types/domain';
@@ -15,12 +15,12 @@ type ActiveControl =
   | { mode: 'status'; row: MyWorkRow }
   | { mode: 'evidence'; row: MyWorkRow }
   | { mode: 'approval'; row: MyWorkRow }
+  | { mode: 'assignment'; row: MyWorkRow }
   | null;
 
 export function MyWork() {
   const { t } = useI18n();
   const work = useAsyncData(getMyWork, []);
-  const profiles = useAsyncData(getProfiles, []);
   const [activeControl, setActiveControl] = useState<ActiveControl>(null);
 
   function closeAndRefresh() {
@@ -57,11 +57,26 @@ export function MyWork() {
               { key: 'department', header: t('common.department'), render: row => row.department_name || t('common.companyWide') },
               { key: 'due', header: t('common.due'), render: row => formatDate(row.due_date) },
               { key: 'status', header: t('common.status'), render: row => <StatusBadge status={t(`status.${row.status}`, humanize(row.status))} /> },
+              {
+                key: 'assignment',
+                header: t('myWork.assignment', 'Assignment'),
+                render: row => (
+                  <div>
+                    <StatusBadge status={t(`assignment.${row.assignment_status}`, humanize(row.assignment_status))} />
+                    {row.assignment_status === 'accepted' && row.responded_at ? <small>{formatDate(row.responded_at)}</small> : null}
+                    {row.assignment_status === 'declined' && row.decline_reason ? <small>{row.decline_reason}</small> : null}
+                  </div>
+                ),
+              },
               { key: 'progress', header: t('common.progress'), render: row => `${row.progress_percent ?? 0}%` },
               {
                 key: 'actions',
                 header: t('myWork.controls'),
-                render: row => <WorkControlButtons onStatus={() => setActiveControl({ mode: 'status', row })} onEvidence={() => setActiveControl({ mode: 'evidence', row })} onApproval={() => setActiveControl({ mode: 'approval', row })} />
+                render: row => row.assignment_status === 'pending' || row.assignment_status === 'legacy_unverified'
+                  ? <button className="primary-button compact-button" type="button" onClick={() => setActiveControl({ mode: 'assignment', row })}>{t('assignment.respond', 'Respond')}</button>
+                  : row.assignment_status === 'accepted'
+                    ? <WorkControlButtons onStatus={() => setActiveControl({ mode: 'status', row })} onEvidence={() => setActiveControl({ mode: 'evidence', row })} onApproval={() => setActiveControl({ mode: 'approval', row })} />
+                    : <span className="muted">{t('assignment.awaitingReassignment', 'Awaiting reassignment')}</span>
               }
             ]}
           />
@@ -69,6 +84,9 @@ export function MyWork() {
       </div>
 
       <Modal open={Boolean(activeControl)} title={activeControl ? activeControl.row.title : t('myWork.controlItem')} onClose={() => setActiveControl(null)}>
+        {activeControl?.mode === 'assignment' ? (
+          <AssignmentResponseForm assignmentId={activeControl.row.assignment_id} onCancel={() => setActiveControl(null)} onResponded={closeAndRefresh} />
+        ) : null}
         {activeControl?.mode === 'status' ? (
           <StatusUpdateForm itemType={activeControl.row.item_type} itemId={activeControl.row.id} currentStatus={activeControl.row.status} currentProgress={activeControl.row.progress_percent} onCancel={() => setActiveControl(null)} onUpdated={closeAndRefresh} />
         ) : null}
@@ -76,7 +94,7 @@ export function MyWork() {
           <EvidenceUploadForm organizationId={activeControl.row.organization_id} itemType={activeControl.row.item_type} itemId={activeControl.row.id} onCancel={() => setActiveControl(null)} onUploaded={closeAndRefresh} />
         ) : null}
         {activeControl?.mode === 'approval' ? (
-          <ApprovalRequestForm organizationId={activeControl.row.organization_id} itemType={activeControl.row.item_type} itemId={activeControl.row.id} profiles={profiles.data || []} onCancel={() => setActiveControl(null)} onRequested={closeAndRefresh} />
+          <ApprovalRequestForm organizationId={activeControl.row.organization_id} itemType={activeControl.row.item_type} itemId={activeControl.row.id} onCancel={() => setActiveControl(null)} onRequested={closeAndRefresh} />
         ) : null}
       </Modal>
     </section>
