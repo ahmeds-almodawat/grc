@@ -176,6 +176,8 @@ async function installEmployeeMocks(
       }] : [];
     } else if (action === 'f1r2_search_eligible_participants') {
       result = [];
+    } else if (action === 'f1r2_get_evidence_pack') {
+      result = [];
     }
 
     await route.fulfill({
