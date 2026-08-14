@@ -516,7 +516,7 @@ test.describe('Patch 83U Employee ID credentials and protected provisioning', ()
 
     await page.goto(patch83uBaseUrl);
     await expect(page.getByText('مسؤول اختبار')).toBeVisible();
-    await page.locator('.nav-child-item').filter({ hasText: 'User Management' }).click();
+    await page.locator('.nav-child-item').filter({ hasText: 'إدارة المستخدمين' }).click();
     await expect(page.getByRole('heading', { name: 'User Management Center' })).toBeVisible();
     await page.getByRole('button', { name: 'قائمة تجهيز حسابات المستخدمين' }).click();
 
