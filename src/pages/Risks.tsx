@@ -33,10 +33,12 @@ import {
   updateRiskTreatment,
 } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
+import { useI18n } from '../i18n/I18nContext';
 import type { RiskReassessmentHistoryRow, RiskRow, RiskWorkflowEventRow } from '../types/domain';
 
 export function Risks() {
   const auth = useAuth();
+  const { t } = useI18n();
   const [formOpen, setFormOpen] = useState(false);  const [selectedRisk, setSelectedRisk] = useState<RiskRow | null>(null);
   const [riskHistory, setRiskHistory] = useState<RiskReassessmentHistoryRow[]>([]);
   const [riskEvents, setRiskEvents] = useState<RiskWorkflowEventRow[]>([]);
@@ -209,29 +211,29 @@ export function Risks() {
   return (
     <section className="page-section">
       <ModuleHeader
-        eyebrow="Risk Register"
-        title="Enterprise Risk Register"
-        subtitle="Identify, assess, own, treat and monitor hospital risks."
+        eyebrow={t('risks.eyebrow')}
+        title={t('risks.title')}
+        subtitle={t('risks.subtitle')}
         action={(
           <div className="inline-actions">
-            {canManageRisks ? <button className="primary-button" onClick={() => setFormOpen(true)}>New Risk</button> : null}
+            {canManageRisks ? <button className="primary-button" onClick={() => setFormOpen(true)}>{t('risks.new')}</button> : null}
           </div>
         )}
       />
       {workflowMessage ? <div className="notice-banner">{workflowMessage}</div> : null}
 
       <div className="module-grid">
-        <div className="module-card"><strong>Total risks</strong><span>{riskRows.length} active risks</span></div>
-        <div className="module-card danger"><strong>Critical / High risks</strong><span>{riskRows.filter(r => r.risk_level === 'critical' || r.risk_level === 'high').length} critical or high</span></div>
-        <div className="module-card warning"><strong>Treatment required</strong><span>{treatmentRows.length} treatments queued</span></div>
-        <div className="module-card danger"><strong>Appetite breached</strong><span>{breachRows.length} risks breached</span></div>
-        <div className="module-card warning"><strong>Overdue review</strong><span>{riskRows.filter(r => r.next_review_date && new Date(r.next_review_date) < new Date()).length} overdue reviews</span></div>
+        <div className="module-card"><strong>{t('risks.total')}</strong><span>{riskRows.length} {t('risks.totalHint')}</span></div>
+        <div className="module-card danger"><strong>{t('risks.criticalHigh')}</strong><span>{riskRows.filter(r => r.risk_level === 'critical' || r.risk_level === 'high').length} {t('risks.criticalHighHint')}</span></div>
+        <div className="module-card warning"><strong>{t('risks.treatmentRequired')}</strong><span>{treatmentRows.length} {t('risks.treatmentQueued')}</span></div>
+        <div className="module-card danger"><strong>{t('risks.appetiteBreached')}</strong><span>{breachRows.length} {t('risks.breachedHint')}</span></div>
+        <div className="module-card warning"><strong>{t('risks.overdueReview')}</strong><span>{riskRows.filter(r => r.next_review_date && new Date(r.next_review_date) < new Date()).length} {t('risks.overdueReviewHint')}</span></div>
       </div>
 
 
 
       <div className="panel">
-        <div className="panel-header"><div><h4>Enterprise risk register</h4><p className="muted">Operational risk records with owner, scoring, review date and residual exposure visibility.</p></div><span className="status-chip neutral">ERM record source</span></div>
+        <div className="panel-header"><div><h4>{t('risks.register')}</h4><p className="muted">{t('risks.registerHint')}</p></div><span className="status-chip neutral">{t('risks.recordSource')}</span></div>
         <DataState
           loading={risks.loading}
           error={risks.error}
@@ -247,18 +249,18 @@ export function Risks() {
             rows={risks.data || []}
             getRowKey={row => row.id}
             columns={[
-              { key: 'code', header: 'Code', render: row => row.risk_code || '—' },
-              { key: 'title', header: 'Risk', render: row => <strong>{row.title}</strong> },
-              { key: 'category', header: 'Category', render: row => humanize(row.category) },
-              { key: 'department', header: 'Department', render: row => departmentName(row.departments) },
-              { key: 'owner', header: 'Owner', render: row => ownerName(row.owner) },
-              { key: 'score', header: 'Score', render: row => `${row.inherent_score} → ${row.residual_score}` },
-              { key: 'appetite', header: 'Appetite', render: row => row.appetite_breached ? <span className="risk-pill high">Breached</span> : <span className="status-chip good">Within</span> },
-              { key: 'treatment', header: 'Treatment', render: row => <StatusBadge status={humanize(row.treatment_status || 'not required')} /> },
-              { key: 'review', header: 'Next Review', render: row => formatDate(row.next_review_date) },
-              { key: 'status', header: 'Status', render: row => <StatusBadge status={humanize(row.status)} /> },
-              { key: 'level', header: 'Level', render: row => <span className={`risk-pill ${row.risk_level}`}>{row.risk_level}</span> },
-              { key: 'actions', header: 'Actions', render: row => <button className="ghost-button" onClick={() => setSelectedRisk(row)}>Workflow</button> }
+              { key: 'code', header: t('common.code'), render: row => row.risk_code || '—' },
+              { key: 'title', header: t('common.risk'), render: row => <strong>{row.title}</strong> },
+              { key: 'category', header: t('risks.category'), render: row => humanize(row.category) },
+              { key: 'department', header: t('common.department'), render: row => departmentName(row.departments) },
+              { key: 'owner', header: t('common.owner'), render: row => ownerName(row.owner) },
+              { key: 'score', header: t('risks.score'), render: row => `${row.inherent_score} → ${row.residual_score}` },
+              { key: 'appetite', header: t('risks.appetite'), render: row => row.appetite_breached ? <span className="risk-pill high">{t('status.breached', 'Breached')}</span> : <span className="status-chip good">{t('status.within', 'Within')}</span> },
+              { key: 'treatment', header: t('risks.treatment'), render: row => <StatusBadge status={t(`status.${row.treatment_status || 'not_required'}`, humanize(row.treatment_status || 'not required'))} /> },
+              { key: 'review', header: t('risks.nextReview'), render: row => formatDate(row.next_review_date) },
+              { key: 'status', header: t('common.status'), render: row => <StatusBadge status={t(`status.${row.status}`, humanize(row.status))} /> },
+              { key: 'level', header: t('risks.level'), render: row => <span className={`risk-pill ${row.risk_level}`}>{t(`risk.${row.risk_level}`, row.risk_level)}</span> },
+              { key: 'actions', header: t('common.actions'), render: row => <button className="ghost-button" onClick={() => setSelectedRisk(row)}>{t('risks.workflow')}</button> }
             ]}
           />
         </DataState>

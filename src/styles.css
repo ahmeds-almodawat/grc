@@ -1358,6 +1358,7 @@ html[dir="rtl"] body {
   }
 }
 
+
 .evidence-pack-panel .panel-header p {
   margin: 0.35rem 0 0;
   color: var(--text-muted);
@@ -9685,5 +9686,1194 @@ table tbody tr:hover {
 
   .modern-main-content .table-wrapper {
     width: 100%;
+  }
+}
+
+/* GRC v1.3 D2 visual stabilization
+   Purpose-based tokens and shared primitives replace the former hybrid-theme
+   bridge. Deliberately white print surfaces remain governed by @media print. */
+:root {
+  --color-page: #f3f6fa;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  --color-surface-muted: #eef2f7;
+  --color-surface-subtle: #f8fafc;
+  --color-surface-inset: #e8eef6;
+  --color-overlay: rgba(7, 17, 31, 0.72);
+  --color-backdrop: rgba(7, 17, 31, 0.64);
+  --color-text-primary: #0b1220;
+  --color-text-secondary: #334155;
+  --color-text-muted: #64748b;
+  --color-text-disabled: #94a3b8;
+  --color-border: #d8e1ec;
+  --color-border-strong: #94a3b8;
+  --color-input-background: #ffffff;
+  --color-input-border: #cbd5e1;
+  --color-input-placeholder: #64748b;
+  --color-table-background: #ffffff;
+  --color-table-header: #eef3f8;
+  --color-table-row-alt: #f8fafc;
+  --color-table-hover: #edf6f5;
+  --color-table-selected: #dff4f0;
+  --color-focus-ring: #0f766e;
+  --color-success-fg: #166534;
+  --color-success-bg: #dcfce7;
+  --color-success-border: #86efac;
+  --color-warning-fg: #92400e;
+  --color-warning-bg: #fef3c7;
+  --color-warning-border: #fcd34d;
+  --color-danger-fg: #991b1b;
+  --color-danger-bg: #fee2e2;
+  --color-danger-border: #fca5a5;
+  --color-info-fg: #1e40af;
+  --color-info-bg: #dbeafe;
+  --color-info-border: #93c5fd;
+  --color-neutral-fg: #334155;
+  --color-neutral-bg: #e2e8f0;
+  --color-neutral-border: #cbd5e1;
+  --nav-background: #eef4f8;
+  --nav-surface: #ffffff;
+  --nav-text: #172033;
+  --nav-text-muted: #64748b;
+  --nav-border: #d8e1ec;
+  --nav-hover: #e8f2f3;
+  --nav-active-background: #dff4f0;
+  --nav-active-text: #0f4c45;
+  --nav-focus: #0f766e;
+  --nav-control-background: #f8fafc;
+
+  /* Compatibility aliases consumed by established shared components. */
+  --ui-bg: var(--color-page);
+  --ui-bg-strong: var(--color-surface-muted);
+  --ui-page: var(--color-page);
+  --ui-surface: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  --ui-surface-solid: var(--color-surface);
+  --ui-surface-muted: var(--color-surface-subtle);
+  --ui-border: var(--color-border);
+  --ui-border-strong: var(--color-border-strong);
+  --ui-ink: var(--color-text-primary);
+  --ui-muted: var(--color-text-muted);
+  --surface: var(--color-surface);
+  --surface-muted: var(--color-surface-muted);
+  --surface-subtle: var(--color-surface-subtle);
+  --text-primary: var(--color-text-primary);
+  --text-muted: var(--color-text-muted);
+  --border-color: var(--color-border);
+}
+
+:root[data-theme="dark"] {
+  --color-page: #06111f;
+  --color-surface: #0f1c2c;
+  --color-surface-elevated: #142438;
+  --color-surface-muted: #17283b;
+  --color-surface-subtle: #102033;
+  --color-surface-inset: #091624;
+  --color-overlay: rgba(2, 8, 18, 0.88);
+  --color-backdrop: rgba(1, 7, 16, 0.78);
+  --color-text-primary: #f4f8fc;
+  --color-text-secondary: #d8e3ef;
+  --color-text-muted: #a8b8ca;
+  --color-text-disabled: #718197;
+  --color-border: #30445a;
+  --color-border-strong: #57708a;
+  --color-input-background: #0b1828;
+  --color-input-border: #405873;
+  --color-input-placeholder: #91a3b8;
+  --color-table-background: #0f1c2c;
+  --color-table-header: #1b3045;
+  --color-table-row-alt: #132338;
+  --color-table-hover: #183849;
+  --color-table-selected: #155148;
+  --color-focus-ring: #63d6c7;
+  --color-success-fg: #b9f6ce;
+  --color-success-bg: #123c2b;
+  --color-success-border: #2d7651;
+  --color-warning-fg: #ffe1a8;
+  --color-warning-bg: #4a3110;
+  --color-warning-border: #8c6224;
+  --color-danger-fg: #ffc7cc;
+  --color-danger-bg: #4a2028;
+  --color-danger-border: #8e3d4d;
+  --color-info-fg: #c9ddff;
+  --color-info-bg: #18365c;
+  --color-info-border: #3d6596;
+  --color-neutral-fg: #d8e3ef;
+  --color-neutral-bg: #24364a;
+  --color-neutral-border: #4a6078;
+  --nav-background: #08111f;
+  --nav-surface: #111827;
+  --nav-text: #e2edf8;
+  --nav-text-muted: #a8b5c7;
+  --nav-border: #30445a;
+  --nav-hover: #172b42;
+  --nav-active-background: #1d3d68;
+  --nav-active-text: #ffffff;
+  --nav-focus: #63d6c7;
+  --nav-control-background: #142438;
+}
+
+/* The navigation shell follows the resolved theme. Desktop and mobile reuse
+   the same authorized tree, so these semantic tokens paint both surfaces. */
+.modern-sidebar {
+  color: var(--nav-text);
+  background: linear-gradient(180deg, var(--nav-surface), var(--nav-background)) !important;
+  border-inline-end: 1px solid var(--nav-border) !important;
+  border-inline-start: 0 !important;
+  box-shadow: 12px 0 32px color-mix(in srgb, var(--nav-background) 18%, transparent);
+}
+
+.rtl-shell .modern-sidebar {
+  border-inline-start: 1px solid var(--nav-border) !important;
+  border-inline-end: 0 !important;
+}
+
+.modern-sidebar .brand-block-modern h1,
+.modern-sidebar .nav-section-label {
+  color: var(--nav-text) !important;
+}
+
+.modern-sidebar .brand-block-modern p,
+.modern-sidebar .nav-group-trigger small,
+.modern-sidebar .nav-item small,
+.modern-sidebar .sidebar-footnote {
+  color: var(--nav-text-muted) !important;
+}
+
+.modern-sidebar .nav-group-trigger,
+.modern-sidebar .nav-child-item,
+.modern-sidebar .nav-item {
+  color: var(--nav-text) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.modern-sidebar .nav-group-trigger:hover,
+.modern-sidebar .nav-child-item:hover,
+.modern-sidebar .nav-item:hover {
+  color: var(--nav-active-text) !important;
+  background: var(--nav-hover) !important;
+  border-color: var(--nav-border) !important;
+}
+
+.modern-sidebar .nav-group-trigger.active,
+.modern-sidebar .nav-child-item.active,
+.modern-sidebar .nav-item.active,
+.modern-sidebar .nav-tree-group.active > .nav-group-trigger {
+  color: var(--nav-active-text) !important;
+  background: var(--nav-active-background) !important;
+  border-color: color-mix(in srgb, var(--nav-focus) 45%, var(--nav-border)) !important;
+}
+
+.modern-sidebar .nav-group-trigger.active small,
+.modern-sidebar .nav-child-item.active small,
+.modern-sidebar .nav-item.active small,
+.modern-sidebar .nav-tree-group.active > .nav-group-trigger small {
+  color: color-mix(in srgb, var(--nav-active-text) 74%, var(--nav-text-muted)) !important;
+}
+
+.modern-sidebar .nav-child-list {
+  border-inline-start-color: var(--nav-border) !important;
+}
+
+.modern-sidebar .language-toggle,
+.modern-sidebar .mobile-nav-close,
+.modern-sidebar .sidebar-footnote,
+.modern-sidebar .legacy-active-banner {
+  color: var(--nav-text);
+  background: var(--nav-control-background);
+  border-color: var(--nav-border);
+}
+
+.modern-sidebar .language-toggle:focus-visible,
+.modern-sidebar .mobile-nav-close:focus-visible,
+.modern-sidebar .nav-group-trigger:focus-visible,
+.modern-sidebar .nav-child-item:focus-visible,
+.modern-sidebar .nav-item:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--nav-focus) 72%, transparent);
+  outline-offset: 2px;
+}
+
+:root[data-theme="dark"] .modern-sidebar {
+  background: linear-gradient(180deg, var(--nav-surface), var(--nav-background)) !important;
+}
+
+:root[data-theme="dark"] .modern-sidebar .nav-group-trigger.active,
+:root[data-theme="dark"] .modern-sidebar .nav-child-item.active,
+:root[data-theme="dark"] .modern-sidebar .nav-item.active {
+  background: var(--nav-active-background) !important;
+}
+
+:root[data-theme="dark"] .modern-app-shell,
+:root[data-theme="dark"] .modern-main-content {
+  background: var(--color-page);
+  color: var(--color-text-primary);
+}
+
+/* Shared semantic surface convention. Specialized cards retain their layout,
+   accent strip, and data visualization; only application-surface paint maps. */
+:root[data-theme="dark"] .modern-main-content :where(
+  .panel,
+  .modern-card,
+  .hero-panel,
+  .page-section,
+  .workspace-card,
+  .hub-hero,
+  .modal-card,
+  [class$="-panel"],
+  [class$="-card"]
+):not(.governed-print-root):not([class*="print-"]) {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  [class*="-card"] strong,
+  [class*="-panel"] strong,
+  [class*="-card"] h1,
+  [class*="-card"] h2,
+  [class*="-card"] h3,
+  [class*="-card"] h4,
+  [class*="-panel"] h1,
+  [class*="-panel"] h2,
+  [class*="-panel"] h3,
+  [class*="-panel"] h4
+) {
+  color: var(--color-text-primary);
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  [class*="-card"] p,
+  [class*="-card"] small,
+  [class*="-panel"] p,
+  [class*="-panel"] small,
+  .muted,
+  .section-subtitle,
+  .stat-label
+) {
+  color: var(--color-text-muted);
+}
+
+/* Bounded compatibility bridge for legacy inline application surfaces. Print,
+   document-preview, chart and brand surfaces are intentionally excluded. */
+:root[data-theme="dark"] .modern-main-content :where(
+  [style*="background: white"],
+  [style*="background-color: white"],
+  [style*="background: #fff"],
+  [style*="background-color: #fff"],
+  [style*="background: rgb(255, 255, 255)"],
+  [style*="background-color: rgb(255, 255, 255)"]
+):not(.governed-print-root):not([class*="print"]):not([class*="chart"]):not([class*="logo"]) {
+  color: var(--color-text-primary) !important;
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* Shared fields and controls. */
+:where(.modern-main-content, .modal-card) :where(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select,
+  .search-control,
+  .filter-control,
+  [role="combobox"]
+) {
+  color: var(--color-text-primary);
+  background-color: var(--color-input-background);
+  border-color: var(--color-input-border);
+}
+
+/* Legacy unclassed/text-input fields have a more specific historical white
+   background rule. In Dark mode they still consume the same shared field
+   tokens; this includes the Production Operator Console filter. */
+:root[data-theme="dark"] .modern-main-content input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+:root[data-theme="dark"] .modal-card input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+:root[data-theme="dark"] .modern-main-content textarea,
+:root[data-theme="dark"] .modal-card textarea,
+:root[data-theme="dark"] .modern-main-content select,
+:root[data-theme="dark"] .modal-card select {
+  color: var(--color-text-primary) !important;
+  background: var(--color-input-background) !important;
+  border-color: var(--color-input-border) !important;
+}
+
+:where(.modern-main-content, .modal-card) :where(input, textarea)::placeholder {
+  color: var(--color-input-placeholder);
+  opacity: 1;
+}
+
+/* Search wrappers are shared application fields, not white document chrome. */
+:where(.modern-main-content, .modal-card) :where(.search-input-wrap, .search-mini) {
+  color: var(--color-text-primary);
+  background: var(--color-input-background);
+  border-color: var(--color-input-border);
+}
+
+:where(.modern-main-content, .modal-card) :where(.search-input-wrap, .search-mini) input {
+  color: var(--color-text-primary) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+:where(.modern-main-content, .modal-card) :where(.search-input-wrap, .search-mini):focus-within {
+  border-color: var(--color-focus-ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus-ring) 28%, transparent);
+}
+
+:root[data-theme="dark"] .modern-main-content :where(.search-input-wrap, .search-mini) {
+  background: var(--color-input-background) !important;
+  border-color: var(--color-input-border) !important;
+}
+
+/* Guided UAT scenarios retain hierarchy and status accents while following
+   the active screen surface palette. */
+.modern-main-content .controlled-uat-scenario {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+
+:root[data-theme="dark"] .modern-main-content .controlled-uat-scenario {
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content .controlled-uat-scenario__actions select {
+  color: var(--color-text-primary);
+  background: var(--color-input-background) !important;
+  border-color: var(--color-input-border) !important;
+}
+
+:where(.modern-main-content, .modal-card) :where(input, textarea, select, button, [href], [tabindex]):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-focus-ring) 72%, transparent);
+  outline-offset: 2px;
+}
+
+:where(.modern-main-content, .modal-card) :where(input, textarea, select):disabled,
+:where(.modern-main-content, .modal-card) :where(input, textarea, select)[readonly] {
+  color: var(--color-text-disabled);
+  background: var(--color-surface-inset);
+  border-color: var(--color-border);
+  cursor: not-allowed;
+}
+
+:where(.modern-main-content, .modal-card) :where(input, textarea, select)[aria-invalid="true"] {
+  border-color: var(--color-danger-border);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger-border) 35%, transparent);
+}
+
+:root[data-theme="dark"] :where(.modern-main-content, .modal-card) select option {
+  color: var(--color-text-primary);
+  background: var(--color-input-background);
+}
+
+:root[data-theme="dark"] :where(.modern-main-content, .modal-card) input:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-text-primary);
+  box-shadow: 0 0 0 1000px var(--color-input-background) inset;
+}
+
+/* Shared table system. */
+:where(.modern-main-content, .modal-card) :where(
+  .table-wrapper,
+  .modern-table-wrap,
+  .entity-table-container,
+  .controlled-uat-issue-table,
+  [class$="-table-wrap"]
+) {
+  max-width: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--color-table-background);
+  border-color: var(--color-border);
+  scrollbar-gutter: stable;
+}
+
+:where(.modern-main-content, .modal-card) table {
+  color: var(--color-text-primary) !important;
+  background: var(--color-table-background) !important;
+  border-color: var(--color-border) !important;
+}
+
+:where(.modern-main-content, .modal-card) thead th {
+  color: var(--color-text-secondary) !important;
+  background: var(--color-table-header) !important;
+  border-color: var(--color-border) !important;
+}
+
+:where(.modern-main-content, .modal-card) tbody td {
+  color: var(--color-text-primary) !important;
+  background: var(--color-table-background) !important;
+  border-color: var(--color-border) !important;
+}
+
+:where(.modern-main-content, .modal-card) tbody tr:nth-child(even) td {
+  background: var(--color-table-row-alt) !important;
+}
+
+:where(.modern-main-content, .modal-card) tbody tr:hover td {
+  background: var(--color-table-hover) !important;
+}
+
+:where(.modern-main-content, .modal-card) tbody tr[aria-selected="true"] td,
+:where(.modern-main-content, .modal-card) tbody tr.is-selected td {
+  background: var(--color-table-selected) !important;
+}
+
+/* Semantic status tones preserve meaning instead of flattening every badge. */
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill)[class*="success"],
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill).active,
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill).closed {
+  color: var(--color-success-fg);
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+}
+
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill)[class*="warning"],
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill).pending {
+  color: var(--color-warning-fg);
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+}
+
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill)[class*="danger"],
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill).critical,
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill).high {
+  color: var(--color-danger-fg);
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+}
+
+:where(.notice-banner, .status-badge, .status-pill, .risk-pill, .role-badge, .topbar-pill)[class*="info"] {
+  color: var(--color-info-fg);
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+}
+
+.controlled-pilot-banner {
+  color: var(--color-info-fg);
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+}
+
+.controlled-pilot-banner strong {
+  color: var(--color-info-fg);
+}
+
+.controlled-pilot-banner span {
+  border-inline-start-color: var(--color-info-border);
+}
+
+.controlled-pilot-banner--internal {
+  color: var(--color-warning-fg);
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+}
+
+.controlled-pilot-banner--internal strong {
+  color: var(--color-warning-fg);
+}
+
+.controlled-pilot-banner--internal span {
+  border-inline-start-color: var(--color-warning-border);
+}
+
+/* Shared Home/workspace sub-surfaces must inherit the semantic screen theme,
+   not the historical translucent-white paint used by the Light-only shell. */
+:where(
+  .workspace-hero__metrics div,
+  .workspace-card__badge,
+  .workspace-card__metric,
+  .workspace-card__icon,
+  .daily-control-row,
+  .quick-action-stack button,
+  .principle-grid span
+) {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+
+:root[data-theme="dark"] .workspace-hero__metrics div,
+:root[data-theme="dark"] .workspace-card__badge,
+:root[data-theme="dark"] .workspace-card__metric,
+:root[data-theme="dark"] .workspace-card__icon,
+:root[data-theme="dark"] .daily-control-row,
+:root[data-theme="dark"] .quick-action-stack button,
+:root[data-theme="dark"] .principle-grid span {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+
+/* D2-R shared legacy-surface adapters. These are primitive families rather
+   than route selectors: many pre-token components add state classes after
+   `-card`/`-panel`, so suffix matching alone cannot reach them. */
+:root[data-theme="dark"] .modern-main-content :where(
+  .stat-card,
+  .module-card,
+  .mini-card,
+  .content-card,
+  .table-card,
+  .rule-tile,
+  .release-score-card,
+  .dataset-card,
+  .dataset-check,
+  .setup-check-card,
+  .training-card,
+  .guide-card,
+  .department-scorecard,
+  .scenario-card,
+  .template-card,
+  .backup-plan-card,
+  .vault-card,
+  .automation-rule-card,
+  .exception-card,
+  .review-card,
+  .committee-action-card,
+  .appetite-card,
+  .mobile-action-card,
+  .mobile-command-item,
+  .mobile-done-rules,
+  .issue-row,
+  .module-pressure-row,
+  .professional-empty-state
+) {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .stat-card,
+  .module-card,
+  .mini-card,
+  .content-card,
+  .table-card,
+  .rule-tile,
+  .release-score-card,
+  .dataset-card,
+  .dataset-check,
+  .setup-check-card,
+  .training-card,
+  .guide-card,
+  .department-scorecard,
+  .scenario-card,
+  .template-card,
+  .backup-plan-card,
+  .vault-card,
+  .automation-rule-card,
+  .exception-card,
+  .review-card,
+  .committee-action-card,
+  .appetite-card,
+  .mobile-action-card,
+  .mobile-command-item,
+  .mobile-done-rules,
+  .issue-row,
+  .module-pressure-row,
+  .professional-empty-state
+) :where(h1, h2, h3, h4, strong) {
+  color: var(--color-text-primary) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .stat-card,
+  .module-card,
+  .mini-card,
+  .content-card,
+  .table-card,
+  .rule-tile,
+  .release-score-card,
+  .dataset-card,
+  .dataset-check,
+  .setup-check-card,
+  .training-card,
+  .guide-card,
+  .department-scorecard,
+  .scenario-card,
+  .template-card,
+  .backup-plan-card,
+  .vault-card,
+  .automation-rule-card,
+  .exception-card,
+  .review-card,
+  .committee-action-card,
+  .appetite-card,
+  .mobile-action-card,
+  .mobile-command-item,
+  .mobile-done-rules,
+  .issue-row,
+  .module-pressure-row,
+  .professional-empty-state
+) :where(p, small, .stat-label, .muted, .muted-text) {
+  color: var(--color-text-muted) !important;
+}
+
+/* Shared gradient/featured hero primitive. The decorative gradients remain,
+   but their canvas is derived from the active semantic screen surfaces. */
+:root[data-theme="dark"] .modern-main-content :where(
+  .modern-gradient-panel,
+  .workspace-hero,
+  .production-finish-hero
+) {
+  color: var(--color-text-primary);
+  background:
+    radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 36%),
+    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.14), transparent 32%),
+    linear-gradient(135deg, var(--color-surface-elevated), var(--color-surface)) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .modern-gradient-panel,
+  .workspace-hero,
+  .production-finish-hero
+) :where(h1, h2, h3, h4, strong) {
+  color: var(--color-text-primary) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .modern-gradient-panel,
+  .workspace-hero,
+  .production-finish-hero
+) :where(p, small, .section-subtitle) {
+  color: var(--color-text-muted) !important;
+}
+
+/* Dense control-page primitives. These historical declarations use
+   `!important`, so their semantic Dark mappings must match that precedence. */
+:root[data-theme="dark"] .modern-main-content :where(
+  .compact-page-header,
+  .reference-kpi-card,
+  .compact-filters-container
+) {
+  color: var(--color-text-primary) !important;
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+  box-shadow: var(--ui-shadow-soft) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content .compact-page-header h1,
+:root[data-theme="dark"] .modern-main-content .reference-kpi-card strong {
+  color: var(--color-text-primary) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .compact-breadcrumb,
+  .reference-kpi-label,
+  .reference-kpi-card small,
+  .compact-filters-toggle small
+) {
+  color: var(--color-text-muted) !important;
+}
+
+/* Embedded metric/search primitives are normal application chrome, not
+   document previews, and therefore follow the screen theme. */
+:root[data-theme="dark"] .modern-main-content :where(
+  .mobile-kpi-strip > div,
+  .mini-metric-grid > div,
+  .device-card-grid > span,
+  .search-mini,
+  .readiness-ring
+) {
+  color: var(--color-text-primary);
+  background: var(--color-surface-inset) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .mobile-kpi-strip > div,
+  .mini-metric-grid > div,
+  .search-mini
+) :where(strong, input) {
+  color: var(--color-text-primary) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .mobile-kpi-strip > div,
+  .mini-metric-grid > div
+) span {
+  color: var(--color-text-muted) !important;
+}
+
+/* Preserve the semantic meaning of accented states on a dark canvas. */
+:root[data-theme="dark"] .modern-main-content :where(.stat-card.warning, .department-scorecard.at_risk, .department-scorecard.watch, .scenario-card.high) {
+  color: var(--color-warning-fg);
+  background: var(--color-warning-bg) !important;
+  border-color: var(--color-warning-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(.stat-card.danger, .department-scorecard.critical, .scenario-card.critical) {
+  color: var(--color-danger-fg);
+  background: var(--color-danger-bg) !important;
+  border-color: var(--color-danger-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content .stat-card.success {
+  color: var(--color-success-fg);
+  background: var(--color-success-bg) !important;
+  border-color: var(--color-success-border) !important;
+}
+
+/* Secondary screen primitives discovered by the CSS-inclusive D2-R audit. */
+:root[data-theme="dark"] .modern-main-content :where(
+  .analytics-card,
+  .analytics-panel,
+  .heatmap-row-label,
+  .timeline-item > div:last-child,
+  .relationship-row,
+  .ultra-list-row,
+  .persona-card,
+  .seed-card,
+  .coverage-row,
+  .hub-active-strip,
+  .uat-issue-list__item,
+  .final-score-panel,
+  .production-blocker-row,
+  .production-fast-step,
+  .production-module-row,
+  .production-pilot-row,
+  .production-handover-card,
+  .production-commandment-grid > div,
+  .production-proof-row,
+  .production-proof-step,
+  .controlled-uat-issue-table__row,
+  .empty-state,
+  .row-more-actions-menu,
+  .row-more-actions-menu--overlay
+) {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .setup-check-icon,
+  .timeline-marker,
+  .production-blocker-icon
+) {
+  color: var(--color-text-primary);
+  background: var(--color-surface-inset) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content .readiness-ring {
+  background:
+    radial-gradient(circle, var(--color-surface-inset) 55%, transparent 57%),
+    conic-gradient(var(--color-focus-ring) calc(var(--score) * 1%), var(--color-border) 0) !important;
+}
+
+:root[data-theme="dark"] .auth-card {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .final-gate-row--warning,
+  .production-proof-row--warning
+) {
+  color: var(--color-warning-fg);
+  background: var(--color-warning-bg) !important;
+  border-color: var(--color-warning-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .final-gate-row--danger,
+  .production-proof-row--danger
+) {
+  color: var(--color-danger-fg);
+  background: var(--color-danger-bg) !important;
+  border-color: var(--color-danger-border) !important;
+}
+
+/* Versioned feature styles are imported by lazy page modules after this
+   stylesheet. The higher-specificity semantic adapters below keep those
+   shared screen primitives theme-correct without changing their Light-mode
+   definitions or the deliberately white print/document surfaces. */
+:root[data-theme="dark"] .modern-main-content :where(
+  .v130-workbench,
+  .v130-workbench__card,
+  .v130-workbench__support-grid > section,
+  .v160-workflow-card,
+  .v160-capability-card,
+  .v160-list-card,
+  .v180-chain-node,
+  .v180-assurance-row,
+  .v180-gap-card,
+  .v190-card,
+  .v190-alert,
+  .v190-management-view,
+  .v220-workflow-card,
+  .v220-capa-card,
+  .v220-metric-card,
+  .v220-evidence-strip span
+) {
+  color: var(--color-text-primary) !important;
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+  box-shadow: var(--ui-shadow-soft) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .v130-workbench__header p,
+  .v130-workbench__card p,
+  .v130-workbench__card dd,
+  .v130-workbench__support-grid li,
+  .v160-workflow-card p,
+  .v160-capability-card p,
+  .v160-list-card p,
+  .v160-metric-grid p,
+  .v160-list-card small,
+  .v160-capability-card small,
+  .v180-chain-node p,
+  .v180-gap-card p,
+  .v180-assurance-row small,
+  .v180-metric small,
+  .v190-card p,
+  .v190-card small,
+  .v190-alert p,
+  .v190-management-view p,
+  .v190-card ul,
+  .v190-management-view ul
+) {
+  color: var(--color-text-muted) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .v130-workbench__card dt,
+  .v160-workflow-card dd,
+  .v160-card-header strong,
+  .v180-badge,
+  .v180-node-index,
+  .v180-gap-remediation,
+  .v190-rule
+) {
+  color: var(--color-text-primary) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .v130-workbench__card-head span,
+  .v180-badge,
+  .v180-node-index,
+  .v190-card-head span,
+  .v190-management-view span,
+  .v190-rule
+) {
+  background: var(--color-surface-inset) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .v120-card,
+  .v120-empty-state,
+  .scenario-status-list span,
+  .table-wrapper,
+  .modern-table,
+  .modern-table-wrap,
+  .controlled-uat-issue-table,
+  .v35-panel,
+  .v35-table-card,
+  .v35-form-card,
+  .v35-radar-card,
+  .v35-stat,
+  .v35-empty,
+  .v35-tabs button
+) {
+  color: var(--color-text-primary) !important;
+  background: var(--color-surface-elevated) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .modern-table th,
+  .v35-table-card th
+) {
+  color: var(--color-text-secondary) !important;
+  background: var(--color-table-header) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .v35-form-card input,
+  .v35-form-card textarea
+) {
+  color: var(--color-text-primary) !important;
+  background: var(--color-input-background) !important;
+  border-color: var(--color-border) !important;
+}
+
+:root[data-theme="dark"] .modern-main-content :where(
+  .v120-muted,
+  .v35-stat span,
+  .v35-table-card small,
+  .v35-form-card label,
+  .v35-radar-card p
+) {
+  color: var(--color-text-muted) !important;
+}
+
+.workspace-hero__metrics strong,
+.workspace-card strong,
+.daily-control-row strong,
+.quick-action-stack button,
+.principle-grid span {
+  color: var(--color-text-primary);
+}
+
+.workspace-hero__metrics span,
+.workspace-card small,
+.daily-control-row small {
+  color: var(--color-text-muted);
+}
+
+:where(.modern-main-content, .modal-card) .ghost-button,
+:where(.modern-main-content, .modal-card) .secondary-action {
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+
+/* Shared modal/workspace sizing and internal scroll ownership (ACC-02A). */
+.modal-backdrop {
+  background: var(--color-backdrop);
+  overscroll-behavior: contain;
+}
+
+.modal-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: min(92dvh, 960px);
+  overflow: hidden;
+  color: var(--color-text-primary);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+}
+
+.modal-card--workspace {
+  height: min(92dvh, 960px);
+}
+
+.modal-header,
+.modal-footer {
+  flex: 0 0 auto;
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border);
+}
+
+.modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+body[data-scroll-locked="true"] {
+  overflow: hidden;
+}
+
+/* Mobile navigation reuses the authorized desktop tree as an overlay drawer. */
+.topbar-actions .mobile-nav-trigger,
+.mobile-nav-close,
+.mobile-nav-backdrop {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .modern-app-shell {
+    display: block;
+    min-width: 0;
+  }
+
+  .modern-main-content {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    padding: 12px;
+    overflow-x: clip;
+  }
+
+  .modern-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .modern-topbar > div:first-child {
+    min-width: 0;
+  }
+
+  .topbar-actions {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .topbar-actions .mobile-nav-trigger {
+    display: inline-flex !important;
+    flex: 0 0 auto;
+  }
+
+  .mobile-nav-close {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: absolute;
+    inset-block-start: 12px;
+    inset-inline-end: 12px;
+    z-index: 2;
+    min-height: 42px;
+    padding: 8px 12px;
+    color: var(--nav-text);
+    background: var(--nav-control-background);
+    border: 1px solid var(--nav-border);
+    border-radius: var(--ui-radius);
+  }
+
+  .modern-sidebar {
+    position: fixed !important;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 70;
+    width: min(88vw, 360px) !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    padding-block-start: 62px;
+    transform: translateX(-105%);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 180ms ease-out;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    box-shadow: 22px 0 60px rgba(0, 0, 0, 0.42);
+  }
+
+  .rtl-shell .modern-sidebar {
+    inset-inline-start: 0;
+    inset-inline-end: auto;
+    transform: translateX(105%);
+    box-shadow: -22px 0 60px rgba(0, 0, 0, 0.42);
+  }
+
+  .modern-sidebar.mobile-nav-open,
+  .rtl-shell .modern-sidebar.mobile-nav-open {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .mobile-nav-backdrop.is-open {
+    display: block !important;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: var(--color-backdrop);
+  }
+
+  .modern-sidebar .sidebar-nav-tree {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 4px;
+  }
+
+  .modern-sidebar .nav-tree-group {
+    min-width: 0;
+  }
+
+  .nav-group-trigger,
+  .nav-child-item {
+    width: 100%;
+  }
+
+  .nav-group-trigger > span,
+  .nav-child-item > span {
+    min-width: 0 !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+  }
+
+  .modern-sidebar .nav-group-trigger strong,
+  .modern-sidebar .nav-group-trigger small,
+  .modern-sidebar .nav-child-item span {
+    overflow: visible !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+  }
+
+  .modal-backdrop {
+    padding: 0;
+    place-items: stretch;
+  }
+
+  .modal-card--large,
+  .modal-card--xl,
+  .modal-card--workspace {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  /* Dense governance tables remain complete and gain a recognizable sticky
+     row identity without introducing document-level horizontal overflow. */
+  :where(.modern-main-content, .modal-card) :where(
+    .table-wrapper,
+    .modern-table-wrap,
+    .entity-table-container,
+    .controlled-uat-issue-table,
+    [class$="-table-wrap"]
+  ) table {
+    min-width: max(100%, 720px);
+  }
+
+  :where(.modern-main-content, .modal-card) :where(
+    .table-wrapper,
+    .modern-table-wrap,
+    .entity-table-container,
+    .controlled-uat-issue-table,
+    [class$="-table-wrap"]
+  ) :where(th:first-child, td:first-child) {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 2;
+    box-shadow: 1px 0 0 var(--color-border);
+  }
+
+  :where(.modern-main-content, .modal-card) :where(
+    .table-wrapper,
+    .modern-table-wrap,
+    .entity-table-container,
+    .controlled-uat-issue-table,
+    [class$="-table-wrap"]
+  ) thead th:first-child {
+    z-index: 3;
+    background: var(--color-table-header) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modern-sidebar {
+    transition: none;
+  }
+}
+
+/* Print remains intentional white A4 output regardless of screen theme. */
+@media print {
+  .governed-print-root,
+  .governed-print-root * {
+    color: #111827 !important;
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: none !important;
   }
 }
