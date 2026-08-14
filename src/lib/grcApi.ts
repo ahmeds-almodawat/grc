@@ -127,6 +127,9 @@ import type {
   EvidenceReviewEventRow,
   EvidenceReviewQueueRow,
   EvidenceRow,
+  EvidenceStatus,
+  EvidenceReviewStatus,
+  EvidenceSensitivityLevel,
   SensitiveEvidenceRegisterRow,
   EscalationRow,
   ExecutiveSummary,
@@ -660,16 +663,9 @@ export async function getGovernanceDecisions(): Promise<GovernanceDecisionRow[]>
 }
 
 export async function getMyWork(): Promise<MyWorkRow[]> {
-  if (!supabase) return emptyLiveArray<any>();
-
-  try {
-    const { data, error } = await supabase.from('v_my_open_work_expanded').select('*').order('due_date', { ascending: true, nullsFirst: false }).limit(100);
-    if (error) throw error;
-    return filterScenarioLabRows((data as unknown as MyWorkRow[])?.length ? (data as unknown as MyWorkRow[]) : liveEmptyMyWork);
-  } catch (error) {
-    logFallback('my work', error);
-    return emptyLiveArray<any>();
-  }
+  requireLiveSupabase();
+  const rows = await invokePrivilegedAction<MyWorkRow[]>('f1r2_list_my_work', {});
+  return filterScenarioLabRows(rows?.length ? rows : liveEmptyMyWork);
 }
 
 export async function getApprovals(): Promise<ApprovalRow[]> {
@@ -885,23 +881,11 @@ export interface CreateProjectInput {
 }
 
 export async function createProject(input: CreateProjectInput) {
-  const client = requireLiveSupabase();
-  const userId = await currentUserId();
-  const payload = {
+  requireLiveSupabase();
+  return invokePrivilegedAction<{ id: string; title: string }>('f1r2_create_work_item', {
     ...input,
-    department_id: input.department_id || null,
-    owner_id: input.owner_id || null,
-    sponsor_id: input.sponsor_id || null,
-    start_date: input.start_date || null,
-    target_end_date: input.target_end_date || null,
-    status: 'draft',
-    progress_percent: 0,
-    created_by: userId,
-    updated_by: userId
-  };
-  const { data, error } = await client.from('projects').insert(payload).select('id,title').single();
-  if (error) throw error;
-  return data;
+    item_type: 'project',
+  });
 }
 
 export interface CreateRiskInput {
@@ -1298,25 +1282,11 @@ export interface CreateMilestoneInput {
 }
 
 export async function createMilestone(input: CreateMilestoneInput) {
-  const client = requireLiveSupabase();
-  const userId = await currentUserId();
-  const { data, error } = await client
-    .from('milestones')
-    .insert({
-      ...input,
-      description: input.description || null,
-      owner_id: input.owner_id || null,
-      start_date: input.start_date || null,
-      due_date: input.due_date || null,
-      status: 'not_started',
-      progress_percent: 0,
-      created_by: userId,
-      updated_by: userId
-    })
-    .select('id,title')
-    .single();
-  if (error) throw error;
-  return data;
+  requireLiveSupabase();
+  return invokePrivilegedAction<{ id: string; title: string }>('f1r2_create_work_item', {
+    ...input,
+    item_type: 'milestone',
+  });
 }
 
 export interface CreateTaskInput {
@@ -1333,27 +1303,11 @@ export interface CreateTaskInput {
 }
 
 export async function createTask(input: CreateTaskInput) {
-  const client = requireLiveSupabase();
-  const userId = await currentUserId();
-  const { data, error } = await client
-    .from('tasks')
-    .insert({
-      ...input,
-      milestone_id: input.milestone_id || null,
-      description: input.description || null,
-      owner_id: input.owner_id || null,
-      assigned_to: input.assigned_to || null,
-      start_date: input.start_date || null,
-      due_date: input.due_date || null,
-      status: 'not_started',
-      progress_percent: 0,
-      created_by: userId,
-      updated_by: userId
-    })
-    .select('id,title')
-    .single();
-  if (error) throw error;
-  return data;
+  requireLiveSupabase();
+  return invokePrivilegedAction<{ id: string; title: string }>('f1r2_create_work_item', {
+    ...input,
+    item_type: 'task',
+  });
 }
 
 export async function updateTaskStatus(taskId: string, status: WorkStatus, progress_percent: number, delay_reason?: string) {
@@ -1361,12 +1315,12 @@ export async function updateTaskStatus(taskId: string, status: WorkStatus, progr
 }
 
 export async function decideApproval(approvalId: string, status: 'approved' | 'rejected', decision_note?: string) {
-  const client = requireLiveSupabase();
-  const { error } = await client
-    .from('approvals')
-    .update({ status, decision_note: decision_note || null, decided_at: new Date().toISOString() })
-    .eq('id', approvalId);
-  if (error) throw error;
+  requireLiveSupabase();
+  return invokePrivilegedAction('f1r2_decide_approval', {
+    approval_id: approvalId,
+    decision: status,
+    note: decision_note?.trim() || null,
+  });
 }
 
 export interface EvidenceGovernanceActionResult {
@@ -1629,22 +1583,30 @@ export async function getEvidenceForItem(
   itemType: ApprovalItemType,
   itemId: string,
 ): Promise<EvidenceRow[]> {
-  if (!supabase) return [];
-  const linkColumn = itemLinkColumn(itemType);
-  const { data, error } = await supabase
-    .from('evidence_files')
-    .select('id,organization_id,file_name,file_path,file_type,file_size,description,status,uploaded_by,reviewed_by,created_at')
-    .eq(linkColumn, itemId)
-    .order('created_at', { ascending: false })
-    .limit(100);
-  if (error) throw error;
-  return (data ?? []).map((row: any) => ({
-    ...row,
-    item_type: itemType,
+  requireLiveSupabase();
+  const canonicalType = itemType === 'ovr_report' ? 'ovr' : itemType;
+  const rows = await invokePrivilegedAction<Array<Record<string, unknown>>>('f1r2_get_evidence_pack', {
+    item_type: canonicalType,
+    item_id: itemId,
+  });
+  return rows.map(row => ({
+    id: String(row.evidence_file_id),
+    organization_id: '',
+    item_type: String(row.linked_item_type || canonicalType),
     item_title: '',
+    file_name: String(row.file_name || row.evidence_title || row.evidence_code || ''),
+    file_path: '',
+    description: null,
+    status: String(row.status || 'submitted') as EvidenceStatus,
+    evidence_code: row.evidence_code ? String(row.evidence_code) : null,
+    evidence_title: row.evidence_title ? String(row.evidence_title) : null,
+    sensitivity_level: row.sensitivity_level ? String(row.sensitivity_level) as EvidenceSensitivityLevel : null,
+    review_status: row.status ? String(row.status) as EvidenceReviewStatus : null,
+    reviewed_at: row.reviewed_at ? String(row.reviewed_at) : null,
     uploaded_by_name: null,
-    reviewed_by_name: null,
-  })) as EvidenceRow[];
+    reviewed_by_name: row.reviewer_name ? String(row.reviewer_name) : null,
+    created_at: row.reviewed_at ? String(row.reviewed_at) : '',
+  }));
 }
 
 export async function getDepartmentExecutionSummary(): Promise<DepartmentExecutionSummary[]> {
@@ -1983,47 +1945,20 @@ export interface CreateOvrReportInput {
 }
 
 export async function createOvrReport(input: CreateOvrReportInput) {
-  const client = requireLiveSupabase();
-  const userId = await currentUserId();
-  const { data, error } = await client
-    .from('ovr_reports')
-    .insert({
-      organization_id: input.organization_id,
-      logging_number: input.logging_number || null,
-      occurrence_date: input.occurrence_date || null,
-      occurrence_time: input.occurrence_time || null,
-      occurrence_location: input.occurrence_location || null,
-      involved_person_type: input.involved_person_type,
-      person_involved_name: input.person_involved_name || null,
-      mrn_or_id_no: input.mrn_or_id_no || null,
-      age: input.age || null,
-      sex: input.sex || null,
-      department_id: input.department_id || null,
-      notification_at: input.notification_at || null,
-      physical_condition: input.physical_condition || null,
-      mental_condition: input.mental_condition || null,
-      pre_occurrence_condition_flags: input.pre_occurrence_condition_flags,
-      brief_description: input.brief_description,
-      occurrence_category: input.occurrence_category,
-      severity_level: input.severity_level || null,
-      injury_type: input.injury_type || null,
-      occurrence_details: {
-        linked_action_plan_requested: input.create_linked_action_plan,
-        synthetic_or_deidentified_expected_for_pilot: true
-      },
-      status: input.status,
-      corrective_action_required: false,
-      evidence_required: true,
-      reported_by: userId,
-      owner_id: userId,
-      created_by: userId,
-      updated_by: userId
-    })
-    .select('id,ovr_number,logging_number')
-    .single();
-  if (error) throw error;
-
-  return data;
+  requireLiveSupabase();
+  return invokePrivilegedAction<{
+    id: string;
+    ovr_number: string | null;
+    logging_number: string | null;
+    status: OvrStatus;
+    occurrence_date: string | null;
+    occurrence_time: string | null;
+    notification_at: string | null;
+    corrective_action_required: boolean;
+  }>('f1r2_create_ovr_report', {
+    ...input,
+    corrective_action_required: input.create_linked_action_plan,
+  });
 }
 
 
@@ -2101,13 +2036,88 @@ export async function updateOvrWorkflow(input: UpdateOvrWorkflowInput) {
   });
 }
 
-export async function createOvrCorrectiveActionProject(ovrReportId: string) {
+export interface CreateOvrCorrectiveProjectInput {
+  ovr_report_id: string;
+  owner_id: string;
+  sponsor_id: string;
+  start_date: string;
+  target_end_date: string;
+  title?: string;
+  description?: string;
+}
+
+export async function createOvrCorrectiveActionProject(input: CreateOvrCorrectiveProjectInput) {
   requireLiveSupabase();
-  const result = await invokePrivilegedAction<{ id: string }>(
-    'create_ovr_corrective_action_project',
-    { ovr_report_id: ovrReportId },
-  );
+  const result = await invokePrivilegedAction<{ id: string }>('f1r2_create_corrective_project', { ...input });
   return result.id;
+}
+
+export interface WorkItemAssignmentResult {
+  id: string;
+  status: 'pending' | 'accepted' | 'declined' | 'superseded' | 'cancelled' | 'legacy_unverified';
+  item_type?: 'project' | 'milestone' | 'task';
+  item_id?: string;
+  assignee_id?: string;
+  responded_at?: string | null;
+  replayed?: boolean;
+}
+
+export function assignWorkItem(input: { item_type: 'project' | 'milestone' | 'task'; item_id: string; assignee_id: string; reason?: string }) {
+  return invokePrivilegedAction<WorkItemAssignmentResult>('f1r2_assign_work_item', input);
+}
+
+export function respondToWorkItemAssignment(input: { assignment_id: string; decision: 'accepted' | 'declined'; decline_reason?: string }) {
+  return invokePrivilegedAction<WorkItemAssignmentResult>('f1r2_respond_work_item_assignment', input);
+}
+
+export function cancelWorkItemAssignment(input: { assignment_id: string; reason: string }) {
+  return invokePrivilegedAction<WorkItemAssignmentResult>('f1r2_cancel_work_item_assignment', input);
+}
+
+export interface WorkItemAssignmentSummary {
+  item_type: 'project' | 'milestone' | 'task';
+  item_id: string;
+  assignment_id: string;
+  assignee_id: string;
+  assignee_name: string;
+  assignment_status: WorkItemAssignmentResult['status'];
+  assigned_at: string;
+  responded_at: string | null;
+  decline_reason: string | null;
+  assigned_by_name: string;
+}
+
+export function getProjectWorkAssignments(projectId: string) {
+  return invokePrivilegedAction<WorkItemAssignmentSummary[]>('f1r2_list_project_assignments', { project_id: projectId });
+}
+
+export interface RelatedParticipantOption extends ProfileOption {
+  role_scope_label?: string | null;
+}
+
+export function searchEligibleWorkParticipants(query = '') {
+  return invokePrivilegedAction<RelatedParticipantOption[]>('f1r2_search_eligible_participants', { query });
+}
+
+export function getWorkItemParticipants(itemType: 'project' | 'milestone' | 'task', itemId: string) {
+  return invokePrivilegedAction<Array<{ profile_id: string; display_name: string; relationship: string; assignment_status: string | null }>>('f1r2_list_item_participants', {
+    item_type: itemType,
+    item_id: itemId,
+  });
+}
+
+export function getCanonicalEvidencePack(itemType: 'project' | 'milestone' | 'task' | 'ovr', itemId: string) {
+  return invokePrivilegedAction<EvidenceRow[]>('f1r2_get_evidence_pack', { item_type: itemType, item_id: itemId });
+}
+
+export function finalizeCorrectiveOvr(input: {
+  ovr_report_id: string;
+  final_verdict: string;
+  final_severity: OvrSeverityLevel;
+  closure_comment: string;
+  idempotency_key: string;
+}) {
+  return invokePrivilegedAction<OvrReportRow>('f1r2_finalize_corrective_ovr', input);
 }
 
 export async function getOvrRiskIndicatorSummary(): Promise<OvrRiskIndicatorSummary> {
