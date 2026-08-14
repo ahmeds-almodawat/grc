@@ -275,11 +275,6 @@ const navTree: NavTreeGroup[] = [
       { key: "evidenceVault", label: "Evidence Vault", icon: <FileStack size={16} /> },
       { key: "documents", label: "Policies", icon: <FolderKanban size={16} /> },
       {
-        key: "evidenceVault",
-        label: "SOP Attestations",
-        icon: <FileStack size={16} />,
-      },
-      {
         key: "bilingualDictionary",
         label: "Bilingual Dictionary",
         icon: <Languages size={16} />,
