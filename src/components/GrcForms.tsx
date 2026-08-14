@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { DepartmentOption, MilestoneRow, PriorityLevel, ProfileOption, RiskLevel, SourceType } from '../types/domain';
 import {
   createAuditFinding,
@@ -6,7 +6,8 @@ import {
   createGovernanceDecision,
   createMilestone,
   createRisk,
-  createTask
+  createTask,
+  searchEligibleWorkParticipants,
 } from '../lib/grcApi';
 import { ScenarioFillButton } from './ScenarioFillButton';
 import {
@@ -319,12 +320,36 @@ interface WorkFormProps {
   organizationId: string;
   projectId: string;
   milestones?: MilestoneRow[];
-  profiles: ProfileOption[];
   onCreated: () => void;
   onCancel: () => void;
 }
 
-export function MilestoneForm({ organizationId, projectId, profiles, onCreated, onCancel }: WorkFormProps) {
+function useContextualWorkParticipants(
+  itemType: 'project' | 'milestone',
+  itemId: string,
+  purpose: 'milestone_owner' | 'task_owner',
+) {
+  const [query, setQuery] = useState('');
+  const [profiles, setProfiles] = useState<ProfileOption[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    const timer = window.setTimeout(() => {
+      void searchEligibleWorkParticipants(itemType, itemId, purpose, query, 100)
+        .then(rows => { if (!cancelled) { setProfiles(rows); setError(null); } })
+        .catch(err => { if (!cancelled) setError(err instanceof Error ? err.message : 'Eligible participants could not be loaded.'); })
+        .finally(() => { if (!cancelled) setLoading(false); });
+    }, 250);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [itemId, itemType, purpose, query]);
+
+  return { error, loading, profiles, query, setQuery };
+}
+
+export function MilestoneForm({ organizationId, projectId, onCreated, onCancel }: WorkFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [ownerId, setOwnerId] = useState('');
@@ -333,6 +358,7 @@ export function MilestoneForm({ organizationId, projectId, profiles, onCreated, 
   const [evidenceRequired, setEvidenceRequired] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const participants = useContextualWorkParticipants('project', projectId, 'milestone_owner');
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -353,9 +379,11 @@ export function MilestoneForm({ organizationId, projectId, profiles, onCreated, 
   return (
     <form className="form-grid" onSubmit={handleSubmit}>
       <ErrorBlock error={error} />
+      <ErrorBlock error={participants.error} />
       <label className="field full-width"><span>Milestone title *</span><input value={title} onChange={event => setTitle(event.target.value)} /></label>
       <label className="field full-width"><span>Description</span><textarea value={description} onChange={event => setDescription(event.target.value)} /></label>
-      <PersonSelect label="Owner" value={ownerId} onChange={setOwnerId} profiles={profiles} />
+      <label className="field"><span>Search eligible owner</span><input value={participants.query} onChange={event => participants.setQuery(event.target.value)} placeholder="Name or Employee ID" /></label>
+      <label className="field"><span>Owner</span><select value={ownerId} onChange={event => setOwnerId(event.target.value)} disabled={participants.loading}><option value="">{participants.loading ? 'Loading…' : 'Unassigned'}</option>{participants.profiles.map(profile => <option key={profile.id} value={profile.id}>{profile.full_name_en}</option>)}</select></label>
       <label className="field"><span>Start date</span><input type="date" value={startDate} onChange={event => setStartDate(event.target.value)} /></label>
       <label className="field"><span>Due date</span><input type="date" value={dueDate} onChange={event => setDueDate(event.target.value)} /></label>
       <label className="checkbox-field"><input type="checkbox" checked={evidenceRequired} onChange={event => setEvidenceRequired(event.target.checked)} /> Evidence required</label>
@@ -364,7 +392,7 @@ export function MilestoneForm({ organizationId, projectId, profiles, onCreated, 
   );
 }
 
-export function TaskForm({ organizationId, projectId, milestones = [], profiles, onCreated, onCancel }: WorkFormProps) {
+export function TaskForm({ organizationId, projectId, milestones = [], onCreated, onCancel }: WorkFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [milestoneId, setMilestoneId] = useState('');
@@ -375,6 +403,8 @@ export function TaskForm({ organizationId, projectId, milestones = [], profiles,
   const [evidenceRequired, setEvidenceRequired] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const participantContext = milestoneId ? { itemType: 'milestone' as const, itemId: milestoneId } : { itemType: 'project' as const, itemId: projectId };
+  const participants = useContextualWorkParticipants(participantContext.itemType, participantContext.itemId, 'task_owner');
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -395,11 +425,13 @@ export function TaskForm({ organizationId, projectId, milestones = [], profiles,
   return (
     <form className="form-grid" onSubmit={handleSubmit}>
       <ErrorBlock error={error} />
+      <ErrorBlock error={participants.error} />
       <label className="field full-width"><span>Task title *</span><input value={title} onChange={event => setTitle(event.target.value)} /></label>
       <label className="field full-width"><span>Description</span><textarea value={description} onChange={event => setDescription(event.target.value)} /></label>
       <label className="field"><span>Milestone</span><select value={milestoneId} onChange={event => setMilestoneId(event.target.value)}><option value="">No milestone</option>{milestones.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
-      <PersonSelect label="Owner" value={ownerId} onChange={setOwnerId} profiles={profiles} />
-      <PersonSelect label="Assigned to" value={assignedTo} onChange={setAssignedTo} profiles={profiles} />
+      <label className="field"><span>Search eligible participant</span><input value={participants.query} onChange={event => participants.setQuery(event.target.value)} placeholder="Name or Employee ID" /></label>
+      <label className="field"><span>Owner</span><select value={ownerId} onChange={event => setOwnerId(event.target.value)} disabled={participants.loading}><option value="">{participants.loading ? 'Loading…' : 'Unassigned'}</option>{participants.profiles.map(profile => <option key={profile.id} value={profile.id}>{profile.full_name_en}</option>)}</select></label>
+      <label className="field"><span>Assigned to</span><select value={assignedTo} onChange={event => setAssignedTo(event.target.value)} disabled={participants.loading}><option value="">{participants.loading ? 'Loading…' : 'Unassigned'}</option>{participants.profiles.map(profile => <option key={profile.id} value={profile.id}>{profile.full_name_en}</option>)}</select></label>
       <label className="field"><span>Start date</span><input type="date" value={startDate} onChange={event => setStartDate(event.target.value)} /></label>
       <label className="field"><span>Due date</span><input type="date" value={dueDate} onChange={event => setDueDate(event.target.value)} /></label>
       <label className="checkbox-field"><input type="checkbox" checked={evidenceRequired} onChange={event => setEvidenceRequired(event.target.checked)} /> Evidence required</label>

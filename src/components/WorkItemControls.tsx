@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import type { PriorityLevel, ProfileOption, ProjectStatus, WorkStatus } from '../types/domain';
-import { assignWorkItem, cancelWorkItemAssignment, getEligibleApprovers, requestApproval, respondToWorkItemAssignment, updateMilestoneStatus, updateProjectStatus, updateTaskStatus, uploadEvidenceForItem, type WorkItemAssignmentSummary } from '../lib/grcApi';
+import { assignWorkItem, cancelWorkItemAssignment, getEligibleApprovers, requestApproval, respondToWorkItemAssignment, searchEligibleWorkParticipants, updateMilestoneStatus, updateProjectStatus, updateTaskStatus, uploadEvidenceForItem, type WorkItemAssignmentSummary } from '../lib/grcApi';
 import { ScenarioFillButton } from './ScenarioFillButton';
 import {
   createScenarioLabScenario,
@@ -330,18 +330,33 @@ export function AssignmentResponseForm({ assignmentId, onCancel, onResponded }: 
 interface AssignmentManagementFormProps {
   itemType: ControllableItemType;
   itemId: string;
-  profiles: ProfileOption[];
   currentAssignment?: WorkItemAssignmentSummary;
   onCancel: () => void;
   onCompleted: () => void;
 }
 
-export function AssignmentManagementForm({ itemType, itemId, profiles, currentAssignment, onCancel, onCompleted }: AssignmentManagementFormProps) {
+export function AssignmentManagementForm({ itemType, itemId, currentAssignment, onCancel, onCompleted }: AssignmentManagementFormProps) {
   const { t, language } = useI18n();
   const [assigneeId, setAssigneeId] = useState(currentAssignment?.assignee_id || '');
   const [reason, setReason] = useState('');
+  const [query, setQuery] = useState('');
+  const [profiles, setProfiles] = useState<ProfileOption[]>([]);
+  const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSearching(true);
+    const timer = window.setTimeout(() => {
+      const purpose = itemType === 'project' ? 'project_owner' : itemType === 'milestone' ? 'milestone_owner' : 'task_owner';
+      void searchEligibleWorkParticipants(itemType, itemId, purpose, query, 100)
+        .then(rows => { if (!cancelled) { setProfiles(rows); setError(null); } })
+        .catch(err => { if (!cancelled) setError(err instanceof Error ? err.message : t('assignment.searchFailed', 'Eligible assignees could not be loaded.')); })
+        .finally(() => { if (!cancelled) setSearching(false); });
+    }, 250);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [itemId, itemType, query, t]);
 
   async function assign(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -367,7 +382,8 @@ export function AssignmentManagementForm({ itemType, itemId, profiles, currentAs
   return <form className="form-grid" onSubmit={assign}>
     {error ? <div className="form-error full-width">{error}</div> : null}
     {currentAssignment ? <div className="notice-banner full-width">{currentAssignment.assignee_name} · {t(`assignment.${currentAssignment.assignment_status}`, humanize(currentAssignment.assignment_status))}</div> : null}
-    <label className="field full-width"><span>{t('common.assignee', 'Assignee')}</span><select value={assigneeId} onChange={event => setAssigneeId(event.target.value)}><option value="">—</option>{profiles.map(profile => <option key={profile.id} value={profile.id}>{language === 'ar' && profile.full_name_ar ? profile.full_name_ar : profile.full_name_en}</option>)}</select></label>
+    <label className="field full-width"><span>{t('assignment.searchEligible', 'Search eligible assignees')}</span><input value={query} onChange={event => setQuery(event.target.value)} placeholder={t('assignment.searchPlaceholder', 'Name or Employee ID')} /></label>
+    <label className="field full-width"><span>{t('common.assignee', 'Assignee')}</span><select value={assigneeId} onChange={event => setAssigneeId(event.target.value)} disabled={searching}><option value="">{searching ? t('common.loading', 'Loading…') : '—'}</option>{profiles.map(profile => <option key={profile.id} value={profile.id}>{language === 'ar' && profile.full_name_ar ? profile.full_name_ar : profile.full_name_en}</option>)}</select></label>
     <label className="field full-width"><span>{t('common.reason', 'Reason')}</span><textarea value={reason} onChange={event => setReason(event.target.value)} /></label>
     <div className="form-actions full-width"><button className="ghost-button" type="button" onClick={onCancel}>{t('common.cancel')}</button>{currentAssignment?.assignment_status === 'pending' ? <button className="ghost-button" type="button" disabled={saving} onClick={cancelPending}>{t('assignment.cancelPending', 'Cancel pending')}</button> : null}<button className="primary-button" disabled={saving || !assigneeId}>{saving ? t('common.saving') : t(currentAssignment ? 'assignment.reassign' : 'assignment.assign', currentAssignment ? 'Reassign' : 'Assign')}</button></div>
   </form>;

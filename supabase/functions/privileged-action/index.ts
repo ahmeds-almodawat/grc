@@ -3086,7 +3086,22 @@ Deno.serve(async (request) => {
     } else if (action === 'f1r2_list_project_assignments') {
       rpcArgs = { ...rpcArgs, p_project_id: safeString(payload.project_id).trim() };
     } else if (action === 'f1r2_search_eligible_participants') {
-      rpcArgs = { ...rpcArgs, p_query: safeString(payload.query).trim() || null };
+      const itemType = safeString(payload.item_type).trim().toLowerCase();
+      const itemId = safeString(payload.item_id).trim();
+      const assignmentPurpose = safeString(payload.assignment_purpose).trim().toLowerCase();
+      if (!['project_create', 'ovr', 'project', 'milestone', 'task'].includes(itemType)
+        || (itemType !== 'project_create' && !itemId)
+        || !['project_owner', 'milestone_owner', 'task_owner', 'sponsor'].includes(assignmentPurpose)) {
+        return errorResponse('The participant-search context is invalid.', 400, 'F1R2_PARTICIPANT_SEARCH_CONTEXT_INVALID', 'Choose an item and assignment purpose.', { action });
+      }
+      rpcArgs = {
+        ...rpcArgs,
+        p_item_type: itemType,
+        p_item_id: itemId || null,
+        p_assignment_purpose: assignmentPurpose,
+        p_query: safeString(payload.query).trim() || null,
+        p_limit: Math.min(Math.max(Number(payload.limit) || 50, 1), 100),
+      };
     } else if (action === 'f1r2_decide_approval') {
       rpcArgs = {
         ...rpcArgs,

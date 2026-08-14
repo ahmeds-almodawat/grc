@@ -10,14 +10,13 @@ import { getProjectMilestones, getProjectTasks, getProjectWorkAssignments } from
 import { getEvidenceForItem } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
 import type { WorkItemAssignmentSummary } from '../lib/grcApi';
-import type { MilestoneRow, ProfileOption, ProjectRow, TaskRow } from '../types/domain';
+import type { MilestoneRow, ProjectRow, TaskRow } from '../types/domain';
 import { useAuth } from '../auth/AuthProvider';
 import { GovernedEvidenceAccess } from './GovernedEvidenceAccess';
 import { useI18n } from '../i18n/I18nContext';
 
 interface ProjectDetailProps {
   project: ProjectRow;
-  profiles: ProfileOption[];
   onProjectUpdated?: () => void;
 }
 
@@ -28,7 +27,7 @@ type ActiveControl =
   | { mode: 'assignment'; itemType: ControllableItemType; itemId: string; title: string; assignment?: WorkItemAssignmentSummary }
   | null;
 
-export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDetailProps) {
+export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps) {
   const auth = useAuth();
   const { t, language } = useI18n();
   const [milestoneFormOpen, setMilestoneFormOpen] = useState(false);
@@ -43,10 +42,9 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
   const hasManagerAuthority = auth.roles.some(role => ['super_admin', 'executive', 'governance_admin', 'division_head', 'department_manager'].includes(role.role));
   const canControlProject = Boolean(actorId && (actorId === project.owner_id || actorId === project.sponsor_id || actorId === project.created_by)) || hasManagerAuthority;
   const currentAssignment = (itemType: ControllableItemType, itemId: string) => assignments.data?.find(row => row.item_type === itemType && row.item_id === itemId);
-  const personName = (profileId?: string | null, nested?: { full_name_en: string | null; full_name_ar: string | null } | null, assignment?: WorkItemAssignmentSummary) => {
-    const related = profiles.find(profile => profile.id === profileId);
-    if (language === 'ar') return related?.full_name_ar || nested?.full_name_ar || related?.full_name_en || nested?.full_name_en || assignment?.assignee_name || t('common.unassigned', 'Unassigned');
-    return related?.full_name_en || nested?.full_name_en || related?.full_name_ar || nested?.full_name_ar || assignment?.assignee_name || t('common.unassigned', 'Unassigned');
+  const personName = (nested?: { full_name_en: string | null; full_name_ar: string | null } | null, assignment?: WorkItemAssignmentSummary) => {
+    if (language === 'ar') return nested?.full_name_ar || nested?.full_name_en || assignment?.assignee_name || t('common.unassigned', 'Unassigned');
+    return nested?.full_name_en || nested?.full_name_ar || assignment?.assignee_name || t('common.unassigned', 'Unassigned');
   };
 
   function refreshDetail() {
@@ -78,7 +76,7 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
 
       <div className="module-grid compact-grid">
         <div className="mini-card"><span>Source</span><strong>{humanize(project.source_type)}</strong></div>
-        <div className="mini-card"><span>Owner</span><strong>{personName(project.owner_id, project.owner, currentAssignment('project', project.id))}</strong></div>
+        <div className="mini-card"><span>Owner</span><strong>{personName(project.owner, currentAssignment('project', project.id))}</strong></div>
         <div className="mini-card"><span>{t('myWork.assignment', 'Assignment')}</span><strong>{t(`assignment.${currentAssignment('project', project.id)?.assignment_status || 'unassigned'}`, humanize(currentAssignment('project', project.id)?.assignment_status || 'unassigned'))}</strong></div>
         <div className="mini-card"><span>Target end</span><strong>{formatDate(project.target_end_date)}</strong></div>
         <div className="mini-card"><span>Progress</span><strong>{project.progress_percent ?? 0}%</strong></div>
@@ -109,7 +107,7 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
             getRowKey={row => row.id}
             columns={[
               { key: 'title', header: 'Milestone', render: row => <strong>{row.title}</strong> },
-              { key: 'owner', header: 'Owner', render: row => personName(row.owner_id, row.owner, currentAssignment('milestone', row.id)) },
+              { key: 'owner', header: 'Owner', render: row => personName(row.owner, currentAssignment('milestone', row.id)) },
               { key: 'assignment', header: t('myWork.assignment', 'Assignment'), render: row => { const assignment=currentAssignment('milestone',row.id); return assignment ? <><StatusBadge status={t(`assignment.${assignment.assignment_status}`,humanize(assignment.assignment_status))} />{assignment.responded_at ? <small>{formatDate(assignment.responded_at)}</small> : null}</> : '—'; } },
               { key: 'due', header: 'Due', render: row => formatDate(row.due_date) },
               { key: 'status', header: 'Status', render: row => <StatusBadge status={t(`status.${row.status}`, humanize(row.status))} /> },
@@ -141,7 +139,7 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
             getRowKey={row => row.id}
             columns={[
               { key: 'title', header: 'Task', render: row => <strong>{row.title}</strong> },
-              { key: 'assignee', header: 'Assigned To', render: row => personName(row.assigned_to || row.owner_id, row.assignee || row.owner, currentAssignment('task', row.id)) },
+              { key: 'assignee', header: 'Assigned To', render: row => personName(row.assignee || row.owner, currentAssignment('task', row.id)) },
               { key: 'assignment', header: t('myWork.assignment', 'Assignment'), render: row => { const assignment=currentAssignment('task',row.id); return assignment ? <><StatusBadge status={t(`assignment.${assignment.assignment_status}`,humanize(assignment.assignment_status))} />{assignment.decline_reason ? <small>{assignment.decline_reason}</small> : null}</> : '—'; } },
               { key: 'due', header: 'Due', render: row => formatDate(row.due_date) },
               { key: 'status', header: 'Status', render: row => <StatusBadge status={t(`status.${row.status}`, humanize(row.status))} /> },
@@ -178,7 +176,6 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
           <MilestoneForm
             organizationId={organizationId}
             projectId={project.id}
-            profiles={profiles}
             onCancel={() => setMilestoneFormOpen(false)}
             onCreated={() => {
               setMilestoneFormOpen(false);
@@ -196,7 +193,6 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
             organizationId={organizationId}
             projectId={project.id}
             milestones={milestones.data || []}
-            profiles={profiles}
             onCancel={() => setTaskFormOpen(false)}
             onCreated={() => {
               setTaskFormOpen(false);
@@ -226,7 +222,7 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
             <div className="notice-banner">Cannot request approval without a real organization context.</div>
           )
         ) : null}
-        {activeControl?.mode === 'assignment' ? <AssignmentManagementForm itemType={activeControl.itemType} itemId={activeControl.itemId} profiles={profiles} currentAssignment={activeControl.assignment} onCancel={() => setActiveControl(null)} onCompleted={closeControlAndRefresh} /> : null}
+        {activeControl?.mode === 'assignment' ? <AssignmentManagementForm itemType={activeControl.itemType} itemId={activeControl.itemId} currentAssignment={activeControl.assignment} onCancel={() => setActiveControl(null)} onCompleted={closeControlAndRefresh} /> : null}
       </Modal>
     </div>
   );

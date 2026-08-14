@@ -1,6 +1,6 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { DepartmentOption, PriorityLevel, ProfileOption, RiskLevel, SourceType } from '../types/domain';
-import { createProject } from '../lib/grcApi';
+import { createProject, searchEligibleWorkParticipants } from '../lib/grcApi';
 import { ScenarioFillButton } from './ScenarioFillButton';
 import {
   createScenarioLabScenario,
@@ -10,7 +10,6 @@ import {
 interface ActionPlanFormProps {
   organizationId: string;
   departments: DepartmentOption[];
-  profiles: ProfileOption[];
   onCreated: () => void;
   onCancel: () => void;
 }
@@ -31,7 +30,7 @@ const sourceTypes: SourceType[] = [
 const priorities: PriorityLevel[] = ['critical', 'high', 'medium', 'low'];
 const riskLevels: RiskLevel[] = ['critical', 'high', 'medium', 'low'];
 
-export function ActionPlanForm({ organizationId, departments, profiles, onCreated, onCancel }: ActionPlanFormProps) {
+export function ActionPlanForm({ organizationId, departments, onCreated, onCancel }: ActionPlanFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Governance');
@@ -39,6 +38,11 @@ export function ActionPlanForm({ organizationId, departments, profiles, onCreate
   const [departmentId, setDepartmentId] = useState('');
   const [ownerId, setOwnerId] = useState('');
   const [sponsorId, setSponsorId] = useState('');
+  const [ownerQuery, setOwnerQuery] = useState('');
+  const [sponsorQuery, setSponsorQuery] = useState('');
+  const [owners, setOwners] = useState<ProfileOption[]>([]);
+  const [sponsors, setSponsors] = useState<ProfileOption[]>([]);
+  const [participantSearchError, setParticipantSearchError] = useState<string | null>(null);
   const [startDate, setStartDate] = useState('');
   const [targetEndDate, setTargetEndDate] = useState('');
   const [priority, setPriority] = useState<PriorityLevel>('medium');
@@ -49,6 +53,22 @@ export function ActionPlanForm({ organizationId, departments, profiles, onCreate
   const [error, setError] = useState<string | null>(null);
 
   const canSubmit = useMemo(() => title.trim().length > 2 && organizationId, [title, organizationId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void Promise.all([
+        searchEligibleWorkParticipants('project_create', departmentId || null, 'project_owner', ownerQuery, 100),
+        searchEligibleWorkParticipants('project_create', departmentId || null, 'sponsor', sponsorQuery, 100),
+      ]).then(([nextOwners, nextSponsors]) => {
+        if (cancelled) return;
+        setOwners(nextOwners); setSponsors(nextSponsors); setParticipantSearchError(null);
+      }).catch(err => {
+        if (!cancelled) setParticipantSearchError(err instanceof Error ? err.message : 'Eligible participants could not be loaded.');
+      });
+    }, 250);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [departmentId, ownerQuery, sponsorQuery]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -106,8 +126,8 @@ export function ActionPlanForm({ organizationId, departments, profiles, onCreate
     setCategory('Controlled Pilot Test');
     setSourceType('manual');
     setDepartmentId(departments[0]?.id || '');
-    setOwnerId(profiles[0]?.id || '');
-    setSponsorId(profiles[0]?.id || '');
+    setOwnerId(owners[0]?.id || '');
+    setSponsorId(sponsors[0]?.id || '');
     setStartDate(new Date().toISOString().slice(0, 10));
     setTargetEndDate(new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10));
     setPriority('high');
@@ -119,6 +139,7 @@ export function ActionPlanForm({ organizationId, departments, profiles, onCreate
   return (
     <form className="form-grid" onSubmit={handleSubmit}>
       {error ? <div className="form-error">{error}</div> : null}
+      {participantSearchError ? <div className="form-error">{participantSearchError}</div> : null}
       <div className="full-width">
         <ScenarioFillButton onClick={fillSyntheticProject} />
       </div>
@@ -155,17 +176,19 @@ export function ActionPlanForm({ organizationId, departments, profiles, onCreate
 
       <label className="field">
         <span>Owner</span>
+        <input value={ownerQuery} onChange={event => setOwnerQuery(event.target.value)} placeholder="Search eligible owners" />
         <select value={ownerId} onChange={event => setOwnerId(event.target.value)}>
           <option value="">Unassigned</option>
-          {profiles.map(profile => <option key={profile.id} value={profile.id}>{profile.full_name_en}</option>)}
+          {owners.map(profile => <option key={profile.id} value={profile.id}>{profile.full_name_en}</option>)}
         </select>
       </label>
 
       <label className="field">
         <span>Sponsor</span>
+        <input value={sponsorQuery} onChange={event => setSponsorQuery(event.target.value)} placeholder="Search eligible sponsors" />
         <select value={sponsorId} onChange={event => setSponsorId(event.target.value)}>
           <option value="">None</option>
-          {profiles.map(profile => <option key={profile.id} value={profile.id}>{profile.full_name_en}</option>)}
+          {sponsors.map(profile => <option key={profile.id} value={profile.id}>{profile.full_name_en}</option>)}
         </select>
       </label>
 

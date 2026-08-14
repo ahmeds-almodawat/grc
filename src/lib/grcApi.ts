@@ -2095,8 +2095,20 @@ export interface RelatedParticipantOption extends ProfileOption {
   role_scope_label?: string | null;
 }
 
-export function searchEligibleWorkParticipants(query = '') {
-  return invokePrivilegedAction<RelatedParticipantOption[]>('f1r2_search_eligible_participants', { query });
+export function searchEligibleWorkParticipants(
+  itemType: 'project_create' | 'ovr' | 'project' | 'milestone' | 'task',
+  itemId: string | null,
+  assignmentPurpose: 'project_owner' | 'milestone_owner' | 'task_owner' | 'sponsor',
+  query = '',
+  limit = 50,
+) {
+  return invokePrivilegedAction<RelatedParticipantOption[]>('f1r2_search_eligible_participants', {
+    item_type: itemType,
+    item_id: itemId,
+    assignment_purpose: assignmentPurpose,
+    query,
+    limit,
+  });
 }
 
 export function getWorkItemParticipants(itemType: 'project' | 'milestone' | 'task', itemId: string) {

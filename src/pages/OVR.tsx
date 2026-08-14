@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, FilePlus2, GitBranch, Printer, ShieldCheck, Upload, Workflow } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
@@ -20,6 +20,7 @@ import {
   getEvidenceForItem,
   getOrganizations,
   getOvrReports,
+  getProfiles,
   getOvrSummary,
   getOvrWorkflowControlSummary,
   getOvrWorkflowQueue,
@@ -27,7 +28,7 @@ import {
   updateOvrWorkflow
 } from '../lib/grcApi';
 import { useI18n } from '../i18n/I18nContext';
-import type { OvrReportRow, OvrSeverityLevel, OvrStatus, OvrWorkflowQueueRow } from '../types/domain';
+import type { OvrReportRow, OvrSeverityLevel, OvrStatus, OvrWorkflowQueueRow, ProfileOption } from '../types/domain';
 import {
   createScenarioLabScenario,
   V99_SCENARIO_TAG,
@@ -168,7 +169,7 @@ export function OVR() {
   const reports = useAsyncData(getOvrReports, []);
   const organizations = useAsyncData(getOrganizations, []);
   const departments = useAsyncData(getDepartments, []);
-  const profiles = useAsyncData(() => searchEligibleWorkParticipants(), []);
+  const profiles = useAsyncData(getProfiles, []);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -177,6 +178,10 @@ export function OVR() {
   const [selectedDashboardReport, setSelectedDashboardReport] = useState<OvrReportRow | null>(null);
   const [correctiveProjectReport, setCorrectiveProjectReport] = useState<OvrReportRow | null>(null);
   const [correctiveProjectForm, setCorrectiveProjectForm] = useState({ owner_id: '', sponsor_id: '', start_date: '', target_end_date: '', title: '', description: '' });
+  const [ownerQuery, setOwnerQuery] = useState('');
+  const [sponsorQuery, setSponsorQuery] = useState('');
+  const [eligibleOwners, setEligibleOwners] = useState<ProfileOption[]>([]);
+  const [eligibleSponsors, setEligibleSponsors] = useState<ProfileOption[]>([]);
   const [activeFilter, setActiveFilter] = useState<OvrDashboardFilter>('all');
   const [reportSearch, setReportSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | OvrStatus>('all');
@@ -222,6 +227,21 @@ export function OVR() {
   });
 
   const organizationId = organizations.data?.[0]?.id || '';
+  useEffect(() => {
+    if (!correctiveProjectReport) { setEligibleOwners([]); setEligibleSponsors([]); return; }
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void Promise.all([
+        searchEligibleWorkParticipants('ovr', correctiveProjectReport.id, 'project_owner', ownerQuery, 100),
+        searchEligibleWorkParticipants('ovr', correctiveProjectReport.id, 'sponsor', sponsorQuery, 100),
+      ]).then(([owners, sponsors]) => {
+        if (!cancelled) { setEligibleOwners(owners); setEligibleSponsors(sponsors); }
+      }).catch(error => {
+        if (!cancelled) setWorkflowMessage(error instanceof Error ? error.message : t('ovr.workflowFailed'));
+      });
+    }, 250);
+    return () => { cancelled=true; window.clearTimeout(timer); };
+  }, [correctiveProjectReport, ownerQuery, sponsorQuery, t]);
   const filteredReports = useMemo(() => {
     const query = reportSearch.trim().toLowerCase();
     return (reports.data || []).filter(row => {
@@ -414,6 +434,7 @@ export function OVR() {
   const createLinkedProject = async () => {
     if (!selectedReport) return;
     setCorrectiveProjectReport(selectedReport);
+    setOwnerQuery(''); setSponsorQuery('');
     setCorrectiveProjectForm({ owner_id: '', sponsor_id: '', start_date: '', target_end_date: '', title: `Corrective action for ${selectedReport.ovr_number || selectedReport.logging_number || ''}`, description: '' });
   };
 
@@ -901,8 +922,8 @@ export function OVR() {
         <form className="form-grid" onSubmit={event => { event.preventDefault(); void submitLinkedProject(); }}>
           <label className="field full-width"><span>{t('common.title', 'Title')}</span><input value={correctiveProjectForm.title} onChange={event => setCorrectiveProjectForm(current => ({ ...current, title: event.target.value }))} /></label>
           <label className="field full-width"><span>{t('common.description')}</span><textarea value={correctiveProjectForm.description} onChange={event => setCorrectiveProjectForm(current => ({ ...current, description: event.target.value }))} /></label>
-          <label className="field"><span>{t('common.owner', 'Owner')} *</span><select value={correctiveProjectForm.owner_id} onChange={event => setCorrectiveProjectForm(current => ({ ...current, owner_id: event.target.value }))}><option value="">—</option>{(profiles.data || []).map(profile => <option key={profile.id} value={profile.id}>{language === 'ar' && profile.full_name_ar ? profile.full_name_ar : profile.full_name_en}</option>)}</select></label>
-          <label className="field"><span>{t('common.sponsor', 'Sponsor')} *</span><select value={correctiveProjectForm.sponsor_id} onChange={event => setCorrectiveProjectForm(current => ({ ...current, sponsor_id: event.target.value }))}><option value="">—</option>{(profiles.data || []).map(profile => <option key={profile.id} value={profile.id}>{language === 'ar' && profile.full_name_ar ? profile.full_name_ar : profile.full_name_en}</option>)}</select></label>
+          <label className="field"><span>{t('common.owner', 'Owner')} *</span><input value={ownerQuery} onChange={event => setOwnerQuery(event.target.value)} placeholder={t('assignment.searchPlaceholder', 'Name or Employee ID')} /><select value={correctiveProjectForm.owner_id} onChange={event => setCorrectiveProjectForm(current => ({ ...current, owner_id: event.target.value }))}><option value="">—</option>{eligibleOwners.map(profile => <option key={profile.id} value={profile.id}>{language === 'ar' && profile.full_name_ar ? profile.full_name_ar : profile.full_name_en}</option>)}</select></label>
+          <label className="field"><span>{t('common.sponsor', 'Sponsor')} *</span><input value={sponsorQuery} onChange={event => setSponsorQuery(event.target.value)} placeholder={t('assignment.searchPlaceholder', 'Name or Employee ID')} /><select value={correctiveProjectForm.sponsor_id} onChange={event => setCorrectiveProjectForm(current => ({ ...current, sponsor_id: event.target.value }))}><option value="">—</option>{eligibleSponsors.map(profile => <option key={profile.id} value={profile.id}>{language === 'ar' && profile.full_name_ar ? profile.full_name_ar : profile.full_name_en}</option>)}</select></label>
           <label className="field"><span>{t('common.startDate', 'Start date')} *</span><input type="date" value={correctiveProjectForm.start_date} onChange={event => setCorrectiveProjectForm(current => ({ ...current, start_date: event.target.value }))} /></label>
           <label className="field"><span>{t('common.targetEndDate', 'Target end date')} *</span><input type="date" value={correctiveProjectForm.target_end_date} onChange={event => setCorrectiveProjectForm(current => ({ ...current, target_end_date: event.target.value }))} /></label>
           <div className="form-actions full-width"><button className="ghost-button" type="button" onClick={() => setCorrectiveProjectReport(null)}>{t('common.cancel')}</button><button className="primary-button" disabled={workflowSaving}>{workflowSaving ? t('common.saving') : t('common.create', 'Create')}</button></div>

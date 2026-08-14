@@ -272,7 +272,7 @@ describe('Patch 83U authenticated surface release proof', () => {
     expect(report.summary.retained_live_broad_security_definer_count).toBe(2);
     expect(report.summary.target_broad_security_definer_count).toBe(3);
     expect(report.summary.reviewed_patch83u_migration_ceiling).toBe(196);
-    expect(report.summary.reviewed_restricted_security_definer_count).toBe(40);
+    expect(report.summary.reviewed_restricted_security_definer_count).toBe(48);
     expect(report.acl_reachable_security_definer_rpcs.reviewed_restricted_security_definers)
       .toEqual(expect.arrayContaining([
         expect.objectContaining({
@@ -298,6 +298,20 @@ describe('Patch 83U authenticated surface release proof', () => {
           source: 'migration194_service_role_acl_review',
           disposition: 'service_role_only',
         }),
+        ...[
+          'f1r2_actor_has_ovr_evidence_entitlement',
+          'f1r2_actor_has_work_evidence_entitlement',
+          'f1r2_actor_scope_allows_context',
+          'f1r2_assignment_candidate_is_eligible',
+          'f1r2_can_close_work_item',
+          'f1r2_item_evidence_satisfied',
+          'f1r2_latest_approval_satisfied',
+          'f1r2_work_item_contains',
+        ].map((name) => expect.objectContaining({
+          name,
+          source: 'migration196_service_role_acl_review',
+          disposition: 'owner_only',
+        })),
       ]));
     expect(report.acl_reachable_security_definer_rpcs.retained_live.every(
       (rpc: { allowed: boolean }) => rpc.allowed,

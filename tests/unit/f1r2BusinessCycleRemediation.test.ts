@@ -8,6 +8,8 @@ const migration = read('supabase/migrations/196_f1r2_business_cycle_remediation.
 const edge = read('supabase/functions/privileged-action/index.ts');
 const api = read('src/lib/grcApi.ts');
 const controls = read('src/components/WorkItemControls.tsx');
+const actionPlan = read('src/components/ActionPlanForm.tsx');
+const grcForms = read('src/components/GrcForms.tsx');
 const myWork = read('src/pages/MyWork.tsx');
 const ovr = read('src/pages/OVR.tsx');
 const project = read('src/components/ProjectDetail.tsx');
@@ -120,7 +122,9 @@ describe('F1-R2 migration 196 governed contracts', () => {
   });
 
   it('allows exact approver evidence access while retaining signed-url governance', () => {
-    expect(migration).toMatch(/exists\(select 1 from public\.approvals ap where ap\.approver_id=p_actor_id/);
+    expect(migration).toContain('public.f1r2_actor_has_work_evidence_entitlement');
+    expect(migration).toContain("a.status::text in('pending','approved','rejected')");
+    expect(migration).toContain("public.f1r2_work_item_contains('project',a.project_id,p_item_type,p_item_id)");
     expect(edge).toContain("createSignedUrl(");
     expect(edge).toContain('60,');
     expect(read('src/pages/Approvals.tsx')).toContain('<GovernedEvidenceAccess');
@@ -129,13 +133,102 @@ describe('F1-R2 migration 196 governed contracts', () => {
   it('closes corrective OVR only after work, evidence, and approval prerequisites', () => {
     const closure = migration.slice(migration.indexOf('create or replace function public.can_close_ovr'), migration.indexOf('-- Correct the non-OVR evidence'));
     expect(closure).toContain("p.status='closed'");
-    expect(closure).toContain('public.evidence_requirements');
-    expect(closure).toContain("a.status<>'approved'");
-    expect(closure).toContain("o.status='corrective_action_in_progress'");
+    expect(closure).toContain("public.f1r2_can_close_work_item('project',p.id)");
+    expect(closure).toContain('public.f1r2_item_evidence_satisfied');
+    expect(closure).toContain("o.status in('corrective_action_in_progress','quality_final_review')");
     expect(closure).toContain('F1R2_OVR_CLOSURE_PREREQUISITES_NOT_MET');
-    expect(closure).toContain("status='closed'");
+    expect(closure).toContain("status='quality_final_review'");
     expect(closure).toContain("'f1r2_ovr_final_verdict'");
-    expect(closure).toContain("'f1r2_ovr_closed'");
+    expect(closure).toContain("'reporter_decision_required',true");
+  });
+
+  it('keeps authenticated assignment RLS row-local and free of protected helpers', () => {
+    const policy = migration.slice(migration.lastIndexOf('create policy work_item_assignments_exact_read'), migration.indexOf('create or replace function public.f1r2_actor_scope_allows_context'));
+    expect(policy).toContain('assignee_id=auth.uid()');
+    expect(policy).toContain('assigned_by=auth.uid()');
+    expect(policy).not.toContain('f1r2_actor_can_manage_item');
+  });
+
+  it('constrains project creation and corrective routing by exact organizational scope', () => {
+    expect(migration).toContain('public.f1r2_actor_scope_allows_context');
+    expect(migration).toContain("array['super_admin','executive','governance_admin','division_head','department_manager']");
+    expect(migration).not.toContain("'department_manager','project_owner')) then raise exception 'F1R2_PROJECT_CREATE_DENIED'");
+    expect(migration).toContain('v_ovr.division_id,v_ovr.department_id,v_ovr.unit_id');
+  });
+
+  it('validates every assignee and sponsor against item context and purpose', () => {
+    expect(migration).toContain('public.f1r2_assignment_candidate_is_eligible');
+    for (const purpose of ['project_owner', 'milestone_owner', 'task_owner', 'sponsor']) expect(migration).toContain(`when '${purpose}'`);
+    expect(migration).toContain('F1R2_ASSIGNEE_NOT_ELIGIBLE');
+    expect(migration).toContain('F1R2_SPONSOR_NOT_ELIGIBLE');
+  });
+
+  it('keeps newly assigned projects draft until explicit owner acceptance', () => {
+    expect(migration).toMatch(/'incident_ovr'.+?'draft',0/s);
+    expect(migration).toContain("if v_decision='accepted' and v_assignment.item_type='project'");
+    expect(migration).toContain("where id=v_assignment.item_id and status='draft'");
+  });
+
+  it('masks parent and sibling participant details from child-only assignees', () => {
+    expect(migration).toContain("else 'Restricted participant' end");
+    expect(migration).toContain('v_full_visibility or a.assignee_id=p_actor_id');
+    expect(migration).toContain('case when v_full_visibility or a.assignee_id=p_actor_id then a.decline_reason end');
+  });
+
+  it('requires an actually existing latest approved decision when approval is required', () => {
+    expect(migration).toContain('public.f1r2_latest_approval_satisfied');
+    expect(migration).toContain('order by a.requested_at desc,a.decided_at desc nulls first,a.id desc');
+    expect(migration).toContain("coalesce((select status='approved' from ranked),false)");
+  });
+
+  it('evaluates accepted evidence and active requirements on every exact work item', () => {
+    expect(migration).toContain('public.f1r2_item_evidence_satisfied');
+    expect(migration).toContain("er.gate_status<>'satisfied'");
+    expect(migration).toContain("coalesce(e.review_status,e.status::text)='accepted'");
+    expect(migration).toContain("not exists(select 1 from public.milestones m where m.project_id=v_project.id and not public.f1r2_item_evidence_satisfied");
+  });
+
+  it('retires old canonical evidence parents and fails closed on ambiguous relinks', () => {
+    expect(migration).toContain('update public.evidence_links');
+    expect(migration).toContain('and is_primary=true and is_active=true');
+    expect(migration).toContain('uq_f1r2_one_active_primary_evidence_link');
+    expect(migration).toContain('canonical_parent_not_unique_or_wrong_organization');
+  });
+
+  it('requires dual OVR and project entitlement before including corrective hierarchy', () => {
+    expect(migration).toContain('public.f1r2_actor_has_ovr_evidence_entitlement');
+    expect(migration).toContain('v_ovr.linked_project_id is not null');
+    expect(migration).toContain('public.f1r2_actor_has_work_evidence_entitlement');
+    expect(migration).toContain("v_type='ovr' and l.linked_item_type='ovr'");
+  });
+
+  it('defines approval evidence reach as project descendants, milestone tasks, or exact task', () => {
+    expect(migration).toContain("public.f1r2_work_item_contains('project',a.project_id,p_item_type,p_item_id)");
+    expect(migration).toContain("public.f1r2_work_item_contains('milestone',a.milestone_id,p_item_type,p_item_id)");
+    expect(migration).toContain("public.f1r2_work_item_contains('task',a.task_id,p_item_type,p_item_id)");
+  });
+
+  it('preserves post-decision read-only approval evidence access for audit reconstruction', () => {
+    expect(migration).toContain('immutable approved/rejected decision for audit reconstruction');
+    expect(migration).toContain("a.status::text in('pending','approved','rejected')");
+    expect(migration).not.toContain("a.status::text in('pending','approved','rejected','cancelled')");
+  });
+
+  it('preserves Quality verdict then original-reporter accept or dispute semantics', () => {
+    expect(migration).toContain("set status='quality_final_review'");
+    expect(migration).toContain('closed_by=null,closed_at=null');
+    expect(ovr).toContain("runWorkflowAction('closed')");
+    expect(ovr).toContain("runWorkflowAction('disputed')");
+    expect(ovr).toContain('isReporterFor(selectedReport)');
+  });
+
+  it('refreshes old and new rollup parents once and preserves closed progress at 100', () => {
+    expect(migration).toContain('old.milestone_id');
+    expect(migration).toContain('new.milestone_id is distinct from old.milestone_id');
+    expect(migration).toContain('new.project_id is distinct from old.project_id');
+    expect(migration).toContain("case when status='closed' then 100 else round(v_progress,2) end");
+    const milestoneRollup = migration.slice(migration.indexOf('create or replace function public.refresh_milestone_progress'), migration.indexOf('create or replace function public.refresh_project_progress'));
+    expect(milestoneRollup).not.toContain('refresh_project_progress');
   });
 });
 
@@ -169,10 +262,11 @@ describe('F1-R2 frontend and Edge contracts', () => {
   });
 
   it('renders related owner names from the protected participant projection', () => {
-    expect(read('src/pages/Projects.tsx')).toContain('searchEligibleWorkParticipants');
+    expect(actionPlan).toContain('searchEligibleWorkParticipants');
+    expect(controls).toContain('searchEligibleWorkParticipants');
     expect(read('src/pages/Projects.tsx')).not.toContain('getProfiles()');
-    expect(project).toContain("personName(project.owner_id, project.owner, currentAssignment('project', project.id))");
-    expect(project).toContain('personName(row.assigned_to || row.owner_id');
+    expect(project).toContain("personName(project.owner, currentAssignment('project', project.id))");
+    expect(project).toContain("personName(row.assignee || row.owner, currentAssignment('task', row.id))");
     expect(project).toContain('<AssignmentManagementForm');
   });
 
@@ -212,5 +306,33 @@ describe('F1-R2 frontend and Edge contracts', () => {
     expect(edge).not.toContain("'admin-create-user'");
     expect(api).not.toContain('SUPABASE_SERVICE_ROLE_KEY');
     expect(migration).toContain('from public,anon,authenticated');
+  });
+
+  it('sends contextual participant-search facts through the Edge bridge', () => {
+    for (const field of ['p_item_type', 'p_item_id', 'p_assignment_purpose', 'p_query', 'p_limit']) expect(edge).toContain(field);
+    expect(edge).toContain("['project_create', 'ovr', 'project', 'milestone', 'task']");
+    expect(edge).toContain("['project_owner', 'milestone_owner', 'task_owner', 'sponsor']");
+  });
+
+  it('makes owner and sponsor selection searchable and contextual instead of globally preloaded', () => {
+    expect(actionPlan).toContain("searchEligibleWorkParticipants('project_create'");
+    expect(actionPlan).toContain("'project_owner'");
+    expect(actionPlan).toContain("'sponsor'");
+    expect(ovr).toContain("searchEligibleWorkParticipants('ovr'");
+    expect(controls).toContain('Search eligible assignees');
+    expect(grcForms).toContain("useContextualWorkParticipants('project', projectId, 'milestone_owner')");
+    expect(grcForms).toContain("useContextualWorkParticipants(participantContext.itemType, participantContext.itemId, 'task_owner')");
+  });
+
+  it('refreshes authoritative OVR state after Quality verdict without auto-closing', () => {
+    expect(ovr).toContain('await finalizeCorrectiveOvr');
+    expect(ovr).toContain('const authoritative = (await getOvrReports()).find');
+    expect(ovr).toContain("selectedReport.status === 'quality_final_review' && isReporterFor(selectedReport)");
+  });
+
+  it('does not create a corrective project from evidence upload or verdict finalization', () => {
+    const finalizer = ovr.slice(ovr.indexOf('const finalizeCorrectiveClosure'), ovr.indexOf('const isManagerFor'));
+    expect(finalizer).not.toContain('createOvrCorrectiveActionProject');
+    expect(controls).not.toContain('createOvrCorrectiveActionProject');
   });
 });
