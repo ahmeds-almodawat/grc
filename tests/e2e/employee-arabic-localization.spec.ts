@@ -174,6 +174,8 @@ async function installEmployeeMocks(
         assigned_by_name: 'مدير المشروع',
         assignee_name: 'موظف اختبار العربية',
       }] : [];
+    } else if (action === 'f1r2_search_eligible_participants') {
+      result = [];
     }
 
     await route.fulfill({
@@ -369,6 +371,7 @@ test.describe('Patch 83U Phase 1 Employee Arabic localization', () => {
       'patch83u_get_capabilities',
       'patch83u_get_credential_state',
       'f1r2_list_my_work',
+      'f1r2_search_eligible_participants',
     ].includes(action))).toBe(true);
     expect(proof.mutationRequests).toEqual([]);
     expect(proof.consoleProblems).toEqual([]);

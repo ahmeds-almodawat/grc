@@ -1924,6 +1924,7 @@ const translations: TranslationMap = {
   'approvals.rejectionReason': { en: 'Rejection reason', ar: 'سبب الرفض' },
   'approvals.approvalNote': { en: 'Approval note', ar: 'ملاحظة الموافقة' },
   'approvals.updateFailed': { en: 'Failed to update approval.', ar: 'تعذر تحديث الموافقة.' },
+  'approvals.noEvidence': { en: 'No governed evidence is linked to this approval item.', ar: 'لا توجد أدلة محكومة مرتبطة ببند الموافقة هذا.' },
   'approvals.filter.all': { en: 'All', ar: 'الكل' },
   'approvals.filter.pending': { en: 'Pending', ar: 'معلقة' },
   'approvals.filter.approved': { en: 'Approved', ar: 'موافق عليها' },
