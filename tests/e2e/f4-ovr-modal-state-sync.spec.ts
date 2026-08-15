@@ -73,6 +73,7 @@ function ovrRow(status: 'submitted' | 'manager_review') {
 async function installMocks(page: Page) {
   let mutationCalls = 0;
   let staleReadsRemaining = 0;
+  let postMutationReads = 0;
 
   await page.addInitScript(({ user }) => {
     localStorage.setItem('grc-language', 'en');
@@ -178,6 +179,7 @@ async function installMocks(page: Page) {
     } else if (resource === 'departments') {
       result = [{ id: departmentId, organization_id: organizationId, name_en: 'Quality', name_ar: 'إدارة الجودة' }];
     } else if (resource === 'ovr_reports') {
+      if (mutationCalls > 0) postMutationReads += 1;
       const status = staleReadsRemaining > 0 ? 'submitted' : mutationCalls > 0 ? 'manager_review' : 'submitted';
       if (staleReadsRemaining > 0) staleReadsRemaining -= 1;
       result = [ovrRow(status)];
@@ -201,7 +203,10 @@ async function installMocks(page: Page) {
     });
   });
 
-  return { getMutationCalls: () => mutationCalls };
+  return {
+    getMutationCalls: () => mutationCalls,
+    getPostMutationReads: () => postMutationReads,
+  };
 }
 
 test.describe('F4 H1 OVR modal state synchronization', () => {
@@ -240,5 +245,25 @@ test.describe('F4 H1 OVR modal state synchronization', () => {
     await expect(dialog).toHaveAttribute('dir', 'ltr');
     expect(proof.getMutationCalls()).toBe(1);
     expect(navigationCount).toBe(1);
+
+    expect(proof.getPostMutationReads()).toBe(2);
+    await dialog.getByRole('button', { name: 'Close' }).click();
+    await expect(dialog).toHaveCount(0);
+
+    const reportRow = page.getByRole('row').filter({ hasText: 'OVR-H1-STATE-SYNC' });
+    await expect(reportRow.getByText('Manager review', { exact: true })).toBeVisible();
+    expect(proof.getPostMutationReads()).toBe(2);
+
+    await reportRow.getByRole('button', { name: 'Open workflow' }).click();
+    await expect(dialog.getByText('Manager review', { exact: true }).first()).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Complete manager review' })).toHaveCount(0);
+    expect(proof.getMutationCalls()).toBe(1);
+    expect(navigationCount).toBe(1);
+
+    await expect.poll(() => proof.getPostMutationReads(), { timeout: 5000 }).toBeGreaterThanOrEqual(3);
+    await expect(reportRow.getByText('Manager review', { exact: true })).toBeVisible();
+    await expect(dialog.getByText('Manager review', { exact: true }).first()).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Complete manager review' })).toHaveCount(0);
+    expect(proof.getMutationCalls()).toBe(1);
   });
 });

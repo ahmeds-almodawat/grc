@@ -2,9 +2,11 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  applyOvrAuthoritativePatches,
   canCompleteManagerReview,
   nextStageHint,
   reconcileOvrAuthoritativeState,
+  retireConvergedOvrPatches,
   type OvrAuthoritativeStatePatch,
 } from '../../src/pages/OVR';
 import type { OvrReportRow, OvrStatus } from '../../src/types/domain';
@@ -77,6 +79,28 @@ describe('F4 H1 OVR open-modal authoritative state synchronization', () => {
     expect(mutate).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps the list authoritative through repeated stale reads and retires the patch after convergence', () => {
+    const initial = report('submitted');
+    const transition: OvrAuthoritativeStatePatch = { id: initial.id, status: 'manager_review' };
+    const staleOne = report('submitted');
+    const staleTwo = report('submitted');
+    const fresh = report('manager_review');
+    let patches: ReadonlyMap<string, OvrAuthoritativeStatePatch> = new Map([[initial.id, transition]]);
+
+    expect(applyOvrAuthoritativePatches([staleOne], patches)[0]?.status).toBe('manager_review');
+    patches = retireConvergedOvrPatches(patches, [staleOne]);
+    expect(patches.has(initial.id)).toBe(true);
+
+    expect(applyOvrAuthoritativePatches([staleTwo], patches)[0]?.status).toBe('manager_review');
+    patches = retireConvergedOvrPatches(patches, [staleTwo]);
+    expect(patches.has(initial.id)).toBe(true);
+
+    patches = retireConvergedOvrPatches(patches, [fresh]);
+    expect(patches.has(initial.id)).toBe(false);
+    expect(applyOvrAuthoritativePatches([fresh], patches)[0]?.status).toBe('manager_review');
+    expect(applyOvrAuthoritativePatches([report('quality_validation')], patches)[0]?.status).toBe('quality_validation');
+  });
+
   it('protects a quality-validation transition from a stale manager-review read', () => {
     const initial = report('manager_review');
     const transition: OvrAuthoritativeStatePatch = {
@@ -91,6 +115,11 @@ describe('F4 H1 OVR open-modal authoritative state synchronization', () => {
     expect(selected.status).toBe('quality_validation');
     expect(selected.quality_validated_at).toBe('2026-08-15T12:30:00.000Z');
     expect(nextStageHint(selected.status)).toBe(3);
+
+    const patches = new Map([[initial.id, transition]]);
+    const renderedList = applyOvrAuthoritativePatches([stale], patches);
+    expect(renderedList[0]?.status).toBe('quality_validation');
+    expect(retireConvergedOvrPatches(patches, [stale]).has(initial.id)).toBe(true);
   });
 
   it('protects the corrective finalizer result and immediately enables reporter-decision state', async () => {
@@ -120,6 +149,7 @@ describe('F4 H1 OVR open-modal authoritative state synchronization', () => {
     let selected = initial;
     let success = false;
     let errorMessage = '';
+    const patches = new Map<string, OvrAuthoritativeStatePatch>();
 
     try {
       const transition = await mutate();
@@ -134,6 +164,8 @@ describe('F4 H1 OVR open-modal authoritative state synchronization', () => {
     expect(success).toBe(false);
     expect(errorMessage).toBe('Synthetic governed failure');
     expect(mutate).toHaveBeenCalledTimes(1);
+    expect(patches.size).toBe(0);
+    expect(applyOvrAuthoritativePatches([initial], patches)[0]?.status).toBe('submitted');
   });
 
   it('consumes every mutation result before reconciliation and preserves open-modal form/message state', () => {
@@ -144,7 +176,7 @@ describe('F4 H1 OVR open-modal authoritative state synchronization', () => {
 
     expect(workflow).toContain('const transition = await updateOvrWorkflow');
     expect(workflow).not.toMatch(/^\s*await updateOvrWorkflow\(/m);
-    expect(workflow.indexOf('synchronizeOpenOvr(transition)')).toBeLessThan(workflow.indexOf('reconcileOvrAfterMutation(transition)'));
+    expect(workflow.indexOf('recordAuthoritativeOvrPatch(transition)')).toBeLessThan(workflow.indexOf('reconcileOvrAfterMutation(transition)'));
     expect(workflow).not.toContain('openReport(');
     expect(workflow).not.toContain('setWorkflowForm(');
     expect(workflow).toContain("setWorkflowMessage(t('ovr.workflowUpdated'))");
@@ -152,14 +184,19 @@ describe('F4 H1 OVR open-modal authoritative state synchronization', () => {
     expect(linkedProject).toContain('const projectId = await createOvrCorrectiveActionProject');
     expect(linkedProject).toContain("linked_project_id: projectId");
     expect(linkedProject).toContain("status: 'corrective_action_in_progress'");
+    expect(linkedProject).toContain('recordAuthoritativeOvrPatch(transition)');
     expect(linkedProject).not.toContain('openReport(');
 
     expect(finalizer).toContain('const transition = await finalizeCorrectiveOvr');
-    expect(finalizer).toContain('synchronizeOpenOvr(transition)');
+    expect(finalizer).toContain('recordAuthoritativeOvrPatch(transition)');
     expect(finalizer).not.toContain('openReport(');
 
     expect(reconciliation).toContain('setSelectedReport(current =>');
     expect(reconciliation).toContain('setSelectedDashboardReport(current =>');
+    expect(ovrSource).toContain('const effectiveReports = useMemo(');
+    expect(ovrSource).toContain('return effectiveReports.filter(row =>');
+    expect(ovrSource).toContain('setAuthoritativeOvrPatches(current => retireConvergedOvrPatches(current, reports.data || []))');
+    expect(ovrSource).toContain('scheduleConvergenceRefresh(mutation.id)');
     expect(reconciliation).not.toContain('setWorkflowMessage(');
     expect(reconciliation).not.toContain('setWorkflowForm(');
   });
