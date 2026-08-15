@@ -27,6 +27,31 @@ type ActiveControl =
   | { mode: 'assignment'; itemType: ControllableItemType; itemId: string; title: string; assignment?: WorkItemAssignmentSummary }
   | null;
 
+type ProjectRelationshipControl = Pick<ProjectRow, 'owner_id' | 'sponsor_id' | 'created_by'>;
+type ProjectRelationshipAssignment = Pick<WorkItemAssignmentSummary, 'assignee_id' | 'assignment_status'>;
+
+export function canControlProjectByRelationship(
+  actorId: string | null | undefined,
+  project: ProjectRelationshipControl,
+  projectAssignment?: ProjectRelationshipAssignment,
+): boolean {
+  const actorIsAcceptedProjectOwner = Boolean(
+    actorId
+    && actorId === project.owner_id
+    && projectAssignment?.assignee_id === actorId
+    && ['accepted', 'legacy_unverified'].includes(projectAssignment.assignment_status),
+  );
+
+  return Boolean(
+    actorId
+    && (
+      actorIsAcceptedProjectOwner
+      || actorId === project.sponsor_id
+      || actorId === project.created_by
+    )
+  );
+}
+
 export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps) {
   const auth = useAuth();
   const { t, language } = useI18n();
@@ -48,13 +73,7 @@ export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps)
   });
   const currentAssignment = (itemType: ControllableItemType, itemId: string) => assignments.data?.find(row => row.item_type === itemType && row.item_id === itemId);
   const projectAssignment = currentAssignment('project', project.id);
-  const actorIsAcceptedProjectOwner = Boolean(
-    actorId
-    && actorId === project.owner_id
-    && projectAssignment?.assignee_id === actorId
-    && ['accepted', 'legacy_unverified'].includes(projectAssignment.assignment_status),
-  );
-  const canControlProject = Boolean(actorId && (actorIsAcceptedProjectOwner || actorId === project.sponsor_id || actorId === project.created_by)) || hasManagerAuthority;
+  const canControlProject = canControlProjectByRelationship(actorId, project, projectAssignment) || hasManagerAuthority;
   const projectAssignmentPending = projectAssignment?.assignment_status === 'pending';
   const canViewProjectEvidence = canControlProject;
   const evidence = useAsyncData(

@@ -238,10 +238,11 @@ export function canAccessPageForUser(
 ): boolean {
   if (
     page === 'projects'
-    && roles.some((role) => ['employee', 'task_owner', 'project_owner', 'milestone_owner'].includes(role.role))
+    && roles.some((role) => ['employee', 'task_owner', 'project_owner', 'milestone_owner', 'compliance_officer'].includes(role.role))
   ) {
     // The page is only a shell; project, milestone, and task visibility remains
-    // governed by assignment-aware RLS. This does not grant portfolio scope.
+    // governed by relationship-aware RLS and controls. This does not grant
+    // portfolio scope or arbitrary project-creation authority.
     return true;
   }
   if (
