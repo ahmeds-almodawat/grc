@@ -53,6 +53,63 @@ const preOccurrenceFlags = ['bedridden', 'active', 'post_op_procedure', 'intra_p
 const majorLevels: Array<OvrSeverityLevel | null> = ['level_4', 'sentinel'];
 type OvrDashboardFilter = 'all' | 'open' | 'quality' | 'corrective' | 'sentinel' | 'nearMiss';
 
+export type OvrAuthoritativeStatePatch = {
+  id: string;
+  status: OvrStatus;
+  supervisor_due_date?: string | null;
+  quality_validated_at?: string | null;
+  cross_department_notified_at?: string | null;
+  final_verdict?: string | null;
+  final_verdict_at?: string | null;
+  reporter_response?: string | null;
+  linked_project_id?: string | null;
+  closed_at?: string | null;
+  closed_by?: string | null;
+  reporter_decision_required?: boolean;
+  replayed?: boolean;
+};
+
+const persistedOvrMutationFields: ReadonlyArray<keyof OvrAuthoritativeStatePatch> = [
+  'id',
+  'status',
+  'supervisor_due_date',
+  'quality_validated_at',
+  'cross_department_notified_at',
+  'final_verdict',
+  'final_verdict_at',
+  'reporter_response',
+  'linked_project_id',
+  'closed_at',
+  'closed_by',
+];
+
+function isFetchedOvrConsistent(
+  fetched: OvrReportRow,
+  mutation: OvrAuthoritativeStatePatch,
+): boolean {
+  const fetchedFields = fetched as unknown as Record<string, unknown>;
+  return persistedOvrMutationFields.every(field => (
+    mutation[field] === undefined || fetchedFields[field] === mutation[field]
+  ));
+}
+
+export function reconcileOvrAuthoritativeState(
+  current: OvrReportRow,
+  mutation: OvrAuthoritativeStatePatch,
+  fetched?: OvrReportRow,
+): OvrReportRow {
+  if (current.id !== mutation.id) return current;
+  const mutationSynchronized = { ...current, ...mutation } as OvrReportRow;
+  if (!fetched || fetched.id !== mutation.id || !isFetchedOvrConsistent(fetched, mutation)) {
+    return mutationSynchronized;
+  }
+  return { ...fetched, ...mutation } as OvrReportRow;
+}
+
+export function canCompleteManagerReview(status: OvrStatus): boolean {
+  return status === 'submitted';
+}
+
 const ovrEvidenceUploadRoles: ReadonlySet<string> = new Set([
   'super_admin',
   'governance_admin',
@@ -88,7 +145,7 @@ function cleanLabel(value: string) {
   return humanize(value.replaceAll('_', ' '));
 }
 
-function nextStageHint(status: OvrStatus) {
+export function nextStageHint(status: OvrStatus) {
   const order: Partial<Record<OvrStatus, number>> = {
     draft: 0,
     submitted: 1,
@@ -279,6 +336,21 @@ export function OVR() {
   const update = (key: keyof typeof form, value: string | boolean | string[]) => setForm(current => ({ ...current, [key]: value }));
   const updateWorkflowForm = (key: keyof typeof workflowForm, value: string) => setWorkflowForm(current => ({ ...current, [key]: value }));
 
+  const synchronizeOpenOvr = (mutation: OvrAuthoritativeStatePatch, fetched?: OvrReportRow) => {
+    setSelectedReport(current => current?.id === mutation.id
+      ? reconcileOvrAuthoritativeState(current, mutation, fetched)
+      : current);
+    setSelectedDashboardReport(current => current?.id === mutation.id
+      ? reconcileOvrAuthoritativeState(current, mutation, fetched)
+      : current);
+  };
+
+  const reconcileOvrAfterMutation = async (mutation: OvrAuthoritativeStatePatch) => {
+    await reports.refresh();
+    const authoritative = (await getOvrReports()).find(report => report.id === mutation.id);
+    synchronizeOpenOvr(mutation, authoritative);
+  };
+
   const openReport = (row: OvrReportRow) => {
     setSelectedReport(row);
     setWorkflowMessage(null);
@@ -403,7 +475,7 @@ export function OVR() {
 
     setWorkflowSaving(true);
     try {
-      await updateOvrWorkflow({
+      const transition = await updateOvrWorkflow({
         ovr_report_id: selectedReport.id,
         next_status: nextStatus,
         note: workflowForm.note,
@@ -417,10 +489,9 @@ export function OVR() {
         confirmed_severity_level: workflowForm.confirmed_severity_level,
         corrective_action_due_date: workflowForm.corrective_action_due_date || undefined
       });
+      synchronizeOpenOvr(transition);
       setWorkflowMessage(t('ovr.workflowUpdated'));
-      await reports.refresh();
-      const authoritative = (await getOvrReports()).find(report => report.id === selectedReport.id);
-      if (authoritative) openReport(authoritative);
+      await reconcileOvrAfterMutation(transition);
       workflowSummary.refresh();
       workflowQueue.refresh();
       summary.refresh();
@@ -450,12 +521,17 @@ export function OVR() {
     }
     setWorkflowSaving(true);
     try {
-      await createOvrCorrectiveActionProject({ ovr_report_id: correctiveProjectReport.id, ...correctiveProjectForm });
+      const reportId = correctiveProjectReport.id;
+      const projectId = await createOvrCorrectiveActionProject({ ovr_report_id: reportId, ...correctiveProjectForm });
+      const transition: OvrAuthoritativeStatePatch = {
+        id: reportId,
+        linked_project_id: projectId,
+        status: 'corrective_action_in_progress',
+      };
+      synchronizeOpenOvr(transition);
       setWorkflowMessage(t('ovr.linkedProjectCreated'));
       setCorrectiveProjectReport(null);
-      await reports.refresh();
-      const authoritative = (await getOvrReports()).find(report => report.id === correctiveProjectReport.id);
-      if (authoritative) openReport(authoritative);
+      await reconcileOvrAfterMutation(transition);
     } catch (error) {
       setWorkflowMessage(error instanceof Error ? error.message : t('ovr.workflowFailed'));
     } finally {
@@ -471,17 +547,16 @@ export function OVR() {
     }
     setWorkflowSaving(true);
     try {
-      await finalizeCorrectiveOvr({
+      const transition = await finalizeCorrectiveOvr({
         ovr_report_id: selectedReport.id,
         final_verdict: workflowForm.final_verdict,
         final_severity: workflowForm.confirmed_severity_level,
         closure_comment: workflowForm.quality_manager_comments,
         idempotency_key: `f1r2-close-${selectedReport.id}-${crypto.randomUUID()}`,
       });
+      synchronizeOpenOvr(transition);
       setWorkflowMessage(t('ovr.workflowUpdated'));
-      await reports.refresh();
-      const authoritative = (await getOvrReports()).find(report => report.id === selectedReport.id);
-      if (authoritative) openReport(authoritative);
+      await reconcileOvrAfterMutation(transition);
       workflowSummary.refresh(); workflowQueue.refresh(); summary.refresh();
     } catch (error) {
       setWorkflowMessage(error instanceof Error ? error.message : t('ovr.workflowFailed'));
@@ -863,7 +938,7 @@ export function OVR() {
               >
                 <Printer size={16} />{t('ovr.print.action', 'Print OVR')}
               </button>
-              {selectedReport.status === 'submitted' && (isManagerFor(selectedReport) || isQuality) ? (
+              {canCompleteManagerReview(selectedReport.status) && (isManagerFor(selectedReport) || isQuality) ? (
                 <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('manager_review')}><Workflow size={16} />{t('ovr.completeManagerReview')}</button>
               ) : null}
               {selectedReport.status === 'manager_review' && isQuality ? (
