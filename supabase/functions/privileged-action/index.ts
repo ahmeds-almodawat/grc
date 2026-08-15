@@ -138,6 +138,7 @@ const f1r2BusinessCycleActions = new Set([
   'f1r2_search_eligible_participants',
   'f1r2_decide_approval',
   'f1r2_get_evidence_pack',
+  'f1r2_relink_evidence_parent',
   'f1r2_finalize_corrective_ovr',
 ]);
 
@@ -3114,6 +3115,22 @@ Deno.serve(async (request) => {
         ...rpcArgs,
         p_item_type: safeString(payload.item_type).trim().toLowerCase(),
         p_item_id: safeString(payload.item_id).trim(),
+      };
+    } else if (action === 'f1r2_relink_evidence_parent') {
+      const itemType = safeString(payload.item_type).trim().toLowerCase();
+      const evidenceFileId = safeString(payload.evidence_file_id).trim();
+      const itemId = safeString(payload.item_id).trim();
+      const reason = safeString(payload.reason).trim();
+      if (!['project', 'milestone', 'task', 'ovr', 'risk', 'compliance', 'audit_finding'].includes(itemType)
+        || !evidenceFileId || !itemId || !reason) {
+        return errorResponse('The evidence relink request is invalid.', 400, 'F1R2_EVIDENCE_RELINK_PAYLOAD_INVALID', 'Choose one governed parent and provide a reason.', { action });
+      }
+      rpcArgs = {
+        ...rpcArgs,
+        p_evidence_file_id: evidenceFileId,
+        p_item_type: itemType,
+        p_item_id: itemId,
+        p_reason: reason,
       };
     } else if (action === 'f1r2_finalize_corrective_ovr') {
       rpcArgs = {

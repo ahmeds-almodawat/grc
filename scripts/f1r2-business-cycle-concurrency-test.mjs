@@ -100,10 +100,10 @@ insert into public.projects(id,organization_id,title,category,source_type,divisi
 values
   ${acceptedProjects.map((id, index) => `('${id}','${ids.org}','Accepted race ${index + 1}','concurrency','manual','${ids.division}','${ids.department}','${ids.owner}','${ids.manager}','${ids.manager}','active',0,false,false)`).join(',\n  ')},
   ${pendingProjects.map((id, index) => `('${id}','${ids.org}','Pending race ${index + 1}','concurrency','manual','${ids.division}','${ids.department}',null,'${ids.manager}','${ids.manager}','draft',0,false,false)`).join(',\n  ')};
-insert into public.work_item_assignments(organization_id,item_type,item_id,assignee_id,assigned_by,status,responded_by,responded_at)
-select '${ids.org}','project',id,'${ids.owner}','${ids.manager}','accepted','${ids.owner}',statement_timestamp() from public.projects where id in (${acceptedProjects.map(id => `'${id}'`).join(',')});
-insert into public.work_item_assignments(organization_id,item_type,item_id,assignee_id,assigned_by,status)
-select '${ids.org}','project',id,'${ids.owner}','${ids.manager}','pending' from public.projects where id in (${pendingProjects.map(id => `'${id}'`).join(',')});
+insert into public.work_item_assignments(organization_id,item_type,item_id,project_id,assignee_id,assigned_by,status,responded_by,responded_at)
+select '${ids.org}','project',id,id,'${ids.owner}','${ids.manager}','accepted','${ids.owner}',statement_timestamp() from public.projects where id in (${acceptedProjects.map(id => `'${id}'`).join(',')});
+insert into public.work_item_assignments(organization_id,item_type,item_id,project_id,assignee_id,assigned_by,status)
+select '${ids.org}','project',id,id,'${ids.owner}','${ids.manager}','pending' from public.projects where id in (${pendingProjects.map(id => `'${id}'`).join(',')});
 commit;
 `);
 
@@ -159,7 +159,10 @@ try {
   result.reassignment_before_status = {
     fulfilled: reassignFirst.filter(row => row.status === 'fulfilled').length,
     stale_mutation_commits: reassignFirst[1].status === 'fulfilled' ? 1 : 0,
-    denied_with_current_state: reassignFirst[1].status === 'rejected' && reassignFirst[1].reason.message.includes('F1R2_STATUS_UPDATE_DENIED'),
+    denied_with_current_state: reassignFirst[1].status === 'rejected' && (
+      reassignFirst[1].reason.message.includes('F1R2_STATUS_UPDATE_DENIED')
+      || reassignFirst[1].reason.message.includes('F1R2_PENDING_PROJECT_EXECUTION_DENIED')
+    ),
     state: await state(ids.reassignFirst),
   };
 

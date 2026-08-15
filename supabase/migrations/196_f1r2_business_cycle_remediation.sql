@@ -13,6 +13,9 @@ create table if not exists public.work_item_assignments (
   organization_id uuid not null references public.organizations(id) on delete cascade,
   item_type text not null check (item_type in ('project','milestone','task')),
   item_id uuid not null,
+  project_id uuid not null,
+  milestone_id uuid,
+  task_id uuid,
   assignee_id uuid not null references public.profiles(id) on delete restrict,
   assigned_by uuid not null references public.profiles(id) on delete restrict,
   assigned_at timestamptz not null default statement_timestamp(),
@@ -28,6 +31,11 @@ create table if not exists public.work_item_assignments (
     or (status = 'declined' and responded_by = assignee_id and responded_at is not null and nullif(btrim(decline_reason),'') is not null)
     or (status in ('pending','legacy_unverified') and responded_by is null and responded_at is null and decline_reason is null)
     or (status in ('superseded','cancelled'))
+  ),
+  constraint work_item_assignments_context_chk check (
+    (item_type='project' and project_id=item_id and milestone_id is null and task_id is null)
+    or (item_type='milestone' and milestone_id=item_id and task_id is null)
+    or (item_type='task' and task_id=item_id)
   )
 );
 
@@ -38,6 +46,8 @@ create index if not exists idx_work_item_assignments_assignee
   on public.work_item_assignments (organization_id,assignee_id,status,assigned_at desc);
 create index if not exists idx_work_item_assignments_item
   on public.work_item_assignments (organization_id,item_type,item_id,assigned_at desc);
+create index if not exists idx_work_item_assignments_context
+  on public.work_item_assignments (organization_id,assignee_id,project_id,milestone_id,task_id,status);
 
 alter table public.work_item_assignments enable row level security;
 drop policy if exists work_item_assignments_exact_read on public.work_item_assignments;
@@ -186,8 +196,8 @@ drop policy if exists work_item_assignments_exact_read on public.work_item_assig
 create policy work_item_assignments_exact_read on public.work_item_assignments
 for select to authenticated
 using (
-  assignee_id=auth.uid()
-  or assigned_by=auth.uid()
+  assignee_id=(select auth.uid())
+  or assigned_by=(select auth.uid())
 );
 
 create or replace function public.f1r2_actor_scope_allows_context(
@@ -262,9 +272,9 @@ $$;
 
 -- Preserve historical ownership as explicitly unacknowledged; never fabricate acceptance.
 insert into public.work_item_assignments(
-  organization_id,item_type,item_id,assignee_id,assigned_by,assigned_at,status,created_at,updated_at
+  organization_id,item_type,item_id,project_id,milestone_id,task_id,assignee_id,assigned_by,assigned_at,status,created_at,updated_at
 )
-select p.organization_id,'project',p.id,p.owner_id,coalesce(p.created_by,p.owner_id),p.created_at,
+select p.organization_id,'project',p.id,p.id,null::uuid,null::uuid,p.owner_id,coalesce(p.created_by,p.owner_id),p.created_at,
        'legacy_unverified',p.created_at,p.updated_at
 from public.projects p
 where p.owner_id is not null
@@ -272,9 +282,9 @@ where p.owner_id is not null
 on conflict do nothing;
 
 insert into public.work_item_assignments(
-  organization_id,item_type,item_id,assignee_id,assigned_by,assigned_at,status,created_at,updated_at
+  organization_id,item_type,item_id,project_id,milestone_id,task_id,assignee_id,assigned_by,assigned_at,status,created_at,updated_at
 )
-select m.organization_id,'milestone',m.id,m.owner_id,coalesce(m.created_by,m.owner_id),m.created_at,
+select m.organization_id,'milestone',m.id,m.project_id,m.id,null::uuid,m.owner_id,coalesce(m.created_by,m.owner_id),m.created_at,
        'legacy_unverified',m.created_at,m.updated_at
 from public.milestones m
 where m.owner_id is not null
@@ -282,9 +292,9 @@ where m.owner_id is not null
 on conflict do nothing;
 
 insert into public.work_item_assignments(
-  organization_id,item_type,item_id,assignee_id,assigned_by,assigned_at,status,created_at,updated_at
+  organization_id,item_type,item_id,project_id,milestone_id,task_id,assignee_id,assigned_by,assigned_at,status,created_at,updated_at
 )
-select t.organization_id,'task',t.id,coalesce(t.assigned_to,t.owner_id),coalesce(t.created_by,t.owner_id,t.assigned_to),t.created_at,
+select t.organization_id,'task',t.id,t.project_id,t.milestone_id,t.id,coalesce(t.assigned_to,t.owner_id),coalesce(t.created_by,t.owner_id,t.assigned_to),t.created_at,
        'legacy_unverified',t.created_at,t.updated_at
 from public.tasks t
 where coalesce(t.assigned_to,t.owner_id) is not null
@@ -303,6 +313,7 @@ declare
   v_actor public.profiles%rowtype; v_assignee public.profiles%rowtype;
   v_project public.projects%rowtype; v_prior public.work_item_assignments%rowtype;
   v_new public.work_item_assignments%rowtype; v_type text := lower(btrim(coalesce(p_item_type,'')));
+  v_milestone_id uuid;
 begin
   v_actor := public.f1r2_active_actor(p_actor_id);
   if v_type not in ('project','milestone','task') then raise exception 'F1R2_ITEM_TYPE_INVALID'; end if;
@@ -327,8 +338,17 @@ begin
     update public.work_item_assignments set status='superseded',superseded_at=statement_timestamp(),updated_at=statement_timestamp() where id=v_prior.id;
   end if;
 
-  insert into public.work_item_assignments(organization_id,item_type,item_id,assignee_id,assigned_by,status)
-  values(v_actor.organization_id,v_type,p_item_id,p_assignee_id,p_actor_id,'pending') returning * into v_new;
+  if v_type='milestone' then
+    v_milestone_id:=p_item_id;
+  elsif v_type='task' then
+    select t.milestone_id into v_milestone_id from public.tasks t where t.id=p_item_id;
+  end if;
+  insert into public.work_item_assignments(
+    organization_id,item_type,item_id,project_id,milestone_id,task_id,assignee_id,assigned_by,status
+  ) values(
+    v_actor.organization_id,v_type,p_item_id,v_project.id,v_milestone_id,
+    case when v_type='task' then p_item_id end,p_assignee_id,p_actor_id,'pending'
+  ) returning * into v_new;
   -- Pending is a proposal, never live execution authority.  A handoff revokes
   -- the prior execution owner and acceptance installs the new one.
   if v_type='project' then update public.projects set owner_id=null,updated_by=p_actor_id where id=p_item_id;
@@ -584,30 +604,78 @@ begin
 end;
 $$;
 
--- Exact assignment relationship grants only the item and necessary parent context.
+-- Exact assignment relationship grants only the item and necessary parent
+-- context.  The ledger persists normalized hierarchy identifiers, so these
+-- policies never recurse through projects/milestones/tasks to resolve parents.
 drop policy if exists projects_f1r2_assignment_read on public.projects;
 create policy projects_f1r2_assignment_read on public.projects for select to authenticated using (
-  exists (select 1 from public.work_item_assignments a where a.organization_id=projects.organization_id and a.assignee_id=auth.uid() and a.status in ('pending','accepted','legacy_unverified') and (
-    (a.item_type='project' and a.item_id=projects.id)
-    or (a.item_type='milestone' and exists(select 1 from public.milestones m where m.id=a.item_id and m.project_id=projects.id))
-    or (a.item_type='task' and exists(select 1 from public.tasks t where t.id=a.item_id and t.project_id=projects.id))
-  ))
+  exists (
+    select 1 from public.work_item_assignments a
+    where a.organization_id=projects.organization_id
+      and a.assignee_id=(select auth.uid())
+      and a.project_id=projects.id
+      and a.status in ('pending','accepted','legacy_unverified')
+  )
 );
 drop policy if exists milestones_f1r2_assignment_read on public.milestones;
 create policy milestones_f1r2_assignment_read on public.milestones for select to authenticated using (
-  exists (select 1 from public.work_item_assignments a where a.organization_id=milestones.organization_id and a.assignee_id=auth.uid() and a.status in ('pending','accepted','legacy_unverified') and (
-    (a.item_type='milestone' and a.item_id=milestones.id)
-    or (a.item_type='project' and a.item_id=milestones.project_id)
-    or (a.item_type='task' and exists(select 1 from public.tasks t where t.id=a.item_id and t.milestone_id=milestones.id))
-  ))
+  exists (
+    select 1 from public.work_item_assignments a
+    where a.organization_id=milestones.organization_id
+      and a.assignee_id=(select auth.uid())
+      and a.project_id=milestones.project_id
+      and (
+        (a.item_type='milestone' and a.milestone_id=milestones.id and a.status in ('pending','accepted','legacy_unverified'))
+        or (a.item_type='project' and a.status in ('accepted','legacy_unverified'))
+        or (a.item_type='task' and a.milestone_id=milestones.id and a.status in ('pending','accepted','legacy_unverified'))
+      )
+  )
 );
 drop policy if exists tasks_f1r2_assignment_read on public.tasks;
 create policy tasks_f1r2_assignment_read on public.tasks for select to authenticated using (
-  exists (select 1 from public.work_item_assignments a where a.organization_id=tasks.organization_id and a.assignee_id=auth.uid() and a.status in ('pending','accepted','legacy_unverified') and (
-    (a.item_type='task' and a.item_id=tasks.id)
-    or (a.item_type='milestone' and a.item_id=tasks.milestone_id)
-    or (a.item_type='project' and a.item_id=tasks.project_id)
-  ))
+  exists (
+    select 1 from public.work_item_assignments a
+    where a.organization_id=tasks.organization_id
+      and a.assignee_id=(select auth.uid())
+      and a.project_id=tasks.project_id
+      and (
+        (a.item_type='task' and a.task_id=tasks.id and a.status in ('pending','accepted','legacy_unverified'))
+        or (a.item_type='milestone' and a.milestone_id=tasks.milestone_id and a.status in ('accepted','legacy_unverified'))
+        or (a.item_type='project' and a.status in ('accepted','legacy_unverified'))
+      )
+  )
+);
+
+-- Existing permissive read policies may independently grant creator, owner, or
+-- scoped-manager access.  A restrictive policy makes active-account state a
+-- mandatory condition for every authenticated read on the assignment surface.
+drop policy if exists work_item_assignments_f1r2_active_actor on public.work_item_assignments;
+create policy work_item_assignments_f1r2_active_actor on public.work_item_assignments
+as restrictive for select to authenticated
+using (
+  (select public.patch83u_credential_access_allowed())
+  and exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.is_active=true and p.user_status::text='active')
+);
+drop policy if exists projects_f1r2_active_actor on public.projects;
+create policy projects_f1r2_active_actor on public.projects
+as restrictive for select to authenticated
+using (
+  (select public.patch83u_credential_access_allowed())
+  and exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.is_active=true and p.user_status::text='active')
+);
+drop policy if exists milestones_f1r2_active_actor on public.milestones;
+create policy milestones_f1r2_active_actor on public.milestones
+as restrictive for select to authenticated
+using (
+  (select public.patch83u_credential_access_allowed())
+  and exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.is_active=true and p.user_status::text='active')
+);
+drop policy if exists tasks_f1r2_active_actor on public.tasks;
+create policy tasks_f1r2_active_actor on public.tasks
+as restrictive for select to authenticated
+using (
+  (select public.patch83u_credential_access_allowed())
+  and exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.is_active=true and p.user_status::text='active')
 );
 
 -- All work-item writes now pass through the service-role Edge bridge.
@@ -963,6 +1031,12 @@ begin
   if v_project.id is null or v_project.organization_id<>v_actor.organization_id then raise exception 'F1R2_ITEM_NOT_FOUND'; end if;
   if p_progress_percent is null or p_progress_percent<0 or p_progress_percent>100 then raise exception 'F1R2_PROGRESS_OUT_OF_RANGE'; end if;
   if p_status='delayed' and nullif(btrim(coalesce(p_delay_reason,'')),'') is null then raise exception 'F1R2_DELAY_REASON_REQUIRED'; end if;
+  if v_type='project' and p_status not in ('draft','pending_approval','active','at_risk','delayed','completed_pending_evidence','completed_pending_approval','closed','cancelled') then raise exception 'F1R2_STATUS_INVALID'; end if;
+  -- A pending project assignment is a pre-execution acknowledgement state.
+  -- No ordinary actor, including creator, sponsor, scoped manager, or Super
+  -- Admin, may begin project execution before the assignee accepts.  Governed
+  -- cancellation remains available to an otherwise-authorized controller.
+  if v_type='project' and v_assignment.status='pending' and p_status not in ('draft','cancelled') then raise exception 'F1R2_PENDING_PROJECT_EXECUTION_DENIED'; end if;
   if v_assignment.assignee_id=p_actor_id and v_assignment.status not in ('accepted','legacy_unverified') then raise exception 'F1R2_ASSIGNMENT_ACCEPTANCE_REQUIRED'; end if;
   if v_assignment.assignee_id is distinct from p_actor_id and not public.f1r2_actor_can_manage_item(p_actor_id,v_type,p_item_id) then raise exception 'F1R2_STATUS_UPDATE_DENIED'; end if;
   if v_type in ('milestone','task') and v_assignment.assignee_id is not null and v_assignment.assignee_id<>p_actor_id then raise exception 'F1R2_ASSIGNEE_IMPERSONATION_DENIED'; end if;
@@ -973,7 +1047,6 @@ begin
   end if;
   if p_status='closed' and not public.f1r2_can_close_work_item(v_type,p_item_id) then raise exception 'F1R2_CLOSURE_PREREQUISITES_NOT_MET'; end if;
   if v_type='project' then
-    if p_status not in ('draft','pending_approval','active','at_risk','delayed','completed_pending_evidence','completed_pending_approval','closed','cancelled') then raise exception 'F1R2_STATUS_INVALID'; end if;
     select count(*) into v_child_count from public.milestones where project_id=p_item_id and status<>'cancelled';
     select to_jsonb(p) into v_old from public.projects p where p.id=p_item_id for update;
     if v_old->>'status'=p_status and p_status='closed' then
@@ -1144,12 +1217,185 @@ begin
 end;
 $$;
 
+-- Parent changes are not ordinary evidence-row edits.  Only the verified
+-- service bridge may establish the transaction-local actor used by the
+-- canonical-link trigger and audit trail.
+create or replace function public.f1r2_guard_evidence_parent_change()
+returns trigger
+language plpgsql
+security definer
+set search_path=pg_catalog,public,pg_temp
+as $$
+declare
+  v_actor_text text;
+  v_actor_id uuid;
+begin
+  if row(new.project_id,new.milestone_id,new.task_id,new.ovr_report_id,new.audit_finding_id,new.risk_id,new.compliance_item_id)
+     is not distinct from
+     row(old.project_id,old.milestone_id,old.task_id,old.ovr_report_id,old.audit_finding_id,old.risk_id,old.compliance_item_id)
+  then
+    return new;
+  end if;
+  if auth.role() is distinct from 'service_role' then
+    raise exception 'F1R2_EVIDENCE_RELINK_SERVICE_ROLE_REQUIRED';
+  end if;
+  v_actor_text:=nullif(current_setting('f1r2.verified_evidence_actor_id',true),'');
+  if v_actor_text is null then
+    raise exception 'F1R2_EVIDENCE_RELINK_ACTOR_CONTEXT_REQUIRED';
+  end if;
+  begin
+    v_actor_id:=v_actor_text::uuid;
+  exception when invalid_text_representation then
+    raise exception 'F1R2_EVIDENCE_RELINK_ACTOR_CONTEXT_INVALID';
+  end;
+  if new.updated_by is distinct from v_actor_id then
+    raise exception 'F1R2_EVIDENCE_RELINK_ACTOR_MISMATCH';
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function public.f1r2_relink_evidence_parent(
+  p_actor_id uuid,
+  p_evidence_file_id uuid,
+  p_item_type text,
+  p_item_id uuid,
+  p_reason text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path=pg_catalog,public,pg_temp
+as $$
+declare
+  v_actor public.profiles%rowtype;
+  v_evidence public.evidence_files%rowtype;
+  v_type text:=lower(btrim(coalesce(p_item_type,'')));
+  v_reason text:=nullif(btrim(coalesce(p_reason,'')),'');
+  v_target_organization_id uuid;
+  v_division_id uuid;
+  v_department_id uuid;
+  v_unit_id uuid;
+  v_target_allowed boolean:=false;
+  v_evidence_controller boolean:=false;
+begin
+  v_actor:=public.f1r2_active_actor(p_actor_id);
+  if v_type not in ('project','milestone','task','ovr','risk','compliance','audit_finding') or p_item_id is null then
+    raise exception 'F1R2_EVIDENCE_RELINK_TARGET_INVALID';
+  end if;
+  if v_reason is null or length(v_reason)>500 then
+    raise exception 'F1R2_EVIDENCE_RELINK_REASON_REQUIRED';
+  end if;
+
+  select * into v_evidence
+  from public.evidence_files
+  where id=p_evidence_file_id
+  for update;
+  if not found or v_evidence.organization_id<>v_actor.organization_id then
+    raise exception 'F1R2_EVIDENCE_NOT_FOUND';
+  end if;
+  if v_evidence.locked_at is not null then
+    raise exception 'F1R2_EVIDENCE_RELINK_LOCKED';
+  end if;
+  v_evidence_controller:=coalesce(
+    p_actor_id in(v_evidence.uploaded_by,v_evidence.created_by,v_evidence.evidence_owner_id,v_evidence.reviewer_id,v_evidence.reviewed_by),
+    false
+  );
+
+  if v_type='project' then
+    select p.organization_id,p.division_id,p.department_id,p.unit_id
+      into v_target_organization_id,v_division_id,v_department_id,v_unit_id
+    from public.projects p where p.id=p_item_id;
+  elsif v_type='milestone' then
+    select m.organization_id,p.division_id,p.department_id,p.unit_id
+      into v_target_organization_id,v_division_id,v_department_id,v_unit_id
+    from public.milestones m join public.projects p on p.id=m.project_id where m.id=p_item_id;
+  elsif v_type='task' then
+    select t.organization_id,p.division_id,p.department_id,p.unit_id
+      into v_target_organization_id,v_division_id,v_department_id,v_unit_id
+    from public.tasks t join public.projects p on p.id=t.project_id where t.id=p_item_id;
+  elsif v_type='ovr' then
+    select o.organization_id,o.division_id,o.department_id,o.unit_id
+      into v_target_organization_id,v_division_id,v_department_id,v_unit_id
+    from public.ovr_reports o where o.id=p_item_id;
+  elsif v_type='risk' then
+    select r.organization_id,r.division_id,r.department_id,r.unit_id
+      into v_target_organization_id,v_division_id,v_department_id,v_unit_id
+    from public.risks r where r.id=p_item_id;
+  elsif v_type='compliance' then
+    select c.organization_id,c.division_id,c.department_id,c.unit_id
+      into v_target_organization_id,v_division_id,v_department_id,v_unit_id
+    from public.compliance_items c where c.id=p_item_id;
+  else
+    select a.organization_id,a.division_id,a.department_id,a.unit_id
+      into v_target_organization_id,v_division_id,v_department_id,v_unit_id
+    from public.audit_findings a where a.id=p_item_id;
+  end if;
+  if not found or v_target_organization_id<>v_actor.organization_id then
+    raise exception 'F1R2_EVIDENCE_RELINK_TARGET_INVALID';
+  end if;
+
+  if v_type in ('project','milestone','task') then
+    v_target_allowed:=public.f1r2_actor_has_work_evidence_entitlement(p_actor_id,v_type,p_item_id);
+    v_evidence_controller:=v_evidence_controller or public.f1r2_actor_can_manage_item(p_actor_id,v_type,p_item_id);
+  elsif v_type='ovr' then
+    v_target_allowed:=public.f1r2_actor_has_ovr_evidence_entitlement(p_actor_id,p_item_id);
+    v_evidence_controller:=v_evidence_controller or public.f1r2_actor_scope_allows_context(
+      p_actor_id,v_target_organization_id,v_division_id,v_department_id,v_unit_id,
+      array['super_admin','governance_admin','compliance_officer','auditor']
+    );
+  else
+    v_target_allowed:=public.f1r2_actor_scope_allows_context(
+      p_actor_id,v_target_organization_id,v_division_id,v_department_id,v_unit_id,
+      array['super_admin','governance_admin','compliance_officer','auditor','division_head','department_manager']
+    );
+    v_evidence_controller:=v_evidence_controller or v_target_allowed;
+  end if;
+  if not v_target_allowed or not v_evidence_controller then
+    raise exception 'F1R2_EVIDENCE_RELINK_DENIED';
+  end if;
+
+  perform set_config('f1r2.verified_evidence_actor_id',p_actor_id::text,true);
+  perform set_config('f1r2.evidence_relink_reason',v_reason,true);
+  update public.evidence_files
+     set project_id=case when v_type='project' then p_item_id end,
+         milestone_id=case when v_type='milestone' then p_item_id end,
+         task_id=case when v_type='task' then p_item_id end,
+         ovr_report_id=case when v_type='ovr' then p_item_id end,
+         audit_finding_id=case when v_type='audit_finding' then p_item_id end,
+         risk_id=case when v_type='risk' then p_item_id end,
+         compliance_item_id=case when v_type='compliance' then p_item_id end,
+         updated_by=p_actor_id
+   where id=p_evidence_file_id;
+  perform set_config('f1r2.verified_evidence_actor_id','',true);
+  perform set_config('f1r2.evidence_relink_reason','',true);
+
+  return jsonb_build_object(
+    'evidence_file_id',p_evidence_file_id,
+    'linked_item_type',v_type,
+    'linked_item_id',p_item_id,
+    'relinked_by',p_actor_id
+  );
+end;
+$$;
+
 create or replace function public.f1r2_sync_evidence_link()
 returns trigger language plpgsql security definer set search_path=pg_catalog,public,pg_temp as $$
 declare
   v_type text; v_id uuid; v_count integer; v_required_closure boolean:=false; v_required_approval boolean:=false;
-  v_old_type text; v_old_id uuid; v_actor_id uuid:=coalesce(new.created_by,new.uploaded_by);
+  v_old_type text; v_old_id uuid; v_actor_id uuid; v_linked_by uuid; v_relink_reason text;
 begin
+  if tg_op='UPDATE' and row(new.project_id,new.milestone_id,new.task_id,new.ovr_report_id,new.audit_finding_id,new.risk_id,new.compliance_item_id)
+     is not distinct from
+     row(old.project_id,old.milestone_id,old.task_id,old.ovr_report_id,old.audit_finding_id,old.risk_id,old.compliance_item_id)
+  then
+    return new;
+  end if;
+  if tg_op='UPDATE' then
+    v_actor_id:=nullif(current_setting('f1r2.verified_evidence_actor_id',true),'')::uuid;
+    v_relink_reason:=nullif(current_setting('f1r2.evidence_relink_reason',true),'');
+  end if;
+  v_linked_by:=coalesce(v_actor_id,new.created_by,new.uploaded_by);
   v_count:=num_nonnulls(new.project_id,new.milestone_id,new.task_id,new.ovr_report_id,new.audit_finding_id,new.risk_id,new.compliance_item_id);
   select l.linked_item_type,l.linked_item_id into v_old_type,v_old_id
   from public.evidence_links l
@@ -1176,7 +1422,7 @@ begin
   select f.required_for_closure,f.required_for_approval into strict v_required_closure,v_required_approval
   from public.f1r2_evidence_requirement_flags(new.organization_id,v_type,v_id) f;
   insert into public.evidence_links(organization_id,evidence_file_id,linked_item_type,linked_item_id,linked_item_title,link_reason,is_primary,required_for_closure,required_for_approval,linked_by)
-  values(new.organization_id,new.id,v_type,v_id,coalesce(new.evidence_title,new.file_name),'canonical upload parent',true,v_required_closure,v_required_approval,coalesce(new.created_by,new.uploaded_by))
+  values(new.organization_id,new.id,v_type,v_id,coalesce(new.evidence_title,new.file_name),case when tg_op='UPDATE' then coalesce(v_relink_reason,'governed canonical relink') else 'canonical upload parent' end,true,v_required_closure,v_required_approval,v_linked_by)
   on conflict(organization_id,evidence_file_id,linked_item_type,linked_item_id) do update
     set is_active=true,is_primary=true,linked_item_title=excluded.linked_item_title,
         required_for_closure=excluded.required_for_closure,required_for_approval=excluded.required_for_approval,
@@ -1199,6 +1445,10 @@ exception when no_data_found or too_many_rows then
     jsonb_build_object('canonical_link_suspended',true,'reason','canonical_parent_not_unique_or_wrong_organization','reconciliation_required',true));
   return new;
 end $$;
+drop trigger if exists trg_f1r2_guard_evidence_parent_change on public.evidence_files;
+create trigger trg_f1r2_guard_evidence_parent_change
+before update of project_id,milestone_id,task_id,ovr_report_id,audit_finding_id,risk_id,compliance_item_id on public.evidence_files
+for each row execute function public.f1r2_guard_evidence_parent_change();
 drop trigger if exists trg_f1r2_sync_evidence_link on public.evidence_files;
 create trigger trg_f1r2_sync_evidence_link after insert or update of project_id,milestone_id,task_id,ovr_report_id,audit_finding_id,risk_id,compliance_item_id on public.evidence_files for each row execute function public.f1r2_sync_evidence_link();
 
@@ -1280,7 +1530,7 @@ begin
     or exists(
       select 1 from public.work_item_assignments a
       where a.organization_id=v_actor.organization_id and a.assignee_id=p_actor_id
-        and a.status in('pending','accepted','legacy_unverified')
+        and a.status in('accepted','legacy_unverified')
         and public.f1r2_work_item_contains(a.item_type,a.item_id,p_item_type,p_item_id)
     )
     or exists(
@@ -1446,6 +1696,7 @@ revoke all on function public.f1r2_create_ovr_report(uuid,jsonb) from public,ano
 revoke all on function public.f1r2_create_corrective_project(uuid,jsonb) from public,anon,authenticated;
 revoke all on function public.f1r2_decide_approval(uuid,uuid,text,text) from public,anon,authenticated;
 revoke all on function public.f1r2_get_evidence_pack(uuid,text,uuid) from public,anon,authenticated;
+revoke all on function public.f1r2_relink_evidence_parent(uuid,uuid,text,uuid,text) from public,anon,authenticated;
 revoke all on function public.f1r2_finalize_corrective_ovr(uuid,uuid,text,public.ovr_severity_level,text,text) from public,anon,authenticated;
 revoke all on function public.acc_v13_update_work_item_status(uuid,text,uuid,text,numeric,text) from public,anon,authenticated;
 revoke all on function public.acc_v13_authorize_evidence_access(uuid,uuid,text) from public,anon,authenticated;
@@ -1468,6 +1719,7 @@ grant execute on function public.f1r2_create_ovr_report(uuid,jsonb) to service_r
 grant execute on function public.f1r2_create_corrective_project(uuid,jsonb) to service_role;
 grant execute on function public.f1r2_decide_approval(uuid,uuid,text,text) to service_role;
 grant execute on function public.f1r2_get_evidence_pack(uuid,text,uuid) to service_role;
+grant execute on function public.f1r2_relink_evidence_parent(uuid,uuid,text,uuid,text) to service_role;
 grant execute on function public.f1r2_finalize_corrective_ovr(uuid,uuid,text,public.ovr_severity_level,text,text) to service_role;
 grant execute on function public.acc_v13_update_work_item_status(uuid,text,uuid,text,numeric,text) to service_role;
 grant execute on function public.acc_v13_authorize_evidence_access(uuid,uuid,text) to service_role;
@@ -1481,6 +1733,7 @@ revoke execute on function public.f1r2_rollup_task_trigger() from public,anon,au
 revoke execute on function public.f1r2_rollup_milestone_trigger() from public,anon,authenticated,service_role;
 revoke execute on function public.f1r2_enforce_project_closure() from public,anon,authenticated,service_role;
 revoke execute on function public.f1r2_sync_evidence_link() from public,anon,authenticated,service_role;
+revoke execute on function public.f1r2_guard_evidence_parent_change() from public,anon,authenticated,service_role;
 revoke execute on function public.f1r2_evidence_requirement_flags(uuid,text,uuid) from public,anon,authenticated,service_role;
 revoke execute on function public.f1r2_guard_corrective_ovr_final_verdict() from public,anon,authenticated,service_role;
 revoke execute on function public.can_close_ovr(uuid) from public,anon,authenticated,service_role;
@@ -1495,6 +1748,7 @@ revoke execute on function public.f1r2_actor_has_ovr_evidence_entitlement(uuid,u
 
 comment on table public.work_item_assignments is 'F1-R2 canonical immutable assignment history for projects, milestones, and tasks.';
 comment on function public.f1r2_finalize_corrective_ovr(uuid,uuid,text,public.ovr_severity_level,text,text) is 'F1-R2 Quality final-verdict path from corrective_action_in_progress; reporter acceptance or dispute remains mandatory.';
+comment on function public.f1r2_relink_evidence_parent(uuid,uuid,text,uuid,text) is 'F1-R2 protected canonical evidence-parent relink with verified actor context and one authoritative audit event.';
 comment on column public.tasks.owner_id is 'Accountable task owner; distinct from the execution assignee when assigned_to differs.';
 comment on column public.tasks.assigned_to is 'Accepted execution assignee; pending proposals remain only in work_item_assignments.';
 

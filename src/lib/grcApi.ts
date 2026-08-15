@@ -2122,6 +2122,20 @@ export function getCanonicalEvidencePack(itemType: 'project' | 'milestone' | 'ta
   return invokePrivilegedAction<EvidenceRow[]>('f1r2_get_evidence_pack', { item_type: itemType, item_id: itemId });
 }
 
+export function relinkCanonicalEvidenceParent(input: {
+  evidence_file_id: string;
+  item_type: 'project' | 'milestone' | 'task' | 'ovr' | 'risk' | 'compliance' | 'audit_finding';
+  item_id: string;
+  reason: string;
+}) {
+  return invokePrivilegedAction<{
+    evidence_file_id: string;
+    linked_item_type: string;
+    linked_item_id: string;
+    relinked_by: string;
+  }>('f1r2_relink_evidence_parent', input);
+}
+
 export function finalizeCorrectiveOvr(input: {
   ovr_report_id: string;
   final_verdict: string;

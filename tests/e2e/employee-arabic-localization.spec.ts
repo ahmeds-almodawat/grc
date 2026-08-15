@@ -549,6 +549,8 @@ test.describe('Patch 83U Phase 1 Employee Arabic localization', () => {
     await expect(dialog.getByRole('button', { name: 'Add Milestone', exact: true })).toHaveCount(0);
     await expect(dialog.getByRole('button', { name: 'Add Task', exact: true })).toHaveCount(0);
     await expect(dialog.getByRole('button', { name: 'Status', exact: true })).toHaveCount(0);
+    await expect(dialog.getByRole('button', { name: 'Evidence', exact: true })).toHaveCount(0);
+    await expect(dialog.getByRole('button', { name: 'Approval', exact: true })).toHaveCount(0);
 
     expect(proof.mutationRequests).toEqual([]);
     expect(proof.pageErrors).toEqual([]);

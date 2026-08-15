@@ -35,7 +35,6 @@ export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps)
   const [activeControl, setActiveControl] = useState<ActiveControl>(null);
   const milestones = useAsyncData(() => getProjectMilestones(project.id), [project.id]);
   const tasks = useAsyncData(() => getProjectTasks(project.id), [project.id]);
-  const evidence = useAsyncData(() => getEvidenceForItem('project', project.id), [project.id]);
   const assignments = useAsyncData(() => getProjectWorkAssignments(project.id), [project.id]);
   const organizationId = project.organization_id ?? null;
   const actorId = auth.session?.user.id;
@@ -56,6 +55,12 @@ export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps)
     && ['accepted', 'legacy_unverified'].includes(projectAssignment.assignment_status),
   );
   const canControlProject = Boolean(actorId && (actorIsAcceptedProjectOwner || actorId === project.sponsor_id || actorId === project.created_by)) || hasManagerAuthority;
+  const projectAssignmentPending = projectAssignment?.assignment_status === 'pending';
+  const canViewProjectEvidence = canControlProject;
+  const evidence = useAsyncData(
+    () => canViewProjectEvidence ? getEvidenceForItem('project', project.id) : Promise.resolve([]),
+    [project.id, canViewProjectEvidence],
+  );
   const personName = (nested?: { full_name_en: string | null; full_name_ar: string | null } | null, assignment?: WorkItemAssignmentSummary) => {
     if (language === 'ar') return nested?.full_name_ar || nested?.full_name_en || assignment?.assignee_name || t('common.unassigned', 'Unassigned');
     return nested?.full_name_en || nested?.full_name_ar || assignment?.assignee_name || t('common.unassigned', 'Unassigned');
@@ -103,6 +108,7 @@ export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps)
             <p>Update the project, upload proof, or request closure/decision approval.</p>
           </div>
           {canControlProject ? <div className="inline-actions"><WorkControlButtons
+            canUpdateStatus={!projectAssignmentPending}
             onStatus={() => setActiveControl({ mode: 'status', itemType: 'project', itemId: project.id, title: project.title, status: project.status, progress: project.progress_percent })}
             onEvidence={() => setActiveControl({ mode: 'evidence', itemType: 'project', itemId: project.id, title: project.title })}
             onApproval={() => setActiveControl({ mode: 'approval', itemType: 'project', itemId: project.id, title: project.title })}

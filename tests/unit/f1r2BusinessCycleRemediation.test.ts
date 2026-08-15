@@ -142,11 +142,24 @@ describe('F1-R2 migration 196 governed contracts', () => {
     expect(closure).toContain("'reporter_decision_required',true");
   });
 
-  it('keeps authenticated assignment RLS row-local and free of protected helpers', () => {
+  it('keeps authenticated assignment RLS non-recursive and requires active profile and credential gates', () => {
     const policy = migration.slice(migration.lastIndexOf('create policy work_item_assignments_exact_read'), migration.indexOf('create or replace function public.f1r2_actor_scope_allows_context'));
-    expect(policy).toContain('assignee_id=auth.uid()');
-    expect(policy).toContain('assigned_by=auth.uid()');
+    expect(policy).toContain('assignee_id=(select auth.uid())');
+    expect(policy).toContain('assigned_by=(select auth.uid())');
     expect(policy).not.toContain('f1r2_actor_can_manage_item');
+    expect(migration).toContain('project_id uuid not null');
+    expect(migration).toContain('constraint work_item_assignments_context_chk');
+    expect(migration).toContain("a.project_id=projects.id");
+    expect(migration).toContain("a.milestone_id=milestones.id");
+    expect(migration).toContain("a.task_id=tasks.id");
+    expect(migration).toContain('create policy work_item_assignments_f1r2_active_actor');
+    expect(migration).toContain('create policy projects_f1r2_active_actor');
+    expect(migration).toContain('create policy milestones_f1r2_active_actor');
+    expect(migration).toContain('create policy tasks_f1r2_active_actor');
+    expect(migration.match(/as restrictive for select to authenticated/g)).toHaveLength(4);
+    expect(migration.match(/\(select public\.patch83u_credential_access_allowed\(\)\)/g)).toHaveLength(4);
+    expect(migration).not.toContain('create or replace function public.f1r2_rls_actor_is_active');
+    expect(migration).not.toContain('create or replace function public.f1r2_rls_can_read_work_item');
   });
 
   it('constrains project creation and corrective routing by exact organizational scope', () => {
@@ -170,6 +183,14 @@ describe('F1-R2 migration 196 governed contracts', () => {
     expect(migration).toContain("set owner_id=case when v_decision='accepted' then p_actor_id end");
     expect(migration).toContain("if v_decision='accepted' and v_assignment.item_type='project'");
     expect(migration).toContain("where id=v_assignment.item_id and status='draft'");
+  });
+
+  it('blocks every ordinary execution status while a project assignment is pending', () => {
+    const updateStatus = migration.slice(migration.indexOf('create or replace function public.acc_v13_update_work_item_status'), migration.indexOf('-- Protected approval decisions'));
+    expect(updateStatus).toContain("v_assignment.status='pending'");
+    expect(updateStatus).toContain("p_status not in ('draft','cancelled')");
+    expect(updateStatus).toContain('F1R2_PENDING_PROJECT_EXECUTION_DENIED');
+    expect(updateStatus.indexOf('F1R2_PENDING_PROJECT_EXECUTION_DENIED')).toBeLessThan(updateStatus.indexOf('F1R2_ASSIGNMENT_ACCEPTANCE_REQUIRED'));
   });
 
   it('authorizes project ownership only from accepted or legacy assignment state', () => {
@@ -243,6 +264,23 @@ describe('F1-R2 migration 196 governed contracts', () => {
     expect(migration).not.toContain("'f1r2_evidence_relinked','evidence_files',new.id,\n      jsonb_build_object('file_path'");
   });
 
+  it('excludes pending and declined assignments from governed evidence entitlement', () => {
+    const entitlement = migration.slice(migration.indexOf('create or replace function public.f1r2_actor_has_work_evidence_entitlement'), migration.indexOf('create or replace function public.f1r2_actor_has_ovr_evidence_entitlement'));
+    expect(entitlement).toContain("a.status in('accepted','legacy_unverified')");
+    expect(entitlement).not.toContain("a.status in('pending','accepted','legacy_unverified')");
+  });
+
+  it('requires a verified service actor for canonical evidence parent mutation and audit attribution', () => {
+    expect(migration).toContain('create or replace function public.f1r2_guard_evidence_parent_change');
+    expect(migration).toContain('F1R2_EVIDENCE_RELINK_SERVICE_ROLE_REQUIRED');
+    expect(migration).toContain("current_setting('f1r2.verified_evidence_actor_id',true)");
+    expect(migration).toContain('create or replace function public.f1r2_relink_evidence_parent');
+    expect(migration).toContain("perform set_config('f1r2.verified_evidence_actor_id',p_actor_id::text,true)");
+    expect(migration).toContain('v_actor_id:=nullif(current_setting');
+    expect(migration).toContain("values(new.organization_id,v_actor_id,'f1r2_evidence_relinked'");
+    expect(migration).toContain('grant execute on function public.f1r2_relink_evidence_parent');
+  });
+
   it('uses one evidence-requirement projection for live sync, backfill, and dynamic packs', () => {
     expect(migration).toContain('create or replace function public.f1r2_evidence_requirement_flags');
     for (const type of ['project', 'milestone', 'task', 'ovr']) expect(migration).toContain(`v_type='${type}'`);
@@ -310,7 +348,7 @@ describe('F1-R2 frontend and Edge contracts', () => {
       'f1r2_create_work_item', 'f1r2_create_ovr_report', 'f1r2_create_corrective_project',
       'f1r2_assign_work_item', 'f1r2_respond_work_item_assignment', 'f1r2_cancel_work_item_assignment', 'f1r2_list_my_work',
       'f1r2_list_item_participants', 'f1r2_list_project_assignments', 'f1r2_search_eligible_participants', 'f1r2_decide_approval',
-      'f1r2_get_evidence_pack', 'f1r2_finalize_corrective_ovr',
+      'f1r2_get_evidence_pack', 'f1r2_relink_evidence_parent', 'f1r2_finalize_corrective_ovr',
     ]) {
       expect(edge).toContain(`'${action}'`);
       expect(api).toContain(`'${action}'`);
@@ -331,6 +369,11 @@ describe('F1-R2 frontend and Edge contracts', () => {
     expect(project).toContain('projectAssignment?.assignee_id === actorId');
     expect(project).toContain('actorId === project.owner_id');
     expect(project).not.toMatch(/canControlProject\s*=.*actorId === project\.owner_id(?![\s\S]*actorIsAcceptedProjectOwner)/);
+    expect(project).toContain("projectAssignment?.assignment_status === 'pending'");
+    expect(project).toContain('canUpdateStatus={!projectAssignmentPending}');
+    expect(project).toContain('canViewProjectEvidence ? getEvidenceForItem');
+    expect(browserProof).toContain("getByRole('button', { name: 'Evidence', exact: true })");
+    expect(browserProof).toContain("getByRole('button', { name: 'Approval', exact: true })");
   });
 
   it('shows scoped manager controls only when their role context matches the project', () => {

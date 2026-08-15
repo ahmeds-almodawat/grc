@@ -272,7 +272,7 @@ describe('Patch 83U authenticated surface release proof', () => {
     expect(report.summary.retained_live_broad_security_definer_count).toBe(2);
     expect(report.summary.target_broad_security_definer_count).toBe(3);
     expect(report.summary.reviewed_patch83u_migration_ceiling).toBe(196);
-    expect(report.summary.reviewed_restricted_security_definer_count).toBe(51);
+    expect(report.summary.reviewed_restricted_security_definer_count).toBe(53);
     expect(report.acl_reachable_security_definer_rpcs.reviewed_restricted_security_definers)
       .toEqual(expect.arrayContaining([
         expect.objectContaining({
@@ -316,6 +316,16 @@ describe('Patch 83U authenticated surface release proof', () => {
         })),
         expect.objectContaining({
           name: 'f1r2_lock_work_item',
+          source: 'migration196_service_role_acl_review',
+          disposition: 'service_role_only',
+        }),
+        expect.objectContaining({
+          name: 'f1r2_guard_evidence_parent_change',
+          source: 'migration196_service_role_acl_review',
+          disposition: 'owner_only',
+        }),
+        expect.objectContaining({
+          name: 'f1r2_relink_evidence_parent',
           source: 'migration196_service_role_acl_review',
           disposition: 'service_role_only',
         }),
