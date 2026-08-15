@@ -193,6 +193,25 @@ describe('F1-R2 migration 196 governed contracts', () => {
     expect(updateStatus.indexOf('F1R2_PENDING_PROJECT_EXECUTION_DENIED')).toBeLessThan(updateStatus.indexOf('F1R2_ASSIGNMENT_ACCEPTANCE_REQUIRED'));
   });
 
+  it('locks terminal work items against assignment and stale responses', () => {
+    const assign = migration.slice(migration.indexOf('create or replace function public.f1r2_assign_work_item'), migration.indexOf('create or replace function public.f1r2_respond_work_item_assignment'));
+    const respond = migration.slice(migration.indexOf('create or replace function public.f1r2_respond_work_item_assignment'), migration.indexOf('create or replace function public.f1r2_cancel_work_item_assignment'));
+    expect(assign).toContain("v_item_status in ('closed','cancelled')");
+    expect(assign).toContain('F1R2_TERMINAL_WORK_ITEM_ASSIGNMENT_DENIED');
+    expect(respond).toContain("v_item_status in ('closed','cancelled')");
+    expect(respond).toContain('F1R2_TERMINAL_WORK_ITEM_RESPONSE_DENIED');
+    expect(respond.indexOf('for update')).toBeLessThan(respond.indexOf("set status=v_decision"));
+  });
+
+  it('atomically cancels a pending project assignment with the project', () => {
+    const updateStatus = migration.slice(migration.indexOf('create or replace function public.acc_v13_update_work_item_status'), migration.indexOf('-- Protected approval decisions'));
+    expect(updateStatus).toContain("p_status='cancelled' and v_assignment.status='pending'");
+    expect(updateStatus).toContain("set status='cancelled',responded_by=p_actor_id");
+    expect(updateStatus).toContain("'f1r2_assignment_cancelled'");
+    expect(updateStatus).toContain("'reason','project_cancelled'");
+    expect(migration).toContain('order by 5 nulls last,3,1;');
+  });
+
   it('authorizes project ownership only from accepted or legacy assignment state', () => {
     expect(migration).toContain("v_project_assignment.status in ('accepted','legacy_unverified')");
     expect(migration).toContain("v_assignment.status not in ('accepted','legacy_unverified')");
@@ -279,6 +298,29 @@ describe('F1-R2 migration 196 governed contracts', () => {
     expect(migration).toContain('v_actor_id:=nullif(current_setting');
     expect(migration).toContain("values(new.organization_id,v_actor_id,'f1r2_evidence_relinked'");
     expect(migration).toContain('grant execute on function public.f1r2_relink_evidence_parent');
+  });
+
+  it('requires independent source and target mutation authority for evidence relink', () => {
+    const helper = migration.slice(migration.indexOf('create or replace function public.f1r2_actor_can_mutate_evidence_parent'), migration.indexOf('-- Parent changes are not ordinary evidence-row edits'));
+    const relink = migration.slice(migration.indexOf('create or replace function public.f1r2_relink_evidence_parent'), migration.indexOf('create or replace function public.f1r2_sync_evidence_link'));
+    expect(helper).toContain("a.status in('accepted','legacy_unverified')");
+    expect(helper).not.toContain("a.status in('pending','accepted','legacy_unverified')");
+    expect(helper).not.toContain("'auditor'");
+    expect(relink).toContain('v_source_allowed:=v_direct_source_allowed');
+    expect(relink).toContain('v_target_allowed:=public.f1r2_actor_can_mutate_evidence_parent');
+    expect(relink).toContain('if not v_source_allowed or not v_target_allowed');
+    expect(relink).toContain('F1R2_EVIDENCE_RELINK_DENIED');
+    expect(relink.indexOf('F1R2_EVIDENCE_RELINK_DENIED')).toBeLessThan(relink.indexOf('update public.evidence_files'));
+  });
+
+  it('limits no-parent reconciliation to mutation-capable governance roles', () => {
+    const relink = migration.slice(migration.indexOf('create or replace function public.f1r2_relink_evidence_parent'), migration.indexOf('create or replace function public.f1r2_sync_evidence_link'));
+    expect(relink).toContain("array['super_admin','governance_admin','compliance_officer']");
+    expect(relink).toContain('F1R2_EVIDENCE_RECONCILIATION_DENIED');
+    expect(relink).toContain("'f1r2_evidence_reconciliation_resolved'");
+    expect(relink).toContain("'reconciliation_reason',v_reconciliation.reason");
+    expect(relink).toContain("perform set_config('f1r2.force_evidence_relink'");
+    expect(migration).toContain('revoke execute on function public.f1r2_actor_can_mutate_evidence_parent');
   });
 
   it('uses one evidence-requirement projection for live sync, backfill, and dynamic packs', () => {

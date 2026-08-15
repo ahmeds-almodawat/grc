@@ -313,11 +313,20 @@ declare
   v_actor public.profiles%rowtype; v_assignee public.profiles%rowtype;
   v_project public.projects%rowtype; v_prior public.work_item_assignments%rowtype;
   v_new public.work_item_assignments%rowtype; v_type text := lower(btrim(coalesce(p_item_type,'')));
-  v_milestone_id uuid;
+  v_milestone_id uuid; v_item_status text;
 begin
   v_actor := public.f1r2_active_actor(p_actor_id);
   if v_type not in ('project','milestone','task') then raise exception 'F1R2_ITEM_TYPE_INVALID'; end if;
   perform public.f1r2_lock_work_item(v_type,p_item_id);
+  if v_type='project' then
+    select p.status::text into v_item_status from public.projects p where p.id=p_item_id for update;
+  elsif v_type='milestone' then
+    select m.status::text into v_item_status from public.milestones m where m.id=p_item_id for update;
+  else
+    select t.status::text into v_item_status from public.tasks t where t.id=p_item_id for update;
+  end if;
+  if not found then raise exception 'F1R2_ITEM_NOT_FOUND'; end if;
+  if v_item_status in ('closed','cancelled') then raise exception 'F1R2_TERMINAL_WORK_ITEM_ASSIGNMENT_DENIED'; end if;
   v_project := public.f1r2_resolve_project(v_type,p_item_id);
   if v_project.id is null or v_project.organization_id <> v_actor.organization_id then raise exception 'F1R2_ITEM_NOT_FOUND'; end if;
   if not public.f1r2_actor_can_manage_item(p_actor_id,v_type,p_item_id) then raise exception 'F1R2_ASSIGNMENT_NOT_AUTHORIZED'; end if;
@@ -375,17 +384,28 @@ as $$
 declare
   v_actor public.profiles%rowtype; v_assignment public.work_item_assignments%rowtype;
   v_decision text:=lower(btrim(coalesce(p_decision,''))); v_reason text:=nullif(btrim(coalesce(p_decline_reason,'')),'');
-  v_old_status text; v_item_type text; v_item_id uuid;
+  v_old_status text; v_item_type text; v_item_id uuid; v_item_status text;
 begin
   v_actor := public.f1r2_active_actor(p_actor_id);
   select item_type,item_id into v_item_type,v_item_id from public.work_item_assignments where id=p_assignment_id;
   if not found then raise exception 'F1R2_ASSIGNMENT_NOT_FOUND'; end if;
   perform public.f1r2_lock_work_item(v_item_type,v_item_id);
+  if v_item_type='project' then
+    select p.status::text into v_item_status from public.projects p where p.id=v_item_id for update;
+  elsif v_item_type='milestone' then
+    select m.status::text into v_item_status from public.milestones m where m.id=v_item_id for update;
+  elsif v_item_type='task' then
+    select t.status::text into v_item_status from public.tasks t where t.id=v_item_id for update;
+  else
+    raise exception 'F1R2_ITEM_TYPE_INVALID';
+  end if;
+  if not found then raise exception 'F1R2_ITEM_NOT_FOUND'; end if;
   select * into v_assignment from public.work_item_assignments where id=p_assignment_id for update;
   if not found or v_assignment.organization_id<>v_actor.organization_id then raise exception 'F1R2_ASSIGNMENT_NOT_FOUND'; end if;
   if v_assignment.assignee_id<>p_actor_id then raise exception 'F1R2_ONLY_ASSIGNEE_MAY_RESPOND'; end if;
   if v_decision not in ('accepted','declined') then raise exception 'F1R2_ASSIGNMENT_DECISION_INVALID'; end if;
   if v_decision='declined' and v_reason is null then raise exception 'F1R2_DECLINE_REASON_REQUIRED'; end if;
+  if v_item_status in ('closed','cancelled') then raise exception 'F1R2_TERMINAL_WORK_ITEM_RESPONSE_DENIED'; end if;
   if v_assignment.status=v_decision then
     return jsonb_build_object('id',v_assignment.id,'status',v_assignment.status,'replayed',true);
   end if;
@@ -477,7 +497,7 @@ begin
   from public.work_item_assignments a join public.tasks t on a.item_type='task' and t.id=a.item_id join public.projects p on p.id=t.project_id
   left join public.departments d on d.id=p.department_id left join public.profiles ab on ab.id=a.assigned_by
   where a.assignee_id=p_actor_id and a.status in ('pending','accepted','declined','legacy_unverified') and t.status not in ('closed','cancelled','approved')
-  order by due_date nulls last,item_type,id;
+  order by 5 nulls last,3,1;
 end;
 $$;
 
@@ -1020,10 +1040,20 @@ as $$
 declare
   v_actor public.profiles%rowtype; v_project public.projects%rowtype; v_assignment public.work_item_assignments%rowtype;
   v_milestone public.milestones%rowtype; v_old jsonb; v_new jsonb;
-  v_type text:=lower(btrim(coalesce(p_item_type,''))); v_child_count integer;
+  v_type text:=lower(btrim(coalesce(p_item_type,''))); v_child_count integer; v_current_status text;
 begin
   v_actor:=public.f1r2_active_actor(p_actor_id);
   perform public.f1r2_lock_work_item(v_type,p_item_id);
+  if v_type='project' then
+    select p.status::text into v_current_status from public.projects p where p.id=p_item_id for update;
+  elsif v_type='milestone' then
+    select m.status::text into v_current_status from public.milestones m where m.id=p_item_id for update;
+  elsif v_type='task' then
+    select t.status::text into v_current_status from public.tasks t where t.id=p_item_id for update;
+  else
+    raise exception 'F1R2_ITEM_TYPE_INVALID';
+  end if;
+  if not found then raise exception 'F1R2_ITEM_NOT_FOUND'; end if;
   v_project:=public.f1r2_resolve_project(v_type,p_item_id);
   select * into v_assignment from public.work_item_assignments
   where item_type=v_type and item_id=p_item_id and status in('pending','accepted','declined','legacy_unverified')
@@ -1052,7 +1082,22 @@ begin
     if v_old->>'status'=p_status and p_status='closed' then
       return jsonb_build_object('item_type',v_type,'item_id',p_item_id,'status',v_old->>'status','progress_percent',(v_old->>'progress_percent')::numeric,'record',v_old,'replayed',true);
     end if;
-    update public.projects set status=p_status::public.project_status,progress_percent=case when v_child_count>0 then progress_percent when p_status='closed' then 100 else p_progress_percent end,delay_reason=case when p_status='delayed' then nullif(btrim(p_delay_reason),'') end,updated_by=p_actor_id where id=p_item_id returning to_jsonb(projects) into v_new;
+    update public.projects
+       set status=p_status::public.project_status,
+           progress_percent=case when v_child_count>0 then progress_percent when p_status='closed' then 100 else p_progress_percent end,
+           delay_reason=case when p_status='delayed' then nullif(btrim(p_delay_reason),'') end,
+           owner_id=case when p_status='cancelled' and v_assignment.status='pending' then null else owner_id end,
+           updated_by=p_actor_id
+     where id=p_item_id returning to_jsonb(projects) into v_new;
+    if p_status='cancelled' and v_assignment.status='pending' then
+      update public.work_item_assignments
+         set status='cancelled',responded_by=p_actor_id,responded_at=statement_timestamp(),updated_at=statement_timestamp()
+       where id=v_assignment.id and status='pending';
+      insert into public.audit_logs(organization_id,actor_id,action,table_name,record_id,old_data,new_data)
+      values(v_actor.organization_id,p_actor_id,'f1r2_assignment_cancelled','work_item_assignments',v_assignment.id,
+        jsonb_build_object('status','pending'),
+        jsonb_build_object('status','cancelled','reason','project_cancelled','project_id',p_item_id));
+    end if;
   elsif v_type='milestone' then
     if p_status not in ('not_started','in_progress','at_risk','delayed','evidence_submitted','approved','rejected','closed','cancelled') then raise exception 'F1R2_STATUS_INVALID'; end if;
     select count(*) into v_child_count from public.tasks where milestone_id=p_item_id and status<>'cancelled';
@@ -1217,6 +1262,69 @@ begin
 end;
 $$;
 
+-- Evidence parent mutation is deliberately narrower than evidence read
+-- entitlement.  Pending assignees, approver-only users, and auditor-only
+-- users never satisfy this predicate.  An accepted/legacy-compatible
+-- assignee may correct evidence only for the exact assigned work item.
+create or replace function public.f1r2_actor_can_mutate_evidence_parent(
+  p_actor_id uuid,p_item_type text,p_item_id uuid
+)
+returns boolean
+language plpgsql
+stable
+security invoker
+set search_path=pg_catalog,public,pg_temp
+as $$
+declare
+  v_actor public.profiles%rowtype;
+  v_project public.projects%rowtype;
+  v_ovr public.ovr_reports%rowtype;
+  v_type text:=lower(btrim(coalesce(p_item_type,'')));
+  v_organization_id uuid; v_division_id uuid; v_department_id uuid; v_unit_id uuid;
+begin
+  v_actor:=public.f1r2_active_actor(p_actor_id);
+  if v_type in('project','milestone','task') then
+    v_project:=public.f1r2_resolve_project(v_type,p_item_id);
+    if v_project.id is null or v_project.organization_id<>v_actor.organization_id then return false; end if;
+    return public.f1r2_actor_can_manage_item(p_actor_id,v_type,p_item_id)
+      or exists(
+        select 1 from public.work_item_assignments a
+        where a.organization_id=v_actor.organization_id
+          and a.item_type=v_type and a.item_id=p_item_id
+          and a.assignee_id=p_actor_id
+          and a.status in('accepted','legacy_unverified')
+      );
+  elsif v_type='ovr' then
+    select * into v_ovr from public.ovr_reports o where o.id=p_item_id;
+    if not found or v_ovr.organization_id<>v_actor.organization_id then return false; end if;
+    return coalesce(p_actor_id in(v_ovr.reported_by,v_ovr.owner_id,v_ovr.supervisor_id,v_ovr.quality_reviewer_id),false)
+      or public.f1r2_actor_scope_allows_context(
+        p_actor_id,v_ovr.organization_id,v_ovr.division_id,v_ovr.department_id,v_ovr.unit_id,
+        array['super_admin','governance_admin','compliance_officer','division_head','department_manager']
+      );
+  elsif v_type='risk' then
+    select r.organization_id,r.division_id,r.department_id,r.unit_id
+      into v_organization_id,v_division_id,v_department_id,v_unit_id
+    from public.risks r where r.id=p_item_id;
+  elsif v_type='compliance' then
+    select c.organization_id,c.division_id,c.department_id,c.unit_id
+      into v_organization_id,v_division_id,v_department_id,v_unit_id
+    from public.compliance_items c where c.id=p_item_id;
+  elsif v_type='audit_finding' then
+    select a.organization_id,a.division_id,a.department_id,a.unit_id
+      into v_organization_id,v_division_id,v_department_id,v_unit_id
+    from public.audit_findings a where a.id=p_item_id;
+  else
+    return false;
+  end if;
+  if not found or v_organization_id<>v_actor.organization_id then return false; end if;
+  return public.f1r2_actor_scope_allows_context(
+    p_actor_id,v_organization_id,v_division_id,v_department_id,v_unit_id,
+    array['super_admin','governance_admin','compliance_officer','division_head','department_manager']
+  );
+end;
+$$;
+
 -- Parent changes are not ordinary evidence-row edits.  Only the verified
 -- service bridge may establish the transaction-local actor used by the
 -- canonical-link trigger and audit trail.
@@ -1233,6 +1341,7 @@ begin
   if row(new.project_id,new.milestone_id,new.task_id,new.ovr_report_id,new.audit_finding_id,new.risk_id,new.compliance_item_id)
      is not distinct from
      row(old.project_id,old.milestone_id,old.task_id,old.ovr_report_id,old.audit_finding_id,old.risk_id,old.compliance_item_id)
+     and coalesce(current_setting('f1r2.force_evidence_relink',true),'')<>'true'
   then
     return new;
   end if;
@@ -1270,14 +1379,22 @@ as $$
 declare
   v_actor public.profiles%rowtype;
   v_evidence public.evidence_files%rowtype;
+  v_reconciliation public.f1r2_evidence_link_reconciliation%rowtype;
   v_type text:=lower(btrim(coalesce(p_item_type,'')));
   v_reason text:=nullif(btrim(coalesce(p_reason,'')),'');
+  v_source_type text;
+  v_source_id uuid;
+  v_source_count integer:=0;
   v_target_organization_id uuid;
   v_division_id uuid;
   v_department_id uuid;
   v_unit_id uuid;
   v_target_allowed boolean:=false;
-  v_evidence_controller boolean:=false;
+  v_source_allowed boolean:=false;
+  v_direct_source_allowed boolean:=false;
+  v_reconciliation_allowed boolean:=false;
+  v_is_reconciliation boolean:=false;
+  v_now timestamptz:=statement_timestamp();
 begin
   v_actor:=public.f1r2_active_actor(p_actor_id);
   if v_type not in ('project','milestone','task','ovr','risk','compliance','audit_finding') or p_item_id is null then
@@ -1297,7 +1414,7 @@ begin
   if v_evidence.locked_at is not null then
     raise exception 'F1R2_EVIDENCE_RELINK_LOCKED';
   end if;
-  v_evidence_controller:=coalesce(
+  v_direct_source_allowed:=coalesce(
     p_actor_id in(v_evidence.uploaded_by,v_evidence.created_by,v_evidence.evidence_owner_id,v_evidence.reviewer_id,v_evidence.reviewed_by),
     false
   );
@@ -1335,28 +1452,63 @@ begin
     raise exception 'F1R2_EVIDENCE_RELINK_TARGET_INVALID';
   end if;
 
-  if v_type in ('project','milestone','task') then
-    v_target_allowed:=public.f1r2_actor_has_work_evidence_entitlement(p_actor_id,v_type,p_item_id);
-    v_evidence_controller:=v_evidence_controller or public.f1r2_actor_can_manage_item(p_actor_id,v_type,p_item_id);
-  elsif v_type='ovr' then
-    v_target_allowed:=public.f1r2_actor_has_ovr_evidence_entitlement(p_actor_id,p_item_id);
-    v_evidence_controller:=v_evidence_controller or public.f1r2_actor_scope_allows_context(
+  -- The evidence row lock serializes every governed relink for this file.
+  -- Resolve the current active canonical source independently of the target.
+  select count(*)::integer into v_source_count
+  from public.evidence_links l
+  where l.evidence_file_id=v_evidence.id and l.organization_id=v_evidence.organization_id
+    and l.is_primary=true and l.is_active=true;
+
+  if v_source_count=1 then
+    select l.linked_item_type,l.linked_item_id into v_source_type,v_source_id
+    from public.evidence_links l
+    where l.evidence_file_id=v_evidence.id and l.organization_id=v_evidence.organization_id
+      and l.is_primary=true and l.is_active=true
+    for update;
+    if not (
+      (v_source_type='project' and v_evidence.project_id=v_source_id)
+      or (v_source_type='milestone' and v_evidence.milestone_id=v_source_id)
+      or (v_source_type='task' and v_evidence.task_id=v_source_id)
+      or (v_source_type='ovr' and v_evidence.ovr_report_id=v_source_id)
+      or (v_source_type='risk' and v_evidence.risk_id=v_source_id)
+      or (v_source_type='compliance' and v_evidence.compliance_item_id=v_source_id)
+      or (v_source_type='audit_finding' and v_evidence.audit_finding_id=v_source_id)
+    ) then
+      raise exception 'F1R2_EVIDENCE_CANONICAL_SOURCE_MISMATCH';
+    end if;
+    v_source_allowed:=v_direct_source_allowed
+      or public.f1r2_actor_can_mutate_evidence_parent(p_actor_id,v_source_type,v_source_id);
+    v_target_allowed:=public.f1r2_actor_can_mutate_evidence_parent(p_actor_id,v_type,p_item_id);
+    if not v_source_allowed or not v_target_allowed then
+      raise exception 'F1R2_EVIDENCE_RELINK_DENIED';
+    end if;
+    if (v_source_type,v_source_id) is not distinct from (v_type,p_item_id) then
+      return jsonb_build_object(
+        'evidence_file_id',p_evidence_file_id,'linked_item_type',v_type,'linked_item_id',p_item_id,
+        'relinked_by',p_actor_id,'replayed',true
+      );
+    end if;
+  elsif v_source_count=0 then
+    select * into v_reconciliation
+    from public.f1r2_evidence_link_reconciliation r
+    where r.evidence_file_id=v_evidence.id and r.organization_id=v_evidence.organization_id
+    for update;
+    if not found then raise exception 'F1R2_EVIDENCE_RECONCILIATION_REQUIRED'; end if;
+    v_is_reconciliation:=true;
+    v_reconciliation_allowed:=public.f1r2_actor_scope_allows_context(
       p_actor_id,v_target_organization_id,v_division_id,v_department_id,v_unit_id,
-      array['super_admin','governance_admin','compliance_officer','auditor']
+      array['super_admin','governance_admin','compliance_officer']
     );
+    if not v_reconciliation_allowed then
+      raise exception 'F1R2_EVIDENCE_RECONCILIATION_DENIED';
+    end if;
   else
-    v_target_allowed:=public.f1r2_actor_scope_allows_context(
-      p_actor_id,v_target_organization_id,v_division_id,v_department_id,v_unit_id,
-      array['super_admin','governance_admin','compliance_officer','auditor','division_head','department_manager']
-    );
-    v_evidence_controller:=v_evidence_controller or v_target_allowed;
-  end if;
-  if not v_target_allowed or not v_evidence_controller then
-    raise exception 'F1R2_EVIDENCE_RELINK_DENIED';
+    raise exception 'F1R2_EVIDENCE_CANONICAL_SOURCE_AMBIGUOUS';
   end if;
 
   perform set_config('f1r2.verified_evidence_actor_id',p_actor_id::text,true);
   perform set_config('f1r2.evidence_relink_reason',v_reason,true);
+  perform set_config('f1r2.force_evidence_relink',case when v_is_reconciliation then 'true' else 'false' end,true);
   update public.evidence_files
      set project_id=case when v_type='project' then p_item_id end,
          milestone_id=case when v_type='milestone' then p_item_id end,
@@ -1369,12 +1521,30 @@ begin
    where id=p_evidence_file_id;
   perform set_config('f1r2.verified_evidence_actor_id','',true);
   perform set_config('f1r2.evidence_relink_reason','',true);
+  perform set_config('f1r2.force_evidence_relink','',true);
+
+  if v_is_reconciliation then
+    insert into public.audit_logs(organization_id,actor_id,action,table_name,record_id,old_data,new_data)
+    values(v_actor.organization_id,p_actor_id,'f1r2_evidence_reconciliation_resolved','evidence_files',v_evidence.id,
+      jsonb_build_object(
+        'reconciliation_reason',v_reconciliation.reason,
+        'detected_at',v_reconciliation.detected_at,
+        'resolved_at',v_reconciliation.resolved_at,
+        'active_canonical_parent_count',0
+      ),
+      jsonb_build_object(
+        'parent_type',v_type,'parent_id',p_item_id,'reason',v_reason,
+        'resolved_at',v_now,'active_canonical_parent_count',1
+      ));
+  end if;
 
   return jsonb_build_object(
     'evidence_file_id',p_evidence_file_id,
     'linked_item_type',v_type,
     'linked_item_id',p_item_id,
-    'relinked_by',p_actor_id
+    'relinked_by',p_actor_id,
+    'reconciliation_resolved',v_is_reconciliation,
+    'replayed',false
   );
 end;
 $$;
@@ -1388,6 +1558,7 @@ begin
   if tg_op='UPDATE' and row(new.project_id,new.milestone_id,new.task_id,new.ovr_report_id,new.audit_finding_id,new.risk_id,new.compliance_item_id)
      is not distinct from
      row(old.project_id,old.milestone_id,old.task_id,old.ovr_report_id,old.audit_finding_id,old.risk_id,old.compliance_item_id)
+     and coalesce(current_setting('f1r2.force_evidence_relink',true),'')<>'true'
   then
     return new;
   end if;
@@ -1431,7 +1602,7 @@ begin
     insert into public.audit_logs(organization_id,actor_id,action,table_name,record_id,old_data,new_data)
     values(new.organization_id,v_actor_id,'f1r2_evidence_relinked','evidence_files',new.id,
       jsonb_build_object('parent_type',v_old_type,'parent_id',v_old_id),
-      jsonb_build_object('parent_type',v_type,'parent_id',v_id));
+      jsonb_build_object('parent_type',v_type,'parent_id',v_id,'reason',v_relink_reason,'relinked_at',statement_timestamp()));
   end if;
   delete from public.f1r2_evidence_link_reconciliation where evidence_file_id=new.id;
   return new;
@@ -1745,6 +1916,7 @@ revoke execute on function public.f1r2_can_close_work_item(text,uuid) from publi
 revoke execute on function public.f1r2_work_item_contains(text,uuid,text,uuid) from public,anon,authenticated,service_role;
 revoke execute on function public.f1r2_actor_has_work_evidence_entitlement(uuid,text,uuid) from public,anon,authenticated,service_role;
 revoke execute on function public.f1r2_actor_has_ovr_evidence_entitlement(uuid,uuid) from public,anon,authenticated,service_role;
+revoke execute on function public.f1r2_actor_can_mutate_evidence_parent(uuid,text,uuid) from public,anon,authenticated,service_role;
 
 comment on table public.work_item_assignments is 'F1-R2 canonical immutable assignment history for projects, milestones, and tasks.';
 comment on function public.f1r2_finalize_corrective_ovr(uuid,uuid,text,public.ovr_severity_level,text,text) is 'F1-R2 Quality final-verdict path from corrective_action_in_progress; reporter acceptance or dispute remains mandatory.';

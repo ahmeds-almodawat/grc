@@ -31,7 +31,8 @@ select id,'authenticated','authenticated',email,'',now(),'{"credential_version":
   (pg_temp.f2_uuid(10),'p1@example.test'),(pg_temp.f2_uuid(11),'p2@example.test'),
   (pg_temp.f2_uuid(12),'p3@example.test'),(pg_temp.f2_uuid(13),'p4@example.test'),
   (pg_temp.f2_uuid(14),'p5@example.test'),(pg_temp.f2_uuid(15),'other@example.test'),
-  (pg_temp.f2_uuid(16),'p6@example.test'),(pg_temp.f2_uuid(17),'p7@example.test')
+  (pg_temp.f2_uuid(16),'p6@example.test'),(pg_temp.f2_uuid(17),'p7@example.test'),
+  (pg_temp.f2_uuid(18),'auditor@example.test'),(pg_temp.f2_uuid(19),'approver-only@example.test')
 ) u(id,email);
 insert into public.profiles(id,organization_id,employee_no,full_name_en,email,is_active,user_status)
 select id,case when id=pg_temp.f2_uuid(15) then pg_temp.f2_uuid(2) else pg_temp.f2_uuid(1) end,'F2-'||right(id::text,4),name,email,true,'active'
@@ -39,13 +40,14 @@ from (values
   (pg_temp.f2_uuid(10),'Reporter P1','p1@example.test'),(pg_temp.f2_uuid(11),'Quality P2','p2@example.test'),
   (pg_temp.f2_uuid(12),'Owner P3','p3@example.test'),(pg_temp.f2_uuid(13),'Approver P4','p4@example.test'),
   (pg_temp.f2_uuid(14),'Unrelated P5','p5@example.test'),(pg_temp.f2_uuid(15),'Other org','other@example.test'),
-  (pg_temp.f2_uuid(16),'Admin P6','p6@example.test'),(pg_temp.f2_uuid(17),'Milestone owner P7','p7@example.test')
+  (pg_temp.f2_uuid(16),'Admin P6','p6@example.test'),(pg_temp.f2_uuid(17),'Milestone owner P7','p7@example.test'),
+  (pg_temp.f2_uuid(18),'Read-only auditor','auditor@example.test'),(pg_temp.f2_uuid(19),'Approver only','approver-only@example.test')
 ) p(id,name,email);
 insert into public.user_credential_states(user_id,organization_id,auth_email,identity_mode,credential_state,requested_lifecycle,credential_version)
 select id,organization_id,lower(email),'legacy_verified','active','active',1 from public.profiles where id::text like 'f1960000-%'
 on conflict(user_id) do update set organization_id=excluded.organization_id,auth_email=excluded.auth_email,identity_mode=excluded.identity_mode,credential_state=excluded.credential_state,requested_lifecycle=excluded.requested_lifecycle,credential_version=excluded.credential_version;
 insert into auth.sessions(id,user_id,created_at,updated_at)
-select pg_temp.f2_uuid(1000+n),pg_temp.f2_uuid(10+n),now(),now() from generate_series(0,7) n;
+select pg_temp.f2_uuid(1000+n),pg_temp.f2_uuid(10+n),now(),now() from generate_series(0,9) n;
 -- Exercise the assignment RLS together with the real enforced Patch83U JWT,
 -- session, profile, and credential gates.  The transaction rolls this back.
 set local session_replication_role=replica;
@@ -81,7 +83,10 @@ insert into public.user_roles(user_id,role,scope,organization_id,department_id,i
   (pg_temp.f2_uuid(14),'employee','assigned_only',pg_temp.f2_uuid(1),null,true),
   (pg_temp.f2_uuid(15),'employee','assigned_only',pg_temp.f2_uuid(2),null,true),
   (pg_temp.f2_uuid(16),'super_admin','global',pg_temp.f2_uuid(1),null,true),
-  (pg_temp.f2_uuid(17),'milestone_owner','assigned_only',pg_temp.f2_uuid(1),null,true);
+  (pg_temp.f2_uuid(17),'milestone_owner','assigned_only',pg_temp.f2_uuid(1),null,true),
+  (pg_temp.f2_uuid(18),'auditor','global',pg_temp.f2_uuid(1),null,true),
+  (pg_temp.f2_uuid(19),'employee','assigned_only',pg_temp.f2_uuid(1),null,true),
+  (pg_temp.f2_uuid(19),'executive','global',pg_temp.f2_uuid(1),null,true);
 set local session_replication_role=origin;
 
 select throws_ok($$select public.f1r2_create_ovr_report(pg_temp.f2_uuid(10),jsonb_build_object('department_id',pg_temp.f2_uuid(23),'brief_description','Cross-org department','status','submitted'))$$,'F1R2_OVR_DEPARTMENT_INVALID','cross-organization OVR department is denied');
@@ -215,6 +220,59 @@ set local role authenticated;
 select is((select count(*)::integer from public.ovr_reports where logging_number='F2-OVR'),0,'corrective-project assignment does not expose source OVR and fails closed');
 reset role;
 select pg_catalog.set_config('request.jwt.claim.role','service_role',true);
+
+-- Terminal assignment guards and atomic pending-project cancellation.
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'project',jsonb_build_object('title','Terminal container project','department_id',pg_temp.f2_uuid(21)))$$,'terminal fixture container is created');
+select lives_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(11),'project',(select id from public.projects where title='Terminal container project'),'active',0,null)$$,'terminal fixture container is activated');
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'project',jsonb_build_object('title','Closed assignment project','department_id',pg_temp.f2_uuid(21),'owner_id',pg_temp.f2_uuid(12)))$$,'closed project begins with a pending assignment');
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'project',jsonb_build_object('title','Cancelled assignment project','department_id',pg_temp.f2_uuid(21),'owner_id',pg_temp.f2_uuid(12)))$$,'cancelled project begins with a pending assignment');
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'project',jsonb_build_object('title','Atomic cancellation project','department_id',pg_temp.f2_uuid(21),'owner_id',pg_temp.f2_uuid(12)))$$,'atomic cancellation project begins pending');
+set local session_replication_role=replica;
+update public.projects set status='closed',updated_by=pg_temp.f2_uuid(11) where title='Closed assignment project';
+update public.projects set status='cancelled',updated_by=pg_temp.f2_uuid(11) where title='Cancelled assignment project';
+set local session_replication_role=origin;
+select throws_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(11),'project',(select id from public.projects where title='Closed assignment project'),pg_temp.f2_uuid(14),'terminal assignment')$$,'F1R2_TERMINAL_WORK_ITEM_ASSIGNMENT_DENIED','closed project rejects a new assignment');
+select throws_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(11),'project',(select id from public.projects where title='Closed assignment project'),pg_temp.f2_uuid(13),'terminal reassignment')$$,'F1R2_TERMINAL_WORK_ITEM_ASSIGNMENT_DENIED','closed project rejects reassignment');
+select throws_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(12),(select id from public.work_item_assignments where item_type='project' and item_id=(select id from public.projects where title='Closed assignment project')),'accepted',null)$$,'F1R2_TERMINAL_WORK_ITEM_RESPONSE_DENIED','closed project rejects a stale pending response');
+select throws_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(11),'project',(select id from public.projects where title='Cancelled assignment project'),pg_temp.f2_uuid(14),'terminal assignment')$$,'F1R2_TERMINAL_WORK_ITEM_ASSIGNMENT_DENIED','cancelled project rejects a new assignment');
+select throws_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(11),'project',(select id from public.projects where title='Cancelled assignment project'),pg_temp.f2_uuid(13),'terminal reassignment')$$,'F1R2_TERMINAL_WORK_ITEM_ASSIGNMENT_DENIED','cancelled project rejects reassignment');
+select throws_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(12),(select id from public.work_item_assignments where item_type='project' and item_id=(select id from public.projects where title='Cancelled assignment project')),'declined','terminal')$$,'F1R2_TERMINAL_WORK_ITEM_RESPONSE_DENIED','cancelled project rejects a stale pending response');
+
+select lives_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(11),'project',(select id from public.projects where title='Atomic cancellation project'),'cancelled',0,null)$$,'authorized controller atomically cancels a pending project');
+select is((select status::text from public.projects where title='Atomic cancellation project'),'cancelled','pending project becomes cancelled');
+select is((select status from public.work_item_assignments where item_type='project' and item_id=(select id from public.projects where title='Atomic cancellation project')),'cancelled','project cancellation cancels the pending assignment in the same transaction');
+select is((select owner_id from public.projects where title='Atomic cancellation project'),null::uuid,'project cancellation leaves no installed owner');
+select is((select count(*)::integer from public.f1r2_list_my_work(pg_temp.f2_uuid(12)) where title='Atomic cancellation project'),0,'cancelled proposal disappears from assignee My Work');
+select throws_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(12),(select id from public.work_item_assignments where item_type='project' and item_id=(select id from public.projects where title='Atomic cancellation project')),'accepted',null)$$,'F1R2_TERMINAL_WORK_ITEM_RESPONSE_DENIED','cancelled project assignment cannot be accepted by ID');
+select is((select count(*)::integer from public.audit_logs where action='f1r2_assignment_cancelled' and record_id=(select id from public.work_item_assignments where item_type='project' and item_id=(select id from public.projects where title='Atomic cancellation project'))),1,'project cancellation emits one linked assignment-cancellation audit event');
+
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'milestone',jsonb_build_object('project_id',(select id from public.projects where title='Terminal container project'),'title','Closed assignment milestone','owner_id',pg_temp.f2_uuid(17)))$$,'closed milestone begins pending');
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'milestone',jsonb_build_object('project_id',(select id from public.projects where title='Terminal container project'),'title','Cancelled assignment milestone','owner_id',pg_temp.f2_uuid(17)))$$,'cancelled milestone begins pending');
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'milestone',jsonb_build_object('project_id',(select id from public.projects where title='Terminal container project'),'title','Terminal task container'))$$,'terminal task container milestone is created');
+set local session_replication_role=replica;
+update public.milestones set status='closed',updated_by=pg_temp.f2_uuid(11) where title='Closed assignment milestone';
+update public.milestones set status='cancelled',updated_by=pg_temp.f2_uuid(11) where title='Cancelled assignment milestone';
+set local session_replication_role=origin;
+select throws_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(11),'milestone',(select id from public.milestones where title='Closed assignment milestone'),pg_temp.f2_uuid(14),'terminal assignment')$$,'F1R2_TERMINAL_WORK_ITEM_ASSIGNMENT_DENIED','closed milestone rejects assignment');
+select throws_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(17),(select id from public.work_item_assignments where item_type='milestone' and item_id=(select id from public.milestones where title='Closed assignment milestone')),'accepted',null)$$,'F1R2_TERMINAL_WORK_ITEM_RESPONSE_DENIED','closed milestone rejects response');
+select throws_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(11),'milestone',(select id from public.milestones where title='Cancelled assignment milestone'),pg_temp.f2_uuid(14),'terminal assignment')$$,'F1R2_TERMINAL_WORK_ITEM_ASSIGNMENT_DENIED','cancelled milestone rejects assignment');
+select throws_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(17),(select id from public.work_item_assignments where item_type='milestone' and item_id=(select id from public.milestones where title='Cancelled assignment milestone')),'declined','terminal')$$,'F1R2_TERMINAL_WORK_ITEM_RESPONSE_DENIED','cancelled milestone rejects response');
+
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'task',jsonb_build_object('project_id',(select id from public.projects where title='Terminal container project'),'milestone_id',(select id from public.milestones where title='Terminal task container'),'title','Closed assignment task','assigned_to',pg_temp.f2_uuid(14)))$$,'closed task begins pending');
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'task',jsonb_build_object('project_id',(select id from public.projects where title='Terminal container project'),'milestone_id',(select id from public.milestones where title='Terminal task container'),'title','Cancelled assignment task','assigned_to',pg_temp.f2_uuid(14)))$$,'cancelled task begins pending');
+set local session_replication_role=replica;
+update public.tasks set status='closed',updated_by=pg_temp.f2_uuid(11) where title='Closed assignment task';
+update public.tasks set status='cancelled',updated_by=pg_temp.f2_uuid(11) where title='Cancelled assignment task';
+update public.work_item_assignments set status='legacy_unverified' where item_type='task' and item_id=(select id from public.tasks where title='Closed assignment task');
+set local session_replication_role=origin;
+select throws_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(11),'task',(select id from public.tasks where title='Closed assignment task'),pg_temp.f2_uuid(13),'terminal assignment')$$,'F1R2_TERMINAL_WORK_ITEM_ASSIGNMENT_DENIED','closed task rejects assignment');
+select throws_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(14),(select id from public.work_item_assignments where item_type='task' and item_id=(select id from public.tasks where title='Closed assignment task')),'accepted',null)$$,'F1R2_TERMINAL_WORK_ITEM_RESPONSE_DENIED','terminal legacy-unverified task cannot fabricate acknowledgement');
+select throws_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(11),'task',(select id from public.tasks where title='Cancelled assignment task'),pg_temp.f2_uuid(13),'terminal assignment')$$,'F1R2_TERMINAL_WORK_ITEM_ASSIGNMENT_DENIED','cancelled task rejects assignment');
+select throws_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(14),(select id from public.work_item_assignments where item_type='task' and item_id=(select id from public.tasks where title='Cancelled assignment task')),'declined','terminal')$$,'F1R2_TERMINAL_WORK_ITEM_RESPONSE_DENIED','cancelled task rejects response');
+
+select lives_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(11),'project',(select id from public.projects where title='Cancelled assignment project'),'draft',0,null)$$,'governed reopen moves the cancelled project out of terminal state');
+select lives_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(11),'project',(select id from public.projects where title='Cancelled assignment project'),pg_temp.f2_uuid(13),'post-reopen assignment')$$,'assignment succeeds only after governed reopen');
+select is((select status from public.work_item_assignments where item_type='project' and item_id=(select id from public.projects where title='Cancelled assignment project') order by assigned_at desc,id desc limit 1),'pending','post-reopen assignment is a new pending proposal');
 
 select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(12),'milestone',jsonb_build_object('project_id',(select id from public.projects where title='F2 Corrective project'),'title','M1','owner_id',pg_temp.f2_uuid(12),'start_date','2026-08-15','due_date','2026-08-25','evidence_required',true))$$,'M1 schedule creation succeeds');
 select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(12),'milestone',jsonb_build_object('project_id',(select id from public.projects where title='F2 Corrective project'),'title','M2','owner_id',pg_temp.f2_uuid(12),'start_date','2026-08-16','due_date','2026-08-26','evidence_required',true))$$,'M2 schedule creation succeeds');
@@ -427,6 +485,67 @@ select is((select count(*)::integer from public.audit_logs where record_id=pg_te
 select is((select actor_id from public.audit_logs where record_id=pg_temp.f2_uuid(107) and action='f1r2_evidence_link_reconciliation_required'),pg_temp.f2_uuid(11),'governed ambiguous transition retains the verified P2 actor');
 select lives_ok($$select public.f1r2_relink_evidence_parent(pg_temp.f2_uuid(11),pg_temp.f2_uuid(107),'task',(select id from public.tasks where title='T2'),'Restore one authoritative parent after reconciliation')$$,'protected relink restores the canonical task parent');
 select is((select count(*)::integer from public.evidence_links where evidence_file_id=pg_temp.f2_uuid(107) and is_active=true and linked_item_type='task'),1,'corrected evidence restores one canonical task link');
+select is((select count(*)::integer from public.audit_logs where record_id=pg_temp.f2_uuid(107) and action='f1r2_evidence_reconciliation_resolved'),1,'reconciliation resolution emits exactly one dedicated audit event');
+select is((select actor_id from public.audit_logs where record_id=pg_temp.f2_uuid(107) and action='f1r2_evidence_reconciliation_resolved'),pg_temp.f2_uuid(11),'reconciliation audit records the verified governance actor');
+
+-- Source and target mutation authority are independent.  Manager B may manage
+-- its target but may not take evidence from Manager/Owner A's source.
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'project',jsonb_build_object('title','Relink source project A','department_id',pg_temp.f2_uuid(22),'owner_id',pg_temp.f2_uuid(12)))$$,'cross-source Project A is created');
+select lives_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(12),(select id from public.work_item_assignments where item_type='project' and item_id=(select id from public.projects where title='Relink source project A')),'accepted',null)$$,'Project A owner accepts');
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'project',jsonb_build_object('title','Relink target project B','department_id',pg_temp.f2_uuid(21)))$$,'cross-source Project B is created');
+select lives_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(11),'project',(select id from public.projects where title='Relink target project B'),'active',0,null)$$,'Project B is activated');
+insert into public.evidence_files(id,organization_id,project_id,file_name,file_path,status,review_status,is_current_version,uploaded_by)
+values(pg_temp.f2_uuid(460),pg_temp.f2_uuid(1),(select id from public.projects where title='Relink source project A'),'cross-source.txt','f2r4/cross-source.txt','submitted','submitted',true,pg_temp.f2_uuid(12));
+select throws_ok($$select public.f1r2_relink_evidence_parent(pg_temp.f2_uuid(13),pg_temp.f2_uuid(460),'project',(select id from public.projects where title='Relink target project B'),'target-only manager attack')$$,'F1R2_EVIDENCE_RELINK_DENIED','target-only Manager B cannot take evidence from Project A');
+select is((select project_id from public.evidence_files where id=pg_temp.f2_uuid(460)),(select id from public.projects where title='Relink source project A'),'denied cross-source relink leaves evidence parent unchanged');
+select is((select count(*)::integer from public.evidence_links where evidence_file_id=pg_temp.f2_uuid(460) and linked_item_id=(select id from public.projects where title='Relink source project A') and is_active=true),1,'denied cross-source relink leaves source link active');
+select is((select count(*)::integer from public.evidence_links where evidence_file_id=pg_temp.f2_uuid(460) and linked_item_id=(select id from public.projects where title='Relink target project B')),0,'denied cross-source relink creates no target link');
+select is((select count(*)::integer from public.f1r2_evidence_link_reconciliation where evidence_file_id=pg_temp.f2_uuid(460)),0,'denied cross-source relink creates no reconciliation mutation');
+select is((select count(*)::integer from public.audit_logs where record_id=pg_temp.f2_uuid(460) and action in('f1r2_evidence_relinked','f1r2_evidence_reconciliation_resolved')),0,'denied cross-source relink creates no relink audit event');
+select lives_ok($$select public.f1r2_relink_evidence_parent(pg_temp.f2_uuid(11),pg_temp.f2_uuid(460),'project',(select id from public.projects where title='Relink target project B'),'governance-authorized source and target correction')$$,'governance actor with source and target authority relinks A to B');
+select is((select count(*)::integer from public.evidence_links where evidence_file_id=pg_temp.f2_uuid(460) and is_active=true and is_primary=true),1,'governed cross-source relink leaves one canonical active link');
+select ok(exists(select 1 from public.evidence_links where evidence_file_id=pg_temp.f2_uuid(460) and linked_item_id=(select id from public.projects where title='Relink source project A') and is_active=false),'governed cross-source relink retires Project A link');
+select ok(exists(select 1 from public.evidence_links where evidence_file_id=pg_temp.f2_uuid(460) and linked_item_id=(select id from public.projects where title='Relink target project B') and is_active=true),'governed cross-source relink activates Project B link');
+select is((select actor_id from public.audit_logs where record_id=pg_temp.f2_uuid(460) and action='f1r2_evidence_relinked'),pg_temp.f2_uuid(11),'cross-source relink audit records Governance actor G');
+
+-- An unlocked uploader satisfies source authority only; accepted target work
+-- authority is independently required.
+insert into public.evidence_files(id,organization_id,task_id,file_name,file_path,status,review_status,is_current_version,uploaded_by)
+values(pg_temp.f2_uuid(461),pg_temp.f2_uuid(1),(select id from public.tasks where title='T1'),'uploader-relink.txt','f2r4/uploader-relink.txt','submitted','submitted',true,pg_temp.f2_uuid(12));
+select lives_ok($$select public.f1r2_relink_evidence_parent(pg_temp.f2_uuid(12),pg_temp.f2_uuid(461),'task',(select id from public.tasks where title='T2'),'uploader with accepted source and target assignments')$$,'uploader with independent accepted target authority may relink');
+select is((select actor_id from public.audit_logs where record_id=pg_temp.f2_uuid(461) and action='f1r2_evidence_relinked'),pg_temp.f2_uuid(12),'uploader relink audit records the actual P3 actor');
+
+-- Auditor and approver entitlements remain read-only for relink purposes.
+select lives_ok($$select public.acc_v13_authorize_evidence_access(pg_temp.f2_uuid(18),pg_temp.f2_uuid(106),'view')$$,'auditor retains governed OVR evidence view');
+select lives_ok($$select public.acc_v13_authorize_evidence_access(pg_temp.f2_uuid(18),pg_temp.f2_uuid(106),'download')$$,'auditor retains governed OVR evidence download');
+select throws_ok($$select public.f1r2_relink_evidence_parent(pg_temp.f2_uuid(18),pg_temp.f2_uuid(106),'project',(select id from public.projects where title='Relink target project B'),'auditor mutation attempt')$$,'F1R2_EVIDENCE_RELINK_DENIED','auditor-only actor cannot relink evidence');
+select is((select ovr_report_id from public.evidence_files where id=pg_temp.f2_uuid(106)),(select id from public.ovr_reports where logging_number='F2-OVR'),'auditor denial leaves the OVR evidence parent unchanged');
+insert into public.approvals(id,organization_id,project_id,requested_by,approver_id,status,request_note)
+values(pg_temp.f2_uuid(463),pg_temp.f2_uuid(1),(select id from public.projects where title='Relink target project B'),pg_temp.f2_uuid(11),pg_temp.f2_uuid(19),'pending','approver-only evidence fixture');
+update public.user_roles set is_active=false where user_id=pg_temp.f2_uuid(19) and role='executive' and organization_id=pg_temp.f2_uuid(1);
+select lives_ok($$select public.acc_v13_authorize_evidence_access(pg_temp.f2_uuid(19),pg_temp.f2_uuid(460),'view')$$,'approver-only actor retains read access to target evidence');
+select throws_ok($$select public.f1r2_relink_evidence_parent(pg_temp.f2_uuid(19),pg_temp.f2_uuid(460),'project',(select id from public.projects where title='Relink source project A'),'approver mutation attempt')$$,'F1R2_EVIDENCE_RELINK_DENIED','approver-only actor cannot relink evidence');
+select is((select project_id from public.evidence_files where id=pg_temp.f2_uuid(460)),(select id from public.projects where title='Relink target project B'),'approver denial leaves the canonical target unchanged');
+
+-- No-active-parent reconciliation requires a governance mutation role and a
+-- reason; ordinary target management is insufficient.
+insert into public.evidence_files(id,organization_id,project_id,file_name,file_path,status,review_status,is_current_version,uploaded_by)
+values(pg_temp.f2_uuid(462),pg_temp.f2_uuid(1),(select id from public.projects where title='Relink target project B'),'reconciliation.txt','f2r4/reconciliation.txt','submitted','submitted',true,pg_temp.f2_uuid(13));
+select pg_catalog.set_config('f1r2.verified_evidence_actor_id',pg_temp.f2_uuid(11)::text,true);
+select pg_catalog.set_config('f1r2.evidence_relink_reason','create governed ambiguous fixture',true);
+update public.evidence_files set task_id=(select id from public.tasks where title='T2'),updated_by=pg_temp.f2_uuid(11) where id=pg_temp.f2_uuid(462);
+select pg_catalog.set_config('f1r2.verified_evidence_actor_id','',true);
+select pg_catalog.set_config('f1r2.evidence_relink_reason','',true);
+select is((select count(*)::integer from public.evidence_links where evidence_file_id=pg_temp.f2_uuid(462) and is_active=true),0,'ambiguous fixture has no active canonical parent');
+select throws_ok($$select public.f1r2_relink_evidence_parent(pg_temp.f2_uuid(13),pg_temp.f2_uuid(462),'project',(select id from public.projects where title='Relink target project B'),'ordinary manager reconciliation attempt')$$,'F1R2_EVIDENCE_RECONCILIATION_DENIED','ordinary project manager cannot resolve evidence reconciliation');
+select is((select num_nonnulls(project_id,milestone_id,task_id,ovr_report_id,audit_finding_id,risk_id,compliance_item_id) from public.evidence_files where id=pg_temp.f2_uuid(462)),2,'denied reconciliation leaves evidence parent columns unchanged');
+select is((select count(*)::integer from public.evidence_links where evidence_file_id=pg_temp.f2_uuid(462) and is_active=true),0,'denied reconciliation leaves active-link count unchanged');
+select is((select count(*)::integer from public.f1r2_evidence_link_reconciliation where evidence_file_id=pg_temp.f2_uuid(462)),1,'denied reconciliation preserves the existing queue row');
+select is((select count(*)::integer from public.audit_logs where record_id=pg_temp.f2_uuid(462) and action='f1r2_evidence_reconciliation_resolved'),0,'denied reconciliation creates no resolution audit');
+select lives_ok($$select public.f1r2_relink_evidence_parent(pg_temp.f2_uuid(11),pg_temp.f2_uuid(462),'project',(select id from public.projects where title='Relink target project B'),'governance reconciliation with verified reason')$$,'governance administrator resolves ambiguous evidence');
+select is((select count(*)::integer from public.evidence_links where evidence_file_id=pg_temp.f2_uuid(462) and is_active=true and is_primary=true),1,'governance reconciliation restores exactly one canonical link');
+select is((select count(*)::integer from public.audit_logs where record_id=pg_temp.f2_uuid(462) and action='f1r2_evidence_reconciliation_resolved'),1,'governance reconciliation writes exactly one resolution audit');
+select is((select actor_id from public.audit_logs where record_id=pg_temp.f2_uuid(462) and action='f1r2_evidence_reconciliation_resolved'),pg_temp.f2_uuid(11),'reconciliation resolution audit records the verified Governance actor');
 
 insert into public.risks(id,organization_id,title,created_by,updated_by)
 values(pg_temp.f2_uuid(420),pg_temp.f2_uuid(1),'Requirement flag risk',pg_temp.f2_uuid(11),pg_temp.f2_uuid(11));

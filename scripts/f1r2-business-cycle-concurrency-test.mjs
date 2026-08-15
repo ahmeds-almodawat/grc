@@ -55,7 +55,7 @@ const serviceSql = sql => `set request.jwt.claim.role='service_role';\n${sql}`;
 const ids = Object.fromEntries([
   'org', 'division', 'department', 'manager', 'owner', 'replacement',
   'statusFirst', 'reassignFirst', 'acceptFirst', 'reassignAcceptFirst',
-  'declineFirst', 'reassignDeclineFirst',
+  'declineFirst', 'reassignDeclineFirst', 'cancelFirst',
 ].map(key => [key, randomUUID()]));
 const token = randomUUID().replaceAll('-', '').slice(0, 14);
 const email = label => `f1r2-${token}-${label}@example.test`;
@@ -70,7 +70,7 @@ if (sentinel.database !== database || !sentinel.migration_196_function || !senti
 }
 
 const acceptedProjects = [ids.statusFirst, ids.reassignFirst];
-const pendingProjects = [ids.acceptFirst, ids.reassignAcceptFirst, ids.declineFirst, ids.reassignDeclineFirst];
+const pendingProjects = [ids.acceptFirst, ids.reassignAcceptFirst, ids.declineFirst, ids.reassignDeclineFirst, ids.cancelFirst];
 const setupSql = serviceSql(`
 begin;
 insert into public.organizations(id,name_en) values('${ids.org}','F1-R2 concurrency ${token}');
@@ -139,12 +139,18 @@ const race = async (firstSql, secondSql) => {
 };
 const reassign = itemId => `select public.f1r2_assign_work_item('${ids.manager}','project','${itemId}','${ids.replacement}','concurrency handoff')::text`;
 const status = itemId => `select public.acc_v13_update_work_item_status('${ids.owner}','project','${itemId}','at_risk',25,null)::text`;
+const cancel = itemId => `select public.acc_v13_update_work_item_status('${ids.manager}','project','${itemId}','cancelled',0,null)::text`;
 const respond = (itemId, decision) => `select public.f1r2_respond_work_item_assignment('${ids.owner}',(select id from public.work_item_assignments where item_type='project' and item_id='${itemId}' and assignee_id='${ids.owner}' order by assigned_at desc,id desc limit 1),'${decision}',${decision === 'declined' ? "'concurrent decline'" : 'null'})::text`;
 const state = itemId => runSql(`select jsonb_build_object(
   'status',(select status::text from public.projects where id='${itemId}'),
   'owner_id',(select owner_id::text from public.projects where id='${itemId}'),
   'current_assignee',(select assignee_id::text from public.work_item_assignments where item_type='project' and item_id='${itemId}' and status in('pending','accepted','declined','legacy_unverified') order by assigned_at desc,id desc limit 1),
   'assignment_status',(select status from public.work_item_assignments where item_type='project' and item_id='${itemId}' and status in('pending','accepted','declined','legacy_unverified') order by assigned_at desc,id desc limit 1)
+)::text;`).then(asJson);
+const terminalState = itemId => runSql(`select jsonb_build_object(
+  'status',(select status::text from public.projects where id='${itemId}'),
+  'owner_id',(select owner_id::text from public.projects where id='${itemId}'),
+  'assignment_status',(select status from public.work_item_assignments where item_type='project' and item_id='${itemId}' order by assigned_at desc,id desc limit 1)
 )::text;`).then(asJson);
 
 const result = {};
@@ -186,6 +192,14 @@ try {
     state: await state(ids.reassignDeclineFirst),
   };
 
+  const cancelFirst = await race(lockThen(ids.cancelFirst, cancel(ids.cancelFirst)), serviceSql(respond(ids.cancelFirst, 'accepted')));
+  result.cancellation_before_accept = {
+    fulfilled: cancelFirst.filter(row => row.status === 'fulfilled').length,
+    stale_mutation_commits: cancelFirst[1].status === 'fulfilled' ? 1 : 0,
+    terminal_response_denied: cancelFirst[1].status === 'rejected' && cancelFirst[1].reason.message.includes('F1R2_TERMINAL_WORK_ITEM_RESPONSE_DENIED'),
+    state: await terminalState(ids.cancelFirst),
+  };
+
   const finalPendingReplacement = entry => entry.state.owner_id === null && entry.state.current_assignee === ids.replacement && entry.state.assignment_status === 'pending';
   const passed =
     result.status_before_reassignment.fulfilled === 2 && result.status_before_reassignment.state.status === 'at_risk' && finalPendingReplacement(result.status_before_reassignment) &&
@@ -193,7 +207,9 @@ try {
     result.accept_before_reassignment.fulfilled === 2 && finalPendingReplacement(result.accept_before_reassignment) &&
     result.reassignment_before_accept.fulfilled === 1 && result.reassignment_before_accept.old_response_denied && finalPendingReplacement(result.reassignment_before_accept) &&
     result.decline_before_reassignment.fulfilled === 2 && finalPendingReplacement(result.decline_before_reassignment) &&
-    result.reassignment_before_decline.fulfilled === 1 && result.reassignment_before_decline.old_response_denied && finalPendingReplacement(result.reassignment_before_decline);
+    result.reassignment_before_decline.fulfilled === 1 && result.reassignment_before_decline.old_response_denied && finalPendingReplacement(result.reassignment_before_decline) &&
+    result.cancellation_before_accept.fulfilled === 1 && result.cancellation_before_accept.stale_mutation_commits === 0 && result.cancellation_before_accept.terminal_response_denied &&
+      result.cancellation_before_accept.state.status === 'cancelled' && result.cancellation_before_accept.state.owner_id === null && result.cancellation_before_accept.state.assignment_status === 'cancelled';
   if (!passed) throw new Error(`F1-R2 concurrency contract failed: ${JSON.stringify(result)}`);
   console.log(JSON.stringify({ status: 'F1R2_CONCURRENCY_PASS', stale_authorization_commits: 0, scenarios: result }, null, 2));
 } catch (error) {
