@@ -69,6 +69,16 @@ export type OvrAuthoritativeStatePatch = {
   replayed?: boolean;
 };
 
+export type OvrAuthoritativePatchRecord = {
+  mutation: OvrAuthoritativeStatePatch;
+  baseline: Partial<Record<keyof OvrAuthoritativeStatePatch, unknown>>;
+};
+
+export type OvrPatchFetchClassification =
+  | 'stale_baseline'
+  | 'mutation_converged'
+  | 'server_moved_beyond_patch';
+
 const persistedOvrMutationFields: ReadonlyArray<keyof OvrAuthoritativeStatePatch> = [
   'id',
   'status',
@@ -93,38 +103,63 @@ function isFetchedOvrConsistent(
   ));
 }
 
-export function reconcileOvrAuthoritativeState(
+export function createOvrAuthoritativePatchRecord(
   current: OvrReportRow,
   mutation: OvrAuthoritativeStatePatch,
+): OvrAuthoritativePatchRecord {
+  const currentFields = current as unknown as Record<string, unknown>;
+  const baseline: Partial<Record<keyof OvrAuthoritativeStatePatch, unknown>> = {};
+  persistedOvrMutationFields.forEach(field => {
+    if (mutation[field] !== undefined) baseline[field] = currentFields[field];
+  });
+  return { mutation, baseline };
+}
+
+export function classifyFetchedOvrAgainstPatch(
+  fetched: OvrReportRow,
+  record: OvrAuthoritativePatchRecord,
+): OvrPatchFetchClassification {
+  if (fetched.id !== record.mutation.id) return 'server_moved_beyond_patch';
+  if (isFetchedOvrConsistent(fetched, record.mutation)) return 'mutation_converged';
+  const fetchedFields = fetched as unknown as Record<string, unknown>;
+  const remainsAtBaseline = persistedOvrMutationFields.every(field => (
+    record.mutation[field] === undefined || fetchedFields[field] === record.baseline[field]
+  ));
+  return remainsAtBaseline ? 'stale_baseline' : 'server_moved_beyond_patch';
+}
+
+export function reconcileOvrAuthoritativeRecord(
+  current: OvrReportRow,
+  record: OvrAuthoritativePatchRecord,
   fetched?: OvrReportRow,
 ): OvrReportRow {
-  if (current.id !== mutation.id) return current;
-  const mutationSynchronized = { ...current, ...mutation } as OvrReportRow;
-  if (!fetched || fetched.id !== mutation.id || !isFetchedOvrConsistent(fetched, mutation)) {
-    return mutationSynchronized;
+  if (current.id !== record.mutation.id) return current;
+  if (!fetched) return { ...current, ...record.mutation } as OvrReportRow;
+  if (classifyFetchedOvrAgainstPatch(fetched, record) === 'stale_baseline') {
+    return { ...current, ...record.mutation } as OvrReportRow;
   }
-  return { ...fetched, ...mutation } as OvrReportRow;
+  return fetched;
 }
 
 export function applyOvrAuthoritativePatches(
   reports: OvrReportRow[],
-  patches: ReadonlyMap<string, OvrAuthoritativeStatePatch>,
+  patches: ReadonlyMap<string, OvrAuthoritativePatchRecord>,
 ): OvrReportRow[] {
   return reports.map(report => {
-    const patch = patches.get(report.id);
-    return patch ? reconcileOvrAuthoritativeState(report, patch) : report;
+    const record = patches.get(report.id);
+    return record ? reconcileOvrAuthoritativeRecord(report, record, report) : report;
   });
 }
 
-export function retireConvergedOvrPatches(
-  patches: ReadonlyMap<string, OvrAuthoritativeStatePatch>,
+export function retireResolvedOvrPatches(
+  patches: ReadonlyMap<string, OvrAuthoritativePatchRecord>,
   fetchedReports: OvrReportRow[],
-): ReadonlyMap<string, OvrAuthoritativeStatePatch> {
-  let next: Map<string, OvrAuthoritativeStatePatch> | null = null;
+): ReadonlyMap<string, OvrAuthoritativePatchRecord> {
+  let next: Map<string, OvrAuthoritativePatchRecord> | null = null;
   const fetchedById = new Map(fetchedReports.map(report => [report.id, report]));
-  patches.forEach((patch, reportId) => {
+  patches.forEach((record, reportId) => {
     const fetched = fetchedById.get(reportId);
-    if (fetched && isFetchedOvrConsistent(fetched, patch)) {
+    if (fetched && classifyFetchedOvrAgainstPatch(fetched, record) !== 'stale_baseline') {
       next ??= new Map(patches);
       next.delete(reportId);
     }
@@ -271,7 +306,7 @@ export function OVR() {
   const [severityFilter, setSeverityFilter] = useState<'all' | OvrSeverityLevel>('all');
   const [workflowSaving, setWorkflowSaving] = useState(false);
   const [workflowMessage, setWorkflowMessage] = useState<string | null>(null);
-  const [authoritativeOvrPatches, setAuthoritativeOvrPatches] = useState<ReadonlyMap<string, OvrAuthoritativeStatePatch>>(
+  const [authoritativeOvrPatches, setAuthoritativeOvrPatches] = useState<ReadonlyMap<string, OvrAuthoritativePatchRecord>>(
     () => new Map(),
   );
   const convergenceRefreshTimers = useRef<Map<string, number>>(new Map());
@@ -370,22 +405,27 @@ export function OVR() {
   const update = (key: keyof typeof form, value: string | boolean | string[]) => setForm(current => ({ ...current, [key]: value }));
   const updateWorkflowForm = (key: keyof typeof workflowForm, value: string) => setWorkflowForm(current => ({ ...current, [key]: value }));
 
-  const synchronizeOpenOvr = (mutation: OvrAuthoritativeStatePatch, fetched?: OvrReportRow) => {
-    setSelectedReport(current => current?.id === mutation.id
-      ? reconcileOvrAuthoritativeState(current, mutation, fetched)
+  const synchronizeOpenOvr = (record: OvrAuthoritativePatchRecord, fetched?: OvrReportRow) => {
+    setSelectedReport(current => current?.id === record.mutation.id
+      ? reconcileOvrAuthoritativeRecord(current, record, fetched)
       : current);
-    setSelectedDashboardReport(current => current?.id === mutation.id
-      ? reconcileOvrAuthoritativeState(current, mutation, fetched)
+    setSelectedDashboardReport(current => current?.id === record.mutation.id
+      ? reconcileOvrAuthoritativeRecord(current, record, fetched)
       : current);
   };
 
-  const recordAuthoritativeOvrPatch = (mutation: OvrAuthoritativeStatePatch) => {
+  const recordAuthoritativeOvrPatch = (
+    baseline: OvrReportRow,
+    mutation: OvrAuthoritativeStatePatch,
+  ): OvrAuthoritativePatchRecord => {
+    const record = createOvrAuthoritativePatchRecord(baseline, mutation);
     setAuthoritativeOvrPatches(current => {
       const next = new Map(current);
-      next.set(mutation.id, { ...current.get(mutation.id), ...mutation });
+      next.set(mutation.id, record);
       return next;
     });
-    synchronizeOpenOvr(mutation);
+    synchronizeOpenOvr(record);
+    return record;
   };
 
   const scheduleConvergenceRefresh = (reportId: string) => {
@@ -398,17 +438,37 @@ export function OVR() {
     convergenceRefreshTimers.current.set(reportId, timer);
   };
 
-  const reconcileOvrAfterMutation = async (mutation: OvrAuthoritativeStatePatch) => {
+  const reconcileOvrAfterMutation = async (record: OvrAuthoritativePatchRecord) => {
     await reports.refresh();
-    const authoritative = (await getOvrReports()).find(report => report.id === mutation.id);
-    synchronizeOpenOvr(mutation, authoritative);
-    scheduleConvergenceRefresh(mutation.id);
+    const authoritative = (await getOvrReports()).find(report => report.id === record.mutation.id);
+    synchronizeOpenOvr(record, authoritative);
+    if (authoritative && classifyFetchedOvrAgainstPatch(authoritative, record) !== 'stale_baseline') {
+      await reports.refresh();
+    } else {
+      scheduleConvergenceRefresh(record.mutation.id);
+    }
   };
 
   useEffect(() => {
     if (!reports.data) return;
-    setAuthoritativeOvrPatches(current => retireConvergedOvrPatches(current, reports.data || []));
-  }, [reports.data]);
+    const fetchedById = new Map(reports.data.map(report => [report.id, report]));
+    const resolved = Array.from(authoritativeOvrPatches.entries()).flatMap(([reportId, record]) => {
+      const fetched = fetchedById.get(reportId);
+      return fetched && classifyFetchedOvrAgainstPatch(fetched, record) !== 'stale_baseline'
+        ? [{ reportId, record, fetched }]
+        : [];
+    });
+    if (!resolved.length) return;
+    setSelectedReport(current => {
+      const match = current && resolved.find(item => item.reportId === current.id);
+      return current && match ? reconcileOvrAuthoritativeRecord(current, match.record, match.fetched) : current;
+    });
+    setSelectedDashboardReport(current => {
+      const match = current && resolved.find(item => item.reportId === current.id);
+      return current && match ? reconcileOvrAuthoritativeRecord(current, match.record, match.fetched) : current;
+    });
+    setAuthoritativeOvrPatches(current => retireResolvedOvrPatches(current, reports.data || []));
+  }, [authoritativeOvrPatches, reports.data]);
 
   useEffect(() => () => {
     convergenceRefreshTimers.current.forEach(timer => window.clearTimeout(timer));
@@ -553,9 +613,9 @@ export function OVR() {
         confirmed_severity_level: workflowForm.confirmed_severity_level,
         corrective_action_due_date: workflowForm.corrective_action_due_date || undefined
       });
-      recordAuthoritativeOvrPatch(transition);
+      const authoritativeRecord = recordAuthoritativeOvrPatch(selectedReport, transition);
       setWorkflowMessage(t('ovr.workflowUpdated'));
-      await reconcileOvrAfterMutation(transition);
+      await reconcileOvrAfterMutation(authoritativeRecord);
       workflowSummary.refresh();
       workflowQueue.refresh();
       summary.refresh();
@@ -592,10 +652,10 @@ export function OVR() {
         linked_project_id: projectId,
         status: 'corrective_action_in_progress',
       };
-      recordAuthoritativeOvrPatch(transition);
+      const authoritativeRecord = recordAuthoritativeOvrPatch(correctiveProjectReport, transition);
       setWorkflowMessage(t('ovr.linkedProjectCreated'));
       setCorrectiveProjectReport(null);
-      await reconcileOvrAfterMutation(transition);
+      await reconcileOvrAfterMutation(authoritativeRecord);
     } catch (error) {
       setWorkflowMessage(error instanceof Error ? error.message : t('ovr.workflowFailed'));
     } finally {
@@ -618,9 +678,9 @@ export function OVR() {
         closure_comment: workflowForm.quality_manager_comments,
         idempotency_key: `f1r2-close-${selectedReport.id}-${crypto.randomUUID()}`,
       });
-      recordAuthoritativeOvrPatch(transition);
+      const authoritativeRecord = recordAuthoritativeOvrPatch(selectedReport, transition);
       setWorkflowMessage(t('ovr.workflowUpdated'));
-      await reconcileOvrAfterMutation(transition);
+      await reconcileOvrAfterMutation(authoritativeRecord);
       workflowSummary.refresh(); workflowQueue.refresh(); summary.refresh();
     } catch (error) {
       setWorkflowMessage(error instanceof Error ? error.message : t('ovr.workflowFailed'));

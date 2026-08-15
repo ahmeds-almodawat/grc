@@ -30,7 +30,9 @@ function parseRequestBody(request: Request): Record<string, unknown> {
   }
 }
 
-function ovrRow(status: 'submitted' | 'manager_review') {
+type SettledStatus = 'manager_review' | 'quality_validation';
+
+function ovrRow(status: 'submitted' | SettledStatus) {
   return {
     id: reportId,
     organization_id: organizationId,
@@ -47,14 +49,14 @@ function ovrRow(status: 'submitted' | 'manager_review') {
     occurrence_category: 'other',
     severity_level: 'level_1',
     injury_type: null,
-    supervisor_investigation: status === 'manager_review' ? 'Governed manager review complete' : null,
+    supervisor_investigation: status !== 'submitted' ? 'Governed manager review complete' : null,
     corrective_action: null,
     quality_manager_comments: null,
     referred_department_id: null,
     referred_user_id: null,
     referred_response: null,
     reported_by: managerId,
-    supervisor_id: status === 'manager_review' ? managerId : null,
+    supervisor_id: status !== 'submitted' ? managerId : null,
     quality_reviewer_id: null,
     quality_validated_at: null,
     cross_department_notified_at: null,
@@ -70,10 +72,18 @@ function ovrRow(status: 'submitted' | 'manager_review') {
   };
 }
 
-async function installMocks(page: Page) {
+async function installMocks(
+  page: Page,
+  settledStatus: SettledStatus = 'manager_review',
+  options: { staleReads?: number; pauseSecondRead?: boolean } = {},
+) {
   let mutationCalls = 0;
   let staleReadsRemaining = 0;
   let postMutationReads = 0;
+  let releaseSecondRead: (() => void) | null = null;
+  const secondReadGate = new Promise<void>(resolve => {
+    releaseSecondRead = resolve;
+  });
 
   await page.addInitScript(({ user }) => {
     localStorage.setItem('grc-language', 'en');
@@ -120,7 +130,7 @@ async function installMocks(page: Page) {
       };
     } else if (action === 'update_ovr_workflow') {
       mutationCalls += 1;
-      staleReadsRemaining = 2;
+      staleReadsRemaining = options.staleReads ?? 2;
       result = {
         id: reportId,
         status: 'manager_review',
@@ -180,7 +190,8 @@ async function installMocks(page: Page) {
       result = [{ id: departmentId, organization_id: organizationId, name_en: 'Quality', name_ar: 'إدارة الجودة' }];
     } else if (resource === 'ovr_reports') {
       if (mutationCalls > 0) postMutationReads += 1;
-      const status = staleReadsRemaining > 0 ? 'submitted' : mutationCalls > 0 ? 'manager_review' : 'submitted';
+      if (options.pauseSecondRead && postMutationReads === 2) await secondReadGate;
+      const status = staleReadsRemaining > 0 ? 'submitted' : mutationCalls > 0 ? settledStatus : 'submitted';
       if (staleReadsRemaining > 0) staleReadsRemaining -= 1;
       result = [ovrRow(status)];
     } else if (resource === 'v_ovr_summary') {
@@ -206,6 +217,7 @@ async function installMocks(page: Page) {
   return {
     getMutationCalls: () => mutationCalls,
     getPostMutationReads: () => postMutationReads,
+    releaseSecondRead: () => releaseSecondRead?.(),
   };
 }
 
@@ -263,6 +275,30 @@ test.describe('F4 H1 OVR modal state synchronization', () => {
     await expect.poll(() => proof.getPostMutationReads(), { timeout: 5000 }).toBeGreaterThanOrEqual(3);
     await expect(reportRow.getByText('Manager review', { exact: true })).toBeVisible();
     await expect(dialog.getByText('Manager review', { exact: true }).first()).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Complete manager review' })).toHaveCount(0);
+    expect(proof.getMutationCalls()).toBe(1);
+  });
+
+  test('yields the obsolete manager-review patch to a later quality-validation server transition', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const proof = await installMocks(page, 'quality_validation', { staleReads: 1, pauseSecondRead: true });
+
+    await page.goto(`${baseUrl}/?page=ovr`);
+    await page.getByRole('button', { name: 'Open workflow' }).click();
+    const dialog = page.getByRole('dialog', { name: 'OVR-H1-STATE-SYNC' });
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel('Investigation report / action taken').fill('Governed manager review complete');
+    await dialog.getByRole('button', { name: 'Complete manager review' }).click();
+
+    await expect.poll(() => proof.getPostMutationReads(), { timeout: 5000 }).toBeGreaterThanOrEqual(2);
+    await expect(dialog.getByText('Manager review', { exact: true }).first()).toBeVisible();
+    const reportRow = page.getByRole('row').filter({ hasText: 'OVR-H1-STATE-SYNC' });
+    await expect(reportRow.getByText('Manager review', { exact: true })).toBeVisible();
+    expect(proof.getMutationCalls()).toBe(1);
+
+    proof.releaseSecondRead();
+    await expect(reportRow.getByText('Quality validation', { exact: true })).toBeVisible();
+    await expect(dialog.getByText('Quality validation', { exact: true }).first()).toBeVisible();
     await expect(dialog.getByRole('button', { name: 'Complete manager review' })).toHaveCount(0);
     expect(proof.getMutationCalls()).toBe(1);
   });

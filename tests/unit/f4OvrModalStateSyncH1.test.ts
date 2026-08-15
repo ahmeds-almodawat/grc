@@ -4,9 +4,12 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   applyOvrAuthoritativePatches,
   canCompleteManagerReview,
+  classifyFetchedOvrAgainstPatch,
+  createOvrAuthoritativePatchRecord,
   nextStageHint,
-  reconcileOvrAuthoritativeState,
-  retireConvergedOvrPatches,
+  reconcileOvrAuthoritativeRecord,
+  retireResolvedOvrPatches,
+  type OvrAuthoritativePatchRecord,
   type OvrAuthoritativeStatePatch,
 } from '../../src/pages/OVR';
 import type { OvrReportRow, OvrStatus } from '../../src/types/domain';
@@ -66,11 +69,12 @@ describe('F4 H1 OVR open-modal authoritative state synchronization', () => {
     } satisfies OvrAuthoritativeStatePatch);
 
     const transition = await mutate();
-    let selected = reconcileOvrAuthoritativeState(initial, transition);
+    const record = createOvrAuthoritativePatchRecord(initial, transition);
+    let selected = reconcileOvrAuthoritativeRecord(initial, record);
     const renderedStatuses = [selected.status];
-    selected = reconcileOvrAuthoritativeState(selected, transition, stale);
+    selected = reconcileOvrAuthoritativeRecord(selected, record, stale);
     renderedStatuses.push(selected.status);
-    selected = reconcileOvrAuthoritativeState(selected, transition, fresh);
+    selected = reconcileOvrAuthoritativeRecord(selected, record, fresh);
     renderedStatuses.push(selected.status);
 
     expect(renderedStatuses).toEqual(['manager_review', 'manager_review', 'manager_review']);
@@ -85,24 +89,67 @@ describe('F4 H1 OVR open-modal authoritative state synchronization', () => {
     const staleOne = report('submitted');
     const staleTwo = report('submitted');
     const fresh = report('manager_review');
-    let patches: ReadonlyMap<string, OvrAuthoritativeStatePatch> = new Map([[initial.id, transition]]);
+    const record = createOvrAuthoritativePatchRecord(initial, transition);
+    let patches: ReadonlyMap<string, OvrAuthoritativePatchRecord> = new Map([[initial.id, record]]);
 
     expect(applyOvrAuthoritativePatches([staleOne], patches)[0]?.status).toBe('manager_review');
-    patches = retireConvergedOvrPatches(patches, [staleOne]);
+    patches = retireResolvedOvrPatches(patches, [staleOne]);
     expect(patches.has(initial.id)).toBe(true);
 
     expect(applyOvrAuthoritativePatches([staleTwo], patches)[0]?.status).toBe('manager_review');
-    patches = retireConvergedOvrPatches(patches, [staleTwo]);
+    patches = retireResolvedOvrPatches(patches, [staleTwo]);
     expect(patches.has(initial.id)).toBe(true);
 
-    patches = retireConvergedOvrPatches(patches, [fresh]);
+    patches = retireResolvedOvrPatches(patches, [fresh]);
     expect(patches.has(initial.id)).toBe(false);
     expect(applyOvrAuthoritativePatches([fresh], patches)[0]?.status).toBe('manager_review');
     expect(applyOvrAuthoritativePatches([report('quality_validation')], patches)[0]?.status).toBe('quality_validation');
   });
 
+  it('retires the obsolete local patch when the server legitimately advances beyond it', () => {
+    const initial = report('submitted');
+    const transition: OvrAuthoritativeStatePatch = { id: initial.id, status: 'manager_review' };
+    const stale = report('submitted');
+    const laterServer = report('quality_validation', { quality_validated_at: '2026-08-15T13:00:00.000Z' });
+    const record = createOvrAuthoritativePatchRecord(initial, transition);
+    let patches: ReadonlyMap<string, OvrAuthoritativePatchRecord> = new Map([[initial.id, record]]);
+
+    expect(classifyFetchedOvrAgainstPatch(stale, record)).toBe('stale_baseline');
+    expect(applyOvrAuthoritativePatches([stale], patches)[0]?.status).toBe('manager_review');
+    expect(reconcileOvrAuthoritativeRecord(initial, record, stale).status).toBe('manager_review');
+
+    expect(classifyFetchedOvrAgainstPatch(laterServer, record)).toBe('server_moved_beyond_patch');
+    const selected = reconcileOvrAuthoritativeRecord(report('manager_review'), record, laterServer);
+    expect(selected.status).toBe('quality_validation');
+    patches = retireResolvedOvrPatches(patches, [laterServer]);
+    expect(patches.has(initial.id)).toBe(false);
+    expect(applyOvrAuthoritativePatches([laterServer], patches)[0]?.status).toBe('quality_validation');
+    expect(canCompleteManagerReview(selected.status)).toBe(false);
+  });
+
+  it('uses mutation-relevant baseline fields for same-status server advancement', () => {
+    const initial = report('quality_final_review', { final_verdict: 'OLD' });
+    const transition: OvrAuthoritativeStatePatch = {
+      id: initial.id,
+      status: 'quality_final_review',
+      final_verdict: 'LOCAL-NEW',
+    };
+    const stale = report('quality_final_review', { final_verdict: 'OLD' });
+    const laterServer = report('quality_final_review', { final_verdict: 'SERVER-NEWER' });
+    const record = createOvrAuthoritativePatchRecord(initial, transition);
+    let patches: ReadonlyMap<string, OvrAuthoritativePatchRecord> = new Map([[initial.id, record]]);
+
+    expect(classifyFetchedOvrAgainstPatch(stale, record)).toBe('stale_baseline');
+    expect(applyOvrAuthoritativePatches([stale], patches)[0]?.final_verdict).toBe('LOCAL-NEW');
+    expect(classifyFetchedOvrAgainstPatch(laterServer, record)).toBe('server_moved_beyond_patch');
+    expect(reconcileOvrAuthoritativeRecord(report('quality_final_review', { final_verdict: 'LOCAL-NEW' }), record, laterServer).final_verdict).toBe('SERVER-NEWER');
+    patches = retireResolvedOvrPatches(patches, [laterServer]);
+    expect(patches.has(initial.id)).toBe(false);
+    expect(applyOvrAuthoritativePatches([laterServer], patches)[0]?.final_verdict).toBe('SERVER-NEWER');
+  });
+
   it('protects a quality-validation transition from a stale manager-review read', () => {
-    const initial = report('manager_review');
+    const initial = report('manager_review', { quality_validated_at: null });
     const transition: OvrAuthoritativeStatePatch = {
       id: initial.id,
       status: 'quality_validation',
@@ -110,16 +157,17 @@ describe('F4 H1 OVR open-modal authoritative state synchronization', () => {
     };
     const stale = report('manager_review', { quality_validated_at: null });
 
-    const selected = reconcileOvrAuthoritativeState(initial, transition, stale);
+    const record = createOvrAuthoritativePatchRecord(initial, transition);
+    const selected = reconcileOvrAuthoritativeRecord(initial, record, stale);
 
     expect(selected.status).toBe('quality_validation');
     expect(selected.quality_validated_at).toBe('2026-08-15T12:30:00.000Z');
     expect(nextStageHint(selected.status)).toBe(3);
 
-    const patches = new Map([[initial.id, transition]]);
+    const patches = new Map([[initial.id, record]]);
     const renderedList = applyOvrAuthoritativePatches([stale], patches);
     expect(renderedList[0]?.status).toBe('quality_validation');
-    expect(retireConvergedOvrPatches(patches, [stale]).has(initial.id)).toBe(true);
+    expect(retireResolvedOvrPatches(patches, [stale]).has(initial.id)).toBe(true);
   });
 
   it('protects the corrective finalizer result and immediately enables reporter-decision state', async () => {
@@ -135,7 +183,8 @@ describe('F4 H1 OVR open-modal authoritative state synchronization', () => {
     const finalize = vi.fn().mockResolvedValue(transition);
 
     const mutationResult = await finalize();
-    const selected = reconcileOvrAuthoritativeState(initial, mutationResult, stale);
+    const record = createOvrAuthoritativePatchRecord(initial, mutationResult);
+    const selected = reconcileOvrAuthoritativeRecord(initial, record, stale);
 
     expect(selected.status).toBe('quality_final_review');
     expect(selected.final_verdict).toBe('Accepted synthetic verdict');
@@ -149,11 +198,11 @@ describe('F4 H1 OVR open-modal authoritative state synchronization', () => {
     let selected = initial;
     let success = false;
     let errorMessage = '';
-    const patches = new Map<string, OvrAuthoritativeStatePatch>();
+    const patches = new Map<string, OvrAuthoritativePatchRecord>();
 
     try {
       const transition = await mutate();
-      selected = reconcileOvrAuthoritativeState(selected, transition);
+      selected = reconcileOvrAuthoritativeRecord(selected, createOvrAuthoritativePatchRecord(selected, transition));
       success = true;
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : 'Unknown failure';
@@ -176,7 +225,7 @@ describe('F4 H1 OVR open-modal authoritative state synchronization', () => {
 
     expect(workflow).toContain('const transition = await updateOvrWorkflow');
     expect(workflow).not.toMatch(/^\s*await updateOvrWorkflow\(/m);
-    expect(workflow.indexOf('recordAuthoritativeOvrPatch(transition)')).toBeLessThan(workflow.indexOf('reconcileOvrAfterMutation(transition)'));
+    expect(workflow.indexOf('recordAuthoritativeOvrPatch(selectedReport, transition)')).toBeLessThan(workflow.indexOf('reconcileOvrAfterMutation(authoritativeRecord)'));
     expect(workflow).not.toContain('openReport(');
     expect(workflow).not.toContain('setWorkflowForm(');
     expect(workflow).toContain("setWorkflowMessage(t('ovr.workflowUpdated'))");
@@ -184,19 +233,19 @@ describe('F4 H1 OVR open-modal authoritative state synchronization', () => {
     expect(linkedProject).toContain('const projectId = await createOvrCorrectiveActionProject');
     expect(linkedProject).toContain("linked_project_id: projectId");
     expect(linkedProject).toContain("status: 'corrective_action_in_progress'");
-    expect(linkedProject).toContain('recordAuthoritativeOvrPatch(transition)');
+    expect(linkedProject).toContain('recordAuthoritativeOvrPatch(correctiveProjectReport, transition)');
     expect(linkedProject).not.toContain('openReport(');
 
     expect(finalizer).toContain('const transition = await finalizeCorrectiveOvr');
-    expect(finalizer).toContain('recordAuthoritativeOvrPatch(transition)');
+    expect(finalizer).toContain('recordAuthoritativeOvrPatch(selectedReport, transition)');
     expect(finalizer).not.toContain('openReport(');
 
     expect(reconciliation).toContain('setSelectedReport(current =>');
     expect(reconciliation).toContain('setSelectedDashboardReport(current =>');
     expect(ovrSource).toContain('const effectiveReports = useMemo(');
     expect(ovrSource).toContain('return effectiveReports.filter(row =>');
-    expect(ovrSource).toContain('setAuthoritativeOvrPatches(current => retireConvergedOvrPatches(current, reports.data || []))');
-    expect(ovrSource).toContain('scheduleConvergenceRefresh(mutation.id)');
+    expect(ovrSource).toContain('setAuthoritativeOvrPatches(current => retireResolvedOvrPatches(current, reports.data || []))');
+    expect(ovrSource).toContain('scheduleConvergenceRefresh(record.mutation.id)');
     expect(reconciliation).not.toContain('setWorkflowMessage(');
     expect(reconciliation).not.toContain('setWorkflowForm(');
   });
