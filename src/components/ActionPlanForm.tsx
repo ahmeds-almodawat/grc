@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { DepartmentOption, PriorityLevel, ProfileOption, RiskLevel, SourceType } from '../types/domain';
 import { createProject, searchEligibleWorkParticipants } from '../lib/grcApi';
 import { ScenarioFillButton } from './ScenarioFillButton';
+import { useAuth } from '../auth/AuthProvider';
 import {
   createScenarioLabScenario,
   V99_SCENARIO_TAG,
@@ -31,6 +32,7 @@ const priorities: PriorityLevel[] = ['critical', 'high', 'medium', 'low'];
 const riskLevels: RiskLevel[] = ['critical', 'high', 'medium', 'low'];
 
 export function ActionPlanForm({ organizationId, departments, onCreated, onCancel }: ActionPlanFormProps) {
+  const auth = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Governance');
@@ -53,9 +55,21 @@ export function ActionPlanForm({ organizationId, departments, onCreated, onCance
   const [error, setError] = useState<string | null>(null);
 
   const canSubmit = useMemo(() => title.trim().length > 2 && organizationId, [title, organizationId]);
+  const canSearchCompanyWide = auth.roles.some(role => (
+    ['super_admin', 'executive', 'governance_admin'].includes(role.role)
+    && role.scope === 'global'
+  ));
 
   useEffect(() => {
     let cancelled = false;
+    if (!departmentId && !canSearchCompanyWide) {
+      setOwners([]);
+      setSponsors([]);
+      setOwnerId('');
+      setSponsorId('');
+      setParticipantSearchError(null);
+      return () => { cancelled = true; };
+    }
     const timer = window.setTimeout(() => {
       void Promise.all([
         searchEligibleWorkParticipants('project_create', departmentId || null, 'project_owner', ownerQuery, 100),
@@ -68,7 +82,7 @@ export function ActionPlanForm({ organizationId, departments, onCreated, onCance
       });
     }, 250);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [departmentId, ownerQuery, sponsorQuery]);
+  }, [canSearchCompanyWide, departmentId, ownerQuery, sponsorQuery]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

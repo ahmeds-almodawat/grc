@@ -28,6 +28,8 @@ on conflict(user_id) do update set organization_id=excluded.organization_id,auth
 insert into public.divisions(id,organization_id,name_en,code) values(pg_temp.f2_uuid(20),pg_temp.f2_uuid(1),'F2 Division','F2-D');
 insert into public.departments(id,organization_id,division_id,name_en,code) values(pg_temp.f2_uuid(21),pg_temp.f2_uuid(1),pg_temp.f2_uuid(20),'F2 Department','F2-DEP');
 insert into public.departments(id,organization_id,division_id,name_en,code) values(pg_temp.f2_uuid(22),pg_temp.f2_uuid(1),pg_temp.f2_uuid(20),'F2 Other Department','F2-OTHER');
+insert into public.departments(id,organization_id,name_en,code) values(pg_temp.f2_uuid(23),pg_temp.f2_uuid(2),'Cross-org Department','F2-XORG');
+insert into public.departments(id,organization_id,division_id,name_en,code,is_active) values(pg_temp.f2_uuid(24),pg_temp.f2_uuid(1),pg_temp.f2_uuid(20),'Inactive Department','F2-INACTIVE',false);
 update public.profiles set division_id=pg_temp.f2_uuid(20),department_id=pg_temp.f2_uuid(21) where organization_id=pg_temp.f2_uuid(1);
 set local session_replication_role=replica;
 insert into public.user_roles(user_id,role,scope,organization_id,department_id,is_active) values
@@ -35,9 +37,14 @@ insert into public.user_roles(user_id,role,scope,organization_id,department_id,i
   (pg_temp.f2_uuid(11),'governance_admin','global',pg_temp.f2_uuid(1),null,true),
   (pg_temp.f2_uuid(12),'project_owner','assigned_only',pg_temp.f2_uuid(1),null,true),
   (pg_temp.f2_uuid(13),'department_manager','department',pg_temp.f2_uuid(1),pg_temp.f2_uuid(21),true),
+  (pg_temp.f2_uuid(13),'executive','global',pg_temp.f2_uuid(2),null,true),
   (pg_temp.f2_uuid(14),'employee','assigned_only',pg_temp.f2_uuid(1),null,true),
   (pg_temp.f2_uuid(15),'employee','assigned_only',pg_temp.f2_uuid(2),null,true);
 set local session_replication_role=origin;
+
+select throws_ok($$select public.f1r2_create_ovr_report(pg_temp.f2_uuid(10),jsonb_build_object('department_id',pg_temp.f2_uuid(23),'brief_description','Cross-org department','status','submitted'))$$,'F1R2_OVR_DEPARTMENT_INVALID','cross-organization OVR department is denied');
+select throws_ok($$select public.f1r2_create_ovr_report(pg_temp.f2_uuid(10),jsonb_build_object('department_id',pg_temp.f2_uuid(24),'brief_description','Inactive department','status','submitted'))$$,'F1R2_OVR_DEPARTMENT_INVALID','inactive OVR department is denied');
+select throws_ok($$select public.f1r2_create_ovr_report(pg_temp.f2_uuid(10),jsonb_build_object('department_id',pg_temp.f2_uuid(999),'brief_description','Unknown department','status','submitted'))$$,'F1R2_OVR_DEPARTMENT_INVALID','unknown OVR department is denied');
 
 insert into auth.users(id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,created_at,updated_at)
 select pg_temp.f2_uuid(200+n),'authenticated','authenticated','bulk-'||n||'@example.test','',now(),'{}'::jsonb,now(),now()
@@ -78,14 +85,29 @@ $$,'Quality routes corrective project explicitly');
 
 select is((select status from public.work_item_assignments where item_type='project' and item_id=(select id from public.projects where title='F2 Corrective project')),'pending','project assignment begins pending');
 select is((select status::text from public.projects where title='F2 Corrective project'),'draft','corrective project stays draft until its owner accepts');
-select is((select owner_id from public.projects where title='F2 Corrective project'),pg_temp.f2_uuid(12),'project owner aligns to assignment');
+select is((select owner_id from public.projects where title='F2 Corrective project'),null::uuid,'pending project assignment grants no owner authority');
 select is((select created_by from public.projects where title='F2 Corrective project'),pg_temp.f2_uuid(11),'creator remains Quality actor');
 select is((select sponsor_id from public.projects where title='F2 Corrective project'),pg_temp.f2_uuid(11),'sponsor remains explicit');
 select throws_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(14),(select id from public.work_item_assignments where item_type='project' and item_id=(select id from public.projects where title='F2 Corrective project')),'accepted',null)$$,'F1R2_ONLY_ASSIGNEE_MAY_RESPOND','unrelated user cannot accept assignment');
+select throws_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(12),'project',(select id from public.projects where title='F2 Corrective project'),'active',10,null)$$,'F1R2_ASSIGNMENT_ACCEPTANCE_REQUIRED','pending project assignee cannot update project status');
+select throws_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(12),'milestone',jsonb_build_object('project_id',(select id from public.projects where title='F2 Corrective project'),'title','Pending owner child'))$$,'F1R2_CHILD_CREATE_DENIED','pending project assignee cannot create child work');
+select throws_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(12),'project',(select id from public.projects where title='F2 Corrective project'),pg_temp.f2_uuid(14),'pending owner reassign')$$,'F1R2_ASSIGNMENT_NOT_AUTHORIZED','pending project assignee cannot reassign the project');
+select throws_ok($$select public.acc_v13_request_approval(pg_temp.f2_uuid(12),pg_temp.f2_uuid(1),'project',(select id from public.projects where title='F2 Corrective project'),pg_temp.f2_uuid(13),'pending owner approval')$$,'ACC_V13_APPROVAL_REQUESTER_NOT_AUTHORIZED','pending project assignee cannot request owner approval');
 select lives_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(12),(select id from public.work_item_assignments where item_type='project' and item_id=(select id from public.projects where title='F2 Corrective project')),'accepted',null)$$,'P3 accepts project assignment');
+select is((select owner_id from public.projects where title='F2 Corrective project'),pg_temp.f2_uuid(12),'accepted project assignment installs the owner');
+select is((select old_data->>'status' from public.audit_logs where action='f1r2_assignment_accepted' and record_id=(select id from public.work_item_assignments where item_type='project' and item_id=(select id from public.projects where title='F2 Corrective project'))),'pending','pending to accepted audit records the true old state');
 select is((select status::text from public.projects where title='F2 Corrective project'),'active','project acceptance is the only initial activation transition');
 select throws_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(12),'project',jsonb_build_object('title','Owner scope escape','department_id',pg_temp.f2_uuid(22)))$$,'F1R2_PROJECT_CREATE_DENIED','assigned-only project owner cannot create arbitrary organization-wide projects');
 select throws_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(13),'project',jsonb_build_object('title','Department scope escape','department_id',pg_temp.f2_uuid(22)))$$,'F1R2_PROJECT_CREATE_DENIED','department manager cannot create outside the matching department');
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'project',jsonb_build_object('title','Decline handoff project','department_id',pg_temp.f2_uuid(21),'owner_id',pg_temp.f2_uuid(12)))$$,'Quality creates a pending handoff fixture');
+select lives_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(12),(select id from public.work_item_assignments where item_type='project' and item_id=(select id from public.projects where title='Decline handoff project')),'declined','Capacity unavailable')$$,'pending project assignee may decline');
+select is((select owner_id from public.projects where title='Decline handoff project'),null::uuid,'declined project retains no owner');
+select throws_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(12),'project',(select id from public.projects where title='Decline handoff project'),'active',10,null)$$,'F1R2_ASSIGNMENT_ACCEPTANCE_REQUIRED','declined project assignee loses status authority');
+select throws_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(12),'project',(select id from public.projects where title='Decline handoff project'),pg_temp.f2_uuid(14),'declined reassign attempt')$$,'F1R2_ASSIGNMENT_NOT_AUTHORIZED','declined project assignee loses reassignment authority');
+select lives_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(11),'project',(select id from public.projects where title='Decline handoff project'),pg_temp.f2_uuid(13),'manager handoff')$$,'creator retains safe handoff authority');
+select is((select owner_id from public.projects where title='Decline handoff project'),null::uuid,'replacement remains non-owner while pending');
+select lives_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(13),(select id from public.work_item_assignments where item_type='project' and item_id=(select id from public.projects where title='Decline handoff project') and status='pending'),'accepted',null)$$,'replacement assignee accepts');
+select is((select owner_id from public.projects where title='Decline handoff project'),pg_temp.f2_uuid(13),'accepted replacement becomes owner');
 select pg_catalog.set_config('request.jwt.claim.sub',pg_temp.f2_uuid(12)::text,true);
 set local role authenticated;
 select throws_like($$select count(*) from public.ovr_reports where logging_number='F2-OVR'$$,'%permission denied%','corrective-project assignment does not expose source OVR and fails closed');
@@ -102,7 +124,25 @@ select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(12),'task'
 select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(12),'task',jsonb_build_object('project_id',(select id from public.projects where title='F2 Corrective project'),'milestone_id',(select id from public.milestones where title='M2'),'title','T2','assigned_to',pg_temp.f2_uuid(12),'start_date','2026-08-16','due_date','2026-08-25','evidence_required',true))$$,'T2 schedule creation succeeds');
 select is((select start_date::text from public.tasks where title='T1'),'2026-08-15','task start persists');
 select is((select due_date::text from public.tasks where title='T2'),'2026-08-25','task due persists');
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'project',jsonb_build_object('title','Task contract project','department_id',pg_temp.f2_uuid(21)))$$,'task contract fixture project is created');
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'milestone',jsonb_build_object('project_id',(select id from public.projects where title='Task contract project'),'title','Task contract milestone'))$$,'task contract fixture milestone is created');
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'task',jsonb_build_object('project_id',(select id from public.projects where title='Task contract project'),'milestone_id',(select id from public.milestones where title='Task contract milestone'),'title','Distinct owner and assignee','owner_id',pg_temp.f2_uuid(13),'assigned_to',pg_temp.f2_uuid(12)))$$,'task accepts distinct accountable owner and execution assignee');
+select is((select owner_id from public.tasks where title='Distinct owner and assignee'),pg_temp.f2_uuid(13),'task accountable owner persists exactly');
+select is((select assigned_to from public.tasks where title='Distinct owner and assignee'),null::uuid,'pending execution assignee is not live authority');
+select is((select assignee_id from public.work_item_assignments where item_type='task' and item_id=(select id from public.tasks where title='Distinct owner and assignee')),pg_temp.f2_uuid(12),'selected execution assignee persists exactly in the assignment ledger');
+select lives_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(12),(select id from public.work_item_assignments where item_type='task' and item_id=(select id from public.tasks where title='Distinct owner and assignee')),'accepted',null)$$,'execution assignee accepts distinct-owner task');
+select is((select assigned_to from public.tasks where title='Distinct owner and assignee'),pg_temp.f2_uuid(12),'accepted execution assignee persists exactly');
+select is((select owner_id from public.tasks where title='Distinct owner and assignee'),pg_temp.f2_uuid(13),'acceptance does not overwrite accountable owner');
+select throws_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(13),'task',(select id from public.tasks where title='Distinct owner and assignee'),'in_progress',10,null)$$,'F1R2_ASSIGNEE_IMPERSONATION_DENIED','accountable owner cannot impersonate a different accepted execution assignee');
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'project',jsonb_build_object('title','Relationship project B','department_id',pg_temp.f2_uuid(21)))$$,'relationship fixture project B is created');
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'milestone',jsonb_build_object('project_id',(select id from public.projects where title='Relationship project B'),'title','Milestone B'))$$,'relationship fixture milestone B is created');
+select throws_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(12),'task',jsonb_build_object('project_id',(select id from public.projects where title='F2 Corrective project'),'milestone_id',(select id from public.milestones where title='Milestone B'),'title','Wrong parent pair'))$$,'F1R2_TASK_MILESTONE_PROJECT_MISMATCH','task cannot combine Project A with Milestone B');
+select throws_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(12),'task',jsonb_build_object('project_id',(select id from public.projects where title='F2 Corrective project'),'milestone_id',pg_temp.f2_uuid(999),'title','Unknown milestone parent'))$$,'F1R2_TASK_MILESTONE_PROJECT_MISMATCH','unknown milestone task parent is denied');
+insert into public.projects(id,organization_id,title,category,source_type,status,priority,risk_level,created_by,updated_by) values(pg_temp.f2_uuid(400),pg_temp.f2_uuid(2),'Cross org project','test','manual','draft','medium','medium',pg_temp.f2_uuid(15),pg_temp.f2_uuid(15));
+insert into public.milestones(id,organization_id,project_id,title,status,created_by,updated_by) values(pg_temp.f2_uuid(401),pg_temp.f2_uuid(2),pg_temp.f2_uuid(400),'Cross org milestone','not_started',pg_temp.f2_uuid(15),pg_temp.f2_uuid(15));
+select throws_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(12),'task',jsonb_build_object('project_id',(select id from public.projects where title='F2 Corrective project'),'milestone_id',pg_temp.f2_uuid(401),'title','Cross org parent'))$$,'F1R2_TASK_MILESTONE_PROJECT_MISMATCH','cross-organization milestone task is denied');
 select is((select count(*)::integer from public.f1r2_search_eligible_participants(pg_temp.f2_uuid(12),'task',(select id from public.tasks where title='T1'),'task_owner','Bulk candidate',100)),55,'contextual participant search finds eligible candidates beyond the first fifty rows');
+select is((select role_scope_label from public.f1r2_search_eligible_participants(pg_temp.f2_uuid(12),'task',(select id from public.tasks where title='T1'),'task_owner','Approver P4',100) where id=pg_temp.f2_uuid(13)),'department_manager / department','participant labels omit unrelated cross-organization roles');
 select throws_ok($$select public.f1r2_search_eligible_participants(pg_temp.f2_uuid(14),'task',(select id from public.tasks where title='T1'),'task_owner','',100)$$,'F1R2_PARTICIPANT_SEARCH_DENIED','unrelated employee cannot enumerate contextual candidates');
 
 select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(12),'task',jsonb_build_object('project_id',(select id from public.projects where title='F2 Corrective project'),'milestone_id',(select id from public.milestones where title='M1'),'title','Privacy leaf','assigned_to',pg_temp.f2_uuid(14),'start_date','2026-08-17','due_date','2026-08-22','evidence_required',false))$$,'P5 privacy assignment fixture is created');
@@ -119,11 +159,28 @@ select lives_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(
 
 select throws_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(12),(select id from public.work_item_assignments where item_type='milestone' and item_id=(select id from public.milestones where title='M2')),'declined',null)$$,'F1R2_DECLINE_REASON_REQUIRED','decline requires a reason');
 select lives_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(12),(select id from public.work_item_assignments where item_type='milestone' and item_id=(select id from public.milestones where title='M2')),'declined','Workload conflict')$$,'assignee declines with reason');
+select is((select owner_id from public.milestones where title='M2'),null::uuid,'declined milestone retains no owner authority');
+select is((select old_data->>'status' from public.audit_logs where action='f1r2_assignment_declined' and record_id=(select id from public.work_item_assignments where item_type='milestone' and item_id=(select id from public.milestones where title='M2') and status='declined')),'pending','pending to declined audit records the true old state');
 select lives_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(12),'milestone',(select id from public.milestones where title='M2'),pg_temp.f2_uuid(13),'controlled reassignment')$$,'authorized owner reassigns declined milestone to an eligible scoped manager');
 select is((select status from public.work_item_assignments where item_type='milestone' and item_id=(select id from public.milestones where title='M2') order by assigned_at,id limit 1),'superseded','declined history becomes superseded without deletion');
 select lives_ok($$select public.f1r2_cancel_work_item_assignment(pg_temp.f2_uuid(12),(select id from public.work_item_assignments where item_type='milestone' and item_id=(select id from public.milestones where title='M2') and status='pending'),'scope changed')$$,'authorized owner cancels pending assignment');
 select is((select owner_id from public.milestones where title='M2'),null::uuid,'pending cancellation clears aligned owner');
 select lives_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(12),'milestone',(select id from public.milestones where title='M2'),pg_temp.f2_uuid(12),'return to owner')$$,'cancelled milestone can be assigned again');
+
+select lives_ok($$select public.f1r2_create_work_item(pg_temp.f2_uuid(11),'task',jsonb_build_object('project_id',(select id from public.projects where title='Task contract project'),'milestone_id',(select id from public.milestones where title='Task contract milestone'),'title','Declined task handoff','assigned_to',pg_temp.f2_uuid(14)))$$,'task decline fixture begins pending');
+select lives_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(14),(select id from public.work_item_assignments where item_type='task' and item_id=(select id from public.tasks where title='Declined task handoff')),'declined','Cannot perform task')$$,'task assignee declines');
+select is((select assigned_to from public.tasks where title='Declined task handoff'),null::uuid,'declined task retains no execution assignee');
+select throws_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(14),'task',(select id from public.tasks where title='Declined task handoff'),'in_progress',10,null)$$,'F1R2_ASSIGNMENT_ACCEPTANCE_REQUIRED','declined task assignee loses execution authority');
+select lives_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(11),'task',(select id from public.tasks where title='Declined task handoff'),pg_temp.f2_uuid(13),'safe task replacement')$$,'project controller reassigns declined task');
+select lives_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(13),(select id from public.work_item_assignments where item_type='task' and item_id=(select id from public.tasks where title='Declined task handoff') and status='pending'),'accepted',null)$$,'replacement task assignee accepts');
+select is((select assigned_to from public.tasks where title='Declined task handoff'),pg_temp.f2_uuid(13),'accepted replacement becomes execution assignee');
+
+insert into public.tasks(id,organization_id,project_id,title,owner_id,assigned_to,status,progress_percent,created_by,updated_by)
+values(pg_temp.f2_uuid(410),pg_temp.f2_uuid(1),(select id from public.projects where title='Task contract project'),'Legacy acknowledgement fixture',pg_temp.f2_uuid(12),pg_temp.f2_uuid(12),'not_started',0,pg_temp.f2_uuid(12),pg_temp.f2_uuid(12));
+insert into public.work_item_assignments(id,organization_id,item_type,item_id,assignee_id,assigned_by,status)
+values(pg_temp.f2_uuid(411),pg_temp.f2_uuid(1),'task',pg_temp.f2_uuid(410),pg_temp.f2_uuid(12),pg_temp.f2_uuid(12),'legacy_unverified');
+select lives_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(12),pg_temp.f2_uuid(411),'accepted',null)$$,'legacy assignment can be explicitly acknowledged');
+select is((select old_data->>'status' from public.audit_logs where action='f1r2_assignment_accepted' and record_id=pg_temp.f2_uuid(411)),'legacy_unverified','legacy acceptance audit records the true old state');
 
 select lives_ok($$select public.f1r2_respond_work_item_assignment(pg_temp.f2_uuid(12),id,'accepted',null) from public.work_item_assignments where assignee_id=pg_temp.f2_uuid(12) and item_type in('milestone','task') and status='pending'$$,'P3 accepts milestone and task assignments');
 select throws_ok($$select public.f1r2_assign_work_item(pg_temp.f2_uuid(12),'task',(select id from public.tasks where title='T2'),pg_temp.f2_uuid(15),'cross org')$$,'F1R2_ASSIGNEE_NOT_ELIGIBLE','cross-organization assignment denied');
@@ -179,6 +236,11 @@ insert into public.evidence_files(id,organization_id,ovr_report_id,file_name,fil
 values(pg_temp.f2_uuid(106),pg_temp.f2_uuid(1),(select id from public.ovr_reports where logging_number='F2-OVR'),'ovr.txt','f2/ovr.txt','accepted','accepted',true,pg_temp.f2_uuid(10),pg_temp.f2_uuid(11),now());
 select is((select count(*)::integer from public.evidence_links where evidence_file_id in(select id from public.evidence_files where file_path like 'f2/%')),6,'each upload has one canonical evidence link');
 select is((select count(distinct evidence_file_id)::integer from public.f1r2_get_evidence_pack(pg_temp.f2_uuid(12),'project',(select id from public.projects where title='F2 Corrective project'))),5,'project pack aggregates project, milestones, and tasks without duplicates');
+select ok((select required_for_closure from public.f1r2_get_evidence_pack(pg_temp.f2_uuid(12),'project',(select id from public.projects where title='F2 Corrective project')) where evidence_file_id=pg_temp.f2_uuid(100)),'project pack initially reflects the authoritative required-evidence flag');
+update public.projects set evidence_required=false where title='F2 Corrective project';
+select ok(not (select required_for_closure from public.f1r2_get_evidence_pack(pg_temp.f2_uuid(12),'project',(select id from public.projects where title='F2 Corrective project')) where evidence_file_id=pg_temp.f2_uuid(100)),'project pack recomputes a later parent requirement change instead of showing stale link metadata');
+update public.projects set evidence_required=true where title='F2 Corrective project';
+select ok((select required_for_closure from public.f1r2_get_evidence_pack(pg_temp.f2_uuid(12),'project',(select id from public.projects where title='F2 Corrective project')) where evidence_file_id=pg_temp.f2_uuid(100)),'restored project requirement is immediately authoritative in the pack');
 select lives_ok($$select public.acc_v13_authorize_evidence_access(pg_temp.f2_uuid(13),pg_temp.f2_uuid(100),'view')$$,'exact approver can inspect project evidence');
 select lives_ok($$select public.acc_v13_authorize_evidence_access(pg_temp.f2_uuid(13),pg_temp.f2_uuid(104),'view')$$,'project approver can inspect descendant task evidence');
 select throws_ok($$select public.acc_v13_authorize_evidence_access(pg_temp.f2_uuid(14),pg_temp.f2_uuid(100),'view')$$,'F1R2_EVIDENCE_ACCESS_DENIED','P5 cannot inspect evidence');
@@ -191,11 +253,33 @@ update public.evidence_files set task_id=(select id from public.tasks where titl
 select is((select count(*)::integer from public.evidence_links where evidence_file_id=pg_temp.f2_uuid(107) and is_active=true and is_primary=true),1,'relink leaves exactly one active canonical parent');
 select ok((select linked_item_id=(select id from public.tasks where title='T2') from public.evidence_links where evidence_file_id=pg_temp.f2_uuid(107) and is_active=true),'relink activates only the new task parent');
 select ok(exists(select 1 from public.evidence_links where evidence_file_id=pg_temp.f2_uuid(107) and linked_item_id=(select id from public.tasks where title='T1') and is_active=false),'relink explicitly retires the old task parent');
+select is((select count(*)::integer from public.audit_logs where record_id=pg_temp.f2_uuid(107) and action='f1r2_evidence_relinked'),1,'one canonical relink emits exactly one audit event');
+select ok((select old_data ? 'parent_id' and new_data ? 'parent_id' and not (new_data ? 'file_path') from public.audit_logs where record_id=pg_temp.f2_uuid(107) and action='f1r2_evidence_relinked'),'relink audit contains parent facts without file path content');
 update public.evidence_files set project_id=(select id from public.projects where title='F2 Corrective project') where id=pg_temp.f2_uuid(107);
 select is((select count(*)::integer from public.evidence_links where evidence_file_id=pg_temp.f2_uuid(107) and is_active=true),0,'ambiguous source row fails closed with no active evidence link');
 select ok(exists(select 1 from public.f1r2_evidence_link_reconciliation where evidence_file_id=pg_temp.f2_uuid(107)),'ambiguous evidence is queued for reconciliation');
+select is((select count(*)::integer from public.audit_logs where record_id=pg_temp.f2_uuid(107) and action='f1r2_evidence_link_reconciliation_required'),1,'ambiguous transition emits one reconciliation audit event');
 update public.evidence_files set project_id=null where id=pg_temp.f2_uuid(107);
 select is((select count(*)::integer from public.evidence_links where evidence_file_id=pg_temp.f2_uuid(107) and is_active=true and linked_item_type='task'),1,'corrected evidence restores one canonical task link');
+
+insert into public.risks(id,organization_id,title,created_by,updated_by)
+values(pg_temp.f2_uuid(420),pg_temp.f2_uuid(1),'Requirement flag risk',pg_temp.f2_uuid(11),pg_temp.f2_uuid(11));
+insert into public.compliance_items(id,organization_id,title,created_by,updated_by)
+values(pg_temp.f2_uuid(421),pg_temp.f2_uuid(1),'Requirement flag compliance',pg_temp.f2_uuid(11),pg_temp.f2_uuid(11));
+insert into public.audit_findings(id,organization_id,title,description,created_by,updated_by)
+values(pg_temp.f2_uuid(422),pg_temp.f2_uuid(1),'Requirement flag audit finding','Disposable requirement flag fixture',pg_temp.f2_uuid(11),pg_temp.f2_uuid(11));
+insert into public.evidence_requirements(id,organization_id,requirement_code,linked_item_type,linked_item_id,requirement_title,required_for_gate,gate_status,is_active,created_by) values
+  (pg_temp.f2_uuid(423),pg_temp.f2_uuid(1),'F2-RISK-CLOSE','risk',pg_temp.f2_uuid(420),'Risk closure evidence','closure','pending',true,pg_temp.f2_uuid(11)),
+  (pg_temp.f2_uuid(424),pg_temp.f2_uuid(1),'F2-COMP-APPROVE','compliance',pg_temp.f2_uuid(421),'Compliance approval evidence','approval','pending',true,pg_temp.f2_uuid(11)),
+  (pg_temp.f2_uuid(425),pg_temp.f2_uuid(1),'F2-AUDIT-CLOSE','audit_finding',pg_temp.f2_uuid(422),'Audit closure evidence','closure','pending',true,pg_temp.f2_uuid(11)),
+  (pg_temp.f2_uuid(426),pg_temp.f2_uuid(1),'F2-AUDIT-APPROVE','audit_finding',pg_temp.f2_uuid(422),'Audit approval evidence','approval','pending',true,pg_temp.f2_uuid(11));
+select ok((select required_for_closure from public.f1r2_evidence_requirement_flags(pg_temp.f2_uuid(1),'project',(select id from public.projects where title='F2 Corrective project'))),'project requirement flags use the shared projection');
+select ok((select required_for_closure from public.f1r2_evidence_requirement_flags(pg_temp.f2_uuid(1),'milestone',(select id from public.milestones where title='M1'))),'milestone requirement flags use the shared projection');
+select ok((select required_for_closure from public.f1r2_evidence_requirement_flags(pg_temp.f2_uuid(1),'task',(select id from public.tasks where title='T1'))),'task requirement flags use the shared projection');
+select ok((select required_for_closure from public.f1r2_evidence_requirement_flags(pg_temp.f2_uuid(1),'ovr',(select id from public.ovr_reports where logging_number='F2-OVR'))),'OVR requirement flags use the shared projection');
+select ok((select required_for_closure and not required_for_approval from public.f1r2_evidence_requirement_flags(pg_temp.f2_uuid(1),'risk',pg_temp.f2_uuid(420))),'risk requirement flags use the shared projection');
+select ok((select not required_for_closure and required_for_approval from public.f1r2_evidence_requirement_flags(pg_temp.f2_uuid(1),'compliance',pg_temp.f2_uuid(421))),'compliance requirement flags use the shared projection');
+select ok((select required_for_closure and required_for_approval from public.f1r2_evidence_requirement_flags(pg_temp.f2_uuid(1),'audit_finding',pg_temp.f2_uuid(422))),'audit-finding requirement flags use the shared projection');
 
 insert into public.evidence_requirements(id,organization_id,requirement_code,linked_item_type,linked_item_id,requirement_title,required_for_gate,gate_status,is_active,created_by)
 values(pg_temp.f2_uuid(108),pg_temp.f2_uuid(1),'F2-REQ','project',(select id from public.projects where title='F2 Corrective project'),'Exact closure evidence requirement','closure','pending',true,pg_temp.f2_uuid(11));
@@ -206,6 +290,9 @@ select pg_catalog.set_config('request.jwt.claim.role','anon',true);
 select throws_ok($$select public.f1r2_get_evidence_pack(pg_temp.f2_uuid(12),'project',(select id from public.projects where title='F2 Corrective project'))$$,'F1R2_SERVICE_ROLE_REQUIRED','anonymous callers cannot execute the protected pack');
 select pg_catalog.set_config('request.jwt.claim.role','service_role',true);
 
+select lives_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(12),'task',(select id from public.tasks where title='Distinct owner and assignee'),'closed',100,null)$$,'accepted execution assignee closes distinct-owner task');
+select lives_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(13),'task',(select id from public.tasks where title='Declined task handoff'),'closed',100,null)$$,'accepted replacement closes reassigned task');
+select lives_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(12),'task',pg_temp.f2_uuid(410),'closed',100,null)$$,'acknowledged legacy assignee closes legacy task');
 select lives_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(12),'task',id,'closed',100,null) from public.tasks where title in('T1','T2')$$,'tasks close');
 select lives_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(12),'milestone',id,'closed',100,null) from public.milestones where title in('M1','M2')$$,'milestones close');
 select ok(public.f1r2_latest_approval_satisfied('project',(select id from public.projects where title='F2 Corrective project'),true),'project retains an exact latest approved decision before closure');
@@ -225,11 +312,32 @@ select throws_ok($$select public.v98_update_ovr_workflow(pg_temp.f2_uuid(11),(se
 select lives_ok($$select public.v98_update_ovr_workflow(pg_temp.f2_uuid(10),(select id from public.ovr_reports where logging_number='F2-OVR'),'disputed',jsonb_build_object('note','Reporter requests another Quality review'))$$,'reporter may dispute the Quality verdict');
 select is((select status::text from public.ovr_reports where logging_number='F2-OVR'),'disputed','reporter dispute is persisted');
 select lives_ok($$select public.v98_update_ovr_workflow(pg_temp.f2_uuid(11),(select id from public.ovr_reports where logging_number='F2-OVR'),'reopened','{}'::jsonb)$$,'Quality reopens a reporter dispute');
-select lives_ok($$select public.v98_update_ovr_workflow(pg_temp.f2_uuid(11),(select id from public.ovr_reports where logging_number='F2-OVR'),'quality_final_review',jsonb_build_object('final_verdict','Corrective actions reverified','quality_manager_comments','Quality review repeated','confirmed_severity_level','level_1'))$$,'Quality issues a revised verdict after dispute');
+insert into public.approvals(id,organization_id,project_id,requested_by,approver_id,status,request_note,requested_at,decided_at)
+values(pg_temp.f2_uuid(440),pg_temp.f2_uuid(1),(select id from public.projects where title='F2 Corrective project'),pg_temp.f2_uuid(12),pg_temp.f2_uuid(13),'rejected','post-dispute rejected gate',statement_timestamp()+interval '1 hour',statement_timestamp()+interval '1 hour 1 minute');
+select throws_ok($$select public.v98_update_ovr_workflow(pg_temp.f2_uuid(11),(select id from public.ovr_reports where logging_number='F2-OVR'),'quality_final_review',jsonb_build_object('final_verdict','Unsafe bypass attempt','quality_manager_comments','Should not persist','confirmed_severity_level','level_1'))$$,'F1R2_OVR_CLOSURE_PREREQUISITES_NOT_MET','legacy revised-verdict route cannot bypass the current corrective gates');
+select throws_ok($$select public.f1r2_finalize_corrective_ovr(pg_temp.f2_uuid(11),(select id from public.ovr_reports where logging_number='F2-OVR'),'Corrective actions reverified','level_1','Quality review repeated','f2-final-2-denied')$$,'F1R2_OVR_CLOSURE_PREREQUISITES_NOT_MET','revised guarded Quality verdict is denied after a newer rejected approval');
+insert into public.approvals(id,organization_id,project_id,requested_by,approver_id,status,request_note,requested_at,decided_at)
+values(pg_temp.f2_uuid(441),pg_temp.f2_uuid(1),(select id from public.projects where title='F2 Corrective project'),pg_temp.f2_uuid(12),pg_temp.f2_uuid(13),'approved','post-dispute restored gate',statement_timestamp()+interval '2 hours',statement_timestamp()+interval '2 hours 1 minute');
+select lives_ok($$select public.f1r2_finalize_corrective_ovr(pg_temp.f2_uuid(11),(select id from public.ovr_reports where logging_number='F2-OVR'),'Corrective actions reverified','level_1','Quality review repeated','f2-final-2')$$,'restored prerequisites permit the guarded revised Quality verdict');
+insert into public.approvals(id,organization_id,project_id,requested_by,approver_id,status,request_note,requested_at,decided_at)
+values(pg_temp.f2_uuid(442),pg_temp.f2_uuid(1),(select id from public.projects where title='F2 Corrective project'),pg_temp.f2_uuid(12),pg_temp.f2_uuid(13),'rejected','post-verdict reporter gate rejection',statement_timestamp()+interval '3 hours',statement_timestamp()+interval '3 hours 1 minute');
+select throws_ok($$select public.v98_update_ovr_workflow(pg_temp.f2_uuid(10),(select id from public.ovr_reports where logging_number='F2-OVR'),'closed','{}'::jsonb)$$,'V98_OVR_ACCEPTED_EVIDENCE_OR_CLOSED_ACTION_REQUIRED','reporter acceptance rechecks and denies a newly invalidated current gate');
+insert into public.approvals(id,organization_id,project_id,requested_by,approver_id,status,request_note,requested_at,decided_at)
+values(pg_temp.f2_uuid(443),pg_temp.f2_uuid(1),(select id from public.projects where title='F2 Corrective project'),pg_temp.f2_uuid(12),pg_temp.f2_uuid(13),'approved','post-verdict reporter gate restored',statement_timestamp()+interval '4 hours',statement_timestamp()+interval '4 hours 1 minute');
 select lives_ok($$select public.v98_update_ovr_workflow(pg_temp.f2_uuid(10),(select id from public.ovr_reports where logging_number='F2-OVR'),'closed','{}'::jsonb)$$,'original reporter accepts and closes the revised verdict');
 select is((select status::text from public.ovr_reports where logging_number='F2-OVR'),'closed','OVR closes only after reporter acceptance');
 select ok((select reporter_response='accepted' and closed_at is not null and closed_by=pg_temp.f2_uuid(10) from public.ovr_reports where logging_number='F2-OVR'),'reporter-only closure facts persist');
-select is((select count(*)::integer from public.audit_logs where record_id=(select id from public.ovr_reports where logging_number='F2-OVR') and action='f1r2_ovr_final_verdict'),1,'F2-R1 Quality finalizer emits one idempotent verdict audit event');
+select is((select count(*)::integer from public.audit_logs where record_id=(select id from public.ovr_reports where logging_number='F2-OVR') and action='f1r2_ovr_final_verdict'),2,'initial and revised guarded Quality verdicts each emit exactly one audit event');
+
+select throws_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(12),'task',(select id from public.tasks where title='T1'),'in_progress',90,null)$$,'F1R2_CLOSED_PROJECT_CHILD_MUTATION_DENIED','closed project blocks child task reopening');
+select throws_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(12),'milestone',(select id from public.milestones where title='M1'),'in_progress',100,null)$$,'F1R2_CLOSED_PROJECT_CHILD_MUTATION_DENIED','closed project blocks milestone reopening');
+select lives_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(12),'project',(select id from public.projects where title='F2 Corrective project'),'active',100,null)$$,'authorized controller reopens the project first');
+select throws_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(12),'task',(select id from public.tasks where title='T1'),'in_progress',90,null)$$,'F1R2_CLOSED_MILESTONE_TASK_MUTATION_DENIED','closed milestone still blocks its child after project reopen');
+select lives_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(12),'milestone',(select id from public.milestones where title='M1'),'in_progress',100,null)$$,'authorized controller reopens the milestone second');
+select lives_ok($$select public.acc_v13_update_work_item_status(pg_temp.f2_uuid(12),'task',(select id from public.tasks where title='T1'),'in_progress',90,null)$$,'accepted execution assignee reopens the task last');
+select is((select count(*)::integer from public.audit_logs where record_id=(select id from public.projects where title='F2 Corrective project') and action='f1r2_project_reopened'),1,'project reopen is audited once');
+select is((select count(*)::integer from public.audit_logs where record_id=(select id from public.milestones where title='M1') and action='f1r2_milestone_reopened'),1,'milestone reopen is audited once');
+select is((select count(*)::integer from public.audit_logs where record_id=(select id from public.tasks where title='T1') and action='f1r2_task_reopened'),1,'task reopen is audited once');
 
 select * from finish();
 rollback;

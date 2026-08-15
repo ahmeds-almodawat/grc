@@ -878,10 +878,10 @@ export function OVR() {
               {selectedReport.status === 'referred_party_response' && isReferredPartyFor(selectedReport) ? (
                 <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('quality_final_review')}>{t('ovr.submitReferredResponse')}</button>
               ) : null}
-              {['quality_final_review', 'reopened', 'escalated'].includes(selectedReport.status) && isQuality ? (
+              {['quality_final_review', 'reopened', 'escalated'].includes(selectedReport.status) && isQuality && !selectedReport.linked_project_id ? (
                 <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('quality_final_review')}>{t('ovr.issueFinalVerdict')}</button>
               ) : null}
-              {selectedReport.status === 'corrective_action_in_progress' && isQuality ? (
+              {['corrective_action_in_progress', 'reopened'].includes(selectedReport.status) && selectedReport.linked_project_id && isQuality ? (
                 <button className="primary-button" disabled={workflowSaving} onClick={finalizeCorrectiveClosure}>{t('ovr.issueFinalVerdict', 'Issue final verdict')}</button>
               ) : null}
               {selectedReport.status === 'quality_final_review' && isReporterFor(selectedReport) ? (

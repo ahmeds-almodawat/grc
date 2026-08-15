@@ -248,7 +248,9 @@ export interface ManagementControlSummary {
 export interface ProjectRow {
   id: string;
   organization_id?: string;
+  division_id?: string | null;
   department_id?: string | null;
+  unit_id?: string | null;
   title: string;
   description: string | null;
   category: string;

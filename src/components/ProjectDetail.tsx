@@ -39,9 +39,23 @@ export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps)
   const assignments = useAsyncData(() => getProjectWorkAssignments(project.id), [project.id]);
   const organizationId = project.organization_id ?? null;
   const actorId = auth.session?.user.id;
-  const hasManagerAuthority = auth.roles.some(role => ['super_admin', 'executive', 'governance_admin', 'division_head', 'department_manager'].includes(role.role));
-  const canControlProject = Boolean(actorId && (actorId === project.owner_id || actorId === project.sponsor_id || actorId === project.created_by)) || hasManagerAuthority;
+  const hasManagerAuthority = auth.roles.some(role => {
+    const organizationMatches = !role.organizationId || role.organizationId === project.organization_id;
+    if (!organizationMatches) return false;
+    if (['super_admin', 'executive', 'governance_admin'].includes(role.role)) return role.scope === 'global';
+    if (role.role === 'division_head') return role.scope === 'division' && Boolean(project.division_id) && role.divisionId === project.division_id;
+    if (role.role === 'department_manager') return role.scope === 'department' && Boolean(project.department_id) && role.departmentId === project.department_id;
+    return false;
+  });
   const currentAssignment = (itemType: ControllableItemType, itemId: string) => assignments.data?.find(row => row.item_type === itemType && row.item_id === itemId);
+  const projectAssignment = currentAssignment('project', project.id);
+  const actorIsAcceptedProjectOwner = Boolean(
+    actorId
+    && actorId === project.owner_id
+    && projectAssignment?.assignee_id === actorId
+    && ['accepted', 'legacy_unverified'].includes(projectAssignment.assignment_status),
+  );
+  const canControlProject = Boolean(actorId && (actorIsAcceptedProjectOwner || actorId === project.sponsor_id || actorId === project.created_by)) || hasManagerAuthority;
   const personName = (nested?: { full_name_en: string | null; full_name_ar: string | null } | null, assignment?: WorkItemAssignmentSummary) => {
     if (language === 'ar') return nested?.full_name_ar || nested?.full_name_en || assignment?.assignee_name || t('common.unassigned', 'Unassigned');
     return nested?.full_name_en || nested?.full_name_ar || assignment?.assignee_name || t('common.unassigned', 'Unassigned');
@@ -76,8 +90,8 @@ export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps)
 
       <div className="module-grid compact-grid">
         <div className="mini-card"><span>Source</span><strong>{humanize(project.source_type)}</strong></div>
-        <div className="mini-card"><span>Owner</span><strong>{personName(project.owner, currentAssignment('project', project.id))}</strong></div>
-        <div className="mini-card"><span>{t('myWork.assignment', 'Assignment')}</span><strong>{t(`assignment.${currentAssignment('project', project.id)?.assignment_status || 'unassigned'}`, humanize(currentAssignment('project', project.id)?.assignment_status || 'unassigned'))}</strong></div>
+        <div className="mini-card"><span>Owner</span><strong>{personName(project.owner, projectAssignment)}</strong></div>
+        <div className="mini-card"><span>{t('myWork.assignment', 'Assignment')}</span><strong>{t(`assignment.${projectAssignment?.assignment_status || 'unassigned'}`, humanize(projectAssignment?.assignment_status || 'unassigned'))}</strong></div>
         <div className="mini-card"><span>Target end</span><strong>{formatDate(project.target_end_date)}</strong></div>
         <div className="mini-card"><span>Progress</span><strong>{project.progress_percent ?? 0}%</strong></div>
       </div>
@@ -92,7 +106,7 @@ export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps)
             onStatus={() => setActiveControl({ mode: 'status', itemType: 'project', itemId: project.id, title: project.title, status: project.status, progress: project.progress_percent })}
             onEvidence={() => setActiveControl({ mode: 'evidence', itemType: 'project', itemId: project.id, title: project.title })}
             onApproval={() => setActiveControl({ mode: 'approval', itemType: 'project', itemId: project.id, title: project.title })}
-          /><button className="ghost-button compact-button" type="button" onClick={() => setActiveControl({ mode: 'assignment', itemType: 'project', itemId: project.id, title: project.title, assignment: currentAssignment('project', project.id) })}>{t('assignment.manage', 'Manage assignment')}</button></div> : null}
+          /><button className="ghost-button compact-button" type="button" onClick={() => setActiveControl({ mode: 'assignment', itemType: 'project', itemId: project.id, title: project.title, assignment: projectAssignment })}>{t('assignment.manage', 'Manage assignment')}</button></div> : null}
         </div>
       </div>
 

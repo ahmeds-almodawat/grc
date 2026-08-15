@@ -135,7 +135,7 @@ describe('F1-R2 migration 196 governed contracts', () => {
     expect(closure).toContain("p.status='closed'");
     expect(closure).toContain("public.f1r2_can_close_work_item('project',p.id)");
     expect(closure).toContain('public.f1r2_item_evidence_satisfied');
-    expect(closure).toContain("o.status in('corrective_action_in_progress','quality_final_review')");
+    expect(closure).toContain("o.status in('corrective_action_in_progress','reopened','quality_final_review')");
     expect(closure).toContain('F1R2_OVR_CLOSURE_PREREQUISITES_NOT_MET');
     expect(closure).toContain("status='quality_final_review'");
     expect(closure).toContain("'f1r2_ovr_final_verdict'");
@@ -165,8 +165,53 @@ describe('F1-R2 migration 196 governed contracts', () => {
 
   it('keeps newly assigned projects draft until explicit owner acceptance', () => {
     expect(migration).toMatch(/'incident_ovr'.+?'draft',0/s);
+    expect(migration).toMatch(/insert into public\.projects[\s\S]+?v_department_id,v_unit_id,null,v_sponsor_id/);
+    expect(migration).toContain("if v_type='project' then update public.projects set owner_id=null");
+    expect(migration).toContain("set owner_id=case when v_decision='accepted' then p_actor_id end");
     expect(migration).toContain("if v_decision='accepted' and v_assignment.item_type='project'");
     expect(migration).toContain("where id=v_assignment.item_id and status='draft'");
+  });
+
+  it('authorizes project ownership only from accepted or legacy assignment state', () => {
+    expect(migration).toContain("v_project_assignment.status in ('accepted','legacy_unverified')");
+    expect(migration).toContain("v_assignment.status not in ('accepted','legacy_unverified')");
+    expect(migration).toContain('F1R2_ASSIGNMENT_ACCEPTANCE_REQUIRED');
+    expect(migration).toContain("jsonb_build_object('status',v_old_status)");
+  });
+
+  it('preserves separate accountable task owner and accepted execution assignee facts', () => {
+    const createWork = migration.slice(migration.indexOf('create or replace function public.f1r2_create_work_item'), migration.indexOf('create or replace function public.f1r2_create_ovr_report'));
+    expect(createWork).toContain("v_assignee:=case when v_type='task'");
+    expect(createWork).toContain('v_owner_id,null,v_start,v_due');
+    expect(createWork).toContain("'task_owner'");
+    expect(migration).toContain("update public.tasks set assigned_to=case when v_decision='accepted' then p_actor_id end");
+    expect(migration).toContain('F1R2_ASSIGNEE_IMPERSONATION_DENIED');
+  });
+
+  it('enforces OVR department and task parent organization integrity before insert', () => {
+    expect(migration).toContain('F1R2_OVR_DEPARTMENT_INVALID');
+    expect(migration).toMatch(/departments d[\s\S]+?d\.organization_id=v_actor\.organization_id[\s\S]+?d\.is_active=true/);
+    expect(migration).toContain('F1R2_TASK_MILESTONE_PROJECT_MISMATCH');
+    expect(migration).toContain('project_id=v_project.id and organization_id=v_actor.organization_id');
+  });
+
+  it('enforces parent-first reopening and audits every governed reopen', () => {
+    expect(migration).toContain('F1R2_CLOSED_PROJECT_CHILD_MUTATION_DENIED');
+    expect(migration).toContain('F1R2_CLOSED_MILESTONE_TASK_MUTATION_DENIED');
+    expect(migration).toContain("'f1r2_project_reopened'");
+    expect(migration).toContain("'f1r2_'||v_type||'_reopened'");
+  });
+
+  it('serializes assignment-sensitive mutations on the same hierarchy locks', () => {
+    expect(migration).toContain('create or replace function public.f1r2_lock_work_item');
+    expect(migration).toContain("pg_advisory_xact_lock(hashtextextended('f1r2-work-item:project:'");
+    expect(migration).toContain("pg_advisory_xact_lock(hashtextextended('f1r2-work-item:milestone:'");
+    expect(migration).toContain("pg_advisory_xact_lock(hashtextextended('f1r2-work-item:task:'");
+    for (const functionName of ['f1r2_assign_work_item', 'f1r2_respond_work_item_assignment', 'acc_v13_update_work_item_status', 'acc_v13_request_approval']) {
+      const start = migration.indexOf(`create or replace function public.${functionName}`);
+      const end = migration.indexOf('create or replace function public.', start + 1);
+      expect(migration.slice(start, end < 0 ? undefined : end)).toContain('perform public.f1r2_lock_work_item');
+    }
   });
 
   it('masks parent and sibling participant details from child-only assignees', () => {
@@ -193,6 +238,33 @@ describe('F1-R2 migration 196 governed contracts', () => {
     expect(migration).toContain('and is_primary=true and is_active=true');
     expect(migration).toContain('uq_f1r2_one_active_primary_evidence_link');
     expect(migration).toContain('canonical_parent_not_unique_or_wrong_organization');
+    expect(migration).toContain("'f1r2_evidence_relinked'");
+    expect(migration).toContain("'f1r2_evidence_link_reconciliation_required'");
+    expect(migration).not.toContain("'f1r2_evidence_relinked','evidence_files',new.id,\n      jsonb_build_object('file_path'");
+  });
+
+  it('uses one evidence-requirement projection for live sync, backfill, and dynamic packs', () => {
+    expect(migration).toContain('create or replace function public.f1r2_evidence_requirement_flags');
+    for (const type of ['project', 'milestone', 'task', 'ovr']) expect(migration).toContain(`v_type='${type}'`);
+    expect(migration).toContain("v_type in('risk','compliance','audit_finding')");
+    expect(migration.match(/public\.f1r2_evidence_requirement_flags/g)?.length).toBeGreaterThanOrEqual(4);
+    const pack = migration.slice(migration.indexOf('create or replace function public.f1r2_get_evidence_pack'));
+    expect(pack).toContain('cross join lateral public.f1r2_evidence_requirement_flags');
+  });
+
+  it('rechecks corrective gates on every initial, revised, and reporter-final verdict', () => {
+    expect(migration).toContain('create trigger trg_f1r2_guard_corrective_ovr_final_verdict');
+    expect(migration).toContain("new.status='quality_final_review'");
+    expect(migration).toContain('not public.can_close_ovr(new.id)');
+    expect(migration).toContain("v_ovr.status not in('corrective_action_in_progress','reopened')");
+    expect(migration).toContain('F1R2_OVR_CLOSURE_PREREQUISITES_NOT_MET');
+  });
+
+  it('keeps participant role labels limited to the resolved organization and scope', () => {
+    const search = migration.slice(migration.indexOf('create or replace function public.f1r2_search_eligible_participants'), migration.indexOf('-- Exact assignment relationship'));
+    expect(search).toContain('(ur.organization_id is null or ur.organization_id=v_organization_id)');
+    expect(search).toContain("ur.scope::text='department' and ur.department_id=v_department_id");
+    expect(search).toContain('string_agg(distinct ur.role::text');
   });
 
   it('requires dual OVR and project entitlement before including corrective hierarchy', () => {
@@ -253,6 +325,22 @@ describe('F1-R2 frontend and Edge contracts', () => {
     expect(controls).toContain('respondToWorkItemAssignment');
   });
 
+  it('fails closed for pending or declined project owners in the project control file', () => {
+    expect(project).toContain('actorIsAcceptedProjectOwner');
+    expect(project).toContain("['accepted', 'legacy_unverified'].includes(projectAssignment.assignment_status)");
+    expect(project).toContain('projectAssignment?.assignee_id === actorId');
+    expect(project).toContain('actorId === project.owner_id');
+    expect(project).not.toMatch(/canControlProject\s*=.*actorId === project\.owner_id(?![\s\S]*actorIsAcceptedProjectOwner)/);
+  });
+
+  it('shows scoped manager controls only when their role context matches the project', () => {
+    expect(project).toContain('role.organizationId === project.organization_id');
+    expect(project).toContain("role.scope === 'division'");
+    expect(project).toContain('role.divisionId === project.division_id');
+    expect(project).toContain("role.scope === 'department'");
+    expect(project).toContain('role.departmentId === project.department_id');
+  });
+
   it('refreshes authoritative OVR and project detail state after mutation', () => {
     expect(ovr).toContain('const authoritative = (await getOvrReports()).find');
     const workflowMutation = ovr.match(/const runWorkflowAction[\s\S]+?const createLinkedProject/)?.[0] || '';
@@ -265,7 +353,7 @@ describe('F1-R2 frontend and Edge contracts', () => {
     expect(actionPlan).toContain('searchEligibleWorkParticipants');
     expect(controls).toContain('searchEligibleWorkParticipants');
     expect(read('src/pages/Projects.tsx')).not.toContain('getProfiles()');
-    expect(project).toContain("personName(project.owner, currentAssignment('project', project.id))");
+    expect(project).toContain('personName(project.owner, projectAssignment)');
     expect(project).toContain("personName(row.assignee || row.owner, currentAssignment('task', row.id))");
     expect(project).toContain('<AssignmentManagementForm');
   });
@@ -322,12 +410,18 @@ describe('F1-R2 frontend and Edge contracts', () => {
     expect(controls).toContain('Search eligible assignees');
     expect(grcForms).toContain("useContextualWorkParticipants('project', projectId, 'milestone_owner')");
     expect(grcForms).toContain("useContextualWorkParticipants(participantContext.itemType, participantContext.itemId, 'task_owner')");
+    expect(actionPlan).toContain('if (!departmentId && !canSearchCompanyWide)');
+    expect(actionPlan).toContain('setOwners([])');
+    expect(actionPlan).toContain('departmentId || null');
   });
 
   it('refreshes authoritative OVR state after Quality verdict without auto-closing', () => {
     expect(ovr).toContain('await finalizeCorrectiveOvr');
     expect(ovr).toContain('const authoritative = (await getOvrReports()).find');
     expect(ovr).toContain("selectedReport.status === 'quality_final_review' && isReporterFor(selectedReport)");
+    expect(ovr).toContain("['corrective_action_in_progress', 'reopened'].includes(selectedReport.status) && selectedReport.linked_project_id");
+    expect(ovr).toContain('onClick={finalizeCorrectiveClosure}');
+    expect(ovr).toContain("!selectedReport.linked_project_id");
   });
 
   it('does not create a corrective project from evidence upload or verdict finalization', () => {
