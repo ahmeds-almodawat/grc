@@ -3,7 +3,8 @@ import { DataState } from '../components/DataState';
 import { EntityTable } from '../components/EntityTable';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
-import { decideApproval } from '../lib/grcApi';
+import { GovernedEvidenceAccess } from '../components/GovernedEvidenceAccess';
+import { decideApproval, getEvidenceForItem } from '../lib/grcApi';
 import { formatDate, humanize } from '../lib/format';
 import { getApprovals } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
@@ -20,6 +21,12 @@ export function Approvals() {
   const [activeFilter, setActiveFilter] = useState<ApprovalFilter>('all');
   const [search, setSearch] = useState('');
   const [selectedApproval, setSelectedApproval] = useState<ApprovalRow | null>(null);
+  const approvalEvidence = useAsyncData(
+    () => selectedApproval && ['project', 'milestone', 'task'].includes(selectedApproval.item_type)
+      ? getEvidenceForItem(selectedApproval.item_type as 'project' | 'milestone' | 'task', selectedApproval.item_id)
+      : Promise.resolve([]),
+    [selectedApproval?.id],
+  );
   const rows = approvals.data || [];
   const filteredRows = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -136,6 +143,12 @@ export function Approvals() {
               <div><span>{t('approvals.requested')}</span><strong>{formatDate(selectedApproval.requested_at)}</strong></div>
               <div><span>{t('approvals.decisionPath')}</span><strong>{selectedApproval.status === 'pending' ? t('approvals.decisionPending') : t('approvals.decisionRecorded')}</strong></div>
             </div>
+            <h5>{t('common.evidence')}</h5>
+            <DataState loading={approvalEvidence.loading} error={approvalEvidence.error} empty={!approvalEvidence.data?.length} emptyMessage={t('approvals.noEvidence', 'No governed evidence is linked to this approval item.')}>
+              <div className="governed-evidence-list">
+                {(approvalEvidence.data || []).map(file => <GovernedEvidenceAccess key={file.id} evidenceId={file.id} fileName={file.file_name} fileType={file.file_type} fileSize={file.file_size} description={file.description} />)}
+              </div>
+            </DataState>
           </div>
         ) : null}
       </div>

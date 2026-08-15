@@ -4,18 +4,19 @@ import { EntityTable } from './EntityTable';
 import { MilestoneForm, TaskForm } from './GrcForms';
 import { Modal } from './Modal';
 import { StatusBadge } from './StatusBadge';
-import { ApprovalRequestForm, EvidenceUploadForm, StatusUpdateForm, WorkControlButtons, type ControllableItemType } from './WorkItemControls';
-import { formatDate, humanize, ownerName } from '../lib/format';
-import { getProjectMilestones, getProjectTasks } from '../lib/grcApi';
+import { ApprovalRequestForm, AssignmentManagementForm, EvidenceUploadForm, StatusUpdateForm, WorkControlButtons, type ControllableItemType } from './WorkItemControls';
+import { formatDate, humanize } from '../lib/format';
+import { getProjectMilestones, getProjectTasks, getProjectWorkAssignments } from '../lib/grcApi';
 import { getEvidenceForItem } from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
-import type { MilestoneRow, ProfileOption, ProjectRow, TaskRow } from '../types/domain';
+import type { WorkItemAssignmentSummary } from '../lib/grcApi';
+import type { MilestoneRow, ProjectRow, TaskRow } from '../types/domain';
 import { useAuth } from '../auth/AuthProvider';
 import { GovernedEvidenceAccess } from './GovernedEvidenceAccess';
+import { useI18n } from '../i18n/I18nContext';
 
 interface ProjectDetailProps {
   project: ProjectRow;
-  profiles: ProfileOption[];
   onProjectUpdated?: () => void;
 }
 
@@ -23,25 +24,53 @@ type ActiveControl =
   | { mode: 'status'; itemType: ControllableItemType; itemId: string; title: string; status: ProjectRow['status'] | MilestoneRow['status'] | TaskRow['status']; progress: number | null }
   | { mode: 'evidence'; itemType: ControllableItemType; itemId: string; title: string }
   | { mode: 'approval'; itemType: ControllableItemType; itemId: string; title: string }
+  | { mode: 'assignment'; itemType: ControllableItemType; itemId: string; title: string; assignment?: WorkItemAssignmentSummary }
   | null;
 
-export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDetailProps) {
+export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps) {
   const auth = useAuth();
+  const { t, language } = useI18n();
   const [milestoneFormOpen, setMilestoneFormOpen] = useState(false);
   const [taskFormOpen, setTaskFormOpen] = useState(false);
   const [activeControl, setActiveControl] = useState<ActiveControl>(null);
   const milestones = useAsyncData(() => getProjectMilestones(project.id), [project.id]);
   const tasks = useAsyncData(() => getProjectTasks(project.id), [project.id]);
-  const evidence = useAsyncData(() => getEvidenceForItem('project', project.id), [project.id]);
+  const assignments = useAsyncData(() => getProjectWorkAssignments(project.id), [project.id]);
   const organizationId = project.organization_id ?? null;
   const actorId = auth.session?.user.id;
-  const hasManagerAuthority = auth.roles.some(role => ['super_admin', 'executive', 'governance_admin', 'division_head', 'department_manager'].includes(role.role));
-  const canControlProject = Boolean(actorId && (actorId === project.owner_id || actorId === project.sponsor_id || actorId === project.created_by)) || hasManagerAuthority;
+  const hasManagerAuthority = auth.roles.some(role => {
+    const organizationMatches = !role.organizationId || role.organizationId === project.organization_id;
+    if (!organizationMatches) return false;
+    if (['super_admin', 'executive', 'governance_admin'].includes(role.role)) return role.scope === 'global';
+    if (role.role === 'division_head') return role.scope === 'division' && Boolean(project.division_id) && role.divisionId === project.division_id;
+    if (role.role === 'department_manager') return role.scope === 'department' && Boolean(project.department_id) && role.departmentId === project.department_id;
+    return false;
+  });
+  const currentAssignment = (itemType: ControllableItemType, itemId: string) => assignments.data?.find(row => row.item_type === itemType && row.item_id === itemId);
+  const projectAssignment = currentAssignment('project', project.id);
+  const actorIsAcceptedProjectOwner = Boolean(
+    actorId
+    && actorId === project.owner_id
+    && projectAssignment?.assignee_id === actorId
+    && ['accepted', 'legacy_unverified'].includes(projectAssignment.assignment_status),
+  );
+  const canControlProject = Boolean(actorId && (actorIsAcceptedProjectOwner || actorId === project.sponsor_id || actorId === project.created_by)) || hasManagerAuthority;
+  const projectAssignmentPending = projectAssignment?.assignment_status === 'pending';
+  const canViewProjectEvidence = canControlProject;
+  const evidence = useAsyncData(
+    () => canViewProjectEvidence ? getEvidenceForItem('project', project.id) : Promise.resolve([]),
+    [project.id, canViewProjectEvidence],
+  );
+  const personName = (nested?: { full_name_en: string | null; full_name_ar: string | null } | null, assignment?: WorkItemAssignmentSummary) => {
+    if (language === 'ar') return nested?.full_name_ar || nested?.full_name_en || assignment?.assignee_name || t('common.unassigned', 'Unassigned');
+    return nested?.full_name_en || nested?.full_name_ar || assignment?.assignee_name || t('common.unassigned', 'Unassigned');
+  };
 
   function refreshDetail() {
     void milestones.refresh();
     void tasks.refresh();
     void evidence.refresh();
+    void assignments.refresh();
     onProjectUpdated?.();
   }
 
@@ -59,14 +88,15 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
           <p className="section-subtitle">{project.description || 'No description added yet.'}</p>
         </div>
         <div className="detail-meta">
-          <StatusBadge status={humanize(project.status)} />
+          <StatusBadge status={t(`status.${project.status}`, humanize(project.status))} />
           <span className={`risk-pill ${project.risk_level}`}>{project.risk_level}</span>
         </div>
       </div>
 
       <div className="module-grid compact-grid">
         <div className="mini-card"><span>Source</span><strong>{humanize(project.source_type)}</strong></div>
-        <div className="mini-card"><span>Owner</span><strong>{ownerName(project.owner)}</strong></div>
+        <div className="mini-card"><span>Owner</span><strong>{personName(project.owner, projectAssignment)}</strong></div>
+        <div className="mini-card"><span>{t('myWork.assignment', 'Assignment')}</span><strong>{t(`assignment.${projectAssignment?.assignment_status || 'unassigned'}`, humanize(projectAssignment?.assignment_status || 'unassigned'))}</strong></div>
         <div className="mini-card"><span>Target end</span><strong>{formatDate(project.target_end_date)}</strong></div>
         <div className="mini-card"><span>Progress</span><strong>{project.progress_percent ?? 0}%</strong></div>
       </div>
@@ -77,11 +107,12 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
             <h4>Project controls</h4>
             <p>Update the project, upload proof, or request closure/decision approval.</p>
           </div>
-          {canControlProject ? <WorkControlButtons
+          {canControlProject ? <div className="inline-actions"><WorkControlButtons
+            canUpdateStatus={!projectAssignmentPending}
             onStatus={() => setActiveControl({ mode: 'status', itemType: 'project', itemId: project.id, title: project.title, status: project.status, progress: project.progress_percent })}
             onEvidence={() => setActiveControl({ mode: 'evidence', itemType: 'project', itemId: project.id, title: project.title })}
             onApproval={() => setActiveControl({ mode: 'approval', itemType: 'project', itemId: project.id, title: project.title })}
-          /> : null}
+          /><button className="ghost-button compact-button" type="button" onClick={() => setActiveControl({ mode: 'assignment', itemType: 'project', itemId: project.id, title: project.title, assignment: projectAssignment })}>{t('assignment.manage', 'Manage assignment')}</button></div> : null}
         </div>
       </div>
 
@@ -96,19 +127,21 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
             getRowKey={row => row.id}
             columns={[
               { key: 'title', header: 'Milestone', render: row => <strong>{row.title}</strong> },
-              { key: 'owner', header: 'Owner', render: row => ownerName(row.owner) },
+              { key: 'owner', header: 'Owner', render: row => personName(row.owner, currentAssignment('milestone', row.id)) },
+              { key: 'assignment', header: t('myWork.assignment', 'Assignment'), render: row => { const assignment=currentAssignment('milestone',row.id); return assignment ? <><StatusBadge status={t(`assignment.${assignment.assignment_status}`,humanize(assignment.assignment_status))} />{assignment.responded_at ? <small>{formatDate(assignment.responded_at)}</small> : null}</> : '—'; } },
               { key: 'due', header: 'Due', render: row => formatDate(row.due_date) },
-              { key: 'status', header: 'Status', render: row => <StatusBadge status={humanize(row.status)} /> },
+              { key: 'status', header: 'Status', render: row => <StatusBadge status={t(`status.${row.status}`, humanize(row.status))} /> },
               { key: 'evidence', header: 'Evidence', render: row => row.evidence_required ? 'Required' : 'Optional' },
               { key: 'progress', header: 'Progress', render: row => `${row.progress_percent ?? 0}%` },
               {
                 key: 'actions',
                 header: 'Controls',
-                render: row => (canControlProject || row.owner_id === actorId) ? <WorkControlButtons
+                render: row => { const assignment=currentAssignment('milestone',row.id); const assigneeCanAct=Boolean(assignment && assignment.assignee_id===actorId && ['accepted','legacy_unverified'].includes(assignment.assignment_status)); return (canControlProject || assigneeCanAct) ? <div className="inline-actions"><WorkControlButtons
+                  canUpdateStatus={Boolean(assigneeCanAct || (!assignment && canControlProject))}
                   onStatus={() => setActiveControl({ mode: 'status', itemType: 'milestone', itemId: row.id, title: row.title, status: row.status, progress: row.progress_percent })}
                   onEvidence={() => setActiveControl({ mode: 'evidence', itemType: 'milestone', itemId: row.id, title: row.title })}
                   onApproval={() => setActiveControl({ mode: 'approval', itemType: 'milestone', itemId: row.id, title: row.title })}
-                /> : '-'
+                />{canControlProject ? <button className="ghost-button compact-button" type="button" onClick={() => setActiveControl({ mode: 'assignment', itemType: 'milestone', itemId: row.id, title: row.title, assignment })}>{t('assignment.manage', 'Manage assignment')}</button> : null}</div> : '-'; }
               }
             ]}
           />
@@ -126,19 +159,21 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
             getRowKey={row => row.id}
             columns={[
               { key: 'title', header: 'Task', render: row => <strong>{row.title}</strong> },
-              { key: 'assignee', header: 'Assigned To', render: row => ownerName(row.assignee) },
+              { key: 'assignee', header: 'Assigned To', render: row => personName(row.assignee || row.owner, currentAssignment('task', row.id)) },
+              { key: 'assignment', header: t('myWork.assignment', 'Assignment'), render: row => { const assignment=currentAssignment('task',row.id); return assignment ? <><StatusBadge status={t(`assignment.${assignment.assignment_status}`,humanize(assignment.assignment_status))} />{assignment.decline_reason ? <small>{assignment.decline_reason}</small> : null}</> : '—'; } },
               { key: 'due', header: 'Due', render: row => formatDate(row.due_date) },
-              { key: 'status', header: 'Status', render: row => <StatusBadge status={humanize(row.status)} /> },
+              { key: 'status', header: 'Status', render: row => <StatusBadge status={t(`status.${row.status}`, humanize(row.status))} /> },
               { key: 'evidence', header: 'Evidence', render: row => row.evidence_required ? 'Required' : 'Optional' },
               { key: 'progress', header: 'Progress', render: row => `${row.progress_percent ?? 0}%` },
               {
                 key: 'actions',
                 header: 'Controls',
-                render: row => (canControlProject || row.owner_id === actorId || row.assigned_to === actorId) ? <WorkControlButtons
+                render: row => { const assignment=currentAssignment('task',row.id); const assigneeCanAct=Boolean(assignment && assignment.assignee_id===actorId && ['accepted','legacy_unverified'].includes(assignment.assignment_status)); return (canControlProject || assigneeCanAct) ? <div className="inline-actions"><WorkControlButtons
+                  canUpdateStatus={Boolean(assigneeCanAct || (!assignment && canControlProject))}
                   onStatus={() => setActiveControl({ mode: 'status', itemType: 'task', itemId: row.id, title: row.title, status: row.status, progress: row.progress_percent })}
                   onEvidence={() => setActiveControl({ mode: 'evidence', itemType: 'task', itemId: row.id, title: row.title })}
                   onApproval={() => setActiveControl({ mode: 'approval', itemType: 'task', itemId: row.id, title: row.title })}
-                /> : '-'
+                />{canControlProject ? <button className="ghost-button compact-button" type="button" onClick={() => setActiveControl({ mode: 'assignment', itemType: 'task', itemId: row.id, title: row.title, assignment })}>{t('assignment.manage', 'Manage assignment')}</button> : null}</div> : '-'; }
               }
             ]}
           />
@@ -161,7 +196,6 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
           <MilestoneForm
             organizationId={organizationId}
             projectId={project.id}
-            profiles={profiles}
             onCancel={() => setMilestoneFormOpen(false)}
             onCreated={() => {
               setMilestoneFormOpen(false);
@@ -179,7 +213,6 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
             organizationId={organizationId}
             projectId={project.id}
             milestones={milestones.data || []}
-            profiles={profiles}
             onCancel={() => setTaskFormOpen(false)}
             onCreated={() => {
               setTaskFormOpen(false);
@@ -204,11 +237,12 @@ export function ProjectDetail({ project, profiles, onProjectUpdated }: ProjectDe
         ) : null}
         {activeControl?.mode === 'approval' ? (
           organizationId ? (
-            <ApprovalRequestForm organizationId={organizationId} itemType={activeControl.itemType} itemId={activeControl.itemId} profiles={profiles} onCancel={() => setActiveControl(null)} onRequested={closeControlAndRefresh} />
+            <ApprovalRequestForm organizationId={organizationId} itemType={activeControl.itemType} itemId={activeControl.itemId} onCancel={() => setActiveControl(null)} onRequested={closeControlAndRefresh} />
           ) : (
             <div className="notice-banner">Cannot request approval without a real organization context.</div>
           )
         ) : null}
+        {activeControl?.mode === 'assignment' ? <AssignmentManagementForm itemType={activeControl.itemType} itemId={activeControl.itemId} currentAssignment={activeControl.assignment} onCancel={() => setActiveControl(null)} onCompleted={closeControlAndRefresh} /> : null}
       </Modal>
     </div>
   );

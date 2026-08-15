@@ -125,6 +125,23 @@ const patch83rDepartmentLifecycleActions = new Set([
   'department_lifecycle_restore',
 ]);
 
+const f1r2BusinessCycleActions = new Set([
+  'f1r2_create_work_item',
+  'f1r2_create_ovr_report',
+  'f1r2_create_corrective_project',
+  'f1r2_assign_work_item',
+  'f1r2_respond_work_item_assignment',
+  'f1r2_cancel_work_item_assignment',
+  'f1r2_list_my_work',
+  'f1r2_list_item_participants',
+  'f1r2_list_project_assignments',
+  'f1r2_search_eligible_participants',
+  'f1r2_decide_approval',
+  'f1r2_get_evidence_pack',
+  'f1r2_relink_evidence_parent',
+  'f1r2_finalize_corrective_ovr',
+]);
+
 const allowedActions = new Set([
   'ovr_executive_dashboard_analytics',
   'search_grc_global',
@@ -172,6 +189,7 @@ const allowedActions = new Set([
   ...patch79OperationsGovernanceActions,
   ...patch83q1ProductionReadinessActions,
   ...patch83rDepartmentLifecycleActions,
+  ...f1r2BusinessCycleActions,
 ]);
 
 const patch19LifecycleActions = new Set([
@@ -3023,6 +3041,119 @@ Deno.serve(async (request) => {
       }, authorizationFailure ? 403 : 409);
     }
 
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (f1r2BusinessCycleActions.has(action)) {
+    const payload = requestPayload;
+    let rpcName = action;
+    let rpcArgs: Record<string, unknown> = { p_actor_id: userData.user.id };
+
+    if (action === 'f1r2_create_work_item') {
+      const itemType = safeString(payload.item_type).trim().toLowerCase();
+      if (!['project', 'milestone', 'task'].includes(itemType)) {
+        return errorResponse('The work-item type is invalid.', 400, 'F1R2_ITEM_TYPE_INVALID', 'Choose project, milestone, or task.', { action });
+      }
+      rpcArgs = { ...rpcArgs, p_item_type: itemType, p_payload: payload };
+    } else if (action === 'f1r2_create_ovr_report' || action === 'f1r2_create_corrective_project') {
+      rpcArgs = { ...rpcArgs, p_payload: payload };
+    } else if (action === 'f1r2_assign_work_item') {
+      rpcArgs = {
+        ...rpcArgs,
+        p_item_type: safeString(payload.item_type).trim().toLowerCase(),
+        p_item_id: safeString(payload.item_id).trim(),
+        p_assignee_id: safeString(payload.assignee_id).trim(),
+        p_reason: safeString(payload.reason).trim() || null,
+      };
+    } else if (action === 'f1r2_respond_work_item_assignment') {
+      rpcArgs = {
+        ...rpcArgs,
+        p_assignment_id: safeString(payload.assignment_id).trim(),
+        p_decision: safeString(payload.decision).trim().toLowerCase(),
+        p_decline_reason: safeString(payload.decline_reason).trim() || null,
+      };
+    } else if (action === 'f1r2_cancel_work_item_assignment') {
+      rpcArgs = {
+        ...rpcArgs,
+        p_assignment_id: safeString(payload.assignment_id).trim(),
+        p_reason: safeString(payload.reason).trim(),
+      };
+    } else if (action === 'f1r2_list_item_participants') {
+      rpcArgs = {
+        ...rpcArgs,
+        p_item_type: safeString(payload.item_type).trim().toLowerCase(),
+        p_item_id: safeString(payload.item_id).trim(),
+      };
+    } else if (action === 'f1r2_list_project_assignments') {
+      rpcArgs = { ...rpcArgs, p_project_id: safeString(payload.project_id).trim() };
+    } else if (action === 'f1r2_search_eligible_participants') {
+      const itemType = safeString(payload.item_type).trim().toLowerCase();
+      const itemId = safeString(payload.item_id).trim();
+      const assignmentPurpose = safeString(payload.assignment_purpose).trim().toLowerCase();
+      if (!['project_create', 'ovr', 'project', 'milestone', 'task'].includes(itemType)
+        || (itemType !== 'project_create' && !itemId)
+        || !['project_owner', 'milestone_owner', 'task_owner', 'sponsor'].includes(assignmentPurpose)) {
+        return errorResponse('The participant-search context is invalid.', 400, 'F1R2_PARTICIPANT_SEARCH_CONTEXT_INVALID', 'Choose an item and assignment purpose.', { action });
+      }
+      rpcArgs = {
+        ...rpcArgs,
+        p_item_type: itemType,
+        p_item_id: itemId || null,
+        p_assignment_purpose: assignmentPurpose,
+        p_query: safeString(payload.query).trim() || null,
+        p_limit: Math.min(Math.max(Number(payload.limit) || 50, 1), 100),
+      };
+    } else if (action === 'f1r2_decide_approval') {
+      rpcArgs = {
+        ...rpcArgs,
+        p_approval_id: safeString(payload.approval_id).trim(),
+        p_decision: safeString(payload.decision).trim().toLowerCase(),
+        p_note: safeString(payload.note).trim() || null,
+      };
+    } else if (action === 'f1r2_get_evidence_pack') {
+      rpcArgs = {
+        ...rpcArgs,
+        p_item_type: safeString(payload.item_type).trim().toLowerCase(),
+        p_item_id: safeString(payload.item_id).trim(),
+      };
+    } else if (action === 'f1r2_relink_evidence_parent') {
+      const itemType = safeString(payload.item_type).trim().toLowerCase();
+      const evidenceFileId = safeString(payload.evidence_file_id).trim();
+      const itemId = safeString(payload.item_id).trim();
+      const reason = safeString(payload.reason).trim();
+      if (!['project', 'milestone', 'task', 'ovr', 'risk', 'compliance', 'audit_finding'].includes(itemType)
+        || !evidenceFileId || !itemId || !reason) {
+        return errorResponse('The evidence relink request is invalid.', 400, 'F1R2_EVIDENCE_RELINK_PAYLOAD_INVALID', 'Choose one governed parent and provide a reason.', { action });
+      }
+      rpcArgs = {
+        ...rpcArgs,
+        p_evidence_file_id: evidenceFileId,
+        p_item_type: itemType,
+        p_item_id: itemId,
+        p_reason: reason,
+      };
+    } else if (action === 'f1r2_finalize_corrective_ovr') {
+      rpcArgs = {
+        ...rpcArgs,
+        p_ovr_report_id: safeString(payload.ovr_report_id).trim(),
+        p_final_verdict: safeString(payload.final_verdict).trim(),
+        p_final_severity: safeString(payload.final_severity).trim().toLowerCase(),
+        p_closure_comment: safeString(payload.closure_comment).trim(),
+        p_idempotency_key: safeString(payload.idempotency_key).trim(),
+      };
+    }
+
+    const { data, error } = await serviceClient.rpc(rpcName, rpcArgs);
+    if (error) {
+      const authorizationFailure = /DENIED|NOT_AUTHORIZED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|ACTIVE_CREDENTIAL|CROSS_ORGANIZATION|ONLY_ASSIGNEE|IMPERSONATION|NOT_ELIGIBLE/i.test(error.message);
+      return errorResponse(
+        authorizationFailure ? 'The governed business-cycle action was denied.' : 'The governed business-cycle action failed safely.',
+        authorizationFailure ? 403 : 409,
+        authorizationFailure ? 'F1R2_ACTION_DENIED' : 'F1R2_ACTION_FAILED',
+        error.message,
+        { action },
+      );
+    }
     return jsonResponse({ ok: true, action, result: data }, 200);
   }
 

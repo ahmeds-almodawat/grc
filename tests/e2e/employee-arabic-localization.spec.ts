@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Request } from '@playwright/test';
+import { join } from 'node:path';
 import { canAccessPageForUser, pageGroups } from '../../src/auth/authAccess';
 import type { AuthRoleAssignment } from '../../src/auth/authTypes';
 import type { PageKey } from '../../src/components/Layout';
@@ -93,6 +94,7 @@ async function installEmployeeMocks(
   proof: BrowserProof,
   language: 'ar' | 'en' = 'ar',
   includeFixtures = false,
+  projectAssignmentStatus: 'pending' | 'accepted' | null = null,
 ) {
   await page.addInitScript(({ user, selectedLanguage }) => {
     localStorage.setItem('grc-language', selectedLanguage);
@@ -154,6 +156,58 @@ async function installEmployeeMocks(
         access_allowed: true,
         message: null,
       };
+    } else if (action === 'f1r2_list_my_work') {
+      result = projectAssignmentStatus ? [{
+        assignment_id: '00000000-0000-4000-8000-000000000291',
+        organization_id: organizationId,
+        item_type: 'project',
+        item_id: '00000000-0000-4000-8000-000000000290',
+        title: 'Pending governed project',
+        project_id: '00000000-0000-4000-8000-000000000290',
+        project_title: 'Pending governed project',
+        due_date: '2026-09-30',
+        status: 'draft',
+        progress_percent: 0,
+        assignment_status: projectAssignmentStatus,
+        assigned_at: '2026-08-15T00:00:00.000Z',
+        responded_at: projectAssignmentStatus === 'accepted' ? '2026-08-15T00:05:00.000Z' : null,
+        decline_reason: null,
+        assigned_by_name: 'Governance Manager',
+      }] : includeFixtures ? [{
+        assignment_id: '00000000-0000-4000-8000-000000000199',
+        organization_id: organizationId,
+        item_type: 'task',
+        item_id: '00000000-0000-4000-8000-000000000195',
+        title: 'مهمة مراجعة عربية',
+        project_id: '00000000-0000-4000-8000-000000000190',
+        project_title: 'مشروع الحوكمة',
+        due_date: '2026-07-30',
+        status: 'in_progress',
+        progress_percent: 25,
+        assignment_status: 'accepted',
+        assigned_at: '2026-07-18T00:00:00.000Z',
+        responded_at: '2026-07-18T00:05:00.000Z',
+        decline_reason: null,
+        assigned_by_name: 'مدير المشروع',
+        assignee_name: 'موظف اختبار العربية',
+      }] : [];
+    } else if (action === 'f1r2_list_project_assignments') {
+      result = projectAssignmentStatus ? [{
+        item_type: 'project',
+        item_id: '00000000-0000-4000-8000-000000000290',
+        assignment_id: '00000000-0000-4000-8000-000000000291',
+        assignee_id: employeeUserId,
+        assignee_name: 'Employee Arabic Test User',
+        assignment_status: projectAssignmentStatus,
+        assigned_at: '2026-08-15T00:00:00.000Z',
+        responded_at: projectAssignmentStatus === 'accepted' ? '2026-08-15T00:05:00.000Z' : null,
+        decline_reason: null,
+        assigned_by_name: 'Governance Manager',
+      }] : [];
+    } else if (action === 'f1r2_search_eligible_participants') {
+      result = [];
+    } else if (action === 'f1r2_get_evidence_pack') {
+      result = [];
     }
 
     await route.fulfill({
@@ -197,6 +251,34 @@ async function installEmployeeMocks(
         unit_id: null,
         is_active: true,
       }];
+    } else if (projectAssignmentStatus && resource === 'projects') {
+      result = [{
+        id: '00000000-0000-4000-8000-000000000290',
+        organization_id: organizationId,
+        division_id: null,
+        department_id: '00000000-0000-4000-8000-000000000193',
+        unit_id: null,
+        title: 'Pending governed project',
+        description: 'Assignment acknowledgement browser fixture',
+        category: 'Governance',
+        source_type: 'manual',
+        owner_id: projectAssignmentStatus === 'accepted' ? employeeUserId : null,
+        sponsor_id: null,
+        created_by: '00000000-0000-4000-8000-000000000299',
+        start_date: '2026-08-15',
+        target_end_date: '2026-09-30',
+        priority: 'medium',
+        risk_level: 'medium',
+        status: projectAssignmentStatus === 'accepted' ? 'active' : 'draft',
+        progress_percent: 0,
+        evidence_required: true,
+        closure_approval_required: true,
+        delay_reason: null,
+        departments: { name_en: 'Quality', name_ar: 'إدارة الجودة' },
+        owner: null,
+      }];
+    } else if (projectAssignmentStatus && ['milestones', 'tasks', 'risks', 'departments', 'organizations', 'evidence_files'].includes(resource)) {
+      result = [];
     } else if (includeFixtures && resource === 'profiles') {
       result = [{
         id: '00000000-0000-4000-8000-000000000194',
@@ -348,6 +430,8 @@ test.describe('Patch 83U Phase 1 Employee Arabic localization', () => {
     expect(proof.actions.filter(Boolean).every((action) => [
       'patch83u_get_capabilities',
       'patch83u_get_credential_state',
+      'f1r2_list_my_work',
+      'f1r2_search_eligible_participants',
     ].includes(action))).toBe(true);
     expect(proof.mutationRequests).toEqual([]);
     expect(proof.consoleProblems).toEqual([]);
@@ -418,5 +502,58 @@ test.describe('Patch 83U Phase 1 Employee Arabic localization', () => {
     await expect(page.getByText(expectedArabicHeadings.home, { exact: true })).toBeVisible();
     await expect(page.locator('.user-management-center')).toHaveCount(0);
     expect(proof.mutationRequests).toEqual([]);
+  });
+
+  test('renders accepted F1-R2 work in mobile Arabic RTL across governed themes', async ({ page }) => {
+    const proof: BrowserProof = { actions: [], mutationRequests: [], consoleProblems: [], pageErrors: [], responseErrors: [] };
+    await installEmployeeMocks(page, proof, 'ar', true);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.myWork}`);
+
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(page.getByText('تم قبول الإسناد', { exact: true })).toBeVisible();
+    await expect(page.getByText('مهمة مراجعة عربية', { exact: true })).toBeVisible();
+    await expect(page.locator('body')).not.toContainText('legacy_unverified');
+    await expect(page.locator('body')).not.toContainText('corrective_action_in_progress');
+
+    const theme = page.getByLabel('مظهر الواجهة');
+    await theme.selectOption('dark');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    const evidenceDir = process.env.F1R2_EVIDENCE_DIR;
+    if (evidenceDir) await page.screenshot({ path: join(evidenceDir, 'f1r2-my-work-mobile-ar-dark.png'), fullPage: true });
+
+    await theme.selectOption('light');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    if (evidenceDir) await page.screenshot({ path: join(evidenceDir, 'f1r2-my-work-mobile-ar-light.png'), fullPage: true });
+
+    await theme.selectOption('system');
+    expect(proof.mutationRequests).toEqual([]);
+    expect(proof.pageErrors).toEqual([]);
+    expect(proof.responseErrors).toEqual([]);
+  });
+
+  test('shows a pending project assignee only the response action and no owner controls', async ({ page }) => {
+    const proof: BrowserProof = { actions: [], mutationRequests: [], consoleProblems: [], pageErrors: [], responseErrors: [] };
+    await installEmployeeMocks(page, proof, 'en', false, 'pending');
+
+    await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.myWork}`);
+    await expect(page.getByText('Pending governed project', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Respond', exact: true })).toBeVisible();
+
+    await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.projects}`);
+    await page.getByRole('button', { name: /Open control file/ }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText('Project controls', { exact: true })).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Manage assignment', exact: true })).toHaveCount(0);
+    await expect(dialog.getByRole('button', { name: 'Add Milestone', exact: true })).toHaveCount(0);
+    await expect(dialog.getByRole('button', { name: 'Add Task', exact: true })).toHaveCount(0);
+    await expect(dialog.getByRole('button', { name: 'Status', exact: true })).toHaveCount(0);
+    await expect(dialog.getByRole('button', { name: 'Evidence', exact: true })).toHaveCount(0);
+    await expect(dialog.getByRole('button', { name: 'Approval', exact: true })).toHaveCount(0);
+
+    expect(proof.mutationRequests).toEqual([]);
+    expect(proof.pageErrors).toEqual([]);
+    expect(proof.responseErrors).toEqual([]);
   });
 });

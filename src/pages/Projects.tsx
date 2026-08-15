@@ -27,7 +27,6 @@ import {
   getOrganizations,
   getPortfolioMilestones,
   getPortfolioTasks,
-  getProfiles,
   getProjects,
   getRisks,
 } from '../lib/grcApi';
@@ -54,10 +53,10 @@ export function Projects({ setPage }: ProjectsProps) {
     return { projects, milestones, tasks, risks };
   }, []);
   const references = useAsyncData(async () => {
-    const [departments, profiles, organizations] = await Promise.all([
-      getDepartments(), getProfiles(), getOrganizations(),
+    const [departments, organizations] = await Promise.all([
+      getDepartments(), getOrganizations(),
     ]);
-    return { departments, profiles, organizations };
+    return { departments, organizations };
   }, []);
 
   const changeFilters = (next: typeof filters) => {
@@ -155,10 +154,19 @@ export function Projects({ setPage }: ProjectsProps) {
       </div>
 
       <Modal size="large" open={formOpen} title={t('projects.v11.createActionPlan', 'Create controlled action plan')} onClose={() => setFormOpen(false)}>
-        <ActionPlanForm organizationId={organizationId} departments={references.data?.departments || []} profiles={references.data?.profiles || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void portfolio.refresh(); }} />
+        <ActionPlanForm organizationId={organizationId} departments={references.data?.departments || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void portfolio.refresh(); }} />
       </Modal>
       <Modal size="workspace" open={detailOpen} title={t('projects.v11.controlFile', 'Project control file')} onClose={() => setDetailOpen(false)}>
-        {selectedProject ? <ProjectDetail project={selectedProject} profiles={references.data?.profiles || []} /> : null}
+        {selectedProject ? <ProjectDetail
+          project={selectedProject}
+          onProjectUpdated={() => {
+            void (async () => {
+              await portfolio.refresh();
+              const refreshed = await getProjects();
+              setSelectedProject(refreshed.find(row => row.id === selectedProject.id) || null);
+            })();
+          }}
+        /> : null}
       </Modal>
     </section>
   );

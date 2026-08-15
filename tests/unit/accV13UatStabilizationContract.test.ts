@@ -16,6 +16,7 @@ const controls = source('src/components/WorkItemControls.tsx');
 const api = source('src/lib/grcApi.ts');
 const edge = source('supabase/functions/privileged-action/index.ts');
 const migration = source('supabase/migrations/195_acc_uat_stabilization_controls.sql');
+const remediation = source('supabase/migrations/196_f1r2_business_cycle_remediation.sql');
 const users = source('src/pages/UserManagementCenter.tsx');
 const app = source('src/App.tsx');
 const ovr = source('src/pages/OVR.tsx');
@@ -63,7 +64,9 @@ describe('ACC v1.3 UAT stabilization contracts', () => {
     expect(migration).toContain('auth.uid() in (p.owner_id, p.sponsor_id, p.created_by)');
     const helper = migration.slice(migration.indexOf('acc_v13_actor_can_control_project'), migration.indexOf('revoke all on function public.acc_v13_actor_can_control_project'));
     expect(helper).not.toContain("'project_owner'");
-    expect(detail).toContain('actorId === project.owner_id || actorId === project.sponsor_id || actorId === project.created_by');
+    expect(remediation).toContain("v_project_assignment.status in ('accepted','legacy_unverified')");
+    expect(detail).toContain('actorIsAcceptedProjectOwner || actorId === project.sponsor_id || actorId === project.created_by');
+    expect(detail).toContain("['accepted', 'legacy_unverified'].includes(projectAssignment.assignment_status)");
   });
 
   it('limits parent-linked child-table access to SELECT and INSERT without adding direct UPDATE or DELETE', () => {
