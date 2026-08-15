@@ -869,7 +869,7 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
                 <button
                   className={`nav-group-trigger ${groupActive ? "active" : ""}`}
                   onClick={() => {
-                    if (group.page && !expanded && !mobileNavigationOpen) setPage(group.page);
+                    if (group.page && group.groupAllowed && !expanded && !mobileNavigationOpen) setPage(group.page);
                     toggleGroup(group.id);
                   }}
                   type="button"

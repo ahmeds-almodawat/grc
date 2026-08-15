@@ -65,7 +65,10 @@ describe('ACC v1.3 UAT stabilization contracts', () => {
     const helper = migration.slice(migration.indexOf('acc_v13_actor_can_control_project'), migration.indexOf('revoke all on function public.acc_v13_actor_can_control_project'));
     expect(helper).not.toContain("'project_owner'");
     expect(remediation).toContain("v_project_assignment.status in ('accepted','legacy_unverified')");
-    expect(detail).toContain('actorIsAcceptedProjectOwner || actorId === project.sponsor_id || actorId === project.created_by');
+    expect(detail).toContain('canControlProjectByRelationship(actorId, project, projectAssignment)');
+    expect(detail).toContain('actorIsAcceptedProjectOwner');
+    expect(detail).toContain('actorId === project.sponsor_id');
+    expect(detail).toContain('actorId === project.created_by');
     expect(detail).toContain("['accepted', 'legacy_unverified'].includes(projectAssignment.assignment_status)");
   });
 
