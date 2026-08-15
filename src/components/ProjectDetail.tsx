@@ -84,6 +84,10 @@ export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps)
     if (language === 'ar') return nested?.full_name_ar || nested?.full_name_en || assignment?.assignee_name || t('common.unassigned', 'Unassigned');
     return nested?.full_name_en || nested?.full_name_ar || assignment?.assignee_name || t('common.unassigned', 'Unassigned');
   };
+  const actualOwnerName = (owner?: { full_name_en: string | null; full_name_ar: string | null } | null) => {
+    if (language === 'ar') return owner?.full_name_ar || owner?.full_name_en || t('common.unassigned', 'Unassigned');
+    return owner?.full_name_en || owner?.full_name_ar || t('common.unassigned', 'Unassigned');
+  };
 
   function refreshDetail() {
     void milestones.refresh();
@@ -114,7 +118,7 @@ export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps)
 
       <div className="module-grid compact-grid">
         <div className="mini-card"><span>Source</span><strong>{humanize(project.source_type)}</strong></div>
-        <div className="mini-card"><span>Owner</span><strong>{personName(project.owner, projectAssignment)}</strong></div>
+        <div className="mini-card"><span>Owner</span><strong>{actualOwnerName(project.owner)}</strong></div>
         <div className="mini-card"><span>{t('myWork.assignment', 'Assignment')}</span><strong>{t(`assignment.${projectAssignment?.assignment_status || 'unassigned'}`, humanize(projectAssignment?.assignment_status || 'unassigned'))}</strong></div>
         <div className="mini-card"><span>Target end</span><strong>{formatDate(project.target_end_date)}</strong></div>
         <div className="mini-card"><span>Progress</span><strong>{project.progress_percent ?? 0}%</strong></div>

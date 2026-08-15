@@ -434,12 +434,14 @@ describe('F1-R2 frontend and Edge contracts', () => {
     expect(read('src/pages/Projects.tsx')).toContain('setSelectedProject(refreshed.find');
   });
 
-  it('renders related owner names from the protected participant projection', () => {
+  it('renders project owner name from actual persisted owner and keeps fallback rendering for milestone/task members', () => {
+    expect(project).toContain('actualOwnerName(project.owner)');
+    expect(project).not.toContain('personName(project.owner, projectAssignment)');
+    expect(project).toContain("personName(row.owner, currentAssignment('milestone', row.id))");
+    expect(project).toContain("personName(row.assignee || row.owner, currentAssignment('task', row.id))");
     expect(actionPlan).toContain('searchEligibleWorkParticipants');
     expect(controls).toContain('searchEligibleWorkParticipants');
     expect(read('src/pages/Projects.tsx')).not.toContain('getProfiles()');
-    expect(project).toContain('personName(project.owner, projectAssignment)');
-    expect(project).toContain("personName(row.assignee || row.owner, currentAssignment('task', row.id))");
     expect(project).toContain('<AssignmentManagementForm');
   });
 
