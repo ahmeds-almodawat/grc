@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, FilePlus2, GitBranch, Printer, ShieldCheck, Upload, Workflow } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
@@ -53,6 +53,124 @@ const preOccurrenceFlags = ['bedridden', 'active', 'post_op_procedure', 'intra_p
 const majorLevels: Array<OvrSeverityLevel | null> = ['level_4', 'sentinel'];
 type OvrDashboardFilter = 'all' | 'open' | 'quality' | 'corrective' | 'sentinel' | 'nearMiss';
 
+export type OvrAuthoritativeStatePatch = {
+  id: string;
+  status: OvrStatus;
+  supervisor_due_date?: string | null;
+  quality_validated_at?: string | null;
+  cross_department_notified_at?: string | null;
+  final_verdict?: string | null;
+  final_verdict_at?: string | null;
+  reporter_response?: string | null;
+  linked_project_id?: string | null;
+  closed_at?: string | null;
+  closed_by?: string | null;
+  reporter_decision_required?: boolean;
+  replayed?: boolean;
+};
+
+export type OvrAuthoritativePatchRecord = {
+  mutation: OvrAuthoritativeStatePatch;
+  baseline: Partial<Record<keyof OvrAuthoritativeStatePatch, unknown>>;
+};
+
+export type OvrPatchFetchClassification =
+  | 'stale_baseline'
+  | 'mutation_converged'
+  | 'server_moved_beyond_patch';
+
+const persistedOvrMutationFields: ReadonlyArray<keyof OvrAuthoritativeStatePatch> = [
+  'id',
+  'status',
+  'supervisor_due_date',
+  'quality_validated_at',
+  'cross_department_notified_at',
+  'final_verdict',
+  'final_verdict_at',
+  'reporter_response',
+  'linked_project_id',
+  'closed_at',
+  'closed_by',
+];
+
+function isFetchedOvrConsistent(
+  fetched: OvrReportRow,
+  mutation: OvrAuthoritativeStatePatch,
+): boolean {
+  const fetchedFields = fetched as unknown as Record<string, unknown>;
+  return persistedOvrMutationFields.every(field => (
+    mutation[field] === undefined || fetchedFields[field] === mutation[field]
+  ));
+}
+
+export function createOvrAuthoritativePatchRecord(
+  current: OvrReportRow,
+  mutation: OvrAuthoritativeStatePatch,
+): OvrAuthoritativePatchRecord {
+  const currentFields = current as unknown as Record<string, unknown>;
+  const baseline: Partial<Record<keyof OvrAuthoritativeStatePatch, unknown>> = {};
+  persistedOvrMutationFields.forEach(field => {
+    if (mutation[field] !== undefined) baseline[field] = currentFields[field];
+  });
+  return { mutation, baseline };
+}
+
+export function classifyFetchedOvrAgainstPatch(
+  fetched: OvrReportRow,
+  record: OvrAuthoritativePatchRecord,
+): OvrPatchFetchClassification {
+  if (fetched.id !== record.mutation.id) return 'server_moved_beyond_patch';
+  if (isFetchedOvrConsistent(fetched, record.mutation)) return 'mutation_converged';
+  const fetchedFields = fetched as unknown as Record<string, unknown>;
+  const remainsAtBaseline = persistedOvrMutationFields.every(field => (
+    record.mutation[field] === undefined || fetchedFields[field] === record.baseline[field]
+  ));
+  return remainsAtBaseline ? 'stale_baseline' : 'server_moved_beyond_patch';
+}
+
+export function reconcileOvrAuthoritativeRecord(
+  current: OvrReportRow,
+  record: OvrAuthoritativePatchRecord,
+  fetched?: OvrReportRow,
+): OvrReportRow {
+  if (current.id !== record.mutation.id) return current;
+  if (!fetched) return { ...current, ...record.mutation } as OvrReportRow;
+  if (classifyFetchedOvrAgainstPatch(fetched, record) === 'stale_baseline') {
+    return { ...current, ...record.mutation } as OvrReportRow;
+  }
+  return fetched;
+}
+
+export function applyOvrAuthoritativePatches(
+  reports: OvrReportRow[],
+  patches: ReadonlyMap<string, OvrAuthoritativePatchRecord>,
+): OvrReportRow[] {
+  return reports.map(report => {
+    const record = patches.get(report.id);
+    return record ? reconcileOvrAuthoritativeRecord(report, record, report) : report;
+  });
+}
+
+export function retireResolvedOvrPatches(
+  patches: ReadonlyMap<string, OvrAuthoritativePatchRecord>,
+  fetchedReports: OvrReportRow[],
+): ReadonlyMap<string, OvrAuthoritativePatchRecord> {
+  let next: Map<string, OvrAuthoritativePatchRecord> | null = null;
+  const fetchedById = new Map(fetchedReports.map(report => [report.id, report]));
+  patches.forEach((record, reportId) => {
+    const fetched = fetchedById.get(reportId);
+    if (fetched && classifyFetchedOvrAgainstPatch(fetched, record) !== 'stale_baseline') {
+      next ??= new Map(patches);
+      next.delete(reportId);
+    }
+  });
+  return next ?? patches;
+}
+
+export function canCompleteManagerReview(status: OvrStatus): boolean {
+  return status === 'submitted';
+}
+
 const ovrEvidenceUploadRoles: ReadonlySet<string> = new Set([
   'super_admin',
   'governance_admin',
@@ -88,7 +206,7 @@ function cleanLabel(value: string) {
   return humanize(value.replaceAll('_', ' '));
 }
 
-function nextStageHint(status: OvrStatus) {
+export function nextStageHint(status: OvrStatus) {
   const order: Partial<Record<OvrStatus, number>> = {
     draft: 0,
     submitted: 1,
@@ -188,6 +306,10 @@ export function OVR() {
   const [severityFilter, setSeverityFilter] = useState<'all' | OvrSeverityLevel>('all');
   const [workflowSaving, setWorkflowSaving] = useState(false);
   const [workflowMessage, setWorkflowMessage] = useState<string | null>(null);
+  const [authoritativeOvrPatches, setAuthoritativeOvrPatches] = useState<ReadonlyMap<string, OvrAuthoritativePatchRecord>>(
+    () => new Map(),
+  );
+  const convergenceRefreshTimers = useRef<Map<string, number>>(new Map());
   const printableEvidence = useAsyncData(
     () => selectedReport ? getEvidenceForItem('ovr_report', selectedReport.id) : Promise.resolve([]),
     [selectedReport?.id],
@@ -242,9 +364,13 @@ export function OVR() {
     }, 250);
     return () => { cancelled=true; window.clearTimeout(timer); };
   }, [correctiveProjectReport, ownerQuery, sponsorQuery, t]);
+  const effectiveReports = useMemo(
+    () => applyOvrAuthoritativePatches(reports.data || [], authoritativeOvrPatches),
+    [authoritativeOvrPatches, reports.data],
+  );
   const filteredReports = useMemo(() => {
     const query = reportSearch.trim().toLowerCase();
-    return (reports.data || []).filter(row => {
+    return effectiveReports.filter(row => {
       const matchesCard =
         activeFilter === 'all'
         || (activeFilter === 'open' && !['closed', 'cancelled', 'rejected'].includes(row.status))
@@ -266,7 +392,7 @@ export function OVR() {
       ].some(value => value?.toLowerCase().includes(query));
       return matchesCard && matchesStatus && matchesSeverity && matchesQuery;
     });
-  }, [activeFilter, reportSearch, reports.data, severityFilter, statusFilter]);
+  }, [activeFilter, effectiveReports, reportSearch, severityFilter, statusFilter]);
   const isQuality = auth.roles.some(role => ['super_admin', 'governance_admin', 'compliance_officer'].includes(role.role));
   const isAuditorOnly = auth.roles.some(role => role.role === 'auditor') && !isQuality;
   const isViewerOnly = auth.roles.some(role => role.role === 'viewer')
@@ -278,6 +404,76 @@ export function OVR() {
 
   const update = (key: keyof typeof form, value: string | boolean | string[]) => setForm(current => ({ ...current, [key]: value }));
   const updateWorkflowForm = (key: keyof typeof workflowForm, value: string) => setWorkflowForm(current => ({ ...current, [key]: value }));
+
+  const synchronizeOpenOvr = (record: OvrAuthoritativePatchRecord, fetched?: OvrReportRow) => {
+    setSelectedReport(current => current?.id === record.mutation.id
+      ? reconcileOvrAuthoritativeRecord(current, record, fetched)
+      : current);
+    setSelectedDashboardReport(current => current?.id === record.mutation.id
+      ? reconcileOvrAuthoritativeRecord(current, record, fetched)
+      : current);
+  };
+
+  const recordAuthoritativeOvrPatch = (
+    baseline: OvrReportRow,
+    mutation: OvrAuthoritativeStatePatch,
+  ): OvrAuthoritativePatchRecord => {
+    const record = createOvrAuthoritativePatchRecord(baseline, mutation);
+    setAuthoritativeOvrPatches(current => {
+      const next = new Map(current);
+      next.set(mutation.id, record);
+      return next;
+    });
+    synchronizeOpenOvr(record);
+    return record;
+  };
+
+  const scheduleConvergenceRefresh = (reportId: string) => {
+    const existing = convergenceRefreshTimers.current.get(reportId);
+    if (existing !== undefined) window.clearTimeout(existing);
+    const timer = window.setTimeout(() => {
+      convergenceRefreshTimers.current.delete(reportId);
+      void reports.refresh();
+    }, 2000);
+    convergenceRefreshTimers.current.set(reportId, timer);
+  };
+
+  const reconcileOvrAfterMutation = async (record: OvrAuthoritativePatchRecord) => {
+    await reports.refresh();
+    const authoritative = (await getOvrReports()).find(report => report.id === record.mutation.id);
+    synchronizeOpenOvr(record, authoritative);
+    if (authoritative && classifyFetchedOvrAgainstPatch(authoritative, record) !== 'stale_baseline') {
+      await reports.refresh();
+    } else {
+      scheduleConvergenceRefresh(record.mutation.id);
+    }
+  };
+
+  useEffect(() => {
+    if (!reports.data) return;
+    const fetchedById = new Map(reports.data.map(report => [report.id, report]));
+    const resolved = Array.from(authoritativeOvrPatches.entries()).flatMap(([reportId, record]) => {
+      const fetched = fetchedById.get(reportId);
+      return fetched && classifyFetchedOvrAgainstPatch(fetched, record) !== 'stale_baseline'
+        ? [{ reportId, record, fetched }]
+        : [];
+    });
+    if (!resolved.length) return;
+    setSelectedReport(current => {
+      const match = current && resolved.find(item => item.reportId === current.id);
+      return current && match ? reconcileOvrAuthoritativeRecord(current, match.record, match.fetched) : current;
+    });
+    setSelectedDashboardReport(current => {
+      const match = current && resolved.find(item => item.reportId === current.id);
+      return current && match ? reconcileOvrAuthoritativeRecord(current, match.record, match.fetched) : current;
+    });
+    setAuthoritativeOvrPatches(current => retireResolvedOvrPatches(current, reports.data || []));
+  }, [authoritativeOvrPatches, reports.data]);
+
+  useEffect(() => () => {
+    convergenceRefreshTimers.current.forEach(timer => window.clearTimeout(timer));
+    convergenceRefreshTimers.current.clear();
+  }, []);
 
   const openReport = (row: OvrReportRow) => {
     setSelectedReport(row);
@@ -403,7 +599,7 @@ export function OVR() {
 
     setWorkflowSaving(true);
     try {
-      await updateOvrWorkflow({
+      const transition = await updateOvrWorkflow({
         ovr_report_id: selectedReport.id,
         next_status: nextStatus,
         note: workflowForm.note,
@@ -417,10 +613,9 @@ export function OVR() {
         confirmed_severity_level: workflowForm.confirmed_severity_level,
         corrective_action_due_date: workflowForm.corrective_action_due_date || undefined
       });
+      const authoritativeRecord = recordAuthoritativeOvrPatch(selectedReport, transition);
       setWorkflowMessage(t('ovr.workflowUpdated'));
-      await reports.refresh();
-      const authoritative = (await getOvrReports()).find(report => report.id === selectedReport.id);
-      if (authoritative) openReport(authoritative);
+      await reconcileOvrAfterMutation(authoritativeRecord);
       workflowSummary.refresh();
       workflowQueue.refresh();
       summary.refresh();
@@ -450,12 +645,17 @@ export function OVR() {
     }
     setWorkflowSaving(true);
     try {
-      await createOvrCorrectiveActionProject({ ovr_report_id: correctiveProjectReport.id, ...correctiveProjectForm });
+      const reportId = correctiveProjectReport.id;
+      const projectId = await createOvrCorrectiveActionProject({ ovr_report_id: reportId, ...correctiveProjectForm });
+      const transition: OvrAuthoritativeStatePatch = {
+        id: reportId,
+        linked_project_id: projectId,
+        status: 'corrective_action_in_progress',
+      };
+      const authoritativeRecord = recordAuthoritativeOvrPatch(correctiveProjectReport, transition);
       setWorkflowMessage(t('ovr.linkedProjectCreated'));
       setCorrectiveProjectReport(null);
-      await reports.refresh();
-      const authoritative = (await getOvrReports()).find(report => report.id === correctiveProjectReport.id);
-      if (authoritative) openReport(authoritative);
+      await reconcileOvrAfterMutation(authoritativeRecord);
     } catch (error) {
       setWorkflowMessage(error instanceof Error ? error.message : t('ovr.workflowFailed'));
     } finally {
@@ -471,17 +671,16 @@ export function OVR() {
     }
     setWorkflowSaving(true);
     try {
-      await finalizeCorrectiveOvr({
+      const transition = await finalizeCorrectiveOvr({
         ovr_report_id: selectedReport.id,
         final_verdict: workflowForm.final_verdict,
         final_severity: workflowForm.confirmed_severity_level,
         closure_comment: workflowForm.quality_manager_comments,
         idempotency_key: `f1r2-close-${selectedReport.id}-${crypto.randomUUID()}`,
       });
+      const authoritativeRecord = recordAuthoritativeOvrPatch(selectedReport, transition);
       setWorkflowMessage(t('ovr.workflowUpdated'));
-      await reports.refresh();
-      const authoritative = (await getOvrReports()).find(report => report.id === selectedReport.id);
-      if (authoritative) openReport(authoritative);
+      await reconcileOvrAfterMutation(authoritativeRecord);
       workflowSummary.refresh(); workflowQueue.refresh(); summary.refresh();
     } catch (error) {
       setWorkflowMessage(error instanceof Error ? error.message : t('ovr.workflowFailed'));
@@ -606,7 +805,7 @@ export function OVR() {
         <div className="split-header">
           <div className="panel-header">
             <h4>{t('ovr.dashboardFilters')}</h4>
-            <p>{t('ovr.dashboardFiltersHint').replace('{shown}', String(filteredReports.length)).replace('{total}', String((reports.data || []).length))}</p>
+            <p>{t('ovr.dashboardFiltersHint').replace('{shown}', String(filteredReports.length)).replace('{total}', String(effectiveReports.length))}</p>
           </div>
           <button className="ghost-button" type="button" onClick={resetOvrFilters}>{t('common.resetFilters')}</button>
         </div>
@@ -615,7 +814,7 @@ export function OVR() {
           <input value={reportSearch} onChange={event => setReportSearch(event.target.value)} placeholder={t('ovr.searchPlaceholder')} />
           <select value={statusFilter} onChange={event => setStatusFilter(event.target.value as typeof statusFilter)}>
             <option value="all">{t('common.allStatuses')}</option>
-            {Array.from(new Set((reports.data || []).map(row => row.status))).map(status => <option key={status} value={status}>{t(`status.${status}`, cleanLabel(status))}</option>)}
+            {Array.from(new Set(effectiveReports.map(row => row.status))).map(status => <option key={status} value={status}>{t(`status.${status}`, cleanLabel(status))}</option>)}
           </select>
           <select value={severityFilter} onChange={event => setSeverityFilter(event.target.value as typeof severityFilter)}>
             <option value="all">{t('ovr.allSeverity')}</option>
@@ -863,7 +1062,7 @@ export function OVR() {
               >
                 <Printer size={16} />{t('ovr.print.action', 'Print OVR')}
               </button>
-              {selectedReport.status === 'submitted' && (isManagerFor(selectedReport) || isQuality) ? (
+              {canCompleteManagerReview(selectedReport.status) && (isManagerFor(selectedReport) || isQuality) ? (
                 <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('manager_review')}><Workflow size={16} />{t('ovr.completeManagerReview')}</button>
               ) : null}
               {selectedReport.status === 'manager_review' && isQuality ? (

@@ -2009,18 +2009,20 @@ export interface UpdateOvrWorkflowInput {
   corrective_action_due_date?: string;
 }
 
+export interface OvrWorkflowMutationResult {
+  id: string;
+  status: OvrStatus;
+  supervisor_due_date: string | null;
+  quality_validated_at: string | null;
+  cross_department_notified_at: string | null;
+  final_verdict: string | null;
+  reporter_response: string | null;
+  closed_at: string | null;
+}
+
 export async function updateOvrWorkflow(input: UpdateOvrWorkflowInput) {
   requireLiveSupabase();
-  return invokePrivilegedAction<{
-    id: string;
-    status: OvrStatus;
-    supervisor_due_date: string | null;
-    quality_validated_at: string | null;
-    cross_department_notified_at: string | null;
-    final_verdict: string | null;
-    reporter_response: string | null;
-    closed_at: string | null;
-  }>('update_ovr_workflow', {
+  return invokePrivilegedAction<OvrWorkflowMutationResult>('update_ovr_workflow', {
     ovr_report_id: input.ovr_report_id,
     next_status: input.next_status,
     note: input.note || null,
@@ -2143,7 +2145,16 @@ export function finalizeCorrectiveOvr(input: {
   closure_comment: string;
   idempotency_key: string;
 }) {
-  return invokePrivilegedAction<OvrReportRow>('f1r2_finalize_corrective_ovr', input);
+  return invokePrivilegedAction<{
+    id: string;
+    status: OvrStatus;
+    final_verdict?: string | null;
+    final_verdict_at?: string | null;
+    closed_at?: string | null;
+    closed_by?: string | null;
+    reporter_decision_required?: boolean;
+    replayed?: boolean;
+  }>('f1r2_finalize_corrective_ovr', input);
 }
 
 export async function getOvrRiskIndicatorSummary(): Promise<OvrRiskIndicatorSummary> {
