@@ -1276,8 +1276,8 @@ export interface CreateMilestoneInput {
   title: string;
   description?: string;
   owner_id?: string;
-  start_date?: string;
-  due_date?: string;
+  start_date: string;
+  due_date: string;
   evidence_required: boolean;
 }
 

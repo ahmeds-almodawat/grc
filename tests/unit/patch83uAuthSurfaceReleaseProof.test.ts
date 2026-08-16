@@ -161,10 +161,10 @@ describe('Patch 83U authenticated surface release proof', () => {
     });
   });
 
-  it('accepts a reviewed migration 194 SECURITY DEFINER routine only with explicit service-role ACL', () => {
+  it('accepts a reviewed migration 197 SECURITY DEFINER routine only with explicit service-role ACL', () => {
     const report = analyzePatch83uAuthSurface({
       migrationFiles: [{
-        path: 'supabase/migrations/194_reviewed_fixture.sql',
+        path: 'supabase/migrations/197_reviewed_fixture.sql',
         text: `
           create function public.reviewed_service_helper()
           returns integer language sql security definer as $$ select 1 $$;
@@ -181,7 +181,7 @@ describe('Patch 83U authenticated surface release proof', () => {
       .toEqual(expect.arrayContaining([
         expect.objectContaining({
           name: 'reviewed_service_helper',
-          source: 'migration194_service_role_acl_review',
+          source: 'migration197_service_role_acl_review',
           disposition: 'service_role_only',
         }),
       ]));
@@ -191,10 +191,10 @@ describe('Patch 83U authenticated surface release proof', () => {
     )).toBe(false);
   });
 
-  it('fails closed when migration 197 introduces an unaudited SECURITY DEFINER routine', () => {
+  it('fails closed when migration 198 introduces an unaudited SECURITY DEFINER routine', () => {
     const report = analyzePatch83uAuthSurface({
       migrationFiles: [{
-        path: 'supabase/migrations/197_future_fixture.sql',
+        path: 'supabase/migrations/198_future_fixture.sql',
         text: `
           create function public.future_browser_helper()
           returns integer language sql security definer as $$ select 1 $$;
@@ -220,10 +220,10 @@ describe('Patch 83U authenticated surface release proof', () => {
     expect(report.status).toBe('fail');
   });
 
-  it('fails closed when migration 197 makes a SECURITY DEFINER routine browser executable', () => {
+  it('fails closed when migration 198 makes a SECURITY DEFINER routine browser executable', () => {
     const report = analyzePatch83uAuthSurface({
       migrationFiles: [{
-        path: 'supabase/migrations/197_browser_fixture.sql',
+        path: 'supabase/migrations/198_browser_fixture.sql',
         text: `
           create function public.future_browser_granted_helper()
           returns integer language sql security definer as $$ select 1 $$;
@@ -270,8 +270,8 @@ describe('Patch 83U authenticated surface release proof', () => {
     )).toBe(true);
     expect(report.search_grc_global.disposition).toBe('authenticated_edge_bridge_with_caller_jwt_rls');
     expect(report.summary.retained_live_broad_security_definer_count).toBe(2);
-    expect(report.summary.target_broad_security_definer_count).toBe(3);
-    expect(report.summary.reviewed_patch83u_migration_ceiling).toBe(196);
+    expect(report.summary.target_broad_security_definer_count).toBe(4);
+    expect(report.summary.reviewed_patch83u_migration_ceiling).toBe(197);
     expect(report.summary.reviewed_restricted_security_definer_count).toBe(53);
     expect(report.acl_reachable_security_definer_rpcs.reviewed_restricted_security_definers)
       .toEqual(expect.arrayContaining([
@@ -314,6 +314,11 @@ describe('Patch 83U authenticated surface release proof', () => {
           source: 'migration196_service_role_acl_review',
           disposition: 'owner_only',
         })),
+        expect.objectContaining({
+          name: 'f1r2_create_work_item',
+          source: 'migration197_service_role_acl_review',
+          disposition: 'service_role_only',
+        }),
         expect.objectContaining({
           name: 'f1r2_lock_work_item',
           source: 'migration196_service_role_acl_review',

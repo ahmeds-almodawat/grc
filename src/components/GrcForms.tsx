@@ -353,8 +353,6 @@ export function MilestoneForm({ organizationId, projectId, onCreated, onCancel }
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [ownerId, setOwnerId] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [dueDate, setDueDate] = useState('');
   const [evidenceRequired, setEvidenceRequired] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -363,11 +361,15 @@ export function MilestoneForm({ organizationId, projectId, onCreated, onCancel }
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    const formData = new FormData(event.currentTarget);
+    const submittedStartDate = String(formData.get('start_date') ?? '').trim();
+    const submittedDueDate = String(formData.get('due_date') ?? '').trim();
     if (!title.trim()) return setError('Milestone title is required.');
-    if (startDate && dueDate && dueDate < startDate) return setError('Milestone due date cannot precede its start date.');
+    if (!submittedStartDate || !submittedDueDate) return setError('Milestone start and due dates are required.');
+    if (submittedDueDate < submittedStartDate) return setError('Milestone due date cannot precede its start date.');
     setSaving(true);
     try {
-      await createMilestone({ organization_id: organizationId, project_id: projectId, title: title.trim(), description: description.trim() || undefined, owner_id: ownerId || undefined, start_date: startDate || undefined, due_date: dueDate || undefined, evidence_required: evidenceRequired });
+      await createMilestone({ organization_id: organizationId, project_id: projectId, title: title.trim(), description: description.trim() || undefined, owner_id: ownerId || undefined, start_date: submittedStartDate, due_date: submittedDueDate, evidence_required: evidenceRequired });
       onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create milestone.');
@@ -384,8 +386,8 @@ export function MilestoneForm({ organizationId, projectId, onCreated, onCancel }
       <label className="field full-width"><span>Description</span><textarea value={description} onChange={event => setDescription(event.target.value)} /></label>
       <label className="field"><span>Search eligible owner</span><input value={participants.query} onChange={event => participants.setQuery(event.target.value)} placeholder="Name or Employee ID" /></label>
       <label className="field"><span>Owner</span><select value={ownerId} onChange={event => setOwnerId(event.target.value)} disabled={participants.loading}><option value="">{participants.loading ? 'Loading…' : 'Unassigned'}</option>{participants.profiles.map(profile => <option key={profile.id} value={profile.id}>{profile.full_name_en}</option>)}</select></label>
-      <label className="field"><span>Start date</span><input type="date" value={startDate} onChange={event => setStartDate(event.target.value)} /></label>
-      <label className="field"><span>Due date</span><input type="date" value={dueDate} onChange={event => setDueDate(event.target.value)} /></label>
+      <label className="field"><span>Start date *</span><input name="start_date" type="date" required /></label>
+      <label className="field"><span>Due date *</span><input name="due_date" type="date" required /></label>
       <label className="checkbox-field"><input type="checkbox" checked={evidenceRequired} onChange={event => setEvidenceRequired(event.target.checked)} /> Evidence required</label>
       <div className="form-actions full-width"><button className="ghost-button" type="button" onClick={onCancel}>Cancel</button><button className="primary-button" disabled={saving || !title.trim()}>{saving ? 'Saving…' : 'Add Milestone'}</button></div>
     </form>
