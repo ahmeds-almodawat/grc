@@ -191,10 +191,10 @@ describe('Patch 83U authenticated surface release proof', () => {
     )).toBe(false);
   });
 
-  it('fails closed when migration 199 introduces an unaudited SECURITY DEFINER routine', () => {
+  it('fails closed when migration 200 introduces an unaudited SECURITY DEFINER routine', () => {
     const report = analyzePatch83uAuthSurface({
       migrationFiles: [{
-        path: 'supabase/migrations/199_future_fixture.sql',
+        path: 'supabase/migrations/200_future_fixture.sql',
         text: `
           create function public.future_browser_helper()
           returns integer language sql security definer as $$ select 1 $$;
@@ -220,10 +220,10 @@ describe('Patch 83U authenticated surface release proof', () => {
     expect(report.status).toBe('fail');
   });
 
-  it('fails closed when migration 199 makes a SECURITY DEFINER routine browser executable', () => {
+  it('fails closed when migration 200 makes a SECURITY DEFINER routine browser executable', () => {
     const report = analyzePatch83uAuthSurface({
       migrationFiles: [{
-        path: 'supabase/migrations/199_browser_fixture.sql',
+        path: 'supabase/migrations/200_browser_fixture.sql',
         text: `
           create function public.future_browser_granted_helper()
           returns integer language sql security definer as $$ select 1 $$;
@@ -271,7 +271,7 @@ describe('Patch 83U authenticated surface release proof', () => {
     expect(report.search_grc_global.disposition).toBe('authenticated_edge_bridge_with_caller_jwt_rls');
     expect(report.summary.retained_live_broad_security_definer_count).toBe(2);
     expect(report.summary.target_broad_security_definer_count).toBe(4);
-    expect(report.summary.reviewed_patch83u_migration_ceiling).toBe(198);
+    expect(report.summary.reviewed_patch83u_migration_ceiling).toBe(199);
     expect(report.summary.reviewed_restricted_security_definer_count).toBe(53);
     expect(report.acl_reachable_security_definer_rpcs.reviewed_restricted_security_definers)
       .toEqual(expect.arrayContaining([
