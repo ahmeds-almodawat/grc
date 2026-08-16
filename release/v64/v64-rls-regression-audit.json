@@ -1,0 +1,2787 @@
+{
+  "generated_at": "2026-08-16T18:53:04.840Z",
+  "base_ref_requested": "a6178e11013beedb1c687382515e7adb9e552f40",
+  "base_ref_resolved": "a6178e11013beedb1c687382515e7adb9e552f40",
+  "head_ref": "a6178e11013beedb1c687382515e7adb9e552f40",
+  "head_source": "current_working_tree",
+  "status": "passed",
+  "summary": {
+    "base_unresolved_critical": 0,
+    "base_unresolved_high": 6,
+    "inherited_unresolved_critical": 0,
+    "inherited_unresolved_high": 6,
+    "resolved_critical": 0,
+    "resolved_high": 0,
+    "new_critical": 0,
+    "new_high": 0,
+    "new_unsafe_browser_grants": 0,
+    "head_controlled_deny_all": 20,
+    "strict_regression_passed": true
+  },
+  "inherited_unresolved": [
+    {
+      "severity": "high",
+      "code": "RLS_NO_POLICY_FOUND",
+      "table": "patch83b_release_migration_events",
+      "created_in": "supabase/migrations/186_legacy_role_scope_reconciliation.sql",
+      "missing_controlled_deny_all_proofs": [
+        "complete_role_acl_lockdown_after_rls"
+      ],
+      "browser_grants": [],
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/186_legacy_role_scope_reconciliation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/186_legacy_role_scope_reconciliation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/186_legacy_role_scope_reconciliation.sql"
+            }
+          ]
+        }
+      },
+      "acl_ambiguities": [],
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/186_legacy_role_scope_reconciliation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/186_legacy_role_scope_reconciliation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/186_legacy_role_scope_reconciliation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3858,\"migration\":\"supabase/migrations/186_legacy_role_scope_reconciliation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table has RLS but no policy and the controlled deny-all contract could not be proven."
+    },
+    {
+      "severity": "high",
+      "code": "RLS_NO_POLICY_FOUND",
+      "table": "patch83u_runtime_control",
+      "created_in": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "missing_controlled_deny_all_proofs": [
+        "complete_role_acl_lockdown_after_rls"
+      ],
+      "browser_grants": [],
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql"
+            }
+          ]
+        }
+      },
+      "acl_ambiguities": [],
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql\"}]}},\"complete_acl_lockdowns\":[],\"ambiguities\":[]}",
+      "message": "Sensitive table has RLS but no policy and the controlled deny-all contract could not be proven."
+    },
+    {
+      "severity": "high",
+      "code": "RLS_NO_POLICY_FOUND",
+      "table": "user_account_provisioning",
+      "created_in": "supabase/migrations/173_patch83t_controlled_user_excel_import.sql",
+      "missing_controlled_deny_all_proofs": [
+        "complete_role_acl_lockdown_after_rls"
+      ],
+      "browser_grants": [],
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/173_patch83t_controlled_user_excel_import.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/173_patch83t_controlled_user_excel_import.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/173_patch83t_controlled_user_excel_import.sql"
+            }
+          ]
+        }
+      },
+      "acl_ambiguities": [],
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/173_patch83t_controlled_user_excel_import.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/173_patch83t_controlled_user_excel_import.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/173_patch83t_controlled_user_excel_import.sql\"}]}},\"complete_acl_lockdowns\":[],\"ambiguities\":[]}",
+      "message": "Sensitive table has RLS but no policy and the controlled deny-all contract could not be proven."
+    },
+    {
+      "severity": "high",
+      "code": "RLS_NO_POLICY_FOUND",
+      "table": "user_credential_events",
+      "created_in": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "missing_controlled_deny_all_proofs": [
+        "complete_role_acl_lockdown_after_rls"
+      ],
+      "browser_grants": [],
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql"
+            }
+          ]
+        }
+      },
+      "acl_ambiguities": [],
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql\"}]}},\"complete_acl_lockdowns\":[],\"ambiguities\":[]}",
+      "message": "Sensitive table has RLS but no policy and the controlled deny-all contract could not be proven."
+    },
+    {
+      "severity": "high",
+      "code": "RLS_NO_POLICY_FOUND",
+      "table": "user_credential_states",
+      "created_in": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "missing_controlled_deny_all_proofs": [
+        "complete_role_acl_lockdown_after_rls"
+      ],
+      "browser_grants": [],
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql"
+            }
+          ]
+        }
+      },
+      "acl_ambiguities": [],
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql\"}]}},\"complete_acl_lockdowns\":[],\"ambiguities\":[]}",
+      "message": "Sensitive table has RLS but no policy and the controlled deny-all contract could not be proven."
+    },
+    {
+      "severity": "high",
+      "code": "RLS_NO_POLICY_FOUND",
+      "table": "user_credential_suspended_roles",
+      "created_in": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "missing_controlled_deny_all_proofs": [
+        "complete_role_acl_lockdown_after_rls"
+      ],
+      "browser_grants": [],
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql"
+            }
+          ]
+        }
+      },
+      "acl_ambiguities": [],
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql\"}]}},\"complete_acl_lockdowns\":[],\"ambiguities\":[]}",
+      "message": "Sensitive table has RLS but no policy and the controlled deny-all contract could not be proven."
+    }
+  ],
+  "resolved": [],
+  "introduced": [],
+  "controlled_deny_all": [
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "f1r2_evidence_link_reconciliation",
+      "created_in": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/196_f1r2_business_cycle_remediation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/196_f1r2_business_cycle_remediation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/196_f1r2_business_cycle_remediation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [],
+        "revoked_privileges": [
+          "delete",
+          "insert",
+          "references",
+          "select",
+          "trigger",
+          "truncate",
+          "update"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/196_f1r2_business_cycle_remediation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/196_f1r2_business_cycle_remediation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/196_f1r2_business_cycle_remediation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/196_f1r2_business_cycle_remediation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":4068,\"migration\":\"supabase/migrations/196_f1r2_business_cycle_remediation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "organization_ovr_analytics_config",
+      "created_in": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [],
+        "revoked_privileges": [
+          "delete",
+          "insert",
+          "references",
+          "select",
+          "trigger",
+          "truncate",
+          "update"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":4018,\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "organization_reporting_lines",
+      "created_in": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [
+          "insert",
+          "select",
+          "update"
+        ],
+        "revoked_privileges": [
+          "delete",
+          "references",
+          "trigger",
+          "truncate"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+          },
+          {
+            "action": "grant",
+            "privileges": [
+              "select",
+              "insert",
+              "update"
+            ],
+            "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3943,\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_conflict_events",
+      "created_in": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [
+          "insert",
+          "select"
+        ],
+        "revoked_privileges": [
+          "delete",
+          "references",
+          "trigger",
+          "truncate",
+          "update"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+          },
+          {
+            "action": "grant",
+            "privileges": [
+              "select",
+              "insert"
+            ],
+            "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3946,\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_executive_analytics_audit",
+      "created_in": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [],
+        "revoked_privileges": [
+          "delete",
+          "insert",
+          "references",
+          "select",
+          "trigger",
+          "truncate",
+          "update"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":4021,\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_executive_analytics_requests",
+      "created_in": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [],
+        "revoked_privileges": [
+          "delete",
+          "insert",
+          "references",
+          "select",
+          "trigger",
+          "truncate",
+          "update"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":4020,\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_executive_analytics_snapshots",
+      "created_in": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [],
+        "revoked_privileges": [
+          "delete",
+          "insert",
+          "references",
+          "select",
+          "trigger",
+          "truncate",
+          "update"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":4019,\"migration\":\"supabase/migrations/194_ovr_executive_analytics_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_final_verdicts",
+      "created_in": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [
+          "select"
+        ],
+        "revoked_privileges": [
+          "delete",
+          "insert",
+          "references",
+          "trigger",
+          "truncate",
+          "update"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+          },
+          {
+            "action": "grant",
+            "privileges": [
+              "select"
+            ],
+            "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3995,\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_governance_closures",
+      "created_in": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [
+          "select"
+        ],
+        "revoked_privileges": [
+          "delete",
+          "insert",
+          "references",
+          "trigger",
+          "truncate",
+          "update"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+          },
+          {
+            "action": "grant",
+            "privileges": [
+              "select"
+            ],
+            "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3996,\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_post_closure_reviews",
+      "created_in": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [
+          "select"
+        ],
+        "revoked_privileges": [
+          "delete",
+          "insert",
+          "references",
+          "trigger",
+          "truncate",
+          "update"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+          },
+          {
+            "action": "grant",
+            "privileges": [
+              "select"
+            ],
+            "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3998,\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_related_persons",
+      "created_in": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [
+          "insert",
+          "select",
+          "update"
+        ],
+        "revoked_privileges": [
+          "delete",
+          "references",
+          "trigger",
+          "truncate"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+          },
+          {
+            "action": "grant",
+            "privileges": [
+              "select",
+              "insert",
+              "update"
+            ],
+            "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3945,\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_relationship_state",
+      "created_in": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [
+          "insert",
+          "select",
+          "update"
+        ],
+        "revoked_privileges": [
+          "delete",
+          "references",
+          "trigger",
+          "truncate"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+          },
+          {
+            "action": "grant",
+            "privileges": [
+              "select",
+              "insert",
+              "update"
+            ],
+            "migration": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3944,\"migration\":\"supabase/migrations/191_ovr_relationship_conflict_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_reporter_responses",
+      "created_in": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [
+          "select"
+        ],
+        "revoked_privileges": [
+          "delete",
+          "insert",
+          "references",
+          "trigger",
+          "truncate",
+          "update"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+          },
+          {
+            "action": "grant",
+            "privileges": [
+              "select"
+            ],
+            "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3997,\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_review_cycles",
+      "created_in": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [
+          "insert",
+          "select",
+          "update"
+        ],
+        "revoked_privileges": [
+          "delete",
+          "references",
+          "trigger",
+          "truncate"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+          },
+          {
+            "action": "grant",
+            "privileges": [
+              "select",
+              "insert",
+              "update"
+            ],
+            "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3967,\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_reviewer_assignments",
+      "created_in": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [
+          "insert",
+          "select",
+          "update"
+        ],
+        "revoked_privileges": [
+          "delete",
+          "references",
+          "trigger",
+          "truncate"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+          },
+          {
+            "action": "grant",
+            "privileges": [
+              "select",
+              "insert",
+              "update"
+            ],
+            "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3969,\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_reviewer_pool_memberships",
+      "created_in": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [
+          "insert",
+          "select",
+          "update"
+        ],
+        "revoked_privileges": [
+          "delete",
+          "references",
+          "trigger",
+          "truncate"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+          },
+          {
+            "action": "grant",
+            "privileges": [
+              "select",
+              "insert",
+              "update"
+            ],
+            "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3966,\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_routing_events",
+      "created_in": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [
+          "insert",
+          "select"
+        ],
+        "revoked_privileges": [
+          "delete",
+          "references",
+          "trigger",
+          "truncate",
+          "update"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+          },
+          {
+            "action": "grant",
+            "privileges": [
+              "select",
+              "insert"
+            ],
+            "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3970,\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_separation_policies",
+      "created_in": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [
+          "select"
+        ],
+        "revoked_privileges": [
+          "delete",
+          "insert",
+          "references",
+          "trigger",
+          "truncate",
+          "update"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+          },
+          {
+            "action": "grant",
+            "privileges": [
+              "select"
+            ],
+            "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3994,\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_stage_instances",
+      "created_in": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [
+          "insert",
+          "select",
+          "update"
+        ],
+        "revoked_privileges": [
+          "delete",
+          "references",
+          "trigger",
+          "truncate"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+          },
+          {
+            "action": "grant",
+            "privileges": [
+              "select",
+              "insert",
+              "update"
+            ],
+            "migration": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3968,\"migration\":\"supabase/migrations/192_ovr_reviewer_routing_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    },
+    {
+      "severity": "observation",
+      "code": "CONTROLLED_DENY_ALL",
+      "table": "ovr_workflow_events_v11",
+      "created_in": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "policy_count": 0,
+      "browser_acl": {
+        "public": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        },
+        "anon": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        },
+        "authenticated": {
+          "explicitly_revoked": true,
+          "explicit_all_revoked": true,
+          "granted_privileges": [],
+          "revoked_privileges": [
+            "delete",
+            "insert",
+            "references",
+            "select",
+            "trigger",
+            "truncate",
+            "update"
+          ],
+          "evidence": [
+            {
+              "action": "revoke",
+              "privileges": [
+                "all"
+              ],
+              "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+            }
+          ]
+        }
+      },
+      "service_role_acl": {
+        "explicitly_revoked": true,
+        "explicit_all_revoked": true,
+        "granted_privileges": [
+          "select"
+        ],
+        "revoked_privileges": [
+          "delete",
+          "insert",
+          "references",
+          "trigger",
+          "truncate",
+          "update"
+        ],
+        "evidence": [
+          {
+            "action": "revoke",
+            "privileges": [
+              "all"
+            ],
+            "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+          },
+          {
+            "action": "grant",
+            "privileges": [
+              "select"
+            ],
+            "migration": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql"
+          }
+        ]
+      },
+      "complete_acl_lockdown_after_rls": true,
+      "acl_state_signature": "{\"rls_enabled\":true,\"rls_forced\":true,\"policies\":[],\"browser_acl\":{\"public\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]},\"anon\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]},\"authenticated\":{\"explicitly_revoked\":true,\"explicit_all_revoked\":true,\"granted_privileges\":[],\"revoked_privileges\":[\"delete\",\"insert\",\"references\",\"select\",\"trigger\",\"truncate\",\"update\"],\"evidence\":[{\"action\":\"revoke\",\"privileges\":[\"all\"],\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\"}]}},\"complete_acl_lockdowns\":[{\"order\":3999,\"migration\":\"supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql\",\"roles\":[\"public\",\"anon\",\"authenticated\",\"service_role\"]}],\"ambiguities\":[]}",
+      "message": "Sensitive table is structurally fail-closed: RLS is enabled and forced, no browser policy exists, an ordered complete tracked-role ACL lockdown follows the final RLS state, and final browser ACLs remain revoked."
+    }
+  ]
+}

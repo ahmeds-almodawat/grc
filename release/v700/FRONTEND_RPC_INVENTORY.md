@@ -1,10 +1,10 @@
 # v7.0 Frontend RPC Inventory
 
-Generated: 2026-07-17T21:12:58.404Z
+Generated: 2026-08-16T18:53:06.696Z
 
 - Direct frontend RPC calls: 0
-- Authenticated Edge bridge calls: 85
-- Unique RPC names: 83
+- Authenticated Edge bridge calls: 104
+- Unique RPC names: 100
 
 ## Classification counts
 
@@ -13,7 +13,10 @@ Generated: 2026-07-17T21:12:58.404Z
   "accreditation_assurance": 8,
   "read_only_search": 1,
   "production_readiness": 28,
-  "workflow_runtime": 14,
+  "workflow_runtime_review": 10,
+  "unknown_requires_review": 9,
+  "workflow_runtime": 13,
+  "privileged_admin_review": 1,
   "privileged_admin": 16,
   "user_management": 12,
   "evidence_governance": 3,
@@ -36,8 +39,16 @@ Generated: 2026-07-17T21:12:58.404Z
 - `create_executive_truth_snapshot` (1 call site)
 - `refresh_executive_truth_snapshot` (1 call site)
 - `record_executive_truth_event` (1 call site)
+- `ovr_executive_dashboard_analytics` (1 call site)
+- `f1r2_list_my_work` (1 call site)
 - `acknowledge_escalation_event` (1 call site)
 - `resolve_escalation_event` (1 call site)
+- `f1r2_create_work_item` (3 call sites)
+- `f1r2_decide_approval` (1 call site)
+- `acc_v13_update_work_item_status` (1 call site)
+- `acc_v13_request_approval` (1 call site)
+- `acc_v13_list_eligible_approvers` (1 call site)
+- `acc_v13_evidence_access` (1 call site)
 - `department_lifecycle_preview` (1 call site)
 - `department_lifecycle_rename` (1 call site)
 - `department_lifecycle_archive` (1 call site)
@@ -46,8 +57,17 @@ Generated: 2026-07-17T21:12:58.404Z
 - `assign_user_role` (2 call sites)
 - `deactivate_user_role` (2 call sites)
 - `create_department` (1 call site)
+- `f1r2_create_ovr_report` (1 call site)
 - `update_ovr_workflow` (1 call site)
-- `create_ovr_corrective_action_project` (1 call site)
+- `f1r2_create_corrective_project` (1 call site)
+- `f1r2_assign_work_item` (1 call site)
+- `f1r2_respond_work_item_assignment` (1 call site)
+- `f1r2_cancel_work_item_assignment` (1 call site)
+- `f1r2_list_project_assignments` (1 call site)
+- `f1r2_search_eligible_participants` (1 call site)
+- `f1r2_get_evidence_pack` (1 call site)
+- `f1r2_relink_evidence_parent` (1 call site)
+- `f1r2_finalize_corrective_ovr` (1 call site)
 - `record_production_evidence_closure_action` (1 call site)
 - `get_production_evidence_closure_action_history` (1 call site)
 - `create_controlled_production_cutover_decision` (1 call site)
