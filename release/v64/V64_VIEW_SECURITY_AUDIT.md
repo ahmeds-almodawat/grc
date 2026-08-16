@@ -2,13 +2,13 @@
 
 ```json
 {
-  "generated_at": "2026-07-05T13:10:01.244Z",
-  "migration_files_scanned": 112,
+  "generated_at": "2026-08-16T18:53:05.726Z",
+  "migration_files_scanned": 153,
   "views_detected": 528,
-  "findings_total": 105,
+  "findings_total": 104,
   "critical": 0,
   "high": 0,
-  "medium": 105,
+  "medium": 104,
   "strict_passed": true,
   "note": "Static scan deduplicates views and recognizes later ALTER VIEW ... SET (security_invoker=true). Final proof still requires staging verification."
 }
@@ -63,7 +63,6 @@
 - **medium** VIEW_WITHOUT_SECURITY_INVOKER on `v_module_payload_pressure` (supabase/migrations/019_performance_responsive_usability.sql) — View does not show security_invoker=true in static scan.
 - **medium** VIEW_WITHOUT_SECURITY_INVOKER on `v_monthly_grc_trend` (supabase/migrations/013_kpi_analytics_heatmap_radar.sql) — View does not show security_invoker=true in static scan.
 - **medium** VIEW_WITHOUT_SECURITY_INVOKER on `v_my_open_work` (supabase/migrations/005_operational_views_and_storage.sql) — View does not show security_invoker=true in static scan.
-- **medium** VIEW_WITHOUT_SECURITY_INVOKER on `v_my_open_work_expanded` (supabase/migrations/006_workflow_queues_and_project_controls.sql) — View does not show security_invoker=true in static scan.
 - **medium** VIEW_WITHOUT_SECURITY_INVOKER on `v_notification_digest` (supabase/migrations/017_notifications_activity_timelines.sql) — View does not show security_invoker=true in static scan.
 - **medium** VIEW_WITHOUT_SECURITY_INVOKER on `v_operational_followup_summary` (supabase/migrations/017_notifications_activity_timelines.sql) — View does not show security_invoker=true in static scan.
 - **medium** VIEW_WITHOUT_SECURITY_INVOKER on `v_permission_test_personas` (supabase/migrations/018_qa_permission_deployment_readiness.sql) — View does not show security_invoker=true in static scan.

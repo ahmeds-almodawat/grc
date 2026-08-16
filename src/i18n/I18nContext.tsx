@@ -1999,6 +1999,8 @@ const translations: TranslationMap = {
   'evidence.queueReason': { en: 'Queue reason', ar: 'سبب الإدراج' },
   'evidence.submitForReview': { en: 'Submit for review', ar: 'إرسال للمراجعة' },
   'evidence.acceptEvidence': { en: 'Accept evidence', ar: 'قبول الدليل' },
+  'evidence.reviewerSeparationRequired': { en: 'Uploader cannot review or decide self-uploaded evidence (separation of duties required).', ar: 'لا يمكن لرافع الدليل مراجعة أو اعتماد الدليل المرفوع من قبله (يلزم فصل المهام).' },
+  'evidence.selfReviewProhibited': { en: 'Separation of duties: uploader cannot review self-uploaded evidence', ar: 'فصل المهام: لا يمكن لرافع الدليل مراجعة الدليل المرفوع من قبله' },
   'evidence.requestRevision': { en: 'Request revision', ar: 'طلب مراجعة' },
   'evidence.rejectEvidence': { en: 'Reject evidence', ar: 'رفض الدليل' },
   'evidence.lockEvidence': { en: 'Lock evidence', ar: 'قفل الدليل' },

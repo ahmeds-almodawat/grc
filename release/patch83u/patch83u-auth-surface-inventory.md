@@ -2,16 +2,16 @@
 
 Status: **PASS**
 
-This is a deterministic static replay of the ordered migration chain through reviewed migration 177 plus actual browser call sites. Supplied evidence records migration 176 as applied to staging, but this static artifact is not live-catalog proof and does not claim migration-177 application or the resulting final catalog state.
+This is a deterministic static replay of the ordered migration chain through reviewed migration 197 plus actual browser call sites. It is not live-catalog proof and does not claim any hosted catalog state.
 
 ## Summary
 
 - Direct browser RPCs: 0
-- Direct browser views: 353
+- Direct browser views: 352
 - Direct browser materialized views: 0
 - Unsafe surfaces: 0
 - Search transport: authenticated_edge_bridge
-- Reviewed restricted migration 176–177 SECURITY DEFINER routines: 3
+- Reviewed restricted migration 176–197 SECURITY DEFINER routines: 53
 - Target credential-gate migration present: yes
 
 ## search_grc_global
@@ -20,25 +20,76 @@ Disposition: **authenticated_edge_bridge_with_caller_jwt_rls**. The accepted des
 
 ## ACL-reachable SECURITY DEFINER routines
 
-The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–174 permit exactly three Patch 83U RLS decision helpers. Every SECURITY DEFINER routine introduced, replaced, or renamed by migrations 176–177 must contain its own explicit revoke from PUBLIC/anon/authenticated plus either an explicit service_role-only grant or an explicit owner-only service_role revoke; migration 174's earlier dynamic revoke is not accepted as evidence for migrations 176–177.
+The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–197 permit exactly three Patch 83U RLS decision helpers. Every SECURITY DEFINER routine introduced, replaced, or renamed by migrations 176–197 must contain its own explicit revoke from PUBLIC/anon/authenticated plus either an explicit service_role-only grant or an explicit owner-only service_role revoke; migration 174's earlier dynamic revoke is not accepted as evidence for later migrations. Migration 198 and later fail closed until separately reviewed.
 
 | Signature | Evidence source | PUBLIC | anon | authenticated | Disposition | Purpose |
 |---|---|---:|---:|---:|---|---|
 | `public.current_user_org_id()` | retained_patch83q_live_catalog | no | no | yes | allowed | Read-only caller organization identity helper retained by Patch 83Q. |
 | `public.has_any_role(text[])` | retained_patch83q_live_catalog | yes | yes | yes | allowed | Read-only RLS role decision helper retained by Patch 83Q. |
-| `public.patch83u_credential_access_allowed()` | target_migrations_171_177 | no | no | yes | allowed | Credential version, state, email, and session freshness decision used by restrictive RLS. |
-| `public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)` | target_migrations_171_177 | no | no | yes | allowed | Same-organization credential-active profile update decision used by restrictive RLS. |
-| `public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)` | target_migrations_171_177 | no | no | yes | allowed | Credential-active canonical role/scope mutation decision used by restrictive RLS. |
+| `public.f1r2_create_work_item(p_actor_id uuid,p_item_type text,p_payload jsonb)` | migration197_service_role_acl_review | no | no | no | allowed |  |
+| `public.patch83u_credential_access_allowed()` | target_migrations_171_198 | no | no | yes | allowed | Credential version, state, email, and session freshness decision used by restrictive RLS. |
+| `public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)` | target_migrations_171_198 | no | no | yes | allowed | Same-organization credential-active profile update decision used by restrictive RLS. |
+| `public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)` | target_migrations_171_198 | no | no | yes | allowed | Credential-active canonical role/scope mutation decision used by restrictive RLS. |
 
-### Reviewed restricted routines from migrations 176–177
+### Reviewed restricted routines from migrations 176–197
 
-These routines are not reachable by browser roles. They are listed explicitly so migration 177's stable finalizer name and in-migration ACL proof remain visible.
+These routines are not reachable by browser roles. They are listed explicitly so every reviewed definition and its migration-local ACL proof remain visible.
 
 | Signature | Evidence source | service_role | Disposition | Definition evidence |
 |---|---|---:|---|---|
+| `public.acc_v13_authorize_evidence_access(p_actor_id uuid,p_evidence_file_id uuid,p_intent text default 'view')` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1830` |
+| `public.acc_v13_update_work_item_status(p_actor_id uuid,p_item_type text,p_item_id uuid,p_status text,p_progress_percent numeric,p_delay_reason text default null)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1034` |
+| `public.can_close_ovr(p_ovr_report_id uuid)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1769` |
+| `public.f1r2_active_actor(p_actor_id uuid)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:77` |
+| `public.f1r2_actor_can_manage_item(p_actor_id uuid,p_item_type text,p_item_id uuid)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:135` |
+| `public.f1r2_actor_has_ovr_evidence_entitlement(p_actor_id uuid,p_ovr_report_id uuid)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1721` |
+| `public.f1r2_actor_has_work_evidence_entitlement(p_actor_id uuid,p_item_type text,p_item_id uuid)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1686` |
+| `public.f1r2_actor_scope_allows_context(p_actor_id uuid, p_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid, p_allowed_roles text[])` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:203` |
+| `public.f1r2_assign_work_item(p_actor_id uuid,p_item_type text,p_item_id uuid,p_assignee_id uuid,p_reason text default null)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:304` |
+| `public.f1r2_assignment_candidate_is_eligible(p_candidate_id uuid, p_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid, p_assignment_purpose text)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:233` |
+| `public.f1r2_can_close_work_item(p_item_type text,p_item_id uuid)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:997` |
+| `public.f1r2_cancel_work_item_assignment(p_actor_id uuid,p_assignment_id uuid,p_reason text)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:436` |
+| `public.f1r2_create_corrective_project(p_actor_id uuid,p_payload jsonb)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:820` |
+| `public.f1r2_create_ovr_report(p_actor_id uuid,p_payload jsonb)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:784` |
+| `public.f1r2_create_work_item(p_actor_id uuid,p_item_type text,p_payload jsonb)` | migration197_service_role_acl_review | yes | service_role_only | `supabase/migrations/197_f4_milestone_date_persistence_guard.sql:3` |
+| `public.f1r2_current_assignment(p_item_type text,p_item_id uuid)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:122` |
+| `public.f1r2_decide_approval(p_actor_id uuid,p_approval_id uuid,p_decision text,p_note text default null)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1207` |
+| `public.f1r2_enforce_project_closure()` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:920` |
+| `public.f1r2_evidence_requirement_flags(p_organization_id uuid,p_item_type text,p_item_id uuid)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1234` |
+| `public.f1r2_finalize_corrective_ovr(p_actor_id uuid,p_ovr_report_id uuid,p_final_verdict text,p_final_severity public.ovr_severity_level,p_closure_comment text,p_idempotency_key text)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1802` |
+| `public.f1r2_get_evidence_pack(p_actor_id uuid,p_item_type text,p_item_id uuid)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1740` |
+| `public.f1r2_guard_corrective_ovr_final_verdict()` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1780` |
+| `public.f1r2_guard_evidence_parent_change()` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1331` |
+| `public.f1r2_item_evidence_satisfied(p_organization_id uuid,p_item_type text,p_item_id uuid,p_evidence_required boolean)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:964` |
+| `public.f1r2_latest_approval_satisfied(p_item_type text,p_item_id uuid,p_required boolean)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:934` |
+| `public.f1r2_list_item_participants(p_actor_id uuid,p_item_type text,p_item_id uuid)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:504` |
+| `public.f1r2_list_my_work(p_actor_id uuid)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:468` |
+| `public.f1r2_list_project_assignments(p_actor_id uuid,p_project_id uuid)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:527` |
+| `public.f1r2_lock_work_item(p_item_type text,p_item_id uuid)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:161` |
+| `public.f1r2_relink_evidence_parent(p_actor_id uuid, p_evidence_file_id uuid, p_item_type text, p_item_id uuid, p_reason text)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1367` |
+| `public.f1r2_resolve_project(p_item_type text,p_item_id uuid)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:102` |
+| `public.f1r2_respond_work_item_assignment(p_actor_id uuid,p_assignment_id uuid,p_decision text,p_decline_reason text default null)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:376` |
+| `public.f1r2_rollup_milestone_trigger()` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:909` |
+| `public.f1r2_rollup_task_trigger()` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:896` |
+| `public.f1r2_search_eligible_participants(p_actor_id uuid,p_item_type text,p_item_id uuid,p_assignment_purpose text, p_query text default null,p_limit integer default 50)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:563` |
+| `public.f1r2_sync_evidence_link()` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1552` |
+| `public.f1r2_work_item_contains(p_parent_type text,p_parent_id uuid,p_child_type text,p_child_id uuid)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1663` |
+| `public.ovr_executive_analytics_v1(p_actor_id uuid, p_query_shape text, p_department_filter_id uuid, p_category_filter text, p_idempotency_key text)` | migration194_service_role_acl_review | yes | service_role_only | `supabase/migrations/194_ovr_executive_analytics_foundation.sql:1139` |
+| `public.ovr_v11_issue_final_verdict(p_actor_id uuid, p_ovr_report_id uuid, p_stage_instance_id uuid, p_verdict text, p_effective_severity public.ovr_severity_level, p_corrective_action_required boolean, p_idempotency_key text, p_supersedes_verdict_id uuid default null)` | migration193_service_role_acl_review | yes | service_role_only | `supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql:953` |
+| `public.ovr_v11_perform_governance_closure(p_actor_id uuid, p_ovr_report_id uuid, p_stage_instance_id uuid, p_final_verdict_id uuid, p_idempotency_key text)` | migration193_service_role_acl_review | yes | service_role_only | `supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql:1157` |
+| `public.ovr_v11_recuse_assignment(p_actor_id uuid, p_assignment_id uuid, p_reason text, p_idempotency_key text)` | migration192_service_role_acl_review | yes | service_role_only | `supabase/migrations/192_ovr_reviewer_routing_foundation.sql:1117` |
+| `public.ovr_v11_reporter_acknowledge(p_actor_id uuid, p_ovr_report_id uuid, p_governance_closure_id uuid, p_idempotency_key text)` | migration193_service_role_acl_review | yes | service_role_only | `supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql:1366` |
+| `public.ovr_v11_reporter_dispute(p_actor_id uuid, p_ovr_report_id uuid, p_governance_closure_id uuid, p_reason text, p_idempotency_key text)` | migration193_service_role_acl_review | yes | service_role_only | `supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql:1471` |
+| `public.ovr_v11_route_reviewer(p_actor_id uuid, p_ovr_report_id uuid, p_stage_instance_id uuid, p_idempotency_key text)` | migration192_service_role_acl_review | yes | service_role_only | `supabase/migrations/192_ovr_reviewer_routing_foundation.sql:561` |
+| `public.patch23_evidence_governance_bridge(p_actor_id uuid, p_action text, p_payload jsonb default '{}'::jsonb)` | migration198_service_role_acl_review | yes | service_role_only | `supabase/migrations/198_f4_evidence_reviewer_separation_guard.sql:5` |
 | `public.patch83u_finalize_password_change_after_revocation(p_actor_id uuid, p_operation_id uuid, p_request_id text, p_applied_credential_version integer, p_verified_auth_email text)` | migration177_service_role_acl_review | yes | service_role_only | `supabase/migrations/177_patch83u_explicit_password_finalizer_rpc_name.sql:68` |
+| `public.patch83u_finalize_required_password_change(p_actor_id uuid, p_operation_id uuid, p_request_id text, p_applied_credential_version integer, p_verified_auth_email text, p_session_revocation_confirmed boolean)` | migration189_service_role_acl_review | yes | service_role_only | `supabase/migrations/189_patch83u_post_provisioning_role_activation.sql:30` |
 | `public.patch83u_reconcile_credential_state_standard_impl(p_actor_id uuid, p_target_user_id uuid, p_request_id text, p_employee_id_confirmation text)` | migration176_service_role_acl_review | no | owner_only | `supabase/migrations/176_patch83u_last_super_admin_recovery.sql:125` |
 | `public.patch83u_reconcile_last_super_admin_recovery(p_actor_id uuid, p_target_user_id uuid, p_request_id text, p_employee_id_confirmation text)` | migration176_service_role_acl_review | no | owner_only | `supabase/migrations/176_patch83u_last_super_admin_recovery.sql:133` |
+| `public.patch83u_reconcile_provisioning(p_actor_id uuid, p_provisioning_id uuid, p_request_id text, p_employee_id_confirmation text)` | migration189_service_role_acl_review | yes | service_role_only | `supabase/migrations/189_patch83u_post_provisioning_role_activation.sql:393` |
+| `public.refresh_milestone_progress(target_milestone_id uuid)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:856` |
+| `public.refresh_ovr_executive_analytics_snapshot_v1(p_actor_id uuid)` | migration194_service_role_acl_review | yes | service_role_only | `supabase/migrations/194_ovr_executive_analytics_foundation.sql:811` |
+| `public.refresh_project_progress(target_project_id uuid)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:876` |
 
 ## Materialized views
 
@@ -111,7 +162,6 @@ No browser-referenced or ACL-reachable materialized view exists in the target re
 | `v_mobile_readiness_gates` | view | yes | 8 | yes | approved_browser_read_view |
 | `v_module_payload_pressure` | view | yes | 6 | yes | approved_browser_read_view |
 | `v_monthly_grc_trend` | view | yes | 5 | yes | approved_browser_read_view |
-| `v_my_open_work_expanded` | view | yes | 4 | yes | approved_browser_read_view |
 | `v_notification_digest` | view | yes | 7 | yes | approved_browser_read_view |
 | `v_operational_followup_summary` | view | yes | 9 | yes | approved_browser_read_view |
 | `v_ovr_repeated_category_alerts` | view | yes | 3 | yes | approved_browser_read_view |
@@ -458,7 +508,6 @@ Views whose original declarations were owner-executed (the target catalog harden
 - `v_mobile_readiness_gates`
 - `v_module_payload_pressure`
 - `v_monthly_grc_trend`
-- `v_my_open_work_expanded`
 - `v_notification_digest`
 - `v_operational_followup_summary`
 - `v_permission_test_personas`
@@ -532,7 +581,7 @@ The audited legacy base-table correction is exact and grants SELECT only after R
 | `v50_query_optimization_items` | credential-gated global metadata | yes | yes |
 | `v50_scale_test_plans` | credential-gated global metadata | yes | yes |
 
-194 direct browser views rely on an ACL outside an explicit per-view repository GRANT. Their call sites prove product intent; final hosted catalog ACL evidence remains mandatory.
+192 direct browser views rely on an ACL outside an explicit per-view repository GRANT. Their call sites prove product intent; final hosted catalog ACL evidence remains mandatory.
 
 ## Proof command
 

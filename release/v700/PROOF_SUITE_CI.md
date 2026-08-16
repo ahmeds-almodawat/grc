@@ -1,0 +1,108 @@
+# v7.0 Proof Suite: ci
+
+```json
+{
+  "generated_at": "2026-08-16T18:53:07.496Z",
+  "mode": "ci",
+  "selected_groups": [
+    "ci"
+  ],
+  "status": "passed",
+  "passed_count": 8,
+  "failed_count": 0,
+  "skipped_count": 0,
+  "failed_commands": [],
+  "skipped_commands": [],
+  "note": "Hermetic CI mode executes only clean-checkout repository proofs. Runtime, restore, and human-governance proofs are not claimed.",
+  "results": [
+    {
+      "group": "ci",
+      "script": "v62:static-strict",
+      "status": "passed",
+      "exit_code": 0,
+      "contract": {
+        "hermetic": true,
+        "classification": "repository-static",
+        "proves": "No forbidden production/demo data patterns in committed source."
+      }
+    },
+    {
+      "group": "ci",
+      "script": "v64:rls-regression",
+      "status": "passed",
+      "exit_code": 0,
+      "contract": {
+        "hermetic": true,
+        "classification": "repository-static-with-explicit-git-base",
+        "proves": "No new Critical/High RLS or browser-ACL regression relative to the supplied resolvable base SHA."
+      }
+    },
+    {
+      "group": "ci",
+      "script": "v64:functions-strict",
+      "status": "passed",
+      "exit_code": 0,
+      "contract": {
+        "hermetic": true,
+        "classification": "repository-static",
+        "proves": "Static SECURITY DEFINER search_path and execute-revoke contract."
+      }
+    },
+    {
+      "group": "ci",
+      "script": "v64:views-strict",
+      "status": "passed",
+      "exit_code": 0,
+      "contract": {
+        "hermetic": true,
+        "classification": "repository-static",
+        "proves": "Static sensitive-view security-invoker contract."
+      }
+    },
+    {
+      "group": "ci",
+      "script": "v64:persona-sql",
+      "status": "passed",
+      "exit_code": 0,
+      "contract": {
+        "hermetic": true,
+        "classification": "repository-static",
+        "proves": "Committed persona SQL exists and can be packaged without executing it."
+      }
+    },
+    {
+      "group": "ci",
+      "script": "v700:rpc-inventory",
+      "status": "passed",
+      "exit_code": 0,
+      "contract": {
+        "hermetic": true,
+        "classification": "repository-static",
+        "proves": "Current frontend direct-RPC and authenticated-edge-bridge inventory."
+      }
+    },
+    {
+      "group": "ci",
+      "script": "v700:v65-audit-strict",
+      "status": "passed",
+      "exit_code": 0,
+      "contract": {
+        "hermetic": true,
+        "classification": "repository-static",
+        "proves": "Canonical v65 SQL security assertions and committed copies remain complete and synchronized."
+      }
+    },
+    {
+      "group": "ci",
+      "script": "v700:vercel-deployment-policy",
+      "status": "passed",
+      "exit_code": 0,
+      "contract": {
+        "hermetic": true,
+        "classification": "repository-static",
+        "proves": "Main cannot create a Git deployment and repository automation cannot deploy or move Vercel Production traffic."
+      }
+    }
+  ]
+}
+```

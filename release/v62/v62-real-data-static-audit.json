@@ -1,12 +1,20 @@
 {
-  "generated_at": "2026-07-05T13:09:06.555Z",
-  "scanned_files": 239,
-  "total_findings": 0,
+  "generated_at": "2026-08-16T18:52:54.241Z",
+  "scanned_files": 249,
+  "total_findings": 1,
   "production_blocking_findings": 0,
   "critical": 0,
   "high": 0,
-  "medium": 0,
-  "files_with_findings": 0,
+  "medium": 1,
+  "files_with_findings": 1,
   "policy": "No direct demo imports, no hardcoded runtime demo/fallback records, no runtime fallback returns. Empty/error states must be explicit.",
-  "findings": []
+  "findings": [
+    {
+      "severity": "medium",
+      "code": "HARDCODED_DEMO_ORG_SIGNAL",
+      "file": "src/lib/grcApi.ts",
+      "line": 25,
+      "text": "val.includes('demo')"
+    }
+  ]
 }

@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-07-05T13:10:00.386Z",
-    "migration_files_scanned": 112,
-    "security_definer_functions_detected": 346,
+    "generated_at": "2026-08-16T18:53:05.314Z",
+    "migration_files_scanned": 153,
+    "security_definer_functions_detected": 530,
     "global_security_definer_lockdown_detected": true,
     "findings_total": 0,
     "critical": 0,
@@ -2087,6 +2087,1110 @@
       "function_name": "update_hospital_adoption_readiness_status",
       "has_search_path": true,
       "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/114_patch68_executive_signoff_gateway.sql",
+      "function_name": "record_executive_production_signoff",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/117_patch68_controlled_evidence_closure_actions.sql",
+      "function_name": "patch68_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/117_patch68_controlled_evidence_closure_actions.sql",
+      "function_name": "patch68_actor_authorized",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/117_patch68_controlled_evidence_closure_actions.sql",
+      "function_name": "record_production_evidence_closure_action",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/117_patch68_controlled_evidence_closure_actions.sql",
+      "function_name": "get_production_evidence_closure_action_history",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/118_patch76_controlled_production_authority_cutover_gate.sql",
+      "function_name": "patch76_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/118_patch76_controlled_production_authority_cutover_gate.sql",
+      "function_name": "patch76_actor_authorized",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/118_patch76_controlled_production_authority_cutover_gate.sql",
+      "function_name": "patch76_validate_cutover_decision",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/118_patch76_controlled_production_authority_cutover_gate.sql",
+      "function_name": "create_controlled_production_cutover_decision",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/118_patch76_controlled_production_authority_cutover_gate.sql",
+      "function_name": "record_controlled_production_cutover_decision_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/119_patch77_live_pilot_execution_issue_burndown.sql",
+      "function_name": "patch77_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/119_patch77_live_pilot_execution_issue_burndown.sql",
+      "function_name": "patch77_actor_authorized",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/119_patch77_live_pilot_execution_issue_burndown.sql",
+      "function_name": "patch77_refresh_session_counts",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/119_patch77_live_pilot_execution_issue_burndown.sql",
+      "function_name": "create_live_pilot_session",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/119_patch77_live_pilot_execution_issue_burndown.sql",
+      "function_name": "update_live_pilot_session_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/119_patch77_live_pilot_execution_issue_burndown.sql",
+      "function_name": "create_live_pilot_issue",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/119_patch77_live_pilot_execution_issue_burndown.sql",
+      "function_name": "update_live_pilot_issue_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/119_patch77_live_pilot_execution_issue_burndown.sql",
+      "function_name": "record_live_pilot_department_acceptance",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/120_patch78_identity_role_data_integrity_hardening.sql",
+      "function_name": "patch78_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/120_patch78_identity_role_data_integrity_hardening.sql",
+      "function_name": "patch78_actor_authorized",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/120_patch78_identity_role_data_integrity_hardening.sql",
+      "function_name": "patch78_refresh_review_counts",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/120_patch78_identity_role_data_integrity_hardening.sql",
+      "function_name": "create_identity_role_integrity_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/120_patch78_identity_role_data_integrity_hardening.sql",
+      "function_name": "update_identity_role_integrity_review_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/120_patch78_identity_role_data_integrity_hardening.sql",
+      "function_name": "record_identity_role_integrity_finding",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/120_patch78_identity_role_data_integrity_hardening.sql",
+      "function_name": "update_identity_role_integrity_finding_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/120_patch78_identity_role_data_integrity_hardening.sql",
+      "function_name": "record_privileged_role_recertification",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/121_patch79_production_operations_hypercare_board_pack.sql",
+      "function_name": "patch79_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/121_patch79_production_operations_hypercare_board_pack.sql",
+      "function_name": "patch79_actor_authorized",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/121_patch79_production_operations_hypercare_board_pack.sql",
+      "function_name": "patch79_refresh_window_counts",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/121_patch79_production_operations_hypercare_board_pack.sql",
+      "function_name": "create_production_hypercare_window",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/121_patch79_production_operations_hypercare_board_pack.sql",
+      "function_name": "update_production_hypercare_window_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/121_patch79_production_operations_hypercare_board_pack.sql",
+      "function_name": "record_production_hypercare_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/121_patch79_production_operations_hypercare_board_pack.sql",
+      "function_name": "update_production_hypercare_item_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/121_patch79_production_operations_hypercare_board_pack.sql",
+      "function_name": "create_executive_governance_board_pack",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/121_patch79_production_operations_hypercare_board_pack.sql",
+      "function_name": "update_executive_governance_board_pack_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/167_patch83m_secure_department_import_backend.sql",
+      "function_name": "apply_department_import_batch",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/168_patch83o_department_import_schema_compatibility.sql",
+      "function_name": "apply_department_import_batch",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/169_patch83o_validation_error_array_fix.sql",
+      "function_name": "apply_department_import_batch",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/171_patch83r_department_lifecycle.sql",
+      "function_name": "department_lifecycle_preview",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/171_patch83r_department_lifecycle.sql",
+      "function_name": "department_lifecycle_rename",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/171_patch83r_department_lifecycle.sql",
+      "function_name": "department_lifecycle_archive",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/171_patch83r_department_lifecycle.sql",
+      "function_name": "department_lifecycle_restore",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/172_patch83s1_department_import_runtime_alignment.sql",
+      "function_name": "apply_department_import_batch",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/173_patch83t_controlled_user_excel_import.sql",
+      "function_name": "patch83t_user_import_identity_references",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/173_patch83t_controlled_user_excel_import.sql",
+      "function_name": "patch83t_apply_user_excel_import",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/173_patch83t_controlled_user_excel_import.sql",
+      "function_name": "patch83t_get_user_import_capabilities",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_require_service_role",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_auth_credential_version",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_runtime_enforcement_state",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_require_enforced_runtime",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_runtime_credential_state_allowed",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_request_frontend_contract_compatible",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_role_scope_allowed",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_role_assignment_valid",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_bootstrap_super_admin_eligible",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_runtime_activation_blockers",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_break_glass_super_admin_eligible",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_effective_super_admin_eligible",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_runtime_super_admin_eligible",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_transition_runtime",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_get_capabilities",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_confirm_session_revocation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_begin_admin_reset",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_admin_reset_session_revocation_proof",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_finalize_admin_reset",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_abort_admin_reset",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_finalize_provisioning",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_fail_provisioning",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_expected_auth_email",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_require_super_admin",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_require_role_admin",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_assign_user_role",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_deactivate_user_role",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_apply_user_lifecycle",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_safe_failure_message",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83t_update_user_profile",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_guard_event_append_only",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_set_updated_at",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_guard_managed_profile_employee_id",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_guard_profile_security_boundary",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_guard_credential_identity",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_guard_role_activation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_guard_last_super_admin_role_removal",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_suspend_roles_for_credential_lock",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_sync_profile_credential_lifecycle",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_credential_access_allowed",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_profile_update_allowed",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_user_role_mutation_allowed",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_get_credential_state",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_list_provisioning",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_claim_provisioning",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_restore_suspended_roles",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_prepare_required_password_change",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_begin_required_password_change",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_finalize_required_password_change",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_abort_required_password_change",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_reconcile_provisioning",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/174_patch83u_employee_id_auth_and_credential_governance.sql",
+      "function_name": "patch83u_reconcile_credential_state",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/176_patch83u_last_super_admin_recovery.sql",
+      "function_name": "patch83u_finalize_required_password_change_after_session_revocation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/176_patch83u_last_super_admin_recovery.sql",
+      "function_name": "patch83u_reconcile_last_super_admin_recovery",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/176_patch83u_last_super_admin_recovery.sql",
+      "function_name": "patch83u_reconcile_credential_state",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/180_runtime_action_authorization_reconciliation.sql",
+      "function_name": "patch45_service_role_required",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/180_runtime_action_authorization_reconciliation.sql",
+      "function_name": "patch83v_runtime_action_authorized",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/181_patch83tu_catalog_contract_attestation.sql",
+      "function_name": "patch83tu_catalog_contract_attestation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/187_legacy_runtime_and_post185_reconciliation.sql",
+      "function_name": "patch83tu_catalog_contract_attestation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/187_legacy_runtime_and_post185_reconciliation.sql",
+      "function_name": "patch83b_release_lineage_attestation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/189_patch83u_post_provisioning_role_activation.sql",
+      "function_name": "patch83u_finalize_required_password_change",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/189_patch83u_post_provisioning_role_activation.sql",
+      "function_name": "patch83u_reconcile_provisioning",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/190_patch23_evidence_service_role_guard_compatibility.sql",
+      "function_name": "patch23_evidence_governance_bridge",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql",
+      "function_name": "ovr_v11_private.guard_append_only",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql",
+      "function_name": "ovr_v11_private.guard_reporting_line_change",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql",
+      "function_name": "ovr_v11_private.guard_related_person_change",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql",
+      "function_name": "ovr_v11_private.record_related_person_change",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/191_ovr_relationship_conflict_foundation.sql",
+      "function_name": "ovr_v11_private.record_reporting_line_change",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql",
+      "function_name": "ovr_v11_private.guard_routing_events_append_only",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql",
+      "function_name": "ovr_v11_private.guard_membership_update",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql",
+      "function_name": "ovr_v11_private.guard_cycle_update",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql",
+      "function_name": "ovr_v11_private.guard_stage_update",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql",
+      "function_name": "ovr_v11_route_reviewer",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql",
+      "function_name": "ovr_v11_recuse_assignment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/192_ovr_reviewer_routing_foundation.sql",
+      "function_name": "ovr_v11_private.invalidate_conflicted_assignments",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql",
+      "function_name": "ovr_v11_private.guard_immutable_history",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql",
+      "function_name": "ovr_v11_private.guard_separation_policy",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql",
+      "function_name": "ovr_v11_private.guard_post_closure_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql",
+      "function_name": "ovr_v11_issue_final_verdict",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql",
+      "function_name": "ovr_v11_perform_governance_closure",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql",
+      "function_name": "ovr_v11_reporter_acknowledge",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/193_ovr_immutable_verdict_closure_foundation.sql",
+      "function_name": "ovr_v11_reporter_dispute",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "function_name": "ovr_v11_private.guard_analytics_history_immutable",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "function_name": "ovr_v11_private.validate_analytics_config",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "function_name": "ovr_v11_private.executive_actor_organization",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "function_name": "ovr_v11_private.analytics_config",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "function_name": "ovr_v11_private.analytics_snapshot_v2",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "function_name": "ovr_v11_private.ovr_kpi_facts_v2",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "function_name": "ovr_v11_private.count_band_v2",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "function_name": "ovr_v11_private.duration_band_v2",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "function_name": "ovr_v11_private.percentage_band_v2",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "function_name": "ovr_v11_private.validate_analytics_shape_v2",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "function_name": "ovr_v11_private.validate_analytics_idempotency_key_v2",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "function_name": "ovr_v11_private.assert_request_match_v2",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "function_name": "refresh_ovr_executive_analytics_snapshot_v1",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "function_name": "ovr_v11_private.execute_analytics_request_v2",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "function_name": "ovr_executive_analytics_v1",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_active_actor",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_resolve_project",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_current_assignment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_actor_can_manage_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_lock_work_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_actor_scope_allows_context",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_assignment_candidate_is_eligible",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_assign_work_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_respond_work_item_assignment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_cancel_work_item_assignment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_list_my_work",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_list_item_participants",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_list_project_assignments",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_search_eligible_participants",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_create_work_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_create_ovr_report",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_create_corrective_project",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "refresh_milestone_progress",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "refresh_project_progress",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_rollup_task_trigger",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_rollup_milestone_trigger",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_enforce_project_closure",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_latest_approval_satisfied",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_item_evidence_satisfied",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_can_close_work_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "acc_v13_update_work_item_status",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_decide_approval",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_evidence_requirement_flags",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_guard_evidence_parent_change",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_relink_evidence_parent",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_sync_evidence_link",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_work_item_contains",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_actor_has_work_evidence_entitlement",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_actor_has_ovr_evidence_entitlement",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_get_evidence_pack",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "can_close_ovr",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_guard_corrective_ovr_final_verdict",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "f1r2_finalize_corrective_ovr",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "function_name": "acc_v13_authorize_evidence_access",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/197_f4_milestone_date_persistence_guard.sql",
+      "function_name": "f1r2_create_work_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/198_f4_evidence_reviewer_separation_guard.sql",
+      "function_name": "patch23_evidence_governance_bridge",
+      "has_search_path": true,
+      "has_public_revoke": true
     }
   ],
   "globalSearchPathFixes": [
@@ -2095,7 +3199,12 @@
     "seed_v31_finish_fast_defaults",
     "seed_v33_production_proof_defaults",
     "seed_v34_pilot_defaults",
-    "seed_v63_auth_route_protection_defaults"
+    "seed_v63_auth_route_protection_defaults",
+    "patch83t_apply_user_excel_import",
+    "patch83u_finalize_password_change_after_revocation",
+    "record_runtime_action_review_event",
+    "create_runtime_action_review",
+    "update_runtime_action_review_status"
   ],
   "globalRevokes": [
     "seed_v64_database_security_proof_defaults",
@@ -2430,7 +3539,161 @@
     "create_hospital_policy_attestation_readiness",
     "update_hospital_policy_attestation_status",
     "create_hospital_adoption_readiness_review",
-    "update_hospital_adoption_readiness_status"
+    "update_hospital_adoption_readiness_status",
+    "record_executive_production_signoff",
+    "patch68_service_role_required",
+    "patch68_actor_authorized",
+    "record_production_evidence_closure_action",
+    "get_production_evidence_closure_action_history",
+    "patch76_service_role_required",
+    "patch76_actor_authorized",
+    "patch76_validate_cutover_decision",
+    "create_controlled_production_cutover_decision",
+    "record_controlled_production_cutover_decision_event",
+    "patch77_service_role_required",
+    "patch77_actor_authorized",
+    "patch77_refresh_session_counts",
+    "create_live_pilot_session",
+    "update_live_pilot_session_status",
+    "create_live_pilot_issue",
+    "update_live_pilot_issue_status",
+    "record_live_pilot_department_acceptance",
+    "patch78_service_role_required",
+    "patch78_actor_authorized",
+    "patch78_refresh_review_counts",
+    "create_identity_role_integrity_review",
+    "update_identity_role_integrity_review_status",
+    "record_identity_role_integrity_finding",
+    "update_identity_role_integrity_finding_status",
+    "record_privileged_role_recertification",
+    "patch79_service_role_required",
+    "patch79_actor_authorized",
+    "patch79_refresh_window_counts",
+    "create_production_hypercare_window",
+    "update_production_hypercare_window_status",
+    "record_production_hypercare_item",
+    "update_production_hypercare_item_status",
+    "create_executive_governance_board_pack",
+    "update_executive_governance_board_pack_status",
+    "apply_department_import_batch",
+    "patch83r_guard_department_identity",
+    "patch83r_guard_active_department_assignment",
+    "department_lifecycle_preview",
+    "department_lifecycle_rename",
+    "department_lifecycle_archive",
+    "department_lifecycle_restore",
+    "apply_department_import_batch_v169",
+    "patch83t_user_import_identity_references",
+    "patch83t_apply_user_excel_import",
+    "patch83t_get_user_import_capabilities",
+    "patch83t_update_user_profile",
+    "patch83u_finalize_required_password_change_after_session_revocation",
+    "patch83u_reconcile_credential_state_standard_impl",
+    "patch83u_reconcile_last_super_admin_recovery",
+    "patch83u_reconcile_credential_state",
+    "patch83u_finalize_password_change_after_revocation",
+    "patch83v_runtime_action_authorized",
+    "patch83tu_catalog_contract_attestation",
+    "patch83b_reject_release_migration_event_mutation",
+    "patch83b_reject_legacy_runtime_bridge_mutation",
+    "patch83b_guard_runtime_activation_provenance",
+    "patch83b_release_lineage_attestation",
+    "patch83u_finalize_required_password_change",
+    "patch83u_reconcile_provisioning",
+    "ovr_v11_private.guard_append_only",
+    "ovr_v11_private.guard_reporting_line_change",
+    "ovr_v11_private.guard_related_person_change",
+    "ovr_v11_private.record_related_person_change",
+    "ovr_v11_private.record_reporting_line_change",
+    "ovr_v11_private.current_conflicts",
+    "ovr_v11_private.guard_routing_events_append_only",
+    "ovr_v11_private.guard_membership_update",
+    "ovr_v11_private.guard_cycle_update",
+    "ovr_v11_private.guard_stage_update",
+    "ovr_v11_private.assert_service_caller",
+    "ovr_v11_private.actor_organization_for_routing",
+    "ovr_v11_route_reviewer",
+    "ovr_v11_recuse_assignment",
+    "ovr_v11_private.invalidate_conflicted_assignments",
+    "ovr_v11_private.guard_immutable_history",
+    "ovr_v11_private.guard_separation_policy",
+    "ovr_v11_private.guard_post_closure_review",
+    "ovr_v11_private.validate_idempotency_key",
+    "ovr_v11_private.semantic_digest",
+    "ovr_v11_private.active_actor_organization",
+    "ovr_v11_private.assert_assigned_action_actor",
+    "ovr_v11_private.assert_not_conflicted",
+    "ovr_v11_private.evidence_gate_snapshot",
+    "ovr_v11_private.separation_policy_snapshot",
+    "ovr_v11_private.replay_response",
+    "ovr_v11_private.current_verdict",
+    "ovr_v11_issue_final_verdict",
+    "ovr_v11_perform_governance_closure",
+    "ovr_v11_reporter_acknowledge",
+    "ovr_v11_reporter_dispute",
+    "ovr_v11_private.guard_analytics_history_immutable",
+    "ovr_v11_private.validate_analytics_config",
+    "ovr_v11_private.executive_actor_organization",
+    "ovr_v11_private.analytics_config",
+    "ovr_v11_private.analytics_snapshot_v2",
+    "ovr_v11_private.ovr_kpi_facts_v2",
+    "ovr_v11_private.count_band_v2",
+    "ovr_v11_private.duration_band_v2",
+    "ovr_v11_private.percentage_band_v2",
+    "ovr_v11_private.validate_analytics_shape_v2",
+    "ovr_v11_private.validate_analytics_idempotency_key_v2",
+    "ovr_v11_private.assert_request_match_v2",
+    "refresh_ovr_executive_analytics_snapshot_v1",
+    "ovr_v11_private.execute_analytics_request_v2",
+    "ovr_executive_analytics_v1",
+    "acc_v13_actor_can_control_project",
+    "acc_v13_update_work_item_status",
+    "acc_v13_resolve_approval_project",
+    "acc_v13_actor_can_request_approval",
+    "acc_v13_is_eligible_approver",
+    "acc_v13_list_eligible_approvers",
+    "acc_v13_request_approval",
+    "acc_v13_guard_approval_separation",
+    "acc_v13_authorize_evidence_access",
+    "f1r2_assert_service_role",
+    "f1r2_active_actor",
+    "f1r2_resolve_project",
+    "f1r2_current_assignment",
+    "f1r2_actor_can_manage_item",
+    "f1r2_lock_work_item",
+    "f1r2_assign_work_item",
+    "f1r2_respond_work_item_assignment",
+    "f1r2_cancel_work_item_assignment",
+    "f1r2_list_my_work",
+    "f1r2_list_item_participants",
+    "f1r2_list_project_assignments",
+    "f1r2_search_eligible_participants",
+    "f1r2_create_work_item",
+    "f1r2_create_ovr_report",
+    "f1r2_create_corrective_project",
+    "f1r2_decide_approval",
+    "f1r2_get_evidence_pack",
+    "f1r2_relink_evidence_parent",
+    "f1r2_finalize_corrective_ovr",
+    "refresh_milestone_progress",
+    "refresh_project_progress",
+    "f1r2_rollup_task_trigger",
+    "f1r2_rollup_milestone_trigger",
+    "f1r2_enforce_project_closure",
+    "f1r2_sync_evidence_link",
+    "f1r2_guard_evidence_parent_change",
+    "f1r2_evidence_requirement_flags",
+    "f1r2_guard_corrective_ovr_final_verdict",
+    "can_close_ovr",
+    "f1r2_actor_scope_allows_context",
+    "f1r2_assignment_candidate_is_eligible",
+    "f1r2_latest_approval_satisfied",
+    "f1r2_item_evidence_satisfied",
+    "f1r2_can_close_work_item",
+    "f1r2_work_item_contains",
+    "f1r2_actor_has_work_evidence_entitlement",
+    "f1r2_actor_has_ovr_evidence_entitlement",
+    "f1r2_actor_can_mutate_evidence_parent"
   ],
   "finalSecurityInvokerFunctions": [
     "current_user_org_id",

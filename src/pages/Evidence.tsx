@@ -260,7 +260,21 @@ export function Evidence() {
   }
   const [actionModal, setActionModal] = useState<{ open: boolean; scope: 'legacy' | 'evidence' | 'waiver'; action: string; row: any } | null>(null);
 
+  function isSelfUploadRow(row: any) {
+    const currentUserId = auth.profile?.id || auth.session?.user?.id;
+    if (!row || !currentUserId) return false;
+    const uploaderId = row.uploaded_by || row.created_by;
+    return Boolean(uploaderId && uploaderId === currentUserId);
+  }
+
   function openActionModal(scope: 'legacy' | 'evidence' | 'waiver', action: string, row: any) {
+    if (
+      (action === 'accept' || action === 'reject' || action === 'revision' || action === 'accepted' || action === 'rejected' || action === 'needs_revision') &&
+      isSelfUploadRow(row)
+    ) {
+      setError(t('evidence.reviewerSeparationRequired', 'Uploader cannot review or decide self-uploaded evidence (separation of duties required).'));
+      return;
+    }
     if (scope === 'legacy' && action === 'accepted') {
       return handleLegacyReview(row, action, {});
     }
@@ -271,6 +285,10 @@ export function Evidence() {
   }
 
   async function handleLegacyReview(row: any, status: 'accepted' | 'rejected' | 'needs_revision', payload: Record<string, any>) {
+    if (isSelfUploadRow(row)) {
+      setError(t('evidence.reviewerSeparationRequired', 'Uploader cannot review or decide self-uploaded evidence (separation of duties required).'));
+      return;
+    }
     const defaultNote = status === 'accepted' ? '' : 'Needs correction or additional evidence.';
     const note = status === 'accepted' ? undefined : (payload.note || defaultNote);
     if (status !== 'accepted' && !payload.note) return;
@@ -291,6 +309,10 @@ export function Evidence() {
 
   async function handleEvidenceAction(row: any, action: 'submit' | 'accept' | 'reject' | 'revision' | 'supersede' | 'lock', payload: Record<string, any>) {
     const evidenceId = row.evidence_file_id;
+    if ((action === 'accept' || action === 'reject' || action === 'revision') && isSelfUploadRow(row)) {
+      setError(t('evidence.reviewerSeparationRequired', 'Uploader cannot review or decide self-uploaded evidence (separation of duties required).'));
+      return;
+    }
     setError(null);
     setMessage(null);
     setBusyId(`${action}:${evidenceId}`);
@@ -526,15 +548,19 @@ export function Evidence() {
               {
                 key: 'actions',
                 header: t('common.actions'),
-                render: row => canGovernEvidence ? (
-                  <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('evidence.submitForReview')} onClick={() => openActionModal('evidence', 'submit', row)}><Send size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('evidence.acceptEvidence')} onClick={() => openActionModal('evidence', 'accept', row)}><ThumbsUp size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('evidence.requestRevision')} onClick={() => openActionModal('evidence', 'revision', row)}><RotateCcw size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('evidence.rejectEvidence')} onClick={() => openActionModal('evidence', 'reject', row)}><XCircle size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled || Boolean(row.locked_at)} title={t('evidence.lockEvidence')} onClick={() => openActionModal('evidence', 'lock', row)}><Lock size={14} /></button>
-                  </div>
-                ) : '-'
+                render: row => {
+                  if (!canGovernEvidence) return '-';
+                  const isSelfUpload = isSelfUploadRow(row);
+                  return (
+                    <div className="inline-actions">
+                      <button className="ghost-button compact-button" disabled={actionDisabled} title={t('evidence.submitForReview')} onClick={() => openActionModal('evidence', 'submit', row)}><Send size={14} /></button>
+                      <button className="ghost-button compact-button" disabled={actionDisabled || isSelfUpload} title={isSelfUpload ? t('evidence.selfReviewProhibited') : t('evidence.acceptEvidence')} onClick={() => openActionModal('evidence', 'accept', row)}><ThumbsUp size={14} /></button>
+                      <button className="ghost-button compact-button" disabled={actionDisabled || isSelfUpload} title={isSelfUpload ? t('evidence.selfReviewProhibited') : t('evidence.requestRevision')} onClick={() => openActionModal('evidence', 'revision', row)}><RotateCcw size={14} /></button>
+                      <button className="ghost-button compact-button" disabled={actionDisabled || isSelfUpload} title={isSelfUpload ? t('evidence.selfReviewProhibited') : t('evidence.rejectEvidence')} onClick={() => openActionModal('evidence', 'reject', row)}><XCircle size={14} /></button>
+                      <button className="ghost-button compact-button" disabled={actionDisabled || Boolean(row.locked_at)} title={t('evidence.lockEvidence')} onClick={() => openActionModal('evidence', 'lock', row)}><Lock size={14} /></button>
+                    </div>
+                  );
+                }
               },
             ]}
           />
@@ -638,13 +664,17 @@ export function Evidence() {
               {
                 key: 'review',
                 header: t('evidence.review'),
-                render: row => canGovernEvidence && (row.status === 'submitted' || row.status === 'needs_revision') ? (
-                  <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => openActionModal('legacy', 'accepted', row)}>{t('evidence.accept')}</button>
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => openActionModal('legacy', 'needs_revision', row)}>{t('evidence.revise')}</button>
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => openActionModal('legacy', 'rejected', row)}>{t('evidence.reject')}</button>
-                  </div>
-                ) : '-'
+                render: row => {
+                  if (!canGovernEvidence || !(row.status === 'submitted' || row.status === 'needs_revision')) return '-';
+                  const isSelfUpload = isSelfUploadRow(row);
+                  return (
+                    <div className="inline-actions">
+                      <button className="ghost-button compact-button" disabled={isSelfUpload || busyId === row.id} title={isSelfUpload ? t('evidence.selfReviewProhibited') : t('evidence.accept')} onClick={() => openActionModal('legacy', 'accepted', row)}>{t('evidence.accept')}</button>
+                      <button className="ghost-button compact-button" disabled={isSelfUpload || busyId === row.id} title={isSelfUpload ? t('evidence.selfReviewProhibited') : t('evidence.revise')} onClick={() => openActionModal('legacy', 'needs_revision', row)}>{t('evidence.revise')}</button>
+                      <button className="ghost-button compact-button" disabled={isSelfUpload || busyId === row.id} title={isSelfUpload ? t('evidence.selfReviewProhibited') : t('evidence.reject')} onClick={() => openActionModal('legacy', 'rejected', row)}>{t('evidence.reject')}</button>
+                    </div>
+                  );
+                }
               }
             ]}
           />

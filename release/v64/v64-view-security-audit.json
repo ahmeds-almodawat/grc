@@ -1,12 +1,12 @@
 {
   "summary": {
-    "generated_at": "2026-07-05T13:10:01.244Z",
-    "migration_files_scanned": 112,
+    "generated_at": "2026-08-16T18:53:05.726Z",
+    "migration_files_scanned": 153,
     "views_detected": 528,
-    "findings_total": 105,
+    "findings_total": 104,
     "critical": 0,
     "high": 0,
-    "medium": 105,
+    "medium": 104,
     "strict_passed": true,
     "note": "Static scan deduplicates views and recognizes later ALTER VIEW ... SET (security_invoker=true). Final proof still requires staging verification."
   },
@@ -238,7 +238,8 @@
     {
       "view": "v_department_execution_summary",
       "files": [
-        "supabase/migrations/006_workflow_queues_and_project_controls.sql"
+        "supabase/migrations/006_workflow_queues_and_project_controls.sql",
+        "supabase/migrations/171_patch83r_department_lifecycle.sql"
       ],
       "has_security_invoker": false,
       "sensitive": false
@@ -589,9 +590,10 @@
     {
       "view": "v_my_open_work_expanded",
       "files": [
-        "supabase/migrations/006_workflow_queues_and_project_controls.sql"
+        "supabase/migrations/006_workflow_queues_and_project_controls.sql",
+        "supabase/migrations/195_acc_uat_stabilization_controls.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -615,7 +617,8 @@
       "files": [
         "supabase/migrations/010_bilingual_and_ovr_module.sql",
         "supabase/migrations/043_v641_database_security_static_remediation.sql",
-        "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql"
+        "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
+        "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -624,7 +627,8 @@
       "view": "v_ovr_repeated_category_alerts",
       "files": [
         "supabase/migrations/011_ovr_risk_indicators.sql",
-        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+        "supabase/migrations/043_v641_database_security_static_remediation.sql",
+        "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -633,7 +637,8 @@
       "view": "v_ovr_risk_attention_items",
       "files": [
         "supabase/migrations/011_ovr_risk_indicators.sql",
-        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+        "supabase/migrations/043_v641_database_security_static_remediation.sql",
+        "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -642,7 +647,8 @@
       "view": "v_ovr_risk_indicator_feed",
       "files": [
         "supabase/migrations/011_ovr_risk_indicators.sql",
-        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+        "supabase/migrations/043_v641_database_security_static_remediation.sql",
+        "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -651,7 +657,8 @@
       "view": "v_ovr_risk_indicator_summary",
       "files": [
         "supabase/migrations/011_ovr_risk_indicators.sql",
-        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+        "supabase/migrations/043_v641_database_security_static_remediation.sql",
+        "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -660,7 +667,8 @@
       "view": "v_ovr_risk_indicators_by_department",
       "files": [
         "supabase/migrations/011_ovr_risk_indicators.sql",
-        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+        "supabase/migrations/043_v641_database_security_static_remediation.sql",
+        "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -670,7 +678,8 @@
       "files": [
         "supabase/migrations/010_bilingual_and_ovr_module.sql",
         "supabase/migrations/043_v641_database_security_static_remediation.sql",
-        "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql"
+        "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
+        "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -681,7 +690,8 @@
         "supabase/migrations/036_b_ovr_workflow_controls.sql",
         "supabase/migrations/043_v641_database_security_static_remediation.sql",
         "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
-        "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql"
+        "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
+        "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -692,7 +702,8 @@
         "supabase/migrations/036_b_ovr_workflow_controls.sql",
         "supabase/migrations/043_v641_database_security_static_remediation.sql",
         "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
-        "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql"
+        "supabase/migrations/049_v98_ovr_workflow_gap_closure.sql",
+        "supabase/migrations/194_ovr_executive_analytics_foundation.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -2684,7 +2695,8 @@
       "view": "v_patch45_access_review_evidence_register",
       "files": [
         "supabase/migrations/105_patch45_runtime_action_authorization_review.sql",
-        "supabase/migrations/105_patch45_runtime_action_authorization_review.sql"
+        "supabase/migrations/105_patch45_runtime_action_authorization_review.sql",
+        "supabase/migrations/180_runtime_action_authorization_reconciliation.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -3458,7 +3470,8 @@
       "view": "v_pending_approvals_expanded",
       "files": [
         "supabase/migrations/006_workflow_queues_and_project_controls.sql",
-        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+        "supabase/migrations/043_v641_database_security_static_remediation.sql",
+        "supabase/migrations/196_f1r2_business_cycle_remediation.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -3661,7 +3674,8 @@
       "view": "v_real_data_activation_summary",
       "files": [
         "supabase/migrations/071_patch10_real_data_activation_uat_readiness.sql",
-        "supabase/migrations/077_patch16_real_data_activation_pack.sql"
+        "supabase/migrations/077_patch16_real_data_activation_pack.sql",
+        "supabase/migrations/179_real_data_activation_view_reconciliation.sql"
       ],
       "has_security_invoker": true,
       "sensitive": false
@@ -10636,6 +10650,104 @@
       "occurrence": "alter_view_security_invoker",
       "has_security_invoker": true,
       "sensitive": false
+    },
+    {
+      "view": "v_department_execution_summary",
+      "file": "supabase/migrations/171_patch83r_department_lifecycle.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_real_data_activation_summary",
+      "file": "supabase/migrations/179_real_data_activation_view_reconciliation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch45_access_review_evidence_register",
+      "file": "supabase/migrations/180_runtime_action_authorization_reconciliation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_summary",
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_quality_queue",
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_workflow_queue",
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_workflow_control_summary",
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_indicator_feed",
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_repeated_category_alerts",
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_indicators_by_department",
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_indicator_summary",
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ovr_risk_attention_items",
+      "file": "supabase/migrations/194_ovr_executive_analytics_foundation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_my_open_work_expanded",
+      "file": "supabase/migrations/195_acc_uat_stabilization_controls.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_pending_approvals_expanded",
+      "file": "supabase/migrations/196_f1r2_business_cycle_remediation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
     }
   ],
   "findings": [
@@ -10973,13 +11085,6 @@
       "code": "VIEW_WITHOUT_SECURITY_INVOKER",
       "view": "v_my_open_work",
       "file": "supabase/migrations/005_operational_views_and_storage.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_my_open_work_expanded",
-      "file": "supabase/migrations/006_workflow_queues_and_project_controls.sql",
       "message": "View does not show security_invoker=true in static scan."
     },
     {
