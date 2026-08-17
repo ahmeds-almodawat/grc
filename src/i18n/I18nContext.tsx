@@ -2149,6 +2149,8 @@ const translations: TranslationMap = {
   'evidence.rejectWaiverAction': { en: 'Reject evidence waiver', ar: 'رفض إعفاء الدليل' },
   'evidence.waiverDecision': { en: 'Waiver decision', ar: 'قرار الإعفاء' },
   'evidence.noPendingWaiver': { en: 'No pending waiver request found for this requirement.', ar: 'لا يوجد طلب إعفاء معلق لهذا المتطلب.' },
+  'evidence.waiverAlreadyRequested': { en: 'A waiver request is already pending for this evidence requirement.', ar: 'يوجد بالفعل طلب إعفاء قيد المراجعة لهذا المتطلب.' },
+  'evidence.multiplePendingWaiversError': { en: 'Multiple pending waiver requests detected for this requirement. Automated binding disabled for safety. Please contact an administrator.', ar: 'تم اكتشاف طلبات إعفاء متعددة معلقة لهذا المتطلب. تم تعطيل الربط التلقائي لسلامة البيانات. يرجى مراجعة مسؤول النظام.' },
   'evidence.waiverActiveMessage': { en: 'An active waiver is already approved for this requirement.', ar: 'يوجد إعفاء معتمد وسارٍ بالفعل لهذا المتطلب.' },
   'evidence.waiverReasonHint': { en: 'Explain the governance reason why this evidence requirement should be waived.', ar: 'اشرح المبرر الحوكمي لإعفاء هذا المتطلب من الأدلة.' },
   'evidence.auditNoteHint': { en: 'Enter the audit note justifying this approval decision.', ar: 'أدخل ملاحظة التدقيق المبررة لقرار الاعتماد.' },

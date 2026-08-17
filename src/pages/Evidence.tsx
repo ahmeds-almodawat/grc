@@ -279,11 +279,15 @@ export function Evidence() {
 
   const [actionModal, setActionModal] = useState<EvidenceModalState>(null);
 
-  const activePendingWaiver = useMemo(() => {
-    if (!actionModal || actionModal.scope !== 'waiver') return null;
-    const matching = (waivers.data || []).filter(w => w.requirement_id === actionModal.row.requirement_id);
-    return matching.find(w => w.status === 'requested') || matching[0] || null;
+  const matchingRequestedWaivers = useMemo(() => {
+    if (!actionModal || actionModal.scope !== 'waiver') return [];
+    return (waivers.data || []).filter(
+      w => w.requirement_id === actionModal.row.requirement_id && w.status === 'requested',
+    );
   }, [actionModal, waivers.data]);
+
+  const hasMultipleRequestedWaivers = matchingRequestedWaivers.length > 1;
+  const activePendingWaiver = matchingRequestedWaivers.length === 1 ? matchingRequestedWaivers[0] : null;
 
   function isSelfUploadRow(row: any) {
     const currentUserId = auth.profile?.id || auth.session?.user?.id;
@@ -399,13 +403,25 @@ export function Evidence() {
           });
           setMessage(t('evidence.waiverCompleted').replace('{action}', t('evidence.action.request', 'Request')));
           await refreshGovernanceData();
+        } catch (err: any) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          if (errMsg.includes('PATCH23_EVIDENCE_WAIVER_ALREADY_REQUESTED')) {
+            setError(t('evidence.waiverAlreadyRequested', 'A waiver request is already pending for this evidence requirement.'));
+          } else {
+            setError(errMsg || t('evidence.actionFailed'));
+          }
         } finally {
           setBusyId(null);
         }
       } else {
+        if (hasMultipleRequestedWaivers) {
+          setError(t('evidence.multiplePendingWaiversError', 'Multiple pending waiver requests detected for this requirement. Automated binding disabled for safety. Please contact an administrator.'));
+          return;
+        }
         const waiverId = values.waiverId || activePendingWaiver?.id;
         if (!waiverId) {
-          throw new Error(t('evidence.noPendingWaiver'));
+          setError(t('evidence.noPendingWaiver'));
+          return;
         }
         const defaultNote = action === 'approve' ? 'Waiver approved by governance lead' : 'Waiver rejected by governance lead';
         const auditNote = values.auditNote?.trim() || defaultNote;
@@ -420,6 +436,9 @@ export function Evidence() {
           }
           setMessage(t('evidence.waiverCompleted').replace('{action}', t(`evidence.action.${action}`, humanize(action))));
           await refreshGovernanceData();
+        } catch (err: any) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          setError(errMsg || t('evidence.actionFailed'));
         } finally {
           setBusyId(null);
         }
@@ -884,9 +903,14 @@ export function Evidence() {
             : t('evidence.confirmAction')
         }
         warningNotice={
-          actionModal?.action === 'reject' || actionModal?.action === 'rejected'
+          actionModal?.scope === 'waiver' && (actionModal?.action === 'approve' || actionModal?.action === 'reject') && hasMultipleRequestedWaivers
+            ? t('evidence.multiplePendingWaiversError')
+            : actionModal?.action === 'reject' || actionModal?.action === 'rejected'
             ? t('evidence.negativeActionWarning')
             : null
+        }
+        submitDisabled={
+          Boolean(actionModal?.scope === 'waiver' && (actionModal?.action === 'approve' || actionModal?.action === 'reject') && hasMultipleRequestedWaivers)
         }
         contextItems={
           !actionModal
@@ -968,7 +992,7 @@ export function Evidence() {
               ]
             : actionModal.scope === 'waiver' && actionModal.action === 'approve'
             ? [
-                ...(!activePendingWaiver
+                ...(!activePendingWaiver && !hasMultipleRequestedWaivers
                   ? [
                       {
                         id: 'waiverId',
@@ -992,7 +1016,7 @@ export function Evidence() {
               ]
             : actionModal.scope === 'waiver' && actionModal.action === 'reject'
             ? [
-                ...(!activePendingWaiver
+                ...(!activePendingWaiver && !hasMultipleRequestedWaivers
                   ? [
                       {
                         id: 'waiverId',
