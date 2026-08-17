@@ -272,7 +272,7 @@ describe('Patch 83U authenticated surface release proof', () => {
     expect(report.summary.retained_live_broad_security_definer_count).toBe(2);
     expect(report.summary.target_broad_security_definer_count).toBe(4);
     expect(report.summary.reviewed_patch83u_migration_ceiling).toBe(201);
-    expect(report.summary.reviewed_restricted_security_definer_count).toBe(57);
+    expect(report.summary.reviewed_restricted_security_definer_count).toBe(58);
     expect(report.acl_reachable_security_definer_rpcs.reviewed_restricted_security_definers)
       .toEqual(expect.arrayContaining([
         expect.objectContaining({

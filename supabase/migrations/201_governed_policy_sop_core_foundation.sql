@@ -2,7 +2,8 @@
 -- Migration 201: Governed Policy & SOP Backend Core Foundation
 -- Establishes structured Policy details, Policy requirements, SOP details,
 -- SOP procedure steps, version-scoped applicability, primary policy linkage,
--- locked-version immutability guards, and read-only catalog views.
+-- locked-version immutability guards (INSERT/UPDATE/DELETE), cross-organization
+-- integrity guards, and read-only catalog views.
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
@@ -25,8 +26,10 @@ create table if not exists public.governed_policy_details (
   non_compliance_escalation_en text,
   non_compliance_escalation_ar text,
   content_mode text not null default 'structured' check (content_mode in ('structured', 'legacy_controlled_document')),
+  transcription_status text not null default 'not_required' check (transcription_status in ('not_required', 'pending', 'complete')),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  check (content_mode <> 'structured' or transcription_status in ('not_required', 'complete'))
 );
 
 -- ----------------------------------------------------------------------------
@@ -73,9 +76,15 @@ create table if not exists public.governed_sop_details (
   acknowledgment_sla_days integer check (acknowledgment_sla_days is null or acknowledgment_sla_days >= 1),
   training_renewal_months integer check (training_renewal_months is null or training_renewal_months >= 1),
   content_mode text not null default 'structured' check (content_mode in ('structured', 'legacy_controlled_document')),
+  transcription_status text not null default 'not_required' check (transcription_status in ('not_required', 'pending', 'complete')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  check (governance_link_state <> 'linked' or primary_policy_version_id is not null)
+  check (
+    (governance_link_state = 'linked' and primary_policy_version_id is not null) or
+    (governance_link_state = 'legacy_pending') or
+    (governance_link_state = 'not_applicable' and primary_policy_version_id is null)
+  ),
+  check (content_mode <> 'structured' or transcription_status in ('not_required', 'complete'))
 );
 
 -- ----------------------------------------------------------------------------
@@ -119,10 +128,20 @@ create table if not exists public.document_version_department_scope (
 create table if not exists public.document_version_role_scope (
   id uuid primary key default gen_random_uuid(),
   version_id uuid not null references public.document_versions(id) on delete cascade,
-  role_name text not null,
+  role_name text,
   job_title text,
   created_at timestamptz not null default now(),
-  unique (version_id, role_name, job_title)
+  check (
+    nullif(trim(coalesce(role_name, '')), '') is not null or
+    nullif(trim(coalesce(job_title, '')), '') is not null
+  )
+);
+
+create unique index if not exists uq_doc_ver_role_scope_unique
+on public.document_version_role_scope (
+  version_id,
+  coalesce(trim(role_name), ''),
+  coalesce(trim(job_title), '')
 );
 
 -- ----------------------------------------------------------------------------
@@ -145,7 +164,7 @@ create index if not exists idx_doc_ver_role_scope_ver on public.document_version
 create index if not exists idx_doc_ver_role_scope_role on public.document_version_role_scope(role_name);
 
 -- ----------------------------------------------------------------------------
--- 7. Document Type & Primary Policy Validation Triggers
+-- 7. Document Type, Primary Policy & Cross-Organization Validation Triggers
 -- ----------------------------------------------------------------------------
 create or replace function public.validate_policy_version_type()
 returns trigger
@@ -155,7 +174,9 @@ set search_path = public, pg_temp
 as $$
 declare
   v_doc_type text;
+  v_doc_org_id uuid;
   v_version_id uuid;
+  v_ref_org_id uuid;
 begin
   if TG_TABLE_NAME = 'governed_policy_details' then
     v_version_id := NEW.version_id;
@@ -163,7 +184,7 @@ begin
     v_version_id := NEW.policy_version_id;
   end if;
 
-  select d.document_type into v_doc_type
+  select d.document_type, d.organization_id into v_doc_type, v_doc_org_id
   from public.document_versions v
   join public.controlled_documents d on d.id = v.document_id
   where v.id = v_version_id;
@@ -174,6 +195,29 @@ begin
 
   if v_doc_type <> 'policy' then
     raise exception 'PATCH201_POLICY_DETAILS_INVALID_DOCUMENT_TYPE';
+  end if;
+
+  -- Cross-organization integrity checks for policy_requirements
+  if TG_TABLE_NAME = 'policy_requirements' then
+    if NEW.monitoring_owner_id is not null then
+      select organization_id into v_ref_org_id
+      from public.profiles
+      where id = NEW.monitoring_owner_id;
+
+      if v_ref_org_id is distinct from v_doc_org_id then
+        raise exception 'PATCH201_CROSS_ORGANIZATION_REFERENCE_DENIED';
+      end if;
+    end if;
+
+    if NEW.mapped_control_id is not null then
+      select organization_id into v_ref_org_id
+      from public.control_library_items
+      where id = NEW.mapped_control_id;
+
+      if v_ref_org_id is distinct from v_doc_org_id then
+        raise exception 'PATCH201_CROSS_ORGANIZATION_REFERENCE_DENIED';
+      end if;
+    end if;
   end if;
 
   return NEW;
@@ -188,26 +232,19 @@ set search_path = public, pg_temp
 as $$
 declare
   v_doc_type text;
+  v_doc_org_id uuid;
   v_primary_doc_type text;
+  v_primary_doc_org_id uuid;
   v_version_id uuid;
+  v_ref_org_id uuid;
 begin
   if TG_TABLE_NAME = 'governed_sop_details' then
     v_version_id := NEW.version_id;
-    if NEW.primary_policy_version_id is not null then
-      select d.document_type into v_primary_doc_type
-      from public.document_versions v
-      join public.controlled_documents d on d.id = v.document_id
-      where v.id = NEW.primary_policy_version_id;
-
-      if v_primary_doc_type is null or v_primary_doc_type <> 'policy' then
-        raise exception 'PATCH201_PRIMARY_POLICY_VERSION_INVALID_TYPE';
-      end if;
-    end if;
   else
     v_version_id := NEW.sop_version_id;
   end if;
 
-  select d.document_type into v_doc_type
+  select d.document_type, d.organization_id into v_doc_type, v_doc_org_id
   from public.document_versions v
   join public.controlled_documents d on d.id = v.document_id
   where v.id = v_version_id;
@@ -218,6 +255,78 @@ begin
 
   if v_doc_type <> 'sop' then
     raise exception 'PATCH201_SOP_DETAILS_INVALID_DOCUMENT_TYPE';
+  end if;
+
+  -- Cross-organization and type checks for governed_sop_details
+  if TG_TABLE_NAME = 'governed_sop_details' then
+    if NEW.process_owner_id is not null then
+      select organization_id into v_ref_org_id
+      from public.profiles
+      where id = NEW.process_owner_id;
+
+      if v_ref_org_id is distinct from v_doc_org_id then
+        raise exception 'PATCH201_CROSS_ORGANIZATION_REFERENCE_DENIED';
+      end if;
+    end if;
+
+    if NEW.primary_policy_version_id is not null then
+      select d.document_type, d.organization_id into v_primary_doc_type, v_primary_doc_org_id
+      from public.document_versions v
+      join public.controlled_documents d on d.id = v.document_id
+      where v.id = NEW.primary_policy_version_id;
+
+      if v_primary_doc_type is null or v_primary_doc_type <> 'policy' then
+        raise exception 'PATCH201_PRIMARY_POLICY_VERSION_INVALID_TYPE';
+      end if;
+
+      if v_primary_doc_org_id is distinct from v_doc_org_id then
+        raise exception 'PATCH201_CROSS_ORGANIZATION_REFERENCE_DENIED';
+      end if;
+    end if;
+  end if;
+
+  -- Cross-organization checks for sop_procedure_steps
+  if TG_TABLE_NAME = 'sop_procedure_steps' then
+    if NEW.required_control_id is not null then
+      select organization_id into v_ref_org_id
+      from public.control_library_items
+      where id = NEW.required_control_id;
+
+      if v_ref_org_id is distinct from v_doc_org_id then
+        raise exception 'PATCH201_CROSS_ORGANIZATION_REFERENCE_DENIED';
+      end if;
+    end if;
+  end if;
+
+  return NEW;
+end;
+$$;
+
+create or replace function public.validate_department_scope()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_doc_org_id uuid;
+  v_dept_org_id uuid;
+begin
+  select d.organization_id into v_doc_org_id
+  from public.document_versions v
+  join public.controlled_documents d on d.id = v.document_id
+  where v.id = NEW.version_id;
+
+  if v_doc_org_id is null then
+    raise exception 'PATCH201_VERSION_NOT_FOUND';
+  end if;
+
+  select organization_id into v_dept_org_id
+  from public.departments
+  where id = NEW.department_id;
+
+  if v_dept_org_id is distinct from v_doc_org_id then
+    raise exception 'PATCH201_CROSS_ORGANIZATION_REFERENCE_DENIED';
   end if;
 
   return NEW;
@@ -244,8 +353,13 @@ create trigger trg_validate_sop_steps_type
 before insert or update on public.sop_procedure_steps
 for each row execute function public.validate_sop_version_type();
 
+drop trigger if exists trg_validate_doc_ver_dept_scope on public.document_version_department_scope;
+create trigger trg_validate_doc_ver_dept_scope
+before insert or update on public.document_version_department_scope
+for each row execute function public.validate_department_scope();
+
 -- ----------------------------------------------------------------------------
--- 8. Version Immutability Guards
+-- 8. Version Immutability Guards (Covers INSERT, UPDATE, and DELETE)
 -- ----------------------------------------------------------------------------
 create or replace function public.enforce_policy_sop_version_immutability()
 returns trigger
@@ -257,25 +371,22 @@ declare
   v_version_id uuid;
   v_locked_at timestamptz;
   v_approved_at timestamptz;
-  v_doc_status text;
 begin
   if TG_TABLE_NAME in ('governed_policy_details', 'governed_sop_details', 'document_version_department_scope', 'document_version_role_scope') then
-    v_version_id := coalesce(OLD.version_id, NEW.version_id);
+    v_version_id := coalesce(NEW.version_id, OLD.version_id);
   elsif TG_TABLE_NAME = 'policy_requirements' then
-    v_version_id := coalesce(OLD.policy_version_id, NEW.policy_version_id);
+    v_version_id := coalesce(NEW.policy_version_id, OLD.policy_version_id);
   elsif TG_TABLE_NAME = 'sop_procedure_steps' then
-    v_version_id := coalesce(OLD.sop_version_id, NEW.sop_version_id);
+    v_version_id := coalesce(NEW.sop_version_id, OLD.sop_version_id);
   end if;
 
-  select v.locked_at, v.approved_at, d.document_status
-  into v_locked_at, v_approved_at, v_doc_status
+  select v.locked_at, v.approved_at
+  into v_locked_at, v_approved_at
   from public.document_versions v
-  join public.controlled_documents d on d.id = v.document_id
   where v.id = v_version_id;
 
-  if v_locked_at is not null
-     or v_approved_at is not null
-     or v_doc_status in ('approved', 'active', 'retired', 'superseded') then
+  -- A version is immutable when locked or approved
+  if v_locked_at is not null or v_approved_at is not null then
     raise exception 'PATCH201_VERSION_IMMUTABLE_LOCKED';
   end if;
 
@@ -288,36 +399,36 @@ $$;
 
 drop trigger if exists trg_immutability_governed_policy_details on public.governed_policy_details;
 create trigger trg_immutability_governed_policy_details
-before update or delete on public.governed_policy_details
+before insert or update or delete on public.governed_policy_details
 for each row execute function public.enforce_policy_sop_version_immutability();
 
 drop trigger if exists trg_immutability_policy_requirements on public.policy_requirements;
 create trigger trg_immutability_policy_requirements
-before update or delete on public.policy_requirements
+before insert or update or delete on public.policy_requirements
 for each row execute function public.enforce_policy_sop_version_immutability();
 
 drop trigger if exists trg_immutability_governed_sop_details on public.governed_sop_details;
 create trigger trg_immutability_governed_sop_details
-before update or delete on public.governed_sop_details
+before insert or update or delete on public.governed_sop_details
 for each row execute function public.enforce_policy_sop_version_immutability();
 
 drop trigger if exists trg_immutability_sop_procedure_steps on public.sop_procedure_steps;
 create trigger trg_immutability_sop_procedure_steps
-before update or delete on public.sop_procedure_steps
+before insert or update or delete on public.sop_procedure_steps
 for each row execute function public.enforce_policy_sop_version_immutability();
 
 drop trigger if exists trg_immutability_doc_ver_dept_scope on public.document_version_department_scope;
 create trigger trg_immutability_doc_ver_dept_scope
-before update or delete on public.document_version_department_scope
+before insert or update or delete on public.document_version_department_scope
 for each row execute function public.enforce_policy_sop_version_immutability();
 
 drop trigger if exists trg_immutability_doc_ver_role_scope on public.document_version_role_scope;
 create trigger trg_immutability_doc_ver_role_scope
-before update or delete on public.document_version_role_scope
+before insert or update or delete on public.document_version_role_scope
 for each row execute function public.enforce_policy_sop_version_immutability();
 
 -- ----------------------------------------------------------------------------
--- 9. Row Level Security
+-- 9. Row Level Security (SELECT-only for authenticated; no direct browser write)
 -- ----------------------------------------------------------------------------
 alter table public.governed_policy_details enable row level security;
 alter table public.policy_requirements enable row level security;
@@ -326,7 +437,7 @@ alter table public.sop_procedure_steps enable row level security;
 alter table public.document_version_department_scope enable row level security;
 alter table public.document_version_role_scope enable row level security;
 
--- Select policies (scoped to organization of parent controlled document)
+-- Authenticated SELECT policies (scoped to organization of parent controlled document)
 drop policy if exists governed_policy_details_select on public.governed_policy_details;
 create policy governed_policy_details_select on public.governed_policy_details
 for select to authenticated
@@ -387,103 +498,6 @@ using (exists (
     and d.organization_id::text = coalesce(auth.jwt() ->> 'organization_id', auth.jwt() -> 'app_metadata' ->> 'organization_id')
 ));
 
--- Write policies (scoped to organization of parent controlled document)
-drop policy if exists governed_policy_details_write on public.governed_policy_details;
-create policy governed_policy_details_write on public.governed_policy_details
-for all to authenticated
-using (exists (
-  select 1 from public.document_versions v
-  join public.controlled_documents d on d.id = v.document_id
-  where v.id = governed_policy_details.version_id
-    and d.organization_id::text = coalesce(auth.jwt() ->> 'organization_id', auth.jwt() -> 'app_metadata' ->> 'organization_id')
-))
-with check (exists (
-  select 1 from public.document_versions v
-  join public.controlled_documents d on d.id = v.document_id
-  where v.id = governed_policy_details.version_id
-    and d.organization_id::text = coalesce(auth.jwt() ->> 'organization_id', auth.jwt() -> 'app_metadata' ->> 'organization_id')
-));
-
-drop policy if exists policy_requirements_write on public.policy_requirements;
-create policy policy_requirements_write on public.policy_requirements
-for all to authenticated
-using (exists (
-  select 1 from public.document_versions v
-  join public.controlled_documents d on d.id = v.document_id
-  where v.id = policy_requirements.policy_version_id
-    and d.organization_id::text = coalesce(auth.jwt() ->> 'organization_id', auth.jwt() -> 'app_metadata' ->> 'organization_id')
-))
-with check (exists (
-  select 1 from public.document_versions v
-  join public.controlled_documents d on d.id = v.document_id
-  where v.id = policy_requirements.policy_version_id
-    and d.organization_id::text = coalesce(auth.jwt() ->> 'organization_id', auth.jwt() -> 'app_metadata' ->> 'organization_id')
-));
-
-drop policy if exists governed_sop_details_write on public.governed_sop_details;
-create policy governed_sop_details_write on public.governed_sop_details
-for all to authenticated
-using (exists (
-  select 1 from public.document_versions v
-  join public.controlled_documents d on d.id = v.document_id
-  where v.id = governed_sop_details.version_id
-    and d.organization_id::text = coalesce(auth.jwt() ->> 'organization_id', auth.jwt() -> 'app_metadata' ->> 'organization_id')
-))
-with check (exists (
-  select 1 from public.document_versions v
-  join public.controlled_documents d on d.id = v.document_id
-  where v.id = governed_sop_details.version_id
-    and d.organization_id::text = coalesce(auth.jwt() ->> 'organization_id', auth.jwt() -> 'app_metadata' ->> 'organization_id')
-));
-
-drop policy if exists sop_procedure_steps_write on public.sop_procedure_steps;
-create policy sop_procedure_steps_write on public.sop_procedure_steps
-for all to authenticated
-using (exists (
-  select 1 from public.document_versions v
-  join public.controlled_documents d on d.id = v.document_id
-  where v.id = sop_procedure_steps.sop_version_id
-    and d.organization_id::text = coalesce(auth.jwt() ->> 'organization_id', auth.jwt() -> 'app_metadata' ->> 'organization_id')
-))
-with check (exists (
-  select 1 from public.document_versions v
-  join public.controlled_documents d on d.id = v.document_id
-  where v.id = sop_procedure_steps.sop_version_id
-    and d.organization_id::text = coalesce(auth.jwt() ->> 'organization_id', auth.jwt() -> 'app_metadata' ->> 'organization_id')
-));
-
-drop policy if exists doc_ver_dept_scope_write on public.document_version_department_scope;
-create policy doc_ver_dept_scope_write on public.document_version_department_scope
-for all to authenticated
-using (exists (
-  select 1 from public.document_versions v
-  join public.controlled_documents d on d.id = v.document_id
-  where v.id = document_version_department_scope.version_id
-    and d.organization_id::text = coalesce(auth.jwt() ->> 'organization_id', auth.jwt() -> 'app_metadata' ->> 'organization_id')
-))
-with check (exists (
-  select 1 from public.document_versions v
-  join public.controlled_documents d on d.id = v.document_id
-  where v.id = document_version_department_scope.version_id
-    and d.organization_id::text = coalesce(auth.jwt() ->> 'organization_id', auth.jwt() -> 'app_metadata' ->> 'organization_id')
-));
-
-drop policy if exists doc_ver_role_scope_write on public.document_version_role_scope;
-create policy doc_ver_role_scope_write on public.document_version_role_scope
-for all to authenticated
-using (exists (
-  select 1 from public.document_versions v
-  join public.controlled_documents d on d.id = v.document_id
-  where v.id = document_version_role_scope.version_id
-    and d.organization_id::text = coalesce(auth.jwt() ->> 'organization_id', auth.jwt() -> 'app_metadata' ->> 'organization_id')
-))
-with check (exists (
-  select 1 from public.document_versions v
-  join public.controlled_documents d on d.id = v.document_id
-  where v.id = document_version_role_scope.version_id
-    and d.organization_id::text = coalesce(auth.jwt() ->> 'organization_id', auth.jwt() -> 'app_metadata' ->> 'organization_id')
-));
-
 -- ----------------------------------------------------------------------------
 -- 10. Read-Only Catalog Views (Security Invoker)
 -- ----------------------------------------------------------------------------
@@ -526,6 +540,7 @@ select
   p.non_compliance_escalation_en,
   p.non_compliance_escalation_ar,
   p.content_mode,
+  p.transcription_status,
   (
     select count(*)::integer
     from public.policy_requirements pr
@@ -585,6 +600,7 @@ select
   s.acknowledgment_sla_days,
   s.training_renewal_months,
   s.content_mode,
+  s.transcription_status,
   (
     select count(*)::integer
     from public.sop_procedure_steps st
@@ -656,6 +672,9 @@ grant execute on function public.validate_policy_version_type() to service_role;
 
 revoke all on function public.validate_sop_version_type() from public, anon, authenticated;
 grant execute on function public.validate_sop_version_type() to service_role;
+
+revoke all on function public.validate_department_scope() from public, anon, authenticated;
+grant execute on function public.validate_department_scope() to service_role;
 
 revoke all on function public.enforce_policy_sop_version_immutability() from public, anon, authenticated;
 grant execute on function public.enforce_policy_sop_version_immutability() to service_role;

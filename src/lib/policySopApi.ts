@@ -38,6 +38,7 @@ export interface GovernedPolicyCatalogRow {
   non_compliance_escalation_en: string | null;
   non_compliance_escalation_ar: string | null;
   content_mode: 'structured' | 'legacy_controlled_document' | null;
+  transcription_status: 'not_required' | 'pending' | 'complete' | null;
   requirement_count: number;
   created_at: string;
   updated_at: string;
@@ -87,6 +88,7 @@ export interface GovernedSopCatalogRow {
   acknowledgment_sla_days: number | null;
   training_renewal_months: number | null;
   content_mode: 'structured' | 'legacy_controlled_document' | null;
+  transcription_status: 'not_required' | 'pending' | 'complete' | null;
   step_count: number;
   created_at: string;
   updated_at: string;
