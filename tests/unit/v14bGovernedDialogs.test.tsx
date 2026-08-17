@@ -698,5 +698,96 @@ describe('GRC v1.4-B Governed Workflow Dialogs & Waiver Remediation', () => {
         });
       });
     });
+
+    it('fails closed with warning notice and disabled submit when multiple requested waivers exist for a requirement', async () => {
+      const duplicateWaiverRow: EvidenceGateWaiverRow = {
+        ...mockWaiverRow,
+        id: 'waiver-guid-999',
+        requested_at: '2026-08-11T13:00:00Z',
+        waiver_reason: 'Second conflicting requested waiver',
+      };
+
+      apiMocks.getEvidenceGapDashboard.mockResolvedValueOnce([]);
+      apiMocks.getEvidenceClosureGateStatus.mockResolvedValueOnce([mockGateRow]);
+      apiMocks.getEvidenceGateWaivers.mockResolvedValueOnce([mockWaiverRow, duplicateWaiverRow]);
+
+      renderWithProviders(<Evidence />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText('Fire Safety Certificate').length).toBeGreaterThan(0);
+      });
+
+      const approveWaiverBtn = screen.getByTitle('Approve waiver by ID');
+      fireEvent.click(approveWaiverBtn);
+
+      // Verify modal opened with ambiguity warning banner
+      expect(screen.getByText('Approve evidence waiver')).toBeInTheDocument();
+      expect(screen.getByText(/Multiple pending waiver requests detected for this requirement/i)).toBeInTheDocument();
+
+      // Submit button should be disabled
+      const confirmApproveBtn = screen.getAllByRole('button', { name: /Approve/i }).find(b => b.classList.contains('primary-button'));
+      expect(confirmApproveBtn).toBeDefined();
+      expect(confirmApproveBtn).toBeDisabled();
+      expect(apiMocks.approveEvidenceGateWaiver).not.toHaveBeenCalled();
+    });
+
+    it('allows manual waiver ID input when 0 pending requested waivers exist', async () => {
+      apiMocks.getEvidenceGapDashboard.mockResolvedValueOnce([]);
+      apiMocks.getEvidenceClosureGateStatus.mockResolvedValueOnce([mockGateRow]);
+      apiMocks.getEvidenceGateWaivers.mockResolvedValueOnce([]);
+
+      renderWithProviders(<Evidence />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText('Fire Safety Certificate').length).toBeGreaterThan(0);
+      });
+
+      const approveWaiverBtn = screen.getByTitle('Approve waiver by ID');
+      fireEvent.click(approveWaiverBtn);
+
+      expect(screen.getByText('Approve evidence waiver')).toBeInTheDocument();
+      // Manual waiver ID field should be rendered
+      const waiverIdInput = screen.getByLabelText(/Waiver ID \*/i);
+      expect(waiverIdInput).toBeInTheDocument();
+
+      fireEvent.change(waiverIdInput, { target: { value: 'custom-waiver-uuid-123' } });
+
+      const confirmApproveBtn = screen.getAllByRole('button', { name: /Approve/i }).find(b => b.classList.contains('primary-button'));
+      fireEvent.click(confirmApproveBtn!);
+
+      await waitFor(() => {
+        expect(apiMocks.approveEvidenceGateWaiver).toHaveBeenCalledWith({
+          waiver_id: 'custom-waiver-uuid-123',
+          audit_note: 'Waiver approved by governance lead',
+        });
+      });
+    });
+
+    it('maps PATCH23_EVIDENCE_WAIVER_ALREADY_REQUESTED error to bilingual message when requesting a duplicate waiver', async () => {
+      apiMocks.getEvidenceGapDashboard.mockResolvedValueOnce([mockGapRow]);
+      apiMocks.getEvidenceClosureGateStatus.mockResolvedValueOnce([mockGateRow]);
+      apiMocks.getEvidenceGateWaivers.mockResolvedValueOnce([]);
+      apiMocks.requestEvidenceGateWaiver.mockRejectedValueOnce(
+        new Error('Database error: PATCH23_EVIDENCE_WAIVER_ALREADY_REQUESTED')
+      );
+
+      renderWithProviders(<Evidence />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText('Fire Safety Certificate').length).toBeGreaterThan(0);
+      });
+
+      const requestBtn = screen.getByRole('button', { name: /Request/i });
+      fireEvent.click(requestBtn);
+
+      const reasonInput = screen.getByLabelText(/Waiver reason \*/i);
+      fireEvent.change(reasonInput, { target: { value: 'Already requested waiver test' } });
+
+      fireEvent.click(screen.getByRole('button', { name: /Confirm action/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/A waiver request is already pending for this evidence requirement/i)).toBeInTheDocument();
+      });
+    });
   });
 });

@@ -33,6 +33,7 @@ export interface GovernedDecisionDialogProps {
   fields?: DecisionFieldConfig[];
   children?: React.ReactNode;
   isSubmitting?: boolean;
+  submitDisabled?: boolean;
   error?: string | null;
   warningNotice?: string | null;
   size?: 'small' | 'medium' | 'large';
@@ -51,6 +52,7 @@ export function GovernedDecisionDialog({
   fields = [],
   children,
   isSubmitting: externalSubmitting = false,
+  submitDisabled = false,
   error = null,
   warningNotice = null,
   size = 'medium',
@@ -277,7 +279,7 @@ export function GovernedDecisionDialog({
           <button
             type="submit"
             className={confirmBtnClass}
-            disabled={isSubmitting}
+            disabled={isSubmitting || submitDisabled}
           >
             {isSubmitting
               ? t('decision.submitting')
