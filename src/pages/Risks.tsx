@@ -39,7 +39,10 @@ import type { RiskReassessmentHistoryRow, RiskRow, RiskWorkflowEventRow } from '
 export function Risks() {
   const auth = useAuth();
   const { t } = useI18n();
-  const [formOpen, setFormOpen] = useState(false);  const [selectedRisk, setSelectedRisk] = useState<RiskRow | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [riskFormDirty, setRiskFormDirty] = useState(false);
+  const [riskFormSubmitting, setRiskFormSubmitting] = useState(false);
+  const [selectedRisk, setSelectedRisk] = useState<RiskRow | null>(null);
   const [riskHistory, setRiskHistory] = useState<RiskReassessmentHistoryRow[]>([]);
   const [riskEvents, setRiskEvents] = useState<RiskWorkflowEventRow[]>([]);
   const [workflowBusy, setWorkflowBusy] = useState(false);
@@ -208,6 +211,18 @@ export function Risks() {
     await runRiskAction('Duplicate risk signal', () => markDuplicateRisk({ risk_id: selectedRisk.id, duplicate_of_risk_id, reason }));
   }
 
+  const openRiskForm = () => {
+    setRiskFormDirty(false);
+    setRiskFormSubmitting(false);
+    setFormOpen(true);
+  };
+
+  const closeRiskForm = () => {
+    setFormOpen(false);
+    setRiskFormDirty(false);
+    setRiskFormSubmitting(false);
+  };
+
   return (
     <section className="page-section">
       <ModuleHeader
@@ -216,7 +231,7 @@ export function Risks() {
         subtitle={t('risks.subtitle')}
         action={(
           <div className="inline-actions">
-            {canManageRisks ? <button className="primary-button" onClick={() => setFormOpen(true)}>{t('risks.new')}</button> : null}
+            {canManageRisks ? <button className="primary-button" onClick={openRiskForm}>{t('risks.new')}</button> : null}
           </div>
         )}
       />
@@ -394,8 +409,25 @@ export function Risks() {
 
         </div>
       </details>
-<Modal open={formOpen} title="Create risk" onClose={() => setFormOpen(false)}>
-        <RiskForm organizationId={organizationId} departments={departments.data || []} profiles={profiles.data || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void risks.refresh(); }} />
+      <Modal
+        open={formOpen}
+        title="Create risk"
+        isDirty={riskFormDirty}
+        isSubmitting={riskFormSubmitting}
+        onClose={closeRiskForm}
+      >
+        <RiskForm
+          organizationId={organizationId}
+          departments={departments.data || []}
+          profiles={profiles.data || []}
+          onDirtyChange={setRiskFormDirty}
+          onSubmittingChange={setRiskFormSubmitting}
+          onCancel={closeRiskForm}
+          onCreated={() => {
+            closeRiskForm();
+            void risks.refresh();
+          }}
+        />
       </Modal>
 
       <Modal open={Boolean(selectedRisk)} title="Risk workflow detail" onClose={() => setSelectedRisk(null)}>

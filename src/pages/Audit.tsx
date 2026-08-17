@@ -132,6 +132,8 @@ export function Audit() {
   const auth = useAuth();
   const { t } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
+  const [findingFormDirty, setFindingFormDirty] = useState(false);
+  const [findingFormSubmitting, setFindingFormSubmitting] = useState(false);
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -321,6 +323,18 @@ export function Audit() {
   }
 const actionDisabled = !canManageFindings || Boolean(busyAction);
 
+  const openFindingForm = () => {
+    setFindingFormDirty(false);
+    setFindingFormSubmitting(false);
+    setFormOpen(true);
+  };
+
+  const closeFindingForm = () => {
+    setFormOpen(false);
+    setFindingFormDirty(false);
+    setFindingFormSubmitting(false);
+  };
+
   return (
     <section className="page-section">
       <ModuleHeader
@@ -329,7 +343,7 @@ const actionDisabled = !canManageFindings || Boolean(busyAction);
         subtitle={t('audit.subtitle')}
         action={canManageFindings ? (
           <div className="inline-actions">
-            <button className="primary-button" onClick={() => setFormOpen(true)}>{t('audit.newFinding')}</button>
+            <button className="primary-button" onClick={openFindingForm}>{t('audit.newFinding')}</button>
           </div>
         ) : null}
       />
@@ -605,8 +619,26 @@ const actionDisabled = !canManageFindings || Boolean(busyAction);
 
         </div>
       </details>
-<Modal size="large" open={formOpen} title="Create audit finding" onClose={() => setFormOpen(false)}>
-        <AuditFindingForm organizationId={organizationId} departments={departments.data || []} profiles={profiles.data || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void refreshAuditWorkflow(); }} />
+      <Modal
+        size="large"
+        open={formOpen}
+        title="Create audit finding"
+        isDirty={findingFormDirty}
+        isSubmitting={findingFormSubmitting}
+        onClose={closeFindingForm}
+      >
+        <AuditFindingForm
+          organizationId={organizationId}
+          departments={departments.data || []}
+          profiles={profiles.data || []}
+          onDirtyChange={setFindingFormDirty}
+          onSubmittingChange={setFindingFormSubmitting}
+          onCancel={closeFindingForm}
+          onCreated={() => {
+            closeFindingForm();
+            void refreshAuditWorkflow();
+          }}
+        />
       </Modal>
     </section>
   );

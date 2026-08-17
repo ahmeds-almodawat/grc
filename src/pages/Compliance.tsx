@@ -16,6 +16,8 @@ export function Compliance() {
   const auth = useAuth();
   const { t } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
+  const [complianceFormDirty, setComplianceFormDirty] = useState(false);
+  const [complianceFormSubmitting, setComplianceFormSubmitting] = useState(false);
   const compliance = useAsyncData(getComplianceItems, []);
   const departments = useAsyncData(getDepartments, []);
   const profiles = useAsyncData(getProfiles, []);
@@ -33,13 +35,25 @@ export function Compliance() {
     overdue: complianceRows.filter(r => r.due_date && new Date(r.due_date).getTime() < Date.now() && r.status !== 'closed' && r.status !== 'compliant').length,
   };
 
+  const openComplianceForm = () => {
+    setComplianceFormDirty(false);
+    setComplianceFormSubmitting(false);
+    setFormOpen(true);
+  };
+
+  const closeComplianceForm = () => {
+    setFormOpen(false);
+    setComplianceFormDirty(false);
+    setComplianceFormSubmitting(false);
+  };
+
   return (
     <section className="page-section">
       <ModuleHeader
         eyebrow={t('compliance.eyebrow')}
         title={t('compliance.title')}
         subtitle={t('compliance.subtitle')}
-        action={canManageCompliance ? <button className="primary-button" onClick={() => setFormOpen(true)}>{t('compliance.new')}</button> : null}
+        action={canManageCompliance ? <button className="primary-button" onClick={openComplianceForm}>{t('compliance.new')}</button> : null}
       />
 
       <div className="module-grid">
@@ -49,8 +63,6 @@ export function Compliance() {
         <div className="module-card warning"><strong>{t('compliance.evidenceNeeded')}</strong><span>{metrics.evidenceNeeded} {t('compliance.pending')}</span></div>
         <div className="module-card danger"><strong>{t('compliance.overdue')}</strong><span>{metrics.overdue} {t('compliance.overdue')}</span></div>
       </div>
-
-
 
       <div className="panel">
         <div className="panel-header">
@@ -79,8 +91,26 @@ export function Compliance() {
         </DataState>
       </div>
 
-      <Modal open={formOpen} title={t('compliance.create')} onClose={() => setFormOpen(false)}>
-        <ComplianceForm organizationId={organizationId} departments={departments.data || []} profiles={profiles.data || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void compliance.refresh(); }} />
-      </Modal></section>
+      <Modal
+        open={formOpen}
+        title={t('compliance.create')}
+        isDirty={complianceFormDirty}
+        isSubmitting={complianceFormSubmitting}
+        onClose={closeComplianceForm}
+      >
+        <ComplianceForm
+          organizationId={organizationId}
+          departments={departments.data || []}
+          profiles={profiles.data || []}
+          onDirtyChange={setComplianceFormDirty}
+          onSubmittingChange={setComplianceFormSubmitting}
+          onCancel={closeComplianceForm}
+          onCreated={() => {
+            closeComplianceForm();
+            void compliance.refresh();
+          }}
+        />
+      </Modal>
+    </section>
   );
 }

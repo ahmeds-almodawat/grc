@@ -56,8 +56,36 @@ export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps)
   const auth = useAuth();
   const { t, language } = useI18n();
   const [milestoneFormOpen, setMilestoneFormOpen] = useState(false);
+  const [milestoneFormDirty, setMilestoneFormDirty] = useState(false);
+  const [milestoneFormSubmitting, setMilestoneFormSubmitting] = useState(false);
   const [taskFormOpen, setTaskFormOpen] = useState(false);
+  const [taskFormDirty, setTaskFormDirty] = useState(false);
+  const [taskFormSubmitting, setTaskFormSubmitting] = useState(false);
   const [activeControl, setActiveControl] = useState<ActiveControl>(null);
+
+  const openMilestoneForm = () => {
+    setMilestoneFormDirty(false);
+    setMilestoneFormSubmitting(false);
+    setMilestoneFormOpen(true);
+  };
+
+  const closeMilestoneForm = () => {
+    setMilestoneFormOpen(false);
+    setMilestoneFormDirty(false);
+    setMilestoneFormSubmitting(false);
+  };
+
+  const openTaskForm = () => {
+    setTaskFormDirty(false);
+    setTaskFormSubmitting(false);
+    setTaskFormOpen(true);
+  };
+
+  const closeTaskForm = () => {
+    setTaskFormOpen(false);
+    setTaskFormDirty(false);
+    setTaskFormSubmitting(false);
+  };
   const milestones = useAsyncData(() => getProjectMilestones(project.id), [project.id]);
   const tasks = useAsyncData(() => getProjectTasks(project.id), [project.id]);
   const assignments = useAsyncData(() => getProjectWorkAssignments(project.id), [project.id]);
@@ -142,7 +170,7 @@ export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps)
       <div className="panel inner-panel">
         <div className="panel-header split-header">
           <div><h4>Milestones</h4><p>Major stages with owner, due date, evidence and approval.</p></div>
-          {canControlProject ? <button className="ghost-button" type="button" onClick={() => setMilestoneFormOpen(true)}>Add Milestone</button> : null}
+          {canControlProject ? <button className="ghost-button" type="button" onClick={openMilestoneForm}>Add Milestone</button> : null}
         </div>
         <DataState loading={milestones.loading} error={milestones.error} empty={!milestones.data?.length} emptyMessage="No milestones yet.">
           <EntityTable<MilestoneRow>
@@ -174,7 +202,7 @@ export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps)
       <div className="panel inner-panel">
         <div className="panel-header split-header">
           <div><h4>Tasks</h4><p>Assigned work under milestones. Keep this for controlled tasks, not daily small to-dos.</p></div>
-          {canControlProject ? <button className="ghost-button" type="button" onClick={() => setTaskFormOpen(true)}>Add Task</button> : null}
+          {canControlProject ? <button className="ghost-button" type="button" onClick={openTaskForm}>Add Task</button> : null}
         </div>
         <DataState loading={tasks.loading} error={tasks.error} empty={!tasks.data?.length} emptyMessage="No tasks yet.">
           <EntityTable<TaskRow>
@@ -214,14 +242,23 @@ export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps)
         </DataState>
       </div>
 
-      <Modal size="large" open={milestoneFormOpen} title="Add controlled milestone" onClose={() => setMilestoneFormOpen(false)}>
+      <Modal
+        size="large"
+        open={milestoneFormOpen}
+        title="Add controlled milestone"
+        isDirty={milestoneFormDirty}
+        isSubmitting={milestoneFormSubmitting}
+        onClose={closeMilestoneForm}
+      >
         {organizationId ? (
           <MilestoneForm
             organizationId={organizationId}
             projectId={project.id}
-            onCancel={() => setMilestoneFormOpen(false)}
+            onDirtyChange={setMilestoneFormDirty}
+            onSubmittingChange={setMilestoneFormSubmitting}
+            onCancel={closeMilestoneForm}
             onCreated={() => {
-              setMilestoneFormOpen(false);
+              closeMilestoneForm();
               void milestones.refresh();
             }}
           />
@@ -230,15 +267,24 @@ export function ProjectDetail({ project, onProjectUpdated }: ProjectDetailProps)
         )}
       </Modal>
 
-      <Modal size="large" open={taskFormOpen} title="Add controlled task" onClose={() => setTaskFormOpen(false)}>
+      <Modal
+        size="large"
+        open={taskFormOpen}
+        title="Add controlled task"
+        isDirty={taskFormDirty}
+        isSubmitting={taskFormSubmitting}
+        onClose={closeTaskForm}
+      >
         {organizationId ? (
           <TaskForm
             organizationId={organizationId}
             projectId={project.id}
             milestones={milestones.data || []}
-            onCancel={() => setTaskFormOpen(false)}
+            onDirtyChange={setTaskFormDirty}
+            onSubmittingChange={setTaskFormSubmitting}
+            onCancel={closeTaskForm}
             onCreated={() => {
-              setTaskFormOpen(false);
+              closeTaskForm();
               void tasks.refresh();
             }}
           />

@@ -6,6 +6,12 @@ import { Modal } from '../../src/components/Modal';
 import { ActionPlanForm } from '../../src/components/ActionPlanForm';
 import { RiskForm, ComplianceForm, MilestoneForm, TaskForm } from '../../src/components/GrcForms';
 import { OVR } from '../../src/pages/OVR';
+import { Risks } from '../../src/pages/Risks';
+import { Compliance } from '../../src/pages/Compliance';
+import { Governance } from '../../src/pages/Governance';
+import { Audit } from '../../src/pages/Audit';
+import { ProjectDetail } from '../../src/components/ProjectDetail';
+import type { ProjectRow } from '../../src/types/domain';
 
 const apiMocks = vi.hoisted(() => ({
   createProject: vi.fn(),
@@ -14,6 +20,8 @@ const apiMocks = vi.hoisted(() => ({
   createMilestone: vi.fn(),
   createTask: vi.fn(),
   createOvrReport: vi.fn(),
+  createAuditFinding: vi.fn(),
+  createGovernanceDecision: vi.fn(),
   getOvrSummary: vi.fn(async () => ({ total_reports: 1, open_reports: 1, under_quality_review: 0, corrective_actions_required: 0, sentinel_events: 0, near_miss_level_1: 0 })),
   getOvrWorkflowControlSummary: vi.fn(async () => ({ pending_supervisor_review: 0, pending_quality_review: 0, returned_for_clarification: 0, pending_evidence_review: 0, major_open_ovrs: 0, overdue_ovr_workflow_items: 0 })),
   getOvrWorkflowQueue: vi.fn(async () => []),
@@ -22,14 +30,35 @@ const apiMocks = vi.hoisted(() => ({
   getDepartments: vi.fn(async () => [{ id: 'dept-1', name_en: 'Quality Department' }]),
   getProfiles: vi.fn(async () => [{ id: 'user-1', full_name_en: 'Dr. Sarah Smith' }]),
   searchEligibleWorkParticipants: vi.fn(async () => [{ id: 'user-1', full_name_en: 'Dr. Sarah Smith' }]),
+  getRisks: vi.fn(async () => []),
+  getRiskWorkflowQueue: vi.fn(async () => []),
+  getRiskAppetiteBreaches: vi.fn(async () => []),
+  getRiskTreatmentQueue: vi.fn(async () => []),
+  getRiskKriAlerts: vi.fn(async () => []),
+  getRiskExecutiveEscalations: vi.fn(async () => []),
+  getRiskClosureBlockers: vi.fn(async () => []),
+  getComplianceItems: vi.fn(async () => []),
+  getGovernanceDecisions: vi.fn(async () => []),
+  getAuditFindings: vi.fn(async () => []),
+  getAuditFindingWorkflowQueue: vi.fn(async () => []),
+  getOverdueAuditFindings: vi.fn(async () => []),
+  getRepeatAuditFindings: vi.fn(async () => []),
+  getAuditClosureGateStatus: vi.fn(async () => []),
+  getAuditExecutiveEscalations: vi.fn(async () => []),
+  getAuditClosurePackIndex: vi.fn(async () => []),
+  getAuditFindingValidationEvents: vi.fn(async () => []),
+  getProjectMilestones: vi.fn(async () => []),
+  getProjectTasks: vi.fn(async () => []),
+  getProjectWorkAssignments: vi.fn(async () => []),
+  getEvidenceForItem: vi.fn(async () => []),
 }));
 
 vi.mock('../../src/lib/grcApi', () => ({
   createProject: apiMocks.createProject,
   createRisk: apiMocks.createRisk,
   createComplianceItem: apiMocks.createComplianceItem,
-  createAuditFinding: vi.fn(),
-  createGovernanceDecision: vi.fn(),
+  createAuditFinding: apiMocks.createAuditFinding,
+  createGovernanceDecision: apiMocks.createGovernanceDecision,
   createMilestone: apiMocks.createMilestone,
   createTask: apiMocks.createTask,
   createOvrReport: apiMocks.createOvrReport,
@@ -41,11 +70,33 @@ vi.mock('../../src/lib/grcApi', () => ({
   getDepartments: apiMocks.getDepartments,
   getProfiles: apiMocks.getProfiles,
   searchEligibleWorkParticipants: apiMocks.searchEligibleWorkParticipants,
-  getEvidenceForItem: vi.fn(async () => []),
+  getRisks: apiMocks.getRisks,
+  getRiskWorkflowQueue: apiMocks.getRiskWorkflowQueue,
+  getRiskAppetiteBreaches: apiMocks.getRiskAppetiteBreaches,
+  getRiskTreatmentQueue: apiMocks.getRiskTreatmentQueue,
+  getRiskKriAlerts: apiMocks.getRiskKriAlerts,
+  getRiskExecutiveEscalations: apiMocks.getRiskExecutiveEscalations,
+  getExecutiveRiskEscalations: apiMocks.getRiskExecutiveEscalations,
+  getRiskClosureBlockers: apiMocks.getRiskClosureBlockers,
+  getComplianceItems: apiMocks.getComplianceItems,
+  getGovernanceDecisions: apiMocks.getGovernanceDecisions,
+  getAuditFindings: apiMocks.getAuditFindings,
+  getAuditFindingWorkflowQueue: apiMocks.getAuditFindingWorkflowQueue,
+  getOverdueAuditFindings: apiMocks.getOverdueAuditFindings,
+  getRepeatAuditFindings: apiMocks.getRepeatAuditFindings,
+  getAuditClosureGateStatus: apiMocks.getAuditClosureGateStatus,
+  getAuditExecutiveEscalations: apiMocks.getAuditExecutiveEscalations,
+  getAuditClosurePackIndex: apiMocks.getAuditClosurePackIndex,
+  getAuditFindingValidationEvents: apiMocks.getAuditFindingValidationEvents,
+  getProjectMilestones: apiMocks.getProjectMilestones,
+  getProjectTasks: apiMocks.getProjectTasks,
+  getProjectWorkAssignments: apiMocks.getProjectWorkAssignments,
+  getEvidenceForItem: apiMocks.getEvidenceForItem,
 }));
 
 vi.mock('../../src/auth/AuthProvider', () => ({
   useAuth: () => ({
+    session: { user: { id: 'user-1' } },
     profile: { id: 'user-1', full_name_en: 'Admin' },
     roles: [{ role: 'super_admin', scope: 'global' }],
   }),
@@ -62,6 +113,19 @@ vi.mock('../../src/lib/scenarioLab', () => ({
 
 const renderWithProviders = (ui: React.ReactElement) => {
   return render(<I18nProvider>{ui}</I18nProvider>);
+};
+
+const mockProject: ProjectRow = {
+  id: 'proj-1',
+  organization_id: 'org-1',
+  title: 'Controlled Accreditation Project',
+  description: 'Test Project',
+  status: 'planning',
+  priority: 'high',
+  start_date: '2026-08-01',
+  target_end_date: '2026-12-31',
+  created_at: '2026-08-01T00:00:00Z',
+  created_by: 'user-1',
 };
 
 describe('GRC v1.4-A Foundation & Form Safety', () => {
@@ -115,12 +179,10 @@ describe('GRC v1.4-A Foundation & Form Safety', () => {
         </Modal>,
       );
 
-      // Trigger discard confirmation via close button
       const closeBtn = screen.getByRole('button', { name: /Close|إغلاق|common\.close/i });
       fireEvent.click(closeBtn);
       expect(screen.getByRole('alertdialog')).toBeTruthy();
 
-      // Click Keep editing
       fireEvent.click(screen.getByRole('button', { name: /Keep editing|متابعة التعديل/i }));
       expect(screen.queryByRole('alertdialog')).toBeNull();
       expect(handleClose).not.toHaveBeenCalled();
@@ -155,7 +217,6 @@ describe('GRC v1.4-A Foundation & Form Safety', () => {
       expect(handleClose).not.toHaveBeenCalled();
       expect(screen.getByRole('alertdialog')).toBeTruthy();
 
-      // Second Escape inside alertdialog cancels the discard overlay
       fireEvent.keyDown(card, { key: 'Escape' });
       expect(screen.queryByRole('alertdialog')).toBeNull();
       expect(handleClose).not.toHaveBeenCalled();
@@ -172,9 +233,7 @@ describe('GRC v1.4-A Foundation & Form Safety', () => {
       const card = screen.getByRole('dialog');
       const backdrop = document.querySelector('.modal-backdrop')!;
 
-      // Mouse down inside card (e.g. text selection drag)
       fireEvent.mouseDown(card);
-      // Mouse up / click on backdrop
       fireEvent.click(backdrop);
 
       expect(handleClose).not.toHaveBeenCalled();
@@ -221,7 +280,6 @@ describe('GRC v1.4-A Foundation & Form Safety', () => {
 
       const form = screen.getByRole('button', { name: 'Create Draft Action Plan' }).closest('form')!;
 
-      // Simulate rapid double submit
       fireEvent.submit(form);
       fireEvent.submit(form);
 
@@ -270,7 +328,6 @@ describe('GRC v1.4-A Foundation & Form Safety', () => {
 
       expect(await screen.findByText('Network error on first attempt')).toBeTruthy();
 
-      // Now retry submission
       apiMocks.createRisk.mockResolvedValueOnce({ id: 'r1' });
       fireEvent.submit(form);
 
@@ -365,7 +422,6 @@ describe('GRC v1.4-A Foundation & Form Safety', () => {
       fireEvent.change(targetInput, { target: { value: '2026-09-10' } });
       expect(targetInput.value).toBe('2026-09-10');
 
-      // Advance start date to 2026-09-15 (after 2026-09-10)
       fireEvent.change(startInput, { target: { value: '2026-09-15' } });
       expect(targetInput.value).toBe('');
     });
@@ -397,11 +453,9 @@ describe('GRC v1.4-A Foundation & Form Safety', () => {
     it('resets form draft and pre-occurrence flags completely upon closing and reopening', async () => {
       renderWithProviders(<OVR />);
 
-      // Open new report form
       const openBtn = await screen.findByRole('button', { name: /New OVR Report|New Report|بلاغ جديد/i });
       fireEvent.click(openBtn);
 
-      // Modify fields and checkboxes
       const descInput = screen.getByLabelText(/Summary facts|Facts|ملخص/i);
       fireEvent.change(descInput, { target: { value: 'Initial draft incident description' } });
 
@@ -409,11 +463,9 @@ describe('GRC v1.4-A Foundation & Form Safety', () => {
       fireEvent.click(flagCheckbox);
       expect((flagCheckbox as HTMLInputElement).checked).toBe(true);
 
-      // Cancel / Close form
       const cancelBtn = screen.getAllByRole('button', { name: /Cancel|إلغاء/i })[0];
       fireEvent.click(cancelBtn);
 
-      // Reopen form
       const reopenBtn = screen.getByRole('button', { name: /New OVR Report|New Report|بلاغ جديد/i });
       fireEvent.click(reopenBtn);
 
@@ -422,6 +474,150 @@ describe('GRC v1.4-A Foundation & Form Safety', () => {
 
       expect(freshDescInput.value).toBe('');
       expect(freshFlagCheckbox.checked).toBe(false);
+    });
+  });
+
+  describe('Host-Level Modal Dirty & Submitting Wiring', () => {
+    it('propagates dirty state from RiskForm to Modal in Risks page and resets on discard', async () => {
+      renderWithProviders(<Risks />);
+
+      const newRiskBtn = await screen.findByRole('button', { name: /New Risk|سجل خطر جديد|risks\.new/i });
+      fireEvent.click(newRiskBtn);
+
+      const titleInput = screen.getByLabelText(/Risk title/i);
+      fireEvent.change(titleInput, { target: { value: 'Draft Risk Description' } });
+
+      const backdrop = document.querySelector('.modal-backdrop')!;
+      fireEvent.mouseDown(backdrop);
+      fireEvent.click(backdrop);
+
+      expect(screen.getByRole('alertdialog')).toBeTruthy();
+      expect(screen.getByText(/Discard unsaved changes/i)).toBeTruthy();
+
+      fireEvent.click(screen.getByRole('button', { name: /Discard changes|تجاهل التغييرات/i }));
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it('propagates dirty state from ComplianceForm to Modal in Compliance page', async () => {
+      renderWithProviders(<Compliance />);
+
+      const newBtn = await screen.findByRole('button', { name: /New Obligation|متطلب جديد|compliance\.new/i });
+      fireEvent.click(newBtn);
+
+      const titleInput = screen.getByLabelText(/Requirement title/i);
+      fireEvent.change(titleInput, { target: { value: 'New License Requirement' } });
+
+      const backdrop = document.querySelector('.modal-backdrop')!;
+      fireEvent.mouseDown(backdrop);
+      fireEvent.click(backdrop);
+
+      expect(screen.getByRole('alertdialog')).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: /Keep editing|متابعة التعديل/i }));
+      expect(screen.queryByRole('alertdialog')).toBeNull();
+      expect(screen.getByRole('dialog')).toBeTruthy();
+
+      fireEvent.click(screen.getByRole('button', { name: /Close|إغلاق|common\.close/i }));
+      fireEvent.click(screen.getByRole('button', { name: /Discard changes|تجاهل التغييرات/i }));
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it('propagates dirty state from DecisionForm to Modal in Governance page', async () => {
+      renderWithProviders(<Governance />);
+
+      const newBtn = await screen.findByRole('button', { name: /New Decision|قرار جديد/i });
+      fireEvent.click(newBtn);
+
+      const titleInput = screen.getByLabelText(/Decision title/i);
+      fireEvent.change(titleInput, { target: { value: 'Board Resolution on Policy' } });
+
+      const dialog = screen.getByRole('dialog');
+      fireEvent.keyDown(dialog, { key: 'Escape' });
+
+      expect(screen.getByRole('alertdialog')).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: /Discard changes|تجاهل التغييرات/i }));
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it('propagates dirty state from AuditFindingForm to Modal in Audit page', async () => {
+      renderWithProviders(<Audit />);
+
+      const newBtn = await screen.findByRole('button', { name: /New Finding|تسجيل ملاحظة|audit\.newFinding/i });
+      fireEvent.click(newBtn);
+
+      const titleInput = screen.getByLabelText(/Finding title/i);
+      fireEvent.change(titleInput, { target: { value: 'Audit discrepancy in logs' } });
+
+      const closeBtn = screen.getByRole('button', { name: /Close|إغلاق|common\.close/i });
+      fireEvent.click(closeBtn);
+
+      expect(screen.getByRole('alertdialog')).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: /Discard changes|تجاهل التغييرات/i }));
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it('propagates dirty state from MilestoneForm to Modal in ProjectDetail', async () => {
+      renderWithProviders(<ProjectDetail project={mockProject} />);
+
+      const addMilestoneBtn = await screen.findByRole('button', { name: /Add Milestone/i });
+      fireEvent.click(addMilestoneBtn);
+
+      const titleInput = screen.getByLabelText(/Milestone title/i);
+      fireEvent.change(titleInput, { target: { value: 'Phase 1 Delivery' } });
+
+      const backdrop = document.querySelector('.modal-backdrop')!;
+      fireEvent.mouseDown(backdrop);
+      fireEvent.click(backdrop);
+
+      expect(screen.getByRole('alertdialog')).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: /Discard changes|تجاهل التغييرات/i }));
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it('propagates dirty state from TaskForm to Modal in ProjectDetail', async () => {
+      renderWithProviders(<ProjectDetail project={mockProject} />);
+
+      const addTaskBtn = await screen.findByRole('button', { name: /Add Task/i });
+      fireEvent.click(addTaskBtn);
+
+      const titleInput = screen.getByLabelText(/Task title/i);
+      fireEvent.change(titleInput, { target: { value: 'Execute unit test review' } });
+
+      const backdrop = document.querySelector('.modal-backdrop')!;
+      fireEvent.mouseDown(backdrop);
+      fireEvent.click(backdrop);
+
+      expect(screen.getByRole('alertdialog')).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: /Discard changes|تجاهل التغييرات/i }));
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it('maintains strict isolation between Milestone and Task modals in ProjectDetail', async () => {
+      renderWithProviders(<ProjectDetail project={mockProject} />);
+
+      // Open Milestone modal and make it dirty
+      const addMilestoneBtn = await screen.findByRole('button', { name: /Add Milestone/i });
+      fireEvent.click(addMilestoneBtn);
+
+      fireEvent.change(screen.getByLabelText(/Milestone title/i), { target: { value: 'Draft Milestone' } });
+
+      // Discard Milestone modal
+      const backdrop1 = document.querySelector('.modal-backdrop')!;
+      fireEvent.mouseDown(backdrop1);
+      fireEvent.click(backdrop1);
+      fireEvent.click(screen.getByRole('button', { name: /Discard changes|تجاهل التغييرات/i }));
+      expect(screen.queryByRole('dialog')).toBeNull();
+
+      // Open Task modal: must start clean (not dirty)
+      const addTaskBtn = screen.getByRole('button', { name: /Add Task/i });
+      fireEvent.click(addTaskBtn);
+
+      // Clean task modal should close directly without discard prompt
+      const backdrop2 = document.querySelector('.modal-backdrop')!;
+      fireEvent.mouseDown(backdrop2);
+      fireEvent.click(backdrop2);
+
+      expect(screen.queryByRole('alertdialog')).toBeNull();
+      expect(screen.queryByRole('dialog')).toBeNull();
     });
   });
 });

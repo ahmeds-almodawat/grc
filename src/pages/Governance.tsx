@@ -12,6 +12,8 @@ import type { GovernanceDecisionRow } from '../types/domain';
 
 export function Governance() {
   const [formOpen, setFormOpen] = useState(false);
+  const [decisionFormDirty, setDecisionFormDirty] = useState(false);
+  const [decisionFormSubmitting, setDecisionFormSubmitting] = useState(false);
   const decisions = useAsyncData(getGovernanceDecisions, []);
   const departments = useAsyncData(getDepartments, []);
   const profiles = useAsyncData(getProfiles, []);
@@ -26,13 +28,25 @@ export function Governance() {
     closed: decisionRows.filter(r => r.status === 'closed' || r.status === 'completed').length,
   };
 
+  const openDecisionForm = () => {
+    setDecisionFormDirty(false);
+    setDecisionFormSubmitting(false);
+    setFormOpen(true);
+  };
+
+  const closeDecisionForm = () => {
+    setFormOpen(false);
+    setDecisionFormDirty(false);
+    setDecisionFormSubmitting(false);
+  };
+
   return (
     <section className="page-section">
       <ModuleHeader
         eyebrow="Governance"
         title="Governance Decisions Register"
         subtitle="Track decisions, owners, due dates, priority, status and follow-up."
-        action={<button className="primary-button" onClick={() => setFormOpen(true)}>New Decision</button>}
+        action={<button className="primary-button" onClick={openDecisionForm}>New Decision</button>}
       />
 
       <div className="module-grid">
@@ -63,8 +77,26 @@ export function Governance() {
         </DataState>
       </div>
 
-      <Modal open={formOpen} title="Create governance decision" onClose={() => setFormOpen(false)}>
-        <DecisionForm organizationId={organizationId} departments={departments.data || []} profiles={profiles.data || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void decisions.refresh(); }} />
-      </Modal></section>
+      <Modal
+        open={formOpen}
+        title="Create governance decision"
+        isDirty={decisionFormDirty}
+        isSubmitting={decisionFormSubmitting}
+        onClose={closeDecisionForm}
+      >
+        <DecisionForm
+          organizationId={organizationId}
+          departments={departments.data || []}
+          profiles={profiles.data || []}
+          onDirtyChange={setDecisionFormDirty}
+          onSubmittingChange={setDecisionFormSubmitting}
+          onCancel={closeDecisionForm}
+          onCreated={() => {
+            closeDecisionForm();
+            void decisions.refresh();
+          }}
+        />
+      </Modal>
+    </section>
   );
 }
