@@ -16,6 +16,10 @@ import {
   type SopDefinition,
   type SopRoleResponsibility,
   type SopMonitoringKpi,
+  type SopRiskLink,
+  type SopAccreditationLink,
+  type SopDerivedControl,
+  type SopInheritedAccreditation,
   type RoleScope,
   type EligibleGoverningPolicy
 } from '../../lib/policySopApi';
@@ -25,6 +29,8 @@ import { SopProcedureBuilder } from './SopProcedureBuilder';
 import { SopDefinitionsBuilder } from './SopDefinitionsBuilder';
 import { SopResponsibilitiesBuilder } from './SopResponsibilitiesBuilder';
 import { SopMonitoringKpisBuilder } from './SopMonitoringKpisBuilder';
+import { SopRiskTraceabilityBuilder } from './SopRiskTraceabilityBuilder';
+import { SopAccreditationTraceabilityBuilder } from './SopAccreditationTraceabilityBuilder';
 import { ApplicabilitySelector } from './ApplicabilitySelector';
 import { VersionHistoryTimeline } from './VersionHistoryTimeline';
 import { StartRevisionModal } from './StartRevisionModal';
@@ -51,7 +57,9 @@ import {
   Search,
   BookA,
   Users,
-  Activity
+  Activity,
+  Shield,
+  Award
 } from 'lucide-react';
 
 interface SopEditorProps {
@@ -79,7 +87,7 @@ export function SopEditor({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'control' | 'linkage' | 'purpose' | 'definitions' | 'responsibilities' | 'procedure' | 'applicability' | 'training' | 'acknowledgment' | 'monitoring' | 'exceptions' | 'history'>('control');
+  const [activeTab, setActiveTab] = useState<'control' | 'linkage' | 'purpose' | 'definitions' | 'responsibilities' | 'procedure' | 'risks_controls' | 'accreditation' | 'applicability' | 'training' | 'acknowledgment' | 'monitoring' | 'exceptions' | 'history'>('control');
   const [isDirty, setIsDirty] = useState(false);
 
   // Form Fields
@@ -113,6 +121,12 @@ export function SopEditor({
   const [definitions, setDefinitions] = useState<SopDefinition[]>([]);
   const [roleResponsibilities, setRoleResponsibilities] = useState<SopRoleResponsibility[]>([]);
   const [monitoringKpis, setMonitoringKpis] = useState<SopMonitoringKpi[]>([]);
+
+  // Traceability: Risks & Accreditation Links (v1.4-E2A)
+  const [riskLinks, setRiskLinks] = useState<SopRiskLink[]>([]);
+  const [accreditationLinks, setAccreditationLinks] = useState<SopAccreditationLink[]>([]);
+  const [derivedControls, setDerivedControls] = useState<SopDerivedControl[]>([]);
+  const [inheritedAccreditations, setInheritedAccreditations] = useState<SopInheritedAccreditation[]>([]);
 
   // Applicability Scopes
   const [departmentScopes, setDepartmentScopes] = useState<string[]>([]);
@@ -175,6 +189,10 @@ export function SopEditor({
     setDefinitions(record.definitions || []);
     setRoleResponsibilities(record.role_responsibilities || []);
     setMonitoringKpis(record.monitoring_kpis || []);
+    setRiskLinks(record.risk_links || []);
+    setAccreditationLinks(record.accreditation_links || []);
+    setDerivedControls(record.derived_controls || []);
+    setInheritedAccreditations(record.inherited_accreditations || []);
     setDepartmentScopes(record.department_scopes || []);
     setRoleScopes(record.role_scopes || []);
 
@@ -337,6 +355,8 @@ export function SopEditor({
           definitions: definitions,
           role_responsibilities: roleResponsibilities,
           monitoring_kpis: monitoringKpis,
+          risk_links: riskLinks,
+          accreditation_links: accreditationLinks,
           department_scopes: departmentScopes,
           role_scopes: roleScopes,
         });
@@ -645,6 +665,36 @@ export function SopEditor({
           </button>
 
           <button
+            onClick={() => setActiveTab('risks_controls')}
+            className={`px-4 py-3 border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+              activeTab === 'risks_controls'
+                ? 'border-indigo-500 text-indigo-400 bg-indigo-950/20 font-semibold'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+            }`}
+          >
+            <Shield className="w-3.5 h-3.5" />
+            <span>7. {t('sop.tab.risksAndControls')}</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-900/60 text-indigo-300">
+              {riskLinks.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('accreditation')}
+            className={`px-4 py-3 border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+              activeTab === 'accreditation'
+                ? 'border-indigo-500 text-indigo-400 bg-indigo-950/20 font-semibold'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+            }`}
+          >
+            <Award className="w-3.5 h-3.5" />
+            <span>8. {t('sop.tab.accreditation')}</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-900/60 text-indigo-300">
+              {accreditationLinks.length + inheritedAccreditations.length}
+            </span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('applicability')}
             className={`px-4 py-3 border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === 'applicability'
@@ -652,7 +702,7 @@ export function SopEditor({
                 : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
             }`}
           >
-            <span>7. {t('policy.tab.applicability')}</span>
+            <span>9. {t('policy.tab.applicability')}</span>
           </button>
 
           <button
@@ -664,7 +714,7 @@ export function SopEditor({
             }`}
           >
             <GraduationCap className="w-3.5 h-3.5" />
-            <span>8. {t('sop.tab.training')}</span>
+            <span>10. {t('sop.tab.training')}</span>
           </button>
 
           <button
@@ -676,7 +726,7 @@ export function SopEditor({
             }`}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>9. {t('sop.tab.acknowledgment')}</span>
+            <span>11. {t('sop.tab.acknowledgment')}</span>
           </button>
 
           <button
@@ -688,7 +738,7 @@ export function SopEditor({
             }`}
           >
             <Activity className="w-3.5 h-3.5" />
-            <span>10. {t('sop.tab.monitoring')}</span>
+            <span>12. {t('sop.tab.monitoring')}</span>
             <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-900/60 text-indigo-300">
               {monitoringKpis.length}
             </span>
@@ -703,7 +753,7 @@ export function SopEditor({
             }`}
           >
             <ShieldAlert className="w-3.5 h-3.5" />
-            <span>11. {t('policy.tab.exceptions')}</span>
+            <span>13. {t('policy.tab.exceptions')}</span>
           </button>
 
           <button
@@ -715,7 +765,7 @@ export function SopEditor({
             }`}
           >
             <History className="w-3.5 h-3.5" />
-            <span>12. {t('policy.tab.history')}</span>
+            <span>14. {t('policy.tab.history')}</span>
           </button>
         </div>
 
@@ -1179,7 +1229,41 @@ export function SopEditor({
             </div>
           )}
 
-          {/* TAB 7: Applicability */}
+          {/* TAB 7: Risks & Controls Traceability */}
+          {activeTab === 'risks_controls' && (
+            <div className="max-w-5xl">
+              <SopRiskTraceabilityBuilder
+                riskLinks={riskLinks}
+                onChangeRiskLinks={(newLinks) => {
+                  setRiskLinks(newLinks);
+                  setIsDirty(true);
+                }}
+                derivedControls={derivedControls}
+                organizationId={sop?.organization_id || ''}
+                isReadOnly={isLocked}
+              />
+            </div>
+          )}
+
+          {/* TAB 8: Accreditation & Regulatory Alignment */}
+          {activeTab === 'accreditation' && (
+            <div className="max-w-5xl">
+              <SopAccreditationTraceabilityBuilder
+                accreditationLinks={accreditationLinks}
+                onChangeAccreditationLinks={(newLinks) => {
+                  setAccreditationLinks(newLinks);
+                  setIsDirty(true);
+                }}
+                inheritedAccreditations={inheritedAccreditations}
+                primaryPolicyDocumentCode={sop?.primary_policy_document_code}
+                primaryPolicyDocumentTitle={sop?.primary_policy_document_title}
+                primaryPolicyVersionLabel={sop?.primary_policy_version_label}
+                isReadOnly={isLocked}
+              />
+            </div>
+          )}
+
+          {/* TAB 9: Applicability */}
           {activeTab === 'applicability' && (
             <div className="max-w-4xl">
               <ApplicabilitySelector

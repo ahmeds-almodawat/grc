@@ -10,7 +10,7 @@
   },
   "summary": {
     "direct_browser_rpc_count": 0,
-    "direct_browser_view_count": 355,
+    "direct_browser_view_count": 356,
     "direct_browser_materialized_view_count": 0,
     "unsafe_surface_count": 0,
     "finding_count": 0,
@@ -20,13 +20,13 @@
     "authenticated_materialized_view_fail_closed_present": true,
     "declared_owner_view_count": 82,
     "non_rls_base_table_count": 0,
-    "views_without_explicit_migration_grant_count": 192,
+    "views_without_explicit_migration_grant_count": 193,
     "retained_live_broad_security_definer_count": 2,
     "target_broad_security_definer_count": 4,
-    "reviewed_restricted_security_definer_count": 75,
+    "reviewed_restricted_security_definer_count": 76,
     "acl_reachable_materialized_view_count": 0,
     "legacy_browser_base_table_hardening_count": 29,
-    "reviewed_patch83u_migration_ceiling": 203
+    "reviewed_patch83u_migration_ceiling": 204
   },
   "search_grc_global": {
     "disposition": "authenticated_edge_bridge_with_caller_jwt_rls",
@@ -3430,12 +3430,12 @@
       "call_sites": [
         {
           "file": "src/lib/policySopApi.ts",
-          "line": 397,
+          "line": 475,
           "evidence": "literal .from()"
         },
         {
           "file": "src/lib/policySopApi.ts",
-          "line": 636,
+          "line": 714,
           "evidence": "literal .from()"
         }
       ],
@@ -3511,7 +3511,7 @@
       "call_sites": [
         {
           "file": "src/lib/policySopApi.ts",
-          "line": 412,
+          "line": 490,
           "evidence": "literal .from()"
         }
       ],
@@ -20998,7 +20998,7 @@
       "call_sites": [
         {
           "file": "src/lib/policySopApi.ts",
-          "line": 427,
+          "line": 505,
           "evidence": "literal .from()"
         }
       ],
@@ -21047,6 +21047,122 @@
           "credential_gate_targeted": true,
           "evidence_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
           "evidence_line": 436
+        }
+      ],
+      "unresolved_dependencies": [],
+      "findings": [],
+      "disposition": "approved_browser_read_view"
+    },
+    {
+      "name": "v_sop_traceability_matrix",
+      "call_sites": [
+        {
+          "file": "src/lib/policySopApi.ts",
+          "line": 1244,
+          "evidence": "literal .from()"
+        }
+      ],
+      "relation_type": "view",
+      "definition_file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
+      "definition_line": 242,
+      "security_invoker_declared": true,
+      "security_invoker": true,
+      "security_invoker_evidence": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:242",
+      "owner_bypass_prevented": true,
+      "authenticated_grant_intentional": true,
+      "authenticated_grant_explicit_in_migrations": false,
+      "grant_evidence": [
+        "src/lib/policySopApi.ts:1244 intentional browser read contract; live ACL must be verified after deployment"
+      ],
+      "nested_views": [],
+      "base_tables": [
+        {
+          "name": "accreditation_clauses",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/095_patch32_accreditation_traceability_matrix.sql",
+          "evidence_line": 91
+        },
+        {
+          "name": "accreditation_standards",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/095_patch32_accreditation_traceability_matrix.sql",
+          "evidence_line": 90
+        },
+        {
+          "name": "control_library_items",
+          "rls_enabled": true,
+          "organization_scoped": true,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/052_v100_unified_capa_risk_control_foundation.sql",
+          "evidence_line": 474
+        },
+        {
+          "name": "controlled_documents",
+          "rls_enabled": true,
+          "organization_scoped": true,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+          "evidence_line": 149
+        },
+        {
+          "name": "document_versions",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+          "evidence_line": 150
+        },
+        {
+          "name": "governed_sop_details",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+          "evidence_line": 435
+        },
+        {
+          "name": "policy_requirements",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+          "evidence_line": 434
+        },
+        {
+          "name": "risks",
+          "rls_enabled": true,
+          "organization_scoped": true,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/003_rls_permissions_and_controls.sql",
+          "evidence_line": 215
+        },
+        {
+          "name": "sop_procedure_steps",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+          "evidence_line": 436
+        },
+        {
+          "name": "sop_version_accreditation_links",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
+          "evidence_line": 69
+        },
+        {
+          "name": "sop_version_risk_links",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
+          "evidence_line": 68
         }
       ],
       "unresolved_dependencies": [],
@@ -22841,7 +22957,7 @@
         "allowed_purpose": null
       },
       {
-        "source": "target_migrations_171_203",
+        "source": "target_migrations_171_204",
         "schema": "public",
         "name": "patch83u_credential_access_allowed",
         "signature": "public.patch83u_credential_access_allowed()",
@@ -22860,7 +22976,7 @@
         "allowed_purpose": "Credential version, state, email, and session freshness decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_203",
+        "source": "target_migrations_171_204",
         "schema": "public",
         "name": "patch83u_profile_update_allowed",
         "signature": "public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)",
@@ -22879,7 +22995,7 @@
         "allowed_purpose": "Same-organization credential-active profile update decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_203",
+        "source": "target_migrations_171_204",
         "schema": "public",
         "name": "patch83u_user_role_mutation_allowed",
         "signature": "public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)",
@@ -24113,6 +24229,28 @@
         ]
       },
       {
+        "source": "migration204_service_role_acl_review",
+        "schema": "public",
+        "name": "save_governed_sop_draft",
+        "signature": "public.save_governed_sop_draft(p_actor_id uuid, p_version_id uuid, p_title_en text, p_title_ar text, p_process_name_en text, p_process_name_ar text, p_purpose_en text, p_purpose_ar text, p_process_owner_id uuid, p_primary_policy_version_id uuid, p_governance_link_state text, p_scope_en text, p_scope_ar text, p_training_required boolean default false, p_acknowledgment_required boolean default false, p_competency_assessment_required boolean default false, p_acknowledgment_sla_days integer default 30, p_training_renewal_months integer default 12, p_procedure_steps jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb, p_definitions jsonb default '[]'::jsonb, p_role_responsibilities jsonb default '[]'::jsonb, p_monitoring_kpis jsonb default '[]'::jsonb, p_risk_links jsonb default '[]'::jsonb, p_accreditation_links jsonb default '[]'::jsonb)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
+        "definition_line": 385,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1544 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1545 grant execute service_role",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1080 revoke execute public, anon, authenticated",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1081 grant execute service_role",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1005 revoke execute public, anon, authenticated",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1008 grant execute service_role"
+        ]
+      },
+      {
         "source": "migration203_service_role_acl_review",
         "schema": "public",
         "name": "save_governed_sop_draft",
@@ -24129,7 +24267,9 @@
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1544 revoke execute public, anon, authenticated",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1545 grant execute service_role",
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1080 revoke execute public, anon, authenticated",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1081 grant execute service_role"
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1081 grant execute service_role",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1005 revoke execute public, anon, authenticated",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1008 grant execute service_role"
         ]
       },
       {
@@ -24149,11 +24289,13 @@
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1544 revoke execute public, anon, authenticated",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1545 grant execute service_role",
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1080 revoke execute public, anon, authenticated",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1081 grant execute service_role"
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1081 grant execute service_role",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1005 revoke execute public, anon, authenticated",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1008 grant execute service_role"
         ]
       },
       {
-        "source": "migration203_service_role_acl_review",
+        "source": "migration204_service_role_acl_review",
         "schema": "public",
         "name": "start_governed_document_revision",
         "signature": "public.start_governed_document_revision(p_actor_id uuid, p_source_version_id uuid, p_revision_type text default 'minor', p_revision_reason text default null)",
@@ -24162,14 +24304,16 @@
         "authenticated_execute": false,
         "service_role_execute": true,
         "disposition": "service_role_only",
-        "definition_file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
-        "definition_line": 896,
+        "definition_file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
+        "definition_line": 813,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1547 revoke execute public, anon, authenticated",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1548 grant execute service_role",
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1083 revoke execute public, anon, authenticated",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1084 grant execute service_role"
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1084 grant execute service_role",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1012 revoke execute public, anon, authenticated",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1013 grant execute service_role"
         ]
       },
       {
@@ -24245,7 +24389,7 @@
         ]
       },
       {
-        "source": "migration203_service_role_acl_review",
+        "source": "migration204_service_role_acl_review",
         "schema": "public",
         "name": "validate_sop_version_type",
         "signature": "public.validate_sop_version_type()",
@@ -24254,14 +24398,16 @@
         "authenticated_execute": false,
         "service_role_execute": true,
         "disposition": "service_role_only",
-        "definition_file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
-        "definition_line": 84,
+        "definition_file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
+        "definition_line": 114,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/201_governed_policy_sop_core_foundation.sql:673 revoke execute public, anon, authenticated",
           "supabase/migrations/201_governed_policy_sop_core_foundation.sql:674 grant execute service_role",
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1071 revoke execute public, anon, authenticated",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1072 grant execute service_role"
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1072 grant execute service_role",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1002 revoke execute public, anon, authenticated",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1003 grant execute service_role"
         ]
       }
     ],
@@ -24806,6 +24952,7 @@
       "v_security_governance_summary",
       "v_sensitive_activity_timeline",
       "v_setup_readiness_checklist",
+      "v_sop_traceability_matrix",
       "v_staging_validation_checks",
       "v_staging_validation_summary",
       "v_uat_findings_queue",

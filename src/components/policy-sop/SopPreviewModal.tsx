@@ -1,6 +1,6 @@
 import { useI18n } from '../../i18n/I18nContext';
 import type { DetailedSopRecord } from '../../lib/policySopApi';
-import { X, Printer, BookOpen, ShieldAlert, GraduationCap, CheckCircle2 } from 'lucide-react';
+import { X, Printer, BookOpen, ShieldAlert, GraduationCap, CheckCircle2, Shield, Award, Layers, AlertTriangle, Link2 } from 'lucide-react';
 import { DocumentStatusBadge } from './DocumentStatusBadge';
 import { DocumentVersionBadge } from './DocumentVersionBadge';
 
@@ -304,11 +304,140 @@ export function SopPreviewModal({ sop, onClose }: SopPreviewModalProps) {
             )}
           </div>
 
+          {/* Risks & Controls Traceability */}
+          {((sop.risk_links && sop.risk_links.length > 0) || (sop.derived_controls && sop.derived_controls.length > 0)) && (
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1 mb-2">
+                5. Risks & Controls Traceability
+              </h3>
+
+              {sop.risk_links && sop.risk_links.length > 0 && (
+                <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/60">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-900/80 text-slate-400 font-semibold border-b border-slate-800">
+                      <tr>
+                        <th className="px-3 py-2 w-12 text-center">#</th>
+                        <th className="px-3 py-2 w-1/4">Risk Code & Title</th>
+                        <th className="px-3 py-2 w-32">Relationship</th>
+                        <th className="px-3 py-2 w-24">Severity</th>
+                        <th className="px-3 py-2">Context Note</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60 text-slate-200">
+                      {sop.risk_links.map((rl) => (
+                        <tr key={rl.id || rl.sequence_number} className="hover:bg-slate-900/30">
+                          <td className="px-3 py-2 text-center font-mono text-slate-400">{rl.sequence_number}</td>
+                          <td className="px-3 py-2">
+                            <span className="font-mono font-bold text-indigo-300 mr-1.5">[{rl.risk_code || 'RISK'}]</span>
+                            <span>{rl.risk_title}</span>
+                          </td>
+                          <td className="px-3 py-2 capitalize text-slate-300">{rl.relationship_type?.replace(/_/g, ' ')}</td>
+                          <td className="px-3 py-2 uppercase text-slate-400">{rl.risk_level || 'medium'}</td>
+                          <td className="px-3 py-2 text-slate-300">{rl.context_note_en || rl.context_note_ar || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {sop.derived_controls && sop.derived_controls.length > 0 && (
+                <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/60">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-900/80 text-slate-400 font-semibold border-b border-slate-800">
+                      <tr>
+                        <th className="px-3 py-2 w-28">Control Code</th>
+                        <th className="px-3 py-2">Derived Control Title</th>
+                        <th className="px-3 py-2 w-28">Type</th>
+                        <th className="px-3 py-2 w-24 text-center">Key Control</th>
+                        <th className="px-3 py-2 w-36">Step References</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60 text-slate-200">
+                      {sop.derived_controls.map((ctrl) => (
+                        <tr key={ctrl.control_id} className="hover:bg-slate-900/30">
+                          <td className="px-3 py-2 font-mono font-bold text-sky-300">{ctrl.control_code || 'CTRL'}</td>
+                          <td className="px-3 py-2 font-medium text-slate-100">{ctrl.control_title}</td>
+                          <td className="px-3 py-2 capitalize text-slate-400">{ctrl.control_type}</td>
+                          <td className="px-3 py-2 text-center text-purple-300">{ctrl.key_control ? 'Yes' : 'No'}</td>
+                          <td className="px-3 py-2 text-slate-400">Steps {ctrl.step_sequences?.join(', ')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Accreditation & Standards Alignment */}
+          {((sop.inherited_accreditations && sop.inherited_accreditations.length > 0) || (sop.accreditation_links && sop.accreditation_links.length > 0)) && (
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1 mb-2">
+                6. Accreditation & Regulatory Alignment
+              </h3>
+
+              {sop.inherited_accreditations && sop.inherited_accreditations.length > 0 && (
+                <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/60">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-900/80 text-slate-400 font-semibold border-b border-slate-800">
+                      <tr>
+                        <th className="px-3 py-2 w-28">Framework</th>
+                        <th className="px-3 py-2 w-28">Clause Code</th>
+                        <th className="px-3 py-2">Inherited Clause Title</th>
+                        <th className="px-3 py-2">Policy Requirement</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60 text-slate-200">
+                      {sop.inherited_accreditations.map((item, idx) => (
+                        <tr key={`${item.clause_id}-${idx}`} className="hover:bg-slate-900/30">
+                          <td className="px-3 py-2 font-semibold text-indigo-300">{item.framework} ({item.standard_code})</td>
+                          <td className="px-3 py-2 font-mono font-bold text-slate-200">{item.clause_code}</td>
+                          <td className="px-3 py-2 font-medium text-slate-100">{item.clause_title}</td>
+                          <td className="px-3 py-2 text-slate-300">{item.policy_requirement_en || item.policy_requirement_ar || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {sop.accreditation_links && sop.accreditation_links.length > 0 && (
+                <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/60">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-slate-900/80 text-slate-400 font-semibold border-b border-slate-800">
+                      <tr>
+                        <th className="px-3 py-2 w-12 text-center">#</th>
+                        <th className="px-3 py-2 w-28">Framework</th>
+                        <th className="px-3 py-2 w-28">Clause Code</th>
+                        <th className="px-3 py-2">Direct Clause Title</th>
+                        <th className="px-3 py-2 w-28">Strength</th>
+                        <th className="px-3 py-2">Context Note</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60 text-slate-200">
+                      {sop.accreditation_links.map((al) => (
+                        <tr key={al.id || al.sequence_number} className="hover:bg-slate-900/30">
+                          <td className="px-3 py-2 text-center font-mono text-slate-400">{al.sequence_number}</td>
+                          <td className="px-3 py-2 font-semibold text-purple-300">{al.framework || 'STD'}</td>
+                          <td className="px-3 py-2 font-mono font-bold text-slate-200">{al.clause_code || 'CLAUSE'}</td>
+                          <td className="px-3 py-2 font-medium text-slate-100">{al.clause_title || '—'}</td>
+                          <td className="px-3 py-2 capitalize text-purple-200">{al.link_strength}</td>
+                          <td className="px-3 py-2 text-slate-300">{al.context_note_en || al.context_note_ar || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Monitoring & Performance Indicators */}
           {sop.monitoring_kpis && sop.monitoring_kpis.length > 0 && (
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1 mb-3">
-                5. {t('sop.tab.monitoring')}
+                7. {t('sop.tab.monitoring')}
               </h3>
               <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/60">
                 <table className="w-full text-xs text-left">
