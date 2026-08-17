@@ -10,7 +10,7 @@
   },
   "summary": {
     "direct_browser_rpc_count": 0,
-    "direct_browser_view_count": 352,
+    "direct_browser_view_count": 355,
     "direct_browser_materialized_view_count": 0,
     "unsafe_surface_count": 0,
     "finding_count": 0,
@@ -23,10 +23,10 @@
     "views_without_explicit_migration_grant_count": 192,
     "retained_live_broad_security_definer_count": 2,
     "target_broad_security_definer_count": 4,
-    "reviewed_restricted_security_definer_count": 53,
+    "reviewed_restricted_security_definer_count": 73,
     "acl_reachable_materialized_view_count": 0,
     "legacy_browser_base_table_hardening_count": 29,
-    "reviewed_patch83u_migration_ceiling": 198
+    "reviewed_patch83u_migration_ceiling": 202
   },
   "search_grc_global": {
     "disposition": "authenticated_edge_bridge_with_caller_jwt_rls",
@@ -165,7 +165,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1808,
+          "line": 1823,
           "evidence": "literal .from()"
         },
         {
@@ -184,7 +184,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:1808 intentional browser read contract; live ACL must be verified after deployment",
+        "src/lib/grcApi.ts:1823 intentional browser read contract; live ACL must be verified after deployment",
         "src/lib/userManagementApi.ts:445 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
@@ -263,7 +263,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1793,
+          "line": 1808,
           "evidence": "literal .from()"
         }
       ],
@@ -277,7 +277,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:1793 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:1808 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [
         "v_access_control_warnings"
@@ -317,7 +317,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1825,
+          "line": 1840,
           "evidence": "literal .from()"
         }
       ],
@@ -331,7 +331,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:1825 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:1840 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
       "base_tables": [
@@ -1819,7 +1819,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 780,
+          "line": 795,
           "evidence": "literal .from()"
         }
       ],
@@ -1833,7 +1833,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:780 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:795 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
       "base_tables": [
@@ -1887,7 +1887,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1617,
+          "line": 1632,
           "evidence": "literal .from()"
         }
       ],
@@ -1901,7 +1901,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:1617 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:1632 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
       "base_tables": [
@@ -1971,7 +1971,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2230,
+          "line": 2245,
           "evidence": "literal .from()"
         },
         {
@@ -1990,7 +1990,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:2230 intentional browser read contract; live ACL must be verified after deployment",
+        "src/lib/grcApi.ts:2245 intentional browser read contract; live ACL must be verified after deployment",
         "src/pages/ModernExecutiveDashboard.tsx:42 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [
@@ -2489,7 +2489,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 762,
+          "line": 777,
           "evidence": "literal .from()"
         }
       ],
@@ -2503,7 +2503,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:762 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:777 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
       "base_tables": [
@@ -3100,7 +3100,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2285,
+          "line": 2300,
           "evidence": "literal .from()"
         }
       ],
@@ -3114,7 +3114,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:2285 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:2300 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [
         "v_export_dataset_catalog"
@@ -3426,11 +3426,163 @@
       "disposition": "approved_browser_read_view"
     },
     {
+      "name": "v_governed_policy_catalog",
+      "call_sites": [
+        {
+          "file": "src/lib/policySopApi.ts",
+          "line": 255,
+          "evidence": "literal .from()"
+        }
+      ],
+      "relation_type": "view",
+      "definition_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+      "definition_line": 504,
+      "security_invoker_declared": true,
+      "security_invoker": true,
+      "security_invoker_evidence": "supabase/migrations/201_governed_policy_sop_core_foundation.sql:655",
+      "owner_bypass_prevented": true,
+      "authenticated_grant_intentional": true,
+      "authenticated_grant_explicit_in_migrations": true,
+      "grant_evidence": [
+        "supabase/migrations/201_governed_policy_sop_core_foundation.sql:659 grant select authenticated"
+      ],
+      "nested_views": [],
+      "base_tables": [
+        {
+          "name": "controlled_documents",
+          "rls_enabled": true,
+          "organization_scoped": true,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+          "evidence_line": 149
+        },
+        {
+          "name": "departments",
+          "rls_enabled": true,
+          "organization_scoped": true,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/003_rls_permissions_and_controls.sql",
+          "evidence_line": 203
+        },
+        {
+          "name": "document_versions",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+          "evidence_line": 150
+        },
+        {
+          "name": "governed_policy_details",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+          "evidence_line": 433
+        },
+        {
+          "name": "policy_requirements",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+          "evidence_line": 434
+        },
+        {
+          "name": "profiles",
+          "rls_enabled": true,
+          "organization_scoped": true,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/003_rls_permissions_and_controls.sql",
+          "evidence_line": 205
+        }
+      ],
+      "unresolved_dependencies": [],
+      "findings": [],
+      "disposition": "approved_browser_read_view"
+    },
+    {
+      "name": "v_governed_sop_catalog",
+      "call_sites": [
+        {
+          "file": "src/lib/policySopApi.ts",
+          "line": 270,
+          "evidence": "literal .from()"
+        }
+      ],
+      "relation_type": "view",
+      "definition_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+      "definition_line": 558,
+      "security_invoker_declared": true,
+      "security_invoker": true,
+      "security_invoker_evidence": "supabase/migrations/201_governed_policy_sop_core_foundation.sql:656",
+      "owner_bypass_prevented": true,
+      "authenticated_grant_intentional": true,
+      "authenticated_grant_explicit_in_migrations": true,
+      "grant_evidence": [
+        "supabase/migrations/201_governed_policy_sop_core_foundation.sql:660 grant select authenticated"
+      ],
+      "nested_views": [],
+      "base_tables": [
+        {
+          "name": "controlled_documents",
+          "rls_enabled": true,
+          "organization_scoped": true,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+          "evidence_line": 149
+        },
+        {
+          "name": "departments",
+          "rls_enabled": true,
+          "organization_scoped": true,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/003_rls_permissions_and_controls.sql",
+          "evidence_line": 203
+        },
+        {
+          "name": "document_versions",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+          "evidence_line": 150
+        },
+        {
+          "name": "governed_sop_details",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+          "evidence_line": 435
+        },
+        {
+          "name": "profiles",
+          "rls_enabled": true,
+          "organization_scoped": true,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/003_rls_permissions_and_controls.sql",
+          "evidence_line": 205
+        },
+        {
+          "name": "sop_procedure_steps",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+          "evidence_line": 436
+        }
+      ],
+      "unresolved_dependencies": [],
+      "findings": [],
+      "disposition": "approved_browser_read_view"
+    },
+    {
       "name": "v_grc_kpi_scorecard",
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2215,
+          "line": 2230,
           "evidence": "literal .from()"
         }
       ],
@@ -3444,7 +3596,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:2215 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:2230 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [
         "v_delay_reason_queue",
@@ -3899,7 +4051,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 796,
+          "line": 811,
           "evidence": "literal .from()"
         }
       ],
@@ -3913,7 +4065,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:796 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:811 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [
         "v_delay_reason_queue"
@@ -4330,7 +4482,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2249,
+          "line": 2264,
           "evidence": "literal .from()"
         }
       ],
@@ -4344,7 +4496,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:2249 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:2264 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
       "base_tables": [
@@ -4584,7 +4736,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2198,
+          "line": 2213,
           "evidence": "literal .from()"
         }
       ],
@@ -4638,7 +4790,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2164,
+          "line": 2179,
           "evidence": "literal .from()"
         }
       ],
@@ -4701,7 +4853,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2179,
+          "line": 2194,
           "evidence": "literal .from()"
         }
       ],
@@ -4756,7 +4908,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1896,
+          "line": 1911,
           "evidence": "literal .from()"
         }
       ],
@@ -4800,7 +4952,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1969,
+          "line": 1984,
           "evidence": "literal .from()"
         }
       ],
@@ -4854,7 +5006,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1984,
+          "line": 1999,
           "evidence": "literal .from()"
         }
       ],
@@ -18607,7 +18759,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2267,
+          "line": 2282,
           "evidence": "literal .from()"
         },
         {
@@ -18626,7 +18778,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:2267 intentional browser read contract; live ACL must be verified after deployment",
+        "src/lib/grcApi.ts:2282 intentional browser read contract; live ACL must be verified after deployment",
         "src/pages/ModernExecutiveDashboard.tsx:43 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [
@@ -20837,6 +20989,66 @@
       "disposition": "approved_browser_read_view"
     },
     {
+      "name": "v_sop_procedure_step_matrix",
+      "call_sites": [
+        {
+          "file": "src/lib/policySopApi.ts",
+          "line": 285,
+          "evidence": "literal .from()"
+        }
+      ],
+      "relation_type": "view",
+      "definition_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+      "definition_line": 621,
+      "security_invoker_declared": true,
+      "security_invoker": true,
+      "security_invoker_evidence": "supabase/migrations/201_governed_policy_sop_core_foundation.sql:657",
+      "owner_bypass_prevented": true,
+      "authenticated_grant_intentional": true,
+      "authenticated_grant_explicit_in_migrations": true,
+      "grant_evidence": [
+        "supabase/migrations/201_governed_policy_sop_core_foundation.sql:661 grant select authenticated"
+      ],
+      "nested_views": [],
+      "base_tables": [
+        {
+          "name": "control_library_items",
+          "rls_enabled": true,
+          "organization_scoped": true,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/052_v100_unified_capa_risk_control_foundation.sql",
+          "evidence_line": 474
+        },
+        {
+          "name": "controlled_documents",
+          "rls_enabled": true,
+          "organization_scoped": true,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+          "evidence_line": 149
+        },
+        {
+          "name": "document_versions",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/089_patch26_document_control_sop_governance.sql",
+          "evidence_line": 150
+        },
+        {
+          "name": "sop_procedure_steps",
+          "rls_enabled": true,
+          "organization_scoped": false,
+          "credential_gate_targeted": true,
+          "evidence_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+          "evidence_line": 436
+        }
+      ],
+      "unresolved_dependencies": [],
+      "findings": [],
+      "disposition": "approved_browser_read_view"
+    },
+    {
       "name": "v_staging_validation_checks",
       "call_sites": [
         {
@@ -22624,7 +22836,7 @@
         "allowed_purpose": null
       },
       {
-        "source": "target_migrations_171_198",
+        "source": "target_migrations_171_202",
         "schema": "public",
         "name": "patch83u_credential_access_allowed",
         "signature": "public.patch83u_credential_access_allowed()",
@@ -22643,7 +22855,7 @@
         "allowed_purpose": "Credential version, state, email, and session freshness decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_198",
+        "source": "target_migrations_171_202",
         "schema": "public",
         "name": "patch83u_profile_update_allowed",
         "signature": "public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)",
@@ -22662,7 +22874,7 @@
         "allowed_purpose": "Same-organization credential-active profile update decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_198",
+        "source": "target_migrations_171_202",
         "schema": "public",
         "name": "patch83u_user_role_mutation_allowed",
         "signature": "public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)",
@@ -22723,6 +22935,24 @@
         ]
       },
       {
+        "source": "migration202_service_role_acl_review",
+        "schema": "public",
+        "name": "activate_governed_document_version",
+        "signature": "public.activate_governed_document_version(p_actor_id uuid, p_version_id uuid, p_effective_date date default current_date)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+        "definition_line": 1146,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1556 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1557 grant execute service_role"
+        ]
+      },
+      {
         "source": "migration196_service_role_acl_review",
         "schema": "public",
         "name": "can_close_ovr",
@@ -22737,6 +22967,96 @@
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/196_f1r2_business_cycle_remediation.sql:1910 revoke execute public,anon,authenticated,service_role"
+        ]
+      },
+      {
+        "source": "migration202_service_role_acl_review",
+        "schema": "public",
+        "name": "complete_governed_document_review",
+        "signature": "public.complete_governed_document_review(p_actor_id uuid, p_trigger_id uuid, p_outcome text, p_outcome_note text)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+        "definition_line": 1322,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1565 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1566 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration202_service_role_acl_review",
+        "schema": "public",
+        "name": "create_governed_policy_draft",
+        "signature": "public.create_governed_policy_draft(p_actor_id uuid, p_organization_id uuid, p_title_en text, p_title_ar text, p_purpose_en text, p_purpose_ar text, p_policy_statement_en text, p_policy_statement_ar text, p_scope_en text default null, p_scope_ar text default null, p_principles_en text default null, p_principles_ar text default null, p_exceptions_summary_en text default null, p_exceptions_summary_ar text default null, p_non_compliance_escalation_en text default null, p_non_compliance_escalation_ar text default null, p_department_id uuid default null, p_criticality_level text default 'medium', p_confidentiality_level text default 'internal', p_content_mode text default 'structured', p_requirements jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+        "definition_line": 169,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1535 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1536 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration202_service_role_acl_review",
+        "schema": "public",
+        "name": "create_governed_sop_draft",
+        "signature": "public.create_governed_sop_draft(p_actor_id uuid, p_organization_id uuid, p_title_en text, p_title_ar text, p_process_name_en text, p_process_name_ar text, p_purpose_en text, p_purpose_ar text, p_process_owner_id uuid, p_primary_policy_version_id uuid default null, p_governance_link_state text default 'linked', p_scope_en text default null, p_scope_ar text default null, p_department_id uuid default null, p_criticality_level text default 'medium', p_confidentiality_level text default 'internal', p_training_required boolean default false, p_acknowledgment_required boolean default false, p_competency_assessment_required boolean default false, p_acknowledgment_sla_days integer default 30, p_training_renewal_months integer default 12, p_content_mode text default 'structured', p_procedure_steps jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+        "definition_line": 322,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1538 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1539 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration202_service_role_acl_review",
+        "schema": "public",
+        "name": "decide_policy_sop_exception",
+        "signature": "public.decide_policy_sop_exception(p_actor_id uuid, p_exception_id uuid, p_decision text, p_decision_note text default null)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+        "definition_line": 1456,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1571 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1572 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration201_service_role_acl_review",
+        "schema": "public",
+        "name": "enforce_policy_sop_version_immutability",
+        "signature": "public.enforce_policy_sop_version_immutability()",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+        "definition_line": 364,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/201_governed_policy_sop_core_foundation.sql:679 revoke execute public, anon, authenticated",
+          "supabase/migrations/201_governed_policy_sop_core_foundation.sql:680 grant execute service_role"
         ]
       },
       {
@@ -23339,6 +23659,60 @@
         ]
       },
       {
+        "source": "migration202_service_role_acl_review",
+        "schema": "public",
+        "name": "finalize_governed_document_approval",
+        "signature": "public.finalize_governed_document_approval(p_actor_id uuid, p_version_id uuid, p_approval_note text default null)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+        "definition_line": 1059,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1553 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1554 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration202_service_role_acl_review",
+        "schema": "public",
+        "name": "generate_governed_document_code",
+        "signature": "public.generate_governed_document_code(p_organization_id uuid, p_document_type text, p_department_code text default null)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+        "definition_line": 86,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1529 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1530 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration202_service_role_acl_review",
+        "schema": "public",
+        "name": "get_effective_document_version",
+        "signature": "public.get_effective_document_version(p_document_id uuid, p_target_date date default current_date)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+        "definition_line": 135,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1532 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1533 grant execute service_role"
+        ]
+      },
+      {
         "source": "migration194_service_role_acl_review",
         "schema": "public",
         "name": "ovr_executive_analytics_v1",
@@ -23465,7 +23839,7 @@
         ]
       },
       {
-        "source": "migration198_service_role_acl_review",
+        "source": "migration200_service_role_acl_review",
         "schema": "public",
         "name": "patch23_evidence_governance_bridge",
         "signature": "public.patch23_evidence_governance_bridge(p_actor_id uuid, p_action text, p_payload jsonb default '{}'::jsonb)",
@@ -23474,8 +23848,8 @@
         "authenticated_execute": false,
         "service_role_execute": true,
         "disposition": "service_role_only",
-        "definition_file": "supabase/migrations/198_f4_evidence_reviewer_separation_guard.sql",
-        "definition_line": 5,
+        "definition_file": "supabase/migrations/200_evidence_waiver_request_uniqueness.sql",
+        "definition_line": 16,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/085_patch23_evidence_bridge_governance.sql:891 revoke execute public, anon, authenticated",
@@ -23483,7 +23857,9 @@
           "supabase/migrations/190_patch23_evidence_service_role_guard_compatibility.sql:422 revoke execute public, anon, authenticated",
           "supabase/migrations/190_patch23_evidence_service_role_guard_compatibility.sql:425 grant execute service_role",
           "supabase/migrations/198_f4_evidence_reviewer_separation_guard.sql:426 revoke execute public, anon, authenticated",
-          "supabase/migrations/198_f4_evidence_reviewer_separation_guard.sql:427 grant execute service_role"
+          "supabase/migrations/198_f4_evidence_reviewer_separation_guard.sql:427 grant execute service_role",
+          "supabase/migrations/200_evidence_waiver_request_uniqueness.sql:537 revoke execute public, anon, authenticated",
+          "supabase/migrations/200_evidence_waiver_request_uniqueness.sql:538 grant execute service_role"
         ]
       },
       {
@@ -23631,6 +24007,206 @@
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/196_f1r2_business_cycle_remediation.sql:1902 revoke execute public,anon,authenticated,service_role"
+        ]
+      },
+      {
+        "source": "migration200_service_role_acl_review",
+        "schema": "public",
+        "name": "request_evidence_gate_waiver",
+        "signature": "public.request_evidence_gate_waiver(p_entity_type text, p_entity_id uuid, p_waiver_reason text, p_actor_user_id uuid, p_expires_on date default null)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/200_evidence_waiver_request_uniqueness.sql",
+        "definition_line": 456,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql:954 revoke execute public, anon, authenticated",
+          "supabase/migrations/103_patch43_accreditation_evidence_assurance.sql:970 grant execute service_role",
+          "supabase/migrations/200_evidence_waiver_request_uniqueness.sql:540 revoke execute public, anon, authenticated",
+          "supabase/migrations/200_evidence_waiver_request_uniqueness.sql:541 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration202_service_role_acl_review",
+        "schema": "public",
+        "name": "request_policy_sop_exception",
+        "signature": "public.request_policy_sop_exception(p_actor_id uuid, p_version_id uuid, p_reason text, p_scope_description text, p_start_date date, p_end_date date, p_risk_summary text default null, p_compensating_controls text default null)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+        "definition_line": 1383,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1568 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1569 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration202_service_role_acl_review",
+        "schema": "public",
+        "name": "retire_governed_document",
+        "signature": "public.retire_governed_document(p_actor_id uuid, p_document_id uuid, p_retirement_reason text)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+        "definition_line": 1234,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1559 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1560 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration202_service_role_acl_review",
+        "schema": "public",
+        "name": "save_governed_policy_draft",
+        "signature": "public.save_governed_policy_draft(p_actor_id uuid, p_version_id uuid, p_title_en text, p_title_ar text, p_purpose_en text, p_purpose_ar text, p_policy_statement_en text, p_policy_statement_ar text, p_scope_en text, p_scope_ar text, p_principles_en text, p_principles_ar text, p_exceptions_summary_en text, p_exceptions_summary_ar text, p_non_compliance_escalation_en text, p_non_compliance_escalation_ar text, p_requirements jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+        "definition_line": 485,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1541 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1542 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration202_service_role_acl_review",
+        "schema": "public",
+        "name": "save_governed_sop_draft",
+        "signature": "public.save_governed_sop_draft(p_actor_id uuid, p_version_id uuid, p_title_en text, p_title_ar text, p_process_name_en text, p_process_name_ar text, p_purpose_en text, p_purpose_ar text, p_process_owner_id uuid, p_primary_policy_version_id uuid, p_governance_link_state text, p_scope_en text, p_scope_ar text, p_training_required boolean default false, p_acknowledgment_required boolean default false, p_competency_assessment_required boolean default false, p_acknowledgment_sla_days integer default 30, p_training_renewal_months integer default 12, p_procedure_steps jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+        "definition_line": 646,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1544 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1545 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration202_service_role_acl_review",
+        "schema": "public",
+        "name": "start_governed_document_revision",
+        "signature": "public.start_governed_document_revision(p_actor_id uuid, p_source_version_id uuid, p_revision_type text default 'minor', p_revision_reason text default null)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+        "definition_line": 831,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1547 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1548 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration202_service_role_acl_review",
+        "schema": "public",
+        "name": "submit_governed_document_for_review",
+        "signature": "public.submit_governed_document_for_review(p_actor_id uuid, p_version_id uuid, p_submission_note text default null)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+        "definition_line": 978,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1550 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1551 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration202_service_role_acl_review",
+        "schema": "public",
+        "name": "trigger_governed_document_review",
+        "signature": "public.trigger_governed_document_review(p_actor_id uuid, p_document_id uuid, p_trigger_type text, p_source_entity_type text default null, p_source_entity_id uuid default null, p_due_date date default (current_date + interval '30 days')",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+        "definition_line": 1278,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1562 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1563 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration201_service_role_acl_review",
+        "schema": "public",
+        "name": "validate_department_scope",
+        "signature": "public.validate_department_scope()",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+        "definition_line": 305,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/201_governed_policy_sop_core_foundation.sql:676 revoke execute public, anon, authenticated",
+          "supabase/migrations/201_governed_policy_sop_core_foundation.sql:677 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration201_service_role_acl_review",
+        "schema": "public",
+        "name": "validate_policy_version_type",
+        "signature": "public.validate_policy_version_type()",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+        "definition_line": 169,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/201_governed_policy_sop_core_foundation.sql:670 revoke execute public, anon, authenticated",
+          "supabase/migrations/201_governed_policy_sop_core_foundation.sql:671 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration201_service_role_acl_review",
+        "schema": "public",
+        "name": "validate_sop_version_type",
+        "signature": "public.validate_sop_version_type()",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+        "definition_line": 227,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/201_governed_policy_sop_core_foundation.sql:673 revoke execute public, anon, authenticated",
+          "supabase/migrations/201_governed_policy_sop_core_foundation.sql:674 grant execute service_role"
         ]
       }
     ],
