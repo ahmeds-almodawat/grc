@@ -281,6 +281,11 @@ using (exists (
 -- ----------------------------------------------------------------------------
 -- 7. Governed SOP Draft Creation RPC Extension
 -- ----------------------------------------------------------------------------
+-- Drop obsolete Migration-202 25-parameter signature to prevent stale overload bypass
+drop function if exists public.create_governed_sop_draft(
+  uuid, uuid, text, text, text, text, text, text, uuid, uuid, text, text, text, uuid, text, text, boolean, boolean, boolean, integer, integer, text, jsonb, uuid[], jsonb
+);
+
 create or replace function public.create_governed_sop_draft(
   p_actor_id uuid,
   p_organization_id uuid,
@@ -513,6 +518,11 @@ $$;
 -- ----------------------------------------------------------------------------
 -- 8. Governed SOP Draft Save RPC Extension
 -- ----------------------------------------------------------------------------
+-- Drop obsolete Migration-202 21-parameter signature to prevent stale overload bypass
+drop function if exists public.save_governed_sop_draft(
+  uuid, uuid, text, text, text, text, text, text, uuid, uuid, text, text, text, boolean, boolean, boolean, integer, integer, jsonb, uuid[], jsonb
+);
+
 create or replace function public.save_governed_sop_draft(
   p_actor_id uuid,
   p_version_id uuid,

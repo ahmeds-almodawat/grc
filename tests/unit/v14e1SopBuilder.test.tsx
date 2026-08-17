@@ -382,6 +382,29 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
       expect(sql).toMatch(/revoke all on function public\.save_governed_sop_draft/i);
       expect(sql).toMatch(/grant execute on function public\.save_governed_sop_draft/i);
     });
+
+    it('verifies explicit drop of obsolete Migration-202 function overloads', () => {
+      const sql = fs.readFileSync(migrationPath, 'utf8');
+      
+      // Drop 202 create overload (25 params)
+      expect(sql).toMatch(/drop function if exists public\.create_governed_sop_draft\(\s*uuid,\s*uuid/i);
+      // Drop 202 save overload (21 params)
+      expect(sql).toMatch(/drop function if exists public\.save_governed_sop_draft\(\s*uuid,\s*uuid/i);
+    });
+
+    it('verifies cross-organization validation for KPI owner and deep revision cloning', () => {
+      const sql = fs.readFileSync(migrationPath, 'utf8');
+      
+      // KPI owner cross-org check
+      expect(sql).toMatch(/if TG_TABLE_NAME = 'sop_monitoring_kpis' then/i);
+      expect(sql).toMatch(/select organization_id into v_ref_org_id\s*from public\.profiles\s*where id = NEW\.owner_id/i);
+      expect(sql).toMatch(/PATCH201_CROSS_ORGANIZATION_REFERENCE_DENIED/i);
+
+      // Deep revision cloning for structured tables
+      expect(sql).toMatch(/insert into public\.sop_definitions\s*\(\s*sop_version_id,\s*sequence_number/i);
+      expect(sql).toMatch(/insert into public\.sop_role_responsibilities\s*\(\s*sop_version_id,\s*sequence_number/i);
+      expect(sql).toMatch(/insert into public\.sop_monitoring_kpis\s*\(\s*sop_version_id,\s*sequence_number/i);
+    });
   });
 
   describe('2. SopRegister Component', () => {

@@ -23021,13 +23021,13 @@
         "service_role_execute": true,
         "disposition": "service_role_only",
         "definition_file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
-        "definition_line": 284,
+        "definition_line": 289,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1538 revoke execute public, anon, authenticated",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1539 grant execute service_role",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1067 revoke execute public, anon, authenticated",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1068 grant execute service_role"
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1077 revoke execute public, anon, authenticated",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1078 grant execute service_role"
         ]
       },
       {
@@ -23046,8 +23046,8 @@
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1538 revoke execute public, anon, authenticated",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1539 grant execute service_role",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1067 revoke execute public, anon, authenticated",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1068 grant execute service_role"
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1077 revoke execute public, anon, authenticated",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1078 grant execute service_role"
         ]
       },
       {
@@ -23084,8 +23084,8 @@
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/201_governed_policy_sop_core_foundation.sql:679 revoke execute public, anon, authenticated",
           "supabase/migrations/201_governed_policy_sop_core_foundation.sql:680 grant execute service_role",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1064 revoke execute public, anon, authenticated",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1065 grant execute service_role"
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1074 revoke execute public, anon, authenticated",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1075 grant execute service_role"
         ]
       },
       {
@@ -24123,13 +24123,13 @@
         "service_role_execute": true,
         "disposition": "service_role_only",
         "definition_file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
-        "definition_line": 516,
+        "definition_line": 526,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1544 revoke execute public, anon, authenticated",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1545 grant execute service_role",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1070 revoke execute public, anon, authenticated",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1071 grant execute service_role"
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1080 revoke execute public, anon, authenticated",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1081 grant execute service_role"
         ]
       },
       {
@@ -24148,8 +24148,8 @@
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1544 revoke execute public, anon, authenticated",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1545 grant execute service_role",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1070 revoke execute public, anon, authenticated",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1071 grant execute service_role"
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1080 revoke execute public, anon, authenticated",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1081 grant execute service_role"
         ]
       },
       {
@@ -24163,13 +24163,13 @@
         "service_role_execute": true,
         "disposition": "service_role_only",
         "definition_file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
-        "definition_line": 886,
+        "definition_line": 896,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1547 revoke execute public, anon, authenticated",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1548 grant execute service_role",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1073 revoke execute public, anon, authenticated",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1074 grant execute service_role"
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1083 revoke execute public, anon, authenticated",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1084 grant execute service_role"
         ]
       },
       {
@@ -24260,8 +24260,8 @@
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/201_governed_policy_sop_core_foundation.sql:673 revoke execute public, anon, authenticated",
           "supabase/migrations/201_governed_policy_sop_core_foundation.sql:674 grant execute service_role",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1061 revoke execute public, anon, authenticated",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1062 grant execute service_role"
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1071 revoke execute public, anon, authenticated",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1072 grant execute service_role"
         ]
       }
     ],
