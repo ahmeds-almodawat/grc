@@ -1,4 +1,9 @@
 import { supabase } from './supabase';
+import { invokePrivilegedAction } from './privilegedAction';
+
+// ----------------------------------------------------------------------------
+// Catalog & Read Types
+// ----------------------------------------------------------------------------
 
 export interface GovernedPolicyCatalogRow {
   document_id: string;
@@ -6,7 +11,7 @@ export interface GovernedPolicyCatalogRow {
   document_code: string | null;
   document_title: string;
   document_description: string | null;
-  document_status: string;
+  document_status: 'draft' | 'under_review' | 'pending_approval' | 'approved' | 'active' | 'under_revision' | 'expired' | 'superseded' | 'retired' | 'rejected' | 'cancelled';
   workflow_stage: string | null;
   department_id: string | null;
   department_name: string | null;
@@ -15,8 +20,8 @@ export interface GovernedPolicyCatalogRow {
   effective_date: string | null;
   next_review_date: string | null;
   expiry_date: string | null;
-  criticality_level: string | null;
-  confidentiality_level: string | null;
+  criticality_level: 'low' | 'medium' | 'high' | 'critical' | null;
+  confidentiality_level: 'public' | 'internal' | 'confidential' | 'restricted' | null;
   version_id: string | null;
   version_number: number | null;
   version_label: string | null;
@@ -50,7 +55,7 @@ export interface GovernedSopCatalogRow {
   document_code: string | null;
   document_title: string;
   document_description: string | null;
-  document_status: string;
+  document_status: 'draft' | 'under_review' | 'pending_approval' | 'approved' | 'active' | 'under_revision' | 'expired' | 'superseded' | 'retired' | 'rejected' | 'cancelled';
   workflow_stage: string | null;
   department_id: string | null;
   department_name: string | null;
@@ -59,8 +64,8 @@ export interface GovernedSopCatalogRow {
   effective_date: string | null;
   next_review_date: string | null;
   expiry_date: string | null;
-  criticality_level: string | null;
-  confidentiality_level: string | null;
+  criticality_level: 'low' | 'medium' | 'high' | 'critical' | null;
+  confidentiality_level: 'public' | 'internal' | 'confidential' | 'restricted' | null;
   version_id: string | null;
   version_number: number | null;
   version_label: string | null;
@@ -94,35 +99,154 @@ export interface GovernedSopCatalogRow {
   updated_at: string;
 }
 
-export interface SopProcedureStepMatrixRow {
-  step_id: string;
-  sop_version_id: string;
-  sop_version_number: number;
+export interface PolicyRequirement {
+  id?: string;
+  sequence_number: number;
+  requirement_statement_en: string;
+  requirement_statement_ar?: string | null;
+  responsible_role?: string | null;
+  is_mandatory: boolean;
+  expected_evidence_en?: string | null;
+  expected_evidence_ar?: string | null;
+  mapped_control_id?: string | null;
+  mapped_control_code?: string | null;
+  mapped_control_title?: string | null;
+  linked_accreditation_clause_id?: string | null;
+  linked_accreditation_clause_code?: string | null;
+  monitoring_frequency?: string | null;
+  monitoring_owner_id?: string | null;
+}
+
+export interface DepartmentScope {
+  department_id: string;
+  department_name?: string;
+  department_code?: string;
+}
+
+export interface RoleScope {
+  id?: string;
+  role_name: string;
+  job_title?: string | null;
+}
+
+export interface DocumentReviewEvent {
+  id: string;
+  document_id: string;
+  version_id: string | null;
+  event_type: string;
+  from_status: string | null;
+  to_status: string | null;
+  actor_id: string | null;
+  actor_name?: string | null;
+  event_note: string | null;
+  created_at: string;
+}
+
+export interface PolicySopException {
+  id: string;
+  document_id: string;
+  document_version_id: string;
+  exception_code: string;
+  exception_reason: string;
+  scope_description: string;
+  effective_start_date: string;
+  effective_end_date: string;
+  risk_assessment_summary?: string | null;
+  compensating_controls?: string | null;
+  requested_by: string;
+  requested_by_name?: string | null;
+  requested_at: string;
+  status: 'requested' | 'approved' | 'rejected' | 'expired' | 'revoked';
+  decision_by?: string | null;
+  decision_by_name?: string | null;
+  decision_at?: string | null;
+  decision_note?: string | null;
+}
+
+export interface GovernedDocumentReviewTrigger {
+  id: string;
+  document_id: string;
+  version_id?: string | null;
+  trigger_type: 'scheduled' | 'regulatory_change' | 'audit_finding' | 'ovr' | 'capa' | 'management_decision' | 'accreditation_finding';
+  source_entity_type?: string | null;
+  source_entity_id?: string | null;
+  triggered_by?: string | null;
+  triggered_at: string;
+  review_owner_id?: string | null;
+  due_date: string;
+  status: 'open' | 'in_progress' | 'completed' | 'cancelled';
+  outcome?: 'no_change' | 'minor_revision' | 'major_revision' | 'retire' | null;
+  outcome_note?: string | null;
+  completed_at?: string | null;
+}
+
+export interface DetailedPolicyRecord {
   document_id: string;
   organization_id: string;
-  document_code: string | null;
+  document_code: string;
   document_title: string;
-  sequence_number: number;
-  responsible_role: string;
-  action_instruction_en: string;
-  action_instruction_ar: string | null;
-  required_control_id: string | null;
-  required_control_code: string | null;
-  required_control_title: string | null;
-  expected_evidence_record_en: string | null;
-  expected_evidence_record_ar: string | null;
-  timing_sla_en: string | null;
-  timing_sla_ar: string | null;
-  is_decision_point: boolean;
-  decision_criteria_en: string | null;
-  decision_criteria_ar: string | null;
-  criticality: 'low' | 'medium' | 'high' | 'critical';
-  escalation_trigger_en: string | null;
-  escalation_trigger_ar: string | null;
-  escalation_destination_role: string | null;
-  created_at: string;
-  updated_at: string;
+  document_description: string | null;
+  document_status: 'draft' | 'under_review' | 'pending_approval' | 'approved' | 'active' | 'under_revision' | 'expired' | 'superseded' | 'retired' | 'rejected' | 'cancelled';
+  workflow_stage: string | null;
+  department_id: string | null;
+  department_name: string | null;
+  document_owner_id: string | null;
+  document_owner_name: string | null;
+  effective_date: string | null;
+  next_review_date: string | null;
+  expiry_date: string | null;
+  criticality_level: 'low' | 'medium' | 'high' | 'critical';
+  confidentiality_level: 'public' | 'internal' | 'confidential' | 'restricted';
+  active_flag: boolean;
+  version_id: string;
+  version_number: number;
+  version_label: string;
+  is_current_version: boolean;
+  approved_by: string | null;
+  approved_at: string | null;
+  locked_by: string | null;
+  locked_at: string | null;
+  revision_reason: string | null;
+  supersedes_version_id: string | null;
+  title_en: string;
+  title_ar: string | null;
+  purpose_en: string;
+  purpose_ar: string | null;
+  policy_statement_en: string;
+  policy_statement_ar: string | null;
+  scope_en: string | null;
+  scope_ar: string | null;
+  principles_en: string | null;
+  principles_ar: string | null;
+  exceptions_summary_en: string | null;
+  exceptions_summary_ar: string | null;
+  non_compliance_escalation_en: string | null;
+  non_compliance_escalation_ar: string | null;
+  content_mode: 'structured' | 'legacy_controlled_document';
+  transcription_status: 'not_required' | 'pending' | 'complete';
+  requirements: PolicyRequirement[];
+  department_scopes: string[];
+  role_scopes: RoleScope[];
+  review_events: DocumentReviewEvent[];
+  exceptions: PolicySopException[];
+  review_triggers: GovernedDocumentReviewTrigger[];
+  all_versions: Array<{
+    id: string;
+    version_number: number;
+    version_label: string;
+    is_current_version: boolean;
+    effective_date: string | null;
+    expiry_date: string | null;
+    approved_at: string | null;
+    locked_at: string | null;
+    prepared_by: string | null;
+    revision_reason: string | null;
+  }>;
 }
+
+// ----------------------------------------------------------------------------
+// Read Queries
+// ----------------------------------------------------------------------------
 
 export async function listGovernedPolicies(): Promise<GovernedPolicyCatalogRow[]> {
   if (!supabase) return [];
@@ -154,21 +278,410 @@ export async function listGovernedSops(): Promise<GovernedSopCatalogRow[]> {
   }
 }
 
-export async function getSopProcedureSteps(sopVersionId?: string): Promise<SopProcedureStepMatrixRow[]> {
+export async function getSopProcedureSteps(sopVersionId: string): Promise<any[]> {
   if (!supabase) return [];
   try {
-    let query = supabase
+    const { data, error } = await supabase
       .from('v_sop_procedure_step_matrix')
       .select('*')
+      .eq('sop_version_id', sopVersionId)
       .order('sequence_number', { ascending: true });
-    if (sopVersionId) {
-      query = query.eq('sop_version_id', sopVersionId);
-    }
-    const { data, error } = await query;
     if (error) throw error;
-    return (data as unknown as SopProcedureStepMatrixRow[]) || [];
+    return data || [];
   } catch (error) {
     console.warn('[PolicySopApi] getSopProcedureSteps fallback:', error);
     return [];
   }
+}
+
+export async function getGovernedPolicyDetail(documentId: string, versionId?: string): Promise<DetailedPolicyRecord | null> {
+  if (!supabase) return null;
+  try {
+    // 1. Fetch document root
+    const { data: doc, error: docErr } = await supabase
+      .from('controlled_documents')
+      .select('*, departments(id, name, code), profiles!controlled_documents_document_owner_id_fkey(id, full_name)')
+      .eq('id', documentId)
+      .single();
+    if (docErr || !doc) throw docErr || new Error('DOCUMENT_NOT_FOUND');
+
+    const targetVerId = versionId || doc.current_version_id;
+
+    // 2. Fetch target version
+    let verQuery = supabase.from('document_versions').select('*');
+    if (targetVerId) {
+      verQuery = verQuery.eq('id', targetVerId);
+    } else {
+      verQuery = verQuery.eq('document_id', documentId).order('version_number', { ascending: false }).limit(1);
+    }
+    const { data: verRows, error: verErr } = await verQuery;
+    if (verErr || !verRows || verRows.length === 0) throw verErr || new Error('VERSION_NOT_FOUND');
+    const ver = verRows[0];
+
+    // 3. Fetch policy details
+    const { data: details } = await supabase
+      .from('governed_policy_details')
+      .select('*')
+      .eq('version_id', ver.id)
+      .maybeSingle();
+
+    // 4. Fetch policy requirements
+    const { data: reqs } = await supabase
+      .from('policy_requirements')
+      .select('*')
+      .eq('policy_version_id', ver.id)
+      .order('sequence_number', { ascending: true });
+
+    // 5. Fetch department scopes
+    const { data: deptScopes } = await supabase
+      .from('document_version_department_scope')
+      .select('department_id')
+      .eq('version_id', ver.id);
+
+    // 6. Fetch role scopes
+    const { data: roleScopes } = await supabase
+      .from('document_version_role_scope')
+      .select('id, role_name, job_title')
+      .eq('version_id', ver.id);
+
+    // 7. Fetch review events
+    const { data: events } = await supabase
+      .from('document_review_events')
+      .select('*, profiles(full_name)')
+      .eq('document_id', documentId)
+      .order('created_at', { ascending: false });
+
+    // 8. Fetch exceptions
+    const { data: exceptions } = await supabase
+      .from('policy_sop_exceptions')
+      .select('*, profiles!policy_sop_exceptions_requested_by_fkey(full_name)')
+      .eq('document_id', documentId)
+      .order('created_at', { ascending: false });
+
+    // 9. Fetch review triggers
+    const { data: triggers } = await supabase
+      .from('governed_document_review_triggers')
+      .select('*')
+      .eq('document_id', documentId)
+      .order('created_at', { ascending: false });
+
+    // 10. Fetch all versions for timeline
+    const { data: allVers } = await supabase
+      .from('document_versions')
+      .select('id, version_number, version_label, is_current_version, effective_date, expiry_date, approved_at, locked_at, prepared_by, revision_reason')
+      .eq('document_id', documentId)
+      .order('version_number', { ascending: false });
+
+    return {
+      document_id: doc.id,
+      organization_id: doc.organization_id,
+      document_code: doc.document_code || 'UNASSIGNED',
+      document_title: doc.document_title,
+      document_description: doc.document_description,
+      document_status: doc.document_status,
+      workflow_stage: doc.workflow_stage,
+      department_id: doc.department_id,
+      department_name: doc.departments?.name || null,
+      document_owner_id: doc.document_owner_id,
+      document_owner_name: doc.profiles?.full_name || null,
+      effective_date: doc.effective_date,
+      next_review_date: doc.next_review_date,
+      expiry_date: doc.expiry_date,
+      criticality_level: doc.criticality_level || 'medium',
+      confidentiality_level: doc.confidentiality_level || 'internal',
+      active_flag: doc.active_flag ?? true,
+      version_id: ver.id,
+      version_number: ver.version_number,
+      version_label: ver.version_label || `${ver.version_number}.0`,
+      is_current_version: ver.is_current_version ?? false,
+      approved_by: ver.approved_by,
+      approved_at: ver.approved_at,
+      locked_by: ver.locked_by,
+      locked_at: ver.locked_at,
+      revision_reason: ver.revision_reason,
+      supersedes_version_id: ver.supersedes_version_id,
+      title_en: details?.title_en || doc.document_title,
+      title_ar: details?.title_ar || null,
+      purpose_en: details?.purpose_en || '',
+      purpose_ar: details?.purpose_ar || null,
+      policy_statement_en: details?.policy_statement_en || '',
+      policy_statement_ar: details?.policy_statement_ar || null,
+      scope_en: details?.scope_en || null,
+      scope_ar: details?.scope_ar || null,
+      principles_en: details?.principles_en || null,
+      principles_ar: details?.principles_ar || null,
+      exceptions_summary_en: details?.exceptions_summary_en || null,
+      exceptions_summary_ar: details?.exceptions_summary_ar || null,
+      non_compliance_escalation_en: details?.non_compliance_escalation_en || null,
+      non_compliance_escalation_ar: details?.non_compliance_escalation_ar || null,
+      content_mode: details?.content_mode || 'structured',
+      transcription_status: details?.transcription_status || 'not_required',
+      requirements: (reqs || []).map(r => ({
+        id: r.id,
+        sequence_number: r.sequence_number,
+        requirement_statement_en: r.requirement_statement_en,
+        requirement_statement_ar: r.requirement_statement_ar,
+        responsible_role: r.responsible_role,
+        is_mandatory: r.is_mandatory,
+        expected_evidence_en: r.expected_evidence_en,
+        expected_evidence_ar: r.expected_evidence_ar,
+        mapped_control_id: r.mapped_control_id,
+        linked_accreditation_clause_id: r.linked_accreditation_clause_id,
+        monitoring_frequency: r.monitoring_frequency,
+        monitoring_owner_id: r.monitoring_owner_id
+      })),
+      department_scopes: (deptScopes || []).map(ds => ds.department_id),
+      role_scopes: (roleScopes || []).map(rs => ({ id: rs.id, role_name: rs.role_name, job_title: rs.job_title })),
+      review_events: (events || []).map(ev => ({
+        id: ev.id,
+        document_id: ev.document_id,
+        version_id: ev.version_id,
+        event_type: ev.event_type,
+        from_status: ev.from_status,
+        to_status: ev.to_status,
+        actor_id: ev.actor_id,
+        actor_name: ev.profiles?.full_name || null,
+        event_note: ev.event_note,
+        created_at: ev.created_at
+      })),
+      exceptions: (exceptions || []).map(ex => ({
+        id: ex.id,
+        document_id: ex.document_id,
+        document_version_id: ex.document_version_id,
+        exception_code: ex.exception_code,
+        exception_reason: ex.exception_reason,
+        scope_description: ex.scope_description,
+        effective_start_date: ex.effective_start_date,
+        effective_end_date: ex.effective_end_date,
+        risk_assessment_summary: ex.risk_assessment_summary,
+        compensating_controls: ex.compensating_controls,
+        requested_by: ex.requested_by,
+        requested_by_name: ex.profiles?.full_name || null,
+        requested_at: ex.requested_at,
+        status: ex.status,
+        decision_by: ex.decision_by,
+        decision_at: ex.decision_at,
+        decision_note: ex.decision_note
+      })),
+      review_triggers: (triggers || []).map(tr => ({
+        id: tr.id,
+        document_id: tr.document_id,
+        version_id: tr.version_id,
+        trigger_type: tr.trigger_type,
+        source_entity_type: tr.source_entity_type,
+        source_entity_id: tr.source_entity_id,
+        triggered_by: tr.triggered_by,
+        triggered_at: tr.triggered_at,
+        review_owner_id: tr.review_owner_id,
+        due_date: tr.due_date,
+        status: tr.status,
+        outcome: tr.outcome,
+        outcome_note: tr.outcome_note,
+        completed_at: tr.completed_at
+      })),
+      all_versions: allVers || []
+    };
+  } catch (error) {
+    console.error('[PolicySopApi] getGovernedPolicyDetail error:', error);
+    return null;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Master Data Fetchers for Form Selectors
+// ----------------------------------------------------------------------------
+
+export async function listDepartments(): Promise<Array<{ id: string; name: string; code: string }>> {
+  if (!supabase) return [];
+  try {
+    const { data } = await supabase.from('departments').select('id, name, code').order('name');
+    return data || [];
+  } catch {
+    return [];
+  }
+}
+
+export async function listProfiles(): Promise<Array<{ id: string; full_name: string; email: string; job_title: string | null }>> {
+  if (!supabase) return [];
+  try {
+    const { data } = await supabase.from('profiles').select('id, full_name, email, job_title').eq('active_flag', true).order('full_name');
+    return data || [];
+  } catch {
+    return [];
+  }
+}
+
+export async function listControls(): Promise<Array<{ id: string; code: string; title: string }>> {
+  if (!supabase) return [];
+  try {
+    const { data } = await supabase.from('controls').select('id, code, title').order('code');
+    return data || [];
+  } catch {
+    return [];
+  }
+}
+
+export async function listAccreditationClauses(): Promise<Array<{ id: string; clause_number: string; title: string }>> {
+  if (!supabase) return [];
+  try {
+    const { data } = await supabase.from('accreditation_clauses').select('id, clause_number, title').order('clause_number');
+    return data || [];
+  } catch {
+    return [];
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Privileged Mutation APIs (Routed via Edge privileged-action)
+// ----------------------------------------------------------------------------
+
+export interface CreatePolicyDraftInput {
+  title_en: string;
+  title_ar?: string;
+  purpose_en: string;
+  purpose_ar?: string;
+  policy_statement_en: string;
+  policy_statement_ar?: string;
+  scope_en?: string;
+  scope_ar?: string;
+  principles_en?: string;
+  principles_ar?: string;
+  exceptions_summary_en?: string;
+  exceptions_summary_ar?: string;
+  non_compliance_escalation_en?: string;
+  non_compliance_escalation_ar?: string;
+  department_id?: string | null;
+  criticality_level?: 'low' | 'medium' | 'high' | 'critical';
+  confidentiality_level?: 'public' | 'internal' | 'confidential' | 'restricted';
+  requirements?: PolicyRequirement[];
+  department_scopes?: string[];
+  role_scopes?: RoleScope[];
+}
+
+export async function createGovernedPolicyDraft(input: CreatePolicyDraftInput): Promise<{ document_id: string; version_id: string; document_code: string }> {
+  return invokePrivilegedAction<{ document_id: string; version_id: string; document_code: string }>(
+    'create_governed_policy_draft',
+    input as unknown as Record<string, unknown>
+  );
+}
+
+export interface SavePolicyDraftInput {
+  version_id: string;
+  title_en: string;
+  title_ar?: string;
+  purpose_en: string;
+  purpose_ar?: string;
+  policy_statement_en: string;
+  policy_statement_ar?: string;
+  scope_en?: string;
+  scope_ar?: string;
+  principles_en?: string;
+  principles_ar?: string;
+  exceptions_summary_en?: string;
+  exceptions_summary_ar?: string;
+  non_compliance_escalation_en?: string;
+  non_compliance_escalation_ar?: string;
+  requirements?: PolicyRequirement[];
+  department_scopes?: string[];
+  role_scopes?: RoleScope[];
+}
+
+export async function saveGovernedPolicyDraft(input: SavePolicyDraftInput): Promise<{ success: boolean; version_id: string }> {
+  return invokePrivilegedAction<{ success: boolean; version_id: string }>(
+    'save_governed_policy_draft',
+    input as unknown as Record<string, unknown>
+  );
+}
+
+export async function startGovernedDocumentRevision(
+  sourceVersionId: string,
+  revisionType: 'minor' | 'major',
+  revisionReason?: string
+): Promise<{ document_id: string; version_id: string; version_number: number; version_label: string }> {
+  return invokePrivilegedAction<{ document_id: string; version_id: string; version_number: number; version_label: string }>(
+    'start_governed_document_revision',
+    {
+      source_version_id: sourceVersionId,
+      revision_type: revisionType,
+      revision_reason: revisionReason
+    }
+  );
+}
+
+export async function submitGovernedDocumentForReview(versionId: string, submissionNote?: string): Promise<{ document_id: string; version_id: string; approval_request_id: string; status: string }> {
+  return invokePrivilegedAction<{ document_id: string; version_id: string; approval_request_id: string; status: string }>(
+    'submit_governed_document_for_review',
+    {
+      version_id: versionId,
+      submission_note: submissionNote
+    }
+  );
+}
+
+export async function activateGovernedDocumentVersion(versionId: string, effectiveDate?: string): Promise<{ document_id: string; version_id: string; status: string; effective_date: string }> {
+  return invokePrivilegedAction<{ document_id: string; version_id: string; status: string; effective_date: string }>(
+    'activate_governed_document_version',
+    {
+      version_id: versionId,
+      effective_date: effectiveDate
+    }
+  );
+}
+
+export async function retireGovernedDocument(documentId: string, retirementReason: string): Promise<{ document_id: string; status: string }> {
+  return invokePrivilegedAction<{ document_id: string; status: string }>(
+    'retire_governed_document',
+    {
+      document_id: documentId,
+      retirement_reason: retirementReason
+    }
+  );
+}
+
+export interface RequestPolicyExceptionInput {
+  version_id: string;
+  reason: string;
+  scope_description: string;
+  start_date: string;
+  end_date: string;
+  risk_summary?: string;
+  compensating_controls?: string;
+}
+
+export async function requestPolicySopException(input: RequestPolicyExceptionInput): Promise<{ exception_id: string; exception_code: string; status: string }> {
+  return invokePrivilegedAction<{ exception_id: string; exception_code: string; status: string }>(
+    'request_policy_sop_exception',
+    input as unknown as Record<string, unknown>
+  );
+}
+
+export interface TriggerReviewInput {
+  document_id: string;
+  trigger_type: 'scheduled' | 'regulatory_change' | 'audit_finding' | 'ovr' | 'capa' | 'management_decision' | 'accreditation_finding';
+  source_entity_type?: string;
+  source_entity_id?: string;
+  due_date?: string;
+  trigger_note?: string;
+}
+
+export async function triggerGovernedDocumentReview(input: TriggerReviewInput): Promise<{ trigger_id: string; document_id: string; status: string }> {
+  return invokePrivilegedAction<{ trigger_id: string; document_id: string; status: string }>(
+    'trigger_governed_document_review',
+    input as unknown as Record<string, unknown>
+  );
+}
+
+export async function completeGovernedDocumentReview(
+  triggerId: string,
+  outcome: 'no_change' | 'minor_revision' | 'major_revision' | 'retire',
+  outcomeNote?: string
+): Promise<{ trigger_id: string; outcome: string; status: string }> {
+  return invokePrivilegedAction<{ trigger_id: string; outcome: string; status: string }>(
+    'complete_governed_document_review',
+    {
+      trigger_id: triggerId,
+      outcome,
+      outcome_note: outcomeNote
+    }
+  );
 }
