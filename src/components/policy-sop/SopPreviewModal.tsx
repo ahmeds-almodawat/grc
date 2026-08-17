@@ -159,10 +159,94 @@ export function SopPreviewModal({ sop, onClose }: SopPreviewModalProps) {
             )}
           </div>
 
+          {/* Definitions & Abbreviations */}
+          {sop.definitions && sop.definitions.length > 0 && (
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1 mb-3">
+                2. {t('sop.tab.definitions')}
+              </h3>
+              <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/60">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-slate-900/80 text-slate-400 font-semibold border-b border-slate-800">
+                    <tr>
+                      <th className="px-3 py-2 w-12 text-center">#</th>
+                      <th className="px-3 py-2 w-28">Abbreviation</th>
+                      <th className="px-3 py-2 w-1/3">Term</th>
+                      <th className="px-3 py-2">Definition</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 text-slate-200">
+                    {sop.definitions.map((def) => (
+                      <tr key={def.id || def.sequence_number} className="hover:bg-slate-900/30">
+                        <td className="px-3 py-2 text-center font-mono text-slate-400">{def.sequence_number}</td>
+                        <td className="px-3 py-2 font-mono font-semibold text-indigo-300">{def.abbreviation || '—'}</td>
+                        <td className="px-3 py-2">
+                          <div className="font-medium text-slate-100">{def.term_en || '—'}</div>
+                          {def.term_ar && <div className="text-[11px] text-slate-400 mt-0.5" dir="rtl">{def.term_ar}</div>}
+                        </td>
+                        <td className="px-3 py-2">
+                          <div className="text-slate-200 leading-relaxed">{def.definition_en}</div>
+                          {def.definition_ar && <div className="text-[11px] text-slate-400 mt-0.5" dir="rtl">{def.definition_ar}</div>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Roles & Responsibilities Matrix */}
+          {sop.role_responsibilities && sop.role_responsibilities.length > 0 && (
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1 mb-3">
+                3. {t('sop.tab.responsibilities')}
+              </h3>
+              <div className="space-y-3">
+                {sop.role_responsibilities.map((resp) => (
+                  <div key={resp.id || resp.sequence_number} className="p-4 rounded-xl border border-slate-800 bg-slate-950/60 space-y-2 text-xs">
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-800/60 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-indigo-400">Role {resp.sequence_number}</span>
+                        <span className="text-slate-200 font-semibold">• {resp.role_name || resp.job_title}</span>
+                        {resp.job_title && resp.role_name && (
+                          <span className="text-[11px] text-slate-400">({resp.job_title})</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                      <div>
+                        <div className="font-semibold text-slate-400 text-[11px] mb-0.5">Assigned Responsibilities:</div>
+                        <p className="text-slate-200 leading-relaxed">{resp.responsibility_en}</p>
+                        {resp.accountable_for_en && (
+                          <div className="mt-2 text-[11px] text-slate-400">
+                            <span className="font-semibold text-slate-300">Accountable For:</span> {resp.accountable_for_en}
+                          </div>
+                        )}
+                      </div>
+                      {(resp.responsibility_ar || resp.accountable_for_ar) && (
+                        <div dir="rtl" className="text-right">
+                          <div className="font-semibold text-slate-400 text-[11px] mb-0.5">المسؤوليات المحددة:</div>
+                          {resp.responsibility_ar && <p className="text-slate-200 leading-relaxed">{resp.responsibility_ar}</p>}
+                          {resp.accountable_for_ar && (
+                            <div className="mt-2 text-[11px] text-slate-400">
+                              <span className="font-semibold text-slate-300">المساءلة النهائية:</span> {resp.accountable_for_ar}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Procedure Steps Table */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1 mb-3">
-              2. {t('sop.procedure.title')}
+              4. {t('sop.procedure.title')}
             </h3>
 
             {sop.procedure_steps.length === 0 ? (
@@ -219,6 +303,47 @@ export function SopPreviewModal({ sop, onClose }: SopPreviewModalProps) {
               </div>
             )}
           </div>
+
+          {/* Monitoring & Performance Indicators */}
+          {sop.monitoring_kpis && sop.monitoring_kpis.length > 0 && (
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1 mb-3">
+                5. {t('sop.tab.monitoring')}
+              </h3>
+              <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/60">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-slate-900/80 text-slate-400 font-semibold border-b border-slate-800">
+                    <tr>
+                      <th className="px-3 py-2 w-12 text-center">#</th>
+                      <th className="px-3 py-2 w-1/3">Indicator Name</th>
+                      <th className="px-3 py-2 w-28">Target</th>
+                      <th className="px-3 py-2 w-28">Frequency</th>
+                      <th className="px-3 py-2 w-36">Owner</th>
+                      <th className="px-3 py-2">Calculation / Audit Method</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 text-slate-200">
+                    {sop.monitoring_kpis.map((kpi) => (
+                      <tr key={kpi.id || kpi.sequence_number} className="hover:bg-slate-900/30">
+                        <td className="px-3 py-2 text-center font-mono text-slate-400">{kpi.sequence_number}</td>
+                        <td className="px-3 py-2">
+                          <div className="font-medium text-slate-100">{kpi.kpi_name_en}</div>
+                          {kpi.kpi_name_ar && <div className="text-[11px] text-slate-400 mt-0.5" dir="rtl">{kpi.kpi_name_ar}</div>}
+                        </td>
+                        <td className="px-3 py-2 font-mono font-semibold text-emerald-300">{kpi.target_value}</td>
+                        <td className="px-3 py-2 text-slate-300">{kpi.measurement_frequency}</td>
+                        <td className="px-3 py-2 text-slate-300">{kpi.owner_name || 'Unassigned'}</td>
+                        <td className="px-3 py-2">
+                          <div className="text-slate-300 leading-relaxed">{kpi.description_en || '—'}</div>
+                          {kpi.description_ar && <div className="text-[11px] text-slate-400 mt-0.5" dir="rtl">{kpi.description_ar}</div>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* Training & Governance Settings */}
           <div className="border-t border-slate-800 pt-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">

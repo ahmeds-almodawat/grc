@@ -23,10 +23,10 @@
     "views_without_explicit_migration_grant_count": 192,
     "retained_live_broad_security_definer_count": 2,
     "target_broad_security_definer_count": 4,
-    "reviewed_restricted_security_definer_count": 73,
+    "reviewed_restricted_security_definer_count": 75,
     "acl_reachable_materialized_view_count": 0,
     "legacy_browser_base_table_hardening_count": 29,
-    "reviewed_patch83u_migration_ceiling": 202
+    "reviewed_patch83u_migration_ceiling": 203
   },
   "search_grc_global": {
     "disposition": "authenticated_edge_bridge_with_caller_jwt_rls",
@@ -3430,12 +3430,12 @@
       "call_sites": [
         {
           "file": "src/lib/policySopApi.ts",
-          "line": 360,
+          "line": 397,
           "evidence": "literal .from()"
         },
         {
           "file": "src/lib/policySopApi.ts",
-          "line": 599,
+          "line": 636,
           "evidence": "literal .from()"
         }
       ],
@@ -3511,7 +3511,7 @@
       "call_sites": [
         {
           "file": "src/lib/policySopApi.ts",
-          "line": 375,
+          "line": 412,
           "evidence": "literal .from()"
         }
       ],
@@ -20998,7 +20998,7 @@
       "call_sites": [
         {
           "file": "src/lib/policySopApi.ts",
-          "line": 390,
+          "line": 427,
           "evidence": "literal .from()"
         }
       ],
@@ -22841,7 +22841,7 @@
         "allowed_purpose": null
       },
       {
-        "source": "target_migrations_171_202",
+        "source": "target_migrations_171_203",
         "schema": "public",
         "name": "patch83u_credential_access_allowed",
         "signature": "public.patch83u_credential_access_allowed()",
@@ -22860,7 +22860,7 @@
         "allowed_purpose": "Credential version, state, email, and session freshness decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_202",
+        "source": "target_migrations_171_203",
         "schema": "public",
         "name": "patch83u_profile_update_allowed",
         "signature": "public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)",
@@ -22879,7 +22879,7 @@
         "allowed_purpose": "Same-organization credential-active profile update decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_202",
+        "source": "target_migrations_171_203",
         "schema": "public",
         "name": "patch83u_user_role_mutation_allowed",
         "signature": "public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)",
@@ -23011,6 +23011,26 @@
         ]
       },
       {
+        "source": "migration203_service_role_acl_review",
+        "schema": "public",
+        "name": "create_governed_sop_draft",
+        "signature": "public.create_governed_sop_draft(p_actor_id uuid, p_organization_id uuid, p_title_en text, p_title_ar text, p_process_name_en text, p_process_name_ar text, p_purpose_en text, p_purpose_ar text, p_process_owner_id uuid, p_primary_policy_version_id uuid default null, p_governance_link_state text default 'linked', p_scope_en text default null, p_scope_ar text default null, p_department_id uuid default null, p_criticality_level text default 'medium', p_confidentiality_level text default 'internal', p_training_required boolean default false, p_acknowledgment_required boolean default false, p_competency_assessment_required boolean default false, p_acknowledgment_sla_days integer default 30, p_training_renewal_months integer default 12, p_content_mode text default 'structured', p_procedure_steps jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb, p_definitions jsonb default '[]'::jsonb, p_role_responsibilities jsonb default '[]'::jsonb, p_monitoring_kpis jsonb default '[]'::jsonb)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
+        "definition_line": 284,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1538 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1539 grant execute service_role",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1067 revoke execute public, anon, authenticated",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1068 grant execute service_role"
+        ]
+      },
+      {
         "source": "migration202_service_role_acl_review",
         "schema": "public",
         "name": "create_governed_sop_draft",
@@ -23025,7 +23045,9 @@
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1538 revoke execute public, anon, authenticated",
-          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1539 grant execute service_role"
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1539 grant execute service_role",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1067 revoke execute public, anon, authenticated",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1068 grant execute service_role"
         ]
       },
       {
@@ -23047,7 +23069,7 @@
         ]
       },
       {
-        "source": "migration201_service_role_acl_review",
+        "source": "migration203_service_role_acl_review",
         "schema": "public",
         "name": "enforce_policy_sop_version_immutability",
         "signature": "public.enforce_policy_sop_version_immutability()",
@@ -23056,12 +23078,14 @@
         "authenticated_execute": false,
         "service_role_execute": true,
         "disposition": "service_role_only",
-        "definition_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
-        "definition_line": 364,
+        "definition_file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
+        "definition_line": 193,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/201_governed_policy_sop_core_foundation.sql:679 revoke execute public, anon, authenticated",
-          "supabase/migrations/201_governed_policy_sop_core_foundation.sql:680 grant execute service_role"
+          "supabase/migrations/201_governed_policy_sop_core_foundation.sql:680 grant execute service_role",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1064 revoke execute public, anon, authenticated",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1065 grant execute service_role"
         ]
       },
       {
@@ -24089,6 +24113,26 @@
         ]
       },
       {
+        "source": "migration203_service_role_acl_review",
+        "schema": "public",
+        "name": "save_governed_sop_draft",
+        "signature": "public.save_governed_sop_draft(p_actor_id uuid, p_version_id uuid, p_title_en text, p_title_ar text, p_process_name_en text, p_process_name_ar text, p_purpose_en text, p_purpose_ar text, p_process_owner_id uuid, p_primary_policy_version_id uuid, p_governance_link_state text, p_scope_en text, p_scope_ar text, p_training_required boolean default false, p_acknowledgment_required boolean default false, p_competency_assessment_required boolean default false, p_acknowledgment_sla_days integer default 30, p_training_renewal_months integer default 12, p_procedure_steps jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb, p_definitions jsonb default '[]'::jsonb, p_role_responsibilities jsonb default '[]'::jsonb, p_monitoring_kpis jsonb default '[]'::jsonb)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
+        "definition_line": 516,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1544 revoke execute public, anon, authenticated",
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1545 grant execute service_role",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1070 revoke execute public, anon, authenticated",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1071 grant execute service_role"
+        ]
+      },
+      {
         "source": "migration202_service_role_acl_review",
         "schema": "public",
         "name": "save_governed_sop_draft",
@@ -24103,11 +24147,13 @@
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1544 revoke execute public, anon, authenticated",
-          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1545 grant execute service_role"
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1545 grant execute service_role",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1070 revoke execute public, anon, authenticated",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1071 grant execute service_role"
         ]
       },
       {
-        "source": "migration202_service_role_acl_review",
+        "source": "migration203_service_role_acl_review",
         "schema": "public",
         "name": "start_governed_document_revision",
         "signature": "public.start_governed_document_revision(p_actor_id uuid, p_source_version_id uuid, p_revision_type text default 'minor', p_revision_reason text default null)",
@@ -24116,12 +24162,14 @@
         "authenticated_execute": false,
         "service_role_execute": true,
         "disposition": "service_role_only",
-        "definition_file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
-        "definition_line": 831,
+        "definition_file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
+        "definition_line": 886,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1547 revoke execute public, anon, authenticated",
-          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1548 grant execute service_role"
+          "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1548 grant execute service_role",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1073 revoke execute public, anon, authenticated",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1074 grant execute service_role"
         ]
       },
       {
@@ -24197,7 +24245,7 @@
         ]
       },
       {
-        "source": "migration201_service_role_acl_review",
+        "source": "migration203_service_role_acl_review",
         "schema": "public",
         "name": "validate_sop_version_type",
         "signature": "public.validate_sop_version_type()",
@@ -24206,12 +24254,14 @@
         "authenticated_execute": false,
         "service_role_execute": true,
         "disposition": "service_role_only",
-        "definition_file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
-        "definition_line": 227,
+        "definition_file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
+        "definition_line": 84,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/201_governed_policy_sop_core_foundation.sql:673 revoke execute public, anon, authenticated",
-          "supabase/migrations/201_governed_policy_sop_core_foundation.sql:674 grant execute service_role"
+          "supabase/migrations/201_governed_policy_sop_core_foundation.sql:674 grant execute service_role",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1061 revoke execute public, anon, authenticated",
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1062 grant execute service_role"
         ]
       }
     ],

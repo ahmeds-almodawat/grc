@@ -13,12 +13,18 @@ import {
   listControls,
   type DetailedSopRecord,
   type SopProcedureStep,
+  type SopDefinition,
+  type SopRoleResponsibility,
+  type SopMonitoringKpi,
   type RoleScope,
   type EligibleGoverningPolicy
 } from '../../lib/policySopApi';
 import { DocumentStatusBadge } from './DocumentStatusBadge';
 import { DocumentVersionBadge } from './DocumentVersionBadge';
 import { SopProcedureBuilder } from './SopProcedureBuilder';
+import { SopDefinitionsBuilder } from './SopDefinitionsBuilder';
+import { SopResponsibilitiesBuilder } from './SopResponsibilitiesBuilder';
+import { SopMonitoringKpisBuilder } from './SopMonitoringKpisBuilder';
 import { ApplicabilitySelector } from './ApplicabilitySelector';
 import { VersionHistoryTimeline } from './VersionHistoryTimeline';
 import { StartRevisionModal } from './StartRevisionModal';
@@ -42,7 +48,10 @@ import {
   AlertCircle,
   GraduationCap,
   ShieldCheck,
-  Search
+  Search,
+  BookA,
+  Users,
+  Activity
 } from 'lucide-react';
 
 interface SopEditorProps {
@@ -70,7 +79,7 @@ export function SopEditor({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'control' | 'linkage' | 'purpose' | 'procedure' | 'applicability' | 'risks' | 'training' | 'acknowledgment' | 'exceptions' | 'approval' | 'history'>('control');
+  const [activeTab, setActiveTab] = useState<'control' | 'linkage' | 'purpose' | 'definitions' | 'responsibilities' | 'procedure' | 'applicability' | 'training' | 'acknowledgment' | 'monitoring' | 'exceptions' | 'history'>('control');
   const [isDirty, setIsDirty] = useState(false);
 
   // Form Fields
@@ -99,6 +108,11 @@ export function SopEditor({
 
   // Procedure Steps
   const [procedureSteps, setProcedureSteps] = useState<SopProcedureStep[]>([]);
+
+  // Definitions, Role Responsibilities & Monitoring KPIs
+  const [definitions, setDefinitions] = useState<SopDefinition[]>([]);
+  const [roleResponsibilities, setRoleResponsibilities] = useState<SopRoleResponsibility[]>([]);
+  const [monitoringKpis, setMonitoringKpis] = useState<SopMonitoringKpi[]>([]);
 
   // Applicability Scopes
   const [departmentScopes, setDepartmentScopes] = useState<string[]>([]);
@@ -158,6 +172,9 @@ export function SopEditor({
     setScopeAr(record.scope_ar || '');
 
     setProcedureSteps(record.procedure_steps || []);
+    setDefinitions(record.definitions || []);
+    setRoleResponsibilities(record.role_responsibilities || []);
+    setMonitoringKpis(record.monitoring_kpis || []);
     setDepartmentScopes(record.department_scopes || []);
     setRoleScopes(record.role_scopes || []);
 
@@ -190,6 +207,9 @@ export function SopEditor({
         setGovernanceLinkState('linked');
         setPrimaryPolicyVersionId(null);
         setProcedureSteps([]);
+        setDefinitions([]);
+        setRoleResponsibilities([]);
+        setMonitoringKpis([]);
         setDepartmentScopes([]);
         setRoleScopes([]);
         setTrainingRequired(false);
@@ -280,6 +300,9 @@ export function SopEditor({
           acknowledgment_sla_days: acknowledgmentSlaDays,
           training_renewal_months: trainingRenewalMonths,
           procedure_steps: procedureSteps,
+          definitions: definitions,
+          role_responsibilities: roleResponsibilities,
+          monitoring_kpis: monitoringKpis,
           department_scopes: departmentScopes,
           role_scopes: roleScopes,
         });
@@ -311,6 +334,9 @@ export function SopEditor({
           acknowledgment_sla_days: acknowledgmentSlaDays,
           training_renewal_months: trainingRenewalMonths,
           procedure_steps: procedureSteps,
+          definitions: definitions,
+          role_responsibilities: roleResponsibilities,
+          monitoring_kpis: monitoringKpis,
           department_scopes: departmentScopes,
           role_scopes: roleScopes,
         });
@@ -574,6 +600,36 @@ export function SopEditor({
           </button>
 
           <button
+            onClick={() => setActiveTab('definitions')}
+            className={`px-4 py-3 border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+              activeTab === 'definitions'
+                ? 'border-indigo-500 text-indigo-400 bg-indigo-950/20 font-semibold'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+            }`}
+          >
+            <BookA className="w-3.5 h-3.5" />
+            <span>4. {t('sop.tab.definitions')}</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-900/60 text-indigo-300">
+              {definitions.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('responsibilities')}
+            className={`px-4 py-3 border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+              activeTab === 'responsibilities'
+                ? 'border-indigo-500 text-indigo-400 bg-indigo-950/20 font-semibold'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>5. {t('sop.tab.responsibilities')}</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-900/60 text-indigo-300">
+              {roleResponsibilities.length}
+            </span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('procedure')}
             className={`px-4 py-3 border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === 'procedure'
@@ -582,7 +638,7 @@ export function SopEditor({
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>4. {t('sop.tab.procedureBuilder')}</span>
+            <span>6. {t('sop.tab.procedureBuilder')}</span>
             <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-900/60 text-indigo-300">
               {procedureSteps.length}
             </span>
@@ -596,7 +652,7 @@ export function SopEditor({
                 : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
             }`}
           >
-            <span>5. {t('policy.tab.applicability')}</span>
+            <span>7. {t('policy.tab.applicability')}</span>
           </button>
 
           <button
@@ -608,7 +664,7 @@ export function SopEditor({
             }`}
           >
             <GraduationCap className="w-3.5 h-3.5" />
-            <span>6. {t('sop.tab.training')}</span>
+            <span>8. {t('sop.tab.training')}</span>
           </button>
 
           <button
@@ -620,7 +676,22 @@ export function SopEditor({
             }`}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>7. {t('sop.tab.acknowledgment')}</span>
+            <span>9. {t('sop.tab.acknowledgment')}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('monitoring')}
+            className={`px-4 py-3 border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+              activeTab === 'monitoring'
+                ? 'border-indigo-500 text-indigo-400 bg-indigo-950/20 font-semibold'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5" />
+            <span>10. {t('sop.tab.monitoring')}</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-900/60 text-indigo-300">
+              {monitoringKpis.length}
+            </span>
           </button>
 
           <button
@@ -632,7 +703,7 @@ export function SopEditor({
             }`}
           >
             <ShieldAlert className="w-3.5 h-3.5" />
-            <span>8. {t('policy.tab.exceptions')}</span>
+            <span>11. {t('policy.tab.exceptions')}</span>
           </button>
 
           <button
@@ -644,7 +715,7 @@ export function SopEditor({
             }`}
           >
             <History className="w-3.5 h-3.5" />
-            <span>9. {t('policy.tab.history')}</span>
+            <span>12. {t('policy.tab.history')}</span>
           </button>
         </div>
 
@@ -1065,7 +1136,35 @@ export function SopEditor({
             </div>
           )}
 
-          {/* TAB 4: Procedure Builder */}
+          {/* TAB 4: Definitions & Abbreviations */}
+          {activeTab === 'definitions' && (
+            <div className="max-w-5xl">
+              <SopDefinitionsBuilder
+                definitions={definitions}
+                onChange={(newDefs) => {
+                  setDefinitions(newDefs);
+                  setIsDirty(true);
+                }}
+                readOnly={isLocked}
+              />
+            </div>
+          )}
+
+          {/* TAB 5: Roles & Responsibilities Matrix */}
+          {activeTab === 'responsibilities' && (
+            <div className="max-w-5xl">
+              <SopResponsibilitiesBuilder
+                responsibilities={roleResponsibilities}
+                onChange={(newResps) => {
+                  setRoleResponsibilities(newResps);
+                  setIsDirty(true);
+                }}
+                readOnly={isLocked}
+              />
+            </div>
+          )}
+
+          {/* TAB 6: Procedure Builder */}
           {activeTab === 'procedure' && (
             <div className="max-w-5xl">
               <SopProcedureBuilder
@@ -1080,7 +1179,7 @@ export function SopEditor({
             </div>
           )}
 
-          {/* TAB 5: Applicability */}
+          {/* TAB 7: Applicability */}
           {activeTab === 'applicability' && (
             <div className="max-w-4xl">
               <ApplicabilitySelector
@@ -1100,7 +1199,7 @@ export function SopEditor({
             </div>
           )}
 
-          {/* TAB 6: Training & Competency */}
+          {/* TAB 8: Training & Competency */}
           {activeTab === 'training' && (
             <div className="space-y-6 max-w-4xl">
               <div>
@@ -1157,7 +1256,7 @@ export function SopEditor({
             </div>
           )}
 
-          {/* TAB 7: Acknowledgment */}
+          {/* TAB 9: Acknowledgment */}
           {activeTab === 'acknowledgment' && (
             <div className="space-y-6 max-w-4xl">
               <div>
@@ -1201,7 +1300,22 @@ export function SopEditor({
             </div>
           )}
 
-          {/* TAB 8: Exceptions */}
+          {/* TAB 10: Monitoring / KPIs */}
+          {activeTab === 'monitoring' && (
+            <div className="max-w-5xl">
+              <SopMonitoringKpisBuilder
+                kpis={monitoringKpis}
+                profiles={profiles}
+                onChange={(newKpis) => {
+                  setMonitoringKpis(newKpis);
+                  setIsDirty(true);
+                }}
+                readOnly={isLocked}
+              />
+            </div>
+          )}
+
+          {/* TAB 11: Exceptions */}
           {activeTab === 'exceptions' && (
             <div className="space-y-6 max-w-4xl">
               <div className="flex items-center justify-between">
@@ -1251,7 +1365,7 @@ export function SopEditor({
             </div>
           )}
 
-          {/* TAB 9: Version History */}
+          {/* TAB 12: Version History */}
           {activeTab === 'history' && sop && (
             <div className="max-w-4xl">
               <VersionHistoryTimeline

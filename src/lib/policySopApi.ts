@@ -268,6 +268,40 @@ export interface SopProcedureStep {
   escalation_destination_role?: string | null;
 }
 
+export interface SopDefinition {
+  id?: string;
+  sequence_number: number;
+  term_en?: string | null;
+  term_ar?: string | null;
+  abbreviation?: string | null;
+  definition_en: string;
+  definition_ar?: string | null;
+}
+
+export interface SopRoleResponsibility {
+  id?: string;
+  sequence_number: number;
+  role_name?: string | null;
+  job_title?: string | null;
+  responsibility_en: string;
+  responsibility_ar?: string | null;
+  accountable_for_en?: string | null;
+  accountable_for_ar?: string | null;
+}
+
+export interface SopMonitoringKpi {
+  id?: string;
+  sequence_number: number;
+  kpi_name_en: string;
+  kpi_name_ar?: string | null;
+  target_value: string;
+  measurement_frequency: string;
+  owner_id?: string | null;
+  owner_name?: string | null;
+  description_en?: string | null;
+  description_ar?: string | null;
+}
+
 export interface EligibleGoverningPolicy {
   version_id: string;
   document_id: string;
@@ -330,6 +364,9 @@ export interface DetailedSopRecord {
   content_mode: 'structured' | 'legacy_controlled_document';
   transcription_status: 'not_required' | 'pending' | 'complete';
   procedure_steps: SopProcedureStep[];
+  definitions: SopDefinition[];
+  role_responsibilities: SopRoleResponsibility[];
+  monitoring_kpis: SopMonitoringKpi[];
   department_scopes: string[];
   role_scopes: RoleScope[];
   review_events: DocumentReviewEvent[];
@@ -645,7 +682,28 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
       .eq('sop_version_id', ver.id)
       .order('sequence_number', { ascending: true });
 
-    // 5. Fetch linked governing policy metadata if linked
+    // 5. Fetch definitions
+    const { data: defs } = await supabase
+      .from('sop_definitions')
+      .select('*')
+      .eq('sop_version_id', ver.id)
+      .order('sequence_number', { ascending: true });
+
+    // 6. Fetch role responsibilities
+    const { data: resps } = await supabase
+      .from('sop_role_responsibilities')
+      .select('*')
+      .eq('sop_version_id', ver.id)
+      .order('sequence_number', { ascending: true });
+
+    // 7. Fetch monitoring KPIs
+    const { data: kpis } = await supabase
+      .from('sop_monitoring_kpis')
+      .select('*, profiles!sop_monitoring_kpis_owner_id_fkey(full_name)')
+      .eq('sop_version_id', ver.id)
+      .order('sequence_number', { ascending: true });
+
+    // 8. Fetch linked governing policy metadata if linked
     let primaryPolicyDocCode: string | null = null;
     let primaryPolicyDocTitle: string | null = null;
     let primaryPolicyVerLabel: string | null = null;
@@ -664,40 +722,40 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
       }
     }
 
-    // 6. Fetch department scopes
+    // 9. Fetch department scopes
     const { data: deptScopes } = await supabase
       .from('document_version_department_scope')
       .select('department_id')
       .eq('version_id', ver.id);
 
-    // 7. Fetch role scopes
+    // 10. Fetch role scopes
     const { data: roleScopes } = await supabase
       .from('document_version_role_scope')
       .select('id, role_name, job_title')
       .eq('version_id', ver.id);
 
-    // 8. Fetch review events
+    // 11. Fetch review events
     const { data: events } = await supabase
       .from('document_review_events')
       .select('*, profiles(full_name)')
       .eq('document_id', documentId)
       .order('created_at', { ascending: false });
 
-    // 9. Fetch exceptions
+    // 12. Fetch exceptions
     const { data: exceptions } = await supabase
       .from('policy_sop_exceptions')
       .select('*, profiles!policy_sop_exceptions_requested_by_fkey(full_name)')
       .eq('document_id', documentId)
       .order('created_at', { ascending: false });
 
-    // 10. Fetch review triggers
+    // 13. Fetch review triggers
     const { data: triggers } = await supabase
       .from('governed_document_review_triggers')
       .select('*')
       .eq('document_id', documentId)
       .order('created_at', { ascending: false });
 
-    // 11. Fetch all versions for timeline
+    // 14. Fetch all versions for timeline
     const { data: allVers } = await supabase
       .from('document_versions')
       .select('id, version_number, version_label, is_current_version, effective_date, expiry_date, approved_at, locked_at, prepared_by, revision_reason')
@@ -776,6 +834,40 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
           escalation_trigger_en: s.escalation_trigger_en,
           escalation_trigger_ar: s.escalation_trigger_ar,
           escalation_destination_role: s.escalation_destination_role
+        };
+      }),
+      definitions: (defs || []).map(d => ({
+        id: d.id,
+        sequence_number: d.sequence_number,
+        term_en: d.term_en,
+        term_ar: d.term_ar,
+        abbreviation: d.abbreviation,
+        definition_en: d.definition_en,
+        definition_ar: d.definition_ar
+      })),
+      role_responsibilities: (resps || []).map(r => ({
+        id: r.id,
+        sequence_number: r.sequence_number,
+        role_name: r.role_name,
+        job_title: r.job_title,
+        responsibility_en: r.responsibility_en,
+        responsibility_ar: r.responsibility_ar,
+        accountable_for_en: r.accountable_for_en,
+        accountable_for_ar: r.accountable_for_ar
+      })),
+      monitoring_kpis: (kpis || []).map(k => {
+        const prof = k.profiles as unknown as { full_name?: string } | undefined;
+        return {
+          id: k.id,
+          sequence_number: k.sequence_number,
+          kpi_name_en: k.kpi_name_en,
+          kpi_name_ar: k.kpi_name_ar,
+          target_value: k.target_value,
+          measurement_frequency: k.measurement_frequency,
+          owner_id: k.owner_id,
+          owner_name: prof?.full_name || null,
+          description_en: k.description_en,
+          description_ar: k.description_ar
         };
       }),
       department_scopes: (deptScopes || []).map(ds => ds.department_id),
@@ -965,6 +1057,9 @@ export interface CreateSopDraftInput {
   procedure_steps?: SopProcedureStep[];
   department_scopes?: string[];
   role_scopes?: RoleScope[];
+  definitions?: SopDefinition[];
+  role_responsibilities?: SopRoleResponsibility[];
+  monitoring_kpis?: SopMonitoringKpi[];
 }
 
 export async function createGovernedSopDraft(input: CreateSopDraftInput): Promise<{ document_id: string; version_id: string; document_code: string }> {
@@ -995,6 +1090,9 @@ export interface SaveSopDraftInput {
   procedure_steps?: SopProcedureStep[];
   department_scopes?: string[];
   role_scopes?: RoleScope[];
+  definitions?: SopDefinition[];
+  role_responsibilities?: SopRoleResponsibility[];
+  monitoring_kpis?: SopMonitoringKpi[];
 }
 
 export async function saveGovernedSopDraft(input: SaveSopDraftInput): Promise<{ success: boolean; version_id: string }> {

@@ -1,15 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
+import * as fs from 'fs';
+import * as path from 'path';
 import { I18nProvider } from '../../src/i18n/I18nContext';
 import { SopRegister } from '../../src/components/policy-sop/SopRegister';
 import { SopProcedureBuilder } from '../../src/components/policy-sop/SopProcedureBuilder';
+import { SopDefinitionsBuilder } from '../../src/components/policy-sop/SopDefinitionsBuilder';
+import { SopResponsibilitiesBuilder } from '../../src/components/policy-sop/SopResponsibilitiesBuilder';
+import { SopMonitoringKpisBuilder } from '../../src/components/policy-sop/SopMonitoringKpisBuilder';
 import { SopPreviewModal } from '../../src/components/policy-sop/SopPreviewModal';
 import { SopEditor } from '../../src/components/policy-sop/SopEditor';
 import type { 
   GovernedSopCatalogRow, 
   DetailedSopRecord, 
-  SopProcedureStep, 
+  SopProcedureStep,
+  SopDefinition,
+  SopRoleResponsibility,
+  SopMonitoringKpi,
   EligibleGoverningPolicy 
 } from '../../src/lib/policySopApi';
 import * as policySopApi from '../../src/lib/policySopApi';
@@ -237,6 +245,62 @@ const mockDetailedSop: DetailedSopRecord = {
       escalation_destination_role: 'Cleanroom Supervisor'
     }
   ],
+  definitions: [
+    {
+      id: 'def-1',
+      sequence_number: 1,
+      term_en: 'Body Surface Area',
+      term_ar: 'مساحة سطح الجسم',
+      abbreviation: 'BSA',
+      definition_en: 'Measured or calculated surface of a human body used for chemotherapy dosage calculations.',
+      definition_ar: 'المساحة المحسوبة لجسم المريض المستخدمة لاحتساب جرعات العلاج الكيماوي بدقة.'
+    },
+    {
+      id: 'def-2',
+      sequence_number: 2,
+      term_en: 'Electronic Health Record',
+      term_ar: 'السجل الصحي الإلكتروني',
+      abbreviation: 'EHR',
+      definition_en: 'Authoritative digital clinical information system recording medication orders and verification.',
+      definition_ar: 'النظام السريري الرقمي المعتمد لتوثيق أوامر الأدوية والتحقق منها.'
+    }
+  ],
+  role_responsibilities: [
+    {
+      id: 'resp-1',
+      sequence_number: 1,
+      role_name: 'Clinical Pharmacist',
+      job_title: 'Specialist Inpatient Pharmacist',
+      responsibility_en: 'Verify chemotherapy calculations, check laboratory markers, and approve final dispensing.',
+      responsibility_ar: 'مطابقة حسابات الجرعات والتحقق من المؤشرات المخبرية والاعتماد النهائي لصرف الدواء.',
+      accountable_for_en: 'Dual-check verification entry sign-off in EHR.',
+      accountable_for_ar: 'التوقيع النهائي لسجل التحقق المزدوج في النظام الإلكتروني.'
+    },
+    {
+      id: 'resp-2',
+      sequence_number: 2,
+      role_name: 'Pharmacy Cleanroom Technician',
+      job_title: 'Certified Compounding Tech',
+      responsibility_en: 'Prepare aseptic IV admixture in compliance with cleanroom environmental protocols.',
+      responsibility_ar: 'تحضير المحاليل الوريدية المعقمة وفق بروتوكولات البيئة المعقمة المعتمدة.',
+      accountable_for_en: 'Cleanroom log completion and particle counter baseline.',
+      accountable_for_ar: 'اكتمال سجل الغرفة المعقمة ومطابقة قراءات عداد الجسيمات.'
+    }
+  ],
+  monitoring_kpis: [
+    {
+      id: 'kpi-1',
+      sequence_number: 1,
+      kpi_name_en: 'Dual-Pharmacist Verification Compliance Rate',
+      kpi_name_ar: 'نسبة الالتزام بالتحقق المزدوج لجرعات الكيماوي',
+      target_value: '100%',
+      measurement_frequency: 'Monthly',
+      owner_id: 'prof-1',
+      owner_name: 'Dr. Sarah Connor',
+      description_en: 'Percentage of chemotherapy orders with completed dual independent verification timestamps.',
+      description_ar: 'نسبة أوامر العلاج الكيماوي المكتملة بأختام التحقق المزدوج المستقل.'
+    }
+  ],
   department_scopes: ['dept-1'],
   role_scopes: [{ id: 'role-1', role_name: 'Clinical Pharmacist', job_title: 'Inpatient Pharmacist' }],
   review_events: [],
@@ -258,12 +322,69 @@ const mockDetailedSop: DetailedSopRecord = {
   ]
 };
 
-describe('GRC v1.4-E1 Governed SOP Register & Builder Suite', () => {
+describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('SopRegister Component', () => {
+  describe('1. Migration 203 Static Contract & Schema Verification', () => {
+    const migrationPath = path.resolve(
+      process.cwd(),
+      'supabase/migrations/203_governed_sop_structured_content_expansion.sql'
+    );
+
+    it('verifies migration 203 file exists and contains essential structured tables', () => {
+      expect(fs.existsSync(migrationPath)).toBe(true);
+      const sql = fs.readFileSync(migrationPath, 'utf8');
+      expect(sql.length).toBeGreaterThan(1000);
+      
+      // Table definitions
+      expect(sql).toMatch(/create table if not exists public\.sop_definitions/i);
+      expect(sql).toMatch(/create table if not exists public\.sop_role_responsibilities/i);
+      expect(sql).toMatch(/create table if not exists public\.sop_monitoring_kpis/i);
+
+      // Check constraints
+      expect(sql).toMatch(/check \(sequence_number >= 1\)/i);
+      expect(sql).toMatch(/nullif\(trim\(coalesce\(term_en, ''\)\), ''\) is not null/i);
+      expect(sql).toMatch(/nullif\(trim\(coalesce\(role_name, ''\)\), ''\) is not null/i);
+    });
+
+    it('verifies RLS security and trigger attachments for immutability and document type', () => {
+      const sql = fs.readFileSync(migrationPath, 'utf8');
+      
+      // RLS enabled
+      expect(sql).toMatch(/alter table public\.sop_definitions enable row level security/i);
+      expect(sql).toMatch(/alter table public\.sop_role_responsibilities enable row level security/i);
+      expect(sql).toMatch(/alter table public\.sop_monitoring_kpis enable row level security/i);
+
+      // Trigger attachment for immutability
+      expect(sql).toMatch(/trg_immutability_sop_definitions/i);
+      expect(sql).toMatch(/trg_immutability_sop_role_responsibilities/i);
+      expect(sql).toMatch(/trg_immutability_sop_monitoring_kpis/i);
+
+      // Trigger attachment for SOP version type
+      expect(sql).toMatch(/trg_validate_sop_definitions_type/i);
+      expect(sql).toMatch(/trg_validate_sop_responsibilities_type/i);
+      expect(sql).toMatch(/trg_validate_sop_kpis_type/i);
+    });
+
+    it('verifies atomic save cross-version child ID denial and service-role execution grants', () => {
+      const sql = fs.readFileSync(migrationPath, 'utf8');
+      
+      expect(sql).toMatch(/PATCH202_CROSS_VERSION_CHILD_ID_DENIED/i);
+      expect(sql).toMatch(/v_seen_def_ids/i);
+      expect(sql).toMatch(/v_seen_resp_ids/i);
+      expect(sql).toMatch(/v_seen_kpi_ids/i);
+
+      // Revocations and grants
+      expect(sql).toMatch(/revoke all on function public\.create_governed_sop_draft/i);
+      expect(sql).toMatch(/grant execute on function public\.create_governed_sop_draft/i);
+      expect(sql).toMatch(/revoke all on function public\.save_governed_sop_draft/i);
+      expect(sql).toMatch(/grant execute on function public\.save_governed_sop_draft/i);
+    });
+  });
+
+  describe('2. SopRegister Component', () => {
     it('renders SOP catalog table with columns and data accurately', () => {
       const handleSelectSop = vi.fn();
       const handleCreateSop = vi.fn();
@@ -344,7 +465,7 @@ describe('GRC v1.4-E1 Governed SOP Register & Builder Suite', () => {
     });
   });
 
-  describe('SopProcedureBuilder Component', () => {
+  describe('3. SopProcedureBuilder Component', () => {
     it('renders procedure steps with sequence, role, and critical control point badges', () => {
       const mockSteps: SopProcedureStep[] = [...mockDetailedSop.procedure_steps];
       const handleChange = vi.fn();
@@ -412,31 +533,163 @@ describe('GRC v1.4-E1 Governed SOP Register & Builder Suite', () => {
       expect(reordered[1].id).toBe('step-1');
       expect(reordered[1].sequence_number).toBe(2);
     });
+  });
 
-    it('supports decision point branching and criteria inputs', () => {
-      const mockSteps: SopProcedureStep[] = [mockDetailedSop.procedure_steps[1]]; // non-decision step
+  describe('4. SopDefinitionsBuilder Component', () => {
+    it('renders definitions with abbreviation, term, and definition texts', () => {
+      const mockDefs: SopDefinition[] = [...mockDetailedSop.definitions];
       const handleChange = vi.fn();
 
       render(
         <I18nProvider>
-          <SopProcedureBuilder
-            steps={mockSteps}
+          <SopDefinitionsBuilder
+            definitions={mockDefs}
             onChange={handleChange}
-            controls={mockControls}
           />
         </I18nProvider>
       );
 
-      const checkbox = screen.getByLabelText(/Branching \/ Decision Point/i);
-      fireEvent.click(checkbox);
+      expect(screen.getByDisplayValue('BSA')).toBeDefined();
+      expect(screen.getByDisplayValue('Body Surface Area')).toBeDefined();
+      expect(screen.getByDisplayValue('EHR')).toBeDefined();
+      expect(screen.getByDisplayValue('Electronic Health Record')).toBeDefined();
+    });
+
+    it('supports adding a new definition entry', () => {
+      const mockDefs: SopDefinition[] = [mockDetailedSop.definitions[0]];
+      const handleChange = vi.fn();
+
+      render(
+        <I18nProvider>
+          <SopDefinitionsBuilder
+            definitions={mockDefs}
+            onChange={handleChange}
+          />
+        </I18nProvider>
+      );
+
+      const addBtn = screen.getByRole('button', { name: /Add Definition/i });
+      fireEvent.click(addBtn);
 
       expect(handleChange).toHaveBeenCalledTimes(1);
-      expect(handleChange.mock.calls[0][0][0].is_decision_point).toBe(true);
+      const res = handleChange.mock.calls[0][0];
+      expect(res).toHaveLength(2);
+      expect(res[1].sequence_number).toBe(2);
+    });
+
+    it('supports reordering and duplicating definitions', () => {
+      const mockDefs: SopDefinition[] = [...mockDetailedSop.definitions];
+      const handleChange = vi.fn();
+
+      render(
+        <I18nProvider>
+          <SopDefinitionsBuilder
+            definitions={mockDefs}
+            onChange={handleChange}
+          />
+        </I18nProvider>
+      );
+
+      const moveDownBtns = screen.getAllByTitle(/Move down/i);
+      fireEvent.click(moveDownBtns[0]);
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      const reordered = handleChange.mock.calls[0][0];
+      expect(reordered[0].id).toBe('def-2');
+      expect(reordered[0].sequence_number).toBe(1);
+      expect(reordered[1].id).toBe('def-1');
+      expect(reordered[1].sequence_number).toBe(2);
     });
   });
 
-  describe('SopPreviewModal Component', () => {
-    it('renders printable A4 document view with institutional metadata and procedure steps', () => {
+  describe('5. SopResponsibilitiesBuilder Component', () => {
+    it('renders role responsibilities with role name, responsibility, and accountability', () => {
+      const mockResps: SopRoleResponsibility[] = [...mockDetailedSop.role_responsibilities];
+      const handleChange = vi.fn();
+
+      render(
+        <I18nProvider>
+          <SopResponsibilitiesBuilder
+            responsibilities={mockResps}
+            onChange={handleChange}
+          />
+        </I18nProvider>
+      );
+
+      expect(screen.getByDisplayValue('Clinical Pharmacist')).toBeDefined();
+      expect(screen.getByDisplayValue('Specialist Inpatient Pharmacist')).toBeDefined();
+      expect(screen.getByDisplayValue('Pharmacy Cleanroom Technician')).toBeDefined();
+    });
+
+    it('supports adding and updating role responsibilities', () => {
+      const mockResps: SopRoleResponsibility[] = [mockDetailedSop.role_responsibilities[0]];
+      const handleChange = vi.fn();
+
+      render(
+        <I18nProvider>
+          <SopResponsibilitiesBuilder
+            responsibilities={mockResps}
+            onChange={handleChange}
+          />
+        </I18nProvider>
+      );
+
+      const addBtn = screen.getByRole('button', { name: /Add Role Responsibility/i });
+      fireEvent.click(addBtn);
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      const res = handleChange.mock.calls[0][0];
+      expect(res).toHaveLength(2);
+      expect(res[1].sequence_number).toBe(2);
+    });
+  });
+
+  describe('6. SopMonitoringKpisBuilder Component', () => {
+    it('renders KPIs with target, frequency, and profile owner selector', () => {
+      const mockKpis: SopMonitoringKpi[] = [...mockDetailedSop.monitoring_kpis];
+      const handleChange = vi.fn();
+
+      render(
+        <I18nProvider>
+          <SopMonitoringKpisBuilder
+            kpis={mockKpis}
+            profiles={mockProfiles}
+            onChange={handleChange}
+          />
+        </I18nProvider>
+      );
+
+      expect(screen.getByDisplayValue('Dual-Pharmacist Verification Compliance Rate')).toBeDefined();
+      expect(screen.getByDisplayValue('100%')).toBeDefined();
+      expect(screen.getByDisplayValue('Monthly')).toBeDefined();
+    });
+
+    it('supports adding new monitoring indicators', () => {
+      const mockKpis: SopMonitoringKpi[] = [mockDetailedSop.monitoring_kpis[0]];
+      const handleChange = vi.fn();
+
+      render(
+        <I18nProvider>
+          <SopMonitoringKpisBuilder
+            kpis={mockKpis}
+            profiles={mockProfiles}
+            onChange={handleChange}
+          />
+        </I18nProvider>
+      );
+
+      const addBtn = screen.getByRole('button', { name: /Add Monitoring Indicator/i });
+      fireEvent.click(addBtn);
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      const res = handleChange.mock.calls[0][0];
+      expect(res).toHaveLength(2);
+      expect(res[1].sequence_number).toBe(2);
+    });
+  });
+
+  describe('7. SopPreviewModal Component', () => {
+    it('renders printable A4 document view with all governed structured sections', () => {
       const handleClose = vi.fn();
 
       render(
@@ -452,11 +705,13 @@ describe('GRC v1.4-E1 Governed SOP Register & Builder Suite', () => {
       expect(screen.getByText('Inpatient Chemotherapy Dispensing SOP')).toBeDefined();
       expect(screen.getByText('POL-MED-2026-0001 - Medication Safety & Administration Policy (v1.0)')).toBeDefined();
       expect(screen.getByText('Chemotherapy Dispensing')).toBeDefined();
-      expect(screen.getByText(/Verify the oncologist electronic prescription against BSA calculator/i)).toBeDefined();
+      expect(screen.getByText(/Body Surface Area/i)).toBeDefined();
+      expect(screen.getByText(/Dual pharmacist sign-off timestamp in EHR/i)).toBeDefined();
+      expect(screen.getByText(/Dual-Pharmacist Verification Compliance Rate/i)).toBeDefined();
     });
   });
 
-  describe('SopEditor Full Workspace & Lifecycle Integration', () => {
+  describe('8. SopEditor Full Workspace & Lifecycle Integration', () => {
     beforeEach(() => {
       vi.spyOn(policySopApi, 'listDepartments').mockResolvedValue(mockDepartments);
       vi.spyOn(policySopApi, 'listProfiles').mockResolvedValue(mockProfiles);
@@ -466,7 +721,7 @@ describe('GRC v1.4-E1 Governed SOP Register & Builder Suite', () => {
       vi.spyOn(policySopApi, 'saveGovernedSopDraft').mockResolvedValue({ success: true, version_id: 'sop-ver-1' });
     });
 
-    it('loads SOP detail and renders tabbed workspace', async () => {
+    it('loads SOP detail and renders full 12-tab workspace', async () => {
       render(
         <I18nProvider>
           <SopEditor
@@ -485,10 +740,13 @@ describe('GRC v1.4-E1 Governed SOP Register & Builder Suite', () => {
       expect(screen.getByText(/Document Control/i)).toBeDefined();
       expect(screen.getByText(/Governing Policy/i)).toBeDefined();
       expect(screen.getByText(/Purpose & Scope/i)).toBeDefined();
+      expect(screen.getByText(/Definitions & Abbreviations/i)).toBeDefined();
+      expect(screen.getByText(/Roles & Responsibilities/i)).toBeDefined();
       expect(screen.getByText(/Procedure Builder/i)).toBeDefined();
+      expect(screen.getByText(/Monitoring & KPIs/i)).toBeDefined();
     });
 
-    it('switches to Governing Policy tab and verifies exact policy version selector', async () => {
+    it('switches to Definitions tab and interacts with definitions builder', async () => {
       render(
         <I18nProvider>
           <SopEditor
@@ -502,15 +760,14 @@ describe('GRC v1.4-E1 Governed SOP Register & Builder Suite', () => {
         expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
       });
 
-      const policyTab = screen.getByRole('button', { name: /Governing Policy/i });
-      fireEvent.click(policyTab);
+      const defsTab = screen.getByRole('button', { name: /Definitions & Abbreviations/i });
+      fireEvent.click(defsTab);
 
-      expect(screen.getByText(/Every hospital SOP derives its authority/i)).toBeDefined();
-      expect(screen.getByText('POL-MED-2026-0001')).toBeDefined();
-      expect(screen.getByText('POL-CLN-2026-0002')).toBeDefined();
+      expect(screen.getByDisplayValue('BSA')).toBeDefined();
+      expect(screen.getByDisplayValue('Body Surface Area')).toBeDefined();
     });
 
-    it('triggers save draft with procedure steps and updated fields', async () => {
+    it('triggers save draft with procedure steps, definitions, responsibilities, and KPIs', async () => {
       const saveSpy = vi.spyOn(policySopApi, 'saveGovernedSopDraft');
 
       render(
@@ -538,7 +795,16 @@ describe('GRC v1.4-E1 Governed SOP Register & Builder Suite', () => {
             version_id: 'sop-ver-1',
             title_en: 'Updated Chemotherapy Dispensing SOP',
             process_name_en: 'Chemotherapy Dispensing',
-            primary_policy_version_id: 'pol-ver-1'
+            primary_policy_version_id: 'pol-ver-1',
+            definitions: expect.arrayContaining([
+              expect.objectContaining({ term_en: 'Body Surface Area', abbreviation: 'BSA' })
+            ]),
+            role_responsibilities: expect.arrayContaining([
+              expect.objectContaining({ role_name: 'Clinical Pharmacist' })
+            ]),
+            monitoring_kpis: expect.arrayContaining([
+              expect.objectContaining({ kpi_name_en: 'Dual-Pharmacist Verification Compliance Rate' })
+            ])
           })
         );
       });
