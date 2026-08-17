@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import type { DepartmentOption, PriorityLevel, ProfileOption, RiskLevel, SourceType } from '../types/domain';
 import { createProject, searchEligibleWorkParticipants } from '../lib/grcApi';
 import { ScenarioFillButton } from './ScenarioFillButton';
@@ -13,6 +13,8 @@ interface ActionPlanFormProps {
   departments: DepartmentOption[];
   onCreated: () => void;
   onCancel: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
+  onSubmittingChange?: (isSubmitting: boolean) => void;
 }
 
 const sourceTypes: SourceType[] = [
@@ -31,8 +33,29 @@ const sourceTypes: SourceType[] = [
 const priorities: PriorityLevel[] = ['critical', 'high', 'medium', 'low'];
 const riskLevels: RiskLevel[] = ['critical', 'high', 'medium', 'low'];
 
-export function ActionPlanForm({ organizationId, departments, onCreated, onCancel }: ActionPlanFormProps) {
+export function ActionPlanForm({
+  organizationId,
+  departments,
+  onCreated,
+  onCancel,
+  onDirtyChange,
+  onSubmittingChange,
+}: ActionPlanFormProps) {
   const auth = useAuth();
+  const titleId = useId();
+  const descriptionId = useId();
+  const categoryId = useId();
+  const sourceId = useId();
+  const departmentIdInput = useId();
+  const ownerSearchId = useId();
+  const ownerSelectId = useId();
+  const sponsorSearchId = useId();
+  const sponsorSelectId = useId();
+  const startDateId = useId();
+  const targetEndDateId = useId();
+  const priorityId = useId();
+  const riskLevelId = useId();
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Governance');
@@ -44,6 +67,7 @@ export function ActionPlanForm({ organizationId, departments, onCreated, onCance
   const [sponsorQuery, setSponsorQuery] = useState('');
   const [owners, setOwners] = useState<ProfileOption[]>([]);
   const [sponsors, setSponsors] = useState<ProfileOption[]>([]);
+  const [searchingParticipants, setSearchingParticipants] = useState(false);
   const [participantSearchError, setParticipantSearchError] = useState<string | null>(null);
   const [startDate, setStartDate] = useState('');
   const [targetEndDate, setTargetEndDate] = useState('');
@@ -53,12 +77,57 @@ export function ActionPlanForm({ organizationId, departments, onCreated, onCance
   const [closureApprovalRequired, setClosureApprovalRequired] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isSubmittingRef = useRef(false);
 
   const canSubmit = useMemo(() => title.trim().length > 2 && organizationId, [title, organizationId]);
   const canSearchCompanyWide = auth.roles.some(role => (
     ['super_admin', 'executive', 'governance_admin'].includes(role.role)
     && role.scope === 'global'
   ));
+
+  const isDirty = useMemo(() => {
+    return Boolean(
+      title.trim() ||
+      description.trim() ||
+      category !== 'Governance' ||
+      sourceType !== 'manual' ||
+      departmentId ||
+      ownerId ||
+      sponsorId ||
+      ownerQuery ||
+      sponsorQuery ||
+      startDate ||
+      targetEndDate ||
+      priority !== 'medium' ||
+      riskLevel !== 'medium' ||
+      !evidenceRequired ||
+      !closureApprovalRequired
+    );
+  }, [
+    title,
+    description,
+    category,
+    sourceType,
+    departmentId,
+    ownerId,
+    sponsorId,
+    ownerQuery,
+    sponsorQuery,
+    startDate,
+    targetEndDate,
+    priority,
+    riskLevel,
+    evidenceRequired,
+    closureApprovalRequired,
+  ]);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
+  useEffect(() => {
+    onSubmittingChange?.(saving);
+  }, [saving, onSubmittingChange]);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,25 +137,40 @@ export function ActionPlanForm({ organizationId, departments, onCreated, onCance
       setOwnerId('');
       setSponsorId('');
       setParticipantSearchError(null);
+      setSearchingParticipants(false);
       return () => { cancelled = true; };
     }
+    setSearchingParticipants(true);
     const timer = window.setTimeout(() => {
       void Promise.all([
         searchEligibleWorkParticipants('project_create', departmentId || null, 'project_owner', ownerQuery, 100),
         searchEligibleWorkParticipants('project_create', departmentId || null, 'sponsor', sponsorQuery, 100),
       ]).then(([nextOwners, nextSponsors]) => {
         if (cancelled) return;
-        setOwners(nextOwners); setSponsors(nextSponsors); setParticipantSearchError(null);
+        setOwners(nextOwners);
+        setSponsors(nextSponsors);
+        setParticipantSearchError(null);
       }).catch(err => {
         if (!cancelled) setParticipantSearchError(err instanceof Error ? err.message : 'Eligible participants could not be loaded.');
+      }).finally(() => {
+        if (!cancelled) setSearchingParticipants(false);
       });
     }, 250);
     return () => { cancelled = true; window.clearTimeout(timer); };
   }, [canSearchCompanyWide, departmentId, ownerQuery, sponsorQuery]);
 
+  const handleStartDateChange = (val: string) => {
+    setStartDate(val);
+    if (targetEndDate && targetEndDate < val) {
+      setTargetEndDate('');
+    }
+  };
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+
+    if (isSubmittingRef.current) return;
 
     if (!canSubmit) {
       setError('Title and organization are required.');
@@ -97,6 +181,7 @@ export function ActionPlanForm({ organizationId, departments, onCreated, onCance
       return;
     }
 
+    isSubmittingRef.current = true;
     setSaving(true);
     try {
       if (
@@ -127,6 +212,7 @@ export function ActionPlanForm({ organizationId, departments, onCreated, onCance
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create project.');
     } finally {
+      isSubmittingRef.current = false;
       setSaving(false);
     }
   }
@@ -158,91 +244,202 @@ export function ActionPlanForm({ organizationId, departments, onCreated, onCance
         <ScenarioFillButton onClick={fillSyntheticProject} />
       </div>
 
-      <label className="field full-width">
+      <label className="field full-width" htmlFor={titleId}>
         <span>Action plan title *</span>
-        <input value={title} onChange={event => setTitle(event.target.value)} placeholder="Example: Authority matrix implementation" />
+        <input
+          id={titleId}
+          value={title}
+          onChange={event => setTitle(event.target.value)}
+          placeholder="Example: Authority matrix implementation"
+          required
+        />
       </label>
 
-      <label className="field full-width">
+      <label className="field full-width" htmlFor={descriptionId}>
         <span>Description</span>
-        <textarea value={description} onChange={event => setDescription(event.target.value)} placeholder="Objective, scope, expected result and governance reason." />
+        <textarea
+          id={descriptionId}
+          value={description}
+          onChange={event => setDescription(event.target.value)}
+          placeholder="Objective, scope, expected result and governance reason."
+        />
       </label>
 
-      <label className="field">
+      <label className="field" htmlFor={categoryId}>
         <span>Category</span>
-        <input value={category} onChange={event => setCategory(event.target.value)} />
+        <input
+          id={categoryId}
+          value={category}
+          onChange={event => setCategory(event.target.value)}
+        />
       </label>
 
-      <label className="field">
+      <label className="field" htmlFor={sourceId}>
         <span>Source</span>
-        <select value={sourceType} onChange={event => setSourceType(event.target.value as SourceType)}>
-          {sourceTypes.map(source => <option key={source} value={source}>{source.replaceAll('_', ' ')}</option>)}
+        <select
+          id={sourceId}
+          value={sourceType}
+          onChange={event => setSourceType(event.target.value as SourceType)}
+        >
+          {sourceTypes.map(source => (
+            <option key={source} value={source}>
+              {source.replaceAll('_', ' ')}
+            </option>
+          ))}
         </select>
       </label>
 
-      <label className="field">
+      <label className="field" htmlFor={departmentIdInput}>
         <span>Department</span>
-        <select value={departmentId} onChange={event => setDepartmentId(event.target.value)}>
+        <select
+          id={departmentIdInput}
+          value={departmentId}
+          onChange={event => setDepartmentId(event.target.value)}
+        >
           <option value="">Company-wide</option>
-          {departments.map(department => <option key={department.id} value={department.id}>{department.name_en}</option>)}
+          {departments.map(department => (
+            <option key={department.id} value={department.id}>
+              {department.name_en}
+            </option>
+          ))}
         </select>
       </label>
 
-      <label className="field">
+      <label className="field" htmlFor={ownerSearchId}>
+        <span>Search eligible owner</span>
+        <input
+          id={ownerSearchId}
+          value={ownerQuery}
+          onChange={event => setOwnerQuery(event.target.value)}
+          placeholder="Search eligible owners"
+        />
+      </label>
+
+      <label className="field" htmlFor={ownerSelectId}>
         <span>Owner</span>
-        <input value={ownerQuery} onChange={event => setOwnerQuery(event.target.value)} placeholder="Search eligible owners" />
-        <select value={ownerId} onChange={event => setOwnerId(event.target.value)}>
-          <option value="">Unassigned</option>
-          {owners.map(profile => <option key={profile.id} value={profile.id}>{profile.full_name_en}</option>)}
+        <select
+          id={ownerSelectId}
+          value={ownerId}
+          onChange={event => setOwnerId(event.target.value)}
+          disabled={searchingParticipants}
+        >
+          <option value="">{searchingParticipants ? 'Searching…' : 'Unassigned'}</option>
+          {owners.map(profile => (
+            <option key={profile.id} value={profile.id}>
+              {profile.full_name_en}
+            </option>
+          ))}
         </select>
       </label>
 
-      <label className="field">
+      <label className="field" htmlFor={sponsorSearchId}>
+        <span>Search eligible sponsor</span>
+        <input
+          id={sponsorSearchId}
+          value={sponsorQuery}
+          onChange={event => setSponsorQuery(event.target.value)}
+          placeholder="Search eligible sponsors"
+        />
+      </label>
+
+      <label className="field" htmlFor={sponsorSelectId}>
         <span>Sponsor</span>
-        <input value={sponsorQuery} onChange={event => setSponsorQuery(event.target.value)} placeholder="Search eligible sponsors" />
-        <select value={sponsorId} onChange={event => setSponsorId(event.target.value)}>
-          <option value="">None</option>
-          {sponsors.map(profile => <option key={profile.id} value={profile.id}>{profile.full_name_en}</option>)}
+        <select
+          id={sponsorSelectId}
+          value={sponsorId}
+          onChange={event => setSponsorId(event.target.value)}
+          disabled={searchingParticipants}
+        >
+          <option value="">{searchingParticipants ? 'Searching…' : 'None'}</option>
+          {sponsors.map(profile => (
+            <option key={profile.id} value={profile.id}>
+              {profile.full_name_en}
+            </option>
+          ))}
         </select>
       </label>
 
-      <label className="field">
+      <label className="field" htmlFor={startDateId}>
         <span>Start date</span>
-        <input type="date" value={startDate} onChange={event => setStartDate(event.target.value)} />
+        <input
+          id={startDateId}
+          type="date"
+          value={startDate}
+          max={targetEndDate || undefined}
+          onChange={event => handleStartDateChange(event.target.value)}
+        />
       </label>
 
-      <label className="field">
+      <label className="field" htmlFor={targetEndDateId}>
         <span>Target end date</span>
-        <input type="date" value={targetEndDate} onChange={event => setTargetEndDate(event.target.value)} />
+        <input
+          id={targetEndDateId}
+          type="date"
+          value={targetEndDate}
+          min={startDate || undefined}
+          onChange={event => setTargetEndDate(event.target.value)}
+        />
       </label>
 
-      <label className="field">
+      <label className="field" htmlFor={priorityId}>
         <span>Priority</span>
-        <select value={priority} onChange={event => setPriority(event.target.value as PriorityLevel)}>
-          {priorities.map(level => <option key={level} value={level}>{level}</option>)}
+        <select
+          id={priorityId}
+          value={priority}
+          onChange={event => setPriority(event.target.value as PriorityLevel)}
+        >
+          {priorities.map(level => (
+            <option key={level} value={level}>
+              {level}
+            </option>
+          ))}
         </select>
       </label>
 
-      <label className="field">
+      <label className="field" htmlFor={riskLevelId}>
         <span>Risk level</span>
-        <select value={riskLevel} onChange={event => setRiskLevel(event.target.value as RiskLevel)}>
-          {riskLevels.map(level => <option key={level} value={level}>{level}</option>)}
+        <select
+          id={riskLevelId}
+          value={riskLevel}
+          onChange={event => setRiskLevel(event.target.value as RiskLevel)}
+        >
+          {riskLevels.map(level => (
+            <option key={level} value={level}>
+              {level}
+            </option>
+          ))}
         </select>
       </label>
 
       <label className="checkbox-field">
-        <input type="checkbox" checked={evidenceRequired} onChange={event => setEvidenceRequired(event.target.checked)} />
+        <input
+          type="checkbox"
+          checked={evidenceRequired}
+          onChange={event => setEvidenceRequired(event.target.checked)}
+        />
         Evidence required before closure
       </label>
 
       <label className="checkbox-field">
-        <input type="checkbox" checked={closureApprovalRequired} onChange={event => setClosureApprovalRequired(event.target.checked)} />
+        <input
+          type="checkbox"
+          checked={closureApprovalRequired}
+          onChange={event => setClosureApprovalRequired(event.target.checked)}
+        />
         Closure approval required
       </label>
 
       <div className="form-actions full-width">
-        <button type="button" className="ghost-button" onClick={onCancel}>Cancel</button>
-        <button type="submit" className="primary-button" disabled={!canSubmit || saving}>{saving ? 'Saving…' : 'Create Draft Action Plan'}</button>
+        <button type="button" className="ghost-button" onClick={onCancel}>
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="primary-button"
+          disabled={!canSubmit || saving}
+        >
+          {saving ? 'Saving…' : 'Create Draft Action Plan'}
+        </button>
       </div>
     </form>
   );

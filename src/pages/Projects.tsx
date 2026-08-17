@@ -44,6 +44,8 @@ export function Projects({ setPage }: ProjectsProps) {
   const canCreateProject = auth.roles.some(role => ['super_admin', 'executive', 'governance_admin', 'division_head', 'department_manager'].includes(role.role));
   const [filters, setFilters] = useState(readDashboardFilters);
   const [formOpen, setFormOpen] = useState(false);
+  const [formDirty, setFormDirty] = useState(false);
+  const [formSubmitting, setFormSubmitting] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectRow | null>(null);
   const portfolio = useAsyncData(async () => {
@@ -153,8 +155,32 @@ export function Projects({ setPage }: ProjectsProps) {
         <div className="span-12"><DashboardSection title={t('projects.v11.recentActivity', 'Recent project activity')}><DashboardWidgetState state="unavailable" message={t('projects.v11.activityUnavailable', 'No trustworthy cross-project activity feed is configured; open a project control file for its governed detail.')} /></DashboardSection></div>
       </div>
 
-      <Modal size="large" open={formOpen} title={t('projects.v11.createActionPlan', 'Create controlled action plan')} onClose={() => setFormOpen(false)}>
-        <ActionPlanForm organizationId={organizationId} departments={references.data?.departments || []} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void portfolio.refresh(); }} />
+      <Modal
+        size="large"
+        open={formOpen}
+        isDirty={formDirty}
+        isSubmitting={formSubmitting}
+        title={t('projects.v11.createActionPlan', 'Create controlled action plan')}
+        onClose={() => {
+          setFormOpen(false);
+          setFormDirty(false);
+        }}
+      >
+        <ActionPlanForm
+          organizationId={organizationId}
+          departments={references.data?.departments || []}
+          onDirtyChange={setFormDirty}
+          onSubmittingChange={setFormSubmitting}
+          onCancel={() => {
+            setFormOpen(false);
+            setFormDirty(false);
+          }}
+          onCreated={() => {
+            setFormOpen(false);
+            setFormDirty(false);
+            void portfolio.refresh();
+          }}
+        />
       </Modal>
       <Modal size="workspace" open={detailOpen} title={t('projects.v11.controlFile', 'Project control file')} onClose={() => setDetailOpen(false)}>
         {selectedProject ? <ProjectDetail

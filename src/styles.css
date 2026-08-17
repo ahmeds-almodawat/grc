@@ -432,6 +432,52 @@ td {
 .modal-card--workspace { width: min(1440px, 100%); height: min(92vh, 960px); }
 .modal-body { min-height: 0; overflow: auto; padding: 2px; }
 .modal-footer { position: sticky; bottom: 0; z-index: 2; margin: 18px -22px -22px; padding: 14px 22px; border-top: 1px solid var(--ui-border, #dbe3ef); background: var(--ui-surface-solid, #fff); }
+.modal-discard-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 100;
+  border-radius: inherit;
+  animation: modalDiscardFadeIn 0.15s ease-out;
+}
+.modal-discard-card {
+  width: min(420px, 100%);
+  background: var(--ui-surface-solid, #fff);
+  border: 1px solid var(--ui-border, #dbe3ef);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--ui-ink, #172033);
+}
+.modal-discard-card h5 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ui-ink, #172033);
+}
+.modal-discard-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ui-muted, #64748b);
+  line-height: 1.5;
+}
+.modal-discard-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+@keyframes modalDiscardFadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
 .modal-header {
   display: flex;
   align-items: center;
