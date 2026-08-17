@@ -278,6 +278,28 @@ function WorkflowQueue({ rows }: { rows: OvrWorkflowQueueRow[] }) {
   );
 }
 
+const INITIAL_OVR_FORM_STATE = {
+  logging_number: '',
+  occurrence_date: '',
+  occurrence_time: '',
+  occurrence_location: '',
+  involved_person_type: 'patient',
+  person_involved_name: '',
+  mrn_or_id_no: '',
+  age: '',
+  sex: '',
+  department_id: '',
+  notification_at: '',
+  physical_condition: '',
+  mental_condition: '',
+  pre_occurrence_condition_flags: [] as string[],
+  brief_description: '',
+  occurrence_category: 'medications',
+  severity_level: 'level_1' as OvrSeverityLevel,
+  injury_type: '',
+  create_linked_action_plan: true
+};
+
 export function OVR() {
   const { t, language } = useI18n();
   const auth = useAuth();
@@ -290,6 +312,7 @@ export function OVR() {
   const profiles = useAsyncData(getProfiles, []);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const isSubmittingOvrRef = useRef(false);
   const [message, setMessage] = useState<string | null>(null);
   const [selectedReport, setSelectedReport] = useState<OvrReportRow | null>(null);
   const [evidenceUploadReport, setEvidenceUploadReport] = useState<OvrReportRow | null>(null);
@@ -326,27 +349,7 @@ export function OVR() {
     confirmed_severity_level: 'level_1' as OvrSeverityLevel,
     corrective_action_due_date: ''
   });
-  const [form, setForm] = useState({
-    logging_number: '',
-    occurrence_date: '',
-    occurrence_time: '',
-    occurrence_location: '',
-    involved_person_type: 'patient',
-    person_involved_name: '',
-    mrn_or_id_no: '',
-    age: '',
-    sex: '',
-    department_id: '',
-    notification_at: '',
-    physical_condition: '',
-    mental_condition: '',
-    pre_occurrence_condition_flags: [] as string[],
-    brief_description: '',
-    occurrence_category: 'medications',
-    severity_level: 'level_1' as OvrSeverityLevel,
-    injury_type: '',
-    create_linked_action_plan: true
-  });
+  const [form, setForm] = useState({ ...INITIAL_OVR_FORM_STATE });
 
   const organizationId = organizations.data?.[0]?.id || '';
   useEffect(() => {
@@ -475,6 +478,18 @@ export function OVR() {
     convergenceRefreshTimers.current.clear();
   }, []);
 
+  const openNewReportForm = () => {
+    setForm({ ...INITIAL_OVR_FORM_STATE });
+    setMessage(null);
+    setShowForm(true);
+  };
+
+  const closeNewReportForm = () => {
+    setForm({ ...INITIAL_OVR_FORM_STATE });
+    setMessage(null);
+    setShowForm(false);
+  };
+
   const openReport = (row: OvrReportRow) => {
     setSelectedReport(row);
     setWorkflowMessage(null);
@@ -501,10 +516,9 @@ export function OVR() {
     }));
   };
 
-  
-
   const saveReport = async (status: 'draft' | 'submitted') => {
     setMessage(null);
+    if (isSubmittingOvrRef.current) return;
     if (!form.brief_description.trim()) {
       setMessage(t('ovr.validationBriefRequired'));
       return;
@@ -513,6 +527,7 @@ export function OVR() {
       setMessage(t('ovr.noActiveOrganization'));
       return;
     }
+    isSubmittingOvrRef.current = true;
     setSaving(true);
     try {
       if (form.brief_description.includes(V99_SCENARIO_TAG)) {
@@ -522,6 +537,7 @@ export function OVR() {
             : 'ovr_same_department',
         );
         setMessage(t('ovr.submittedMessage'));
+        setForm({ ...INITIAL_OVR_FORM_STATE });
         setShowForm(false);
         reports.refresh();
         summary.refresh();
@@ -553,6 +569,7 @@ export function OVR() {
         status
       });
       setMessage(status === 'submitted' ? t('ovr.submittedMessage') : t('ovr.draftMessage'));
+      setForm({ ...INITIAL_OVR_FORM_STATE });
       setShowForm(false);
       reports.refresh();
       summary.refresh();
@@ -561,6 +578,7 @@ export function OVR() {
     } catch (error) {
       setMessage(error instanceof Error ? error.message : t('ovr.saveFailed'));
     } finally {
+      isSubmittingOvrRef.current = false;
       setSaving(false);
     }
   };
@@ -764,9 +782,9 @@ export function OVR() {
         action={!isReadOnly ? (
           <div className="inline-actions">
             
-            <button className="primary-button" onClick={() => setShowForm(value => !value)}>
+            <button className="primary-button" onClick={() => (showForm ? closeNewReportForm() : openNewReportForm())}>
               <FilePlus2 size={17} />
-              {t('ovr.newReport')}
+              {showForm ? t('common.cancel', 'Cancel') : t('ovr.newReport')}
             </button>
           </div>
         ) : null}
@@ -919,8 +937,9 @@ export function OVR() {
           </label>
 
           <div className="form-actions">
-            <button className="ghost-button" disabled={saving} onClick={() => saveReport('draft')}>{t('ovr.saveDraft')}</button>
-            <button className="primary-button" disabled={saving} onClick={() => saveReport('submitted')}>{t('ovr.submit')}</button>
+            <button className="ghost-button" type="button" disabled={saving} onClick={closeNewReportForm}>{t('common.cancel', 'Cancel')}</button>
+            <button className="ghost-button" type="button" disabled={saving} onClick={() => saveReport('draft')}>{t('ovr.saveDraft')}</button>
+            <button className="primary-button" type="button" disabled={saving} onClick={() => saveReport('submitted')}>{saving ? t('common.saving', 'Saving…') : t('ovr.submit')}</button>
           </div>
         </div>
       ) : null}
