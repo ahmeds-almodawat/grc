@@ -753,6 +753,21 @@ export async function getSensitiveEvidenceRegister(): Promise<SensitiveEvidenceR
   return filterScenarioLabRows(rows.length ? rows : liveEmptySensitiveEvidenceRegister);
 }
 
+export async function getEvidenceGateWaivers(): Promise<EvidenceGateWaiverRow[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('evidence_gate_waivers')
+      .select('*')
+      .order('requested_at', { ascending: false });
+    if (error) throw error;
+    return (data as unknown as EvidenceGateWaiverRow[]) || [];
+  } catch (error) {
+    logFallback('Evidence gate waivers', error);
+    return [];
+  }
+}
+
 
 export async function getEscalations(): Promise<EscalationRow[]> {
   if (!supabase) return emptyLiveArray<any>();

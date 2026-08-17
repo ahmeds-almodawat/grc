@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { DataState } from '../components/DataState';
 import { EntityTable } from '../components/EntityTable';
+import { GovernedDecisionDialog } from '../components/GovernedDecisionDialog';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
 import { GovernedEvidenceAccess } from '../components/GovernedEvidenceAccess';
@@ -21,6 +22,11 @@ export function Approvals() {
   const [activeFilter, setActiveFilter] = useState<ApprovalFilter>('all');
   const [search, setSearch] = useState('');
   const [selectedApproval, setSelectedApproval] = useState<ApprovalRow | null>(null);
+  const [decisionModal, setDecisionModal] = useState<{
+    row: ApprovalRow;
+    status: 'approved' | 'rejected';
+  } | null>(null);
+
   const approvalEvidence = useAsyncData(
     () => selectedApproval && ['project', 'milestone', 'task'].includes(selectedApproval.item_type)
       ? getEvidenceForItem(selectedApproval.item_type as 'project' | 'milestone' | 'task', selectedApproval.item_id)
@@ -48,17 +54,16 @@ export function Approvals() {
     setSelectedApproval(null);
   };
 
-  async function handleDecision(row: ApprovalRow, status: 'approved' | 'rejected') {
+  async function executeDecision(values: Record<string, any>) {
+    if (!decisionModal) return;
+    const { row, status } = decisionModal;
     const defaultNote = status === 'approved' ? t('approvals.defaultApprovalNote') : t('approvals.defaultRejectionNote');
-    const note = status === 'rejected' ? window.prompt(t('approvals.rejectionReason'), defaultNote) : window.prompt(t('approvals.approvalNote'), defaultNote);
-    if (note === null) return;
+    const note = values.note?.trim() || defaultNote;
     setError(null);
     setBusyId(row.id);
     try {
-      await decideApproval(row.id, status, note || defaultNote);
+      await decideApproval(row.id, status, note);
       void approvals.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('approvals.updateFailed'));
     } finally {
       setBusyId(null);
     }
@@ -118,8 +123,8 @@ export function Approvals() {
                 header: t('approvals.decision'),
                 render: row => row.status === 'pending' ? (
                   <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => void handleDecision(row, 'approved')}>{t('approvals.approve')}</button>
-                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => void handleDecision(row, 'rejected')}>{t('approvals.reject')}</button>
+                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => setDecisionModal({ row, status: 'approved' })}>{t('approvals.approve')}</button>
+                    <button className="ghost-button compact-button" disabled={busyId === row.id} onClick={() => setDecisionModal({ row, status: 'rejected' })}>{t('approvals.reject')}</button>
                   </div>
                 ) : '—'
               }
@@ -152,6 +157,75 @@ export function Approvals() {
           </div>
         ) : null}
       </div>
+
+      <GovernedDecisionDialog
+        open={Boolean(decisionModal)}
+        title={
+          decisionModal?.status === 'approved'
+            ? t('approvals.approveDecisionTitle')
+            : t('approvals.rejectDecisionTitle')
+        }
+        decisionVariant={decisionModal?.status === 'approved' ? 'approve' : 'reject'}
+        confirmLabel={
+          decisionModal?.status === 'approved'
+            ? t('approvals.approve')
+            : t('approvals.reject')
+        }
+        contextItems={
+          decisionModal
+            ? [
+                {
+                  label: t('common.type'),
+                  value: t(`itemType.${decisionModal.row.item_type}`, humanize(decisionModal.row.item_type)),
+                },
+                {
+                  label: t('common.item'),
+                  value: decisionModal.row.item_title,
+                },
+                {
+                  label: t('approvals.requestedBy'),
+                  value: decisionModal.row.requested_by_name || '—',
+                },
+                {
+                  label: t('approvals.requested'),
+                  value: formatDate(decisionModal.row.requested_at),
+                },
+                {
+                  label: t('common.status'),
+                  value: <StatusBadge status={t(`status.${decisionModal.row.status}`, humanize(decisionModal.row.status))} />,
+                },
+              ]
+            : []
+        }
+        fields={
+          decisionModal?.status === 'approved'
+            ? [
+                {
+                  id: 'note',
+                  label: t('approvals.noteLabel'),
+                  type: 'textarea',
+                  defaultValue: t('approvals.defaultApprovalNote'),
+                  placeholder: t('approvals.defaultApprovalNote'),
+                  required: false,
+                  autoFocus: true,
+                },
+              ]
+            : [
+                {
+                  id: 'note',
+                  label: t('approvals.rejectionReason'),
+                  type: 'textarea',
+                  defaultValue: '',
+                  placeholder: t('approvals.defaultRejectionNote'),
+                  required: true,
+                  hint: t('approvals.rejectionReasonRequired'),
+                  autoFocus: true,
+                },
+              ]
+        }
+        onClose={() => setDecisionModal(null)}
+        onSubmit={executeDecision}
+      />
     </section>
   );
 }
