@@ -7,11 +7,11 @@ This is a deterministic static replay of the ordered migration chain through rev
 ## Summary
 
 - Direct browser RPCs: 0
-- Direct browser views: 355
+- Direct browser views: 356
 - Direct browser materialized views: 0
 - Unsafe surfaces: 0
 - Search transport: authenticated_edge_bridge
-- Reviewed restricted migration 176–197 SECURITY DEFINER routines: 75
+- Reviewed restricted migration 176–197 SECURITY DEFINER routines: 76
 - Target credential-gate migration present: yes
 
 ## search_grc_global
@@ -27,9 +27,9 @@ The retained live Patch 83Q inventory permits exactly two documented read-only h
 | `public.current_user_org_id()` | retained_patch83q_live_catalog | no | no | yes | allowed | Read-only caller organization identity helper retained by Patch 83Q. |
 | `public.has_any_role(text[])` | retained_patch83q_live_catalog | yes | yes | yes | allowed | Read-only RLS role decision helper retained by Patch 83Q. |
 | `public.f1r2_create_work_item(p_actor_id uuid,p_item_type text,p_payload jsonb)` | migration197_service_role_acl_review | no | no | no | allowed |  |
-| `public.patch83u_credential_access_allowed()` | target_migrations_171_203 | no | no | yes | allowed | Credential version, state, email, and session freshness decision used by restrictive RLS. |
-| `public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)` | target_migrations_171_203 | no | no | yes | allowed | Same-organization credential-active profile update decision used by restrictive RLS. |
-| `public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)` | target_migrations_171_203 | no | no | yes | allowed | Credential-active canonical role/scope mutation decision used by restrictive RLS. |
+| `public.patch83u_credential_access_allowed()` | target_migrations_171_204 | no | no | yes | allowed | Credential version, state, email, and session freshness decision used by restrictive RLS. |
+| `public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)` | target_migrations_171_204 | no | no | yes | allowed | Same-organization credential-active profile update decision used by restrictive RLS. |
+| `public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)` | target_migrations_171_204 | no | no | yes | allowed | Credential-active canonical role/scope mutation decision used by restrictive RLS. |
 
 ### Reviewed restricted routines from migrations 176–197
 
@@ -46,7 +46,7 @@ These routines are not reachable by browser roles. They are listed explicitly so
 | `public.create_governed_sop_draft(p_actor_id uuid, p_organization_id uuid, p_title_en text, p_title_ar text, p_process_name_en text, p_process_name_ar text, p_purpose_en text, p_purpose_ar text, p_process_owner_id uuid, p_primary_policy_version_id uuid default null, p_governance_link_state text default 'linked', p_scope_en text default null, p_scope_ar text default null, p_department_id uuid default null, p_criticality_level text default 'medium', p_confidentiality_level text default 'internal', p_training_required boolean default false, p_acknowledgment_required boolean default false, p_competency_assessment_required boolean default false, p_acknowledgment_sla_days integer default 30, p_training_renewal_months integer default 12, p_content_mode text default 'structured', p_procedure_steps jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb, p_definitions jsonb default '[]'::jsonb, p_role_responsibilities jsonb default '[]'::jsonb, p_monitoring_kpis jsonb default '[]'::jsonb)` | migration203_service_role_acl_review | yes | service_role_only | `supabase/migrations/203_governed_sop_structured_content_expansion.sql:289` |
 | `public.create_governed_sop_draft(p_actor_id uuid, p_organization_id uuid, p_title_en text, p_title_ar text, p_process_name_en text, p_process_name_ar text, p_purpose_en text, p_purpose_ar text, p_process_owner_id uuid, p_primary_policy_version_id uuid default null, p_governance_link_state text default 'linked', p_scope_en text default null, p_scope_ar text default null, p_department_id uuid default null, p_criticality_level text default 'medium', p_confidentiality_level text default 'internal', p_training_required boolean default false, p_acknowledgment_required boolean default false, p_competency_assessment_required boolean default false, p_acknowledgment_sla_days integer default 30, p_training_renewal_months integer default 12, p_content_mode text default 'structured', p_procedure_steps jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:322` |
 | `public.decide_policy_sop_exception(p_actor_id uuid, p_exception_id uuid, p_decision text, p_decision_note text default null)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1456` |
-| `public.enforce_policy_sop_version_immutability()` | migration203_service_role_acl_review | yes | service_role_only | `supabase/migrations/203_governed_sop_structured_content_expansion.sql:193` |
+| `public.enforce_policy_sop_version_immutability()` | migration204_service_role_acl_review | yes | service_role_only | `supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:101` |
 | `public.f1r2_active_actor(p_actor_id uuid)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:77` |
 | `public.f1r2_actor_can_manage_item(p_actor_id uuid,p_item_type text,p_item_id uuid)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:135` |
 | `public.f1r2_actor_has_ovr_evidence_entitlement(p_actor_id uuid,p_ovr_report_id uuid)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1721` |
@@ -104,14 +104,15 @@ These routines are not reachable by browser roles. They are listed explicitly so
 | `public.request_policy_sop_exception(p_actor_id uuid, p_version_id uuid, p_reason text, p_scope_description text, p_start_date date, p_end_date date, p_risk_summary text default null, p_compensating_controls text default null)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1383` |
 | `public.retire_governed_document(p_actor_id uuid, p_document_id uuid, p_retirement_reason text)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1234` |
 | `public.save_governed_policy_draft(p_actor_id uuid, p_version_id uuid, p_title_en text, p_title_ar text, p_purpose_en text, p_purpose_ar text, p_policy_statement_en text, p_policy_statement_ar text, p_scope_en text, p_scope_ar text, p_principles_en text, p_principles_ar text, p_exceptions_summary_en text, p_exceptions_summary_ar text, p_non_compliance_escalation_en text, p_non_compliance_escalation_ar text, p_requirements jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:485` |
+| `public.save_governed_sop_draft(p_actor_id uuid, p_version_id uuid, p_title_en text default null, p_title_ar text default null, p_process_name_en text default null, p_process_name_ar text default null, p_purpose_en text default null, p_purpose_ar text default null, p_process_owner_id uuid default null, p_primary_policy_version_id uuid default null, p_governance_link_state text default null, p_scope_en text default null, p_scope_ar text default null, p_training_required boolean default null, p_acknowledgment_required boolean default null, p_competency_assessment_required boolean default null, p_acknowledgment_sla_days integer default null, p_training_renewal_months integer default null, p_procedure_steps jsonb default null, p_department_scopes uuid[] default null, p_role_scopes jsonb default null, p_definitions jsonb default null, p_role_responsibilities jsonb default null, p_monitoring_kpis jsonb default null, p_risk_links jsonb default null, p_accreditation_links jsonb default null)` | migration204_service_role_acl_review | yes | service_role_only | `supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:424` |
 | `public.save_governed_sop_draft(p_actor_id uuid, p_version_id uuid, p_title_en text, p_title_ar text, p_process_name_en text, p_process_name_ar text, p_purpose_en text, p_purpose_ar text, p_process_owner_id uuid, p_primary_policy_version_id uuid, p_governance_link_state text, p_scope_en text, p_scope_ar text, p_training_required boolean default false, p_acknowledgment_required boolean default false, p_competency_assessment_required boolean default false, p_acknowledgment_sla_days integer default 30, p_training_renewal_months integer default 12, p_procedure_steps jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb, p_definitions jsonb default '[]'::jsonb, p_role_responsibilities jsonb default '[]'::jsonb, p_monitoring_kpis jsonb default '[]'::jsonb)` | migration203_service_role_acl_review | yes | service_role_only | `supabase/migrations/203_governed_sop_structured_content_expansion.sql:526` |
 | `public.save_governed_sop_draft(p_actor_id uuid, p_version_id uuid, p_title_en text, p_title_ar text, p_process_name_en text, p_process_name_ar text, p_purpose_en text, p_purpose_ar text, p_process_owner_id uuid, p_primary_policy_version_id uuid, p_governance_link_state text, p_scope_en text, p_scope_ar text, p_training_required boolean default false, p_acknowledgment_required boolean default false, p_competency_assessment_required boolean default false, p_acknowledgment_sla_days integer default 30, p_training_renewal_months integer default 12, p_procedure_steps jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:646` |
-| `public.start_governed_document_revision(p_actor_id uuid, p_source_version_id uuid, p_revision_type text default 'minor', p_revision_reason text default null)` | migration203_service_role_acl_review | yes | service_role_only | `supabase/migrations/203_governed_sop_structured_content_expansion.sql:896` |
+| `public.start_governed_document_revision(p_actor_id uuid, p_source_version_id uuid, p_revision_type text default 'minor', p_revision_reason text default null)` | migration204_service_role_acl_review | yes | service_role_only | `supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:885` |
 | `public.submit_governed_document_for_review(p_actor_id uuid, p_version_id uuid, p_submission_note text default null)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:978` |
 | `public.trigger_governed_document_review(p_actor_id uuid, p_document_id uuid, p_trigger_type text, p_source_entity_type text default null, p_source_entity_id uuid default null, p_due_date date default (current_date + interval '30 days')` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1278` |
 | `public.validate_department_scope()` | migration201_service_role_acl_review | yes | service_role_only | `supabase/migrations/201_governed_policy_sop_core_foundation.sql:305` |
 | `public.validate_policy_version_type()` | migration201_service_role_acl_review | yes | service_role_only | `supabase/migrations/201_governed_policy_sop_core_foundation.sql:169` |
-| `public.validate_sop_version_type()` | migration203_service_role_acl_review | yes | service_role_only | `supabase/migrations/203_governed_sop_structured_content_expansion.sql:84` |
+| `public.validate_sop_version_type()` | migration204_service_role_acl_review | yes | service_role_only | `supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:153` |
 
 ## Materialized views
 
@@ -442,6 +443,7 @@ No browser-referenced or ACL-reachable materialized view exists in the target re
 | `v_sensitive_activity_timeline` | view | yes | 3 | yes | approved_browser_read_view |
 | `v_setup_readiness_checklist` | view | yes | 11 | yes | approved_browser_read_view |
 | `v_sop_procedure_step_matrix` | view | yes | 4 | yes | approved_browser_read_view |
+| `v_sop_traceability_matrix` | view | yes | 11 | yes | approved_browser_read_view |
 | `v_staging_validation_checks` | view | yes | 2 | yes | approved_browser_read_view |
 | `v_staging_validation_summary` | view | yes | 4 | yes | approved_browser_read_view |
 | `v_uat_findings_queue` | view | yes | 1 | yes | approved_browser_read_view |
@@ -606,7 +608,7 @@ The audited legacy base-table correction is exact and grants SELECT only after R
 | `v50_query_optimization_items` | credential-gated global metadata | yes | yes |
 | `v50_scale_test_plans` | credential-gated global metadata | yes | yes |
 
-192 direct browser views rely on an ACL outside an explicit per-view repository GRANT. Their call sites prove product intent; final hosted catalog ACL evidence remains mandatory.
+193 direct browser views rely on an ACL outside an explicit per-view repository GRANT. Their call sites prove product intent; final hosted catalog ACL evidence remains mandatory.
 
 ## Proof command
 

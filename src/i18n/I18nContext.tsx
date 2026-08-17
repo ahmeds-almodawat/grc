@@ -2464,6 +2464,21 @@ const translations: TranslationMap = {
   'risks.decision.inherentScore': { en: 'Inherent score', ar: 'الدرجة الكامنة' },
   'risks.decision.residualScore': { en: 'Residual score', ar: 'الدرجة المتبقية' },
   'risks.decision.appetiteStatus': { en: 'Appetite status', ar: 'حالة تقبل المخاطر' },
+
+  // Governed SOP Traceability (v1.4-E2A)
+  'sop.tab.risksAndControls': { en: 'Risks & Controls', ar: 'المخاطر والضوابط' },
+  'sop.tab.accreditation': { en: 'Accreditation & Standards', ar: 'الاعتماد والمعايير' },
+  'sop.traceability.directRisks': { en: 'Direct Enterprise Risks', ar: 'المخاطر المؤسسية المباشرة' },
+  'sop.traceability.derivedControls': { en: 'Derived Controls', ar: 'الضوابط المشتقة' },
+  'sop.traceability.inheritedAccreditation': { en: 'Inherited from Policy', ar: 'موروث من السياسة' },
+  'sop.traceability.directAccreditation': { en: 'Direct Accreditation', ar: 'الاعتماد المباشر' },
+  'sop.traceability.relationship.mitigates': { en: 'Mitigates Risk', ar: 'يحد من الخطر' },
+  'sop.traceability.relationship.riskIfNotFollowed': { en: 'Risk if Not Followed', ar: 'مخاطر عدم الالتزام' },
+  'sop.traceability.relationship.operationalContext': { en: 'Operational Context', ar: 'سياق تشغيلي' },
+  'sop.traceability.strength.primary': { en: 'Primary Clause', ar: 'معيار رئيسي' },
+  'sop.traceability.strength.supporting': { en: 'Supporting Clause', ar: 'معيار داعم' },
+  'sop.traceability.strength.reference': { en: 'Reference', ar: 'مرجع استرشادي' },
+  'sop.traceability.strength.gap': { en: 'Identified Gap', ar: 'فجوة محددة' },
 };
 
 interface I18nContextValue {

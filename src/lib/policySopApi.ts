@@ -313,6 +313,80 @@ export interface EligibleGoverningPolicy {
   effective_date: string | null;
 }
 
+export interface SopRiskLink {
+  id?: string;
+  sequence_number: number;
+  risk_id: string;
+  risk_code?: string | null;
+  risk_title?: string | null;
+  risk_status?: string | null;
+  risk_level?: string | null;
+  relationship_type: 'mitigates' | 'risk_if_not_followed' | 'operational_context';
+  context_note_en?: string | null;
+  context_note_ar?: string | null;
+}
+
+export interface SopAccreditationLink {
+  id?: string;
+  sequence_number: number;
+  clause_id: string;
+  clause_code?: string | null;
+  clause_title?: string | null;
+  clause_title_ar?: string | null;
+  framework?: string | null;
+  standard_code?: string | null;
+  criticality?: string | null;
+  link_strength: 'primary' | 'supporting' | 'reference' | 'gap';
+  context_note_en?: string | null;
+  context_note_ar?: string | null;
+}
+
+export interface SopDerivedControl {
+  control_id: string;
+  control_code: string | null;
+  control_title: string;
+  control_type: string;
+  key_control: boolean;
+  step_sequences: number[];
+}
+
+export interface SopInheritedAccreditation {
+  clause_id: string;
+  clause_code: string;
+  clause_title: string;
+  clause_title_ar?: string | null;
+  standard_code: string;
+  framework: string;
+  criticality: string;
+  policy_requirement_en?: string | null;
+  policy_requirement_ar?: string | null;
+}
+
+export interface SopTraceabilityMatrixRow {
+  sop_version_id: string;
+  document_id: string;
+  organization_id: string;
+  document_code: string;
+  document_title: string;
+  version_number: number;
+  version_label: string;
+  item_type: 'risk' | 'control' | 'accreditation_clause';
+  provenance: 'direct_sop' | 'derived_step_control' | 'inherited_policy';
+  link_semantic: string;
+  link_id: string | null;
+  sequence_number: number;
+  target_id: string;
+  target_code: string;
+  target_title: string;
+  target_description: string | null;
+  target_status: string;
+  target_criticality: string | null;
+  framework_or_standard: string | null;
+  context_note_en: string | null;
+  context_note_ar: string | null;
+  step_sequences: number[] | null;
+}
+
 export interface DetailedSopRecord {
   document_id: string;
   organization_id: string;
@@ -367,6 +441,10 @@ export interface DetailedSopRecord {
   definitions: SopDefinition[];
   role_responsibilities: SopRoleResponsibility[];
   monitoring_kpis: SopMonitoringKpi[];
+  risk_links: SopRiskLink[];
+  accreditation_links: SopAccreditationLink[];
+  derived_controls: SopDerivedControl[];
+  inherited_accreditations: SopInheritedAccreditation[];
   department_scopes: string[];
   role_scopes: RoleScope[];
   review_events: DocumentReviewEvent[];
@@ -762,6 +840,75 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
       .eq('document_id', documentId)
       .order('version_number', { ascending: false });
 
+    // 15. Fetch direct risk links
+    const { data: riskLinks } = await supabase
+      .from('sop_version_risk_links')
+      .select('*, risks(id, risk_code, title, status, risk_level)')
+      .eq('sop_version_id', ver.id)
+      .order('sequence_number', { ascending: true });
+
+    // 16. Fetch direct accreditation links
+    const { data: accLinks } = await supabase
+      .from('sop_version_accreditation_links')
+      .select('*, accreditation_clauses(id, clause_code, clause_title, clause_title_ar, criticality, accreditation_standards(standard_code, framework))')
+      .eq('sop_version_id', ver.id)
+      .order('sequence_number', { ascending: true });
+
+    // 17. Derive controls from procedure steps
+    const derivedControlsMap = new Map<string, SopDerivedControl>();
+    (steps || []).forEach(s => {
+      if (s.required_control_id && s.control_library_items) {
+        const ctrl = s.control_library_items as unknown as { code?: string; title?: string; control_type?: string; key_control?: boolean };
+        if (!derivedControlsMap.has(s.required_control_id)) {
+          derivedControlsMap.set(s.required_control_id, {
+            control_id: s.required_control_id,
+            control_code: ctrl?.code || null,
+            control_title: ctrl?.title || 'Untitled Control',
+            control_type: ctrl?.control_type || 'preventive',
+            key_control: ctrl?.key_control ?? false,
+            step_sequences: [s.sequence_number]
+          });
+        } else {
+          derivedControlsMap.get(s.required_control_id)!.step_sequences.push(s.sequence_number);
+        }
+      }
+    });
+    const derived_controls = Array.from(derivedControlsMap.values());
+
+    // 18. Derive inherited policy accreditations if primary policy is linked
+    let inherited_accreditations: SopInheritedAccreditation[] = [];
+    if (details?.primary_policy_version_id) {
+      const { data: policyReqs } = await supabase
+        .from('policy_requirements')
+        .select('requirement_statement_en, requirement_statement_ar, linked_accreditation_clause_id, accreditation_clauses(id, clause_code, clause_title, clause_title_ar, criticality, accreditation_standards(standard_code, framework))')
+        .eq('policy_version_id', details.primary_policy_version_id)
+        .not('linked_accreditation_clause_id', 'is', null);
+
+      if (policyReqs) {
+        inherited_accreditations = policyReqs.map(pr => {
+          const cl = pr.accreditation_clauses as unknown as {
+            id: string;
+            clause_code: string;
+            clause_title: string;
+            clause_title_ar?: string;
+            criticality: string;
+            accreditation_standards?: { standard_code?: string; framework?: string };
+          };
+          return {
+            clause_id: cl?.id || pr.linked_accreditation_clause_id || '',
+            clause_code: cl?.clause_code || 'CLAUSE',
+            clause_title: cl?.clause_title || 'Untitled Clause',
+            clause_title_ar: cl?.clause_title_ar || null,
+            standard_code: cl?.accreditation_standards?.standard_code || 'STANDARD',
+            framework: cl?.accreditation_standards?.framework || 'CBAHI',
+            criticality: cl?.criticality || 'medium',
+            policy_requirement_en: pr.requirement_statement_en,
+            policy_requirement_ar: pr.requirement_statement_ar
+          };
+        });
+      }
+    }
+
     return {
       document_id: doc.id,
       organization_id: doc.organization_id,
@@ -870,6 +1017,47 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
           description_ar: k.description_ar
         };
       }),
+      risk_links: (riskLinks || []).map(rl => {
+        const r = rl.risks as unknown as { id: string; risk_code?: string; title?: string; status?: string; risk_level?: string } | undefined;
+        return {
+          id: rl.id,
+          sequence_number: rl.sequence_number,
+          risk_id: rl.risk_id,
+          risk_code: r?.risk_code || null,
+          risk_title: r?.title || null,
+          risk_status: r?.status || null,
+          risk_level: r?.risk_level || null,
+          relationship_type: rl.relationship_type,
+          context_note_en: rl.context_note_en,
+          context_note_ar: rl.context_note_ar
+        };
+      }),
+      accreditation_links: (accLinks || []).map(al => {
+        const c = al.accreditation_clauses as unknown as {
+          id: string;
+          clause_code?: string;
+          clause_title?: string;
+          clause_title_ar?: string;
+          criticality?: string;
+          accreditation_standards?: { standard_code?: string; framework?: string };
+        } | undefined;
+        return {
+          id: al.id,
+          sequence_number: al.sequence_number,
+          clause_id: al.clause_id,
+          clause_code: c?.clause_code || null,
+          clause_title: c?.clause_title || null,
+          clause_title_ar: c?.clause_title_ar || null,
+          framework: c?.accreditation_standards?.framework || null,
+          standard_code: c?.accreditation_standards?.standard_code || null,
+          criticality: c?.criticality || null,
+          link_strength: al.link_strength,
+          context_note_en: al.context_note_en,
+          context_note_ar: al.context_note_ar
+        };
+      }),
+      derived_controls,
+      inherited_accreditations,
       department_scopes: (deptScopes || []).map(ds => ds.department_id),
       role_scopes: (roleScopes || []).map(rs => ({ id: rs.id, role_name: rs.role_name, job_title: rs.job_title })),
       review_events: (events || []).map(ev => ({
@@ -900,6 +1088,7 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
         requested_at: ex.requested_at,
         status: ex.status,
         decision_by: ex.decision_by,
+        decision_by_name: ex.decision_profiles?.full_name || null,
         decision_at: ex.decision_at,
         decision_note: ex.decision_note
       })),
@@ -919,17 +1108,24 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
         outcome_note: tr.outcome_note,
         completed_at: tr.completed_at
       })),
-      all_versions: allVers || []
+      all_versions: (allVers || []).map(av => ({
+        id: av.id,
+        version_number: av.version_number,
+        version_label: av.version_label,
+        is_current_version: av.is_current_version,
+        effective_date: av.effective_date,
+        expiry_date: av.expiry_date,
+        approved_at: av.approved_at,
+        locked_at: av.locked_at,
+        prepared_by: av.prepared_by,
+        revision_reason: av.revision_reason
+      }))
     };
   } catch (error) {
-    console.error('[PolicySopApi] getGovernedSopDetail error:', error);
+    console.error('[PolicySopApi] fetchGovernedSopWorkspace failed:', error);
     return null;
   }
 }
-
-// ----------------------------------------------------------------------------
-// Master Data Fetchers for Form Selectors
-// ----------------------------------------------------------------------------
 
 export async function listDepartments(): Promise<Array<{ id: string; name: string; code: string }>> {
   if (!supabase) return [];
@@ -967,6 +1163,92 @@ export async function listAccreditationClauses(): Promise<Array<{ id: string; cl
     const { data } = await supabase.from('accreditation_clauses').select('id, clause_number, title').order('clause_number');
     return data || [];
   } catch {
+    return [];
+  }
+}
+
+export async function fetchActiveRisks(organizationId: string): Promise<Array<{
+  id: string;
+  risk_code: string;
+  title: string;
+  status: string;
+  risk_level: string;
+  department_id?: string | null;
+  department_name?: string | null;
+}>> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('risks')
+      .select('id, risk_code, title, status, risk_level, department_id, departments(name)')
+      .eq('organization_id', organizationId)
+      .not('status', 'in', '("closed","cancelled")')
+      .order('risk_code', { ascending: true });
+
+    if (error) throw error;
+    return (data || []).map(r => ({
+      id: r.id,
+      risk_code: r.risk_code || 'UNASSIGNED',
+      title: r.title,
+      status: r.status,
+      risk_level: r.risk_level,
+      department_id: r.department_id,
+      department_name: (r.departments as unknown as { name?: string })?.name || null
+    }));
+  } catch (error) {
+    console.warn('[PolicySopApi] fetchActiveRisks fallback:', error);
+    return [];
+  }
+}
+
+export async function fetchAccreditationClauses(): Promise<Array<{
+  id: string;
+  clause_code: string;
+  clause_title: string;
+  clause_title_ar?: string | null;
+  framework: string;
+  standard_code: string;
+  criticality: string;
+}>> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('accreditation_clauses')
+      .select('id, clause_code, clause_title, clause_title_ar, criticality, accreditation_standards(standard_code, framework)')
+      .eq('active', true)
+      .order('clause_code', { ascending: true });
+
+    if (error) throw error;
+    return (data || []).map(c => {
+      const std = c.accreditation_standards as unknown as { standard_code?: string; framework?: string };
+      return {
+        id: c.id,
+        clause_code: c.clause_code,
+        clause_title: c.clause_title,
+        clause_title_ar: c.clause_title_ar || null,
+        framework: std?.framework || 'CBAHI',
+        standard_code: std?.standard_code || 'STD',
+        criticality: c.criticality || 'medium'
+      };
+    });
+  } catch (error) {
+    console.warn('[PolicySopApi] fetchAccreditationClauses fallback:', error);
+    return [];
+  }
+}
+
+export async function getSopTraceabilityMatrix(sopVersionId: string): Promise<SopTraceabilityMatrixRow[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('v_sop_traceability_matrix')
+      .select('*')
+      .eq('sop_version_id', sopVersionId)
+      .order('sequence_number', { ascending: true });
+    if (error) throw error;
+    return (data as unknown as SopTraceabilityMatrixRow[]) || [];
+  } catch (error) {
+    console.warn('[PolicySopApi] getSopTraceabilityMatrix fallback:', error);
     return [];
   }
 }
@@ -1093,6 +1375,8 @@ export interface SaveSopDraftInput {
   definitions?: SopDefinition[];
   role_responsibilities?: SopRoleResponsibility[];
   monitoring_kpis?: SopMonitoringKpi[];
+  risk_links?: SopRiskLink[];
+  accreditation_links?: SopAccreditationLink[];
 }
 
 export async function saveGovernedSopDraft(input: SaveSopDraftInput): Promise<{ success: boolean; version_id: string }> {
