@@ -28,7 +28,7 @@ create table if not exists public.sop_version_risk_links (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (sop_version_id, risk_id, relationship_type),
-  unique (sop_version_id, sequence_number)
+  unique (sop_version_id, sequence_number) deferrable initially deferred
 );
 
 create index if not exists idx_sop_risk_links_version on public.sop_version_risk_links(sop_version_id, sequence_number);
@@ -53,7 +53,7 @@ create table if not exists public.sop_version_accreditation_links (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (sop_version_id, clause_id),
-  unique (sop_version_id, sequence_number)
+  unique (sop_version_id, sequence_number) deferrable initially deferred
 );
 
 create index if not exists idx_sop_accreditation_links_version on public.sop_version_accreditation_links(sop_version_id, sequence_number);
@@ -96,8 +96,47 @@ using (
 );
 
 -- ----------------------------------------------------------------------------
--- 4. Version Immutability Triggers
+-- 4. Version Immutability Triggers & Function Extension
 -- ----------------------------------------------------------------------------
+create or replace function public.enforce_policy_sop_version_immutability()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_version_id uuid;
+  v_locked_at timestamptz;
+  v_approved_at timestamptz;
+begin
+  if TG_TABLE_NAME in ('governed_policy_details', 'governed_sop_details', 'document_version_department_scope', 'document_version_role_scope') then
+    v_version_id := coalesce(NEW.version_id, OLD.version_id);
+  elsif TG_TABLE_NAME = 'policy_requirements' then
+    v_version_id := coalesce(NEW.policy_version_id, OLD.policy_version_id);
+  elsif TG_TABLE_NAME in (
+    'sop_procedure_steps', 'sop_definitions', 'sop_role_responsibilities',
+    'sop_monitoring_kpis', 'sop_version_risk_links', 'sop_version_accreditation_links'
+  ) then
+    v_version_id := coalesce(NEW.sop_version_id, OLD.sop_version_id);
+  end if;
+
+  select v.locked_at, v.approved_at
+  into v_locked_at, v_approved_at
+  from public.document_versions v
+  where v.id = v_version_id;
+
+  -- A version is immutable when locked or approved
+  if v_locked_at is not null or v_approved_at is not null then
+    raise exception 'PATCH201_VERSION_IMMUTABLE_LOCKED';
+  end if;
+
+  if TG_OP = 'DELETE' then
+    return OLD;
+  end if;
+  return NEW;
+end;
+$$;
+
 drop trigger if exists trg_immutability_sop_version_risk_links on public.sop_version_risk_links;
 create trigger trg_immutability_sop_version_risk_links
 before insert or update or delete on public.sop_version_risk_links
@@ -248,7 +287,7 @@ select
   d.id as document_id,
   d.organization_id,
   d.document_code,
-  d.title as document_title,
+  d.document_title,
   v.version_number,
   v.version_label,
   'risk'::text as item_type,
@@ -279,7 +318,7 @@ select
   d.id as document_id,
   d.organization_id,
   d.document_code,
-  d.title as document_title,
+  d.document_title,
   v.version_number,
   v.version_label,
   'control'::text as item_type,
@@ -302,7 +341,7 @@ join public.document_versions v on v.id = st.sop_version_id
 join public.controlled_documents d on d.id = v.document_id
 join public.control_library_items ctrl on ctrl.id = st.required_control_id
 where st.required_control_id is not null
-group by v.id, d.id, d.organization_id, d.document_code, d.title, v.version_number, v.version_label, ctrl.id, ctrl.control_code, ctrl.title, ctrl.description, ctrl.control_type, ctrl.is_active, ctrl.key_control, ctrl.standard_reference
+group by v.id, d.id, d.organization_id, d.document_code, d.document_title, v.version_number, v.version_label, ctrl.id, ctrl.control_code, ctrl.title, ctrl.description, ctrl.control_type, ctrl.is_active, ctrl.key_control, ctrl.standard_reference
 
 union all
 
@@ -312,7 +351,7 @@ select
   d.id as document_id,
   d.organization_id,
   d.document_code,
-  d.title as document_title,
+  d.document_title,
   v.version_number,
   v.version_label,
   'accreditation_clause'::text as item_type,
@@ -344,7 +383,7 @@ select
   d.id as document_id,
   d.organization_id,
   d.document_code,
-  d.title as document_title,
+  d.document_title,
   v.version_number,
   v.version_label,
   'accreditation_clause'::text as item_type,
@@ -369,7 +408,7 @@ join public.policy_requirements pr on pr.policy_version_id = sd.primary_policy_v
 join public.accreditation_clauses c on c.id = pr.linked_accreditation_clause_id
 join public.accreditation_standards s on s.id = c.standard_id
 where sd.primary_policy_version_id is not null and pr.linked_accreditation_clause_id is not null
-group by v.id, d.id, d.organization_id, d.document_code, d.title, v.version_number, v.version_label, c.id, c.clause_code, c.clause_title, c.clause_description, c.active, c.criticality, s.standard_code, s.framework, pr.requirement_statement_en, pr.requirement_statement_ar;
+group by v.id, d.id, d.organization_id, d.document_code, d.document_title, v.version_number, v.version_label, c.id, c.clause_code, c.clause_title, c.clause_description, c.active, c.criticality, s.standard_code, s.framework, pr.requirement_statement_en, pr.requirement_statement_ar;
 
 comment on view public.v_sop_traceability_matrix is
   'Migration 204: Unified read-only Governed SOP traceability matrix distinguishing Direct SOP, Derived Step Control, and Inherited Policy provenance.';
@@ -385,30 +424,30 @@ drop function if exists public.save_governed_sop_draft(
 create or replace function public.save_governed_sop_draft(
   p_actor_id uuid,
   p_version_id uuid,
-  p_title_en text,
-  p_title_ar text,
-  p_process_name_en text,
-  p_process_name_ar text,
-  p_purpose_en text,
-  p_purpose_ar text,
-  p_process_owner_id uuid,
-  p_primary_policy_version_id uuid,
-  p_governance_link_state text,
-  p_scope_en text,
-  p_scope_ar text,
-  p_training_required boolean default false,
-  p_acknowledgment_required boolean default false,
-  p_competency_assessment_required boolean default false,
-  p_acknowledgment_sla_days integer default 30,
-  p_training_renewal_months integer default 12,
-  p_procedure_steps jsonb default '[]'::jsonb,
-  p_department_scopes uuid[] default '{}'::uuid[],
-  p_role_scopes jsonb default '[]'::jsonb,
-  p_definitions jsonb default '[]'::jsonb,
-  p_role_responsibilities jsonb default '[]'::jsonb,
-  p_monitoring_kpis jsonb default '[]'::jsonb,
-  p_risk_links jsonb default '[]'::jsonb,
-  p_accreditation_links jsonb default '[]'::jsonb
+  p_title_en text default null,
+  p_title_ar text default null,
+  p_process_name_en text default null,
+  p_process_name_ar text default null,
+  p_purpose_en text default null,
+  p_purpose_ar text default null,
+  p_process_owner_id uuid default null,
+  p_primary_policy_version_id uuid default null,
+  p_governance_link_state text default null,
+  p_scope_en text default null,
+  p_scope_ar text default null,
+  p_training_required boolean default null,
+  p_acknowledgment_required boolean default null,
+  p_competency_assessment_required boolean default null,
+  p_acknowledgment_sla_days integer default null,
+  p_training_renewal_months integer default null,
+  p_procedure_steps jsonb default null,
+  p_department_scopes uuid[] default null,
+  p_role_scopes jsonb default null,
+  p_definitions jsonb default null,
+  p_role_responsibilities jsonb default null,
+  p_monitoring_kpis jsonb default null,
+  p_risk_links jsonb default null,
+  p_accreditation_links jsonb default null
 )
 returns jsonb
 language plpgsql
@@ -459,19 +498,14 @@ begin
   end if;
 
   -- 1. Update document root title
-  update public.controlled_documents set
-    title = p_title_en,
-    updated_at = now()
-  where id = v_doc_id;
+  if p_title_en is not null then
+    update public.controlled_documents set
+      document_title = p_title_en,
+      updated_at = now()
+    where id = v_doc_id;
+  end if;
 
-  -- 2. Update version root title
-  update public.document_versions set
-    title_en = p_title_en,
-    title_ar = p_title_ar,
-    updated_at = now()
-  where id = p_version_id;
-
-  -- 3. Upsert governed_sop_details
+  -- 2. Upsert governed_sop_details
   insert into public.governed_sop_details (
     version_id, title_en, title_ar, process_name_en, process_name_ar,
     purpose_en, purpose_ar, scope_en, scope_ar, process_owner_id,
@@ -480,317 +514,355 @@ begin
     acknowledgment_sla_days, training_renewal_months,
     content_mode, transcription_status, updated_at
   ) values (
-    p_version_id, p_title_en, p_title_ar, p_process_name_en, p_process_name_ar,
-    p_purpose_en, p_purpose_ar, p_scope_en, p_scope_ar, p_process_owner_id,
-    p_primary_policy_version_id, coalesce(p_governance_link_state, 'linked'),
-    coalesce(p_training_required, false), coalesce(p_acknowledgment_required, false),
+    p_version_id,
+    coalesce(p_title_en, 'Untitled SOP'),
+    p_title_ar,
+    coalesce(p_process_name_en, 'General Process'),
+    p_process_name_ar,
+    p_purpose_en,
+    p_purpose_ar,
+    p_scope_en,
+    p_scope_ar,
+    p_process_owner_id,
+    p_primary_policy_version_id,
+    coalesce(p_governance_link_state, case when p_primary_policy_version_id is not null then 'linked' else 'not_applicable' end),
+    coalesce(p_training_required, false),
+    coalesce(p_acknowledgment_required, false),
     coalesce(p_competency_assessment_required, false),
-    coalesce(p_acknowledgment_sla_days, 30), coalesce(p_training_renewal_months, 12),
-    'structured', 'not_required', now()
+    coalesce(p_acknowledgment_sla_days, 30),
+    coalesce(p_training_renewal_months, 12),
+    'structured',
+    'not_required',
+    now()
   )
   on conflict (version_id) do update set
-    title_en = excluded.title_en,
-    title_ar = excluded.title_ar,
-    process_name_en = excluded.process_name_en,
-    process_name_ar = excluded.process_name_ar,
-    purpose_en = excluded.purpose_en,
-    purpose_ar = excluded.purpose_ar,
-    scope_en = excluded.scope_en,
-    scope_ar = excluded.scope_ar,
-    process_owner_id = excluded.process_owner_id,
-    primary_policy_version_id = excluded.primary_policy_version_id,
-    governance_link_state = excluded.governance_link_state,
-    training_required = excluded.training_required,
-    acknowledgment_required = excluded.acknowledgment_required,
-    competency_assessment_required = excluded.competency_assessment_required,
-    acknowledgment_sla_days = excluded.acknowledgment_sla_days,
-    training_renewal_months = excluded.training_renewal_months,
+    title_en = coalesce(p_title_en, governed_sop_details.title_en),
+    title_ar = coalesce(p_title_ar, governed_sop_details.title_ar),
+    process_name_en = coalesce(p_process_name_en, governed_sop_details.process_name_en),
+    process_name_ar = coalesce(p_process_name_ar, governed_sop_details.process_name_ar),
+    purpose_en = coalesce(p_purpose_en, governed_sop_details.purpose_en),
+    purpose_ar = coalesce(p_purpose_ar, governed_sop_details.purpose_ar),
+    scope_en = coalesce(p_scope_en, governed_sop_details.scope_en),
+    scope_ar = coalesce(p_scope_ar, governed_sop_details.scope_ar),
+    process_owner_id = coalesce(p_process_owner_id, governed_sop_details.process_owner_id),
+    primary_policy_version_id = coalesce(p_primary_policy_version_id, governed_sop_details.primary_policy_version_id),
+    governance_link_state = coalesce(
+      p_governance_link_state,
+      case
+        when p_primary_policy_version_id is not null then 'linked'
+        when governed_sop_details.primary_policy_version_id is not null then governed_sop_details.governance_link_state
+        else 'not_applicable'
+      end
+    ),
+    training_required = coalesce(p_training_required, governed_sop_details.training_required),
+    acknowledgment_required = coalesce(p_acknowledgment_required, governed_sop_details.acknowledgment_required),
+    competency_assessment_required = coalesce(p_competency_assessment_required, governed_sop_details.competency_assessment_required),
+    acknowledgment_sla_days = coalesce(p_acknowledgment_sla_days, governed_sop_details.acknowledgment_sla_days),
+    training_renewal_months = coalesce(p_training_renewal_months, governed_sop_details.training_renewal_months),
     updated_at = now();
 
   -- 4. Reconcile Procedure Steps
-  select array_agg(id) into v_existing_step_ids
-  from public.sop_procedure_steps
-  where sop_version_id = p_version_id;
+  if p_procedure_steps is not null then
+    select array_agg(id) into v_existing_step_ids
+    from public.sop_procedure_steps
+    where sop_version_id = p_version_id;
 
-  for v_step in select * from jsonb_array_elements(coalesce(p_procedure_steps, '[]'::jsonb))
-  loop
-    v_item_id := nullif(v_step->>'id', '')::uuid;
-    if v_item_id is not null then
-      if v_existing_step_ids is not null and not (v_item_id = any(v_existing_step_ids)) then
-        raise exception 'PATCH202_CROSS_VERSION_CHILD_ID_DENIED';
+    for v_step in select * from jsonb_array_elements(p_procedure_steps)
+    loop
+      v_item_id := nullif(v_step->>'id', '')::uuid;
+      if v_item_id is not null then
+        if not (v_item_id = any(coalesce(v_existing_step_ids, '{}'::uuid[]))) then
+          raise exception 'PATCH202_CROSS_VERSION_CHILD_ID_DENIED';
+        end if;
+        v_payload_step_ids := array_append(v_payload_step_ids, v_item_id);
+
+        update public.sop_procedure_steps set
+          sequence_number = (v_step->>'sequence_number')::integer,
+          responsible_role = coalesce(v_step->>'responsible_role', responsible_role, 'Performer'),
+          action_instruction_en = coalesce(v_step->>'action_instruction_en', action_instruction_en, 'Step ' || coalesce(v_step->>'sequence_number', '1')),
+          action_instruction_ar = v_step->>'action_instruction_ar',
+          required_control_id = nullif(v_step->>'required_control_id', '')::uuid,
+          expected_evidence_record_en = v_step->>'expected_evidence_record_en',
+          expected_evidence_record_ar = v_step->>'expected_evidence_record_ar',
+          timing_sla_en = v_step->>'timing_sla_en',
+          timing_sla_ar = v_step->>'timing_sla_ar',
+          is_decision_point = coalesce((v_step->>'is_decision_point')::boolean, false),
+          decision_criteria_en = v_step->>'decision_criteria_en',
+          decision_criteria_ar = v_step->>'decision_criteria_ar',
+          criticality = coalesce(v_step->>'criticality', 'medium'),
+          escalation_trigger_en = v_step->>'escalation_trigger_en',
+          escalation_trigger_ar = v_step->>'escalation_trigger_ar',
+          escalation_destination_role = v_step->>'escalation_destination_role',
+          updated_at = now()
+        where id = v_item_id and sop_version_id = p_version_id;
+      else
+        insert into public.sop_procedure_steps (
+          sop_version_id, sequence_number, responsible_role,
+          action_instruction_en, action_instruction_ar, required_control_id,
+          expected_evidence_record_en, expected_evidence_record_ar,
+          timing_sla_en, timing_sla_ar, is_decision_point,
+          decision_criteria_en, decision_criteria_ar, criticality,
+          escalation_trigger_en, escalation_trigger_ar, escalation_destination_role
+        ) values (
+          p_version_id, (v_step->>'sequence_number')::integer,
+          coalesce(v_step->>'responsible_role', 'Performer'),
+          coalesce(v_step->>'action_instruction_en', 'Step ' || coalesce(v_step->>'sequence_number', '1')),
+          v_step->>'action_instruction_ar',
+          nullif(v_step->>'required_control_id', '')::uuid,
+          v_step->>'expected_evidence_record_en', v_step->>'expected_evidence_record_ar',
+          v_step->>'timing_sla_en', v_step->>'timing_sla_ar',
+          coalesce((v_step->>'is_decision_point')::boolean, false),
+          v_step->>'decision_criteria_en', v_step->>'decision_criteria_ar',
+          coalesce(v_step->>'criticality', 'medium'),
+          v_step->>'escalation_trigger_en', v_step->>'escalation_trigger_ar',
+          v_step->>'escalation_destination_role'
+        ) returning id into v_item_id;
+        v_payload_step_ids := array_append(v_payload_step_ids, v_item_id);
       end if;
-      v_payload_step_ids := array_append(v_payload_step_ids, v_item_id);
+    end loop;
 
-      update public.sop_procedure_steps set
-        sequence_number = (v_step->>'sequence_number')::integer,
-        responsible_role = v_step->>'responsible_role',
-        action_instruction_en = v_step->>'action_instruction_en',
-        action_instruction_ar = v_step->>'action_instruction_ar',
-        required_control_id = nullif(v_step->>'required_control_id', '')::uuid,
-        expected_evidence_record_en = v_step->>'expected_evidence_record_en',
-        expected_evidence_record_ar = v_step->>'expected_evidence_record_ar',
-        timing_sla_en = v_step->>'timing_sla_en',
-        timing_sla_ar = v_step->>'timing_sla_ar',
-        is_decision_point = coalesce((v_step->>'is_decision_point')::boolean, false),
-        decision_criteria_en = v_step->>'decision_criteria_en',
-        decision_criteria_ar = v_step->>'decision_criteria_ar',
-        criticality = coalesce(v_step->>'criticality', 'medium'),
-        escalation_trigger_en = v_step->>'escalation_trigger_en',
-        escalation_trigger_ar = v_step->>'escalation_trigger_ar',
-        escalation_destination_role = v_step->>'escalation_destination_role',
-        updated_at = now()
-      where id = v_item_id and sop_version_id = p_version_id;
-    else
-      insert into public.sop_procedure_steps (
-        sop_version_id, sequence_number, responsible_role,
-        action_instruction_en, action_instruction_ar, required_control_id,
-        expected_evidence_record_en, expected_evidence_record_ar,
-        timing_sla_en, timing_sla_ar, is_decision_point,
-        decision_criteria_en, decision_criteria_ar, criticality,
-        escalation_trigger_en, escalation_trigger_ar, escalation_destination_role
-      ) values (
-        p_version_id, (v_step->>'sequence_number')::integer, v_step->>'responsible_role',
-        v_step->>'action_instruction_en', v_step->>'action_instruction_ar',
-        nullif(v_step->>'required_control_id', '')::uuid,
-        v_step->>'expected_evidence_record_en', v_step->>'expected_evidence_record_ar',
-        v_step->>'timing_sla_en', v_step->>'timing_sla_ar',
-        coalesce((v_step->>'is_decision_point')::boolean, false),
-        v_step->>'decision_criteria_en', v_step->>'decision_criteria_ar',
-        coalesce(v_step->>'criticality', 'medium'),
-        v_step->>'escalation_trigger_en', v_step->>'escalation_trigger_ar',
-        v_step->>'escalation_destination_role'
-      ) returning id into v_item_id;
-      v_payload_step_ids := array_append(v_payload_step_ids, v_item_id);
-    end if;
-  end loop;
-
-  delete from public.sop_procedure_steps
-  where sop_version_id = p_version_id
-    and not (id = any(v_payload_step_ids));
+    delete from public.sop_procedure_steps
+    where sop_version_id = p_version_id
+      and not (id = any(v_payload_step_ids));
+  end if;
 
   -- 5. Reconcile Definitions
-  select array_agg(id) into v_existing_def_ids
-  from public.sop_definitions
-  where sop_version_id = p_version_id;
+  if p_definitions is not null then
+    select array_agg(id) into v_existing_def_ids
+    from public.sop_definitions
+    where sop_version_id = p_version_id;
 
-  for v_def in select * from jsonb_array_elements(coalesce(p_definitions, '[]'::jsonb))
-  loop
-    v_item_id := nullif(v_def->>'id', '')::uuid;
-    if v_item_id is not null then
-      if v_existing_def_ids is not null and not (v_item_id = any(v_existing_def_ids)) then
-        raise exception 'PATCH202_CROSS_VERSION_CHILD_ID_DENIED';
+    for v_def in select * from jsonb_array_elements(p_definitions)
+    loop
+      v_item_id := nullif(v_def->>'id', '')::uuid;
+      if v_item_id is not null then
+        if not (v_item_id = any(coalesce(v_existing_def_ids, '{}'::uuid[]))) then
+          raise exception 'PATCH202_CROSS_VERSION_CHILD_ID_DENIED';
+        end if;
+        v_payload_def_ids := array_append(v_payload_def_ids, v_item_id);
+
+        update public.sop_definitions set
+          sequence_number = (v_def->>'sequence_number')::integer,
+          term_en = v_def->>'term_en',
+          term_ar = v_def->>'term_ar',
+          abbreviation = v_def->>'abbreviation',
+          definition_en = v_def->>'definition_en',
+          definition_ar = v_def->>'definition_ar',
+          updated_at = now()
+        where id = v_item_id and sop_version_id = p_version_id;
+      else
+        insert into public.sop_definitions (
+          sop_version_id, sequence_number, term_en, term_ar, abbreviation, definition_en, definition_ar
+        ) values (
+          p_version_id, (v_def->>'sequence_number')::integer,
+          v_def->>'term_en', v_def->>'term_ar', v_def->>'abbreviation',
+          v_def->>'definition_en', v_def->>'definition_ar'
+        ) returning id into v_item_id;
+        v_payload_def_ids := array_append(v_payload_def_ids, v_item_id);
       end if;
-      v_payload_def_ids := array_append(v_payload_def_ids, v_item_id);
+    end loop;
 
-      update public.sop_definitions set
-        sequence_number = (v_def->>'sequence_number')::integer,
-        term_en = v_def->>'term_en',
-        term_ar = v_def->>'term_ar',
-        abbreviation = v_def->>'abbreviation',
-        definition_en = v_def->>'definition_en',
-        definition_ar = v_def->>'definition_ar',
-        updated_at = now()
-      where id = v_item_id and sop_version_id = p_version_id;
-    else
-      insert into public.sop_definitions (
-        sop_version_id, sequence_number, term_en, term_ar, abbreviation, definition_en, definition_ar
-      ) values (
-        p_version_id, (v_def->>'sequence_number')::integer,
-        v_def->>'term_en', v_def->>'term_ar', v_def->>'abbreviation',
-        v_def->>'definition_en', v_def->>'definition_ar'
-      ) returning id into v_item_id;
-      v_payload_def_ids := array_append(v_payload_def_ids, v_item_id);
-    end if;
-  end loop;
-
-  delete from public.sop_definitions
-  where sop_version_id = p_version_id
-    and not (id = any(v_payload_def_ids));
+    delete from public.sop_definitions
+    where sop_version_id = p_version_id
+      and not (id = any(v_payload_def_ids));
+  end if;
 
   -- 6. Reconcile Roles & Responsibilities
-  select array_agg(id) into v_existing_resp_ids
-  from public.sop_role_responsibilities
-  where sop_version_id = p_version_id;
+  if p_role_responsibilities is not null then
+    select array_agg(id) into v_existing_resp_ids
+    from public.sop_role_responsibilities
+    where sop_version_id = p_version_id;
 
-  for v_resp in select * from jsonb_array_elements(coalesce(p_role_responsibilities, '[]'::jsonb))
-  loop
-    v_item_id := nullif(v_resp->>'id', '')::uuid;
-    if v_item_id is not null then
-      if v_existing_resp_ids is not null and not (v_item_id = any(v_existing_resp_ids)) then
-        raise exception 'PATCH202_CROSS_VERSION_CHILD_ID_DENIED';
+    for v_resp in select * from jsonb_array_elements(p_role_responsibilities)
+    loop
+      v_item_id := nullif(v_resp->>'id', '')::uuid;
+      if v_item_id is not null then
+        if not (v_item_id = any(coalesce(v_existing_resp_ids, '{}'::uuid[]))) then
+          raise exception 'PATCH202_CROSS_VERSION_CHILD_ID_DENIED';
+        end if;
+        v_payload_resp_ids := array_append(v_payload_resp_ids, v_item_id);
+
+        update public.sop_role_responsibilities set
+          sequence_number = (v_resp->>'sequence_number')::integer,
+          role_name = v_resp->>'role_name',
+          job_title = v_resp->>'job_title',
+          responsibility_en = v_resp->>'responsibility_en',
+          responsibility_ar = v_resp->>'responsibility_ar',
+          accountable_for_en = v_resp->>'accountable_for_en',
+          accountable_for_ar = v_resp->>'accountable_for_ar',
+          updated_at = now()
+        where id = v_item_id and sop_version_id = p_version_id;
+      else
+        insert into public.sop_role_responsibilities (
+          sop_version_id, sequence_number, role_name, job_title,
+          responsibility_en, responsibility_ar, accountable_for_en, accountable_for_ar
+        ) values (
+          p_version_id, (v_resp->>'sequence_number')::integer,
+          v_resp->>'role_name', v_resp->>'job_title',
+          v_resp->>'responsibility_en', v_resp->>'responsibility_ar',
+          v_resp->>'accountable_for_en', v_resp->>'accountable_for_ar'
+        ) returning id into v_item_id;
+        v_payload_resp_ids := array_append(v_payload_resp_ids, v_item_id);
       end if;
-      v_payload_resp_ids := array_append(v_payload_resp_ids, v_item_id);
+    end loop;
 
-      update public.sop_role_responsibilities set
-        sequence_number = (v_resp->>'sequence_number')::integer,
-        role_name = v_resp->>'role_name',
-        job_title = v_resp->>'job_title',
-        responsibility_en = v_resp->>'responsibility_en',
-        responsibility_ar = v_resp->>'responsibility_ar',
-        accountable_for_en = v_resp->>'accountable_for_en',
-        accountable_for_ar = v_resp->>'accountable_for_ar',
-        updated_at = now()
-      where id = v_item_id and sop_version_id = p_version_id;
-    else
-      insert into public.sop_role_responsibilities (
-        sop_version_id, sequence_number, role_name, job_title,
-        responsibility_en, responsibility_ar, accountable_for_en, accountable_for_ar
-      ) values (
-        p_version_id, (v_resp->>'sequence_number')::integer,
-        v_resp->>'role_name', v_resp->>'job_title',
-        v_resp->>'responsibility_en', v_resp->>'responsibility_ar',
-        v_resp->>'accountable_for_en', v_resp->>'accountable_for_ar'
-      ) returning id into v_item_id;
-      v_payload_resp_ids := array_append(v_payload_resp_ids, v_item_id);
-    end if;
-  end loop;
-
-  delete from public.sop_role_responsibilities
-  where sop_version_id = p_version_id
-    and not (id = any(v_payload_resp_ids));
+    delete from public.sop_role_responsibilities
+    where sop_version_id = p_version_id
+      and not (id = any(v_payload_resp_ids));
+  end if;
 
   -- 7. Reconcile Monitoring KPIs
-  select array_agg(id) into v_existing_kpi_ids
-  from public.sop_monitoring_kpis
-  where sop_version_id = p_version_id;
+  if p_monitoring_kpis is not null then
+    select array_agg(id) into v_existing_kpi_ids
+    from public.sop_monitoring_kpis
+    where sop_version_id = p_version_id;
 
-  for v_kpi in select * from jsonb_array_elements(coalesce(p_monitoring_kpis, '[]'::jsonb))
-  loop
-    v_item_id := nullif(v_kpi->>'id', '')::uuid;
-    if v_item_id is not null then
-      if v_existing_kpi_ids is not null and not (v_item_id = any(v_existing_kpi_ids)) then
-        raise exception 'PATCH202_CROSS_VERSION_CHILD_ID_DENIED';
+    for v_kpi in select * from jsonb_array_elements(p_monitoring_kpis)
+    loop
+      v_item_id := nullif(v_kpi->>'id', '')::uuid;
+      if v_item_id is not null then
+        if not (v_item_id = any(coalesce(v_existing_kpi_ids, '{}'::uuid[]))) then
+          raise exception 'PATCH202_CROSS_VERSION_CHILD_ID_DENIED';
+        end if;
+        v_payload_kpi_ids := array_append(v_payload_kpi_ids, v_item_id);
+
+        update public.sop_monitoring_kpis set
+          sequence_number = (v_kpi->>'sequence_number')::integer,
+          kpi_name_en = v_kpi->>'kpi_name_en',
+          kpi_name_ar = v_kpi->>'kpi_name_ar',
+          target_value = v_kpi->>'target_value',
+          measurement_frequency = v_kpi->>'measurement_frequency',
+          owner_id = nullif(v_kpi->>'owner_id', '')::uuid,
+          description_en = v_kpi->>'description_en',
+          description_ar = v_kpi->>'description_ar',
+          updated_at = now()
+        where id = v_item_id and sop_version_id = p_version_id;
+      else
+        insert into public.sop_monitoring_kpis (
+          sop_version_id, sequence_number, kpi_name_en, kpi_name_ar,
+          target_value, measurement_frequency, owner_id, description_en, description_ar
+        ) values (
+          p_version_id, (v_kpi->>'sequence_number')::integer,
+          v_kpi->>'kpi_name_en', v_kpi->>'kpi_name_ar',
+          v_kpi->>'target_value', v_kpi->>'measurement_frequency',
+          nullif(v_kpi->>'owner_id', '')::uuid,
+          v_kpi->>'description_en', v_kpi->>'description_ar'
+        ) returning id into v_item_id;
+        v_payload_kpi_ids := array_append(v_payload_kpi_ids, v_item_id);
       end if;
-      v_payload_kpi_ids := array_append(v_payload_kpi_ids, v_item_id);
+    end loop;
 
-      update public.sop_monitoring_kpis set
-        sequence_number = (v_kpi->>'sequence_number')::integer,
-        kpi_name_en = v_kpi->>'kpi_name_en',
-        kpi_name_ar = v_kpi->>'kpi_name_ar',
-        target_value = v_kpi->>'target_value',
-        measurement_frequency = v_kpi->>'measurement_frequency',
-        owner_id = nullif(v_kpi->>'owner_id', '')::uuid,
-        description_en = v_kpi->>'description_en',
-        description_ar = v_kpi->>'description_ar',
-        updated_at = now()
-      where id = v_item_id and sop_version_id = p_version_id;
-    else
-      insert into public.sop_monitoring_kpis (
-        sop_version_id, sequence_number, kpi_name_en, kpi_name_ar,
-        target_value, measurement_frequency, owner_id, description_en, description_ar
-      ) values (
-        p_version_id, (v_kpi->>'sequence_number')::integer,
-        v_kpi->>'kpi_name_en', v_kpi->>'kpi_name_ar',
-        v_kpi->>'target_value', v_kpi->>'measurement_frequency',
-        nullif(v_kpi->>'owner_id', '')::uuid,
-        v_kpi->>'description_en', v_kpi->>'description_ar'
-      ) returning id into v_item_id;
-      v_payload_kpi_ids := array_append(v_payload_kpi_ids, v_item_id);
-    end if;
-  end loop;
-
-  delete from public.sop_monitoring_kpis
-  where sop_version_id = p_version_id
-    and not (id = any(v_payload_kpi_ids));
+    delete from public.sop_monitoring_kpis
+    where sop_version_id = p_version_id
+      and not (id = any(v_payload_kpi_ids));
+  end if;
 
   -- 8. Reconcile Risk Links
-  select array_agg(id) into v_existing_risk_ids
-  from public.sop_version_risk_links
-  where sop_version_id = p_version_id;
+  if p_risk_links is not null then
+    select array_agg(id) into v_existing_risk_ids
+    from public.sop_version_risk_links
+    where sop_version_id = p_version_id;
 
-  for v_risk in select * from jsonb_array_elements(coalesce(p_risk_links, '[]'::jsonb))
-  loop
-    v_item_id := nullif(v_risk->>'id', '')::uuid;
-    if v_item_id is not null then
-      if v_existing_risk_ids is not null and not (v_item_id = any(v_existing_risk_ids)) then
-        raise exception 'PATCH202_CROSS_VERSION_CHILD_ID_DENIED';
+    for v_risk in select * from jsonb_array_elements(p_risk_links)
+    loop
+      v_item_id := nullif(v_risk->>'id', '')::uuid;
+      if v_item_id is not null then
+        if not (v_item_id = any(coalesce(v_existing_risk_ids, '{}'::uuid[]))) then
+          raise exception 'PATCH202_CROSS_VERSION_CHILD_ID_DENIED';
+        end if;
+        v_payload_risk_ids := array_append(v_payload_risk_ids, v_item_id);
+
+        update public.sop_version_risk_links set
+          sequence_number = coalesce((v_risk->>'sequence_number')::integer, sequence_number, 1),
+          risk_id = (v_risk->>'risk_id')::uuid,
+          relationship_type = v_risk->>'relationship_type',
+          context_note_en = v_risk->>'context_note_en',
+          context_note_ar = v_risk->>'context_note_ar',
+          updated_at = now()
+        where id = v_item_id and sop_version_id = p_version_id;
+      else
+        insert into public.sop_version_risk_links (
+          sop_version_id, sequence_number, risk_id, relationship_type,
+          context_note_en, context_note_ar
+        ) values (
+          p_version_id, coalesce((v_risk->>'sequence_number')::integer, array_length(v_payload_risk_ids, 1) + 1, 1),
+          (v_risk->>'risk_id')::uuid, v_risk->>'relationship_type',
+          v_risk->>'context_note_en', v_risk->>'context_note_ar'
+        ) returning id into v_item_id;
+        v_payload_risk_ids := array_append(v_payload_risk_ids, v_item_id);
       end if;
-      v_payload_risk_ids := array_append(v_payload_risk_ids, v_item_id);
+    end loop;
 
-      update public.sop_version_risk_links set
-        sequence_number = (v_risk->>'sequence_number')::integer,
-        risk_id = (v_risk->>'risk_id')::uuid,
-        relationship_type = v_risk->>'relationship_type',
-        context_note_en = v_risk->>'context_note_en',
-        context_note_ar = v_risk->>'context_note_ar',
-        updated_at = now()
-      where id = v_item_id and sop_version_id = p_version_id;
-    else
-      insert into public.sop_version_risk_links (
-        sop_version_id, sequence_number, risk_id, relationship_type,
-        context_note_en, context_note_ar
-      ) values (
-        p_version_id, (v_risk->>'sequence_number')::integer,
-        (v_risk->>'risk_id')::uuid, v_risk->>'relationship_type',
-        v_risk->>'context_note_en', v_risk->>'context_note_ar'
-      ) returning id into v_item_id;
-      v_payload_risk_ids := array_append(v_payload_risk_ids, v_item_id);
-    end if;
-  end loop;
-
-  delete from public.sop_version_risk_links
-  where sop_version_id = p_version_id
-    and not (id = any(v_payload_risk_ids));
+    delete from public.sop_version_risk_links
+    where sop_version_id = p_version_id
+      and not (id = any(v_payload_risk_ids));
+  end if;
 
   -- 9. Reconcile Accreditation Links
-  select array_agg(id) into v_existing_acc_ids
-  from public.sop_version_accreditation_links
-  where sop_version_id = p_version_id;
+  if p_accreditation_links is not null then
+    select array_agg(id) into v_existing_acc_ids
+    from public.sop_version_accreditation_links
+    where sop_version_id = p_version_id;
 
-  for v_acc in select * from jsonb_array_elements(coalesce(p_accreditation_links, '[]'::jsonb))
-  loop
-    v_item_id := nullif(v_acc->>'id', '')::uuid;
-    if v_item_id is not null then
-      if v_existing_acc_ids is not null and not (v_item_id = any(v_existing_acc_ids)) then
-        raise exception 'PATCH202_CROSS_VERSION_CHILD_ID_DENIED';
+    for v_acc in select * from jsonb_array_elements(p_accreditation_links)
+    loop
+      v_item_id := nullif(v_acc->>'id', '')::uuid;
+      if v_item_id is not null then
+        if not (v_item_id = any(coalesce(v_existing_acc_ids, '{}'::uuid[]))) then
+          raise exception 'PATCH202_CROSS_VERSION_CHILD_ID_DENIED';
+        end if;
+        v_payload_acc_ids := array_append(v_payload_acc_ids, v_item_id);
+
+        update public.sop_version_accreditation_links set
+          sequence_number = coalesce((v_acc->>'sequence_number')::integer, sequence_number, 1),
+          clause_id = (v_acc->>'clause_id')::uuid,
+          link_strength = coalesce(v_acc->>'link_strength', 'primary'),
+          context_note_en = v_acc->>'context_note_en',
+          context_note_ar = v_acc->>'context_note_ar',
+          updated_at = now()
+        where id = v_item_id and sop_version_id = p_version_id;
+      else
+        insert into public.sop_version_accreditation_links (
+          sop_version_id, sequence_number, clause_id, link_strength,
+          context_note_en, context_note_ar
+        ) values (
+          p_version_id, coalesce((v_acc->>'sequence_number')::integer, array_length(v_payload_acc_ids, 1) + 1, 1),
+          (v_acc->>'clause_id')::uuid, coalesce(v_acc->>'link_strength', 'primary'),
+          v_acc->>'context_note_en', v_acc->>'context_note_ar'
+        ) returning id into v_item_id;
+        v_payload_acc_ids := array_append(v_payload_acc_ids, v_item_id);
       end if;
-      v_payload_acc_ids := array_append(v_payload_acc_ids, v_item_id);
+    end loop;
 
-      update public.sop_version_accreditation_links set
-        sequence_number = (v_acc->>'sequence_number')::integer,
-        clause_id = (v_acc->>'clause_id')::uuid,
-        link_strength = coalesce(v_acc->>'link_strength', 'primary'),
-        context_note_en = v_acc->>'context_note_en',
-        context_note_ar = v_acc->>'context_note_ar',
-        updated_at = now()
-      where id = v_item_id and sop_version_id = p_version_id;
-    else
-      insert into public.sop_version_accreditation_links (
-        sop_version_id, sequence_number, clause_id, link_strength,
-        context_note_en, context_note_ar
-      ) values (
-        p_version_id, (v_acc->>'sequence_number')::integer,
-        (v_acc->>'clause_id')::uuid, coalesce(v_acc->>'link_strength', 'primary'),
-        v_acc->>'context_note_en', v_acc->>'context_note_ar'
-      ) returning id into v_item_id;
-      v_payload_acc_ids := array_append(v_payload_acc_ids, v_item_id);
-    end if;
-  end loop;
-
-  delete from public.sop_version_accreditation_links
-  where sop_version_id = p_version_id
-    and not (id = any(v_payload_acc_ids));
+    delete from public.sop_version_accreditation_links
+    where sop_version_id = p_version_id
+      and not (id = any(v_payload_acc_ids));
+  end if;
 
   -- 10. Reconcile Department Scope
-  delete from public.document_version_department_scope
-  where version_id = p_version_id;
+  if p_department_scopes is not null then
+    delete from public.document_version_department_scope
+    where version_id = p_version_id;
 
-  if p_department_scopes is not null and array_length(p_department_scopes, 1) > 0 then
-    foreach v_dept_id in array p_department_scopes loop
-      insert into public.document_version_department_scope (version_id, department_id)
-      values (p_version_id, v_dept_id);
-    end loop;
+    if array_length(p_department_scopes, 1) > 0 then
+      foreach v_dept_id in array p_department_scopes loop
+        insert into public.document_version_department_scope (version_id, department_id)
+        values (p_version_id, v_dept_id);
+      end loop;
+    end if;
   end if;
 
   -- 11. Reconcile Role Scope
-  delete from public.document_version_role_scope
-  where version_id = p_version_id;
+  if p_role_scopes is not null then
+    delete from public.document_version_role_scope
+    where version_id = p_version_id;
 
-  if p_role_scopes is not null and jsonb_array_length(p_role_scopes) > 0 then
-    for v_role in select * from jsonb_array_elements(p_role_scopes) loop
-      insert into public.document_version_role_scope (version_id, role_name, job_title)
-      values (p_version_id, v_role->>'role_name', v_role->>'job_title');
-    end loop;
+    if jsonb_array_length(p_role_scopes) > 0 then
+      for v_role in select * from jsonb_array_elements(p_role_scopes) loop
+        insert into public.document_version_role_scope (version_id, role_name, job_title)
+        values (p_version_id, v_role->>'role_name', v_role->>'job_title');
+      end loop;
+    end if;
   end if;
 
   return jsonb_build_object(
@@ -824,14 +896,14 @@ as $$
 declare
   v_doc_id uuid;
   v_doc_type text;
-  v_curr_ver_num numeric;
-  v_new_ver_num numeric;
+  v_source_ver_num integer;
+  v_new_ver_num integer;
   v_new_ver_label text;
   v_new_ver_id uuid;
 begin
   -- Validate source version
   select d.id, d.document_type, v.version_number
-  into v_doc_id, v_doc_type, v_curr_ver_num
+  into v_doc_id, v_doc_type, v_source_ver_num
   from public.document_versions v
   join public.controlled_documents d on d.id = v.document_id
   where v.id = p_source_version_id;
@@ -840,25 +912,28 @@ begin
     raise exception 'PATCH202_SOURCE_VERSION_NOT_FOUND';
   end if;
 
-  -- Compute new version numbers
+  -- Concurrency lock root document row
+  perform 1 from public.controlled_documents where id = v_doc_id for update;
+
+  -- Determine next version number
+  select max(version_number) + 1 into v_new_ver_num
+  from public.document_versions
+  where document_id = v_doc_id;
+
   if p_revision_type = 'major' then
-    v_new_ver_num := floor(v_curr_ver_num) + 1.0;
+    v_new_ver_label := (v_source_ver_num + 1)::text || '.0';
   else
-    v_new_ver_num := v_curr_ver_num + 0.1;
+    v_new_ver_label := v_source_ver_num::text || '.' || (v_new_ver_num - v_source_ver_num)::text;
   end if;
-  v_new_ver_label := to_char(v_new_ver_num, 'FM999990.0');
 
   -- Create new draft version
   insert into public.document_versions (
-    document_id, version_number, version_label, title_en, title_ar,
-    change_summary, is_current_version
-  )
-  select
-    document_id, v_new_ver_num, v_new_ver_label, title_en, title_ar,
-    coalesce(p_revision_reason, 'Revision started from ' || version_label), false
-  from public.document_versions
-  where id = p_source_version_id
-  returning id into v_new_ver_id;
+    document_id, version_number, version_label, prepared_by, revision_reason,
+    supersedes_version_id, is_current_version
+  ) values (
+    v_doc_id, v_new_ver_num, v_new_ver_label, p_actor_id, p_revision_reason,
+    p_source_version_id, false
+  ) returning id into v_new_ver_id;
 
   -- Clone Policy structured content
   if v_doc_type = 'policy' then
@@ -983,7 +1058,7 @@ begin
     document_id, version_id, event_type, from_status, to_status, actor_id, event_note
   ) values (
     v_doc_id, v_new_ver_id, 'revision_started', null, 'draft', p_actor_id,
-    'Started ' || p_revision_type || ' revision ' || v_new_ver_label || ' from version ' || to_char(v_curr_ver_num, 'FM999990.0')
+    'Started ' || p_revision_type || ' revision ' || v_new_ver_label || ' from version ' || v_source_ver_num::text
   );
 
   return jsonb_build_object(
@@ -999,6 +1074,9 @@ $$;
 -- ----------------------------------------------------------------------------
 -- 9. Security Definer ACL Hardening
 -- ----------------------------------------------------------------------------
+revoke all on function public.enforce_policy_sop_version_immutability() from public, anon, authenticated;
+grant execute on function public.enforce_policy_sop_version_immutability() to service_role;
+
 revoke all on function public.validate_sop_version_type() from public, anon, authenticated;
 grant execute on function public.validate_sop_version_type() to service_role;
 

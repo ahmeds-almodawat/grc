@@ -21064,10 +21064,10 @@
       ],
       "relation_type": "view",
       "definition_file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
-      "definition_line": 242,
+      "definition_line": 281,
       "security_invoker_declared": true,
       "security_invoker": true,
-      "security_invoker_evidence": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:242",
+      "security_invoker_evidence": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:281",
       "owner_bypass_prevented": true,
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
@@ -23185,7 +23185,7 @@
         ]
       },
       {
-        "source": "migration203_service_role_acl_review",
+        "source": "migration204_service_role_acl_review",
         "schema": "public",
         "name": "enforce_policy_sop_version_immutability",
         "signature": "public.enforce_policy_sop_version_immutability()",
@@ -23194,14 +23194,16 @@
         "authenticated_execute": false,
         "service_role_execute": true,
         "disposition": "service_role_only",
-        "definition_file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
-        "definition_line": 193,
+        "definition_file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
+        "definition_line": 101,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/201_governed_policy_sop_core_foundation.sql:679 revoke execute public, anon, authenticated",
           "supabase/migrations/201_governed_policy_sop_core_foundation.sql:680 grant execute service_role",
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1074 revoke execute public, anon, authenticated",
-          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1075 grant execute service_role"
+          "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1075 grant execute service_role",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1077 revoke execute public, anon, authenticated",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1078 grant execute service_role"
         ]
       },
       {
@@ -24232,22 +24234,22 @@
         "source": "migration204_service_role_acl_review",
         "schema": "public",
         "name": "save_governed_sop_draft",
-        "signature": "public.save_governed_sop_draft(p_actor_id uuid, p_version_id uuid, p_title_en text, p_title_ar text, p_process_name_en text, p_process_name_ar text, p_purpose_en text, p_purpose_ar text, p_process_owner_id uuid, p_primary_policy_version_id uuid, p_governance_link_state text, p_scope_en text, p_scope_ar text, p_training_required boolean default false, p_acknowledgment_required boolean default false, p_competency_assessment_required boolean default false, p_acknowledgment_sla_days integer default 30, p_training_renewal_months integer default 12, p_procedure_steps jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb, p_definitions jsonb default '[]'::jsonb, p_role_responsibilities jsonb default '[]'::jsonb, p_monitoring_kpis jsonb default '[]'::jsonb, p_risk_links jsonb default '[]'::jsonb, p_accreditation_links jsonb default '[]'::jsonb)",
+        "signature": "public.save_governed_sop_draft(p_actor_id uuid, p_version_id uuid, p_title_en text default null, p_title_ar text default null, p_process_name_en text default null, p_process_name_ar text default null, p_purpose_en text default null, p_purpose_ar text default null, p_process_owner_id uuid default null, p_primary_policy_version_id uuid default null, p_governance_link_state text default null, p_scope_en text default null, p_scope_ar text default null, p_training_required boolean default null, p_acknowledgment_required boolean default null, p_competency_assessment_required boolean default null, p_acknowledgment_sla_days integer default null, p_training_renewal_months integer default null, p_procedure_steps jsonb default null, p_department_scopes uuid[] default null, p_role_scopes jsonb default null, p_definitions jsonb default null, p_role_responsibilities jsonb default null, p_monitoring_kpis jsonb default null, p_risk_links jsonb default null, p_accreditation_links jsonb default null)",
         "public_execute": false,
         "anon_execute": false,
         "authenticated_execute": false,
         "service_role_execute": true,
         "disposition": "service_role_only",
         "definition_file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
-        "definition_line": 385,
+        "definition_line": 424,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1544 revoke execute public, anon, authenticated",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1545 grant execute service_role",
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1080 revoke execute public, anon, authenticated",
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1081 grant execute service_role",
-          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1005 revoke execute public, anon, authenticated",
-          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1008 grant execute service_role"
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1083 revoke execute public, anon, authenticated",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1086 grant execute service_role"
         ]
       },
       {
@@ -24268,8 +24270,8 @@
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1545 grant execute service_role",
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1080 revoke execute public, anon, authenticated",
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1081 grant execute service_role",
-          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1005 revoke execute public, anon, authenticated",
-          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1008 grant execute service_role"
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1083 revoke execute public, anon, authenticated",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1086 grant execute service_role"
         ]
       },
       {
@@ -24290,8 +24292,8 @@
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1545 grant execute service_role",
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1080 revoke execute public, anon, authenticated",
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1081 grant execute service_role",
-          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1005 revoke execute public, anon, authenticated",
-          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1008 grant execute service_role"
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1083 revoke execute public, anon, authenticated",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1086 grant execute service_role"
         ]
       },
       {
@@ -24305,15 +24307,15 @@
         "service_role_execute": true,
         "disposition": "service_role_only",
         "definition_file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
-        "definition_line": 813,
+        "definition_line": 885,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1547 revoke execute public, anon, authenticated",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1548 grant execute service_role",
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1083 revoke execute public, anon, authenticated",
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1084 grant execute service_role",
-          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1012 revoke execute public, anon, authenticated",
-          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1013 grant execute service_role"
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1090 revoke execute public, anon, authenticated",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1091 grant execute service_role"
         ]
       },
       {
@@ -24399,15 +24401,15 @@
         "service_role_execute": true,
         "disposition": "service_role_only",
         "definition_file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
-        "definition_line": 114,
+        "definition_line": 153,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/201_governed_policy_sop_core_foundation.sql:673 revoke execute public, anon, authenticated",
           "supabase/migrations/201_governed_policy_sop_core_foundation.sql:674 grant execute service_role",
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1071 revoke execute public, anon, authenticated",
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1072 grant execute service_role",
-          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1002 revoke execute public, anon, authenticated",
-          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1003 grant execute service_role"
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1080 revoke execute public, anon, authenticated",
+          "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1081 grant execute service_role"
         ]
       }
     ],
