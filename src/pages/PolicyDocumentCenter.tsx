@@ -12,7 +12,8 @@ import {
 } from '../lib/policySopApi';
 import { PolicyRegister } from '../components/policy-sop/PolicyRegister';
 import { PolicyEditor } from '../components/policy-sop/PolicyEditor';
-import { SopRegisterShell } from '../components/policy-sop/SopRegisterShell';
+import { SopRegister } from '../components/policy-sop/SopRegister';
+import { SopEditor } from '../components/policy-sop/SopEditor';
 import { ReviewsDueTab } from '../components/policy-sop/ReviewsDueTab';
 import { ExceptionsTab } from '../components/policy-sop/ExceptionsTab';
 import { TrainingAckTab } from '../components/policy-sop/TrainingAckTab';
@@ -25,14 +26,20 @@ export function PolicyDocumentCenter() {
 
   // Hub Navigation State
   const [activeTab, setActiveTab] = useState<HubTab>('policies');
+
+  // Policy Editor State
   const [editingPolicyId, setEditingPolicyId] = useState<string | null>(null);
   const [editingVersionId, setEditingVersionId] = useState<string | null>(null);
-  const [isCreatingNew, setIsCreatingNew] = useState<boolean>(false);
+  const [isCreatingNewPolicy, setIsCreatingNewPolicy] = useState<boolean>(false);
+  const [currentPolicyDetail, setCurrentPolicyDetail] = useState<DetailedPolicyRecord | null>(null);
+
+  // SOP Editor State
+  const [editingSopId, setEditingSopId] = useState<string | null>(null);
+  const [isCreatingNewSop, setIsCreatingNewSop] = useState<boolean>(false);
 
   // Data State
   const [policies, setPolicies] = useState<GovernedPolicyCatalogRow[]>([]);
   const [sops, setSops] = useState<GovernedSopCatalogRow[]>([]);
-  const [currentPolicyDetail, setCurrentPolicyDetail] = useState<DetailedPolicyRecord | null>(null);
   const [departments, setDepartments] = useState<Array<{ id: string; name: string; code: string }>>([]);
   const [profiles, setProfiles] = useState<Array<{ id: string; full_name: string; email: string; job_title: string | null }>>([]);
   const [controls, setControls] = useState<Array<{ id: string; code: string; title: string }>>([]);
@@ -81,7 +88,7 @@ export function PolicyDocumentCenter() {
         setCurrentPolicyDetail(detail);
         setEditingPolicyId(documentId);
         setEditingVersionId(versionId || detail.version_id);
-        setIsCreatingNew(false);
+        setIsCreatingNewPolicy(false);
       }
     } catch (err: any) {
       console.error('[PolicyDocumentCenter] getGovernedPolicyDetail error:', err);
@@ -94,14 +101,16 @@ export function PolicyDocumentCenter() {
     setCurrentPolicyDetail(null);
     setEditingPolicyId(null);
     setEditingVersionId(null);
-    setIsCreatingNew(true);
+    setIsCreatingNewPolicy(true);
   };
 
   const handleBackToRegister = () => {
     setCurrentPolicyDetail(null);
     setEditingPolicyId(null);
     setEditingVersionId(null);
-    setIsCreatingNew(false);
+    setIsCreatingNewPolicy(false);
+    setEditingSopId(null);
+    setIsCreatingNewSop(false);
     refreshHubData();
   };
 
@@ -133,8 +142,8 @@ export function PolicyDocumentCenter() {
         </div>
       </div>
 
-      {/* Editor View vs Hub Register View */}
-      {isCreatingNew || (editingPolicyId && currentPolicyDetail) ? (
+      {/* View Switcher: Policy Editor vs SOP Editor vs Hub Register View */}
+      {isCreatingNewPolicy || (editingPolicyId && currentPolicyDetail) ? (
         <PolicyEditor
           initialPolicy={currentPolicyDetail}
           departments={departments}
@@ -145,6 +154,14 @@ export function PolicyDocumentCenter() {
           onRefresh={async (docId, verId) => {
             await handleSelectPolicy(docId, verId);
             await refreshHubData();
+          }}
+        />
+      ) : isCreatingNewSop || editingSopId ? (
+        <SopEditor
+          initialSopId={editingSopId || 'new'}
+          onBack={handleBackToRegister}
+          onSopSaved={() => {
+            refreshHubData();
           }}
         />
       ) : (
@@ -224,7 +241,19 @@ export function PolicyDocumentCenter() {
                 )}
 
                 {activeTab === 'sops' && (
-                  <SopRegisterShell sops={sops} loading={loading} />
+                  <SopRegister
+                    sops={sops}
+                    departments={departments}
+                    onSelectSop={(sop) => {
+                      setEditingSopId(sop.document_id);
+                      setIsCreatingNewSop(false);
+                    }}
+                    onCreateSop={() => {
+                      setEditingSopId(null);
+                      setIsCreatingNewSop(true);
+                    }}
+                    loading={loading}
+                  />
                 )}
 
                 {activeTab === 'reviews' && (

@@ -74,6 +74,8 @@ export interface GovernedSopCatalogRow {
   locked_at: string | null;
   version_title_en: string | null;
   version_title_ar: string | null;
+  title_en?: string | null;
+  title_ar?: string | null;
   process_name_en: string | null;
   process_name_ar: string | null;
   process_owner_id: string | null;
@@ -225,6 +227,109 @@ export interface DetailedPolicyRecord {
   content_mode: 'structured' | 'legacy_controlled_document';
   transcription_status: 'not_required' | 'pending' | 'complete';
   requirements: PolicyRequirement[];
+  department_scopes: string[];
+  role_scopes: RoleScope[];
+  review_events: DocumentReviewEvent[];
+  exceptions: PolicySopException[];
+  review_triggers: GovernedDocumentReviewTrigger[];
+  all_versions: Array<{
+    id: string;
+    version_number: number;
+    version_label: string;
+    is_current_version: boolean;
+    effective_date: string | null;
+    expiry_date: string | null;
+    approved_at: string | null;
+    locked_at: string | null;
+    prepared_by: string | null;
+    revision_reason: string | null;
+  }>;
+}
+
+export interface SopProcedureStep {
+  id?: string;
+  sequence_number: number;
+  responsible_role: string;
+  action_instruction_en: string;
+  action_instruction_ar?: string | null;
+  required_control_id?: string | null;
+  required_control_code?: string | null;
+  required_control_title?: string | null;
+  expected_evidence_record_en?: string | null;
+  expected_evidence_record_ar?: string | null;
+  timing_sla_en?: string | null;
+  timing_sla_ar?: string | null;
+  is_decision_point: boolean;
+  decision_criteria_en?: string | null;
+  decision_criteria_ar?: string | null;
+  criticality: 'low' | 'medium' | 'high' | 'critical';
+  escalation_trigger_en?: string | null;
+  escalation_trigger_ar?: string | null;
+  escalation_destination_role?: string | null;
+}
+
+export interface EligibleGoverningPolicy {
+  version_id: string;
+  document_id: string;
+  document_code: string;
+  title_en: string;
+  title_ar: string | null;
+  version_label: string;
+  document_status: string;
+  effective_date: string | null;
+}
+
+export interface DetailedSopRecord {
+  document_id: string;
+  organization_id: string;
+  document_code: string;
+  document_title: string;
+  document_description: string | null;
+  document_status: 'draft' | 'under_review' | 'pending_approval' | 'approved' | 'active' | 'under_revision' | 'expired' | 'superseded' | 'retired' | 'rejected' | 'cancelled';
+  workflow_stage: string | null;
+  department_id: string | null;
+  department_name: string | null;
+  document_owner_id: string | null;
+  document_owner_name: string | null;
+  effective_date: string | null;
+  next_review_date: string | null;
+  expiry_date: string | null;
+  criticality_level: 'low' | 'medium' | 'high' | 'critical';
+  confidentiality_level: 'public' | 'internal' | 'confidential' | 'restricted';
+  active_flag: boolean;
+  version_id: string;
+  version_number: number;
+  version_label: string;
+  is_current_version: boolean;
+  approved_by: string | null;
+  approved_at: string | null;
+  locked_by: string | null;
+  locked_at: string | null;
+  revision_reason: string | null;
+  supersedes_version_id: string | null;
+  title_en: string;
+  title_ar: string | null;
+  process_name_en: string;
+  process_name_ar: string | null;
+  process_owner_id: string | null;
+  process_owner_name: string | null;
+  purpose_en: string;
+  purpose_ar: string | null;
+  scope_en: string | null;
+  scope_ar: string | null;
+  primary_policy_version_id: string | null;
+  primary_policy_document_code: string | null;
+  primary_policy_document_title: string | null;
+  primary_policy_version_label: string | null;
+  governance_link_state: 'linked' | 'legacy_pending' | 'not_applicable';
+  training_required: boolean;
+  acknowledgment_required: boolean;
+  competency_assessment_required: boolean;
+  acknowledgment_sla_days: number | null;
+  training_renewal_months: number | null;
+  content_mode: 'structured' | 'legacy_controlled_document';
+  transcription_status: 'not_required' | 'pending' | 'complete';
+  procedure_steps: SopProcedureStep[];
   department_scopes: string[];
   role_scopes: RoleScope[];
   review_events: DocumentReviewEvent[];
@@ -487,6 +592,249 @@ export async function getGovernedPolicyDetail(documentId: string, versionId?: st
   }
 }
 
+export async function listEligibleGoverningPolicies(): Promise<EligibleGoverningPolicy[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('v_governed_policy_catalog')
+      .select('version_id, document_id, document_code, title_en, title_ar, version_label, document_status, effective_date')
+      .order('document_code', { ascending: true });
+    if (error) throw error;
+    return (data as unknown as EligibleGoverningPolicy[]) || [];
+  } catch (error) {
+    console.warn('[PolicySopApi] listEligibleGoverningPolicies fallback:', error);
+    return [];
+  }
+}
+
+export async function getGovernedSopDetail(documentId: string, versionId?: string): Promise<DetailedSopRecord | null> {
+  if (!supabase) return null;
+  try {
+    // 1. Fetch document root
+    const { data: doc, error: docErr } = await supabase
+      .from('controlled_documents')
+      .select('*, departments(id, name, code), profiles!controlled_documents_document_owner_id_fkey(id, full_name)')
+      .eq('id', documentId)
+      .single();
+    if (docErr || !doc) throw docErr || new Error('DOCUMENT_NOT_FOUND');
+
+    const targetVerId = versionId || doc.current_version_id;
+
+    // 2. Fetch target version
+    let verQuery = supabase.from('document_versions').select('*');
+    if (targetVerId) {
+      verQuery = verQuery.eq('id', targetVerId);
+    } else {
+      verQuery = verQuery.eq('document_id', documentId).order('version_number', { ascending: false }).limit(1);
+    }
+    const { data: verRows, error: verErr } = await verQuery;
+    if (verErr || !verRows || verRows.length === 0) throw verErr || new Error('VERSION_NOT_FOUND');
+    const ver = verRows[0];
+
+    // 3. Fetch SOP details
+    const { data: details } = await supabase
+      .from('governed_sop_details')
+      .select('*, profiles!governed_sop_details_process_owner_id_fkey(id, full_name)')
+      .eq('version_id', ver.id)
+      .maybeSingle();
+
+    // 4. Fetch procedure steps with mapped control code/title
+    const { data: steps } = await supabase
+      .from('sop_procedure_steps')
+      .select('*, control_library_items(code, title)')
+      .eq('sop_version_id', ver.id)
+      .order('sequence_number', { ascending: true });
+
+    // 5. Fetch linked governing policy metadata if linked
+    let primaryPolicyDocCode: string | null = null;
+    let primaryPolicyDocTitle: string | null = null;
+    let primaryPolicyVerLabel: string | null = null;
+
+    if (details?.primary_policy_version_id) {
+      const { data: polVer } = await supabase
+        .from('document_versions')
+        .select('version_label, controlled_documents(document_code, document_title)')
+        .eq('id', details.primary_policy_version_id)
+        .maybeSingle();
+      if (polVer) {
+        primaryPolicyVerLabel = polVer.version_label;
+        const polDoc = polVer.controlled_documents as unknown as { document_code?: string; document_title?: string };
+        primaryPolicyDocCode = polDoc?.document_code || null;
+        primaryPolicyDocTitle = polDoc?.document_title || null;
+      }
+    }
+
+    // 6. Fetch department scopes
+    const { data: deptScopes } = await supabase
+      .from('document_version_department_scope')
+      .select('department_id')
+      .eq('version_id', ver.id);
+
+    // 7. Fetch role scopes
+    const { data: roleScopes } = await supabase
+      .from('document_version_role_scope')
+      .select('id, role_name, job_title')
+      .eq('version_id', ver.id);
+
+    // 8. Fetch review events
+    const { data: events } = await supabase
+      .from('document_review_events')
+      .select('*, profiles(full_name)')
+      .eq('document_id', documentId)
+      .order('created_at', { ascending: false });
+
+    // 9. Fetch exceptions
+    const { data: exceptions } = await supabase
+      .from('policy_sop_exceptions')
+      .select('*, profiles!policy_sop_exceptions_requested_by_fkey(full_name)')
+      .eq('document_id', documentId)
+      .order('created_at', { ascending: false });
+
+    // 10. Fetch review triggers
+    const { data: triggers } = await supabase
+      .from('governed_document_review_triggers')
+      .select('*')
+      .eq('document_id', documentId)
+      .order('created_at', { ascending: false });
+
+    // 11. Fetch all versions for timeline
+    const { data: allVers } = await supabase
+      .from('document_versions')
+      .select('id, version_number, version_label, is_current_version, effective_date, expiry_date, approved_at, locked_at, prepared_by, revision_reason')
+      .eq('document_id', documentId)
+      .order('version_number', { ascending: false });
+
+    return {
+      document_id: doc.id,
+      organization_id: doc.organization_id,
+      document_code: doc.document_code || 'UNASSIGNED',
+      document_title: doc.document_title,
+      document_description: doc.document_description,
+      document_status: doc.document_status,
+      workflow_stage: doc.workflow_stage,
+      department_id: doc.department_id,
+      department_name: doc.departments?.name || null,
+      document_owner_id: doc.document_owner_id,
+      document_owner_name: doc.profiles?.full_name || null,
+      effective_date: doc.effective_date,
+      next_review_date: doc.next_review_date,
+      expiry_date: doc.expiry_date,
+      criticality_level: doc.criticality_level || 'medium',
+      confidentiality_level: doc.confidentiality_level || 'internal',
+      active_flag: doc.active_flag ?? true,
+      version_id: ver.id,
+      version_number: ver.version_number,
+      version_label: ver.version_label || `${ver.version_number}.0`,
+      is_current_version: ver.is_current_version ?? false,
+      approved_by: ver.approved_by,
+      approved_at: ver.approved_at,
+      locked_by: ver.locked_by,
+      locked_at: ver.locked_at,
+      revision_reason: ver.revision_reason,
+      supersedes_version_id: ver.supersedes_version_id,
+      title_en: details?.title_en || doc.document_title,
+      title_ar: details?.title_ar || null,
+      process_name_en: details?.process_name_en || '',
+      process_name_ar: details?.process_name_ar || null,
+      process_owner_id: details?.process_owner_id || null,
+      process_owner_name: details?.profiles?.full_name || null,
+      purpose_en: details?.purpose_en || '',
+      purpose_ar: details?.purpose_ar || null,
+      scope_en: details?.scope_en || null,
+      scope_ar: details?.scope_ar || null,
+      primary_policy_version_id: details?.primary_policy_version_id || null,
+      primary_policy_document_code: primaryPolicyDocCode,
+      primary_policy_document_title: primaryPolicyDocTitle,
+      primary_policy_version_label: primaryPolicyVerLabel,
+      governance_link_state: details?.governance_link_state || 'linked',
+      training_required: details?.training_required ?? false,
+      acknowledgment_required: details?.acknowledgment_required ?? false,
+      competency_assessment_required: details?.competency_assessment_required ?? false,
+      acknowledgment_sla_days: details?.acknowledgment_sla_days ?? 30,
+      training_renewal_months: details?.training_renewal_months ?? 12,
+      content_mode: details?.content_mode || 'structured',
+      transcription_status: details?.transcription_status || 'not_required',
+      procedure_steps: (steps || []).map(s => {
+        const ctrl = s.control_library_items as unknown as { code?: string; title?: string } | undefined;
+        return {
+          id: s.id,
+          sequence_number: s.sequence_number,
+          responsible_role: s.responsible_role,
+          action_instruction_en: s.action_instruction_en,
+          action_instruction_ar: s.action_instruction_ar,
+          required_control_id: s.required_control_id,
+          required_control_code: ctrl?.code || null,
+          required_control_title: ctrl?.title || null,
+          expected_evidence_record_en: s.expected_evidence_record_en,
+          expected_evidence_record_ar: s.expected_evidence_record_ar,
+          timing_sla_en: s.timing_sla_en,
+          timing_sla_ar: s.timing_sla_ar,
+          is_decision_point: s.is_decision_point,
+          decision_criteria_en: s.decision_criteria_en,
+          decision_criteria_ar: s.decision_criteria_ar,
+          criticality: s.criticality,
+          escalation_trigger_en: s.escalation_trigger_en,
+          escalation_trigger_ar: s.escalation_trigger_ar,
+          escalation_destination_role: s.escalation_destination_role
+        };
+      }),
+      department_scopes: (deptScopes || []).map(ds => ds.department_id),
+      role_scopes: (roleScopes || []).map(rs => ({ id: rs.id, role_name: rs.role_name, job_title: rs.job_title })),
+      review_events: (events || []).map(ev => ({
+        id: ev.id,
+        document_id: ev.document_id,
+        version_id: ev.version_id,
+        event_type: ev.event_type,
+        from_status: ev.from_status,
+        to_status: ev.to_status,
+        actor_id: ev.actor_id,
+        actor_name: ev.profiles?.full_name || null,
+        event_note: ev.event_note,
+        created_at: ev.created_at
+      })),
+      exceptions: (exceptions || []).map(ex => ({
+        id: ex.id,
+        document_id: ex.document_id,
+        document_version_id: ex.document_version_id,
+        exception_code: ex.exception_code,
+        exception_reason: ex.exception_reason,
+        scope_description: ex.scope_description,
+        effective_start_date: ex.effective_start_date,
+        effective_end_date: ex.effective_end_date,
+        risk_assessment_summary: ex.risk_assessment_summary,
+        compensating_controls: ex.compensating_controls,
+        requested_by: ex.requested_by,
+        requested_by_name: ex.profiles?.full_name || null,
+        requested_at: ex.requested_at,
+        status: ex.status,
+        decision_by: ex.decision_by,
+        decision_at: ex.decision_at,
+        decision_note: ex.decision_note
+      })),
+      review_triggers: (triggers || []).map(tr => ({
+        id: tr.id,
+        document_id: tr.document_id,
+        version_id: tr.version_id,
+        trigger_type: tr.trigger_type,
+        source_entity_type: tr.source_entity_type,
+        source_entity_id: tr.source_entity_id,
+        triggered_by: tr.triggered_by,
+        triggered_at: tr.triggered_at,
+        review_owner_id: tr.review_owner_id,
+        due_date: tr.due_date,
+        status: tr.status,
+        outcome: tr.outcome,
+        outcome_note: tr.outcome_note,
+        completed_at: tr.completed_at
+      })),
+      all_versions: allVers || []
+    };
+  } catch (error) {
+    console.error('[PolicySopApi] getGovernedSopDetail error:', error);
+    return null;
+  }
+}
+
 // ----------------------------------------------------------------------------
 // Master Data Fetchers for Form Selectors
 // ----------------------------------------------------------------------------
@@ -589,6 +937,69 @@ export interface SavePolicyDraftInput {
 export async function saveGovernedPolicyDraft(input: SavePolicyDraftInput): Promise<{ success: boolean; version_id: string }> {
   return invokePrivilegedAction<{ success: boolean; version_id: string }>(
     'save_governed_policy_draft',
+    input as unknown as Record<string, unknown>
+  );
+}
+
+export interface CreateSopDraftInput {
+  title_en: string;
+  title_ar?: string;
+  process_name_en: string;
+  process_name_ar?: string;
+  purpose_en: string;
+  purpose_ar?: string;
+  process_owner_id?: string | null;
+  primary_policy_version_id?: string | null;
+  governance_link_state?: 'linked' | 'legacy_pending' | 'not_applicable';
+  scope_en?: string;
+  scope_ar?: string;
+  department_id?: string | null;
+  criticality_level?: 'low' | 'medium' | 'high' | 'critical';
+  confidentiality_level?: 'public' | 'internal' | 'confidential' | 'restricted';
+  training_required?: boolean;
+  acknowledgment_required?: boolean;
+  competency_assessment_required?: boolean;
+  acknowledgment_sla_days?: number;
+  training_renewal_months?: number;
+  content_mode?: 'structured' | 'legacy_controlled_document';
+  procedure_steps?: SopProcedureStep[];
+  department_scopes?: string[];
+  role_scopes?: RoleScope[];
+}
+
+export async function createGovernedSopDraft(input: CreateSopDraftInput): Promise<{ document_id: string; version_id: string; document_code: string }> {
+  return invokePrivilegedAction<{ document_id: string; version_id: string; document_code: string }>(
+    'create_governed_sop_draft',
+    input as unknown as Record<string, unknown>
+  );
+}
+
+export interface SaveSopDraftInput {
+  version_id: string;
+  title_en: string;
+  title_ar?: string;
+  process_name_en: string;
+  process_name_ar?: string;
+  purpose_en: string;
+  purpose_ar?: string;
+  process_owner_id?: string | null;
+  primary_policy_version_id?: string | null;
+  governance_link_state?: 'linked' | 'legacy_pending' | 'not_applicable';
+  scope_en?: string;
+  scope_ar?: string;
+  training_required?: boolean;
+  acknowledgment_required?: boolean;
+  competency_assessment_required?: boolean;
+  acknowledgment_sla_days?: number;
+  training_renewal_months?: number;
+  procedure_steps?: SopProcedureStep[];
+  department_scopes?: string[];
+  role_scopes?: RoleScope[];
+}
+
+export async function saveGovernedSopDraft(input: SaveSopDraftInput): Promise<{ success: boolean; version_id: string }> {
+  return invokePrivilegedAction<{ success: boolean; version_id: string }>(
+    'save_governed_sop_draft',
     input as unknown as Record<string, unknown>
   );
 }

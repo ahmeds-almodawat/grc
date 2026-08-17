@@ -1,0 +1,547 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
+import { I18nProvider } from '../../src/i18n/I18nContext';
+import { SopRegister } from '../../src/components/policy-sop/SopRegister';
+import { SopProcedureBuilder } from '../../src/components/policy-sop/SopProcedureBuilder';
+import { SopPreviewModal } from '../../src/components/policy-sop/SopPreviewModal';
+import { SopEditor } from '../../src/components/policy-sop/SopEditor';
+import type { 
+  GovernedSopCatalogRow, 
+  DetailedSopRecord, 
+  SopProcedureStep, 
+  EligibleGoverningPolicy 
+} from '../../src/lib/policySopApi';
+import * as policySopApi from '../../src/lib/policySopApi';
+
+const mockDepartments = [
+  { id: 'dept-1', name: 'Clinical Pharmacy', code: 'PHARM' },
+  { id: 'dept-2', name: 'Emergency Medicine', code: 'ER' },
+];
+
+const mockProfiles = [
+  { id: 'prof-1', full_name: 'Dr. Sarah Connor', email: 's.connor@hospital.org', job_title: 'Chief Medical Officer' },
+  { id: 'prof-2', full_name: 'Ahmed Al-Mansoor', email: 'a.mansoor@hospital.org', job_title: 'Quality Director' },
+];
+
+const mockControls = [
+  { id: 'ctrl-1', code: 'CTL-MED-001', title: 'High-Alert Medication Dual Verification' },
+  { id: 'ctrl-2', code: 'CTL-HYG-002', title: 'Aseptic Hand Hygiene Compliance' },
+];
+
+const mockEligiblePolicies: EligibleGoverningPolicy[] = [
+  {
+    version_id: 'pol-ver-1',
+    document_id: 'pol-doc-1',
+    document_code: 'POL-MED-2026-0001',
+    title_en: 'Medication Safety & Administration Policy',
+    title_ar: 'سياسة سلامة وإعطاء الأدوية',
+    version_label: '1.0',
+    document_status: 'active',
+    effective_date: '2026-01-01'
+  },
+  {
+    version_id: 'pol-ver-2',
+    document_id: 'pol-doc-2',
+    document_code: 'POL-CLN-2026-0002',
+    title_en: 'Infection Prevention and Hygiene Policy',
+    title_ar: 'سياسة مكافحة العدوى والتعقيم',
+    version_label: '2.0',
+    document_status: 'approved',
+    effective_date: '2026-02-01'
+  }
+];
+
+const mockSops: GovernedSopCatalogRow[] = [
+  {
+    document_id: 'sop-1',
+    document_code: 'SOP-PHARM-2026-0001',
+    document_title: 'Inpatient Chemotherapy Dispensing SOP',
+    document_type: 'sop',
+    document_status: 'active',
+    effective_date: '2026-01-15',
+    next_review_date: '2027-01-15',
+    department_id: 'dept-1',
+    department_name: 'Clinical Pharmacy',
+    document_owner_id: 'prof-1',
+    document_owner_name: 'Dr. Sarah Connor',
+    version_id: 'sop-ver-1',
+    version_number: 1,
+    version_label: '1.0',
+    is_current_version: true,
+    version_title_en: 'Inpatient Chemotherapy Dispensing SOP',
+    version_title_ar: 'إجراء صرف العلاج الكيماوي للمرضى الداخليين',
+    title_en: 'Inpatient Chemotherapy Dispensing SOP',
+    title_ar: 'إجراء صرف العلاج الكيماوي للمرضى الداخليين',
+    process_name_en: 'Chemotherapy Dispensing',
+    process_name_ar: 'صرف العلاج الكيماوي',
+    process_owner_id: 'prof-1',
+    process_owner_name: 'Dr. Sarah Connor',
+    purpose_en: 'Ensure safe and accurate dispensing of chemotherapy medications.',
+    purpose_ar: 'ضمان الصرف الآمن والدقيق لأدوية العلاج الكيماوي.',
+    scope_en: 'Applies to all inpatient pharmacy staff.',
+    scope_ar: 'ينطبق على جميع صيادلة القسم الداخلي.',
+    primary_policy_version_id: 'pol-ver-1',
+    primary_policy_document_code: 'POL-MED-2026-0001',
+    primary_policy_document_title: 'Medication Safety & Administration Policy',
+    primary_policy_version_number: 1,
+    governance_link_state: 'linked',
+    training_required: true,
+    acknowledgment_required: true,
+    competency_assessment_required: true,
+    acknowledgment_sla_days: 30,
+    training_renewal_months: 12,
+    content_mode: 'structured',
+    transcription_status: 'not_required',
+    step_count: 5,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-15T00:00:00Z',
+  },
+  {
+    document_id: 'sop-2',
+    document_code: 'SOP-ER-2026-0002',
+    document_title: 'Emergency Triage Rapid Assessment SOP',
+    document_type: 'sop',
+    document_status: 'draft',
+    effective_date: null,
+    next_review_date: null,
+    department_id: 'dept-2',
+    department_name: 'Emergency Medicine',
+    document_owner_id: 'prof-2',
+    document_owner_name: 'Ahmed Al-Mansoor',
+    version_id: 'sop-ver-2',
+    version_number: 1,
+    version_label: '1.0',
+    is_current_version: true,
+    version_title_en: 'Emergency Triage Rapid Assessment SOP',
+    version_title_ar: 'إجراء الفرز والتقييم السريع في الطوارئ',
+    title_en: 'Emergency Triage Rapid Assessment SOP',
+    title_ar: 'إجراء الفرز والتقييم السريع في الطوارئ',
+    process_name_en: 'Emergency Patient Intake',
+    process_name_ar: 'استقبال وتصنيف مرضى الطوارئ',
+    process_owner_id: 'prof-2',
+    process_owner_name: 'Ahmed Al-Mansoor',
+    purpose_en: 'Rapid categorization of patient acuity upon ER arrival.',
+    purpose_ar: 'تصنيف سرعة استجابة ورعاية المرضى عند الوصول للطوارئ.',
+    scope_en: 'Emergency department triage desk.',
+    scope_ar: 'مكتب فرز قسم الطوارئ.',
+    primary_policy_version_id: null,
+    primary_policy_document_code: null,
+    primary_policy_document_title: null,
+    primary_policy_version_number: null,
+    governance_link_state: 'legacy_pending',
+    training_required: false,
+    acknowledgment_required: false,
+    competency_assessment_required: false,
+    acknowledgment_sla_days: null,
+    training_renewal_months: null,
+    content_mode: 'structured',
+    transcription_status: 'not_required',
+    step_count: 3,
+    created_at: '2026-02-01T00:00:00Z',
+    updated_at: '2026-02-01T00:00:00Z',
+  }
+];
+
+const mockDetailedSop: DetailedSopRecord = {
+  document_id: 'sop-1',
+  organization_id: 'org-1',
+  document_code: 'SOP-PHARM-2026-0001',
+  document_title: 'Inpatient Chemotherapy Dispensing SOP',
+  document_description: null,
+  document_status: 'draft',
+  workflow_stage: 'draft',
+  department_id: 'dept-1',
+  department_name: 'Clinical Pharmacy',
+  document_owner_id: 'prof-1',
+  document_owner_name: 'Dr. Sarah Connor',
+  effective_date: '2026-01-15',
+  next_review_date: '2027-01-15',
+  expiry_date: null,
+  criticality_level: 'critical',
+  confidentiality_level: 'internal',
+  active_flag: true,
+  version_id: 'sop-ver-1',
+  version_number: 1,
+  version_label: '1.0',
+  is_current_version: true,
+  approved_by: null,
+  approved_at: null,
+  locked_by: null,
+  locked_at: null,
+  revision_reason: 'Initial creation',
+  supersedes_version_id: null,
+  title_en: 'Inpatient Chemotherapy Dispensing SOP',
+  title_ar: 'إجراء صرف العلاج الكيماوي للمرضى الداخليين',
+  process_name_en: 'Chemotherapy Dispensing',
+  process_name_ar: 'صرف العلاج الكيماوي',
+  process_owner_id: 'prof-1',
+  process_owner_name: 'Dr. Sarah Connor',
+  purpose_en: 'Ensure safe and accurate dispensing of chemotherapy medications.',
+  purpose_ar: 'ضمان الصرف الآمن والدقيق لأدوية العلاج الكيماوي.',
+  scope_en: 'Applies to all inpatient pharmacy staff.',
+  scope_ar: 'ينطبق على جميع صيادلة القسم الداخلي.',
+  primary_policy_version_id: 'pol-ver-1',
+  primary_policy_document_code: 'POL-MED-2026-0001',
+  primary_policy_document_title: 'Medication Safety & Administration Policy',
+  primary_policy_version_label: '1.0',
+  governance_link_state: 'linked',
+  training_required: true,
+  acknowledgment_required: true,
+  competency_assessment_required: true,
+  acknowledgment_sla_days: 30,
+  training_renewal_months: 12,
+  content_mode: 'structured',
+  transcription_status: 'not_required',
+  procedure_steps: [
+    {
+      id: 'step-1',
+      sequence_number: 1,
+      responsible_role: 'Clinical Pharmacist',
+      action_instruction_en: 'Verify the oncologist electronic prescription against BSA calculator.',
+      action_instruction_ar: 'مطابقة الوصفة الإلكترونية الصادرة من استشاري الأورام مع حاسبة مساحة سطح الجسم.',
+      required_control_id: 'ctrl-1',
+      required_control_code: 'CTL-MED-001',
+      required_control_title: 'High-Alert Medication Dual Verification',
+      expected_evidence_record_en: 'Dual pharmacist sign-off timestamp in EHR.',
+      expected_evidence_record_ar: 'توثيق توقيع الصيدلي المزدوج في النظام الصحي الإلكتروني.',
+      timing_sla_en: 'Within 30 minutes of prescription order',
+      timing_sla_ar: 'خلال 30 دقيقة من صدور أمر الوصفة',
+      is_decision_point: true,
+      decision_criteria_en: 'If dose deviation > 5%, hold order and escalate to prescriber.',
+      decision_criteria_ar: 'إذا تجاوز انحراف الجرعة 5%، يتم إيقاف الأمر والتصعيد للطبيب الواصف.',
+      criticality: 'critical',
+      escalation_trigger_en: 'Unresolved dosage conflict after 15 min',
+      escalation_trigger_ar: 'عدم حل التعارض في الجرعة خلال 15 دقيقة',
+      escalation_destination_role: 'Chief Medical Officer / Pharmacy Director'
+    },
+    {
+      id: 'step-2',
+      sequence_number: 2,
+      responsible_role: 'Pharmacy Cleanroom Technician',
+      action_instruction_en: 'Perform aseptic compounding inside biological safety cabinet class II.',
+      action_instruction_ar: 'تحضير الدواء في بيئة معقمة داخل كابينة الأمان الحيوي من الفئة الثانية.',
+      required_control_id: 'ctrl-2',
+      required_control_code: 'CTL-HYG-002',
+      required_control_title: 'Aseptic Hand Hygiene Compliance',
+      expected_evidence_record_en: 'Cleanroom batch preparation log sheet.',
+      expected_evidence_record_ar: 'سجل تحضير الدفعة في الغرفة المعقمة.',
+      timing_sla_en: 'Standard compounding time: 20 minutes',
+      timing_sla_ar: 'وقت التحضير المعياري: 20 دقيقة',
+      is_decision_point: false,
+      decision_criteria_en: null,
+      decision_criteria_ar: null,
+      criticality: 'high',
+      escalation_trigger_en: 'Airflow filter alarm or containment leak',
+      escalation_trigger_ar: 'إنذار تدفق الهواء أو تسرب الاحتواء',
+      escalation_destination_role: 'Cleanroom Supervisor'
+    }
+  ],
+  department_scopes: ['dept-1'],
+  role_scopes: [{ id: 'role-1', role_name: 'Clinical Pharmacist', job_title: 'Inpatient Pharmacist' }],
+  review_events: [],
+  exceptions: [],
+  review_triggers: [],
+  all_versions: [
+    {
+      id: 'sop-ver-1',
+      version_number: 1,
+      version_label: '1.0',
+      is_current_version: true,
+      effective_date: '2026-01-15',
+      expiry_date: null,
+      approved_at: null,
+      locked_at: null,
+      prepared_by: 'prof-1',
+      revision_reason: 'Initial creation'
+    }
+  ]
+};
+
+describe('GRC v1.4-E1 Governed SOP Register & Builder Suite', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('SopRegister Component', () => {
+    it('renders SOP catalog table with columns and data accurately', () => {
+      const handleSelectSop = vi.fn();
+      const handleCreateSop = vi.fn();
+
+      render(
+        <I18nProvider>
+          <SopRegister
+            sops={mockSops}
+            departments={mockDepartments}
+            onSelectSop={handleSelectSop}
+            onCreateSop={handleCreateSop}
+          />
+        </I18nProvider>
+      );
+
+      expect(screen.getByText('SOP-PHARM-2026-0001')).toBeDefined();
+      expect(screen.getByText('Inpatient Chemotherapy Dispensing SOP')).toBeDefined();
+      expect(screen.getByText('SOP-ER-2026-0002')).toBeDefined();
+      expect(screen.getByText('Emergency Triage Rapid Assessment SOP')).toBeDefined();
+      expect(screen.getByText('POL-MED-2026-0001')).toBeDefined();
+    });
+
+    it('filters SOPs by search term', () => {
+      render(
+        <I18nProvider>
+          <SopRegister
+            sops={mockSops}
+            departments={mockDepartments}
+            onSelectSop={vi.fn()}
+            onCreateSop={vi.fn()}
+          />
+        </I18nProvider>
+      );
+
+      const searchInput = screen.getByPlaceholderText(/Search by SOP code/i);
+      fireEvent.change(searchInput, { target: { value: 'Chemotherapy' } });
+
+      expect(screen.getByText('Inpatient Chemotherapy Dispensing SOP')).toBeDefined();
+      expect(screen.queryByText('Emergency Triage Rapid Assessment SOP')).toBeNull();
+    });
+
+    it('filters SOPs by governing policy linkage state', () => {
+      render(
+        <I18nProvider>
+          <SopRegister
+            sops={mockSops}
+            departments={mockDepartments}
+            onSelectSop={vi.fn()}
+            onCreateSop={vi.fn()}
+          />
+        </I18nProvider>
+      );
+
+      const linkSelect = screen.getByLabelText(/Policy Linkage/i);
+      fireEvent.change(linkSelect, { target: { value: 'legacy_pending' } });
+
+      expect(screen.queryByText('Inpatient Chemotherapy Dispensing SOP')).toBeNull();
+      expect(screen.getByText('Emergency Triage Rapid Assessment SOP')).toBeDefined();
+    });
+
+    it('triggers new SOP creation callback on button click', () => {
+      const handleCreateSop = vi.fn();
+
+      render(
+        <I18nProvider>
+          <SopRegister
+            sops={mockSops}
+            departments={mockDepartments}
+            onSelectSop={vi.fn()}
+            onCreateSop={handleCreateSop}
+          />
+        </I18nProvider>
+      );
+
+      const newBtn = screen.getByRole('button', { name: /New SOP/i });
+      fireEvent.click(newBtn);
+      expect(handleCreateSop).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('SopProcedureBuilder Component', () => {
+    it('renders procedure steps with sequence, role, and critical control point badges', () => {
+      const mockSteps: SopProcedureStep[] = [...mockDetailedSop.procedure_steps];
+      const handleChange = vi.fn();
+
+      render(
+        <I18nProvider>
+          <SopProcedureBuilder
+            steps={mockSteps}
+            onChange={handleChange}
+            controls={mockControls}
+          />
+        </I18nProvider>
+      );
+
+      expect(screen.getByText('Clinical Pharmacist')).toBeDefined();
+      expect(screen.getByText(/Verify the oncologist electronic prescription/i)).toBeDefined();
+      expect(screen.getByText('Pharmacy Cleanroom Technician')).toBeDefined();
+      expect(screen.getAllByText(/Critical Control Point/i).length).toBeGreaterThan(0);
+    });
+
+    it('supports adding a new step and re-indexing sequences', () => {
+      const mockSteps: SopProcedureStep[] = [mockDetailedSop.procedure_steps[0]];
+      const handleChange = vi.fn();
+
+      render(
+        <I18nProvider>
+          <SopProcedureBuilder
+            steps={mockSteps}
+            onChange={handleChange}
+            controls={mockControls}
+          />
+        </I18nProvider>
+      );
+
+      const addBtn = screen.getByRole('button', { name: /Add Step/i });
+      fireEvent.click(addBtn);
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      const passedSteps = handleChange.mock.calls[0][0];
+      expect(passedSteps).toHaveLength(2);
+      expect(passedSteps[1].sequence_number).toBe(2);
+    });
+
+    it('supports moving steps down and maintaining stable sequences', () => {
+      const mockSteps: SopProcedureStep[] = [...mockDetailedSop.procedure_steps];
+      const handleChange = vi.fn();
+
+      render(
+        <I18nProvider>
+          <SopProcedureBuilder
+            steps={mockSteps}
+            onChange={handleChange}
+            controls={mockControls}
+          />
+        </I18nProvider>
+      );
+
+      const moveDownBtns = screen.getAllByTitle(/Move down/i);
+      fireEvent.click(moveDownBtns[0]);
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      const reordered = handleChange.mock.calls[0][0];
+      expect(reordered[0].id).toBe('step-2');
+      expect(reordered[0].sequence_number).toBe(1);
+      expect(reordered[1].id).toBe('step-1');
+      expect(reordered[1].sequence_number).toBe(2);
+    });
+
+    it('supports decision point branching and criteria inputs', () => {
+      const mockSteps: SopProcedureStep[] = [mockDetailedSop.procedure_steps[1]]; // non-decision step
+      const handleChange = vi.fn();
+
+      render(
+        <I18nProvider>
+          <SopProcedureBuilder
+            steps={mockSteps}
+            onChange={handleChange}
+            controls={mockControls}
+          />
+        </I18nProvider>
+      );
+
+      const checkbox = screen.getByLabelText(/Branching \/ Decision Point/i);
+      fireEvent.click(checkbox);
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      expect(handleChange.mock.calls[0][0][0].is_decision_point).toBe(true);
+    });
+  });
+
+  describe('SopPreviewModal Component', () => {
+    it('renders printable A4 document view with institutional metadata and procedure steps', () => {
+      const handleClose = vi.fn();
+
+      render(
+        <I18nProvider>
+          <SopPreviewModal
+            sop={mockDetailedSop}
+            onClose={handleClose}
+          />
+        </I18nProvider>
+      );
+
+      expect(screen.getAllByText('SOP-PHARM-2026-0001').length).toBeGreaterThan(0);
+      expect(screen.getByText('Inpatient Chemotherapy Dispensing SOP')).toBeDefined();
+      expect(screen.getByText('POL-MED-2026-0001 - Medication Safety & Administration Policy (v1.0)')).toBeDefined();
+      expect(screen.getByText('Chemotherapy Dispensing')).toBeDefined();
+      expect(screen.getByText(/Verify the oncologist electronic prescription against BSA calculator/i)).toBeDefined();
+    });
+  });
+
+  describe('SopEditor Full Workspace & Lifecycle Integration', () => {
+    beforeEach(() => {
+      vi.spyOn(policySopApi, 'listDepartments').mockResolvedValue(mockDepartments);
+      vi.spyOn(policySopApi, 'listProfiles').mockResolvedValue(mockProfiles);
+      vi.spyOn(policySopApi, 'listControls').mockResolvedValue(mockControls);
+      vi.spyOn(policySopApi, 'listEligibleGoverningPolicies').mockResolvedValue(mockEligiblePolicies);
+      vi.spyOn(policySopApi, 'getGovernedSopDetail').mockResolvedValue(mockDetailedSop);
+      vi.spyOn(policySopApi, 'saveGovernedSopDraft').mockResolvedValue({ success: true, version_id: 'sop-ver-1' });
+    });
+
+    it('loads SOP detail and renders tabbed workspace', async () => {
+      render(
+        <I18nProvider>
+          <SopEditor
+            initialSopId="sop-1"
+            onBack={vi.fn()}
+          />
+        </I18nProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
+      });
+
+      expect(screen.getByDisplayValue('Inpatient Chemotherapy Dispensing SOP')).toBeDefined();
+      expect(screen.getByDisplayValue('Chemotherapy Dispensing')).toBeDefined();
+      expect(screen.getByText(/Document Control/i)).toBeDefined();
+      expect(screen.getByText(/Governing Policy/i)).toBeDefined();
+      expect(screen.getByText(/Purpose & Scope/i)).toBeDefined();
+      expect(screen.getByText(/Procedure Builder/i)).toBeDefined();
+    });
+
+    it('switches to Governing Policy tab and verifies exact policy version selector', async () => {
+      render(
+        <I18nProvider>
+          <SopEditor
+            initialSopId="sop-1"
+            onBack={vi.fn()}
+          />
+        </I18nProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
+      });
+
+      const policyTab = screen.getByRole('button', { name: /Governing Policy/i });
+      fireEvent.click(policyTab);
+
+      expect(screen.getByText(/Every hospital SOP derives its authority/i)).toBeDefined();
+      expect(screen.getByText('POL-MED-2026-0001')).toBeDefined();
+      expect(screen.getByText('POL-CLN-2026-0002')).toBeDefined();
+    });
+
+    it('triggers save draft with procedure steps and updated fields', async () => {
+      const saveSpy = vi.spyOn(policySopApi, 'saveGovernedSopDraft');
+
+      render(
+        <I18nProvider>
+          <SopEditor
+            initialSopId="sop-1"
+            onBack={vi.fn()}
+          />
+        </I18nProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
+      });
+
+      const titleInput = screen.getByDisplayValue('Inpatient Chemotherapy Dispensing SOP');
+      fireEvent.change(titleInput, { target: { value: 'Updated Chemotherapy Dispensing SOP' } });
+
+      const saveBtn = screen.getByRole('button', { name: /Save Draft/i });
+      fireEvent.click(saveBtn);
+
+      await waitFor(() => {
+        expect(saveSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            version_id: 'sop-ver-1',
+            title_en: 'Updated Chemotherapy Dispensing SOP',
+            process_name_en: 'Chemotherapy Dispensing',
+            primary_policy_version_id: 'pol-ver-1'
+          })
+        );
+      });
+    });
+  });
+});
