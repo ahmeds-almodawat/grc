@@ -2,8 +2,8 @@
 -- Migration 202: Governed Policy & SOP Lifecycle, Review, Approval & Exception Foundation
 -- Establishes review triggers, Policy/SOP exceptions, concurrency-safe numbering,
 -- and service-role-only lifecycle mutation RPCs for draft creation, atomic saving,
--- revision cloning, review submission, approval locking, activation, supersession,
--- and retirement.
+-- revision cloning, review submission, Patch 27 approval integration, activation,
+-- supersession, and retirement.
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
@@ -98,13 +98,14 @@ declare
   v_seq integer;
   v_prefix text;
   v_code text;
+  v_cleaned_dept text;
 begin
   if p_document_type = 'policy' then
     v_prefix := 'POL';
   elsif p_document_type = 'sop' then
     v_prefix := 'SOP';
   else
-    v_prefix := upper(p_document_type);
+    v_prefix := upper(regexp_replace(p_document_type, '[^a-zA-Z0-9]', '', 'g'));
   end if;
 
   insert into public.governed_document_numbering_sequences (organization_id, document_type, year_number, last_sequence, updated_at)
@@ -113,8 +114,13 @@ begin
   do update set last_sequence = governed_document_numbering_sequences.last_sequence + 1, updated_at = now()
   returning last_sequence into v_seq;
 
-  if p_department_code is not null and trim(p_department_code) <> '' then
-    v_code := v_prefix || '-' || upper(trim(p_department_code)) || '-' || v_year::text || '-' || lpad(v_seq::text, 4, '0');
+  if p_department_code is not null then
+    v_cleaned_dept := upper(regexp_replace(trim(p_department_code), '[^a-zA-Z0-9]', '', 'g'));
+    if length(v_cleaned_dept) > 0 then
+      v_code := v_prefix || '-' || v_cleaned_dept || '-' || v_year::text || '-' || lpad(v_seq::text, 4, '0');
+    else
+      v_code := v_prefix || '-' || v_year::text || '-' || lpad(v_seq::text, 4, '0');
+    end if;
   else
     v_code := v_prefix || '-' || v_year::text || '-' || lpad(v_seq::text, 4, '0');
   end if;
@@ -474,7 +480,7 @@ end;
 $$;
 
 -- ----------------------------------------------------------------------------
--- 7. Governed Draft Save RPCs (Stable Child UUIDs & Resequencing)
+-- 7. Governed Draft Save RPCs (Child Containment & Stable Resequencing)
 -- ----------------------------------------------------------------------------
 create or replace function public.save_governed_policy_draft(
   p_actor_id uuid,
@@ -540,26 +546,50 @@ begin
     updated_at = now()
   where version_id = p_version_id;
 
-  -- Reconcile requirements preserving stable UUIDs
+  -- Reconcile requirements preserving stable UUIDs and validating child containment
   if jsonb_array_length(p_requirements) > 0 then
     for v_req in select * from jsonb_array_elements(p_requirements) loop
       v_req_id := (v_req ->> 'id')::uuid;
-      if v_req_id is not null and exists (select 1 from public.policy_requirements where id = v_req_id and policy_version_id = p_version_id) then
-        update public.policy_requirements set
-          sequence_number = v_seq,
-          requirement_statement_en = coalesce(v_req ->> 'requirement_statement_en', requirement_statement_en),
-          requirement_statement_ar = v_req ->> 'requirement_statement_ar',
-          responsible_role = v_req ->> 'responsible_role',
-          is_mandatory = coalesce((v_req ->> 'is_mandatory')::boolean, is_mandatory),
-          expected_evidence_en = v_req ->> 'expected_evidence_en',
-          expected_evidence_ar = v_req ->> 'expected_evidence_ar',
-          mapped_control_id = (v_req ->> 'mapped_control_id')::uuid,
-          linked_accreditation_clause_id = (v_req ->> 'linked_accreditation_clause_id')::uuid,
-          monitoring_frequency = v_req ->> 'monitoring_frequency',
-          monitoring_owner_id = (v_req ->> 'monitoring_owner_id')::uuid,
-          updated_at = now()
-        where id = v_req_id;
-        v_seen_req_ids := array_append(v_seen_req_ids, v_req_id);
+      if v_req_id is not null then
+        if exists (select 1 from public.policy_requirements where id = v_req_id and policy_version_id <> p_version_id) then
+          raise exception 'PATCH202_CROSS_VERSION_CHILD_ID_DENIED';
+        end if;
+        if exists (select 1 from public.policy_requirements where id = v_req_id and policy_version_id = p_version_id) then
+          update public.policy_requirements set
+            sequence_number = v_seq,
+            requirement_statement_en = coalesce(v_req ->> 'requirement_statement_en', requirement_statement_en),
+            requirement_statement_ar = v_req ->> 'requirement_statement_ar',
+            responsible_role = v_req ->> 'responsible_role',
+            is_mandatory = coalesce((v_req ->> 'is_mandatory')::boolean, is_mandatory),
+            expected_evidence_en = v_req ->> 'expected_evidence_en',
+            expected_evidence_ar = v_req ->> 'expected_evidence_ar',
+            mapped_control_id = (v_req ->> 'mapped_control_id')::uuid,
+            linked_accreditation_clause_id = (v_req ->> 'linked_accreditation_clause_id')::uuid,
+            monitoring_frequency = v_req ->> 'monitoring_frequency',
+            monitoring_owner_id = (v_req ->> 'monitoring_owner_id')::uuid,
+            updated_at = now()
+          where id = v_req_id;
+          v_seen_req_ids := array_append(v_seen_req_ids, v_req_id);
+        else
+          insert into public.policy_requirements (
+            policy_version_id, sequence_number, requirement_statement_en, requirement_statement_ar,
+            responsible_role, is_mandatory, expected_evidence_en, expected_evidence_ar,
+            mapped_control_id, linked_accreditation_clause_id, monitoring_frequency, monitoring_owner_id
+          ) values (
+            p_version_id, v_seq,
+            coalesce(v_req ->> 'requirement_statement_en', 'Requirement ' || v_seq::text),
+            v_req ->> 'requirement_statement_ar',
+            v_req ->> 'responsible_role',
+            coalesce((v_req ->> 'is_mandatory')::boolean, true),
+            v_req ->> 'expected_evidence_en',
+            v_req ->> 'expected_evidence_ar',
+            (v_req ->> 'mapped_control_id')::uuid,
+            (v_req ->> 'linked_accreditation_clause_id')::uuid,
+            v_req ->> 'monitoring_frequency',
+            (v_req ->> 'monitoring_owner_id')::uuid
+          ) returning id into v_req_id;
+          v_seen_req_ids := array_append(v_seen_req_ids, v_req_id);
+        end if;
       else
         insert into public.policy_requirements (
           policy_version_id, sequence_number, requirement_statement_en, requirement_statement_ar,
@@ -582,7 +612,6 @@ begin
       end if;
       v_seq := v_seq + 1;
     end loop;
-    -- Delete removed requirements
     delete from public.policy_requirements where policy_version_id = p_version_id and not (id = any(v_seen_req_ids));
   else
     delete from public.policy_requirements where policy_version_id = p_version_id;
@@ -682,31 +711,61 @@ begin
     updated_at = now()
   where version_id = p_version_id;
 
-  -- Reconcile steps preserving stable UUIDs
+  -- Reconcile steps preserving stable UUIDs and validating child containment
   if jsonb_array_length(p_procedure_steps) > 0 then
     for v_step in select * from jsonb_array_elements(p_procedure_steps) loop
       v_step_id := (v_step ->> 'id')::uuid;
-      if v_step_id is not null and exists (select 1 from public.sop_procedure_steps where id = v_step_id and sop_version_id = p_version_id) then
-        update public.sop_procedure_steps set
-          sequence_number = v_seq,
-          responsible_role = coalesce(v_step ->> 'responsible_role', responsible_role),
-          action_instruction_en = coalesce(v_step ->> 'action_instruction_en', action_instruction_en),
-          action_instruction_ar = v_step ->> 'action_instruction_ar',
-          required_control_id = (v_step ->> 'required_control_id')::uuid,
-          expected_evidence_record_en = v_step ->> 'expected_evidence_record_en',
-          expected_evidence_record_ar = v_step ->> 'expected_evidence_record_ar',
-          timing_sla_en = v_step ->> 'timing_sla_en',
-          timing_sla_ar = v_step ->> 'timing_sla_ar',
-          is_decision_point = coalesce((v_step ->> 'is_decision_point')::boolean, is_decision_point),
-          decision_criteria_en = v_step ->> 'decision_criteria_en',
-          decision_criteria_ar = v_step ->> 'decision_criteria_ar',
-          criticality = coalesce(v_step ->> 'criticality', criticality),
-          escalation_trigger_en = v_step ->> 'escalation_trigger_en',
-          escalation_trigger_ar = v_step ->> 'escalation_trigger_ar',
-          escalation_destination_role = v_step ->> 'escalation_destination_role',
-          updated_at = now()
-        where id = v_step_id;
-        v_seen_step_ids := array_append(v_seen_step_ids, v_step_id);
+      if v_step_id is not null then
+        if exists (select 1 from public.sop_procedure_steps where id = v_step_id and sop_version_id <> p_version_id) then
+          raise exception 'PATCH202_CROSS_VERSION_CHILD_ID_DENIED';
+        end if;
+        if exists (select 1 from public.sop_procedure_steps where id = v_step_id and sop_version_id = p_version_id) then
+          update public.sop_procedure_steps set
+            sequence_number = v_seq,
+            responsible_role = coalesce(v_step ->> 'responsible_role', responsible_role),
+            action_instruction_en = coalesce(v_step ->> 'action_instruction_en', action_instruction_en),
+            action_instruction_ar = v_step ->> 'action_instruction_ar',
+            required_control_id = (v_step ->> 'required_control_id')::uuid,
+            expected_evidence_record_en = v_step ->> 'expected_evidence_record_en',
+            expected_evidence_record_ar = v_step ->> 'expected_evidence_record_ar',
+            timing_sla_en = v_step ->> 'timing_sla_en',
+            timing_sla_ar = v_step ->> 'timing_sla_ar',
+            is_decision_point = coalesce((v_step ->> 'is_decision_point')::boolean, is_decision_point),
+            decision_criteria_en = v_step ->> 'decision_criteria_en',
+            decision_criteria_ar = v_step ->> 'decision_criteria_ar',
+            criticality = coalesce(v_step ->> 'criticality', criticality),
+            escalation_trigger_en = v_step ->> 'escalation_trigger_en',
+            escalation_trigger_ar = v_step ->> 'escalation_trigger_ar',
+            escalation_destination_role = v_step ->> 'escalation_destination_role',
+            updated_at = now()
+          where id = v_step_id;
+          v_seen_step_ids := array_append(v_seen_step_ids, v_step_id);
+        else
+          insert into public.sop_procedure_steps (
+            sop_version_id, sequence_number, responsible_role, action_instruction_en, action_instruction_ar,
+            required_control_id, expected_evidence_record_en, expected_evidence_record_ar,
+            timing_sla_en, timing_sla_ar, is_decision_point, decision_criteria_en, decision_criteria_ar,
+            criticality, escalation_trigger_en, escalation_trigger_ar, escalation_destination_role
+          ) values (
+            p_version_id, v_seq,
+            coalesce(v_step ->> 'responsible_role', 'Performer'),
+            coalesce(v_step ->> 'action_instruction_en', 'Step ' || v_seq::text),
+            v_step ->> 'action_instruction_ar',
+            (v_step ->> 'required_control_id')::uuid,
+            v_step ->> 'expected_evidence_record_en',
+            v_step ->> 'expected_evidence_record_ar',
+            v_step ->> 'timing_sla_en',
+            v_step ->> 'timing_sla_ar',
+            coalesce((v_step ->> 'is_decision_point')::boolean, false),
+            v_step ->> 'decision_criteria_en',
+            v_step ->> 'decision_criteria_ar',
+            coalesce(v_step ->> 'criticality', 'medium'),
+            v_step ->> 'escalation_trigger_en',
+            v_step ->> 'escalation_trigger_ar',
+            v_step ->> 'escalation_destination_role'
+          ) returning id into v_step_id;
+          v_seen_step_ids := array_append(v_seen_step_ids, v_step_id);
+        end if;
       else
         insert into public.sop_procedure_steps (
           sop_version_id, sequence_number, responsible_role, action_instruction_en, action_instruction_ar,
@@ -735,7 +794,6 @@ begin
       end if;
       v_seq := v_seq + 1;
     end loop;
-    -- Delete removed steps
     delete from public.sop_procedure_steps where sop_version_id = p_version_id and not (id = any(v_seen_step_ids));
   else
     delete from public.sop_procedure_steps where sop_version_id = p_version_id;
@@ -932,7 +990,6 @@ declare
   v_doc_type text;
   v_org_id uuid;
   v_dept_id uuid;
-  v_req_count integer;
   v_step_count integer;
   v_appr_req_id uuid;
 begin
@@ -997,7 +1054,7 @@ end;
 $$;
 
 -- ----------------------------------------------------------------------------
--- 10. Governed Approval Finalization & Version Locking RPC
+-- 10. Governed Approval Finalization & Version Locking RPC (Patch 27 Integrated)
 -- ----------------------------------------------------------------------------
 create or replace function public.finalize_governed_document_approval(
   p_actor_id uuid,
@@ -1013,6 +1070,9 @@ declare
   v_doc_id uuid;
   v_org_id uuid;
   v_is_locked boolean;
+  v_appr_req_id uuid;
+  v_final_decision text;
+  v_approver_id uuid;
 begin
   select d.id, d.organization_id, (v.locked_at is not null or v.approved_at is not null)
   into v_doc_id, v_org_id, v_is_locked
@@ -1028,9 +1088,31 @@ begin
     return jsonb_build_object('success', true, 'already_approved', true, 'version_id', p_version_id);
   end if;
 
+  -- Verify authoritative Patch 27 approval request
+  select id, final_decision, coalesce(final_decision_by, (
+    select approver_id from public.approval_decisions
+    where approval_request_id = ar.id and decision = 'approved'
+    order by decided_at desc limit 1
+  ))
+  into v_appr_req_id, v_final_decision, v_approver_id
+  from public.approval_requests ar
+  where linked_item_type = 'document_version'
+    and linked_item_id = p_version_id
+    and workflow_type = 'document_control'
+    and organization_id = v_org_id
+  order by requested_at desc
+  limit 1;
+
+  if v_appr_req_id is not null and v_final_decision is not null and v_final_decision <> 'approved' then
+    raise exception 'PATCH202_APPROVAL_NOT_FINALIZED';
+  end if;
+
+  -- Derive business approver identity from Patch 27 truth (fallback to p_actor_id if direct privileged finalization)
+  v_approver_id := coalesce(v_approver_id, p_actor_id);
+
   -- Lock version
   update public.document_versions set
-    approved_by = p_actor_id,
+    approved_by = v_approver_id,
     approved_at = now(),
     locked_by = p_actor_id,
     locked_at = now()
@@ -1046,12 +1128,13 @@ begin
   insert into public.document_review_events (
     document_id, version_id, event_type, from_status, to_status, actor_id, event_note
   ) values (
-    v_doc_id, p_version_id, 'approved', 'under_review', 'approved', p_actor_id, p_approval_note
+    v_doc_id, p_version_id, 'approved', 'under_review', 'approved', v_approver_id, p_approval_note
   );
 
   return jsonb_build_object(
     'document_id', v_doc_id,
     'version_id', p_version_id,
+    'approved_by', v_approver_id,
     'status', 'approved'
   );
 end;
@@ -1073,6 +1156,7 @@ as $$
 declare
   v_doc_id uuid;
   v_prior_ver_id uuid;
+  v_prior_eff_date date;
 begin
   select d.id into v_doc_id
   from public.document_versions v
@@ -1087,7 +1171,7 @@ begin
   perform 1 from public.controlled_documents where id = v_doc_id for update;
 
   -- Identify prior active version
-  select id into v_prior_ver_id
+  select id, effective_date into v_prior_ver_id, v_prior_eff_date
   from public.document_versions
   where document_id = v_doc_id and is_current_version = true and id <> p_version_id;
 
@@ -1096,7 +1180,11 @@ begin
     update public.document_versions set
       is_current_version = false,
       superseded_by_version_id = p_version_id,
-      expiry_date = coalesce(expiry_date, p_effective_date)
+      expiry_date = case
+        when v_prior_eff_date is not null and v_prior_eff_date < p_effective_date
+        then (p_effective_date - interval '1 day')::date
+        else p_effective_date
+      end
     where id = v_prior_ver_id;
 
     insert into public.document_review_events (
@@ -1245,6 +1333,7 @@ as $$
 declare
   v_doc_id uuid;
   v_ver_id uuid;
+  v_revision_res jsonb;
 begin
   select document_id, version_id into v_doc_id, v_ver_id
   from public.governed_document_review_triggers
@@ -1252,6 +1341,15 @@ begin
 
   if v_doc_id is null then
     raise exception 'PATCH202_TRIGGER_NOT_OPEN';
+  end if;
+
+  -- Reuse existing lifecycle operations based on outcome
+  if p_outcome = 'minor_revision' then
+    v_revision_res := public.start_governed_document_revision(p_actor_id, v_ver_id, 'minor', p_outcome_note);
+  elsif p_outcome = 'major_revision' then
+    v_revision_res := public.start_governed_document_revision(p_actor_id, v_ver_id, 'major', p_outcome_note);
+  elsif p_outcome = 'retire' then
+    perform public.retire_governed_document(p_actor_id, v_doc_id, p_outcome_note);
   end if;
 
   update public.governed_document_review_triggers set
@@ -1273,7 +1371,8 @@ begin
     'trigger_id', p_trigger_id,
     'document_id', v_doc_id,
     'outcome', p_outcome,
-    'status', 'completed'
+    'status', 'completed',
+    'revision', v_revision_res
   );
 end;
 $$;
@@ -1299,17 +1398,23 @@ as $$
 declare
   v_doc_id uuid;
   v_org_id uuid;
+  v_is_approved boolean;
   v_exc_id uuid;
   v_code text;
   v_appr_req_id uuid;
 begin
-  select d.id, d.organization_id into v_doc_id, v_org_id
+  select d.id, d.organization_id, (v.approved_at is not null)
+  into v_doc_id, v_org_id, v_is_approved
   from public.document_versions v
   join public.controlled_documents d on d.id = v.document_id
   where v.id = p_version_id;
 
   if v_doc_id is null then
     raise exception 'PATCH202_VERSION_NOT_FOUND';
+  end if;
+
+  if not v_is_approved then
+    raise exception 'PATCH202_EXCEPTION_TARGET_NOT_APPROVED';
   end if;
 
   if p_end_date < p_start_date then
@@ -1361,8 +1466,9 @@ set search_path = public, pg_temp
 as $$
 declare
   v_req_by uuid;
+  v_appr_req_id uuid;
 begin
-  select requested_by into v_req_by
+  select requested_by, approval_request_id into v_req_by, v_appr_req_id
   from public.policy_sop_exceptions
   where id = p_exception_id and status = 'requested';
 
@@ -1381,6 +1487,16 @@ begin
     decision_at = now(),
     decision_note = p_decision_note
   where id = p_exception_id;
+
+  if v_appr_req_id is not null then
+    update public.approval_requests set
+      request_status = p_decision,
+      final_decision = p_decision,
+      final_decision_by = p_actor_id,
+      final_decision_at = now(),
+      final_decision_note = p_decision_note
+    where id = v_appr_req_id;
+  end if;
 
   return jsonb_build_object(
     'exception_id', p_exception_id,

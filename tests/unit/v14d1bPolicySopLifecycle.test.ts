@@ -54,9 +54,10 @@ describe('GRC v1.4-D1B: Governed Policy & SOP Lifecycle, Review, Approval & Exce
       expect(sql).toMatch(/insert into public\.sop_procedure_steps/i);
     });
 
-    it('defines save_governed_policy_draft and save_governed_sop_draft preserving stable child UUIDs', () => {
+    it('defines save_governed_policy_draft and save_governed_sop_draft preserving stable child UUIDs and denying cross-version child IDs', () => {
       expect(sql).toMatch(/function public\.save_governed_policy_draft\(/i);
       expect(sql).toMatch(/function public\.save_governed_sop_draft\(/i);
+      expect(sql).toMatch(/PATCH202_CROSS_VERSION_CHILD_ID_DENIED/i);
       expect(sql).toMatch(/v_seen_req_ids/i);
       expect(sql).toMatch(/v_seen_step_ids/i);
     });
@@ -78,10 +79,11 @@ describe('GRC v1.4-D1B: Governed Policy & SOP Lifecycle, Review, Approval & Exce
       expect(sql).toMatch(/insert into public\.approval_requests/i);
     });
 
-    it('defines finalize_governed_document_approval locking the approved version', () => {
+    it('defines finalize_governed_document_approval locking the approved version and binding Patch 27 decision', () => {
       expect(sql).toMatch(/function public\.finalize_governed_document_approval\(/i);
       expect(sql).toMatch(/locked_at = now\(\)/i);
       expect(sql).toMatch(/approved_at = now\(\)/i);
+      expect(sql).toMatch(/PATCH202_APPROVAL_NOT_FINALIZED/i);
     });
 
     it('defines activate_governed_document_version superseding prior active version', () => {
@@ -103,13 +105,16 @@ describe('GRC v1.4-D1B: Governed Policy & SOP Lifecycle, Review, Approval & Exce
   describe('4. Review Triggers & Exception Governance RPCs', () => {
     const sql = fs.readFileSync(migrationPath, 'utf8');
 
-    it('defines trigger_governed_document_review and complete_governed_document_review', () => {
+    it('defines trigger_governed_document_review and complete_governed_document_review with lifecycle reuse', () => {
       expect(sql).toMatch(/function public\.trigger_governed_document_review\(/i);
       expect(sql).toMatch(/function public\.complete_governed_document_review\(/i);
+      expect(sql).toMatch(/public\.start_governed_document_revision\(p_actor_id, v_ver_id/i);
+      expect(sql).toMatch(/public\.retire_governed_document\(p_actor_id, v_doc_id/i);
     });
 
-    it('defines request_policy_sop_exception and decide_policy_sop_exception with SoD enforcement', () => {
+    it('defines request_policy_sop_exception and decide_policy_sop_exception with target version validation and SoD enforcement', () => {
       expect(sql).toMatch(/function public\.request_policy_sop_exception\(/i);
+      expect(sql).toMatch(/PATCH202_EXCEPTION_TARGET_NOT_APPROVED/i);
       expect(sql).toMatch(/function public\.decide_policy_sop_exception\(/i);
       expect(sql).toMatch(/PATCH202_SELF_APPROVAL_FORBIDDEN/i);
     });
