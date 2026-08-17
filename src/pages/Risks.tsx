@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { EntityTable } from '../components/EntityTable';
+import { GovernedDecisionDialog } from '../components/GovernedDecisionDialog';
 import { RiskForm } from '../components/GrcForms';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
@@ -36,6 +37,20 @@ import { useAsyncData } from '../hooks/useAsyncData';
 import { useI18n } from '../i18n/I18nContext';
 import type { RiskReassessmentHistoryRow, RiskRow, RiskWorkflowEventRow } from '../types/domain';
 
+type RiskActionType =
+  | 'reassess'
+  | 'request_acceptance'
+  | 'update_treatment'
+  | 'link_source'
+  | 'mark_duplicate'
+  | 'request_closure'
+  | 'reopen';
+
+interface RiskDecisionState {
+  action: RiskActionType;
+  risk: RiskRow;
+}
+
 export function Risks() {
   const auth = useAuth();
   const { t } = useI18n();
@@ -43,6 +58,7 @@ export function Risks() {
   const [riskFormDirty, setRiskFormDirty] = useState(false);
   const [riskFormSubmitting, setRiskFormSubmitting] = useState(false);
   const [selectedRisk, setSelectedRisk] = useState<RiskRow | null>(null);
+  const [decisionDialog, setDecisionDialog] = useState<RiskDecisionState | null>(null);
   const [riskHistory, setRiskHistory] = useState<RiskReassessmentHistoryRow[]>([]);
   const [riskEvents, setRiskEvents] = useState<RiskWorkflowEventRow[]>([]);
   const [workflowBusy, setWorkflowBusy] = useState(false);
@@ -135,80 +151,84 @@ export function Risks() {
     }
   }
 
-  function promptText(label: string, fallback = '') {
-    const value = window.prompt(label, fallback);
-    return value === null ? null : value.trim();
-  }
-
   function defaultExpiryDate() {
     const date = new Date();
     date.setDate(date.getDate() + 90);
     return date.toISOString().slice(0, 10);
   }
 
-  async function reassessSelectedRisk() {
-    if (!selectedRisk) return;
-    const residualLikelihood = Number(promptText('Residual likelihood 1-5', String(selectedRisk.residual_likelihood ?? 3)));
-    const residualImpact = Number(promptText('Residual impact 1-5', String(selectedRisk.residual_impact ?? 3)));
-    const reason = promptText('Reason for score change');
-    if (!reason) return;
-    await runRiskAction('Risk reassessment', () => updateRiskAssessment({
-      risk_id: selectedRisk.id,
-      likelihood: selectedRisk.likelihood,
-      impact: selectedRisk.impact,
-      residual_likelihood: residualLikelihood,
-      residual_impact: residualImpact,
-      appetite_threshold: selectedRisk.appetite_threshold ?? 12,
-      change_reason: reason,
-    }));
-  }
+  async function executeRiskDecision(values: Record<string, any>) {
+    if (!decisionDialog) return;
+    const { action, risk } = decisionDialog;
+    setWorkflowBusy(true);
+    setWorkflowMessage(null);
 
-  async function requestAcceptanceForSelectedRisk() {
-    if (!selectedRisk) return;
-    const reason = promptText('Acceptance reason');
-    if (!reason) return;
-    const acceptance_expiry_date = promptText('Acceptance expiry date', selectedRisk.acceptance_expiry_date || defaultExpiryDate());
-    if (!acceptance_expiry_date) return;
-    await runRiskAction('Risk acceptance request', () => requestRiskAcceptance({ risk_id: selectedRisk.id, reason, acceptance_expiry_date }));
-  }
-
-  async function updateTreatmentForSelectedRisk() {
-    if (!selectedRisk) return;
-    const treatment_plan_summary = promptText('Treatment plan summary', selectedRisk.treatment_plan_summary || '');
-    if (!treatment_plan_summary) return;
-    const treatment_due_date = promptText('Treatment due date', selectedRisk.treatment_due_date || defaultExpiryDate()) || undefined;
-    await runRiskAction('Risk treatment', () => updateRiskTreatment({
-      risk_id: selectedRisk.id,
-      treatment_status: 'planned',
-      treatment_plan_summary,
-      treatment_due_date,
-      treatment_owner_id: selectedRisk.treatment_owner_id || selectedRisk.owner_id || undefined,
-      note: treatment_plan_summary,
-    }));
-  }
-
-  async function linkSourceForSelectedRisk() {
-    if (!selectedRisk) return;
-    const source_ovr_id = promptText('Source OVR id, optional', selectedRisk.source_ovr_id || '') || undefined;
-    const source_audit_finding_id = promptText('Source audit finding id, optional', selectedRisk.source_audit_finding_id || '') || undefined;
-    const source_compliance_id = promptText('Source compliance id, optional', selectedRisk.source_compliance_id || '') || undefined;
-    const source_project_id = promptText('Source project id, optional', selectedRisk.source_project_id || '') || undefined;
-    await runRiskAction('Risk source link', () => linkRiskSource({
-      risk_id: selectedRisk.id,
-      source_ovr_id,
-      source_audit_finding_id,
-      source_compliance_id,
-      source_project_id,
-      note: 'Source linkage updated',
-    }));
-  }
-
-  async function markDuplicateForSelectedRisk() {
-    if (!selectedRisk) return;
-    const duplicate_of_risk_id = promptText('Duplicate of risk id', selectedRisk.duplicate_of_risk_id || '');
-    if (!duplicate_of_risk_id) return;
-    const reason = promptText('Duplicate / related-risk reason', 'Duplicate or related risk signal') || undefined;
-    await runRiskAction('Duplicate risk signal', () => markDuplicateRisk({ risk_id: selectedRisk.id, duplicate_of_risk_id, reason }));
+    try {
+      if (action === 'reassess') {
+        const likelihood = Number(values.residual_likelihood);
+        const impact = Number(values.residual_impact);
+        const reason = values.change_reason?.trim();
+        await updateRiskAssessment({
+          risk_id: risk.id,
+          likelihood: risk.likelihood,
+          impact: risk.impact,
+          residual_likelihood: likelihood,
+          residual_impact: impact,
+          appetite_threshold: risk.appetite_threshold ?? 12,
+          change_reason: reason,
+        });
+        setWorkflowMessage('Risk reassessment saved.');
+      } else if (action === 'request_acceptance') {
+        await requestRiskAcceptance({
+          risk_id: risk.id,
+          reason: values.reason,
+          acceptance_expiry_date: values.acceptance_expiry_date,
+        });
+        setWorkflowMessage('Risk acceptance request saved.');
+      } else if (action === 'update_treatment') {
+        await updateRiskTreatment({
+          risk_id: risk.id,
+          treatment_status: 'planned',
+          treatment_plan_summary: values.treatment_plan_summary,
+          treatment_due_date: values.treatment_due_date || undefined,
+          treatment_owner_id: risk.treatment_owner_id || risk.owner_id || undefined,
+          note: values.treatment_plan_summary,
+        });
+        setWorkflowMessage('Risk treatment saved.');
+      } else if (action === 'link_source') {
+        await linkRiskSource({
+          risk_id: risk.id,
+          source_ovr_id: values.source_ovr_id || undefined,
+          source_audit_finding_id: values.source_audit_finding_id || undefined,
+          source_compliance_id: values.source_compliance_id || undefined,
+          source_project_id: values.source_project_id || undefined,
+          note: 'Source linkage updated',
+        });
+        setWorkflowMessage('Risk source link saved.');
+      } else if (action === 'mark_duplicate') {
+        await markDuplicateRisk({
+          risk_id: risk.id,
+          duplicate_of_risk_id: values.duplicate_of_risk_id,
+          reason: values.reason || undefined,
+        });
+        setWorkflowMessage('Duplicate risk signal saved.');
+      } else if (action === 'request_closure') {
+        await requestRiskClosure({
+          risk_id: risk.id,
+          reason: values.reason || undefined,
+        });
+        setWorkflowMessage('Closure request saved.');
+      } else if (action === 'reopen') {
+        await reopenRiskWithReason({
+          risk_id: risk.id,
+          reason: values.reason || undefined,
+        });
+        setWorkflowMessage('Risk reopen saved.');
+      }
+      await refreshRiskWorkflow();
+    } finally {
+      setWorkflowBusy(false);
+    }
   }
 
   const openRiskForm = () => {
@@ -504,22 +524,234 @@ export function Risks() {
 
             {canManageRisks ? (
               <div className="form-actions full-width">
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => void reassessSelectedRisk()}>Reassess risk</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => void requestAcceptanceForSelectedRisk()}>Request acceptance</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'reassess', risk: selectedRisk })}>Reassess risk</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'request_acceptance', risk: selectedRisk })}>Request acceptance</button>
                 <button className="ghost-button" disabled={workflowBusy} onClick={() => void runRiskAction('Acceptance approval', () => approveRiskAcceptance({ risk_id: selectedRisk.id, reason: 'Approved from workflow center' }))}>Approve acceptance</button>
                 <button className="ghost-button" disabled={workflowBusy} onClick={() => void runRiskAction('Acceptance rejection', () => rejectRiskAcceptance({ risk_id: selectedRisk.id, reason: 'Rejected from workflow center' }))}>Reject acceptance</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => void updateTreatmentForSelectedRisk()}>Update treatment</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'update_treatment', risk: selectedRisk })}>Update treatment</button>
                 <button className="ghost-button" disabled={workflowBusy} onClick={() => void runRiskAction('Treatment completion', () => completeRiskTreatment({ risk_id: selectedRisk.id, reason: 'Treatment completed from workflow center' }))}>Complete treatment</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => void runRiskAction('Closure request', () => requestRiskClosure({ risk_id: selectedRisk.id, reason: promptText('Closure reason') || undefined }))}>Request closure</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'request_closure', risk: selectedRisk })}>Request closure</button>
                 <button className="ghost-button" disabled={workflowBusy} onClick={() => void runRiskAction('Closure approval', () => approveRiskClosure({ risk_id: selectedRisk.id, reason: 'Approved from workflow center' }))}>Approve closure</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => void runRiskAction('Risk reopen', () => reopenRiskWithReason({ risk_id: selectedRisk.id, reason: promptText('Reopen reason') || undefined }))}>Reopen with reason</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => void linkSourceForSelectedRisk()}>Link source</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => void markDuplicateForSelectedRisk()}>Mark duplicate</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'reopen', risk: selectedRisk })}>Reopen with reason</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'link_source', risk: selectedRisk })}>Link source</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'mark_duplicate', risk: selectedRisk })}>Mark duplicate</button>
               </div>
             ) : null}
           </div>
         ) : null}
       </Modal>
+
+      <GovernedDecisionDialog
+        open={Boolean(decisionDialog)}
+        title={
+          decisionDialog?.action === 'reassess'
+            ? t('risks.decision.reassessTitle')
+            : decisionDialog?.action === 'request_acceptance'
+            ? t('risks.decision.requestAcceptanceTitle')
+            : decisionDialog?.action === 'update_treatment'
+            ? t('risks.decision.updateTreatmentTitle')
+            : decisionDialog?.action === 'link_source'
+            ? t('risks.decision.linkSourceTitle')
+            : decisionDialog?.action === 'mark_duplicate'
+            ? t('risks.decision.markDuplicateTitle')
+            : decisionDialog?.action === 'request_closure'
+            ? t('risks.decision.closureRequestTitle')
+            : decisionDialog?.action === 'reopen'
+            ? t('risks.decision.reopenTitle')
+            : ''
+        }
+        subtitle={
+          decisionDialog?.action === 'reassess'
+            ? t('risks.decision.reassessSubtitle')
+            : undefined
+        }
+        decisionVariant={
+          decisionDialog?.action === 'reopen'
+            ? 'warning'
+            : decisionDialog?.action === 'request_closure'
+            ? 'approve'
+            : 'action'
+        }
+        contextItems={
+          decisionDialog
+            ? [
+                {
+                  label: 'Risk',
+                  value: decisionDialog.risk.risk_code || decisionDialog.risk.title,
+                },
+                {
+                  label: t('risks.decision.inherentScore'),
+                  value: decisionDialog.risk.inherent_score ?? (decisionDialog.risk.likelihood * decisionDialog.risk.impact),
+                },
+                {
+                  label: t('risks.decision.residualScore'),
+                  value: decisionDialog.risk.residual_score ?? ((decisionDialog.risk.residual_likelihood ?? 3) * (decisionDialog.risk.residual_impact ?? 3)),
+                },
+                {
+                  label: t('risks.decision.appetiteStatus'),
+                  value: decisionDialog.risk.appetite_breached ? 'Breached' : 'Within appetite',
+                },
+              ]
+            : []
+        }
+        fields={
+          !decisionDialog
+            ? []
+            : decisionDialog.action === 'reassess'
+            ? [
+                {
+                  id: 'residual_likelihood',
+                  label: t('risks.decision.residualLikelihood'),
+                  type: 'select',
+                  defaultValue: String(decisionDialog.risk.residual_likelihood ?? 3),
+                  options: [
+                    { value: '1', label: '1 - Very Low' },
+                    { value: '2', label: '2 - Low' },
+                    { value: '3', label: '3 - Medium' },
+                    { value: '4', label: '4 - High' },
+                    { value: '5', label: '5 - Critical' },
+                  ],
+                  required: true,
+                },
+                {
+                  id: 'residual_impact',
+                  label: t('risks.decision.residualImpact'),
+                  type: 'select',
+                  defaultValue: String(decisionDialog.risk.residual_impact ?? 3),
+                  options: [
+                    { value: '1', label: '1 - Negligible' },
+                    { value: '2', label: '2 - Minor' },
+                    { value: '3', label: '3 - Moderate' },
+                    { value: '4', label: '4 - Major' },
+                    { value: '5', label: '5 - Catastrophic' },
+                  ],
+                  required: true,
+                },
+                {
+                  id: 'change_reason',
+                  label: t('risks.decision.reassessReason'),
+                  type: 'textarea',
+                  defaultValue: '',
+                  placeholder: 'Document why the residual score has changed…',
+                  required: true,
+                  autoFocus: true,
+                },
+              ]
+            : decisionDialog.action === 'request_acceptance'
+            ? [
+                {
+                  id: 'reason',
+                  label: t('risks.decision.acceptanceReason'),
+                  type: 'textarea',
+                  defaultValue: '',
+                  placeholder: 'State the governance justification for accepting this residual risk…',
+                  required: true,
+                  autoFocus: true,
+                },
+                {
+                  id: 'acceptance_expiry_date',
+                  label: t('risks.decision.acceptanceExpiry'),
+                  type: 'date',
+                  defaultValue: decisionDialog.risk.acceptance_expiry_date || defaultExpiryDate(),
+                  required: true,
+                },
+              ]
+            : decisionDialog.action === 'update_treatment'
+            ? [
+                {
+                  id: 'treatment_plan_summary',
+                  label: t('risks.decision.treatmentSummary'),
+                  type: 'textarea',
+                  defaultValue: decisionDialog.risk.treatment_plan_summary || '',
+                  placeholder: 'Detail the mitigation and treatment actions…',
+                  required: true,
+                  autoFocus: true,
+                },
+                {
+                  id: 'treatment_due_date',
+                  label: t('risks.decision.treatmentDueDate'),
+                  type: 'date',
+                  defaultValue: decisionDialog.risk.treatment_due_date || defaultExpiryDate(),
+                  required: false,
+                },
+              ]
+            : decisionDialog.action === 'link_source'
+            ? [
+                {
+                  id: 'source_ovr_id',
+                  label: t('risks.decision.sourceOvr'),
+                  type: 'text',
+                  defaultValue: decisionDialog.risk.source_ovr_id || '',
+                  placeholder: 'OVR-UUID',
+                },
+                {
+                  id: 'source_audit_finding_id',
+                  label: t('risks.decision.sourceAudit'),
+                  type: 'text',
+                  defaultValue: decisionDialog.risk.source_audit_finding_id || '',
+                  placeholder: 'AUDIT-FINDING-UUID',
+                },
+                {
+                  id: 'source_compliance_id',
+                  label: t('risks.decision.sourceCompliance'),
+                  type: 'text',
+                  defaultValue: decisionDialog.risk.source_compliance_id || '',
+                  placeholder: 'COMPLIANCE-UUID',
+                },
+                {
+                  id: 'source_project_id',
+                  label: t('risks.decision.sourceProject'),
+                  type: 'text',
+                  defaultValue: decisionDialog.risk.source_project_id || '',
+                  placeholder: 'PROJECT-UUID',
+                },
+              ]
+            : decisionDialog.action === 'mark_duplicate'
+            ? [
+                {
+                  id: 'duplicate_of_risk_id',
+                  label: t('risks.decision.duplicateTargetId'),
+                  type: 'text',
+                  defaultValue: decisionDialog.risk.duplicate_of_risk_id || '',
+                  placeholder: 'Target Risk UUID',
+                  required: true,
+                  autoFocus: true,
+                },
+                {
+                  id: 'reason',
+                  label: t('risks.decision.duplicateReason'),
+                  type: 'textarea',
+                  defaultValue: 'Duplicate or related risk signal',
+                  required: false,
+                },
+              ]
+            : decisionDialog.action === 'request_closure'
+            ? [
+                {
+                  id: 'reason',
+                  label: t('risks.decision.closureReason'),
+                  type: 'textarea',
+                  defaultValue: '',
+                  placeholder: 'Document why this risk is eligible for formal closure…',
+                  required: false,
+                  autoFocus: true,
+                },
+              ]
+            : [
+                {
+                  id: 'reason',
+                  label: t('risks.decision.reopenReason'),
+                  type: 'textarea',
+                  defaultValue: '',
+                  placeholder: 'Explain the new circumstances or residual escalation requiring reopening…',
+                  required: false,
+                  autoFocus: true,
+                },
+              ]
+        }
+        onClose={() => setDecisionDialog(null)}
+        onSubmit={executeRiskDecision}
+      />
     </section>
   );
 }

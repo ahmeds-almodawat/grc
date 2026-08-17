@@ -17,6 +17,7 @@ import {
 import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { EntityTable } from '../components/EntityTable';
+import { GovernedDecisionDialog } from '../components/GovernedDecisionDialog';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
@@ -28,6 +29,7 @@ import {
   getEvidenceChainOfCustody,
   getEvidenceClosureGateStatus,
   getEvidenceGapDashboard,
+  getEvidenceGateWaivers,
   getEvidencePackIndex,
   getEvidenceQueue,
   getEvidenceReviewQueue,
@@ -47,6 +49,7 @@ import type {
   EvidenceChainOfCustodyRow,
   EvidenceClosureGateStatusRow,
   EvidenceGapDashboardRow,
+  EvidenceGateWaiverRow,
   EvidencePackIndexRow,
   EvidenceReviewQueueRow,
   EvidenceRow,
@@ -75,6 +78,12 @@ function isPast(value: string | null | undefined) {
   if (!value) return false;
   const date = new Date(value);
   return !Number.isNaN(date.getTime()) && date.getTime() < Date.now();
+}
+
+function defaultExpiryDate() {
+  const date = new Date();
+  date.setDate(date.getDate() + 90);
+  return date.toISOString().slice(0, 10);
 }
 
 function evidenceTitle(row: EvidenceSelection) {
@@ -172,6 +181,7 @@ export function Evidence() {
   const gates = useAsyncData(getEvidenceClosureGateStatus, []);
   const packIndex = useAsyncData(getEvidencePackIndex, []);
   const sensitiveRegister = useAsyncData(getSensitiveEvidenceRegister, []);
+  const waivers = useAsyncData(getEvidenceGateWaivers, []);
   const [selectedEvidence, setSelectedEvidence] = useState<EvidenceSelection | null>(null);
   const [selectedPackKey, setSelectedPackKey] = useState<string | null>(null);
   const chainOfCustody = useAsyncData(
@@ -180,7 +190,8 @@ export function Evidence() {
   );
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);  const canGovernEvidence = auth.roles.some(
+  const [message, setMessage] = useState<string | null>(null);
+  const canGovernEvidence = auth.roles.some(
     role => ['super_admin', 'governance_admin', 'compliance_officer', 'department_manager', 'auditor'].includes(role.role)
   );
 
@@ -255,10 +266,24 @@ export function Evidence() {
       gates.refresh(),
       packIndex.refresh(),
       sensitiveRegister.refresh(),
+      waivers.refresh(),
       chainOfCustody.refresh(),
     ]);
   }
-  const [actionModal, setActionModal] = useState<{ open: boolean; scope: 'legacy' | 'evidence' | 'waiver'; action: string; row: any } | null>(null);
+
+  type EvidenceModalState =
+    | { scope: 'waiver'; action: 'request' | 'approve' | 'reject'; row: any }
+    | { scope: 'legacy'; action: 'rejected' | 'needs_revision'; row: any }
+    | { scope: 'evidence'; action: 'reject' | 'revision' | 'supersede' | 'lock'; row: any }
+    | null;
+
+  const [actionModal, setActionModal] = useState<EvidenceModalState>(null);
+
+  const activePendingWaiver = useMemo(() => {
+    if (!actionModal || actionModal.scope !== 'waiver') return null;
+    const matching = (waivers.data || []).filter(w => w.requirement_id === actionModal.row.requirement_id);
+    return matching.find(w => w.status === 'requested') || matching[0] || null;
+  }, [actionModal, waivers.data]);
 
   function isSelfUploadRow(row: any) {
     const currentUserId = auth.profile?.id || auth.session?.user?.id;
@@ -276,12 +301,12 @@ export function Evidence() {
       return;
     }
     if (scope === 'legacy' && action === 'accepted') {
-      return handleLegacyReview(row, action, {});
+      return void handleLegacyReview(row, action, {});
     }
     if (scope === 'evidence' && (action === 'submit' || action === 'accept')) {
-      return handleEvidenceAction(row, action, {});
+      return void handleEvidenceAction(row, action, {});
     }
-    setActionModal({ open: true, scope, action, row });
+    setActionModal({ scope, action: action as any, row });
   }
 
   async function handleLegacyReview(row: any, status: 'accepted' | 'rejected' | 'needs_revision', payload: Record<string, any>) {
@@ -352,41 +377,95 @@ export function Evidence() {
     }
   }
 
-  async function handleWaiverAction(row: any, action: 'request' | 'approve' | 'reject', payload: Record<string, any>) {
-    setError(null);
-    setMessage(null);
-    setBusyId(`${action}:${row.requirement_id}`);
-    setActionModal(null);
-    try {
+  async function executeActionModal(values: Record<string, any>) {
+    if (!actionModal) return;
+    const { scope, action, row } = actionModal;
+
+    if (scope === 'waiver') {
       if (action === 'request') {
-        const reason = payload.reason;
+        const reason = values.reason?.trim();
         if (!reason) return;
-        await requestEvidenceGateWaiver({
-          requirement_id: row.requirement_id,
-          linked_item_type: row.linked_item_type,
-          linked_item_id: row.linked_item_id,
-          waiver_reason: reason,
-          audit_note: reason,
-        });
+        setBusyId(`request:${row.requirement_id}`);
+        setError(null);
+        setMessage(null);
+        try {
+          await requestEvidenceGateWaiver({
+            requirement_id: row.requirement_id,
+            linked_item_type: row.linked_item_type,
+            linked_item_id: row.linked_item_id,
+            waiver_reason: reason,
+            expiry_date: values.expiry_date || undefined,
+            audit_note: reason,
+          });
+          setMessage(t('evidence.waiverCompleted').replace('{action}', t('evidence.action.request', 'Request')));
+          await refreshGovernanceData();
+        } finally {
+          setBusyId(null);
+        }
       } else {
-        const waiverId = payload.waiverId;
-        if (!waiverId) return;
-        const auditNote = payload.auditNote;
-        if (!auditNote) return;
-        if (action === 'approve') {
-          await approveEvidenceGateWaiver({ waiver_id: waiverId, audit_note: auditNote });
-        } else {
-          await rejectEvidenceGateWaiver({ waiver_id: waiverId, audit_note: auditNote });
+        const waiverId = values.waiverId || activePendingWaiver?.id;
+        if (!waiverId) {
+          throw new Error(t('evidence.noPendingWaiver'));
+        }
+        const defaultNote = action === 'approve' ? 'Waiver approved by governance lead' : 'Waiver rejected by governance lead';
+        const auditNote = values.auditNote?.trim() || defaultNote;
+        setBusyId(`${action}:${row.requirement_id}`);
+        setError(null);
+        setMessage(null);
+        try {
+          if (action === 'approve') {
+            await approveEvidenceGateWaiver({ waiver_id: waiverId, audit_note: auditNote });
+          } else {
+            await rejectEvidenceGateWaiver({ waiver_id: waiverId, audit_note: auditNote });
+          }
+          setMessage(t('evidence.waiverCompleted').replace('{action}', t(`evidence.action.${action}`, humanize(action))));
+          await refreshGovernanceData();
+        } finally {
+          setBusyId(null);
         }
       }
-      setMessage(t('evidence.waiverCompleted').replace('{action}', t(`evidence.action.${action}`, humanize(action))));
-      await refreshGovernanceData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('evidence.waiverFailed'));
-    } finally {
-      setBusyId(null);
+    } else if (scope === 'legacy') {
+      const status = action as 'rejected' | 'needs_revision';
+      const note = values.note?.trim();
+      setBusyId(row.id);
+      setError(null);
+      setMessage(null);
+      try {
+        await reviewEvidence(row.id, status, note);
+        setMessage(t('evidence.reviewCompleted').replace('{status}', t(`status.${status}`, humanize(status))));
+        await refreshGovernanceData();
+      } finally {
+        setBusyId(null);
+      }
+    } else if (scope === 'evidence') {
+      const evidenceId = row.evidence_file_id;
+      setBusyId(`${action}:${evidenceId}`);
+      setError(null);
+      setMessage(null);
+      try {
+        if (action === 'reject') {
+          const reason = values.reason?.trim();
+          await rejectEvidence({ evidence_file_id: evidenceId, reason, note: reason });
+        } else if (action === 'revision') {
+          const reason = values.reason?.trim();
+          await requestEvidenceRevision({ evidence_file_id: evidenceId, reason, note: reason });
+        } else if (action === 'supersede') {
+          await supersedeEvidence({
+            evidence_file_id: evidenceId,
+            superseded_by_evidence_id: values.newEvidenceId,
+            note: 'Superseded from Evidence Governance Center.',
+          });
+        } else if (action === 'lock') {
+          await lockEvidence({ evidence_file_id: evidenceId, note: values.note?.trim() });
+        }
+        setMessage(t('evidence.actionCompleted').replace('{action}', t(`evidence.action.${action}`, humanize(action))).replace('{evidence}', evidenceTitle(row)));
+        await refreshGovernanceData();
+      } finally {
+        setBusyId(null);
+      }
     }
   }
+
   function printPack(group: EvidencePackGroup) {
     setSelectedPackKey(group.key);
     window.requestAnimationFrame(() => window.print());
@@ -775,112 +854,234 @@ export function Evidence() {
         ) : null}
       </Modal>
 
-          </section>
-  );
-}
-
-
-function EvidenceActionForm({ state, evidenceList, onClose, onConfirm }: { state: any, evidenceList: any[], onClose: () => void, onConfirm: (p: Record<string, any>) => void }) {
-  const { t } = useI18n();
-  const [payload, setPayload] = useState<Record<string, any>>({});
-
-  const isReject = state.action === 'rejected' || state.action === 'reject' || state.action === 'needs_revision' || state.action === 'revision';
-
-  const missingFields: string[] = [];
-  if (state.scope === 'legacy' && !payload.note) missingFields.push(t('evidence.reviewNote'));
-  if (state.scope === 'evidence' && state.action === 'reject' && !payload.reason) missingFields.push(t('evidence.rejectionReason'));
-  if (state.scope === 'evidence' && state.action === 'revision' && !payload.reason) missingFields.push(t('evidence.revisionReason'));
-  if (state.scope === 'evidence' && state.action === 'supersede' && !payload.newEvidenceId) missingFields.push(t('evidence.replacementEvidence'));
-  if (state.scope === 'evidence' && state.action === 'lock' && !payload.note) missingFields.push(t('evidence.lockNote'));
-  if (state.scope === 'waiver' && state.action === 'request' && !payload.reason) missingFields.push(t('evidence.waiverReason'));
-  if (state.scope === 'evidence' && state.action === 'classify' && !payload.sensitivity) missingFields.push(t('evidence.sensitivityLevel'));
-
-  const isValid = missingFields.length === 0;
-
-  const selectedTitle = state.row ? `${state.row.evidence_code ? state.row.evidence_code + ' - ' : ''}${state.row.evidence_title || state.row.item_title || state.row.file_name}` : t('common.unknown');
-
-  return (
-    <div className="panel" style={{ padding: '24px', border: 'none', margin: 0 }}>
-       <div style={{ marginBottom: '16px' }}>
-         <strong>{t('common.action')}: {t(`evidence.action.${state.action}`, humanize(state.action))}</strong><br/>
-         <small>{t('common.evidence')}: {selectedTitle}</small>
-       </div>
-
-       {state.scope === 'legacy' && (
-         <div className="field-group">
-           <label>{t('evidence.reviewNote')} *</label>
-           <textarea autoFocus value={payload.note || ''} onChange={e => setPayload({...payload, note: e.target.value})} />
-         </div>
-       )}
-       {state.scope === 'evidence' && state.action === 'reject' && (
-         <div className="field-group">
-           <label>{t('evidence.rejectionReason')} *</label>
-           <input autoFocus value={payload.reason || ''} onChange={e => setPayload({...payload, reason: e.target.value})} />
-         </div>
-       )}
-       {state.scope === 'evidence' && state.action === 'revision' && (
-         <div className="field-group">
-           <label>{t('evidence.revisionReason')} *</label>
-           <input autoFocus value={payload.reason || ''} onChange={e => setPayload({...payload, reason: e.target.value})} />
-         </div>
-       )}
-       {state.scope === 'evidence' && state.action === 'supersede' && (
-         <div className="field-group">
-           <label>{t('evidence.replacementEvidence')} *</label>
-           <select autoFocus value={payload.newEvidenceId || ''} onChange={e => setPayload({...payload, newEvidenceId: e.target.value})}>
-             <option value="">{t('evidence.selectReplacement')}</option>
-             {evidenceList.filter(e => e.id !== state.row.evidence_file_id).map(e => <option key={e.id} value={e.id}>{e.evidence_code ? e.evidence_code + ' - ' : ''}{e.evidence_title || e.item_title || e.file_name}</option>)}
-           </select>
-         </div>
-       )}
-       {state.scope === 'evidence' && state.action === 'lock' && (
-         <div className="field-group">
-           <label>{t('evidence.lockNote')} *</label>
-           <input autoFocus value={payload.note || ''} onChange={e => setPayload({...payload, note: e.target.value})} />
-         </div>
-       )}
-       {state.scope === 'evidence' && state.action === 'classify' && (
-         <div className="field-group">
-           <label>{t('evidence.sensitivityClassification')} *</label>
-           <select autoFocus value={payload.sensitivity || ''} onChange={e => setPayload({...payload, sensitivity: e.target.value})}>
-             <option value="">{t('evidence.selectSensitivity')}</option>
-             <option value="public">{t('evidence.sensitivity.public')}</option>
-             <option value="internal">{t('evidence.sensitivity.internal')}</option>
-             <option value="confidential">{t('evidence.sensitivity.confidential')}</option>
-             <option value="restricted">{t('evidence.sensitivity.restricted')}</option>
-           </select>
-         </div>
-       )}
-       {state.scope === 'waiver' && state.action === 'request' && (
-         <div className="field-group">
-           <label>{t('evidence.waiverReason')} *</label>
-           <input autoFocus value={payload.reason || ''} onChange={e => setPayload({...payload, reason: e.target.value})} />
-         </div>
-       )}
-       {state.scope === 'waiver' && (state.action === 'approve' || state.action === 'reject') && (
-         <>
-           <div className="field-group">
-             <label>{t('evidence.waiverId')} *</label>
-             <div className="notice-banner warning">{t('evidence.noSelectableRecords')}</div>
-           </div>
-           <div className="field-group">
-             <label>{t('evidence.auditNote')} *</label>
-             <input value={payload.auditNote || ''} onChange={e => setPayload({...payload, auditNote: e.target.value})} />
-           </div>
-         </>
-       )}
-       {isReject && <div className="notice-banner danger" style={{ marginTop: '16px' }}>{t('evidence.negativeActionWarning')}</div>}
-
-       {!isValid && <div className="notice-banner warning" style={{ marginTop: '16px' }}>{t('evidence.missingFields')}: {missingFields.join('، ')}</div>}
-
-       <div className="form-actions" style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-         <button className="ghost-button" onClick={onClose}>{t('common.cancel')}</button>
-         {(state.scope === 'waiver' && (state.action === 'approve' || state.action === 'reject')) || !isValid ? (
-           <button className="primary-button" disabled>{t('evidence.confirmAction')}</button>
-         ) : (
-           <button className="primary-button" onClick={() => onConfirm(payload)}>{t('evidence.confirmAction')}</button>
-         )}
-       </div>
-    </div>
+      <GovernedDecisionDialog
+        open={Boolean(actionModal)}
+        title={
+          !actionModal
+            ? ''
+            : actionModal.scope === 'waiver'
+            ? actionModal.action === 'request'
+              ? t('evidence.requestWaiver')
+              : actionModal.action === 'approve'
+              ? t('evidence.approveWaiverAction')
+              : t('evidence.rejectWaiverAction')
+            : actionModal.scope === 'legacy'
+            ? `${t('evidence.review')}: ${t(`status.${actionModal.action}`, humanize(actionModal.action))}`
+            : `${t('evidence.actionControls')}: ${t(`evidence.action.${actionModal.action}`, humanize(actionModal.action))}`
+        }
+        decisionVariant={
+          actionModal?.action === 'reject' || actionModal?.action === 'rejected'
+            ? 'reject'
+            : actionModal?.action === 'approve'
+            ? 'approve'
+            : 'action'
+        }
+        confirmLabel={
+          actionModal?.action === 'approve'
+            ? t('evidence.action.approve')
+            : actionModal?.action === 'reject' || actionModal?.action === 'rejected'
+            ? t('evidence.action.reject')
+            : t('evidence.confirmAction')
+        }
+        warningNotice={
+          actionModal?.action === 'reject' || actionModal?.action === 'rejected'
+            ? t('evidence.negativeActionWarning')
+            : null
+        }
+        contextItems={
+          !actionModal
+            ? []
+            : actionModal.scope === 'waiver'
+            ? [
+                {
+                  label: t('evidence.requirement'),
+                  value: actionModal.row.requirement_title,
+                },
+                {
+                  label: t('common.item'),
+                  value: `${t(`itemType.${actionModal.row.linked_item_type}`, humanize(actionModal.row.linked_item_type))} ${actionModal.row.linked_item_id?.slice(0, 8) || ''}`,
+                },
+                {
+                  label: t('evidence.gate'),
+                  value: t(`evidence.gate.${actionModal.row.required_for_gate}`, humanize(actionModal.row.required_for_gate)),
+                },
+                ...(actionModal.action !== 'request' && activePendingWaiver
+                  ? [
+                      {
+                        label: t('evidence.waiverReason'),
+                        value: activePendingWaiver.waiver_reason,
+                      },
+                      {
+                        label: t('approvals.requestedBy'),
+                        value: activePendingWaiver.requested_by || '—',
+                      },
+                      {
+                        label: t('approvals.requested'),
+                        value: formatDate(activePendingWaiver.requested_at),
+                      },
+                    ]
+                  : []),
+              ]
+            : actionModal.scope === 'legacy'
+            ? [
+                {
+                  label: t('common.item'),
+                  value: actionModal.row.item_title || actionModal.row.file_name,
+                },
+                {
+                  label: t('common.status'),
+                  value: <StatusBadge status={t(`status.${actionModal.row.status}`, humanize(actionModal.row.status))} />,
+                },
+              ]
+            : [
+                {
+                  label: t('common.evidence'),
+                  value: evidenceTitle(actionModal.row),
+                },
+                {
+                  label: t('evidence.sensitivity'),
+                  value: actionModal.row.sensitivity_level || '—',
+                },
+              ]
+        }
+        fields={
+          !actionModal
+            ? []
+            : actionModal.scope === 'waiver' && actionModal.action === 'request'
+            ? [
+                {
+                  id: 'reason',
+                  label: t('evidence.waiverReason'),
+                  type: 'textarea',
+                  defaultValue: '',
+                  placeholder: t('evidence.waiverReasonHint'),
+                  required: true,
+                  autoFocus: true,
+                },
+                {
+                  id: 'expiry_date',
+                  label: t('evidence.expiryDate'),
+                  type: 'date',
+                  defaultValue: defaultExpiryDate(),
+                  required: false,
+                },
+              ]
+            : actionModal.scope === 'waiver' && actionModal.action === 'approve'
+            ? [
+                ...(!activePendingWaiver
+                  ? [
+                      {
+                        id: 'waiverId',
+                        label: t('evidence.waiverId'),
+                        type: 'text' as const,
+                        defaultValue: '',
+                        placeholder: 'Waiver UUID',
+                        required: true,
+                      },
+                    ]
+                  : []),
+                {
+                  id: 'auditNote',
+                  label: t('evidence.auditNote'),
+                  type: 'textarea' as const,
+                  defaultValue: 'Waiver approved by governance lead',
+                  placeholder: t('evidence.auditNoteHint'),
+                  required: false,
+                  autoFocus: true,
+                },
+              ]
+            : actionModal.scope === 'waiver' && actionModal.action === 'reject'
+            ? [
+                ...(!activePendingWaiver
+                  ? [
+                      {
+                        id: 'waiverId',
+                        label: t('evidence.waiverId'),
+                        type: 'text' as const,
+                        defaultValue: '',
+                        placeholder: 'Waiver UUID',
+                        required: true,
+                      },
+                    ]
+                  : []),
+                {
+                  id: 'auditNote',
+                  label: t('evidence.rejectionReason'),
+                  type: 'textarea' as const,
+                  defaultValue: '',
+                  placeholder: t('evidence.rejectionNoteHint'),
+                  required: true,
+                  autoFocus: true,
+                },
+              ]
+            : actionModal.scope === 'legacy'
+            ? [
+                {
+                  id: 'note',
+                  label: t('evidence.reviewNote'),
+                  type: 'textarea',
+                  defaultValue: '',
+                  placeholder: 'Document review observations or required fixes…',
+                  required: true,
+                  autoFocus: true,
+                },
+              ]
+            : actionModal.action === 'reject'
+            ? [
+                {
+                  id: 'reason',
+                  label: t('evidence.rejectionReason'),
+                  type: 'textarea',
+                  defaultValue: '',
+                  placeholder: 'State the reason for rejecting this evidence…',
+                  required: true,
+                  autoFocus: true,
+                },
+              ]
+            : actionModal.action === 'revision'
+            ? [
+                {
+                  id: 'reason',
+                  label: t('evidence.revisionReason'),
+                  type: 'textarea',
+                  defaultValue: '',
+                  placeholder: 'Describe required revisions…',
+                  required: true,
+                  autoFocus: true,
+                },
+              ]
+            : actionModal.action === 'supersede'
+            ? [
+                {
+                  id: 'newEvidenceId',
+                  label: t('evidence.replacementEvidence'),
+                  type: 'select',
+                  defaultValue: '',
+                  options: (packIndex.data || [])
+                    .filter(e => e.evidence_file_id !== actionModal.row.evidence_file_id)
+                    .map(e => ({
+                      value: e.evidence_file_id,
+                      label: `${e.evidence_code ? e.evidence_code + ' - ' : ''}${e.evidence_title || e.file_name}`,
+                    })),
+                  required: true,
+                  autoFocus: true,
+                },
+              ]
+            : [
+                {
+                  id: 'note',
+                  label: t('evidence.lockNote'),
+                  type: 'textarea',
+                  defaultValue: '',
+                  placeholder: 'Explain reason for locking evidence…',
+                  required: true,
+                  autoFocus: true,
+                },
+              ]
+        }
+        onClose={() => setActionModal(null)}
+        onSubmit={executeActionModal}
+      />
+    </section>
   );
 }

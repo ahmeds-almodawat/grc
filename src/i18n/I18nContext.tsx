@@ -2135,6 +2135,60 @@ const translations: TranslationMap = {
   'ovr.print.closureState': { en: 'Closure state', ar: 'حالة الإغلاق' },
   'ovr.print.notClosed': { en: 'Not closed', ar: 'غير مغلق' },
 
+  // Governed Workflow Decision Dialogs (v1.4-B)
+  'decision.confirm': { en: 'Confirm decision', ar: 'تأكيد القرار' },
+  'decision.submitting': { en: 'Recording decision…', ar: 'جارٍ تسجيل القرار…' },
+  'decision.context': { en: 'Governance context', ar: 'السياق الحوكمي' },
+  'decision.details': { en: 'Decision details', ar: 'تفاصيل القرار' },
+  'decision.requiredField': { en: 'This field is required.', ar: 'هذا الحقل مطلوب.' },
+  'decision.actionFailed': { en: 'Failed to record decision.', ar: 'تعذر تسجيل القرار.' },
+
+  // Evidence Waiver Decisions
+  'evidence.requestWaiver': { en: 'Request evidence waiver', ar: 'طلب إعفاء من الدليل' },
+  'evidence.approveWaiverAction': { en: 'Approve evidence waiver', ar: 'اعتماد إعفاء الدليل' },
+  'evidence.rejectWaiverAction': { en: 'Reject evidence waiver', ar: 'رفض إعفاء الدليل' },
+  'evidence.waiverDecision': { en: 'Waiver decision', ar: 'قرار الإعفاء' },
+  'evidence.noPendingWaiver': { en: 'No pending waiver request found for this requirement.', ar: 'لا يوجد طلب إعفاء معلق لهذا المتطلب.' },
+  'evidence.waiverActiveMessage': { en: 'An active waiver is already approved for this requirement.', ar: 'يوجد إعفاء معتمد وسارٍ بالفعل لهذا المتطلب.' },
+  'evidence.waiverReasonHint': { en: 'Explain the governance reason why this evidence requirement should be waived.', ar: 'اشرح المبرر الحوكمي لإعفاء هذا المتطلب من الأدلة.' },
+  'evidence.auditNoteHint': { en: 'Enter the audit note justifying this approval decision.', ar: 'أدخل ملاحظة التدقيق المبررة لقرار الاعتماد.' },
+  'evidence.rejectionNoteHint': { en: 'Enter the formal reason for rejecting this waiver request.', ar: 'أدخل السبب الرسمي لرفض طلب الإعفاء.' },
+  'evidence.expiryDate': { en: 'Waiver expiry date', ar: 'تاريخ انتهاء الإعفاء' },
+
+  // Governed Approval Decisions
+  'approvals.approveDecisionTitle': { en: 'Approve Governed Request', ar: 'اعتماد الطلب المحكوم' },
+  'approvals.rejectDecisionTitle': { en: 'Reject Governed Request', ar: 'رفض الطلب المحكوم' },
+  'approvals.decisionConfirm': { en: 'Confirm decision', ar: 'تأكيد القرار' },
+  'approvals.noteLabel': { en: 'Decision note', ar: 'ملاحظة القرار' },
+  'approvals.rejectionReasonRequired': { en: 'A rejection reason is required.', ar: 'سبب الرفض إلزامي.' },
+
+  // Governed Risk Decisions
+  'risks.decision.reassessTitle': { en: 'Reassess Residual Risk Score', ar: 'إعادة تقييم درجة الخطر المتبقي' },
+  'risks.decision.reassessSubtitle': { en: 'Update likelihood, impact and record the formal reason for change.', ar: 'تحديث الاحتمالية والأثر وتسجيل المبرر الرسمي للتغيير.' },
+  'risks.decision.residualLikelihood': { en: 'Residual likelihood (1-5)', ar: 'الاحتمالية المتبقية (1-5)' },
+  'risks.decision.residualImpact': { en: 'Residual impact (1-5)', ar: 'الأثر المتبقي (1-5)' },
+  'risks.decision.reassessReason': { en: 'Reason for score change', ar: 'سبب تغيير التقييم' },
+  'risks.decision.requestAcceptanceTitle': { en: 'Request Risk Acceptance', ar: 'طلب قبول الخطر' },
+  'risks.decision.acceptanceReason': { en: 'Acceptance reason', ar: 'مبرر قبول الخطر' },
+  'risks.decision.acceptanceExpiry': { en: 'Acceptance expiry date', ar: 'تاريخ انتهاء القبول' },
+  'risks.decision.updateTreatmentTitle': { en: 'Update Risk Treatment Plan', ar: 'تحديث خطة معالجة الخطر' },
+  'risks.decision.treatmentSummary': { en: 'Treatment plan summary', ar: 'ملخص خطة المعالجة' },
+  'risks.decision.treatmentDueDate': { en: 'Treatment due date', ar: 'تاريخ استحقاق المعالجة' },
+  'risks.decision.linkSourceTitle': { en: 'Link Risk References & Sources', ar: 'ربط مراجع ومصادر الخطر' },
+  'risks.decision.sourceOvr': { en: 'Source OVR ID', ar: 'معرف بلاغ OVR المصدر' },
+  'risks.decision.sourceAudit': { en: 'Source Audit Finding ID', ar: 'معرف ملاحظة المراجعة المصدر' },
+  'risks.decision.sourceCompliance': { en: 'Source Compliance Item ID', ar: 'معرف بند الالتزام المصدر' },
+  'risks.decision.sourceProject': { en: 'Source Project ID', ar: 'معرف المشروع المصدر' },
+  'risks.decision.markDuplicateTitle': { en: 'Mark Duplicate or Related Risk', ar: 'تحديد خطر مكرر أو مرتبط' },
+  'risks.decision.duplicateTargetId': { en: 'Master / Related Risk ID', ar: 'معرف الخطر الرئيسي أو المرتبط' },
+  'risks.decision.duplicateReason': { en: 'Duplicate or related signal reason', ar: 'سبب التكرار أو الارتباط' },
+  'risks.decision.closureRequestTitle': { en: 'Request Risk Closure', ar: 'طلب إغلاق الخطر' },
+  'risks.decision.closureReason': { en: 'Closure justification', ar: 'مبرر طلب الإغلاق' },
+  'risks.decision.reopenTitle': { en: 'Reopen Risk with Reason', ar: 'إعادة فتح الخطر مع المبرر' },
+  'risks.decision.reopenReason': { en: 'Reopen reason', ar: 'سبب إعادة الفتح' },
+  'risks.decision.inherentScore': { en: 'Inherent score', ar: 'الدرجة الكامنة' },
+  'risks.decision.residualScore': { en: 'Residual score', ar: 'الدرجة المتبقية' },
+  'risks.decision.appetiteStatus': { en: 'Appetite status', ar: 'حالة تقبل المخاطر' },
 };
 
 interface I18nContextValue {
