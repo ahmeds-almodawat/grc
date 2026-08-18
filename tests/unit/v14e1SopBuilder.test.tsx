@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import * as fs from 'fs';
 import * as path from 'path';
-import { I18nProvider } from '../../src/i18n/I18nContext';
+import { I18nProvider, useI18n } from '../../src/i18n/I18nContext';
 import { SopRegister } from '../../src/components/policy-sop/SopRegister';
 import { SopProcedureBuilder } from '../../src/components/policy-sop/SopProcedureBuilder';
 import { SopDefinitionsBuilder } from '../../src/components/policy-sop/SopDefinitionsBuilder';
@@ -831,6 +831,191 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
           })
         );
       });
+    });
+
+    it('loads existing SOP completely independently of master data delay, exact fetch count 1, and saves correctly', async () => {
+      // 1. Arrange mocks so getGovernedSopDetail resolves, but master data is delayed
+      let resolveDepartments: any;
+      const deptPromise = new Promise(resolve => { resolveDepartments = resolve; });
+      vi.spyOn(policySopApi, 'listDepartments').mockReturnValue(deptPromise as any);
+
+      const getSopSpy = vi.spyOn(policySopApi, 'getGovernedSopDetail');
+      const saveSpy = vi.spyOn(policySopApi, 'saveGovernedSopDraft');
+
+      render(
+        <I18nProvider>
+          <SopEditor
+            initialSopId="sop-1"
+            onBack={vi.fn()}
+          />
+        </I18nProvider>
+      );
+
+      // Prove the existing SOP editor becomes usable before delayed master data promises complete
+      await waitFor(() => {
+        expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
+      });
+
+      const titleInput = screen.getByDisplayValue('Inpatient Chemotherapy Dispensing SOP');
+      expect(titleInput).toBeDefined();
+
+      // Assert getGovernedSopDetail was called exactly once
+      expect(getSopSpy).toHaveBeenCalledTimes(1);
+
+      // NO SECOND LOADING FLICKER
+      // Resolve delayed master data
+      resolveDepartments(mockDepartments);
+
+      // Wait a tick to ensure no re-renders wipe out the state or show loading
+      await new Promise(r => setTimeout(r, 50));
+
+      // verify the editor does NOT return to "Loading Governed SOP Workspace…"
+      expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
+
+      // EXACT FETCH COUNT: assert it's STILL 1
+      expect(getSopSpy).toHaveBeenCalledTimes(1);
+
+      // SAVE DRAFT REMAINS AVAILABLE
+      fireEvent.change(titleInput, { target: { value: 'Modified Title After Master Data' } });
+      const saveBtn = screen.getByRole('button', { name: /Save Draft/i });
+      fireEvent.click(saveBtn);
+
+      // EXISTING SAVE PAYLOAD STILL WORKS
+      await waitFor(() => {
+        expect(saveSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            version_id: 'sop-ver-1',
+            title_en: 'Modified Title After Master Data',
+            process_name_en: 'Chemotherapy Dispensing',
+            primary_policy_version_id: 'pol-ver-1'
+          })
+        );
+      });
+    });
+
+    it('initializes new SOP defaults only once when master data resolves, without overwriting user changes', async () => {
+      let resolveDepartments: any;
+      let resolveProfiles: any;
+      const deptPromise = new Promise(resolve => { resolveDepartments = resolve; });
+      const profPromise = new Promise(resolve => { resolveProfiles = resolve; });
+
+      vi.spyOn(policySopApi, 'listDepartments').mockReturnValue(deptPromise as any);
+      vi.spyOn(policySopApi, 'listProfiles').mockReturnValue(profPromise as any);
+
+      const createSpy = vi.spyOn(policySopApi, 'createGovernedSopDraft').mockResolvedValue({ document_id: 'new-doc', version_id: 'new-ver' } as any);
+
+      render(
+        <I18nProvider>
+          <SopEditor
+            initialSopId="new"
+            onBack={vi.fn()}
+          />
+        </I18nProvider>
+      );
+
+      // Wait for it to render empty initially (sop fetch returns synchronously for 'new')
+      await waitFor(() => {
+        expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
+      });
+
+      // User makes a change before master data is available
+      const titleInput = screen.getByPlaceholderText(/e.g. Standard Procedure for Safe Medication Administration/i);
+      fireEvent.change(titleInput, { target: { value: 'My Early Title' } });
+
+      const processInput = screen.getByPlaceholderText(/e.g. Inpatient Medication Dispensing/i);
+      fireEvent.change(processInput, { target: { value: 'My Early Process' } });
+
+      // Switch to Linkage tab and set to Not Applicable to pass validation
+      const allButtons = screen.getAllByRole('button');
+      const linkageTab = allButtons.find(btn => btn.textContent?.includes('2.'));
+      if (linkageTab) fireEvent.click(linkageTab);
+      
+      await waitFor(() => {
+        const radios = screen.getAllByRole('radio');
+        if (radios.length >= 3) {
+          fireEvent.click(radios[2]);
+        }
+      });
+
+      // Now resolve master data
+      resolveDepartments(mockDepartments);
+      resolveProfiles(mockProfiles);
+
+      // Wait a tick for the defaults to apply
+      await new Promise(r => setTimeout(r, 50));
+
+      const saveBtn = screen.getByRole('button', { name: /Save Draft/i });
+      fireEvent.click(saveBtn);
+
+      // Validate initialization does not repeatedly overwrite subsequent user changes
+      // and that master data defaults (department, owner) are applied.
+      await waitFor(() => {
+        expect(createSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title_en: 'My Early Title',
+            process_name_en: 'My Early Process',
+            department_id: mockDepartments[0].id,
+            process_owner_id: mockProfiles[0].id,
+            governance_link_state: 'not_applicable'
+          })
+        );
+      });
+    });
+
+    it('maintains fetch identity and unsaved state across language switches without reloading', async () => {
+      // 1. Arrange
+      vi.spyOn(policySopApi, 'listDepartments').mockResolvedValue(mockDepartments as any);
+      vi.spyOn(policySopApi, 'listProfiles').mockResolvedValue(mockProfiles as any);
+      const getSopSpy = vi.spyOn(policySopApi, 'getGovernedSopDetail');
+
+      const LanguageToggler = () => {
+        const { language, setLanguage } = useI18n();
+        return (
+          <button onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}>
+            Toggle Language
+          </button>
+        );
+      };
+
+      render(
+        <I18nProvider>
+          <div>
+            <LanguageToggler />
+            <SopEditor
+              initialSopId="sop-1"
+              onBack={vi.fn()}
+            />
+          </div>
+        </I18nProvider>
+      );
+
+      // 2. Wait until the SOP is usable
+      await waitFor(() => {
+        expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
+      });
+
+      // 3. Assert getGovernedSopDetail call count = 1
+      expect(getSopSpy).toHaveBeenCalledTimes(1);
+
+      // 4. Modify an editable form field to create unsaved state
+      const titleInput = screen.getByDisplayValue('Inpatient Chemotherapy Dispensing SOP');
+      fireEvent.change(titleInput, { target: { value: 'My Unsaved Arabic Title' } });
+
+      // 5. Trigger a real I18n language change
+      const toggleBtn = screen.getByText('Toggle Language');
+      fireEvent.click(toggleBtn);
+
+      // Wait a tick for context to propagate
+      await new Promise(r => setTimeout(r, 50));
+
+      // 6. Verify UI changes language (if applicable) and no loading flicker
+      expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
+
+      // 7. Verify call count is STILL exactly 1
+      expect(getSopSpy).toHaveBeenCalledTimes(1);
+
+      // 8. Verify unsaved state remains intact
+      expect(screen.getByDisplayValue('My Unsaved Arabic Title')).toBeDefined();
     });
   });
 });
