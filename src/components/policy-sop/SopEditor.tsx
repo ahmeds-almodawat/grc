@@ -81,6 +81,7 @@ export function SopEditor({
   const [controls, setControls] = useState<Array<{ id: string; code: string; title: string }>>([]);
   const [eligiblePolicies, setEligiblePolicies] = useState<EligibleGoverningPolicy[]>([]);
   const [masterDataLoaded, setMasterDataLoaded] = useState(false);
+  const [hasInitializedNewDefaults, setHasInitializedNewDefaults] = useState(false);
 
   // State
   const [sop, setSop] = useState<DetailedSopRecord | null>(null);
@@ -207,10 +208,18 @@ export function SopEditor({
     setIsDirty(false);
   }, []);
 
+  // Initialize New Draft Defaults (only once, after master data loaded)
+  useEffect(() => {
+    if (initialSopId === 'new' && masterDataLoaded && !hasInitializedNewDefaults) {
+      setDepartmentId(departments[0]?.id || null);
+      setDocumentOwnerId(profiles[0]?.id || null);
+      setProcessOwnerId(profiles[0]?.id || null);
+      setHasInitializedNewDefaults(true);
+    }
+  }, [initialSopId, masterDataLoaded, departments, profiles, hasInitializedNewDefaults]);
+
   // Fetch SOP on Mount
   useEffect(() => {
-    if (!masterDataLoaded) return;
-
     async function fetchSop() {
       if (!initialSopId || initialSopId === 'new') {
         // Initializing New Draft
@@ -219,9 +228,7 @@ export function SopEditor({
         setTitleAr('');
         setProcessNameEn('');
         setProcessNameAr('');
-        setDepartmentId(departments[0]?.id || null);
-        setDocumentOwnerId(profiles[0]?.id || null);
-        setProcessOwnerId(profiles[0]?.id || null);
+        // Department and Owner defaults are handled by the effect above
         setPurposeEn('');
         setPurposeAr('');
         setScopeEn('');
@@ -258,7 +265,7 @@ export function SopEditor({
       }
     }
     fetchSop();
-  }, [initialSopId, masterDataLoaded, populateForm, t]);
+  }, [initialSopId, populateForm, t]);
 
   const isLocked = Boolean(
     sop &&

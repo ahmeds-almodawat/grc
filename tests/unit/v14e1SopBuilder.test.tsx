@@ -11,14 +11,14 @@ import { SopResponsibilitiesBuilder } from '../../src/components/policy-sop/SopR
 import { SopMonitoringKpisBuilder } from '../../src/components/policy-sop/SopMonitoringKpisBuilder';
 import { SopPreviewModal } from '../../src/components/policy-sop/SopPreviewModal';
 import { SopEditor } from '../../src/components/policy-sop/SopEditor';
-import type {
-  GovernedSopCatalogRow,
-  DetailedSopRecord,
+import type { 
+  GovernedSopCatalogRow, 
+  DetailedSopRecord, 
   SopProcedureStep,
   SopDefinition,
   SopRoleResponsibility,
   SopMonitoringKpi,
-  EligibleGoverningPolicy
+  EligibleGoverningPolicy 
 } from '../../src/lib/policySopApi';
 import * as policySopApi from '../../src/lib/policySopApi';
 
@@ -337,7 +337,7 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
       expect(fs.existsSync(migrationPath)).toBe(true);
       const sql = fs.readFileSync(migrationPath, 'utf8');
       expect(sql.length).toBeGreaterThan(1000);
-
+      
       // Table definitions
       expect(sql).toMatch(/create table if not exists public\.sop_definitions/i);
       expect(sql).toMatch(/create table if not exists public\.sop_role_responsibilities/i);
@@ -351,7 +351,7 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
 
     it('verifies RLS security and trigger attachments for immutability and document type', () => {
       const sql = fs.readFileSync(migrationPath, 'utf8');
-
+      
       // RLS enabled
       expect(sql).toMatch(/alter table public\.sop_definitions enable row level security/i);
       expect(sql).toMatch(/alter table public\.sop_role_responsibilities enable row level security/i);
@@ -370,7 +370,7 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
 
     it('verifies atomic save cross-version child ID denial and service-role execution grants', () => {
       const sql = fs.readFileSync(migrationPath, 'utf8');
-
+      
       expect(sql).toMatch(/PATCH202_CROSS_VERSION_CHILD_ID_DENIED/i);
       expect(sql).toMatch(/v_seen_def_ids/i);
       expect(sql).toMatch(/v_seen_resp_ids/i);
@@ -385,7 +385,7 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
 
     it('verifies explicit drop of obsolete Migration-202 function overloads', () => {
       const sql = fs.readFileSync(migrationPath, 'utf8');
-
+      
       // Drop 202 create overload (25 params)
       expect(sql).toMatch(/drop function if exists public\.create_governed_sop_draft\(\s*uuid,\s*uuid/i);
       // Drop 202 save overload (21 params)
@@ -394,7 +394,7 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
 
     it('verifies cross-organization validation for KPI owner and deep revision cloning', () => {
       const sql = fs.readFileSync(migrationPath, 'utf8');
-
+      
       // KPI owner cross-org check
       expect(sql).toMatch(/if TG_TABLE_NAME = 'sop_monitoring_kpis' then/i);
       expect(sql).toMatch(/select organization_id into v_ref_org_id\s*from public\.profiles\s*where id = NEW\.owner_id/i);
@@ -832,6 +832,7 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
         );
       });
     });
+
     it('loads existing SOP completely independently of master data delay, exact fetch count 1, and saves correctly', async () => {
       // 1. Arrange mocks so getGovernedSopDetail resolves, but master data is delayed
       let resolveDepartments: any;
@@ -926,11 +927,15 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
 
       // Switch to Linkage tab and set to Not Applicable to pass validation
       const allButtons = screen.getAllByRole('button');
-      const linkageTab = allButtons.find(btn => btn.textContent?.includes('sop.tab.governingPolicy'));
+      const linkageTab = allButtons.find(btn => btn.textContent?.includes('2.'));
       if (linkageTab) fireEvent.click(linkageTab);
-
-      const notApplicableLabel = screen.getByText('sop.linkState.not_applicable');
-      fireEvent.click(notApplicableLabel);
+      
+      await waitFor(() => {
+        const radios = screen.getAllByRole('radio');
+        if (radios.length >= 3) {
+          fireEvent.click(radios[2]);
+        }
+      });
 
       // Now resolve master data
       resolveDepartments(mockDepartments);
