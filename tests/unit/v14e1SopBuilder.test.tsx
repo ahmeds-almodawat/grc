@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import * as fs from 'fs';
 import * as path from 'path';
-import { I18nProvider } from '../../src/i18n/I18nContext';
+import { I18nProvider, useI18n } from '../../src/i18n/I18nContext';
 import { SopRegister } from '../../src/components/policy-sop/SopRegister';
 import { SopProcedureBuilder } from '../../src/components/policy-sop/SopProcedureBuilder';
 import { SopDefinitionsBuilder } from '../../src/components/policy-sop/SopDefinitionsBuilder';
@@ -960,6 +960,62 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
           })
         );
       });
+    });
+
+    it('maintains fetch identity and unsaved state across language switches without reloading', async () => {
+      // 1. Arrange
+      vi.spyOn(policySopApi, 'listDepartments').mockResolvedValue(mockDepartments as any);
+      vi.spyOn(policySopApi, 'listProfiles').mockResolvedValue(mockProfiles as any);
+      const getSopSpy = vi.spyOn(policySopApi, 'getGovernedSopDetail');
+
+      const LanguageToggler = () => {
+        const { language, setLanguage } = useI18n();
+        return (
+          <button onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}>
+            Toggle Language
+          </button>
+        );
+      };
+
+      render(
+        <I18nProvider>
+          <div>
+            <LanguageToggler />
+            <SopEditor
+              initialSopId="sop-1"
+              onBack={vi.fn()}
+            />
+          </div>
+        </I18nProvider>
+      );
+
+      // 2. Wait until the SOP is usable
+      await waitFor(() => {
+        expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
+      });
+
+      // 3. Assert getGovernedSopDetail call count = 1
+      expect(getSopSpy).toHaveBeenCalledTimes(1);
+
+      // 4. Modify an editable form field to create unsaved state
+      const titleInput = screen.getByDisplayValue('Inpatient Chemotherapy Dispensing SOP');
+      fireEvent.change(titleInput, { target: { value: 'My Unsaved Arabic Title' } });
+
+      // 5. Trigger a real I18n language change
+      const toggleBtn = screen.getByText('Toggle Language');
+      fireEvent.click(toggleBtn);
+
+      // Wait a tick for context to propagate
+      await new Promise(r => setTimeout(r, 50));
+
+      // 6. Verify UI changes language (if applicable) and no loading flicker
+      expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
+
+      // 7. Verify call count is STILL exactly 1
+      expect(getSopSpy).toHaveBeenCalledTimes(1);
+
+      // 8. Verify unsaved state remains intact
+      expect(screen.getByDisplayValue('My Unsaved Arabic Title')).toBeDefined();
     });
   });
 });

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '../../i18n/I18nContext';
 import { 
   getGovernedSopDetail, 
@@ -74,6 +74,10 @@ export function SopEditor({
   onSopSaved,
 }: SopEditorProps) {
   const { t } = useI18n();
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
 
   // Master Data
   const [departments, setDepartments] = useState<Array<{ id: string; name: string; code: string }>>([]);
@@ -256,16 +260,16 @@ export function SopEditor({
         if (record) {
           populateForm(record);
         } else {
-          setError(t('sop.error.notFound'));
+          setError(tRef.current('sop.error.notFound'));
         }
       } catch (err: any) {
-        setError(err.message || t('sop.error.loadFailed'));
+        setError(err.message || tRef.current('sop.error.loadFailed'));
       } finally {
         setLoading(false);
       }
     }
     fetchSop();
-  }, [initialSopId, populateForm, t]);
+  }, [initialSopId, populateForm]);
 
   const isLocked = Boolean(
     sop &&
