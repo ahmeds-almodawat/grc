@@ -85,10 +85,10 @@ describe('GRC v1.4-E2B1 Governed SOP Training & Competency Invariants', () => {
     expect(sql).toMatch(/false,\s*true,\s*false,\s*null,\s*null,\s*null/);
   });
 
-  it('Migration 206 does NOT exist', () => {
-    const migration206 = fs.readdirSync(path.resolve(rootDir, 'supabase/migrations'))
-      .find(f => f.startsWith('206_'));
-    expect(migration206).toBeUndefined();
+  it('Migration 207 does NOT exist', () => {
+    const migration207 = fs.readdirSync(path.resolve(rootDir, 'supabase/migrations'))
+      .find(f => f.startsWith('207_'));
+    expect(migration207).toBeUndefined();
   });
 
   it('Edge privileged-action allowlists all required Patch26 and Patch29 operational actions', () => {
