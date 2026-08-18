@@ -78,7 +78,7 @@ describe('GRC v1.4-E1-R1 Governed SOP Template Alignment & RACI Backend Invarian
     expect(sql).toContain('drop function if exists public.create_governed_sop_draft(uuid, uuid, text, text, text, text, text, text, uuid, uuid, text, text, text, uuid, text, text, boolean, boolean, boolean, integer, integer, text, jsonb, uuid[], jsonb, jsonb, jsonb, jsonb);');
   });
 
-  it('Deterministic SQL proof script exists and covers all required test cases', () => {
+  it('Deterministic SQL proof script exists and covers all 49 required test cases', () => {
     expect(fs.existsSync(sqlProofPath)).toBe(true);
     const proof = fs.readFileSync(sqlProofPath, 'utf8');
 
@@ -91,15 +91,30 @@ describe('GRC v1.4-E1-R1 Governed SOP Template Alignment & RACI Backend Invarian
     expect(proof).toContain('TEST 08: Exact-Version Cross-Org Link Rejected');
     expect(proof).toContain('TEST 10: Unresolved section_client_key Rejected');
     expect(proof).toContain('TEST 11, 12, 13: Revision Deep Cloning & Explicit UUID Mapping');
+    expect(proof).toContain('TEST 14: Missing Authority Rule Fails Closed');
     expect(proof).toContain('TEST 15: Missing Stage Configuration Fails Closed');
     expect(proof).toContain('TEST 16: Submission & Server-Side Inferred Stage 1');
     expect(proof).toContain('TEST 18: Unauthorized Actor');
-    expect(proof).toContain('TEST 19 & 25: Correct Stage 1 Approval Advances to Stage 2');
-    expect(proof).toContain('TEST 20: Wrong Org Actor Rejected');
+    expect(proof).toContain('TEST 19, 22 & 25 PASSED');
+    expect(proof).toContain('TEST 20 & 46: Same Role in Wrong Org Actor Rejected');
+    expect(proof).toContain('TEST 21: Unrelated / Expired / Wrong-Scope Delegation Rejected');
     expect(proof).toContain('TEST 23: Self Approval Blocked on Stage 1');
-    expect(proof).toContain('TEST 24: Duplicate Decision in Same Stage Blocked');
+    expect(proof).toContain('TEST 24 & 26 PASSED');
+    expect(proof).toContain('TEST 27 & 28: Return & Rejection Lifecycle Transitions');
+    expect(proof).toContain('TEST 29 & 30: Finalization Guard Failures');
     expect(proof).toContain('TEST 31: Finalization Derives approved_by from Final Stage Approver');
-    expect(proof).toContain('TEST 32, 33, 34: UN-STAGED Request Patch27 Regression');
+    expect(proof).toContain('TEST 32, 33, 34, 35: UN-STAGED Request Patch27 Regression');
+    expect(proof).toContain('TEST 36: No stale create/save RPC overloads');
+    expect(proof).toContain('TEST 37: Direct authenticated mutation cannot bypass staged engine');
     expect(proof).toContain('TEST 38: Immutability on Locked/Approved Version');
+    expect(proof).toContain('TEST 39: Existing legacy step preserves responsible_role when RACI omitted');
+    expect(proof).toContain('TEST 40: Explicit empty RACI sets responsible_role to NULL');
+    expect(proof).toContain('TEST 41: Legacy controlled SOP creation preserves content_mode');
+    expect(proof).toContain('TEST 42 & 09 & 05: Structured Creation & client_key maps & Incomplete RACI');
+    expect(proof).toContain('TEST 43: Stage ordering normalization');
+    expect(proof).toContain('TEST 44 & 45: Stage Configuration Actor Authorization & Tenancy');
+    expect(proof).toContain('TEST 47: Unrelated super_admin cannot bypass configured role');
+    expect(proof).toContain('TEST 48: Document-Scoped RPCs Reject Cross-Org Actor');
+    expect(proof).toContain('TEST 49: Migration 206 Security Definer Classification & ACL Hardening');
   });
 });

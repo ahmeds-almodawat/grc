@@ -191,10 +191,10 @@ describe('Patch 83U authenticated surface release proof', () => {
     )).toBe(false);
   });
 
-  it('fails closed when migration 206 introduces an unaudited SECURITY DEFINER routine', () => {
+  it('fails closed when future migration 207 introduces an unaudited SECURITY DEFINER routine', () => {
     const report = analyzePatch83uAuthSurface({
       migrationFiles: [{
-        path: 'supabase/migrations/206_future_fixture.sql',
+        path: 'supabase/migrations/207_future_fixture.sql',
         text: `
           create function public.future_browser_helper()
           returns integer language sql security definer as $$ select 1 $$;
@@ -220,10 +220,10 @@ describe('Patch 83U authenticated surface release proof', () => {
     expect(report.status).toBe('fail');
   });
 
-  it('fails closed when migration 206 makes a SECURITY DEFINER routine browser executable', () => {
+  it('fails closed when future migration 207 makes a SECURITY DEFINER routine browser executable', () => {
     const report = analyzePatch83uAuthSurface({
       migrationFiles: [{
-        path: 'supabase/migrations/206_browser_fixture.sql',
+        path: 'supabase/migrations/207_browser_fixture.sql',
         text: `
           create function public.future_browser_granted_helper()
           returns integer language sql security definer as $$ select 1 $$;
@@ -271,8 +271,8 @@ describe('Patch 83U authenticated surface release proof', () => {
     expect(report.search_grc_global.disposition).toBe('authenticated_edge_bridge_with_caller_jwt_rls');
     expect(report.summary.retained_live_broad_security_definer_count).toBe(2);
     expect(report.summary.target_broad_security_definer_count).toBe(4);
-    expect(report.summary.reviewed_patch83u_migration_ceiling).toBe(205);
-    expect(report.summary.reviewed_restricted_security_definer_count).toBe(84);
+    expect(report.summary.reviewed_patch83u_migration_ceiling).toBe(206);
+    expect(report.summary.reviewed_restricted_security_definer_count).toBe(90);
     expect(report.acl_reachable_security_definer_rpcs.reviewed_restricted_security_definers)
       .toEqual(expect.arrayContaining([
         expect.objectContaining({
@@ -298,6 +298,50 @@ describe('Patch 83U authenticated surface release proof', () => {
           source: 'migration194_service_role_acl_review',
           disposition: 'service_role_only',
         }),
+        expect.objectContaining({
+          name: 'configure_approval_authority_rule_stages',
+          source: 'migration206_service_role_acl_review',
+          disposition: 'service_role_only',
+        }),
+        expect.objectContaining({
+          name: 'record_approval_decision',
+          source: 'migration206_service_role_acl_review',
+          disposition: 'service_role_only',
+        }),
+        expect.objectContaining({
+          name: 'submit_governed_document_for_review',
+          source: 'migration206_service_role_acl_review',
+          disposition: 'service_role_only',
+        }),
+        expect.objectContaining({
+          name: 'finalize_governed_document_approval',
+          source: 'migration206_service_role_acl_review',
+          disposition: 'service_role_only',
+        }),
+        expect.objectContaining({
+          name: 'save_governed_sop_draft',
+          source: 'migration206_service_role_acl_review',
+          disposition: 'service_role_only',
+        }),
+        expect.objectContaining({
+          name: 'create_governed_sop_draft',
+          source: 'migration206_service_role_acl_review',
+          disposition: 'service_role_only',
+        }),
+        expect.objectContaining({
+          name: 'start_governed_document_revision',
+          source: 'migration206_service_role_acl_review',
+          disposition: 'service_role_only',
+        }),
+        ...[
+          'validate_governed_doc_ver_link_tenancy',
+          'guard_staged_approval_mutations',
+          'enforce_policy_sop_version_immutability',
+        ].map((name) => expect.objectContaining({
+          name,
+          source: 'migration206_service_role_acl_review',
+          disposition: 'owner_only',
+        })),
         ...[
           'f1r2_actor_has_ovr_evidence_entitlement',
           'f1r2_actor_has_work_evidence_entitlement',

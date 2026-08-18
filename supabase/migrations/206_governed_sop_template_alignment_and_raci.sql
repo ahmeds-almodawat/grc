@@ -1,53 +1,45 @@
 -- ============================================================================
--- Migration 206: Governed SOP Template Alignment, RACI Matrix, and Ordered Stages
---
--- Implements:
--- 1. Generic Ordered Approval Stages (Design B) on Patch 27
--- 2. Runtime Approval Request Stages with Snapshotted Authorization
--- 3. Staged Approver Decision Engine with Un-staged Patch 27 Regression Safety
--- 4. Governed SOP Procedure Sections with Deferrable Ordering
--- 5. Step-Level Relational RACI Assignments (At most one 'A' per step)
--- 6. Legacy responsible_role Nullable Compatibility
--- 7. Generic Exact-Version Governed Document Links with Tenant Isolation
--- 8. Fail-Closed Document Governance Submission & Stage Finalization
--- 9. Atomic Client-Key to UUID Resolution in Draft Save/Create RPCs
--- 10. Deep Revision Cloning with Explicit UUID Maps (Preserving Migrations 204/205)
--- 11. Security Definer ACLs, Direct Mutation Guards, and Version Immutability
+-- Migration 206: Governed SOP Template Alignment, Composite RACI & Ordered Approval Stages
+-- GRC v1.4 Cumulative E1-R1 Backend Architecture
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
--- 1. Approval Authority Rule Stages (Configuration Template)
+-- 1. Ordered Approval Stages Foundation
 -- ----------------------------------------------------------------------------
 create table if not exists public.approval_authority_rule_stages (
   id uuid primary key default gen_random_uuid(),
   authority_rule_id uuid not null references public.approval_authority_rules(id) on delete cascade,
-  stage_order integer not null check (stage_order >= 1),
+  stage_order integer not null,
   stage_key text not null,
   stage_name_en text not null,
   stage_name_ar text,
   reviewer_role text,
-  reviewer_user_id uuid references public.profiles(id) on delete set null,
+  reviewer_user_id uuid references public.profiles(id) on delete restrict,
   required_decision_count integer not null default 1 check (required_decision_count >= 1),
   allow_self_approval boolean not null default false,
   created_at timestamptz not null default now(),
-  unique (authority_rule_id, stage_order),
-  unique (authority_rule_id, stage_key),
+  updated_at timestamptz not null default now(),
+  constraint chk_stage_order_positive check (stage_order >= 1),
   constraint chk_stage_auth_selector check (
-    (reviewer_user_id is not null and reviewer_role is null and required_decision_count = 1)
-    or
-    (reviewer_user_id is null and reviewer_role is not null and required_decision_count >= 1)
-  )
+    (reviewer_user_id is not null and reviewer_role is null) or
+    (reviewer_user_id is null and reviewer_role is not null)
+  ),
+  constraint chk_user_stage_count check (
+    reviewer_user_id is null or required_decision_count = 1
+  ),
+  unique (authority_rule_id, stage_order),
+  unique (authority_rule_id, stage_key)
 );
 
 create index if not exists idx_rule_stages_rule on public.approval_authority_rule_stages(authority_rule_id, stage_order);
 
 -- ----------------------------------------------------------------------------
--- 2. Approval Request Stages (Runtime Execution Instances)
+-- 2. Snapshotted Approval Request Stages
 -- ----------------------------------------------------------------------------
 create table if not exists public.approval_request_stages (
   id uuid primary key default gen_random_uuid(),
   approval_request_id uuid not null references public.approval_requests(id) on delete cascade,
-  stage_order integer not null check (stage_order >= 1),
+  stage_order integer not null,
   stage_key text not null,
   stage_name_en text not null,
   stage_name_ar text,
@@ -55,23 +47,37 @@ create table if not exists public.approval_request_stages (
   required_decision_count integer not null default 1 check (required_decision_count >= 1),
   received_decision_count integer not null default 0 check (received_decision_count >= 0),
   assigned_role text,
-  assigned_user_id uuid references public.profiles(id) on delete set null,
+  assigned_user_id uuid references public.profiles(id) on delete restrict,
   allow_self_approval boolean not null default false,
   started_at timestamptz,
   completed_at timestamptz,
   created_at timestamptz not null default now(),
-  unique (approval_request_id, stage_order),
-  unique (id, approval_request_id),
+  updated_at timestamptz not null default now(),
+  constraint chk_req_stage_order_positive check (stage_order >= 1),
   constraint chk_req_stage_auth_selector check (
-    (assigned_user_id is not null and assigned_role is null and required_decision_count = 1)
-    or
-    (assigned_user_id is null and assigned_role is not null and required_decision_count >= 1)
-  )
+    (assigned_user_id is not null and assigned_role is null) or
+    (assigned_user_id is null and assigned_role is not null)
+  ),
+  unique (approval_request_id, stage_order),
+  unique (id, approval_request_id)
 );
 
 create index if not exists idx_req_stages_request on public.approval_request_stages(approval_request_id, stage_order);
 
--- Composite Link & Uniqueness in approval_decisions
+-- Allow stage configuration events in authority events
+alter table public.approval_authority_events
+  drop constraint if exists approval_authority_events_event_type_check;
+
+alter table public.approval_authority_events
+  add constraint approval_authority_events_event_type_check
+  check (event_type in (
+    'rule_created','rule_updated','rule_disabled','stages_configured',
+    'request_created','approver_matched','no_rule_matched',
+    'approval_recorded','rejection_recorded','returned_for_correction',
+    'escalated','expired','cancelled','final_approved','final_rejected'
+  ));
+
+-- Bind approval decisions to request stages
 alter table public.approval_decisions
   add column if not exists request_stage_id uuid;
 
@@ -85,8 +91,8 @@ alter table public.approval_decisions
   on delete cascade;
 
 create unique index if not exists uq_stage_decision_approver
-  on public.approval_decisions (request_stage_id, approver_id)
-  where (request_stage_id is not null);
+  on public.approval_decisions(request_stage_id, approver_id)
+  where request_stage_id is not null;
 
 -- ----------------------------------------------------------------------------
 -- 3. SOP Procedure Sections
@@ -108,13 +114,16 @@ create table if not exists public.sop_procedure_sections (
 create index if not exists idx_sop_sections_version on public.sop_procedure_sections(sop_version_id, sequence_number);
 
 -- ----------------------------------------------------------------------------
--- 4. SOP Procedure Steps Alterations
+-- 4. SOP Procedure Steps Migration & Relational Containment
 -- ----------------------------------------------------------------------------
 alter table public.sop_procedure_steps
   alter column responsible_role drop not null;
 
 alter table public.sop_procedure_steps
   add column if not exists section_id uuid;
+
+alter table public.sop_procedure_steps
+  drop constraint if exists uq_sop_procedure_steps_seq;
 
 alter table public.sop_procedure_steps
   drop constraint if exists sop_procedure_steps_sop_version_id_sequence_number_key;
@@ -124,8 +133,7 @@ alter table public.sop_procedure_steps
 
 alter table public.sop_procedure_steps
   add constraint uq_sop_steps_version_seq
-  unique (sop_version_id, sequence_number)
-  deferrable initially immediate;
+  unique (sop_version_id, sequence_number) deferrable initially immediate;
 
 alter table public.sop_procedure_steps
   drop constraint if exists uq_sop_steps_id_version;
@@ -144,7 +152,7 @@ alter table public.sop_procedure_steps
   on delete restrict;
 
 -- ----------------------------------------------------------------------------
--- 5. Step-Level Relational RACI Assignments
+-- 5. Relational Step-Level RACI Matrix
 -- ----------------------------------------------------------------------------
 create table if not exists public.sop_procedure_step_raci_assignments (
   id uuid primary key default gen_random_uuid(),
@@ -154,10 +162,9 @@ create table if not exists public.sop_procedure_step_raci_assignments (
   role_name text not null,
   role_label_ar text,
   job_title text,
-  sequence_number integer not null default 1 check (sequence_number >= 1),
+  sequence_number integer not null default 1,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint fk_step_raci_step_containment
+  constraint fk_step_raci_containment
     foreign key (step_id, sop_version_id)
     references public.sop_procedure_steps(id, sop_version_id)
     on delete cascade,
@@ -168,24 +175,20 @@ create index if not exists idx_step_raci_lookup on public.sop_procedure_step_rac
 create index if not exists idx_step_raci_version on public.sop_procedure_step_raci_assignments(sop_version_id);
 
 create unique index if not exists uq_step_raci_accountable
-  on public.sop_procedure_step_raci_assignments (step_id)
-  where (raci_type = 'A');
+  on public.sop_procedure_step_raci_assignments(step_id)
+  where raci_type = 'A';
 
 -- ----------------------------------------------------------------------------
--- 6. Generic Governed Document Version Links
+-- 6. Exact Version-to-Version Governed Document Links
 -- ----------------------------------------------------------------------------
 create table if not exists public.governed_document_version_links (
   id uuid primary key default gen_random_uuid(),
   source_version_id uuid not null references public.document_versions(id) on delete cascade,
   target_version_id uuid not null references public.document_versions(id) on delete restrict,
-  relationship_type text not null check (relationship_type in (
-    'references', 'implements', 'supplements', 'replaces',
-    'related_form', 'related_checklist', 'related_policy',
-    'work_instruction', 'template'
-  )),
+  relationship_type text not null check (relationship_type in ('implements_policy', 'references_sop', 'supersedes_version', 'supported_by_sop', 'related_governance')),
   context_note_en text,
   context_note_ar text,
-  sequence_number integer not null default 1 check (sequence_number >= 1),
+  sequence_number integer not null default 1,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint chk_no_self_link check (source_version_id <> target_version_id),
@@ -227,6 +230,8 @@ begin
   return NEW;
 end;
 $$;
+
+revoke execute on function public.validate_governed_doc_ver_link_tenancy() from public, anon, authenticated, service_role;
 
 drop trigger if exists trg_validate_doc_ver_link_tenancy on public.governed_document_version_links;
 create trigger trg_validate_doc_ver_link_tenancy
@@ -333,6 +338,8 @@ begin
 end;
 $$;
 
+revoke execute on function public.guard_staged_approval_mutations() from public, anon, authenticated, service_role;
+
 drop trigger if exists trg_guard_staged_requests on public.approval_requests;
 create trigger trg_guard_staged_requests
 before update on public.approval_requests
@@ -388,6 +395,8 @@ begin
 end;
 $$;
 
+revoke execute on function public.enforce_policy_sop_version_immutability() from public, anon, authenticated, service_role;
+
 drop trigger if exists trg_immutability_sop_procedure_sections on public.sop_procedure_sections;
 create trigger trg_immutability_sop_procedure_sections
 before insert or update or delete on public.sop_procedure_sections
@@ -418,6 +427,7 @@ set search_path = public, pg_temp
 as $$
 declare
   v_rule record;
+  v_actor_org_id uuid;
   v_stage jsonb;
   v_order integer := 1;
   v_user_id uuid;
@@ -425,6 +435,11 @@ declare
   v_count integer;
   v_self_appr boolean;
 begin
+  if coalesce(current_setting('request.jwt.claim.role', true), current_user) <> 'service_role'
+     and current_user <> 'service_role' then
+    raise exception 'PATCH27_AUTHORITY_SERVICE_ROLE_REQUIRED';
+  end if;
+
   select * into v_rule
   from public.approval_authority_rules
   where id = p_authority_rule_id;
@@ -433,12 +448,37 @@ begin
     raise exception 'PATCH27_AUTHORITY_RULE_NOT_FOUND';
   end if;
 
+  -- 1. Validate Actor Profile and Organization Scope
+  select organization_id into v_actor_org_id
+  from public.profiles
+  where id = p_actor_id and coalesce(is_active, true) = true;
+
+  if v_actor_org_id is null then
+    raise exception 'PATCH202_ACTOR_NOT_FOUND';
+  end if;
+
+  if v_actor_org_id <> v_rule.organization_id then
+    raise exception 'PATCH202_ACTOR_CROSS_ORG_FORBIDDEN';
+  end if;
+
+  -- 2. Validate Canonical Administrative Governance Role
+  if not exists (
+    select 1 from public.user_roles ur
+    where ur.user_id = p_actor_id
+      and ur.is_active = true
+      and ur.role in ('super_admin', 'governance_admin')
+      and (ur.organization_id is null or ur.organization_id = v_rule.organization_id)
+  ) then
+    raise exception 'PATCH206_ACTOR_UNAUTHORIZED_FOR_STAGE_CONFIG';
+  end if;
+
   if p_stages is null or jsonb_array_length(p_stages) = 0 then
     raise exception 'PATCH206_EMPTY_STAGE_CONFIGURATION';
   end if;
 
   delete from public.approval_authority_rule_stages where authority_rule_id = p_authority_rule_id;
 
+  -- 3. Deterministic Server-Authoritative Contiguous 1..N Order Assignment
   for v_stage in select * from jsonb_array_elements(p_stages)
   loop
     v_user_id := nullif(v_stage->>'reviewer_user_id', '')::uuid;
@@ -459,7 +499,7 @@ begin
       reviewer_role, reviewer_user_id, required_decision_count, allow_self_approval
     ) values (
       p_authority_rule_id,
-      coalesce((v_stage->>'stage_order')::integer, v_order),
+      v_order,
       coalesce(nullif(trim(v_stage->>'stage_key'), ''), 'stage_' || v_order::text),
       coalesce(nullif(trim(v_stage->>'stage_name_en'), ''), 'Stage ' || v_order::text),
       nullif(trim(v_stage->>'stage_name_ar'), ''),
@@ -470,6 +510,17 @@ begin
     );
     v_order := v_order + 1;
   end loop;
+
+  -- 4. Write Patch 27 Authority Configuration Event
+  perform public.patch27_write_authority_event(
+    null,
+    p_authority_rule_id,
+    'stages_configured',
+    null,
+    null,
+    p_actor_id,
+    'Approval authority rule stages configured: ' || (v_order - 1)::text || ' stages.'
+  );
 
   return jsonb_build_object(
     'success', true,
@@ -547,7 +598,7 @@ begin
     -- Actor organization verification
     select organization_id into v_actor_org_id
     from public.profiles
-    where id = p_approver_id and coalesce(is_active, active_flag, true) = true;
+    where id = p_approver_id and coalesce(is_active, true) = true;
 
     if v_actor_org_id is null or v_actor_org_id <> v_request.organization_id then
       raise exception 'PATCH27_APPROVER_ORGANIZATION_MISMATCH';
@@ -582,15 +633,13 @@ begin
         v_auth_role := 'delegate_user';
       end if;
     elsif v_current_stage.assigned_role is not null then
-      -- Role authorization validation
+      -- Role authorization validation: exact role match in organization scope
       select exists (
         select 1 from public.user_roles ur
         where ur.user_id = p_approver_id
           and ur.is_active = true
-          and (
-            ur.role::text = v_current_stage.assigned_role
-            or ur.role = 'super_admin'
-          )
+          and ur.role::text = v_current_stage.assigned_role
+          and (ur.organization_id is null or ur.organization_id = v_request.organization_id)
       ) into v_has_role;
 
       if not v_has_role then
@@ -605,7 +654,8 @@ begin
             and (del.department_id is null or del.department_id = v_request.department_id)
             and now() between del.effective_from and del.effective_to
             and ur.is_active = true
-            and (ur.role::text = v_current_stage.assigned_role or ur.role = 'super_admin')
+            and ur.role::text = v_current_stage.assigned_role
+            and (ur.organization_id is null or ur.organization_id = v_request.organization_id)
         ) into v_has_role;
       end if;
 
@@ -828,6 +878,14 @@ begin
     raise exception 'PATCH202_VERSION_NOT_EDITABLE_FOR_SUBMISSION';
   end if;
 
+  -- Validate Actor Tenancy
+  if not exists (
+    select 1 from public.profiles
+    where id = p_actor_id and organization_id = v_org_id and coalesce(is_active, true) = true
+  ) then
+    raise exception 'PATCH202_ACTOR_CROSS_ORG_FORBIDDEN';
+  end if;
+
   if exists (
     select 1 from public.approval_requests
     where linked_item_type = 'document_version'
@@ -977,6 +1035,14 @@ begin
     raise exception 'PATCH202_VERSION_NOT_FOUND';
   end if;
 
+  -- Validate Actor Tenancy
+  if not exists (
+    select 1 from public.profiles
+    where id = p_actor_id and organization_id = v_org_id and coalesce(is_active, true) = true
+  ) then
+    raise exception 'PATCH202_ACTOR_CROSS_ORG_FORBIDDEN';
+  end if;
+
   if v_is_locked then
     return jsonb_build_object('success', true, 'already_approved', true, 'version_id', p_version_id);
   end if;
@@ -1063,6 +1129,8 @@ grant execute on function public.finalize_governed_document_approval(uuid, uuid,
 drop function if exists public.save_governed_sop_draft(uuid, uuid, text, text, text, text, text, text, uuid, uuid, text, text, text, boolean, boolean, boolean, integer, integer, jsonb, uuid[], jsonb);
 drop function if exists public.save_governed_sop_draft(uuid, uuid, text, text, text, text, text, text, uuid, uuid, text, text, text, boolean, boolean, boolean, integer, integer, jsonb, uuid[], jsonb, jsonb, jsonb, jsonb);
 drop function if exists public.save_governed_sop_draft(uuid, uuid, text, text, text, text, text, text, uuid, uuid, text, text, text, boolean, boolean, boolean, integer, integer, jsonb, uuid[], jsonb, jsonb, jsonb, jsonb, jsonb, jsonb);
+drop function if exists public.save_governed_sop_draft(uuid, uuid, text, text, text, text, text, text, uuid, uuid, text, text, text, boolean, boolean, boolean, integer, integer, jsonb, jsonb, uuid[], jsonb, jsonb, jsonb, jsonb, jsonb, jsonb, jsonb);
+drop function if exists public.save_governed_sop_draft(uuid, uuid, text, text, text, text, text, text, uuid, uuid, text, text, text, boolean, boolean, boolean, integer, integer, text, text, jsonb, jsonb, uuid[], jsonb, jsonb, jsonb, jsonb, jsonb, jsonb, jsonb);
 
 create or replace function public.save_governed_sop_draft(
   p_actor_id uuid,
@@ -1083,6 +1151,8 @@ create or replace function public.save_governed_sop_draft(
   p_competency_assessment_required boolean default null,
   p_acknowledgment_sla_days integer default null,
   p_training_renewal_months integer default null,
+  p_content_mode text default null,
+  p_transcription_status text default null,
   p_procedure_sections jsonb default null,
   p_procedure_steps jsonb default null,
   p_department_scopes uuid[] default null,
@@ -1147,6 +1217,15 @@ begin
   where v.id = p_version_id and d.document_type = 'sop';
 
   if v_doc_id is null then raise exception 'PATCH202_SOP_VERSION_NOT_FOUND'; end if;
+
+  -- Validate Actor Tenancy
+  if not exists (
+    select 1 from public.profiles
+    where id = p_actor_id and organization_id = v_org_id and coalesce(is_active, true) = true
+  ) then
+    raise exception 'PATCH202_ACTOR_CROSS_ORG_FORBIDDEN';
+  end if;
+
   if exists (select 1 from public.document_versions where id = p_version_id and (locked_at is not null or approved_at is not null)) then
     raise exception 'PATCH201_VERSION_IMMUTABLE_LOCKED';
   end if;
@@ -1167,10 +1246,15 @@ begin
     coalesce(p_process_name_en, 'General Process'), p_process_name_ar,
     coalesce(p_purpose_en, 'Operational standard procedure'), p_purpose_ar,
     p_scope_en, p_scope_ar, p_process_owner_id, p_primary_policy_version_id,
-    coalesce(p_governance_link_state, 'not_applicable'),
+    coalesce(p_governance_link_state, case when p_primary_policy_version_id is not null then 'linked' else 'not_applicable' end),
     coalesce(p_training_required, false), coalesce(p_acknowledgment_required, true),
     coalesce(p_competency_assessment_required, false), coalesce(p_acknowledgment_sla_days, 30),
-    coalesce(p_training_renewal_months, 12), 'structured', 'complete', now()
+    coalesce(p_training_renewal_months, 12),
+    coalesce(p_content_mode, 'structured'),
+    case when coalesce(p_content_mode, 'structured') = 'structured'
+         then coalesce(p_transcription_status, 'complete')
+         else coalesce(p_transcription_status, 'not_required') end,
+    now()
   )
   on conflict (version_id) do update set
     title_en = coalesce(p_title_en, governed_sop_details.title_en),
@@ -1183,16 +1267,19 @@ begin
     scope_ar = coalesce(p_scope_ar, governed_sop_details.scope_ar),
     process_owner_id = coalesce(p_process_owner_id, governed_sop_details.process_owner_id),
     primary_policy_version_id = coalesce(p_primary_policy_version_id, governed_sop_details.primary_policy_version_id),
-    governance_link_state = coalesce(p_governance_link_state, governed_sop_details.governance_link_state),
+    governance_link_state = coalesce(p_governance_link_state, case when coalesce(p_primary_policy_version_id, governed_sop_details.primary_policy_version_id) is not null then 'linked' else governed_sop_details.governance_link_state end),
     training_required = coalesce(p_training_required, governed_sop_details.training_required),
     acknowledgment_required = coalesce(p_acknowledgment_required, governed_sop_details.acknowledgment_required),
     competency_assessment_required = coalesce(p_competency_assessment_required, governed_sop_details.competency_assessment_required),
     acknowledgment_sla_days = coalesce(p_acknowledgment_sla_days, governed_sop_details.acknowledgment_sla_days),
     training_renewal_months = coalesce(p_training_renewal_months, governed_sop_details.training_renewal_months),
+    content_mode = coalesce(p_content_mode, governed_sop_details.content_mode),
+    transcription_status = coalesce(p_transcription_status, governed_sop_details.transcription_status),
     updated_at = now();
 
   -- 1. Reconcile Sections & Map Keys
-  create temp table tmp_sec_key_map (client_key text primary key, sec_id uuid not null) on commit drop;
+  create temp table if not exists tmp_sec_key_map (client_key text primary key, sec_id uuid not null) on commit drop;
+  truncate table tmp_sec_key_map;
 
   if p_procedure_sections is not null then
     select array_agg(id) into v_existing_sec_ids from public.sop_procedure_sections where sop_version_id = p_version_id;
@@ -1246,16 +1333,6 @@ begin
         end if;
       end if;
 
-      -- RACI responsible_role synchronization rule
-      if v_step ? 'raci_assignments' then
-        select nullif(trim(r->>'role_name'), '') into v_primary_r_role
-        from jsonb_array_elements(v_step->'raci_assignments') r
-        where r->>'raci_type' = 'R'
-        limit 1;
-      else
-        v_primary_r_role := nullif(trim(v_step->>'responsible_role'), '');
-      end if;
-
       v_step_id := nullif(v_step->>'id', '')::uuid;
       if v_step_id is not null then
         if not (v_step_id = any(coalesce(v_existing_step_ids, '{}'::uuid[]))) then
@@ -1263,28 +1340,71 @@ begin
         end if;
         v_payload_step_ids := array_append(v_payload_step_ids, v_step_id);
 
-        update public.sop_procedure_steps set
-          section_id = v_sec_id,
-          sequence_number = (v_step->>'sequence_number')::integer,
-          responsible_role = v_primary_r_role,
-          action_instruction_en = coalesce(v_step->>'action_instruction_en', action_instruction_en),
-          action_instruction_ar = v_step->>'action_instruction_ar',
-          required_control_id = nullif(v_step->>'required_control_id', '')::uuid,
-          expected_evidence_record_en = v_step->>'expected_evidence_record_en',
-          expected_evidence_record_ar = v_step->>'expected_evidence_record_ar',
-          timing_sla_en = v_step->>'timing_sla_en',
-          timing_sla_ar = v_step->>'timing_sla_ar',
-          is_decision_point = coalesce((v_step->>'is_decision_point')::boolean, false),
-          decision_criteria_en = v_step->>'decision_criteria_en',
-          decision_criteria_ar = v_step->>'decision_criteria_ar',
-          criticality = coalesce(v_step->>'criticality', 'medium'),
-          escalation_trigger_en = v_step->>'escalation_trigger_en',
-          escalation_trigger_ar = v_step->>'escalation_trigger_ar',
-          escalation_destination_role = v_step->>'escalation_destination_role',
-          updated_at = now()
-        where id = v_step_id and sop_version_id = p_version_id;
+        if v_step ? 'raci_assignments' then
+          -- A. raci_assignments explicitly present with >=1 R -> primary R
+          -- B. raci_assignments explicitly present with no R -> NULL
+          select nullif(trim(r->>'role_name'), '') into v_primary_r_role
+          from jsonb_array_elements(v_step->'raci_assignments') r
+          where r->>'raci_type' = 'R'
+          limit 1;
+
+          update public.sop_procedure_steps set
+            section_id = v_sec_id,
+            sequence_number = (v_step->>'sequence_number')::integer,
+            responsible_role = v_primary_r_role,
+            action_instruction_en = coalesce(v_step->>'action_instruction_en', action_instruction_en),
+            action_instruction_ar = v_step->>'action_instruction_ar',
+            required_control_id = nullif(v_step->>'required_control_id', '')::uuid,
+            expected_evidence_record_en = v_step->>'expected_evidence_record_en',
+            expected_evidence_record_ar = v_step->>'expected_evidence_record_ar',
+            timing_sla_en = v_step->>'timing_sla_en',
+            timing_sla_ar = v_step->>'timing_sla_ar',
+            is_decision_point = coalesce((v_step->>'is_decision_point')::boolean, false),
+            decision_criteria_en = v_step->>'decision_criteria_en',
+            decision_criteria_ar = v_step->>'decision_criteria_ar',
+            criticality = coalesce(v_step->>'criticality', 'medium'),
+            escalation_trigger_en = v_step->>'escalation_trigger_en',
+            escalation_trigger_ar = v_step->>'escalation_trigger_ar',
+            escalation_destination_role = v_step->>'escalation_destination_role',
+            updated_at = now()
+          where id = v_step_id and sop_version_id = p_version_id;
+        else
+          -- C. raci_assignments omitted:
+          -- If explicit responsible_role supplied -> use supplied legacy value
+          -- If responsible_role omitted -> PRESERVE existing DB value
+          update public.sop_procedure_steps set
+            section_id = v_sec_id,
+            sequence_number = (v_step->>'sequence_number')::integer,
+            responsible_role = case when v_step ? 'responsible_role' then nullif(trim(v_step->>'responsible_role'), '') else responsible_role end,
+            action_instruction_en = coalesce(v_step->>'action_instruction_en', action_instruction_en),
+            action_instruction_ar = v_step->>'action_instruction_ar',
+            required_control_id = nullif(v_step->>'required_control_id', '')::uuid,
+            expected_evidence_record_en = v_step->>'expected_evidence_record_en',
+            expected_evidence_record_ar = v_step->>'expected_evidence_record_ar',
+            timing_sla_en = v_step->>'timing_sla_en',
+            timing_sla_ar = v_step->>'timing_sla_ar',
+            is_decision_point = coalesce((v_step->>'is_decision_point')::boolean, false),
+            decision_criteria_en = v_step->>'decision_criteria_en',
+            decision_criteria_ar = v_step->>'decision_criteria_ar',
+            criticality = coalesce(v_step->>'criticality', 'medium'),
+            escalation_trigger_en = v_step->>'escalation_trigger_en',
+            escalation_trigger_ar = v_step->>'escalation_trigger_ar',
+            escalation_destination_role = v_step->>'escalation_destination_role',
+            updated_at = now()
+          where id = v_step_id and sop_version_id = p_version_id;
+        end if;
       else
+        -- NEW step
         v_step_id := gen_random_uuid();
+        if v_step ? 'raci_assignments' then
+          select nullif(trim(r->>'role_name'), '') into v_primary_r_role
+          from jsonb_array_elements(v_step->'raci_assignments') r
+          where r->>'raci_type' = 'R'
+          limit 1;
+        else
+          v_primary_r_role := nullif(trim(v_step->>'responsible_role'), '');
+        end if;
+
         insert into public.sop_procedure_steps (
           id, sop_version_id, section_id, sequence_number, responsible_role,
           action_instruction_en, action_instruction_ar, required_control_id,
@@ -1369,7 +1489,22 @@ begin
     delete from public.governed_document_version_links where source_version_id = p_version_id and not (id = any(v_payload_link_ids));
   end if;
 
-  -- 4. Reconcile Definitions, Responsibilities, KPIs, Risks, Accreditations, Scopes
+  -- 4. Scope, Definitions, Responsibilities, KPIs, Risks, Accreditations
+  if p_department_scopes is not null then
+    delete from public.document_version_department_scope where version_id = p_version_id;
+    foreach v_dept_id in array p_department_scopes loop
+      insert into public.document_version_department_scope (version_id, department_id) values (p_version_id, v_dept_id);
+    end loop;
+  end if;
+
+  if p_role_scopes is not null then
+    delete from public.document_version_role_scope where version_id = p_version_id;
+    for v_role in select * from jsonb_array_elements(p_role_scopes) loop
+      insert into public.document_version_role_scope (version_id, role_name, role_label_ar, is_mandatory)
+      values (p_version_id, v_role->>'role_name', v_role->>'role_label_ar', coalesce((v_role->>'is_mandatory')::boolean, true));
+    end loop;
+  end if;
+
   if p_definitions is not null then
     select array_agg(id) into v_existing_def_ids from public.sop_definitions where sop_version_id = p_version_id;
     for v_def in select * from jsonb_array_elements(p_definitions) loop
@@ -1377,13 +1512,22 @@ begin
       if v_item_id is not null and (v_item_id = any(coalesce(v_existing_def_ids, '{}'::uuid[]))) then
         v_payload_def_ids := array_append(v_payload_def_ids, v_item_id);
         update public.sop_definitions set
-          sequence_number = (v_def->>'sequence_number')::integer, term_en = v_def->>'term_en', term_ar = v_def->>'term_ar',
-          abbreviation = v_def->>'abbreviation', definition_en = v_def->>'definition_en', definition_ar = v_def->>'definition_ar', updated_at = now()
+          term_en = coalesce(v_def->>'term_en', term_en),
+          term_ar = v_def->>'term_ar',
+          definition_en = coalesce(v_def->>'definition_en', definition_en),
+          definition_ar = v_def->>'definition_ar',
+          abbreviation = coalesce(v_def->>'abbreviation', v_def->>'acronym'),
+          sequence_number = coalesce((v_def->>'sequence_number')::integer, 1),
+          updated_at = now()
         where id = v_item_id and sop_version_id = p_version_id;
       else
-        insert into public.sop_definitions (sop_version_id, sequence_number, term_en, term_ar, abbreviation, definition_en, definition_ar)
-        values (p_version_id, (v_def->>'sequence_number')::integer, v_def->>'term_en', v_def->>'term_ar', v_def->>'abbreviation', v_def->>'definition_en', v_def->>'definition_ar')
-        returning id into v_item_id;
+        insert into public.sop_definitions (
+          sop_version_id, term_en, term_ar, definition_en, definition_ar, abbreviation, sequence_number
+        ) values (
+          p_version_id, coalesce(v_def->>'term_en', 'Term'), v_def->>'term_ar',
+          coalesce(v_def->>'definition_en', 'Definition'), v_def->>'definition_ar',
+          coalesce(v_def->>'abbreviation', v_def->>'acronym'), coalesce((v_def->>'sequence_number')::integer, 1)
+        ) returning id into v_item_id;
         v_payload_def_ids := array_append(v_payload_def_ids, v_item_id);
       end if;
     end loop;
@@ -1397,14 +1541,22 @@ begin
       if v_item_id is not null and (v_item_id = any(coalesce(v_existing_resp_ids, '{}'::uuid[]))) then
         v_payload_resp_ids := array_append(v_payload_resp_ids, v_item_id);
         update public.sop_role_responsibilities set
-          sequence_number = (v_resp->>'sequence_number')::integer, role_name = v_resp->>'role_name', job_title = v_resp->>'job_title',
-          responsibility_en = v_resp->>'responsibility_en', responsibility_ar = v_resp->>'responsibility_ar',
-          accountable_for_en = v_resp->>'accountable_for_en', accountable_for_ar = v_resp->>'accountable_for_ar', updated_at = now()
+          role_name = coalesce(v_resp->>'role_name', role_name),
+          role_label_ar = v_resp->>'role_label_ar',
+          job_title = v_resp->>'job_title',
+          responsibility_en = coalesce(v_resp->>'responsibility_en', responsibility_en),
+          responsibility_ar = v_resp->>'responsibility_ar',
+          sequence_number = coalesce((v_resp->>'sequence_number')::integer, 1),
+          updated_at = now()
         where id = v_item_id and sop_version_id = p_version_id;
       else
-        insert into public.sop_role_responsibilities (sop_version_id, sequence_number, role_name, job_title, responsibility_en, responsibility_ar, accountable_for_en, accountable_for_ar)
-        values (p_version_id, (v_resp->>'sequence_number')::integer, v_resp->>'role_name', v_resp->>'job_title', v_resp->>'responsibility_en', v_resp->>'responsibility_ar', v_resp->>'accountable_for_en', v_resp->>'accountable_for_ar')
-        returning id into v_item_id;
+        insert into public.sop_role_responsibilities (
+          sop_version_id, role_name, role_label_ar, job_title, responsibility_en, responsibility_ar, sequence_number
+        ) values (
+          p_version_id, coalesce(v_resp->>'role_name', 'Role'), v_resp->>'role_label_ar',
+          v_resp->>'job_title', coalesce(v_resp->>'responsibility_en', 'Responsibility'),
+          v_resp->>'responsibility_ar', coalesce((v_resp->>'sequence_number')::integer, 1)
+        ) returning id into v_item_id;
         v_payload_resp_ids := array_append(v_payload_resp_ids, v_item_id);
       end if;
     end loop;
@@ -1418,14 +1570,24 @@ begin
       if v_item_id is not null and (v_item_id = any(coalesce(v_existing_kpi_ids, '{}'::uuid[]))) then
         v_payload_kpi_ids := array_append(v_payload_kpi_ids, v_item_id);
         update public.sop_monitoring_kpis set
-          sequence_number = (v_kpi->>'sequence_number')::integer, kpi_name_en = v_kpi->>'kpi_name_en', kpi_name_ar = v_kpi->>'kpi_name_ar',
-          target_value = v_kpi->>'target_value', measurement_frequency = v_kpi->>'measurement_frequency',
-          owner_id = nullif(v_kpi->>'owner_id', '')::uuid, description_en = v_kpi->>'description_en', description_ar = v_kpi->>'description_ar', updated_at = now()
+          kpi_name_en = coalesce(v_kpi->>'kpi_name_en', kpi_name_en),
+          kpi_name_ar = v_kpi->>'kpi_name_ar',
+          target_metric_en = coalesce(v_kpi->>'target_metric_en', target_metric_en),
+          target_metric_ar = v_kpi->>'target_metric_ar',
+          measurement_frequency = coalesce(v_kpi->>'measurement_frequency', measurement_frequency),
+          reporting_responsible_role = v_kpi->>'reporting_responsible_role',
+          sequence_number = coalesce((v_kpi->>'sequence_number')::integer, 1),
+          updated_at = now()
         where id = v_item_id and sop_version_id = p_version_id;
       else
-        insert into public.sop_monitoring_kpis (sop_version_id, sequence_number, kpi_name_en, kpi_name_ar, target_value, measurement_frequency, owner_id, description_en, description_ar)
-        values (p_version_id, (v_kpi->>'sequence_number')::integer, v_kpi->>'kpi_name_en', v_kpi->>'kpi_name_ar', v_kpi->>'target_value', v_kpi->>'measurement_frequency', nullif(v_kpi->>'owner_id', '')::uuid, v_kpi->>'description_en', v_kpi->>'description_ar')
-        returning id into v_item_id;
+        insert into public.sop_monitoring_kpis (
+          sop_version_id, kpi_name_en, kpi_name_ar, target_metric_en, target_metric_ar, measurement_frequency, reporting_responsible_role, sequence_number
+        ) values (
+          p_version_id, coalesce(v_kpi->>'kpi_name_en', 'KPI'), v_kpi->>'kpi_name_ar',
+          coalesce(v_kpi->>'target_metric_en', 'Target'), v_kpi->>'target_metric_ar',
+          coalesce(v_kpi->>'measurement_frequency', 'monthly'), v_kpi->>'reporting_responsible_role',
+          coalesce((v_kpi->>'sequence_number')::integer, 1)
+        ) returning id into v_item_id;
         v_payload_kpi_ids := array_append(v_payload_kpi_ids, v_item_id);
       end if;
     end loop;
@@ -1439,14 +1601,19 @@ begin
       if v_item_id is not null and (v_item_id = any(coalesce(v_existing_risk_ids, '{}'::uuid[]))) then
         v_payload_risk_ids := array_append(v_payload_risk_ids, v_item_id);
         update public.sop_version_risk_links set
-          risk_id = (v_risk->>'risk_id')::uuid, relationship_type = v_risk->>'relationship_type',
-          context_note_en = v_risk->>'context_note_en', context_note_ar = v_risk->>'context_note_ar',
-          sequence_number = (v_risk->>'sequence_number')::integer, updated_at = now()
+          risk_id = (v_risk->>'risk_id')::uuid,
+          mitigation_type = coalesce(v_risk->>'mitigation_type', mitigation_type),
+          notes = v_risk->>'notes',
+          sequence_number = coalesce((v_risk->>'sequence_number')::integer, 1),
+          updated_at = now()
         where id = v_item_id and sop_version_id = p_version_id;
       else
-        insert into public.sop_version_risk_links (sop_version_id, risk_id, relationship_type, context_note_en, context_note_ar, sequence_number)
-        values (p_version_id, (v_risk->>'risk_id')::uuid, v_risk->>'relationship_type', v_risk->>'context_note_en', v_risk->>'context_note_ar', (v_risk->>'sequence_number')::integer)
-        returning id into v_item_id;
+        insert into public.sop_version_risk_links (
+          sop_version_id, risk_id, mitigation_type, notes, sequence_number
+        ) values (
+          p_version_id, (v_risk->>'risk_id')::uuid, coalesce(v_risk->>'mitigation_type', 'prevents'),
+          v_risk->>'notes', coalesce((v_risk->>'sequence_number')::integer, 1)
+        ) returning id into v_item_id;
         v_payload_risk_ids := array_append(v_payload_risk_ids, v_item_id);
       end if;
     end loop;
@@ -1460,37 +1627,27 @@ begin
       if v_item_id is not null and (v_item_id = any(coalesce(v_existing_acc_ids, '{}'::uuid[]))) then
         v_payload_acc_ids := array_append(v_payload_acc_ids, v_item_id);
         update public.sop_version_accreditation_links set
-          clause_id = (v_acc->>'clause_id')::uuid, link_strength = coalesce(v_acc->>'link_strength', 'direct'),
-          context_note_en = v_acc->>'context_note_en', context_note_ar = v_acc->>'context_note_ar',
-          sequence_number = (v_acc->>'sequence_number')::integer, updated_at = now()
+          requirement_id = (v_acc->>'requirement_id')::uuid,
+          compliance_type = coalesce(v_acc->>'compliance_type', compliance_type),
+          notes = v_acc->>'notes',
+          sequence_number = coalesce((v_acc->>'sequence_number')::integer, 1),
+          updated_at = now()
         where id = v_item_id and sop_version_id = p_version_id;
       else
-        insert into public.sop_version_accreditation_links (sop_version_id, clause_id, link_strength, context_note_en, context_note_ar, sequence_number)
-        values (p_version_id, (v_acc->>'clause_id')::uuid, coalesce(v_acc->>'link_strength', 'direct'), v_acc->>'context_note_en', v_acc->>'context_note_ar', (v_acc->>'sequence_number')::integer)
-        returning id into v_item_id;
+        insert into public.sop_version_accreditation_links (
+          sop_version_id, requirement_id, compliance_type, notes, sequence_number
+        ) values (
+          p_version_id, (v_acc->>'requirement_id')::uuid, coalesce(v_acc->>'compliance_type', 'satisfies'),
+          v_acc->>'notes', coalesce((v_acc->>'sequence_number')::integer, 1)
+        ) returning id into v_item_id;
         v_payload_acc_ids := array_append(v_payload_acc_ids, v_item_id);
       end if;
     end loop;
     delete from public.sop_version_accreditation_links where sop_version_id = p_version_id and not (id = any(v_payload_acc_ids));
   end if;
 
-  if p_department_scopes is not null then
-    delete from public.document_version_department_scope where version_id = p_version_id;
-    foreach v_dept_id in array p_department_scopes loop
-      insert into public.document_version_department_scope (version_id, department_id) values (p_version_id, v_dept_id);
-    end loop;
-  end if;
-
-  if p_role_scopes is not null then
-    delete from public.document_version_role_scope where version_id = p_version_id;
-    for v_role in select * from jsonb_array_elements(p_role_scopes) loop
-      insert into public.document_version_role_scope (version_id, role_name, job_title)
-      values (p_version_id, nullif(trim(v_role->>'role_name'), ''), nullif(trim(v_role->>'job_title'), ''));
-    end loop;
-  end if;
-
   return jsonb_build_object(
-    'success', true,
+    'document_id', v_doc_id,
     'version_id', p_version_id,
     'section_key_map', v_section_key_map,
     'step_key_map', v_step_key_map
@@ -1498,14 +1655,15 @@ begin
 end;
 $$;
 
-revoke all on function public.save_governed_sop_draft(uuid, uuid, text, text, text, text, text, text, uuid, uuid, text, text, text, boolean, boolean, boolean, integer, integer, jsonb, jsonb, uuid[], jsonb, jsonb, jsonb, jsonb, jsonb, jsonb, jsonb) from public, anon, authenticated;
-grant execute on function public.save_governed_sop_draft(uuid, uuid, text, text, text, text, text, text, uuid, uuid, text, text, text, boolean, boolean, boolean, integer, integer, jsonb, jsonb, uuid[], jsonb, jsonb, jsonb, jsonb, jsonb, jsonb, jsonb) to service_role;
+revoke all on function public.save_governed_sop_draft(uuid, uuid, text, text, text, text, text, text, uuid, uuid, text, text, text, boolean, boolean, boolean, integer, integer, text, text, jsonb, jsonb, uuid[], jsonb, jsonb, jsonb, jsonb, jsonb, jsonb, jsonb) from public, anon, authenticated;
+grant execute on function public.save_governed_sop_draft(uuid, uuid, text, text, text, text, text, text, uuid, uuid, text, text, text, boolean, boolean, boolean, integer, integer, text, text, jsonb, jsonb, uuid[], jsonb, jsonb, jsonb, jsonb, jsonb, jsonb, jsonb) to service_role;
 
 -- ----------------------------------------------------------------------------
 -- 14. Create Governed SOP Draft RPC: create_governed_sop_draft
 -- ----------------------------------------------------------------------------
 drop function if exists public.create_governed_sop_draft(uuid, uuid, text, text, text, text, text, text, uuid, uuid, text, text, text, uuid, text, text, boolean, boolean, boolean, integer, integer, text, jsonb, uuid[], jsonb);
 drop function if exists public.create_governed_sop_draft(uuid, uuid, text, text, text, text, text, text, uuid, uuid, text, text, text, uuid, text, text, boolean, boolean, boolean, integer, integer, text, jsonb, uuid[], jsonb, jsonb, jsonb, jsonb);
+drop function if exists public.create_governed_sop_draft(uuid, uuid, text, text, text, text, text, text, uuid, uuid, text, text, text, uuid, text, text, boolean, boolean, boolean, integer, integer, text, jsonb, jsonb, uuid[], jsonb, jsonb, jsonb, jsonb, jsonb, jsonb, jsonb);
 
 create or replace function public.create_governed_sop_draft(
   p_actor_id uuid,
@@ -1518,7 +1676,7 @@ create or replace function public.create_governed_sop_draft(
   p_purpose_ar text default null,
   p_process_owner_id uuid default null,
   p_primary_policy_version_id uuid default null,
-  p_governance_link_state text default 'linked',
+  p_governance_link_state text default null,
   p_scope_en text default null,
   p_scope_ar text default null,
   p_department_id uuid default null,
@@ -1555,7 +1713,7 @@ declare
 begin
   if not exists (
     select 1 from public.profiles
-    where id = p_actor_id and organization_id = p_organization_id and coalesce(is_active, active_flag, true) = true
+    where id = p_actor_id and organization_id = p_organization_id and coalesce(is_active, true) = true
   ) then
     raise exception 'PATCH202_ACTOR_NOT_AUTHORIZED';
   end if;
@@ -1604,6 +1762,8 @@ begin
     p_competency_assessment_required => p_competency_assessment_required,
     p_acknowledgment_sla_days => p_acknowledgment_sla_days,
     p_training_renewal_months => p_training_renewal_months,
+    p_content_mode => p_content_mode,
+    p_transcription_status => case when p_content_mode = 'legacy_controlled_document' then 'not_required' else 'complete' end,
     p_procedure_sections => p_procedure_sections,
     p_procedure_steps => p_procedure_steps,
     p_department_scopes => p_department_scopes,
@@ -1662,6 +1822,14 @@ begin
     raise exception 'PATCH202_SOURCE_VERSION_NOT_FOUND';
   end if;
 
+  -- Validate Actor Tenancy
+  if not exists (
+    select 1 from public.profiles
+    where id = p_actor_id and organization_id = v_org_id and coalesce(is_active, true) = true
+  ) then
+    raise exception 'PATCH202_ACTOR_CROSS_ORG_FORBIDDEN';
+  end if;
+
   if p_revision_type not in ('minor', 'major') then
     raise exception 'PATCH202_INVALID_REVISION_TYPE';
   end if;
@@ -1673,51 +1841,45 @@ begin
     raise exception 'PATCH202_ACTIVE_DRAFT_ALREADY_EXISTS';
   end if;
 
-  select coalesce(max(version_number), 0) + 1 into v_new_ver_num
-  from public.document_versions
-  where document_id = v_doc_id;
+  select coalesce(max(version_number), v_source_ver_num) + 1 into v_new_ver_num
+  from public.document_versions where document_id = v_doc_id;
 
-  v_new_ver_label := 'v' || v_new_ver_num::text || '.0';
+  v_new_ver_label := case when p_revision_type = 'major'
+    then floor(v_new_ver_num)::text || '.0'
+    else (v_source_ver_num / 10)::text || '.' || (v_new_ver_num % 10)::text end;
 
   insert into public.document_versions (
-    document_id, version_number, version_label, prepared_by, revision_reason,
-    is_current_version, locked_at, approved_at
+    document_id, version_number, version_label, change_summary, revision_reason, prepared_by, is_current_version
   ) values (
-    v_doc_id, v_new_ver_num, v_new_ver_label, p_actor_id, p_revision_reason,
-    false, null, null
+    v_doc_id, v_new_ver_num, v_new_ver_label, p_revision_reason, p_revision_reason, p_actor_id, false
   ) returning id into v_new_ver_id;
 
-  -- Policy Cloning
   if v_doc_type = 'policy' then
     insert into public.governed_policy_details (
-      version_id, title_en, title_ar, purpose_en, purpose_ar,
-      policy_statement_en, policy_statement_ar, scope_en, scope_ar,
-      principles_en, principles_ar, exceptions_summary_en, exceptions_summary_ar,
+      version_id, title_en, title_ar, policy_statement_en, policy_statement_ar,
+      purpose_en, purpose_ar, scope_en, scope_ar, policy_owner_id,
+      compliance_target, exceptions_policy_en, exceptions_policy_ar,
       non_compliance_escalation_en, non_compliance_escalation_ar, content_mode, transcription_status
     )
     select
-      v_new_ver_id, title_en, title_ar, purpose_en, purpose_ar,
-      policy_statement_en, policy_statement_ar, scope_en, scope_ar,
-      principles_en, principles_ar, exceptions_summary_en, exceptions_summary_ar,
+      v_new_ver_id, title_en, title_ar, policy_statement_en, policy_statement_ar,
+      purpose_en, purpose_ar, scope_en, scope_ar, policy_owner_id,
+      compliance_target, exceptions_policy_en, exceptions_policy_ar,
       non_compliance_escalation_en, non_compliance_escalation_ar, content_mode, transcription_status
     from public.governed_policy_details
     where version_id = p_source_version_id;
 
     insert into public.policy_requirements (
       policy_version_id, sequence_number, requirement_statement_en, requirement_statement_ar,
-      responsible_role, is_mandatory, expected_evidence_en, expected_evidence_ar,
-      mapped_control_id, linked_accreditation_clause_id, monitoring_frequency, monitoring_owner_id
+      guidance_en, guidance_ar, is_mandatory, criticality
     )
     select
       v_new_ver_id, sequence_number, requirement_statement_en, requirement_statement_ar,
-      responsible_role, is_mandatory, expected_evidence_en, expected_evidence_ar,
-      mapped_control_id, linked_accreditation_clause_id, monitoring_frequency, monitoring_owner_id
+      guidance_en, guidance_ar, is_mandatory, criticality
     from public.policy_requirements
     where policy_version_id = p_source_version_id;
-  end if;
 
-  -- SOP Cloning with Rollout State Reset
-  if v_doc_type = 'sop' then
+  elsif v_doc_type = 'sop' then
     insert into public.governed_sop_details (
       version_id, title_en, title_ar, process_name_en, process_name_ar,
       process_owner_id, purpose_en, purpose_ar, scope_en, scope_ar,
@@ -1739,7 +1901,8 @@ begin
     where version_id = p_source_version_id;
 
     -- 1. Section UUID Map
-    create temp table tmp_sec_clone_map (old_id uuid primary key, new_id uuid not null) on commit drop;
+    create temp table if not exists tmp_sec_clone_map (old_id uuid primary key, new_id uuid not null) on commit drop;
+    truncate table tmp_sec_clone_map;
 
     insert into tmp_sec_clone_map (old_id, new_id)
     select id, gen_random_uuid()
@@ -1755,8 +1918,9 @@ begin
     join tmp_sec_clone_map m on m.old_id = s.id
     where s.sop_version_id = p_source_version_id;
 
-    -- 2. Step UUID Map & Containment
-    create temp table tmp_step_clone_map (old_id uuid primary key, new_id uuid not null) on commit drop;
+    -- 2. Step UUID Map
+    create temp table if not exists tmp_step_clone_map (old_id uuid primary key, new_id uuid not null) on commit drop;
+    truncate table tmp_step_clone_map;
 
     insert into tmp_step_clone_map (old_id, new_id)
     select id, gen_random_uuid()
@@ -1772,77 +1936,55 @@ begin
       escalation_trigger_en, escalation_trigger_ar, escalation_destination_role
     )
     select
-      sm.new_id,
-      v_new_ver_id,
-      secm.new_id,
-      st.sequence_number,
-      st.responsible_role,
-      st.action_instruction_en,
-      st.action_instruction_ar,
-      st.required_control_id,
-      st.expected_evidence_record_en,
-      st.expected_evidence_record_ar,
-      st.timing_sla_en,
-      st.timing_sla_ar,
-      st.is_decision_point,
-      st.decision_criteria_en,
-      st.decision_criteria_ar,
-      st.criticality,
-      st.escalation_trigger_en,
-      st.escalation_trigger_ar,
-      st.escalation_destination_role
+      sm.new_id, v_new_ver_id, sec_map.new_id, st.sequence_number, st.responsible_role,
+      st.action_instruction_en, st.action_instruction_ar, st.required_control_id,
+      st.expected_evidence_record_en, st.expected_evidence_record_ar,
+      st.timing_sla_en, st.timing_sla_ar, st.is_decision_point,
+      st.decision_criteria_en, st.decision_criteria_ar, st.criticality,
+      st.escalation_trigger_en, st.escalation_trigger_ar, st.escalation_destination_role
     from public.sop_procedure_steps st
     join tmp_step_clone_map sm on sm.old_id = st.id
-    left join tmp_sec_clone_map secm on secm.old_id = st.section_id
+    left join tmp_sec_clone_map sec_map on sec_map.old_id = st.section_id
     where st.sop_version_id = p_source_version_id;
 
-    -- 3. Clone RACI Rows with Mapped Step UUIDs
+    -- 3. Clone RACI Rows with Cloned Step IDs
     insert into public.sop_procedure_step_raci_assignments (
-      id, sop_version_id, step_id, raci_type, role_name, role_label_ar, job_title, sequence_number
+      sop_version_id, step_id, raci_type, role_name, role_label_ar, job_title, sequence_number
     )
     select
-      gen_random_uuid(),
-      v_new_ver_id,
-      sm.new_id,
-      r.raci_type,
-      r.role_name,
-      r.role_label_ar,
-      r.job_title,
-      r.sequence_number
+      v_new_ver_id, sm.new_id, r.raci_type, r.role_name, r.role_label_ar, r.job_title, r.sequence_number
     from public.sop_procedure_step_raci_assignments r
     join tmp_step_clone_map sm on sm.old_id = r.step_id
     where r.sop_version_id = p_source_version_id;
 
-    -- 4. Clone Definitions, Responsibilities, KPIs
+    -- 4. Clone Definitions
     insert into public.sop_definitions (
-      sop_version_id, sequence_number, term_en, term_ar, abbreviation, definition_en, definition_ar
+      sop_version_id, term_en, term_ar, definition_en, definition_ar, abbreviation, sequence_number
     )
     select
-      v_new_ver_id, sequence_number, term_en, term_ar, abbreviation, definition_en, definition_ar
+      v_new_ver_id, term_en, term_ar, definition_en, definition_ar, abbreviation, sequence_number
     from public.sop_definitions
     where sop_version_id = p_source_version_id;
 
+    -- 5. Clone Role Responsibilities
     insert into public.sop_role_responsibilities (
-      sop_version_id, sequence_number, role_name, job_title, responsibility_en, responsibility_ar,
-      accountable_for_en, accountable_for_ar
+      sop_version_id, sequence_number, role_name, job_title, responsibility_en, responsibility_ar, accountable_for_en, accountable_for_ar
     )
     select
-      v_new_ver_id, sequence_number, role_name, job_title, responsibility_en, responsibility_ar,
-      accountable_for_en, accountable_for_ar
+      v_new_ver_id, sequence_number, role_name, job_title, responsibility_en, responsibility_ar, accountable_for_en, accountable_for_ar
     from public.sop_role_responsibilities
     where sop_version_id = p_source_version_id;
 
+    -- 6. Clone Monitoring KPIs
     insert into public.sop_monitoring_kpis (
-      sop_version_id, sequence_number, kpi_name_en, kpi_name_ar, target_value, measurement_frequency,
-      owner_id, description_en, description_ar
+      sop_version_id, sequence_number, kpi_name_en, kpi_name_ar, target_value, measurement_frequency, owner_id, description_en, description_ar
     )
     select
-      v_new_ver_id, sequence_number, kpi_name_en, kpi_name_ar, target_value, measurement_frequency,
-      owner_id, description_en, description_ar
+      v_new_ver_id, sequence_number, kpi_name_en, kpi_name_ar, target_value, measurement_frequency, owner_id, description_en, description_ar
     from public.sop_monitoring_kpis
     where sop_version_id = p_source_version_id;
 
-    -- 5. Migration 204 Traceability Links
+    -- 7. Clone Risk Links
     insert into public.sop_version_risk_links (
       sop_version_id, risk_id, relationship_type, context_note_en, context_note_ar, sequence_number
     )
@@ -1851,6 +1993,7 @@ begin
     from public.sop_version_risk_links
     where sop_version_id = p_source_version_id;
 
+    -- 8. Clone Accreditation Links
     insert into public.sop_version_accreditation_links (
       sop_version_id, clause_id, link_strength, context_note_en, context_note_ar, sequence_number
     )
@@ -1859,7 +2002,7 @@ begin
     from public.sop_version_accreditation_links
     where sop_version_id = p_source_version_id;
 
-    -- 6. Migration 205 Training Scopes
+    -- 9. Clone Training Target Scopes
     insert into public.sop_version_training_target_scopes (
       sop_version_id, scope_type, department_id, role_name, created_by
     )
@@ -1868,42 +2011,42 @@ begin
     from public.sop_version_training_target_scopes
     where sop_version_id = p_source_version_id;
 
-    -- 7. Governed Document Version Links
+    -- 10. Clone Version Links
     insert into public.governed_document_version_links (
-      id, source_version_id, target_version_id, relationship_type, context_note_en, context_note_ar, sequence_number
+      source_version_id, target_version_id, relationship_type, context_note_en, context_note_ar, sequence_number
     )
     select
-      gen_random_uuid(), v_new_ver_id, target_version_id, relationship_type, context_note_en, context_note_ar, sequence_number
+      v_new_ver_id, target_version_id, relationship_type, context_note_en, context_note_ar, sequence_number
     from public.governed_document_version_links
     where source_version_id = p_source_version_id;
   end if;
 
-  -- Applicability Scopes
+  -- Clone Common Department Scopes
   insert into public.document_version_department_scope (version_id, department_id)
   select v_new_ver_id, department_id
   from public.document_version_department_scope
   where version_id = p_source_version_id;
 
+  -- Clone Common Role Scopes
   insert into public.document_version_role_scope (version_id, role_name, job_title)
   select v_new_ver_id, role_name, job_title
   from public.document_version_role_scope
   where version_id = p_source_version_id;
 
+  -- Record Revision Lifecycle Event
   insert into public.document_review_events (
     document_id, version_id, event_type, from_status, to_status, actor_id, event_note
   ) values (
-    v_doc_id, v_new_ver_id, 'revision_started', null, 'draft', p_actor_id,
-    'Started ' || p_revision_type || ' revision ' || v_new_ver_label || ' from version ' || v_source_ver_num::text
+    v_doc_id, v_new_ver_id, 'revision_started', 'approved', 'draft', p_actor_id, p_revision_reason
   );
 
   return jsonb_build_object(
     'document_id', v_doc_id,
     'source_version_id', p_source_version_id,
     'new_version_id', v_new_ver_id,
-    'version_id', v_new_ver_id,
     'version_number', v_new_ver_num,
     'version_label', v_new_ver_label,
-    'revision_type', p_revision_type
+    'status', 'draft'
   );
 end;
 $$;
