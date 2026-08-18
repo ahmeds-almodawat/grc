@@ -11,14 +11,14 @@ import { SopResponsibilitiesBuilder } from '../../src/components/policy-sop/SopR
 import { SopMonitoringKpisBuilder } from '../../src/components/policy-sop/SopMonitoringKpisBuilder';
 import { SopPreviewModal } from '../../src/components/policy-sop/SopPreviewModal';
 import { SopEditor } from '../../src/components/policy-sop/SopEditor';
-import type { 
-  GovernedSopCatalogRow, 
-  DetailedSopRecord, 
+import type {
+  GovernedSopCatalogRow,
+  DetailedSopRecord,
   SopProcedureStep,
   SopDefinition,
   SopRoleResponsibility,
   SopMonitoringKpi,
-  EligibleGoverningPolicy 
+  EligibleGoverningPolicy
 } from '../../src/lib/policySopApi';
 import * as policySopApi from '../../src/lib/policySopApi';
 
@@ -337,7 +337,7 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
       expect(fs.existsSync(migrationPath)).toBe(true);
       const sql = fs.readFileSync(migrationPath, 'utf8');
       expect(sql.length).toBeGreaterThan(1000);
-      
+
       // Table definitions
       expect(sql).toMatch(/create table if not exists public\.sop_definitions/i);
       expect(sql).toMatch(/create table if not exists public\.sop_role_responsibilities/i);
@@ -351,7 +351,7 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
 
     it('verifies RLS security and trigger attachments for immutability and document type', () => {
       const sql = fs.readFileSync(migrationPath, 'utf8');
-      
+
       // RLS enabled
       expect(sql).toMatch(/alter table public\.sop_definitions enable row level security/i);
       expect(sql).toMatch(/alter table public\.sop_role_responsibilities enable row level security/i);
@@ -370,7 +370,7 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
 
     it('verifies atomic save cross-version child ID denial and service-role execution grants', () => {
       const sql = fs.readFileSync(migrationPath, 'utf8');
-      
+
       expect(sql).toMatch(/PATCH202_CROSS_VERSION_CHILD_ID_DENIED/i);
       expect(sql).toMatch(/v_seen_def_ids/i);
       expect(sql).toMatch(/v_seen_resp_ids/i);
@@ -385,7 +385,7 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
 
     it('verifies explicit drop of obsolete Migration-202 function overloads', () => {
       const sql = fs.readFileSync(migrationPath, 'utf8');
-      
+
       // Drop 202 create overload (25 params)
       expect(sql).toMatch(/drop function if exists public\.create_governed_sop_draft\(\s*uuid,\s*uuid/i);
       // Drop 202 save overload (21 params)
@@ -394,7 +394,7 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
 
     it('verifies cross-organization validation for KPI owner and deep revision cloning', () => {
       const sql = fs.readFileSync(migrationPath, 'utf8');
-      
+
       // KPI owner cross-org check
       expect(sql).toMatch(/if TG_TABLE_NAME = 'sop_monitoring_kpis' then/i);
       expect(sql).toMatch(/select organization_id into v_ref_org_id\s*from public\.profiles\s*where id = NEW\.owner_id/i);
@@ -832,12 +832,14 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
         );
       });
     });
-    it('maintains stable form state and does not flicker when master data resolves with delay', async () => {
+    it('loads existing SOP completely independently of master data delay, exact fetch count 1, and saves correctly', async () => {
+      // 1. Arrange mocks so getGovernedSopDetail resolves, but master data is delayed
       let resolveDepartments: any;
-      const deptPromise = new Promise(resolve => {
-        resolveDepartments = resolve;
-      });
+      const deptPromise = new Promise(resolve => { resolveDepartments = resolve; });
       vi.spyOn(policySopApi, 'listDepartments').mockReturnValue(deptPromise as any);
+
+      const getSopSpy = vi.spyOn(policySopApi, 'getGovernedSopDetail');
+      const saveSpy = vi.spyOn(policySopApi, 'saveGovernedSopDraft');
 
       render(
         <I18nProvider>
@@ -848,10 +850,7 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
         </I18nProvider>
       );
 
-      expect(screen.getByText(/Loading Governed SOP Workspace/i)).toBeDefined();
-
-      resolveDepartments(mockDepartments);
-
+      // Prove the existing SOP editor becomes usable before delayed master data promises complete
       await waitFor(() => {
         expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
       });
@@ -859,13 +858,103 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
       const titleInput = screen.getByDisplayValue('Inpatient Chemotherapy Dispensing SOP');
       expect(titleInput).toBeDefined();
 
-      fireEvent.change(titleInput, { target: { value: 'Modified Title' } });
+      // Assert getGovernedSopDetail was called exactly once
+      expect(getSopSpy).toHaveBeenCalledTimes(1);
 
-      // Wait a tick to ensure no re-renders wipe out the state
+      // NO SECOND LOADING FLICKER
+      // Resolve delayed master data
+      resolveDepartments(mockDepartments);
+
+      // Wait a tick to ensure no re-renders wipe out the state or show loading
       await new Promise(r => setTimeout(r, 50));
 
+      // verify the editor does NOT return to "Loading Governed SOP Workspace…"
       expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
-      expect(screen.getByDisplayValue('Modified Title')).toBeDefined();
+
+      // EXACT FETCH COUNT: assert it's STILL 1
+      expect(getSopSpy).toHaveBeenCalledTimes(1);
+
+      // SAVE DRAFT REMAINS AVAILABLE
+      fireEvent.change(titleInput, { target: { value: 'Modified Title After Master Data' } });
+      const saveBtn = screen.getByRole('button', { name: /Save Draft/i });
+      fireEvent.click(saveBtn);
+
+      // EXISTING SAVE PAYLOAD STILL WORKS
+      await waitFor(() => {
+        expect(saveSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            version_id: 'sop-ver-1',
+            title_en: 'Modified Title After Master Data',
+            process_name_en: 'Chemotherapy Dispensing',
+            primary_policy_version_id: 'pol-ver-1'
+          })
+        );
+      });
+    });
+
+    it('initializes new SOP defaults only once when master data resolves, without overwriting user changes', async () => {
+      let resolveDepartments: any;
+      let resolveProfiles: any;
+      const deptPromise = new Promise(resolve => { resolveDepartments = resolve; });
+      const profPromise = new Promise(resolve => { resolveProfiles = resolve; });
+
+      vi.spyOn(policySopApi, 'listDepartments').mockReturnValue(deptPromise as any);
+      vi.spyOn(policySopApi, 'listProfiles').mockReturnValue(profPromise as any);
+
+      const createSpy = vi.spyOn(policySopApi, 'createGovernedSopDraft').mockResolvedValue({ document_id: 'new-doc', version_id: 'new-ver' } as any);
+
+      render(
+        <I18nProvider>
+          <SopEditor
+            initialSopId="new"
+            onBack={vi.fn()}
+          />
+        </I18nProvider>
+      );
+
+      // Wait for it to render empty initially (sop fetch returns synchronously for 'new')
+      await waitFor(() => {
+        expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
+      });
+
+      // User makes a change before master data is available
+      const titleInput = screen.getByPlaceholderText(/e.g. Standard Procedure for Safe Medication Administration/i);
+      fireEvent.change(titleInput, { target: { value: 'My Early Title' } });
+
+      const processInput = screen.getByPlaceholderText(/e.g. Inpatient Medication Dispensing/i);
+      fireEvent.change(processInput, { target: { value: 'My Early Process' } });
+
+      // Switch to Linkage tab and set to Not Applicable to pass validation
+      const allButtons = screen.getAllByRole('button');
+      const linkageTab = allButtons.find(btn => btn.textContent?.includes('sop.tab.governingPolicy'));
+      if (linkageTab) fireEvent.click(linkageTab);
+
+      const notApplicableLabel = screen.getByText('sop.linkState.not_applicable');
+      fireEvent.click(notApplicableLabel);
+
+      // Now resolve master data
+      resolveDepartments(mockDepartments);
+      resolveProfiles(mockProfiles);
+
+      // Wait a tick for the defaults to apply
+      await new Promise(r => setTimeout(r, 50));
+
+      const saveBtn = screen.getByRole('button', { name: /Save Draft/i });
+      fireEvent.click(saveBtn);
+
+      // Validate initialization does not repeatedly overwrite subsequent user changes
+      // and that master data defaults (department, owner) are applied.
+      await waitFor(() => {
+        expect(createSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title_en: 'My Early Title',
+            process_name_en: 'My Early Process',
+            department_id: mockDepartments[0].id,
+            process_owner_id: mockProfiles[0].id,
+            governance_link_state: 'not_applicable'
+          })
+        );
+      });
     });
   });
 });
