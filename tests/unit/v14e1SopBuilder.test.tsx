@@ -832,5 +832,40 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
         );
       });
     });
+    it('maintains stable form state and does not flicker when master data resolves with delay', async () => {
+      let resolveDepartments: any;
+      const deptPromise = new Promise(resolve => {
+        resolveDepartments = resolve;
+      });
+      vi.spyOn(policySopApi, 'listDepartments').mockReturnValue(deptPromise as any);
+
+      render(
+        <I18nProvider>
+          <SopEditor
+            initialSopId="sop-1"
+            onBack={vi.fn()}
+          />
+        </I18nProvider>
+      );
+
+      expect(screen.getByText(/Loading Governed SOP Workspace/i)).toBeDefined();
+
+      resolveDepartments(mockDepartments);
+
+      await waitFor(() => {
+        expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
+      });
+
+      const titleInput = screen.getByDisplayValue('Inpatient Chemotherapy Dispensing SOP');
+      expect(titleInput).toBeDefined();
+
+      fireEvent.change(titleInput, { target: { value: 'Modified Title' } });
+
+      // Wait a tick to ensure no re-renders wipe out the state
+      await new Promise(r => setTimeout(r, 50));
+
+      expect(screen.queryByText(/Loading Governed SOP Workspace/i)).toBeNull();
+      expect(screen.getByDisplayValue('Modified Title')).toBeDefined();
+    });
   });
 });

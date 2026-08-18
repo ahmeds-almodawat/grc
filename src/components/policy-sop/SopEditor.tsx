@@ -80,6 +80,7 @@ export function SopEditor({
   const [profiles, setProfiles] = useState<Array<{ id: string; full_name: string; email: string; job_title: string | null }>>([]);
   const [controls, setControls] = useState<Array<{ id: string; code: string; title: string }>>([]);
   const [eligiblePolicies, setEligiblePolicies] = useState<EligibleGoverningPolicy[]>([]);
+  const [masterDataLoaded, setMasterDataLoaded] = useState(false);
 
   // State
   const [sop, setSop] = useState<DetailedSopRecord | null>(null);
@@ -158,6 +159,7 @@ export function SopEditor({
       setProfiles(profList);
       setControls(ctrlList);
       setEligiblePolicies(polList);
+      setMasterDataLoaded(true);
     }
     loadMasterData();
   }, []);
@@ -207,6 +209,8 @@ export function SopEditor({
 
   // Fetch SOP on Mount
   useEffect(() => {
+    if (!masterDataLoaded) return;
+
     async function fetchSop() {
       if (!initialSopId || initialSopId === 'new') {
         // Initializing New Draft
@@ -254,7 +258,7 @@ export function SopEditor({
       }
     }
     fetchSop();
-  }, [initialSopId, departments, profiles, populateForm, t]);
+  }, [initialSopId, masterDataLoaded, populateForm, t]);
 
   const isLocked = Boolean(
     sop &&
