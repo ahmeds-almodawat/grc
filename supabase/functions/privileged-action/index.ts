@@ -158,6 +158,16 @@ const patch29TrainingActions = new Set([
   'reopen_training_assignment_with_reason',
 ]);
 
+const v14e1rGovernedDocumentActions = new Set([
+  'v14e1r_configure_approval_authority_rule_stages',
+  'v14e1r_create_governed_sop_draft',
+  'v14e1r_save_governed_sop_draft',
+  'v14e1r_start_governed_document_revision',
+  'v14e1r_submit_governed_document_for_review',
+  'v14e1r_record_governed_document_approval_decision',
+  'v14e1r_finalize_governed_document_approval',
+]);
+
 const allowedActions = new Set([
   'ovr_executive_dashboard_analytics',
   'search_grc_global',
@@ -208,6 +218,7 @@ const allowedActions = new Set([
   ...patch83q1ProductionReadinessActions,
   ...patch83rDepartmentLifecycleActions,
   ...f1r2BusinessCycleActions,
+  ...v14e1rGovernedDocumentActions,
 ]);
 
 const patch19LifecycleActions = new Set([
@@ -333,6 +344,76 @@ function asObject(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? value as Record<string, unknown>
     : {};
+}
+
+const MAX_E1R2_PAYLOAD_BYTES = 1024 * 1024; // 1 MiB
+
+function isCanonicalUuid(value: unknown): value is string {
+  return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
+}
+
+function requireCanonicalUuid(value: unknown, fieldName: string): string {
+  const s = String(value ?? '').trim();
+  if (!isCanonicalUuid(s)) {
+    throw new Error(`INVALID_UUID_${fieldName.toUpperCase()}`);
+  }
+  return s;
+}
+
+function optionalCanonicalUuid(value: unknown, fieldName: string): string | null {
+  if (value === null || value === undefined || value === '') return null;
+  return requireCanonicalUuid(value, fieldName);
+}
+
+function boundedString(value: unknown, maxLen: number, fieldName: string, required = false): string | null {
+  if (value === null || value === undefined) {
+    if (required) throw new Error(`REQUIRED_${fieldName.toUpperCase()}`);
+    return null;
+  }
+  const s = String(value).trim();
+  if (!s && required) throw new Error(`REQUIRED_${fieldName.toUpperCase()}`);
+  if (s.length > maxLen) throw new Error(`MAX_LENGTH_EXCEEDED_${fieldName.toUpperCase()}`);
+  return s || null;
+}
+
+function assertNoIdentityOverrides(payload: Record<string, unknown>, prohibitedFields: string[]) {
+  for (const field of prohibitedFields) {
+    if (field in payload && payload[field] !== undefined && payload[field] !== null) {
+      throw new Error(`PROHIBITED_IDENTITY_OVERRIDE_${field.toUpperCase()}`);
+    }
+  }
+}
+
+function mapV14e1rDatabaseError(action: string, error: unknown) {
+  const row = asObject(error);
+  const rawMessage = String(row.message ?? row.details ?? error ?? '');
+  const knownMatch = rawMessage.match(/(PATCH\w+|INVALID_UUID_\w+|PROHIBITED_IDENTITY_OVERRIDE_\w+|REQUIRED_\w+|MAX_LENGTH_EXCEEDED_\w+|MAX_COUNT_EXCEEDED_\w+|INVALID_CRITICALITY_LEVEL|INVALID_CONFIDENTIALITY_LEVEL|INVALID_CONTENT_MODE|INVALID_DECISION|INVALID_REVISION_TYPE|PAYLOAD_BYTE_BOUND_EXCEEDED)/);
+  const code = knownMatch ? knownMatch[1] : 'E1R2_OPERATION_FAILED';
+
+  let status = 409;
+  let safeDetail = 'The governed document operation could not be completed.';
+
+  if (/PATCH202_ACTOR_NOT_AUTHORIZED|PATCH202_ACTOR_CROSS_ORG_FORBIDDEN|PATCH206_ACTOR_UNAUTHORIZED_FOR_STAGE_CONFIG|PATCH27_APPROVER_ORGANIZATION_MISMATCH|PATCH27_APPROVER_ROLE_MISMATCH|PATCH27_APPROVER_USER_MISMATCH|PATCH27_SELF_APPROVAL_BLOCKED|PATCH206_CROSS_ORGANIZATION_LINK_DENIED/i.test(code)) {
+    status = 403;
+    safeDetail = 'Actor is not authorized for this governed document operation.';
+  } else if (/PATCH202_VERSION_NOT_FOUND|PATCH202_SOP_VERSION_NOT_FOUND|PATCH202_SOURCE_VERSION_NOT_FOUND|PATCH202_APPROVAL_REQUEST_NOT_FOUND|PATCH206_RULE_NOT_FOUND/i.test(code)) {
+    status = 404;
+    safeDetail = 'The requested governed document resource was not found.';
+  } else if (/PATCH206_EMPTY_STAGE_CONFIGURATION|PATCH206_INVALID_STAGE_AUTH_SELECTOR|PATCH206_INVALID_STAGE_REVIEWER_ROLE|PATCH206_INVALID_STAGE_REVIEWER_USER|PATCH206_INSUFFICIENT_STAGE_REVIEWERS|PATCH206_USER_STAGE_REQUIRES_COUNT_ONE|PATCH206_INVALID_STAGE_KEY_SYNTAX|PATCH206_SOP_STEP_RACI_INCOMPLETE|PATCH206_UNRESOLVED_SECTION_KEY|INVALID_UUID|PROHIBITED_IDENTITY_OVERRIDE|REQUIRED_|MAX_LENGTH_EXCEEDED|MAX_COUNT_EXCEEDED|INVALID_CRITICALITY|INVALID_CONFIDENTIALITY|INVALID_CONTENT_MODE|INVALID_DECISION|INVALID_REVISION_TYPE|PAYLOAD_BYTE_BOUND_EXCEEDED/i.test(code)) {
+    status = 400;
+    safeDetail = 'The submitted payload contains invalid parameters or constraints.';
+  } else if (/PATCH201_VERSION_IMMUTABLE_LOCKED|PATCH202_APPROVAL_NOT_FINALIZED|PATCH206_APPROVAL_STAGES_INCOMPLETE|PATCH27_DUPLICATE_STAGE_DECISION|PATCH202_VERSION_NOT_EDITABLE_FOR_SUBMISSION|PATCH206_ORDERED_STAGES_REQUIRED|PATCH206_NO_STAGES_INSTANTIATED|PATCH206_REQUEST_NOT_OPEN|PATCH206_INVALID_STAGE_STATE|PROOF_VALIDATION_FAILED/i.test(code)) {
+    status = 409;
+    safeDetail = 'The operation conflicts with the current lifecycle state of the document.';
+  }
+
+  return errorResponse(
+    'Governed document operation failed.',
+    status,
+    code,
+    safeDetail,
+    { action },
+  );
 }
 
 type Patch83tUserImportCapabilities = {
@@ -4246,6 +4327,509 @@ Deno.serve(async (request) => {
       return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
     }
     return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (v14e1rGovernedDocumentActions.has(action)) {
+    const payloadBytes = new TextEncoder().encode(JSON.stringify(requestPayload)).length;
+    if (payloadBytes > MAX_E1R2_PAYLOAD_BYTES) {
+      return errorResponse(
+        'Governed document operation payload exceeds maximum allowable size.',
+        400,
+        'PAYLOAD_BYTE_BOUND_EXCEEDED',
+        'The submitted payload exceeds the 1 MiB limit.',
+        { action },
+      );
+    }
+  }
+
+  if (action === 'v14e1r_configure_approval_authority_rule_stages') {
+    try {
+      const payload = asObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id', 'stage_order']);
+      const authorityRuleId = requireCanonicalUuid(payload.authority_rule_id, 'authority_rule_id');
+
+      if (!Array.isArray(payload.stages) || payload.stages.length === 0 || payload.stages.length > 20) {
+        throw new Error('PATCH206_EMPTY_STAGE_CONFIGURATION');
+      }
+
+      const normalizedStages = [];
+      for (const stage of payload.stages) {
+        const s = asObject(stage);
+        const stageKey = boundedString(s.stage_key, 50, 'stage_key', true)!;
+        if (!/^[a-z][a-z0-9_]{1,49}$/.test(stageKey)) {
+          throw new Error('PATCH206_INVALID_STAGE_KEY_SYNTAX');
+        }
+        const stageNameEn = boundedString(s.stage_name_en, 255, 'stage_name_en', true)!;
+        const stageNameAr = boundedString(s.stage_name_ar, 255, 'stage_name_ar', false);
+        const reviewerUserId = optionalCanonicalUuid(s.reviewer_user_id, 'reviewer_user_id');
+        const reviewerRole = s.reviewer_role !== undefined && s.reviewer_role !== null && String(s.reviewer_role).trim() !== ''
+          ? normalizeRole(s.reviewer_role)
+          : null;
+
+        if ((reviewerUserId && reviewerRole) || (!reviewerUserId && !reviewerRole)) {
+          throw new Error('PATCH206_INVALID_STAGE_AUTH_SELECTOR');
+        }
+
+        const reqCount = typeof s.required_decision_count === 'number' && Number.isInteger(s.required_decision_count)
+          ? Math.max(1, Math.min(10, s.required_decision_count))
+          : 1;
+
+        if (reviewerUserId && reqCount !== 1) {
+          throw new Error('PATCH206_USER_STAGE_REQUIRES_COUNT_ONE');
+        }
+
+        normalizedStages.push({
+          stage_key: stageKey,
+          stage_name_en: stageNameEn,
+          stage_name_ar: stageNameAr,
+          reviewer_user_id: reviewerUserId,
+          reviewer_role: reviewerRole,
+          required_decision_count: reqCount,
+          allow_self_approval: Boolean(s.allow_self_approval),
+        });
+      }
+
+      const { data, error } = await serviceClient.rpc('configure_approval_authority_rule_stages', {
+        p_actor_id: userData.user.id,
+        p_authority_rule_id: authorityRuleId,
+        p_stages: normalizedStages,
+      });
+
+      if (error) {
+        return mapV14e1rDatabaseError(action, error);
+      }
+
+      const resObj = asObject(data);
+      if (resObj.success !== true || resObj.authority_rule_id !== authorityRuleId || typeof resObj.stage_count !== 'number' || resObj.stage_count < 1) {
+        return errorResponse('Configure stages response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      return mapV14e1rDatabaseError(action, err);
+    }
+  }
+
+  if (action === 'v14e1r_create_governed_sop_draft') {
+    try {
+      const payload = asObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+
+      const { data: actorProfile, error: profileErr } = await serviceClient
+        .from('profiles')
+        .select('id, organization_id, is_active')
+        .eq('id', userData.user.id)
+        .single();
+
+      if (profileErr || !actorProfile || !actorProfile.organization_id || actorProfile.is_active === false) {
+        return mapV14e1rDatabaseError(action, 'PATCH202_ACTOR_NOT_AUTHORIZED');
+      }
+
+      const titleEn = boundedString(payload.title_en, 500, 'title_en', true)!;
+      const titleAr = boundedString(payload.title_ar, 500, 'title_ar');
+      const processNameEn = boundedString(payload.process_name_en, 255, 'process_name_en');
+      const processNameAr = boundedString(payload.process_name_ar, 255, 'process_name_ar');
+      const purposeEn = boundedString(payload.purpose_en, 5000, 'purpose_en');
+      const purposeAr = boundedString(payload.purpose_ar, 5000, 'purpose_ar');
+      const processOwnerId = optionalCanonicalUuid(payload.process_owner_id, 'process_owner_id');
+      const primaryPolicyVersionId = optionalCanonicalUuid(payload.primary_policy_version_id, 'primary_policy_version_id');
+      const governanceLinkState = boundedString(payload.governance_link_state, 100, 'governance_link_state');
+      const scopeEn = boundedString(payload.scope_en, 5000, 'scope_en');
+      const scopeAr = boundedString(payload.scope_ar, 5000, 'scope_ar');
+      const departmentId = optionalCanonicalUuid(payload.department_id, 'department_id');
+
+      const criticalityLevel = payload.criticality_level ? String(payload.criticality_level).trim() : 'medium';
+      if (!['low', 'medium', 'high', 'critical'].includes(criticalityLevel)) {
+        throw new Error('INVALID_CRITICALITY_LEVEL');
+      }
+
+      const confidentialityLevel = payload.confidentiality_level ? String(payload.confidentiality_level).trim() : 'internal';
+      if (!['public', 'internal', 'confidential', 'restricted'].includes(confidentialityLevel)) {
+        throw new Error('INVALID_CONFIDENTIALITY_LEVEL');
+      }
+
+      const contentMode = payload.content_mode ? String(payload.content_mode).trim() : 'structured';
+      if (!['structured', 'legacy_controlled_document'].includes(contentMode)) {
+        throw new Error('INVALID_CONTENT_MODE');
+      }
+
+      const sections = Array.isArray(payload.procedure_sections) ? payload.procedure_sections : [];
+      if (sections.length > 100) throw new Error('MAX_COUNT_EXCEEDED_PROCEDURE_SECTIONS');
+
+      const steps = Array.isArray(payload.procedure_steps) ? payload.procedure_steps : [];
+      if (steps.length > 500) throw new Error('MAX_COUNT_EXCEEDED_PROCEDURE_STEPS');
+
+      const deptScopes = Array.isArray(payload.department_scopes) ? payload.department_scopes.map(d => requireCanonicalUuid(d, 'department_scope')) : [];
+      if (deptScopes.length > 250) throw new Error('MAX_COUNT_EXCEEDED_DEPARTMENT_SCOPES');
+
+      const roleScopes = Array.isArray(payload.role_scopes) ? payload.role_scopes : [];
+      if (roleScopes.length > 250) throw new Error('MAX_COUNT_EXCEEDED_ROLE_SCOPES');
+
+      const definitions = Array.isArray(payload.definitions) ? payload.definitions : [];
+      if (definitions.length > 250) throw new Error('MAX_COUNT_EXCEEDED_DEFINITIONS');
+
+      const roleResponsibilities = Array.isArray(payload.role_responsibilities) ? payload.role_responsibilities : [];
+      if (roleResponsibilities.length > 250) throw new Error('MAX_COUNT_EXCEEDED_ROLE_RESPONSIBILITIES');
+
+      const monitoringKpis = Array.isArray(payload.monitoring_kpis) ? payload.monitoring_kpis : [];
+      if (monitoringKpis.length > 250) throw new Error('MAX_COUNT_EXCEEDED_MONITORING_KPIS');
+
+      const riskLinks = Array.isArray(payload.risk_links) ? payload.risk_links : [];
+      if (riskLinks.length > 250) throw new Error('MAX_COUNT_EXCEEDED_RISK_LINKS');
+
+      const accreditationLinks = Array.isArray(payload.accreditation_links) ? payload.accreditation_links : [];
+      if (accreditationLinks.length > 250) throw new Error('MAX_COUNT_EXCEEDED_ACCREDITATION_LINKS');
+
+      const versionLinks = Array.isArray(payload.version_links) ? payload.version_links : [];
+      if (versionLinks.length > 250) throw new Error('MAX_COUNT_EXCEEDED_VERSION_LINKS');
+
+      const { data, error } = await serviceClient.rpc('create_governed_sop_draft', {
+        p_actor_id: userData.user.id,
+        p_organization_id: actorProfile.organization_id,
+        p_title_en: titleEn,
+        p_title_ar: titleAr,
+        p_process_name_en: processNameEn,
+        p_process_name_ar: processNameAr,
+        p_purpose_en: purposeEn,
+        p_purpose_ar: purposeAr,
+        p_process_owner_id: processOwnerId,
+        p_primary_policy_version_id: primaryPolicyVersionId,
+        p_governance_link_state: governanceLinkState,
+        p_scope_en: scopeEn,
+        p_scope_ar: scopeAr,
+        p_department_id: departmentId,
+        p_criticality_level: criticalityLevel,
+        p_confidentiality_level: confidentialityLevel,
+        p_training_required: Boolean(payload.training_required),
+        p_acknowledgment_required: Boolean(payload.acknowledgment_required),
+        p_competency_assessment_required: Boolean(payload.competency_assessment_required),
+        p_acknowledgment_sla_days: typeof payload.acknowledgment_sla_days === 'number' ? payload.acknowledgment_sla_days : 30,
+        p_training_renewal_months: typeof payload.training_renewal_months === 'number' ? payload.training_renewal_months : 12,
+        p_content_mode: contentMode,
+        p_procedure_sections: sections,
+        p_procedure_steps: steps,
+        p_department_scopes: deptScopes,
+        p_role_scopes: roleScopes,
+        p_definitions: definitions,
+        p_role_responsibilities: roleResponsibilities,
+        p_monitoring_kpis: monitoringKpis,
+        p_risk_links: riskLinks,
+        p_accreditation_links: accreditationLinks,
+        p_version_links: versionLinks,
+      });
+
+      if (error) {
+        return mapV14e1rDatabaseError(action, error);
+      }
+
+      const resObj = asObject(data);
+      if (!resObj.document_id || !resObj.version_id || !resObj.document_code || typeof resObj.section_key_map !== 'object' || typeof resObj.step_key_map !== 'object') {
+        return errorResponse('Create draft response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      return mapV14e1rDatabaseError(action, err);
+    }
+  }
+
+  if (action === 'v14e1r_save_governed_sop_draft') {
+    try {
+      const payload = asObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+
+      const titleEn = boundedString(payload.title_en, 500, 'title_en');
+      const titleAr = boundedString(payload.title_ar, 500, 'title_ar');
+      const processNameEn = boundedString(payload.process_name_en, 255, 'process_name_en');
+      const processNameAr = boundedString(payload.process_name_ar, 255, 'process_name_ar');
+      const purposeEn = boundedString(payload.purpose_en, 5000, 'purpose_en');
+      const purposeAr = boundedString(payload.purpose_ar, 5000, 'purpose_ar');
+      const processOwnerId = optionalCanonicalUuid(payload.process_owner_id, 'process_owner_id');
+      const primaryPolicyVersionId = optionalCanonicalUuid(payload.primary_policy_version_id, 'primary_policy_version_id');
+      const governanceLinkState = boundedString(payload.governance_link_state, 100, 'governance_link_state');
+      const scopeEn = boundedString(payload.scope_en, 5000, 'scope_en');
+      const scopeAr = boundedString(payload.scope_ar, 5000, 'scope_ar');
+      const contentMode = boundedString(payload.content_mode, 50, 'content_mode');
+      const transcriptionStatus = boundedString(payload.transcription_status, 50, 'transcription_status');
+
+      const sections = Array.isArray(payload.procedure_sections) ? payload.procedure_sections : null;
+      if (sections && sections.length > 100) throw new Error('MAX_COUNT_EXCEEDED_PROCEDURE_SECTIONS');
+
+      const steps = Array.isArray(payload.procedure_steps) ? payload.procedure_steps : null;
+      if (steps && steps.length > 500) throw new Error('MAX_COUNT_EXCEEDED_PROCEDURE_STEPS');
+
+      const deptScopes = Array.isArray(payload.department_scopes) ? payload.department_scopes.map(d => requireCanonicalUuid(d, 'department_scope')) : null;
+      if (deptScopes && deptScopes.length > 250) throw new Error('MAX_COUNT_EXCEEDED_DEPARTMENT_SCOPES');
+
+      const roleScopes = Array.isArray(payload.role_scopes) ? payload.role_scopes : null;
+      if (roleScopes && roleScopes.length > 250) throw new Error('MAX_COUNT_EXCEEDED_ROLE_SCOPES');
+
+      const definitions = Array.isArray(payload.definitions) ? payload.definitions : null;
+      if (definitions && definitions.length > 250) throw new Error('MAX_COUNT_EXCEEDED_DEFINITIONS');
+
+      const roleResponsibilities = Array.isArray(payload.role_responsibilities) ? payload.role_responsibilities : null;
+      if (roleResponsibilities && roleResponsibilities.length > 250) throw new Error('MAX_COUNT_EXCEEDED_ROLE_RESPONSIBILITIES');
+
+      const monitoringKpis = Array.isArray(payload.monitoring_kpis) ? payload.monitoring_kpis : null;
+      if (monitoringKpis && monitoringKpis.length > 250) throw new Error('MAX_COUNT_EXCEEDED_MONITORING_KPIS');
+
+      const riskLinks = Array.isArray(payload.risk_links) ? payload.risk_links : null;
+      if (riskLinks && riskLinks.length > 250) throw new Error('MAX_COUNT_EXCEEDED_RISK_LINKS');
+
+      const accreditationLinks = Array.isArray(payload.accreditation_links) ? payload.accreditation_links : null;
+      if (accreditationLinks && accreditationLinks.length > 250) throw new Error('MAX_COUNT_EXCEEDED_ACCREDITATION_LINKS');
+
+      const versionLinks = Array.isArray(payload.version_links) ? payload.version_links : null;
+      if (versionLinks && versionLinks.length > 250) throw new Error('MAX_COUNT_EXCEEDED_VERSION_LINKS');
+
+      const { data, error } = await serviceClient.rpc('save_governed_sop_draft', {
+        p_actor_id: userData.user.id,
+        p_version_id: versionId,
+        p_title_en: titleEn,
+        p_title_ar: titleAr,
+        p_process_name_en: processNameEn,
+        p_process_name_ar: processNameAr,
+        p_purpose_en: purposeEn,
+        p_purpose_ar: purposeAr,
+        p_process_owner_id: processOwnerId,
+        p_primary_policy_version_id: primaryPolicyVersionId,
+        p_governance_link_state: governanceLinkState,
+        p_scope_en: scopeEn,
+        p_scope_ar: scopeAr,
+        p_training_required: payload.training_required !== undefined ? Boolean(payload.training_required) : null,
+        p_acknowledgment_required: payload.acknowledgment_required !== undefined ? Boolean(payload.acknowledgment_required) : null,
+        p_competency_assessment_required: payload.competency_assessment_required !== undefined ? Boolean(payload.competency_assessment_required) : null,
+        p_acknowledgment_sla_days: typeof payload.acknowledgment_sla_days === 'number' ? payload.acknowledgment_sla_days : null,
+        p_training_renewal_months: typeof payload.training_renewal_months === 'number' ? payload.training_renewal_months : null,
+        p_content_mode: contentMode,
+        p_transcription_status: transcriptionStatus,
+        p_procedure_sections: sections,
+        p_procedure_steps: steps,
+        p_department_scopes: deptScopes,
+        p_role_scopes: roleScopes,
+        p_definitions: definitions,
+        p_role_responsibilities: roleResponsibilities,
+        p_monitoring_kpis: monitoringKpis,
+        p_risk_links: riskLinks,
+        p_accreditation_links: accreditationLinks,
+        p_version_links: versionLinks,
+      });
+
+      if (error) {
+        return mapV14e1rDatabaseError(action, error);
+      }
+
+      const resObj = asObject(data);
+      if (!resObj.document_id || resObj.version_id !== versionId || typeof resObj.section_key_map !== 'object' || typeof resObj.step_key_map !== 'object') {
+        return errorResponse('Save draft response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      return mapV14e1rDatabaseError(action, err);
+    }
+  }
+
+  if (action === 'v14e1r_start_governed_document_revision') {
+    try {
+      const payload = asObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      const sourceVersionId = requireCanonicalUuid(payload.source_version_id, 'source_version_id');
+      const revisionType = payload.revision_type ? String(payload.revision_type).trim() : 'minor';
+      if (!['minor', 'major'].includes(revisionType)) {
+        throw new Error('INVALID_REVISION_TYPE');
+      }
+      const revisionReason = boundedString(payload.revision_reason, 1000, 'revision_reason');
+
+      const { data, error } = await serviceClient.rpc('start_governed_document_revision', {
+        p_actor_id: userData.user.id,
+        p_source_version_id: sourceVersionId,
+        p_revision_type: revisionType,
+        p_revision_reason: revisionReason,
+      });
+
+      if (error) {
+        return mapV14e1rDatabaseError(action, error);
+      }
+
+      const resObj = asObject(data);
+      if (!resObj.document_id || resObj.source_version_id !== sourceVersionId || !resObj.new_version_id || typeof resObj.version_number !== 'number' || resObj.version_number < 1 || !resObj.version_label || resObj.status !== 'draft') {
+        return errorResponse('Start revision response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      return mapV14e1rDatabaseError(action, err);
+    }
+  }
+
+  if (action === 'v14e1r_submit_governed_document_for_review') {
+    try {
+      const payload = asObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+      const submissionNote = boundedString(payload.submission_note, 2000, 'submission_note');
+
+      const { data, error } = await serviceClient.rpc('submit_governed_document_for_review', {
+        p_actor_id: userData.user.id,
+        p_version_id: versionId,
+        p_submission_note: submissionNote,
+      });
+
+      if (error) {
+        return mapV14e1rDatabaseError(action, error);
+      }
+
+      const resObj = asObject(data);
+      if (!resObj.document_id || resObj.version_id !== versionId || !resObj.approval_request_id || !resObj.workflow_stage || resObj.status !== 'under_review') {
+        return errorResponse('Submit review response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      return mapV14e1rDatabaseError(action, err);
+    }
+  }
+
+  if (action === 'v14e1r_record_governed_document_approval_decision') {
+    try {
+      const payload = asObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, [
+        'actor_id', 'p_actor_id',
+        'approver_id', 'p_approver_id',
+        'approver_role', 'p_approver_role',
+        'stage_id', 'request_stage_id',
+        'organization_id', 'p_organization_id',
+        'workflow_type', 'linked_item_type', 'linked_item_id',
+      ]);
+
+      const approvalRequestId = requireCanonicalUuid(payload.approval_request_id, 'approval_request_id');
+      const decision = String(payload.decision ?? '').trim();
+      if (!['approved', 'rejected', 'returned', 'abstained'].includes(decision)) {
+        throw new Error('INVALID_DECISION');
+      }
+      const decisionNote = boundedString(payload.decision_note, 2000, 'decision_note');
+
+      // ------------------------------------------------------------
+      // MANDATORY EDGE PATH-A PREFLIGHT (SERVICE-ROLE READS)
+      // ------------------------------------------------------------
+      const { data: reqRow, error: reqErr } = await serviceClient
+        .from('approval_requests')
+        .select('id, organization_id, workflow_type, linked_item_type, linked_item_id, request_status')
+        .eq('id', approvalRequestId)
+        .single();
+
+      if (reqErr || !reqRow) {
+        return mapV14e1rDatabaseError(action, 'PATCH202_APPROVAL_REQUEST_NOT_FOUND');
+      }
+
+      const { data: actorProfile, error: profileErr } = await serviceClient
+        .from('profiles')
+        .select('id, organization_id, is_active')
+        .eq('id', userData.user.id)
+        .single();
+
+      if (profileErr || !actorProfile || !actorProfile.organization_id || actorProfile.is_active === false) {
+        return mapV14e1rDatabaseError(action, 'PATCH202_ACTOR_NOT_AUTHORIZED');
+      }
+
+      if (reqRow.organization_id !== actorProfile.organization_id) {
+        return mapV14e1rDatabaseError(action, 'PATCH202_ACTOR_CROSS_ORG_FORBIDDEN');
+      }
+
+      if (reqRow.workflow_type !== 'document_control' || reqRow.linked_item_type !== 'document_version') {
+        return errorResponse('Invalid workflow type for governed document approval.', 400, 'PATCH206_INVALID_WORKFLOW_TYPE', 'This action strictly supports document_control on document_version.', { action });
+      }
+
+      const { data: linkedVer, error: verErr } = await serviceClient
+        .from('document_versions')
+        .select('id, document_id, controlled_documents(organization_id)')
+        .eq('id', reqRow.linked_item_id)
+        .single();
+
+      if (verErr || !linkedVer) {
+        return mapV14e1rDatabaseError(action, 'PATCH202_VERSION_NOT_FOUND');
+      }
+      const docOrg = (linkedVer.controlled_documents as { organization_id?: string })?.organization_id;
+      if (docOrg !== actorProfile.organization_id) {
+        return mapV14e1rDatabaseError(action, 'PATCH202_ACTOR_CROSS_ORG_FORBIDDEN');
+      }
+
+      if (!['pending', 'partially_approved'].includes(reqRow.request_status)) {
+        return errorResponse('Approval request is not open for review.', 409, 'PATCH206_REQUEST_NOT_OPEN', 'The approval request is already closed or completed.', { action });
+      }
+
+      const { data: stageRows, error: stageErr } = await serviceClient
+        .from('approval_request_stages')
+        .select('id, stage_order, stage_status')
+        .eq('approval_request_id', approvalRequestId);
+
+      if (stageErr || !stageRows || stageRows.length === 0) {
+        return errorResponse('No approval stages instantiated.', 409, 'PATCH206_NO_STAGES_INSTANTIATED', 'The approval request has no instantiated stages.', { action });
+      }
+
+      const inProgressStages = stageRows.filter((s: { stage_status?: string }) => s.stage_status === 'in_progress');
+      if (inProgressStages.length !== 1) {
+        return errorResponse('Approval request stage state is invalid.', 409, 'PATCH206_INVALID_STAGE_STATE', `Expected exactly 1 in-progress stage, found ${inProgressStages.length}.`, { action });
+      }
+
+      const { data, error } = await serviceClient.rpc('record_approval_decision', {
+        p_approval_request_id: approvalRequestId,
+        p_approver_id: userData.user.id,
+        p_decision: decision,
+        p_decision_note: decisionNote,
+        p_approver_role: null,
+        p_decision_metadata: {},
+      });
+
+      if (error) {
+        return mapV14e1rDatabaseError(action, error);
+      }
+
+      const resObj = asObject(data);
+      if (resObj.status !== 'ok' || resObj.approval_request_id !== approvalRequestId || !['pending', 'partially_approved', 'approved', 'rejected', 'returned'].includes(String(resObj.request_status))) {
+        return errorResponse('Record decision response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      return mapV14e1rDatabaseError(action, err);
+    }
+  }
+
+  if (action === 'v14e1r_finalize_governed_document_approval') {
+    try {
+      const payload = asObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+      const approvalNote = boundedString(payload.approval_note, 2000, 'approval_note');
+
+      const { data, error } = await serviceClient.rpc('finalize_governed_document_approval', {
+        p_actor_id: userData.user.id,
+        p_version_id: versionId,
+        p_approval_note: approvalNote,
+      });
+
+      if (error) {
+        return mapV14e1rDatabaseError(action, error);
+      }
+
+      const resObj = asObject(data);
+      if (resObj.already_approved === true) {
+        if (resObj.success !== true || resObj.version_id !== versionId) {
+          return errorResponse('Finalize approval response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+        }
+      } else {
+        if (!resObj.document_id || resObj.version_id !== versionId || !resObj.approved_by || resObj.status !== 'approved') {
+          return errorResponse('Finalize approval response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+        }
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      return mapV14e1rDatabaseError(action, err);
+    }
   }
 
   const { data, error } = await serviceClient.rpc('v72_execute_privileged_action', {
