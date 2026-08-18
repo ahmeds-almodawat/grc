@@ -111,4 +111,27 @@ describe('GRC v1.4-E2B1 Governed SOP Training & Competency Invariants', () => {
     const content = fs.readFileSync(patch83uScriptPath, 'utf8');
     expect(content).toContain('const reviewedPatch83uMigrationCeiling = 205;');
   });
+
+  it('Migration 205 restricts rollout decision authority strictly to Quality and Governance authorities', () => {
+    const sql = fs.readFileSync(migration205Path, 'utf8');
+    expect(sql).toContain("role::text in ('super_admin', 'governance_admin', 'compliance_officer', 'quality_director')");
+  });
+
+  it('Migration 205 mandates explicit rollout governance decision before publishing revision obligations', () => {
+    const sql = fs.readFileSync(migration205Path, 'utf8');
+    expect(sql).toContain('ROLLOUT_DECISION_REQUIRED: Governed rollout requirements must be decided prior to publishing revision obligations');
+  });
+
+  it('Migration 205 reconciles scope-transferred active employees and cancels open uncompleted assignments', () => {
+    const sql = fs.readFileSync(migration205Path, 'utf8');
+    expect(sql).toContain('cancelled_out_of_scope_count');
+    expect(sql).toContain("status in ('assigned', 'in_progress')");
+  });
+
+  it('Migration 205 hardens complete_training_assignment with formal authority and cross-org validation', () => {
+    const sql = fs.readFileSync(migration205Path, 'utf8');
+    expect(sql).toContain('create or replace function public.complete_training_assignment(');
+    expect(sql).toContain('UNAUTHORIZED_TRAINING_COMPLETER');
+    expect(sql).toContain('CROSS_ORGANIZATION_DENIED');
+  });
 });

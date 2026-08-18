@@ -334,7 +334,7 @@ begin
   select exists (
     select 1 from public.user_roles
     where user_id = p_actor_id
-      and role::text in ('super_admin', 'governance_admin', 'compliance_officer', 'department_manager', 'division_head', 'executive', 'quality_director', 'training_coordinator')
+      and role::text in ('super_admin', 'governance_admin', 'compliance_officer', 'quality_director')
   ) into v_actor_has_role;
 
   if not v_actor_has_role then
@@ -647,7 +647,7 @@ begin
   select exists (
     select 1 from public.user_roles
     where user_id = p_actor_id
-      and role::text in ('super_admin', 'governance_admin', 'compliance_officer', 'department_manager', 'division_head', 'executive', 'quality_director', 'training_coordinator')
+      and role::text in ('super_admin', 'governance_admin', 'compliance_officer', 'quality_director', 'training_coordinator')
   ) or (v_doc.document_owner_id = p_actor_id) into v_actor_has_role;
 
   if not v_actor_has_role then
@@ -658,8 +658,17 @@ begin
   from public.governed_sop_details
   where version_id = p_version_id;
 
-  -- Determine cycle type if revision
-  if v_version.version_number > 1 then
+  -- Revision Rollout Governance Verification:
+  -- For revisions, explicit rollout decision is strictly mandatory before obligations can be published.
+  if v_version.version_number > 1 or v_version.supersedes_version_id is not null then
+    if v_sop_detail.rollout_decided_at is null
+       or v_sop_detail.rollout_decided_by is null
+       or v_sop_detail.rollout_decision_rationale is null
+       or length(trim(v_sop_detail.rollout_decision_rationale)) < 5
+    then
+      raise exception 'ROLLOUT_DECISION_REQUIRED: Governed rollout requirements must be decided prior to publishing revision obligations';
+    end if;
+
     if coalesce(v_sop_detail.retraining_required, false) then
       v_cycle_type := 'retraining';
     end if;
@@ -672,6 +681,7 @@ begin
   select id into v_prog_id
   from public.training_programs
   where linked_sop_id = v_doc.id and training_type = 'sop_acknowledgment'
+  order by created_at asc
   limit 1;
 
   if v_prog_id is null then
@@ -700,68 +710,79 @@ begin
   ) into v_has_target_role;
 
   -- 6. Resolve Target Population and Create Version-Bound Assignments Idempotently
-  for v_user in (
-    select distinct p.id as user_id, p.department_id
-    from public.profiles p
-    left join public.user_roles ur on ur.user_id = p.id
-    where p.organization_id = v_doc.organization_id
-      and coalesce(p.is_active, true) = true
-      -- Department filtering
-      and (
-        case
-          when v_has_target_dept then
-            p.department_id in (
-              select department_id from public.sop_version_training_target_scopes
-              where sop_version_id = p_version_id and scope_type = 'department'
-            )
-          when exists (select 1 from public.document_version_department_scope where version_id = p_version_id) then
-            p.department_id in (
-              select department_id from public.document_version_department_scope
-              where version_id = p_version_id
-            )
-          else true
-        end
-      )
-      -- Role filtering
-      and (
-        case
-          when v_has_target_role then
-            ur.role::text in (
-              select role_name from public.sop_version_training_target_scopes
-              where sop_version_id = p_version_id and scope_type = 'role'
-            )
-          when exists (select 1 from public.document_version_role_scope where version_id = p_version_id) then
-            ur.role::text in (
-              select role_name from public.document_version_role_scope
-              where version_id = p_version_id
-            )
-          else true
-        end
-      )
-  ) loop
-    -- Insert training assignment if not already exists in cycle
-    if not exists (
-      select 1 from public.training_assignments
-      where program_id = v_prog_id
-        and document_version_id = p_version_id
-        and assigned_to_user_id = v_user.user_id
-        and obligation_cycle = v_cycle
-    ) then
-      insert into public.training_assignments (
-        program_id, document_version_id, assigned_to_user_id,
-        assigned_to_department_id, due_date, status,
-        obligation_cycle, cycle_type, assigned_by
-      ) values (
-        v_prog_id, p_version_id, v_user.user_id,
-        v_user.department_id, v_due_date, 'assigned',
-        v_cycle, v_cycle_type, p_actor_id
-      );
-      v_assigned_count := v_assigned_count + 1;
-    end if;
-  end loop;
+  -- Only create training assignments if initial version has training_required OR revision has retraining_required
+  if (
+    (v_version.version_number = 1 and v_version.supersedes_version_id is null and coalesce(v_sop_detail.training_required, false) = true)
+    or
+    ((v_version.version_number > 1 or v_version.supersedes_version_id is not null) and coalesce(v_sop_detail.retraining_required, false) = true)
+  ) then
+    for v_user in (
+      select distinct p.id as user_id, p.department_id
+      from public.profiles p
+      left join public.user_roles ur on ur.user_id = p.id
+      where p.organization_id = v_doc.organization_id
+        and coalesce(p.is_active, true) = true
+        -- Department filtering
+        and (
+          case
+            when v_has_target_dept then
+              p.department_id in (
+                select department_id from public.sop_version_training_target_scopes
+                where sop_version_id = p_version_id and scope_type = 'department'
+              )
+            when exists (select 1 from public.document_version_department_scope where version_id = p_version_id) then
+              p.department_id in (
+                select department_id from public.document_version_department_scope
+                where version_id = p_version_id
+              )
+            else true
+          end
+        )
+        -- Role filtering
+        and (
+          case
+            when v_has_target_role then
+              ur.role::text in (
+                select role_name from public.sop_version_training_target_scopes
+                where sop_version_id = p_version_id and scope_type = 'role'
+              )
+            when exists (select 1 from public.document_version_role_scope where version_id = p_version_id) then
+              ur.role::text in (
+                select role_name from public.document_version_role_scope
+                where version_id = p_version_id
+              )
+            else true
+          end
+        )
+    ) loop
+      -- Insert training assignment if not already exists in cycle
+      if not exists (
+        select 1 from public.training_assignments
+        where program_id = v_prog_id
+          and document_version_id = p_version_id
+          and assigned_to_user_id = v_user.user_id
+          and obligation_cycle = v_cycle
+      ) then
+        insert into public.training_assignments (
+          program_id, document_version_id, assigned_to_user_id,
+          assigned_to_department_id, due_date, status,
+          obligation_cycle, cycle_type, assigned_by
+        ) values (
+          v_prog_id, p_version_id, v_user.user_id,
+          v_user.department_id, v_due_date, 'assigned',
+          v_cycle, v_cycle_type, p_actor_id
+        );
+        v_assigned_count := v_assigned_count + 1;
+      end if;
+    end loop;
+  end if;
 
   -- 7. Initialize Patch 26 Acknowledgment Requirements if Acknowledgment Required
-  if coalesce(v_sop_detail.acknowledgment_required, true) then
+  if (
+    (v_version.version_number = 1 and v_version.supersedes_version_id is null and coalesce(v_sop_detail.acknowledgment_required, true) = true)
+    or
+    ((v_version.version_number > 1 or v_version.supersedes_version_id is not null) and coalesce(v_sop_detail.reacknowledgment_required, true) = true)
+  ) then
     if not exists (
       select 1 from public.document_acknowledgment_requirements
       where document_id = v_doc.id and version_id = p_version_id and requirement_scope = 'all_employees'
@@ -817,6 +838,7 @@ declare
   v_prog_id uuid;
   v_due_date date;
   v_cycle integer := 1;
+  v_cycle_type text := 'initial';
   v_added_count integer := 0;
   v_cancelled_count integer := 0;
   v_user record;
@@ -859,7 +881,7 @@ begin
   select exists (
     select 1 from public.user_roles
     where user_id = p_actor_id
-      and role::text in ('super_admin', 'governance_admin', 'compliance_officer', 'department_manager', 'division_head', 'executive', 'quality_director', 'training_coordinator')
+      and role::text in ('super_admin', 'governance_admin', 'compliance_officer', 'quality_director', 'training_coordinator')
   ) or (v_doc.document_owner_id = p_actor_id) into v_actor_has_role;
 
   if not v_actor_has_role then
@@ -869,6 +891,7 @@ begin
   select id into v_prog_id
   from public.training_programs
   where linked_sop_id = v_doc.id and training_type = 'sop_acknowledgment'
+  order by created_at asc
   limit 1;
 
   if v_prog_id is null then
@@ -881,6 +904,12 @@ begin
 
   v_due_date := coalesce(v_doc.effective_date, current_date) + coalesce(v_sop_detail.acknowledgment_sla_days, 30);
 
+  if v_version.version_number > 1 or v_version.supersedes_version_id is not null then
+    if coalesce(v_sop_detail.retraining_required, false) then
+      v_cycle_type := 'retraining';
+    end if;
+  end if;
+
   select exists (
     select 1 from public.sop_version_training_target_scopes
     where sop_version_id = p_version_id and scope_type = 'department'
@@ -892,73 +921,113 @@ begin
   ) into v_has_target_role;
 
   -- 3. Add newly eligible active users (Current cycle only, idempotent no-op for existing)
-  for v_user in (
-    select distinct p.id as user_id, p.department_id
-    from public.profiles p
-    left join public.user_roles ur on ur.user_id = p.id
-    where p.organization_id = v_doc.organization_id
-      and coalesce(p.is_active, true) = true
-      and (
-        case
-          when v_has_target_dept then
-            p.department_id in (
-              select department_id from public.sop_version_training_target_scopes
-              where sop_version_id = p_version_id and scope_type = 'department'
-            )
-          when exists (select 1 from public.document_version_department_scope where version_id = p_version_id) then
-            p.department_id in (
-              select department_id from public.document_version_department_scope
-              where version_id = p_version_id
-            )
-          else true
-        end
-      )
-      and (
-        case
-          when v_has_target_role then
-            ur.role::text in (
-              select role_name from public.sop_version_training_target_scopes
-              where sop_version_id = p_version_id and scope_type = 'role'
-            )
-          when exists (select 1 from public.document_version_role_scope where version_id = p_version_id) then
-            ur.role::text in (
-              select role_name from public.document_version_role_scope
-              where version_id = p_version_id
-            )
-          else true
-        end
-      )
-  ) loop
-    if not exists (
-      select 1 from public.training_assignments
-      where program_id = v_prog_id
-        and document_version_id = p_version_id
-        and assigned_to_user_id = v_user.user_id
-        and obligation_cycle = v_cycle
-    ) then
-      insert into public.training_assignments (
-        program_id, document_version_id, assigned_to_user_id,
-        assigned_to_department_id, due_date, status,
-        obligation_cycle, cycle_type, assigned_by
-      ) values (
-        v_prog_id, p_version_id, v_user.user_id,
-        v_user.department_id, v_due_date, 'assigned',
-        v_cycle, 'initial', p_actor_id
-      );
-      v_added_count := v_added_count + 1;
-    end if;
-  end loop;
+  -- Only add training assignments if initial training or revision retraining is required
+  if (
+    (v_version.version_number = 1 and v_version.supersedes_version_id is null and coalesce(v_sop_detail.training_required, false) = true)
+    or
+    ((v_version.version_number > 1 or v_version.supersedes_version_id is not null) and coalesce(v_sop_detail.retraining_required, false) = true)
+  ) then
+    for v_user in (
+      select distinct p.id as user_id, p.department_id
+      from public.profiles p
+      left join public.user_roles ur on ur.user_id = p.id
+      where p.organization_id = v_doc.organization_id
+        and coalesce(p.is_active, true) = true
+        and (
+          case
+            when v_has_target_dept then
+              p.department_id in (
+                select department_id from public.sop_version_training_target_scopes
+                where sop_version_id = p_version_id and scope_type = 'department'
+              )
+            when exists (select 1 from public.document_version_department_scope where version_id = p_version_id) then
+              p.department_id in (
+                select department_id from public.document_version_department_scope
+                where version_id = p_version_id
+              )
+            else true
+          end
+        )
+        and (
+          case
+            when v_has_target_role then
+              ur.role::text in (
+                select role_name from public.sop_version_training_target_scopes
+                where sop_version_id = p_version_id and scope_type = 'role'
+              )
+            when exists (select 1 from public.document_version_role_scope where version_id = p_version_id) then
+              ur.role::text in (
+                select role_name from public.document_version_role_scope
+                where version_id = p_version_id
+              )
+            else true
+          end
+        )
+    ) loop
+      if not exists (
+        select 1 from public.training_assignments
+        where program_id = v_prog_id
+          and document_version_id = p_version_id
+          and assigned_to_user_id = v_user.user_id
+          and obligation_cycle = v_cycle
+      ) then
+        insert into public.training_assignments (
+          program_id, document_version_id, assigned_to_user_id,
+          assigned_to_department_id, due_date, status,
+          obligation_cycle, cycle_type, assigned_by
+        ) values (
+          v_prog_id, p_version_id, v_user.user_id,
+          v_user.department_id, v_due_date, 'assigned',
+          v_cycle, v_cycle_type, p_actor_id
+        );
+        v_added_count := v_added_count + 1;
+      end if;
+    end loop;
+  end if;
 
-  -- 4. Cancel open uncompleted obligations for deactivated employees
+  -- 4. Cancel open uncompleted obligations for users who left target population (deactivated OR transferred out of target scope)
   update public.training_assignments
   set status = 'cancelled'
   where program_id = v_prog_id
     and document_version_id = p_version_id
     and obligation_cycle = v_cycle
     and status in ('assigned', 'in_progress')
-    and assigned_to_user_id in (
-      select id from public.profiles
-      where organization_id = v_doc.organization_id and coalesce(is_active, true) = false
+    and assigned_to_user_id not in (
+      select distinct p.id
+      from public.profiles p
+      left join public.user_roles ur on ur.user_id = p.id
+      where p.organization_id = v_doc.organization_id
+        and coalesce(p.is_active, true) = true
+        and (
+          case
+            when v_has_target_dept then
+              p.department_id in (
+                select department_id from public.sop_version_training_target_scopes
+                where sop_version_id = p_version_id and scope_type = 'department'
+              )
+            when exists (select 1 from public.document_version_department_scope where version_id = p_version_id) then
+              p.department_id in (
+                select department_id from public.document_version_department_scope
+                where version_id = p_version_id
+              )
+            else true
+          end
+        )
+        and (
+          case
+            when v_has_target_role then
+              ur.role::text in (
+                select role_name from public.sop_version_training_target_scopes
+                where sop_version_id = p_version_id and scope_type = 'role'
+              )
+            when exists (select 1 from public.document_version_role_scope where version_id = p_version_id) then
+              ur.role::text in (
+                select role_name from public.document_version_role_scope
+                where version_id = p_version_id
+              )
+            else true
+          end
+        )
     );
 
   get diagnostics v_cancelled_count = row_count;
@@ -969,6 +1038,7 @@ begin
     'program_id', v_prog_id,
     'cycle', v_cycle,
     'newly_assigned_count', v_added_count,
+    'cancelled_out_of_scope_count', v_cancelled_count,
     'inactive_cancelled_count', v_cancelled_count
   );
 end;
@@ -976,6 +1046,81 @@ $$;
 
 revoke all on function public.reconcile_sop_training_population(uuid, uuid) from public, anon, authenticated;
 grant execute on function public.reconcile_sop_training_population(uuid, uuid) to service_role;
+
+-- ============================================================================
+-- 10B. Governed Operational RPC: complete_training_assignment
+-- ============================================================================
+create or replace function public.complete_training_assignment(
+  p_assignment_id uuid,
+  p_evidence_id uuid,
+  p_actor_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_assign record;
+  v_prog record;
+  v_actor_org_id uuid;
+  v_target_org_id uuid;
+  v_has_auth boolean := false;
+begin
+  if coalesce(current_setting('request.jwt.claim.role', true), current_user) <> 'service_role'
+     and current_user <> 'service_role' then
+    raise exception 'PATCH29_TRAINING_SERVICE_ROLE_REQUIRED';
+  end if;
+
+  select * into v_assign
+  from public.training_assignments
+  where id = p_assignment_id;
+
+  if not found or v_assign.status not in ('assigned', 'in_progress', 'overdue') then
+    raise exception 'PATCH29_ASSIGNMENT_NOT_COMPLETABLE';
+  end if;
+
+  select * into v_prog
+  from public.training_programs
+  where id = v_assign.program_id;
+
+  -- Verify Organization Boundary
+  select organization_id into v_actor_org_id from public.profiles where id = p_actor_id;
+  select organization_id into v_target_org_id from public.profiles where id = v_assign.assigned_to_user_id;
+
+  if v_actor_org_id is null or v_target_org_id is null or v_actor_org_id <> v_target_org_id then
+    raise exception 'CROSS_ORGANIZATION_DENIED';
+  end if;
+
+  -- SOP acknowledgment self-completion vs formal training completion
+  if v_prog.training_type = 'sop_acknowledgment' and v_assign.assigned_to_user_id = p_actor_id then
+    v_has_auth := true;
+  else
+    select exists (
+      select 1 from public.user_roles
+      where user_id = p_actor_id
+        and role::text in ('super_admin', 'governance_admin', 'compliance_officer', 'quality_director', 'training_coordinator', 'department_manager', 'division_head')
+    ) or (v_prog.owner_user_id = p_actor_id) into v_has_auth;
+  end if;
+
+  if not v_has_auth then
+    raise exception 'UNAUTHORIZED_TRAINING_COMPLETER: Only training coordinators, managers, or Quality authorities may certify formal training completion';
+  end if;
+
+  update public.training_assignments
+  set status = 'completed', completed_at = now(), completion_evidence_id = p_evidence_id
+  where id = p_assignment_id;
+
+  perform public.log_training_event(
+    'training_assignments', p_assignment_id, 'completed',
+    'Training completed successfully with evidence ' || coalesce(p_evidence_id::text, 'none') || '.',
+    p_actor_id
+  );
+end;
+$$;
+
+revoke all on function public.complete_training_assignment(uuid, uuid, uuid) from public, anon, authenticated;
+grant execute on function public.complete_training_assignment(uuid, uuid, uuid) to service_role;
 
 -- ============================================================================
 -- 11. Hardened Competency Assessment RPC with SOD Enforcement

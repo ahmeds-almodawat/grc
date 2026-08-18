@@ -23,7 +23,7 @@
     "views_without_explicit_migration_grant_count": 193,
     "retained_live_broad_security_definer_count": 2,
     "target_broad_security_definer_count": 4,
-    "reviewed_restricted_security_definer_count": 83,
+    "reviewed_restricted_security_definer_count": 84,
     "acl_reachable_materialized_view_count": 0,
     "legacy_browser_base_table_hardening_count": 29,
     "reviewed_patch83u_migration_ceiling": 205
@@ -21180,15 +21180,15 @@
       ],
       "relation_type": "view",
       "definition_file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
-      "definition_line": 1068,
+      "definition_line": 1211,
       "security_invoker_declared": true,
       "security_invoker": true,
-      "security_invoker_evidence": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1068",
+      "security_invoker_evidence": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1211",
       "owner_bypass_prevented": true,
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": true,
       "grant_evidence": [
-        "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1156 grant select authenticated"
+        "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1299 grant select authenticated"
       ],
       "nested_views": [],
       "base_tables": [
@@ -23185,6 +23185,26 @@
         ]
       },
       {
+        "source": "migration205_service_role_acl_review",
+        "schema": "public",
+        "name": "complete_training_assignment",
+        "signature": "public.complete_training_assignment(p_assignment_id uuid, p_evidence_id uuid, p_actor_id uuid)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
+        "definition_line": 1053,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:517 revoke execute public, anon, authenticated",
+          "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:518 grant execute service_role",
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1122 revoke execute public, anon, authenticated",
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1123 grant execute service_role"
+        ]
+      },
+      {
         "source": "migration202_service_role_acl_review",
         "schema": "public",
         "name": "create_governed_policy_draft",
@@ -23271,11 +23291,11 @@
         "service_role_execute": true,
         "disposition": "service_role_only",
         "definition_file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
-        "definition_line": 269,
+        "definition_line": 280,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:366 revoke execute public, anon, authenticated",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:367 grant execute service_role"
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:375 revoke execute public, anon, authenticated",
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:376 grant execute service_role"
         ]
       },
       {
@@ -23928,11 +23948,11 @@
         "service_role_execute": true,
         "disposition": "service_role_only",
         "definition_file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
-        "definition_line": 178,
+        "definition_line": 189,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:207 revoke execute public, anon, authenticated",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:208 grant execute service_role"
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:218 revoke execute public, anon, authenticated",
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:219 grant execute service_role"
         ]
       },
       {
@@ -23946,11 +23966,11 @@
         "service_role_execute": true,
         "disposition": "service_role_only",
         "definition_file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
-        "definition_line": 211,
+        "definition_line": 222,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:263 revoke execute public, anon, authenticated",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:264 grant execute service_role"
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:274 revoke execute public, anon, authenticated",
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:275 grant execute service_role"
         ]
       },
       {
@@ -23964,11 +23984,11 @@
         "service_role_execute": true,
         "disposition": "service_role_only",
         "definition_file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
-        "definition_line": 108,
+        "definition_line": 119,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:174 revoke execute public, anon, authenticated",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:175 grant execute service_role"
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:185 revoke execute public, anon, authenticated",
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:186 grant execute service_role"
         ]
       },
       {
@@ -24263,11 +24283,11 @@
         "service_role_execute": true,
         "disposition": "service_role_only",
         "definition_file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
-        "definition_line": 593,
+        "definition_line": 591,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:800 revoke execute public, anon, authenticated",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:801 grant execute service_role"
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:819 revoke execute public, anon, authenticated",
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:820 grant execute service_role"
         ]
       },
       {
@@ -24281,11 +24301,11 @@
         "service_role_execute": true,
         "disposition": "service_role_only",
         "definition_file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
-        "definition_line": 806,
+        "definition_line": 825,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:979 revoke execute public, anon, authenticated",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:980 grant execute service_role"
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1047 revoke execute public, anon, authenticated",
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1048 grant execute service_role"
         ]
       },
       {
@@ -24299,13 +24319,13 @@
         "service_role_execute": true,
         "disposition": "service_role_only",
         "definition_file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
-        "definition_line": 985,
+        "definition_line": 1128,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:679 revoke execute public, anon, authenticated",
           "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:680 grant execute service_role",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1062 revoke execute public, anon, authenticated",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1063 grant execute service_role"
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1205 revoke execute public, anon, authenticated",
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1206 grant execute service_role"
         ]
       },
       {
@@ -24511,7 +24531,7 @@
         "service_role_execute": true,
         "disposition": "service_role_only",
         "definition_file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
-        "definition_line": 372,
+        "definition_line": 381,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1547 revoke execute public, anon, authenticated",
@@ -24520,8 +24540,8 @@
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1084 grant execute service_role",
           "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1090 revoke execute public, anon, authenticated",
           "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1091 grant execute service_role",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:587 revoke execute public, anon, authenticated",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:588 grant execute service_role"
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:585 revoke execute public, anon, authenticated",
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:586 grant execute service_role"
         ]
       },
       {

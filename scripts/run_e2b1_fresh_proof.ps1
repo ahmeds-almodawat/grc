@@ -41,6 +41,31 @@ $authStub = @"
 CREATE SCHEMA IF NOT EXISTS auth;
 GRANT ALL ON SCHEMA auth TO postgres;
 GRANT ALL ON SCHEMA auth TO supabase_admin;
+
+CREATE TABLE IF NOT EXISTS auth.users (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  email text,
+  aud text DEFAULT 'authenticated',
+  role text DEFAULT 'authenticated'
+);
+
+ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS email_confirmed_at timestamptz DEFAULT now();
+ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS raw_app_meta_data jsonb DEFAULT '{"provider":"email","providers":["email"]}';
+ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS raw_user_meta_data jsonb DEFAULT '{}';
+ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS is_super_admin boolean DEFAULT false;
+ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
+ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS banned_until timestamptz;
+
+CREATE TABLE IF NOT EXISTS auth.identities (
+  id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  identity_data jsonb DEFAULT '{}',
+  provider text DEFAULT 'email',
+  last_sign_in_at timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
 CREATE OR REPLACE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS '
   SELECT coalesce(
     nullif(current_setting(''request.jwt.claims'', true), ''''),
@@ -54,32 +79,31 @@ CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS '
     ''a0000000-0000-0000-0000-000000000001''::uuid
   );
 ';
+GRANT ALL ON ALL TABLES IN SCHEMA auth TO postgres, supabase_admin;
 GRANT EXECUTE ON FUNCTION auth.jwt() TO postgres, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION auth.uid() TO postgres, anon, authenticated, service_role;
 "@
 docker exec $CONTAINER_NAME psql -U supabase_admin -d postgres -c "$authStub" | Out-Null
 Write-Host "   Auth stubs initialized." -ForegroundColor Green
 
-Write-Host "`n5. Restoring Pre-204 Production Base Schema (prod_pre204_clean.sql)..."
-docker cp prod_pre204_clean.sql "${CONTAINER_NAME}:/tmp/prod_pre204_clean.sql"
-$restoreOut = docker exec $CONTAINER_NAME psql -U postgres -d postgres -f /tmp/prod_pre204_clean.sql 2>&1
-# Reapply auth stubs in case dump reset auth schema
+Write-Host "`n5. Restoring Baseline v3 through Migration 187..."
+docker cp supabase/baselines/grc_platform_baseline_v3_through_187.sql "${CONTAINER_NAME}:/tmp/baseline187.sql"
+$resBaseline = docker exec $CONTAINER_NAME psql -U postgres -d postgres -f /tmp/baseline187.sql -v ON_ERROR_STOP=0 2>&1
 docker exec $CONTAINER_NAME psql -U supabase_admin -d postgres -c "$authStub" | Out-Null
-Write-Host "   Base schema restore completed." -ForegroundColor Green
+Write-Host "   Baseline v3 through 187 applied." -ForegroundColor Green
 
-Write-Host "`n6. Applying Foundation Migrations 201, 202, 203, 204 to build 204 baseline..."
-docker cp supabase/migrations/201_governed_policy_sop_core_foundation.sql "${CONTAINER_NAME}:/tmp/201.sql"
-$res201 = docker exec $CONTAINER_NAME psql -U postgres -d postgres -f /tmp/201.sql -v ON_ERROR_STOP=0 2>&1
-
-docker cp supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql "${CONTAINER_NAME}:/tmp/202.sql"
-$res202 = docker exec $CONTAINER_NAME psql -U postgres -d postgres -f /tmp/202.sql -v ON_ERROR_STOP=0 2>&1
-
-docker cp supabase/migrations/203_governed_sop_structured_content_expansion.sql "${CONTAINER_NAME}:/tmp/203.sql"
-$res203 = docker exec $CONTAINER_NAME psql -U postgres -d postgres -f /tmp/203.sql -v ON_ERROR_STOP=0 2>&1
-
-docker cp supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql "${CONTAINER_NAME}:/tmp/204.sql"
-$res204 = docker exec $CONTAINER_NAME psql -U postgres -d postgres -f /tmp/204.sql -v ON_ERROR_STOP=0 2>&1
-Write-Host "   Base schema at Migration 204 established." -ForegroundColor Green
+Write-Host "`n6. Applying Migrations 188 through 204 to construct exact Production-204 state..."
+$migFiles = Get-ChildItem "supabase/migrations/*.sql" | Sort-Object Name
+foreach ($f in $migFiles) {
+    if ($f.Name -match "^(\d+)_") {
+        $num = [int]$matches[1]
+        if ($num -ge 188 -and $num -le 204) {
+            docker cp $f.FullName "${CONTAINER_NAME}:/tmp/mig.sql"
+            $resMig = docker exec $CONTAINER_NAME psql -U postgres -d postgres -f /tmp/mig.sql -v ON_ERROR_STOP=0 2>&1
+        }
+    }
+}
+Write-Host "   Exact Production-204 state established." -ForegroundColor Green
 
 Write-Host "`n7. PRE-205 BASELINE CHECK (Verifying Migration 205 objects ABSENT)..."
 $pre205Check = @"
@@ -107,11 +131,11 @@ SELECT
   (SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'governed_sop_details' AND column_name = 'retraining_required') as rollout_col,
   (SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'training_assignments' AND column_name = 'obligation_cycle') as cycle_col,
   (SELECT count(*) FROM information_schema.views WHERE table_schema = 'public' AND table_name = 'v_sop_training_compliance_matrix') as compliance_view,
-  (SELECT count(*) FROM pg_proc WHERE proname IN ('decide_sop_rollout_requirements', 'publish_sop_training_obligations', 'reconcile_sop_training_population')) as rpc_count;
+  (SELECT count(*) FROM pg_proc WHERE proname IN ('decide_sop_rollout_requirements', 'publish_sop_training_obligations', 'reconcile_sop_training_population', 'complete_training_assignment', 'record_competency_assessment')) as rpc_count;
 "@
 docker exec $CONTAINER_NAME psql -U postgres -d postgres -c "$post205Check"
 
-Write-Host "`n10. EXECUTING POSTGRESQL RUNTIME INVARIANT PROOF (24 Test Cases)..."
+Write-Host "`n10. EXECUTING POSTGRESQL RUNTIME INVARIANT PROOF (32 Test Cases: A through AF)..."
 docker cp tests/sql/v14e2b1_training_invariants_proof.sql "${CONTAINER_NAME}:/tmp/runtime_proof.sql"
 $proofOut = docker exec $CONTAINER_NAME psql -U postgres -d postgres -f /tmp/runtime_proof.sql -v ON_ERROR_STOP=1 2>&1
 Write-Host $proofOut
@@ -119,7 +143,7 @@ if ($LASTEXITCODE -ne 0) {
     Write-Error "RUNTIME INVARIANT PROOF FAILED!"
     exit 1
 }
-Write-Host "   ALL 24 RUNTIME INVARIANT TEST CASES PASSED WITH 100% SUCCESS!" -ForegroundColor Green
+Write-Host "   ALL 32 RUNTIME INVARIANT TEST CASES (A THROUGH AF) PASSED WITH 100% SUCCESS!" -ForegroundColor Green
 
 Write-Host "`n11. Cleaning up disposable container ($CONTAINER_NAME)..."
 docker rm -f $CONTAINER_NAME | Out-Null

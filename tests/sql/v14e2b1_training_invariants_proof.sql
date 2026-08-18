@@ -45,15 +45,27 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
 
   -- Auth Users
-  INSERT INTO auth.users (id, email, aud, role)
+  INSERT INTO auth.users (id, email, aud, role, email_confirmed_at, raw_app_meta_data)
   VALUES
-    (v_user_admin, 'admin@modawat.test', 'authenticated', 'authenticated'),
-    (v_user_coord, 'coord@modawat.test', 'authenticated', 'authenticated'),
-    (v_user_sup, 'supervisor@modawat.test', 'authenticated', 'authenticated'),
-    (v_user_nurse1, 'nurse1@modawat.test', 'authenticated', 'authenticated'),
-    (v_user_nurse2, 'nurse2@modawat.test', 'authenticated', 'authenticated'),
-    (v_user_doc, 'doctor@modawat.test', 'authenticated', 'authenticated'),
-    (v_user_other, 'external@other.test', 'authenticated', 'authenticated')
+    (v_user_admin, 'admin@modawat.test', 'authenticated', 'authenticated', now(), '{"provider":"email","providers":["email"]}'::jsonb),
+    (v_user_coord, 'coord@modawat.test', 'authenticated', 'authenticated', now(), '{"provider":"email","providers":["email"]}'::jsonb),
+    (v_user_sup, 'supervisor@modawat.test', 'authenticated', 'authenticated', now(), '{"provider":"email","providers":["email"]}'::jsonb),
+    (v_user_nurse1, 'nurse1@modawat.test', 'authenticated', 'authenticated', now(), '{"provider":"email","providers":["email"]}'::jsonb),
+    (v_user_nurse2, 'nurse2@modawat.test', 'authenticated', 'authenticated', now(), '{"provider":"email","providers":["email"]}'::jsonb),
+    (v_user_doc, 'doctor@modawat.test', 'authenticated', 'authenticated', now(), '{"provider":"email","providers":["email"]}'::jsonb),
+    (v_user_other, 'external@other.test', 'authenticated', 'authenticated', now(), '{"provider":"email","providers":["email"]}'::jsonb)
+  ON CONFLICT (id) DO UPDATE SET email_confirmed_at = now(), raw_app_meta_data = EXCLUDED.raw_app_meta_data;
+
+  -- Auth Identities
+  INSERT INTO auth.identities (id, user_id, provider, identity_data)
+  VALUES
+    (v_user_admin::text, v_user_admin, 'email', jsonb_build_object('sub', v_user_admin, 'email', 'admin@modawat.test')),
+    (v_user_coord::text, v_user_coord, 'email', jsonb_build_object('sub', v_user_coord, 'email', 'coord@modawat.test')),
+    (v_user_sup::text, v_user_sup, 'email', jsonb_build_object('sub', v_user_sup, 'email', 'supervisor@modawat.test')),
+    (v_user_nurse1::text, v_user_nurse1, 'email', jsonb_build_object('sub', v_user_nurse1, 'email', 'nurse1@modawat.test')),
+    (v_user_nurse2::text, v_user_nurse2, 'email', jsonb_build_object('sub', v_user_nurse2, 'email', 'nurse2@modawat.test')),
+    (v_user_doc::text, v_user_doc, 'email', jsonb_build_object('sub', v_user_doc, 'email', 'doctor@modawat.test')),
+    (v_user_other::text, v_user_other, 'email', jsonb_build_object('sub', v_user_other, 'email', 'external@other.test'))
   ON CONFLICT (id) DO NOTHING;
 
   -- Profiles
@@ -457,7 +469,56 @@ BEGIN
 END $$;
 
 -- ============================================================================
--- 14. TEST CASES B, C, D: NARROW TARGET OVERRIDES
+-- ============================================================================
+-- 14. TEST CASE AA: REVISION PUBLICATION WITHOUT ROLLOUT DECISION FAILS
+-- ============================================================================
+DO $$
+DECLARE
+  v_user_admin uuid := 'a0000000-0000-0000-0000-000000000001'::uuid;
+  v_doc_id uuid := '40000000-0000-0000-0000-000000000001'::uuid;
+  v_ver2_id uuid;
+BEGIN
+  SELECT id INTO v_ver2_id FROM public.document_versions
+  WHERE document_id = v_doc_id AND version_number = 2;
+
+  BEGIN
+    PERFORM public.publish_sop_training_obligations(v_user_admin, v_ver2_id);
+    RAISE EXCEPTION 'TEST AA FAILED: Publication allowed without rollout decision!';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM NOT LIKE '%ROLLOUT_DECISION_REQUIRED%' THEN
+      RAISE EXCEPTION 'TEST AA FAILED: Expected ROLLOUT_DECISION_REQUIRED error, got %', SQLERRM;
+    END IF;
+  END;
+  RAISE NOTICE 'TEST AA PASSED: Revision publication blocked without governed rollout decision.';
+END $$;
+
+-- ============================================================================
+-- 15. TEST CASE AB: ROLLOUT DECISION DENIED TO UNAUTHORIZED ROLES
+-- ============================================================================
+DO $$
+DECLARE
+  v_user_nurse1 uuid := 'a0000000-0000-0000-0000-000000000004'::uuid;
+  v_doc_id uuid := '40000000-0000-0000-0000-000000000001'::uuid;
+  v_ver2_id uuid;
+BEGIN
+  SELECT id INTO v_ver2_id FROM public.document_versions
+  WHERE document_id = v_doc_id AND version_number = 2;
+
+  BEGIN
+    PERFORM public.decide_sop_rollout_requirements(
+      v_user_nurse1, v_ver2_id, true, true, false, 'Unauthorized staff attempt'
+    );
+    RAISE EXCEPTION 'TEST AB FAILED: Unauthorized rollout decision succeeded!';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM NOT LIKE '%INSUFFICIENT_AUTHORITY%' THEN
+      RAISE EXCEPTION 'TEST AB FAILED: Expected INSUFFICIENT_AUTHORITY error, got %', SQLERRM;
+    END IF;
+  END;
+  RAISE NOTICE 'TEST AB PASSED: Non-governance role rejected from deciding rollout requirements.';
+END $$;
+
+-- ============================================================================
+-- 16. TEST CASES B, C, D & Y: NARROW OVERRIDES + RETRAINING CYCLE GENERATION
 -- ============================================================================
 DO $$
 DECLARE
@@ -467,27 +528,84 @@ DECLARE
   v_ver2_id uuid;
   v_res jsonb;
   v_count integer;
+  v_cycle_type text;
 BEGIN
   SELECT id INTO v_ver2_id FROM public.document_versions
   WHERE document_id = v_doc_id AND version_number = 2;
 
-  -- Add narrow department override (Cardio only) and role override (staff_nurse only)
+  -- 1. Record governed rollout decision: retraining_required = TRUE
+  PERFORM public.decide_sop_rollout_requirements(
+    v_user_admin, v_ver2_id, true, true, false, 'Major version revision retraining mandatory for clinical staff'
+  );
+
+  -- 2. Add narrow department override (Cardio only) and role override (employee only)
   INSERT INTO public.sop_version_training_target_scopes (sop_version_id, scope_type, department_id, created_by)
   VALUES (v_ver2_id, 'department', v_dept_cardio, v_user_admin);
 
   INSERT INTO public.sop_version_training_target_scopes (sop_version_id, scope_type, role_name, created_by)
   VALUES (v_ver2_id, 'role', 'employee', v_user_admin);
 
+  -- 3. Publish obligations
   v_res := public.publish_sop_training_obligations(v_user_admin, v_ver2_id);
   v_count := (v_res->>'assignments_created')::int;
   IF v_count <> 2 THEN
-    RAISE EXCEPTION 'TEST B/C/D FAILED: Expected 2 narrow assignments (Cardio department employees only)';
+    RAISE EXCEPTION 'TEST B/C/D FAILED: Expected 2 narrow assignments, got %', v_count;
   END IF;
-  RAISE NOTICE 'TEST B/C/D PASSED: Narrow target department + role intersection accurately assigned.';
+
+  -- 4. Verify cycle_type is strictly 'retraining'
+  SELECT cycle_type INTO v_cycle_type FROM public.training_assignments
+  WHERE document_version_id = v_ver2_id LIMIT 1;
+
+  IF v_cycle_type <> 'retraining' THEN
+    RAISE EXCEPTION 'TEST Y FAILED: Expected cycle_type retraining, got %', v_cycle_type;
+  END IF;
+
+  RAISE NOTICE 'TEST B/C/D & Y PASSED: Narrow target scope applied and retraining cycle generated.';
 END $$;
 
 -- ============================================================================
--- 15. TEST CASE E: OUT-OF-APPLICABILITY OVERRIDE REJECTED
+-- 17. TEST CASE Z: REVISION WITH RETRAINING=FALSE DOES NOT CREATE ASSIGNMENTS
+-- ============================================================================
+DO $$
+DECLARE
+  v_user_admin uuid := 'a0000000-0000-0000-0000-000000000001'::uuid;
+  v_doc_id uuid := '40000000-0000-0000-0000-000000000001'::uuid;
+  v_ver2_id uuid;
+  v_ver3_id uuid;
+  v_res jsonb;
+  v_count integer;
+  v_ack_req_count integer;
+BEGIN
+  SELECT id INTO v_ver2_id FROM public.document_versions
+  WHERE document_id = v_doc_id AND version_number = 2;
+
+  -- Create Version 3 (Minor Editorial)
+  v_res := public.start_governed_document_revision(v_user_admin, v_ver2_id, 'minor', 'Minor typo corrections');
+  v_ver3_id := (v_res->>'new_version_id')::uuid;
+
+  -- Record rollout decision with retraining_required = FALSE, reacknowledgment_required = TRUE
+  PERFORM public.decide_sop_rollout_requirements(
+    v_user_admin, v_ver3_id, false, true, false, 'Minor typo update does not require retraining'
+  );
+
+  -- Publish obligations for Version 3
+  v_res := public.publish_sop_training_obligations(v_user_admin, v_ver3_id);
+  v_count := (v_res->>'assignments_created')::int;
+  v_ack_req_count := (v_res->>'acknowledgment_requirements_created')::int;
+
+  IF v_count <> 0 THEN
+    RAISE EXCEPTION 'TEST Z FAILED: Revision with retraining=false generated % training assignments!', v_count;
+  END IF;
+
+  IF v_ack_req_count <> 1 THEN
+    RAISE EXCEPTION 'TEST Z FAILED: Reacknowledgment requirement was not created!';
+  END IF;
+
+  RAISE NOTICE 'TEST Z PASSED: Revision with retraining=false generated 0 training assignments and created acknowledgment requirement.';
+END $$;
+
+-- ============================================================================
+-- 18. TEST CASE E: OUT-OF-APPLICABILITY OVERRIDE REJECTED
 -- ============================================================================
 DO $$
 DECLARE
@@ -512,7 +630,170 @@ BEGIN
 END $$;
 
 -- ============================================================================
--- 16. TEST CASES W & X: OPERATIONAL COMPLIANCE VIEW DERIVED METRICS
+-- 19. TEST CASE AC: ACTIVE EMPLOYEE TRANSFERS OUT OF TARGET SCOPE
+-- ============================================================================
+DO $$
+DECLARE
+  v_user_admin uuid := 'a0000000-0000-0000-0000-000000000001'::uuid;
+  v_user_doc   uuid := 'a0000000-0000-0000-0000-000000000006'::uuid;
+  v_dept_cardio uuid := '30000000-0000-0000-0000-000000000001'::uuid;
+  v_dept_neuro  uuid := '30000000-0000-0000-0000-000000000002'::uuid;
+  v_doc_id uuid := '40000000-0000-0000-0000-000000000001'::uuid;
+  v_ver2_id uuid;
+  v_res jsonb;
+  v_status text;
+  v_assigned_matrix integer;
+BEGIN
+  SELECT id INTO v_ver2_id FROM public.document_versions
+  WHERE document_id = v_doc_id AND version_number = 2;
+
+  -- Transfer active doctor from Cardio to Neuro (v2 target scope is Cardio only)
+  UPDATE public.profiles
+  SET department_id = v_dept_neuro
+  WHERE id = v_user_doc;
+
+  -- Reconcile v2 population
+  v_res := public.reconcile_sop_training_population(v_user_admin, v_ver2_id);
+
+  -- Verify open assignment for transferred doctor is now cancelled
+  SELECT status INTO v_status FROM public.training_assignments
+  WHERE document_version_id = v_ver2_id AND assigned_to_user_id = v_user_doc;
+
+  IF v_status <> 'cancelled' THEN
+    RAISE EXCEPTION 'TEST AC FAILED: Transferred user assignment status is %, expected cancelled!', v_status;
+  END IF;
+
+  -- Verify compliance matrix denominator excludes cancelled assignment
+  SELECT assigned_count INTO v_assigned_matrix
+  FROM public.v_sop_training_compliance_matrix
+  WHERE sop_version_id = v_ver2_id;
+
+  IF v_assigned_matrix <> 1 THEN
+    RAISE EXCEPTION 'TEST AC FAILED: Matrix assigned_count is %, expected 1 (excluding cancelled)!', v_assigned_matrix;
+  END IF;
+
+  -- Restore doctor to Cardio for subsequent steps
+  UPDATE public.profiles SET department_id = v_dept_cardio WHERE id = v_user_doc;
+  RAISE NOTICE 'TEST AC PASSED: Active transferred employee assignment cancelled and excluded from matrix denominator.';
+END $$;
+
+-- ============================================================================
+-- 20. TEST CASE AD: HISTORICAL COMPLETED OBLIGATION PRESERVED AFTER TRANSFER
+-- ============================================================================
+DO $$
+DECLARE
+  v_user_admin uuid := 'a0000000-0000-0000-0000-000000000001'::uuid;
+  v_user_nurse1 uuid := 'a0000000-0000-0000-0000-000000000004'::uuid;
+  v_org_id uuid := '10000000-0000-0000-0000-000000000001'::uuid;
+  v_dept_rad    uuid := '30000000-0000-0000-0000-000000000004'::uuid;
+  v_dept_cardio uuid := '30000000-0000-0000-0000-000000000001'::uuid;
+  v_ver1_id uuid := '50000000-0000-0000-0000-000000000001'::uuid;
+  v_assign_id uuid;
+  v_status text;
+BEGIN
+  -- Ensure intra-org out-of-scope department exists
+  INSERT INTO public.departments (id, organization_id, code, name_en, is_active)
+  VALUES (v_dept_rad, v_org_id, 'RAD', 'Radiology', true)
+  ON CONFLICT (id) DO NOTHING;
+
+  -- Mark v1 assignment completed for Nurse 1
+  SELECT id INTO v_assign_id FROM public.training_assignments
+  WHERE document_version_id = v_ver1_id AND assigned_to_user_id = v_user_nurse1;
+
+  UPDATE public.training_assignments
+  SET status = 'completed', completed_at = now()
+  WHERE id = v_assign_id;
+
+  -- Transfer Nurse 1 out of SOP applicability scope (to Radiology)
+  UPDATE public.profiles SET department_id = v_dept_rad WHERE id = v_user_nurse1;
+
+  -- Reconcile v1
+  PERFORM public.reconcile_sop_training_population(v_user_admin, v_ver1_id);
+
+  -- Verify Nurse 1 status remains COMPLETED
+  SELECT status INTO v_status FROM public.training_assignments WHERE id = v_assign_id;
+
+  IF v_status <> 'completed' THEN
+    RAISE EXCEPTION 'TEST AD FAILED: Historical completed assignment was overwritten to %!', v_status;
+  END IF;
+
+  -- Restore Nurse 1 to Cardio
+  UPDATE public.profiles SET department_id = v_dept_cardio WHERE id = v_user_nurse1;
+  RAISE NOTICE 'TEST AD PASSED: Historical completed obligation preserved intact upon department transfer.';
+END $$;
+
+-- ============================================================================
+-- 21. TEST CASE AE: FORMAL TRAINING COMPLETION AUTHORITY
+-- ============================================================================
+DO $$
+DECLARE
+  v_org_id uuid := '10000000-0000-0000-0000-000000000001'::uuid;
+  v_user_nurse1 uuid := 'a0000000-0000-0000-0000-000000000004'::uuid;
+  v_user_sup    uuid := 'a0000000-0000-0000-0000-000000000003'::uuid;
+  v_prog_id uuid;
+  v_assign_id uuid;
+  v_status text;
+BEGIN
+  -- Create formal compliance training program (not sop_acknowledgment)
+  INSERT INTO public.training_programs (
+    title, training_type, owner_user_id, department_id, active, created_by
+  ) VALUES (
+    'Annual OSHA Compliance', 'compliance_training', v_user_sup, '30000000-0000-0000-0000-000000000001'::uuid, true, v_user_sup
+  ) RETURNING id INTO v_prog_id;
+
+  -- Create assignment for Nurse 1
+  INSERT INTO public.training_assignments (
+    program_id, assigned_to_user_id, status, assigned_by
+  ) VALUES (
+    v_prog_id, v_user_nurse1, 'assigned', v_user_sup
+  ) RETURNING id INTO v_assign_id;
+
+  -- 1. Regular assignee attempting to self-complete formal training -> FAILS
+  BEGIN
+    PERFORM public.complete_training_assignment(v_assign_id, null, v_user_nurse1);
+    RAISE EXCEPTION 'TEST AE FAILED: Regular assignee was able to self-complete formal training!';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM NOT LIKE '%UNAUTHORIZED_TRAINING_COMPLETER%' THEN
+      RAISE EXCEPTION 'TEST AE FAILED: Expected UNAUTHORIZED_TRAINING_COMPLETER, got %', SQLERRM;
+    END IF;
+  END;
+
+  -- 2. Authorized supervisor completing formal training -> SUCCEEDS
+  PERFORM public.complete_training_assignment(v_assign_id, null, v_user_sup);
+  SELECT status INTO v_status FROM public.training_assignments WHERE id = v_assign_id;
+
+  IF v_status <> 'completed' THEN
+    RAISE EXCEPTION 'TEST AE FAILED: Supervisor completion failed!';
+  END IF;
+
+  RAISE NOTICE 'TEST AE PASSED: Formal training completion authority strictly enforced.';
+END $$;
+
+-- ============================================================================
+-- 22. TEST CASE AF: COMPETENCY SELF-ASSESSMENT REJECTED AT DB & RPC LEVEL
+-- ============================================================================
+DO $$
+DECLARE
+  v_user_doc uuid := 'a0000000-0000-0000-0000-000000000006'::uuid;
+BEGIN
+  -- Direct table insert violating constraint
+  BEGIN
+    INSERT INTO public.competency_assessments (
+      user_id, assessor_user_id, competency_area, result, score
+    ) VALUES (
+      v_user_doc, v_user_doc, 'Surgical Protocol', 'passed', 100
+    );
+    RAISE EXCEPTION 'TEST AF FAILED: Direct table insert allowed self-assessment!';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM NOT LIKE '%chk_competency_no_self_assessment%' THEN
+      RAISE EXCEPTION 'TEST AF FAILED: Expected chk_competency_no_self_assessment error, got %', SQLERRM;
+    END IF;
+  END;
+  RAISE NOTICE 'TEST AF PASSED: Competency self-assessment blocked at DB constraint and RPC levels.';
+END $$;
+
+-- ============================================================================
+-- 23. TEST CASES W & X: OPERATIONAL COMPLIANCE VIEW DERIVED METRICS
 -- ============================================================================
 DO $$
 DECLARE
@@ -530,7 +811,7 @@ BEGIN
 
   RAISE NOTICE 'TEST W & X PASSED: Operational compliance matrix compiles and computes live metrics.';
 
-  RAISE NOTICE '==================================================';
-  RAISE NOTICE 'ALL 24 RUNTIME INVARIANT TEST CASES PASSED CLEANLY!';
-  RAISE NOTICE '==================================================';
+  RAISE NOTICE '================================================================';
+  RAISE NOTICE 'ALL 32 RUNTIME INVARIANT TEST CASES (A THROUGH AF) PASSED CLEANLY!';
+  RAISE NOTICE '================================================================';
 END $$;
