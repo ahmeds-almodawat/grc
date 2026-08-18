@@ -434,6 +434,7 @@ declare
   v_role text;
   v_count integer;
   v_self_appr boolean;
+  v_eligible_user_count integer;
 begin
   if coalesce(current_setting('request.jwt.claim.role', true), current_user) <> 'service_role'
      and current_user <> 'service_role' then
@@ -490,8 +491,40 @@ begin
       raise exception 'PATCH206_INVALID_STAGE_AUTH_SELECTOR';
     end if;
 
-    if v_user_id is not null and v_count <> 1 then
-      raise exception 'PATCH206_USER_STAGE_REQUIRES_COUNT_ONE';
+    if v_user_id is not null then
+      if v_count <> 1 then
+        raise exception 'PATCH206_USER_STAGE_REQUIRES_COUNT_ONE';
+      end if;
+
+      if not exists (
+        select 1 from public.profiles
+        where id = v_user_id
+          and organization_id = v_rule.organization_id
+          and coalesce(is_active, true) = true
+      ) then
+        raise exception 'PATCH206_INVALID_STAGE_REVIEWER_USER';
+      end if;
+    end if;
+
+    if v_role is not null then
+      begin
+        perform v_role::public.app_role;
+      exception when others then
+        raise exception 'PATCH206_INVALID_STAGE_REVIEWER_ROLE';
+      end;
+
+      select count(distinct ur.user_id) into v_eligible_user_count
+      from public.user_roles ur
+      join public.profiles p on p.id = ur.user_id
+      where ur.role::text = v_role
+        and ur.is_active = true
+        and (ur.organization_id is null or ur.organization_id = v_rule.organization_id)
+        and p.organization_id = v_rule.organization_id
+        and coalesce(p.is_active, true) = true;
+
+      if v_eligible_user_count < v_count then
+        raise exception 'PATCH206_INSUFFICIENT_STAGE_REVIEWERS';
+      end if;
     end if;
 
     insert into public.approval_authority_rule_stages (
@@ -859,6 +892,8 @@ declare
   v_org_id uuid;
   v_dept_id uuid;
   v_criticality text;
+  v_doc_owner_id uuid;
+  v_prepared_by uuid;
   v_content_mode text;
   v_transcription_status text;
   v_step_count integer;
@@ -868,8 +903,8 @@ declare
   v_stage record;
   v_first_stage_key text;
 begin
-  select d.id, d.document_type, d.organization_id, d.department_id, d.criticality_level
-  into v_doc_id, v_doc_type, v_org_id, v_dept_id, v_criticality
+  select d.id, d.document_type, d.organization_id, d.department_id, d.criticality_level, d.document_owner_id, v.prepared_by
+  into v_doc_id, v_doc_type, v_org_id, v_dept_id, v_criticality, v_doc_owner_id, v_prepared_by
   from public.document_versions v
   join public.controlled_documents d on d.id = v.document_id
   where v.id = p_version_id and v.locked_at is null and v.approved_at is null;
@@ -884,6 +919,21 @@ begin
     where id = p_actor_id and organization_id = v_org_id and coalesce(is_active, true) = true
   ) then
     raise exception 'PATCH202_ACTOR_CROSS_ORG_FORBIDDEN';
+  end if;
+
+  -- Validate Business Authority: prepared_by, document_owner_id, or active same-org governance_admin / super_admin
+  if not (
+    coalesce(v_prepared_by, '00000000-0000-0000-0000-000000000000'::uuid) = p_actor_id
+    or coalesce(v_doc_owner_id, '00000000-0000-0000-0000-000000000000'::uuid) = p_actor_id
+    or exists (
+      select 1 from public.user_roles ur
+      where ur.user_id = p_actor_id
+        and ur.is_active = true
+        and ur.role in ('super_admin', 'governance_admin')
+        and (ur.organization_id is null or ur.organization_id = v_org_id)
+    )
+  ) then
+    raise exception 'PATCH202_ACTOR_NOT_AUTHORIZED';
   end if;
 
   if exists (
@@ -1023,6 +1073,7 @@ declare
   v_is_locked boolean;
   v_appr_req_id uuid;
   v_final_decision text;
+  v_req_final_decision_by uuid;
   v_final_approver_id uuid;
 begin
   select d.id, d.organization_id, (v.locked_at is not null or v.approved_at is not null)
@@ -1048,8 +1099,8 @@ begin
   end if;
 
   -- 1. Authoritative Latest Approval Request Exists
-  select id, final_decision
-  into v_appr_req_id, v_final_decision
+  select id, final_decision, final_decision_by
+  into v_appr_req_id, v_final_decision, v_req_final_decision_by
   from public.approval_requests
   where linked_item_type = 'document_version'
     and linked_item_id = p_version_id
@@ -1089,6 +1140,22 @@ begin
 
   if v_final_approver_id is null then
     raise exception 'PATCH206_FINAL_APPROVER_NOT_FOUND';
+  end if;
+
+  -- 4. Validate Operational Actor Authority:
+  -- Must be completing final-stage approver OR approval_requests.final_decision_by OR active same-org governance_admin / super_admin
+  if not (
+    p_actor_id = v_final_approver_id
+    or (v_req_final_decision_by is not null and p_actor_id = v_req_final_decision_by)
+    or exists (
+      select 1 from public.user_roles ur
+      where ur.user_id = p_actor_id
+        and ur.is_active = true
+        and ur.role in ('super_admin', 'governance_admin')
+        and (ur.organization_id is null or ur.organization_id = v_org_id)
+    )
+  ) then
+    raise exception 'PATCH202_ACTOR_NOT_AUTHORIZED';
   end if;
 
   -- 4. Lock Version and Finalize Status
@@ -1172,6 +1239,8 @@ as $$
 declare
   v_doc_id uuid;
   v_org_id uuid;
+  v_doc_owner_id uuid;
+  v_prepared_by uuid;
   v_sec jsonb;
   v_step jsonb;
   v_raci jsonb;
@@ -1211,7 +1280,8 @@ declare
 begin
   set constraints uq_sop_sections_version_seq, uq_sop_steps_version_seq deferred;
 
-  select d.id, d.organization_id into v_doc_id, v_org_id
+  select d.id, d.organization_id, d.document_owner_id, v.prepared_by
+  into v_doc_id, v_org_id, v_doc_owner_id, v_prepared_by
   from public.document_versions v
   join public.controlled_documents d on d.id = v.document_id
   where v.id = p_version_id and d.document_type = 'sop';
@@ -1224,6 +1294,21 @@ begin
     where id = p_actor_id and organization_id = v_org_id and coalesce(is_active, true) = true
   ) then
     raise exception 'PATCH202_ACTOR_CROSS_ORG_FORBIDDEN';
+  end if;
+
+  -- Validate Business Authority: prepared_by, document_owner_id, or active same-org governance_admin / super_admin
+  if not (
+    coalesce(v_prepared_by, '00000000-0000-0000-0000-000000000000'::uuid) = p_actor_id
+    or coalesce(v_doc_owner_id, '00000000-0000-0000-0000-000000000000'::uuid) = p_actor_id
+    or exists (
+      select 1 from public.user_roles ur
+      where ur.user_id = p_actor_id
+        and ur.is_active = true
+        and ur.role in ('super_admin', 'governance_admin')
+        and (ur.organization_id is null or ur.organization_id = v_org_id)
+    )
+  ) then
+    raise exception 'PATCH202_ACTOR_NOT_AUTHORIZED';
   end if;
 
   if exists (select 1 from public.document_versions where id = p_version_id and (locked_at is not null or approved_at is not null)) then
@@ -1807,13 +1892,15 @@ declare
   v_doc_id uuid;
   v_doc_type text;
   v_org_id uuid;
+  v_doc_owner_id uuid;
+  v_prepared_by uuid;
   v_source_ver_num integer;
   v_new_ver_num integer;
   v_new_ver_label text;
   v_new_ver_id uuid;
 begin
-  select d.id, d.document_type, d.organization_id, v.version_number
-  into v_doc_id, v_doc_type, v_org_id, v_source_ver_num
+  select d.id, d.document_type, d.organization_id, d.document_owner_id, v.version_number, v.prepared_by
+  into v_doc_id, v_doc_type, v_org_id, v_doc_owner_id, v_source_ver_num, v_prepared_by
   from public.document_versions v
   join public.controlled_documents d on d.id = v.document_id
   where v.id = p_source_version_id;
@@ -1828,6 +1915,21 @@ begin
     where id = p_actor_id and organization_id = v_org_id and coalesce(is_active, true) = true
   ) then
     raise exception 'PATCH202_ACTOR_CROSS_ORG_FORBIDDEN';
+  end if;
+
+  -- Validate Business Authority: controlled_documents.document_owner_id, source document_versions.prepared_by, or active same-org governance_admin / super_admin
+  if not (
+    coalesce(v_prepared_by, '00000000-0000-0000-0000-000000000000'::uuid) = p_actor_id
+    or coalesce(v_doc_owner_id, '00000000-0000-0000-0000-000000000000'::uuid) = p_actor_id
+    or exists (
+      select 1 from public.user_roles ur
+      where ur.user_id = p_actor_id
+        and ur.is_active = true
+        and ur.role in ('super_admin', 'governance_admin')
+        and (ur.organization_id is null or ur.organization_id = v_org_id)
+    )
+  ) then
+    raise exception 'PATCH202_ACTOR_NOT_AUTHORIZED';
   end if;
 
   if p_revision_type not in ('minor', 'major') then
