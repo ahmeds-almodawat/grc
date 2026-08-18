@@ -142,6 +142,22 @@ const f1r2BusinessCycleActions = new Set([
   'f1r2_finalize_corrective_ovr',
 ]);
 
+const patch26DocumentActions = new Set([
+  'record_document_acknowledgment',
+]);
+
+const patch29TrainingActions = new Set([
+  'decide_sop_rollout_requirements',
+  'publish_sop_training_obligations',
+  'reconcile_sop_training_population',
+  'start_training_assignment',
+  'complete_training_assignment',
+  'record_competency_assessment',
+  'waive_training_assignment_with_reason',
+  'cancel_training_assignment_with_reason',
+  'reopen_training_assignment_with_reason',
+]);
+
 const allowedActions = new Set([
   'ovr_executive_dashboard_analytics',
   'search_grc_global',
@@ -182,6 +198,8 @@ const allowedActions = new Set([
   ...patch22RiskActions,
   ...patch23EvidenceActions,
   ...patch24AuditActions,
+  ...patch26DocumentActions,
+  ...patch29TrainingActions,
   ...patch68EvidenceClosureActions,
   ...patch76CutoverDecisionActions,
   ...patch77LivePilotActions,
@@ -4076,6 +4094,155 @@ Deno.serve(async (request) => {
 
     if (error) {
       const authFailure = /unauthorized|service_role_required|active_actor_required|organization_scope_denied|division_scope_denied/i.test(error.message);
+      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'decide_sop_rollout_requirements') {
+    const payload = requestBody.payload ?? {};
+    const { data, error } = await serviceClient.rpc('decide_sop_rollout_requirements', {
+      p_actor_id: userData.user.id,
+      p_version_id: payload.version_id,
+      p_retraining_required: Boolean(payload.retraining_required),
+      p_reacknowledgment_required: payload.reacknowledgment_required !== undefined ? Boolean(payload.reacknowledgment_required) : true,
+      p_competency_reassessment_required: Boolean(payload.competency_reassessment_required),
+      p_rationale: String(payload.rationale ?? ''),
+    });
+    if (error) {
+      const authFailure = /unauthorized|service_role_required|insufficient_authority|cross_organization/i.test(error.message);
+      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'publish_sop_training_obligations') {
+    const payload = requestBody.payload ?? {};
+    const { data, error } = await serviceClient.rpc('publish_sop_training_obligations', {
+      p_actor_id: userData.user.id,
+      p_version_id: payload.version_id,
+    });
+    if (error) {
+      const authFailure = /unauthorized|service_role_required|insufficient_authority|cross_organization/i.test(error.message);
+      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'reconcile_sop_training_population') {
+    const payload = requestBody.payload ?? {};
+    const { data, error } = await serviceClient.rpc('reconcile_sop_training_population', {
+      p_actor_id: userData.user.id,
+      p_version_id: payload.version_id,
+    });
+    if (error) {
+      const authFailure = /unauthorized|service_role_required|insufficient_authority|cross_organization/i.test(error.message);
+      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'record_document_acknowledgment') {
+    const payload = requestBody.payload ?? {};
+    // Employee self-acknowledgment enforces subject = authenticated actor unless admin
+    const targetUserId = payload.user_id ? String(payload.user_id) : userData.user.id;
+    const { data, error } = await serviceClient.rpc('record_document_acknowledgment', {
+      p_document_id: payload.document_id,
+      p_version_id: payload.version_id,
+      p_user_id: targetUserId,
+      p_acknowledgment_method: payload.acknowledgment_method ?? 'web_ui',
+      p_acknowledgment_note: payload.acknowledgment_note ?? null,
+    });
+    if (error) {
+      const authFailure = /unauthorized|service_role_required|cross_organization/i.test(error.message);
+      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'start_training_assignment') {
+    const payload = requestBody.payload ?? {};
+    const { data, error } = await serviceClient.rpc('start_training_assignment', {
+      p_assignment_id: payload.assignment_id,
+      p_actor_id: userData.user.id,
+    });
+    if (error) {
+      const authFailure = /unauthorized|service_role_required/i.test(error.message);
+      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'complete_training_assignment') {
+    const payload = requestBody.payload ?? {};
+    const { data, error } = await serviceClient.rpc('complete_training_assignment', {
+      p_assignment_id: payload.assignment_id,
+      p_evidence_id: payload.evidence_id ?? null,
+      p_actor_id: userData.user.id,
+    });
+    if (error) {
+      const authFailure = /unauthorized|service_role_required/i.test(error.message);
+      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'record_competency_assessment') {
+    const payload = requestBody.payload ?? {};
+    const { data, error } = await serviceClient.rpc('record_competency_assessment', {
+      p_assignment_id: payload.assignment_id ?? null,
+      p_user_id: payload.user_id,
+      p_competency_area: payload.competency_area,
+      p_result: payload.result,
+      p_score: payload.score ?? null,
+      p_evidence_id: payload.evidence_id ?? null,
+      p_notes: payload.notes ?? null,
+      p_actor_id: userData.user.id,
+    });
+    if (error) {
+      const authFailure = /unauthorized|service_role_required|sod_violation|unauthorized_assessor|cross_organization/i.test(error.message);
+      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'waive_training_assignment_with_reason') {
+    const payload = requestBody.payload ?? {};
+    const { data, error } = await serviceClient.rpc('waive_training_assignment_with_reason', {
+      p_assignment_id: payload.assignment_id,
+      p_reason: payload.reason,
+      p_actor_id: userData.user.id,
+    });
+    if (error) {
+      const authFailure = /unauthorized|service_role_required/i.test(error.message);
+      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'cancel_training_assignment_with_reason') {
+    const payload = requestBody.payload ?? {};
+    const { data, error } = await serviceClient.rpc('cancel_training_assignment_with_reason', {
+      p_assignment_id: payload.assignment_id,
+      p_reason: payload.reason,
+      p_actor_id: userData.user.id,
+    });
+    if (error) {
+      const authFailure = /unauthorized|service_role_required/i.test(error.message);
+      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    }
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (action === 'reopen_training_assignment_with_reason') {
+    const payload = requestBody.payload ?? {};
+    const { data, error } = await serviceClient.rpc('reopen_training_assignment_with_reason', {
+      p_assignment_id: payload.assignment_id,
+      p_reason: payload.reason,
+      p_actor_id: userData.user.id,
+    });
+    if (error) {
+      const authFailure = /unauthorized|service_role_required/i.test(error.message);
       return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
     }
     return jsonResponse({ ok: true, action, result: data }, 200);

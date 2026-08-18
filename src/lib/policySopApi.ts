@@ -1478,3 +1478,138 @@ export async function completeGovernedDocumentReview(
     }
   );
 }
+
+// ----------------------------------------------------------------------------
+// E2B1 Governed SOP Training, Acknowledgment & Competency Lifecycle APIs
+// ----------------------------------------------------------------------------
+
+export interface DecideSopRolloutInput {
+  version_id: string;
+  retraining_required?: boolean;
+  reacknowledgment_required?: boolean;
+  competency_reassessment_required?: boolean;
+  rationale: string;
+}
+
+export async function decideSopRolloutRequirements(input: DecideSopRolloutInput): Promise<{
+  success: boolean;
+  version_id: string;
+  retraining_required: boolean;
+  reacknowledgment_required: boolean;
+  competency_reassessment_required: boolean;
+  decided_at: string;
+}> {
+  return invokePrivilegedAction<{
+    success: boolean;
+    version_id: string;
+    retraining_required: boolean;
+    reacknowledgment_required: boolean;
+    competency_reassessment_required: boolean;
+    decided_at: string;
+  }>(
+    'decide_sop_rollout_requirements',
+    input as unknown as Record<string, unknown>
+  );
+}
+
+export async function publishSopTrainingObligations(versionId: string): Promise<{
+  success: boolean;
+  version_id: string;
+  program_id: string;
+  cycle: number;
+  cycle_type: string;
+  assignments_created: number;
+  acknowledgment_requirements_created: number;
+}> {
+  return invokePrivilegedAction<{
+    success: boolean;
+    version_id: string;
+    program_id: string;
+    cycle: number;
+    cycle_type: string;
+    assignments_created: number;
+    acknowledgment_requirements_created: number;
+  }>(
+    'publish_sop_training_obligations',
+    { version_id: versionId }
+  );
+}
+
+export async function reconcileSopTrainingPopulation(versionId: string): Promise<{
+  success: boolean;
+  version_id: string;
+  program_id: string;
+  cycle: number;
+  newly_assigned_count: number;
+  inactive_cancelled_count: number;
+}> {
+  return invokePrivilegedAction<{
+    success: boolean;
+    version_id: string;
+    program_id: string;
+    cycle: number;
+    newly_assigned_count: number;
+    inactive_cancelled_count: number;
+  }>(
+    'reconcile_sop_training_population',
+    { version_id: versionId }
+  );
+}
+
+export interface RecordDocumentAcknowledgmentInput {
+  document_id: string;
+  version_id: string;
+  user_id?: string;
+  acknowledgment_method?: string;
+  acknowledgment_note?: string;
+}
+
+export async function recordDocumentAcknowledgment(input: RecordDocumentAcknowledgmentInput): Promise<string> {
+  return invokePrivilegedAction<string>(
+    'record_document_acknowledgment',
+    input as unknown as Record<string, unknown>
+  );
+}
+
+export interface SopTrainingComplianceMatrixRow {
+  sop_version_id: string;
+  document_id: string;
+  organization_id: string;
+  document_code: string | null;
+  document_title: string;
+  version_number: number;
+  version_label: string;
+  document_status: string;
+  training_required: boolean;
+  acknowledgment_required: boolean;
+  competency_assessment_required: boolean;
+  target_population_count: number;
+  assigned_count: number;
+  in_progress_count: number;
+  completed_count: number;
+  overdue_count: number;
+  waived_count: number;
+  cancelled_count: number;
+  acknowledged_count: number;
+  acknowledgment_gap_count: number;
+  competency_passed_count: number;
+  competency_failed_count: number;
+  competency_pending_count: number;
+  renewal_due_count: number;
+}
+
+export async function getSopTrainingComplianceMatrix(sopVersionId?: string): Promise<SopTrainingComplianceMatrixRow[]> {
+  if (!supabase) return [];
+  try {
+    let query = supabase.from('v_sop_training_compliance_matrix').select('*');
+    if (sopVersionId) {
+      query = query.eq('sop_version_id', sopVersionId);
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []) as SopTrainingComplianceMatrixRow[];
+  } catch (error) {
+    console.warn('[PolicySopApi] getSopTrainingComplianceMatrix fallback:', error);
+    return [];
+  }
+}

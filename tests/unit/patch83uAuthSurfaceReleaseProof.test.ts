@@ -191,10 +191,10 @@ describe('Patch 83U authenticated surface release proof', () => {
     )).toBe(false);
   });
 
-  it('fails closed when migration 205 introduces an unaudited SECURITY DEFINER routine', () => {
+  it('fails closed when migration 206 introduces an unaudited SECURITY DEFINER routine', () => {
     const report = analyzePatch83uAuthSurface({
       migrationFiles: [{
-        path: 'supabase/migrations/205_future_fixture.sql',
+        path: 'supabase/migrations/206_future_fixture.sql',
         text: `
           create function public.future_browser_helper()
           returns integer language sql security definer as $$ select 1 $$;
@@ -220,10 +220,10 @@ describe('Patch 83U authenticated surface release proof', () => {
     expect(report.status).toBe('fail');
   });
 
-  it('fails closed when migration 205 makes a SECURITY DEFINER routine browser executable', () => {
+  it('fails closed when migration 206 makes a SECURITY DEFINER routine browser executable', () => {
     const report = analyzePatch83uAuthSurface({
       migrationFiles: [{
-        path: 'supabase/migrations/205_browser_fixture.sql',
+        path: 'supabase/migrations/206_browser_fixture.sql',
         text: `
           create function public.future_browser_granted_helper()
           returns integer language sql security definer as $$ select 1 $$;
@@ -271,8 +271,8 @@ describe('Patch 83U authenticated surface release proof', () => {
     expect(report.search_grc_global.disposition).toBe('authenticated_edge_bridge_with_caller_jwt_rls');
     expect(report.summary.retained_live_broad_security_definer_count).toBe(2);
     expect(report.summary.target_broad_security_definer_count).toBe(4);
-    expect(report.summary.reviewed_patch83u_migration_ceiling).toBe(204);
-    expect(report.summary.reviewed_restricted_security_definer_count).toBe(76);
+    expect(report.summary.reviewed_patch83u_migration_ceiling).toBe(205);
+    expect(report.summary.reviewed_restricted_security_definer_count).toBe(84);
     expect(report.acl_reachable_security_definer_rpcs.reviewed_restricted_security_definers)
       .toEqual(expect.arrayContaining([
         expect.objectContaining({
