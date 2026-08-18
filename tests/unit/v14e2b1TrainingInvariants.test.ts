@@ -85,10 +85,10 @@ describe('GRC v1.4-E2B1 Governed SOP Training & Competency Invariants', () => {
     expect(sql).toMatch(/false,\s*true,\s*false,\s*null,\s*null,\s*null/);
   });
 
-  it('Migration 207 does NOT exist', () => {
-    const migration207 = fs.readdirSync(path.resolve(rootDir, 'supabase/migrations'))
-      .find(f => f.startsWith('207_'));
-    expect(migration207).toBeUndefined();
+  it('Migration 208 does NOT exist', () => {
+    const migration208 = fs.readdirSync(path.resolve(rootDir, 'supabase/migrations'))
+      .find(f => f.startsWith('208_'));
+    expect(migration208).toBeUndefined();
   });
 
   it('Edge privileged-action allowlists all required Patch26 and Patch29 operational actions', () => {
@@ -109,7 +109,7 @@ describe('GRC v1.4-E2B1 Governed SOP Training & Competency Invariants', () => {
 
   it('Patch83U proof reviewed ceiling is set to 205 or higher', () => {
     const content = fs.readFileSync(patch83uScriptPath, 'utf8');
-    expect(content).toMatch(/const reviewedPatch83uMigrationCeiling = 20[56];/);
+    expect(content).toMatch(/const reviewedPatch83uMigrationCeiling = 20[567];/);
   });
 
   it('Migration 205 restricts rollout decision authority strictly to Quality and Governance authorities', () => {

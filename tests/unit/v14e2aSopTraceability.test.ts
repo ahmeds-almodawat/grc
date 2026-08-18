@@ -81,7 +81,7 @@ describe('GRC v1.4-E2A Governed SOP Traceability Engine & Contracts', () => {
   it('Patch83U proof script reviewed ceiling is set to 205 or higher', () => {
     const proofScriptPath = path.resolve(process.cwd(), 'scripts/patch83u-auth-surface-proof.mjs');
     const content = fs.readFileSync(proofScriptPath, 'utf8');
-    expect(content).toMatch(/const reviewedPatch83uMigrationCeiling = 20[56];/);
+    expect(content).toMatch(/const reviewedPatch83uMigrationCeiling = 20[567];/);
   });
 
   it('correctly models typed SOP Risk links with relationship semantics', () => {
