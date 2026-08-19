@@ -1,5 +1,46 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.108.2';
 import { normalizeRosterPageRequest } from '../_shared/accV13RosterPaging.ts';
+import {
+  v14e1rGovernedDocumentActions,
+  MAX_E1R2_PAYLOAD_BYTES,
+  validateStageConfigInput,
+  validateProcedureSections,
+  validateProcedureSteps,
+  validateDepartmentScopes,
+  validateRoleScopes,
+  validateDefinitions,
+  validateRoleResponsibilities,
+  validateMonitoringKpis,
+  validateRiskLinks,
+  validateAccreditationLinks,
+  validateVersionLinks,
+  validateConfigureStagesProof,
+  validateCreateSopDraftProof,
+  validateSaveSopDraftProof,
+  validateStartRevisionProof,
+  validateSubmitReviewProof,
+  validateApprovalDecisionProof,
+  validateFinalizeApprovalProof,
+  mapV14e1rDatabaseError,
+  requireCanonicalUuid,
+  optionalCanonicalUuid,
+  boundedString,
+  validateStrictBoolean,
+  optionalStrictBoolean,
+  validateStrictInteger,
+  optionalStrictInteger,
+  assertNoIdentityOverrides,
+  assertOnlyAllowedKeys,
+  asPlainObject,
+  validCriticalityLevels,
+  validConfidentialityLevels,
+  validContentModes,
+  validTranscriptionStatuses,
+  validGovernanceLinkStates,
+  resolveCreateGovernanceLinkState,
+  validRevisionTypes,
+  validApprovalDecisions,
+} from '../_shared/v14e1rGovernedDocumentBridge.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -208,6 +249,7 @@ const allowedActions = new Set([
   ...patch83q1ProductionReadinessActions,
   ...patch83rDepartmentLifecycleActions,
   ...f1r2BusinessCycleActions,
+  ...v14e1rGovernedDocumentActions,
 ]);
 
 const patch19LifecycleActions = new Set([
@@ -4246,6 +4288,569 @@ Deno.serve(async (request) => {
       return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
     }
     return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (v14e1rGovernedDocumentActions.has(action)) {
+    const payloadBytes = new TextEncoder().encode(JSON.stringify(requestPayload)).length;
+    if (payloadBytes > MAX_E1R2_PAYLOAD_BYTES) {
+      return errorResponse(
+        'Governed document operation payload exceeds maximum allowable size.',
+        400,
+        'PAYLOAD_BYTE_BOUND_EXCEEDED',
+        'The submitted payload exceeds the 1 MiB limit.',
+        { action },
+      );
+    }
+  }
+
+  if (action === 'v14e1r_configure_approval_authority_rule_stages') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, [
+        'actor_id', 'p_actor_id',
+        'organization_id', 'p_organization_id',
+        'stage_order',
+      ]);
+      assertOnlyAllowedKeys(payload, new Set(['authority_rule_id', 'stages']), 'CONFIGURE_STAGES_PAYLOAD');
+      const { authorityRuleId, stages } = validateStageConfigInput(payload);
+
+      const { data, error } = await serviceClient.rpc('configure_approval_authority_rule_stages', {
+        p_actor_id: userData.user.id,
+        p_authority_rule_id: authorityRuleId,
+        p_stages: stages,
+      });
+
+      if (error) {
+        const err = mapV14e1rDatabaseError(action, error);
+        return errorResponse(err.error, err.status, err.code, err.detail, err.extra);
+      }
+
+      if (!validateConfigureStagesProof(data, authorityRuleId)) {
+        return errorResponse('Configure stages response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'v14e1r_create_governed_sop_draft') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set([
+        'title_en',
+        'title_ar',
+        'process_name_en',
+        'process_name_ar',
+        'purpose_en',
+        'purpose_ar',
+        'process_owner_id',
+        'primary_policy_version_id',
+        'governance_link_state',
+        'scope_en',
+        'scope_ar',
+        'department_id',
+        'criticality_level',
+        'confidentiality_level',
+        'content_mode',
+        'training_required',
+        'acknowledgment_required',
+        'competency_assessment_required',
+        'acknowledgment_sla_days',
+        'training_renewal_months',
+        'procedure_sections',
+        'procedure_steps',
+        'department_scopes',
+        'role_scopes',
+        'definitions',
+        'role_responsibilities',
+        'monitoring_kpis',
+        'risk_links',
+        'accreditation_links',
+        'version_links',
+      ]), 'CREATE_SOP_PAYLOAD');
+
+      const { data: actorProfile, error: profileErr } = await serviceClient
+        .from('profiles')
+        .select('id, organization_id, is_active')
+        .eq('id', userData.user.id)
+        .single();
+
+      if (profileErr || !actorProfile || !actorProfile.organization_id || actorProfile.is_active === false) {
+        const e = mapV14e1rDatabaseError(action, 'PATCH202_ACTOR_NOT_AUTHORIZED');
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      const titleEn = boundedString(payload.title_en, 500, 'title_en', true)!;
+      const titleAr = boundedString(payload.title_ar, 500, 'title_ar');
+      const processNameEn = boundedString(payload.process_name_en, 255, 'process_name_en');
+      const processNameAr = boundedString(payload.process_name_ar, 255, 'process_name_ar');
+      const purposeEn = boundedString(payload.purpose_en, 5000, 'purpose_en');
+      const purposeAr = boundedString(payload.purpose_ar, 5000, 'purpose_ar');
+      const processOwnerId = optionalCanonicalUuid(payload.process_owner_id, 'process_owner_id');
+      const primaryPolicyVersionId = optionalCanonicalUuid(payload.primary_policy_version_id, 'primary_policy_version_id');
+      const governanceLinkState = resolveCreateGovernanceLinkState(payload.governance_link_state, primaryPolicyVersionId);
+
+      const scopeEn = boundedString(payload.scope_en, 5000, 'scope_en');
+      const scopeAr = boundedString(payload.scope_ar, 5000, 'scope_ar');
+      const departmentId = optionalCanonicalUuid(payload.department_id, 'department_id');
+
+      let criticalityLevel = 'medium';
+      if (payload.criticality_level !== undefined && payload.criticality_level !== null) {
+        if (typeof payload.criticality_level !== 'string') throw new Error('INVALID_CRITICALITY_LEVEL');
+        const c = payload.criticality_level.trim();
+        if (!validCriticalityLevels.has(c)) throw new Error('INVALID_CRITICALITY_LEVEL');
+        criticalityLevel = c;
+      }
+
+      let confidentialityLevel = 'internal';
+      if (payload.confidentiality_level !== undefined && payload.confidentiality_level !== null) {
+        if (typeof payload.confidentiality_level !== 'string') throw new Error('INVALID_CONFIDENTIALITY_LEVEL');
+        const c = payload.confidentiality_level.trim();
+        if (!validConfidentialityLevels.has(c)) throw new Error('INVALID_CONFIDENTIALITY_LEVEL');
+        confidentialityLevel = c;
+      }
+
+      let contentMode = 'structured';
+      if (payload.content_mode !== undefined && payload.content_mode !== null) {
+        if (typeof payload.content_mode !== 'string') throw new Error('INVALID_CONTENT_MODE');
+        const cm = payload.content_mode.trim();
+        if (!validContentModes.has(cm)) throw new Error('INVALID_CONTENT_MODE');
+        contentMode = cm;
+      }
+
+      const trainingRequired = validateStrictBoolean(payload.training_required, 'training_required', false);
+      const acknowledgmentRequired = validateStrictBoolean(payload.acknowledgment_required, 'acknowledgment_required', false);
+      const competencyAssessmentRequired = validateStrictBoolean(payload.competency_assessment_required, 'competency_assessment_required', false);
+      const acknowledgmentSlaDays = validateStrictInteger(payload.acknowledgment_sla_days, 'acknowledgment_sla_days', 1, 365, 30);
+      const trainingRenewalMonths = validateStrictInteger(payload.training_renewal_months, 'training_renewal_months', 1, 120, 12);
+
+      const sections = validateProcedureSections(payload.procedure_sections) ?? [];
+      const steps = validateProcedureSteps(payload.procedure_steps) ?? [];
+      const deptScopes = validateDepartmentScopes(payload.department_scopes) ?? [];
+      const roleScopes = validateRoleScopes(payload.role_scopes) ?? [];
+      const definitions = validateDefinitions(payload.definitions) ?? [];
+      const roleResponsibilities = validateRoleResponsibilities(payload.role_responsibilities) ?? [];
+      const monitoringKpis = validateMonitoringKpis(payload.monitoring_kpis) ?? [];
+      const riskLinks = validateRiskLinks(payload.risk_links) ?? [];
+      const accreditationLinks = validateAccreditationLinks(payload.accreditation_links) ?? [];
+      const versionLinks = validateVersionLinks(payload.version_links) ?? [];
+
+      const { data, error } = await serviceClient.rpc('create_governed_sop_draft', {
+        p_actor_id: userData.user.id,
+        p_organization_id: actorProfile.organization_id,
+        p_title_en: titleEn,
+        p_title_ar: titleAr,
+        p_process_name_en: processNameEn,
+        p_process_name_ar: processNameAr,
+        p_purpose_en: purposeEn,
+        p_purpose_ar: purposeAr,
+        p_process_owner_id: processOwnerId,
+        p_primary_policy_version_id: primaryPolicyVersionId,
+        p_governance_link_state: governanceLinkState,
+        p_scope_en: scopeEn,
+        p_scope_ar: scopeAr,
+        p_department_id: departmentId,
+        p_criticality_level: criticalityLevel,
+        p_confidentiality_level: confidentialityLevel,
+        p_training_required: trainingRequired,
+        p_acknowledgment_required: acknowledgmentRequired,
+        p_competency_assessment_required: competencyAssessmentRequired,
+        p_acknowledgment_sla_days: acknowledgmentSlaDays,
+        p_training_renewal_months: trainingRenewalMonths,
+        p_content_mode: contentMode,
+        p_procedure_sections: sections,
+        p_procedure_steps: steps,
+        p_department_scopes: deptScopes,
+        p_role_scopes: roleScopes,
+        p_definitions: definitions,
+        p_role_responsibilities: roleResponsibilities,
+        p_monitoring_kpis: monitoringKpis,
+        p_risk_links: riskLinks,
+        p_accreditation_links: accreditationLinks,
+        p_version_links: versionLinks,
+      });
+
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      if (!validateCreateSopDraftProof(data)) {
+        return errorResponse('Create draft response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'v14e1r_save_governed_sop_draft') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set([
+        'version_id',
+        'title_en',
+        'title_ar',
+        'process_name_en',
+        'process_name_ar',
+        'purpose_en',
+        'purpose_ar',
+        'process_owner_id',
+        'primary_policy_version_id',
+        'governance_link_state',
+        'scope_en',
+        'scope_ar',
+        'content_mode',
+        'transcription_status',
+        'training_required',
+        'acknowledgment_required',
+        'competency_assessment_required',
+        'acknowledgment_sla_days',
+        'training_renewal_months',
+        'procedure_sections',
+        'procedure_steps',
+        'department_scopes',
+        'role_scopes',
+        'definitions',
+        'role_responsibilities',
+        'monitoring_kpis',
+        'risk_links',
+        'accreditation_links',
+        'version_links',
+      ]), 'SAVE_SOP_PAYLOAD');
+
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+
+      const titleEn = boundedString(payload.title_en, 500, 'title_en');
+      const titleAr = boundedString(payload.title_ar, 500, 'title_ar');
+      const processNameEn = boundedString(payload.process_name_en, 255, 'process_name_en');
+      const processNameAr = boundedString(payload.process_name_ar, 255, 'process_name_ar');
+      const purposeEn = boundedString(payload.purpose_en, 5000, 'purpose_en');
+      const purposeAr = boundedString(payload.purpose_ar, 5000, 'purpose_ar');
+      const processOwnerId = optionalCanonicalUuid(payload.process_owner_id, 'process_owner_id');
+      const primaryPolicyVersionId = optionalCanonicalUuid(payload.primary_policy_version_id, 'primary_policy_version_id');
+
+      let governanceLinkState: string | null = null;
+      if (payload.governance_link_state !== undefined && payload.governance_link_state !== null) {
+        if (typeof payload.governance_link_state !== 'string') throw new Error('INVALID_GOVERNANCE_LINK_STATE');
+        const gls = payload.governance_link_state.trim();
+        if (!validGovernanceLinkStates.has(gls)) throw new Error('INVALID_GOVERNANCE_LINK_STATE');
+        governanceLinkState = gls;
+      }
+      if (governanceLinkState === 'linked' && primaryPolicyVersionId === null && payload.primary_policy_version_id !== undefined) {
+        throw new Error('PATCH206_LINKED_STATE_REQUIRES_POLICY');
+      }
+      if (governanceLinkState === 'not_applicable' && primaryPolicyVersionId) {
+        throw new Error('PATCH206_NOT_APPLICABLE_FORBIDS_POLICY');
+      }
+
+      const scopeEn = boundedString(payload.scope_en, 5000, 'scope_en');
+      const scopeAr = boundedString(payload.scope_ar, 5000, 'scope_ar');
+
+      let contentMode: string | null = null;
+      if (payload.content_mode !== undefined && payload.content_mode !== null) {
+        if (typeof payload.content_mode !== 'string') throw new Error('INVALID_CONTENT_MODE');
+        const cm = payload.content_mode.trim();
+        if (!validContentModes.has(cm)) throw new Error('INVALID_CONTENT_MODE');
+        contentMode = cm;
+      }
+
+      let transcriptionStatus: string | null = null;
+      if (payload.transcription_status !== undefined && payload.transcription_status !== null) {
+        if (typeof payload.transcription_status !== 'string') throw new Error('INVALID_TRANSCRIPTION_STATUS');
+        const ts = payload.transcription_status.trim();
+        if (!validTranscriptionStatuses.has(ts)) throw new Error('INVALID_TRANSCRIPTION_STATUS');
+        transcriptionStatus = ts;
+      }
+
+      const trainingRequired = optionalStrictBoolean(payload.training_required, 'training_required');
+      const acknowledgmentRequired = optionalStrictBoolean(payload.acknowledgment_required, 'acknowledgment_required');
+      const competencyAssessmentRequired = optionalStrictBoolean(payload.competency_assessment_required, 'competency_assessment_required');
+      const acknowledgmentSlaDays = optionalStrictInteger(payload.acknowledgment_sla_days, 'acknowledgment_sla_days', 1, 365);
+      const trainingRenewalMonths = optionalStrictInteger(payload.training_renewal_months, 'training_renewal_months', 1, 120);
+
+      const sections = validateProcedureSections(payload.procedure_sections);
+      const steps = validateProcedureSteps(payload.procedure_steps);
+      const deptScopes = validateDepartmentScopes(payload.department_scopes);
+      const roleScopes = validateRoleScopes(payload.role_scopes);
+      const definitions = validateDefinitions(payload.definitions);
+      const roleResponsibilities = validateRoleResponsibilities(payload.role_responsibilities);
+      const monitoringKpis = validateMonitoringKpis(payload.monitoring_kpis);
+      const riskLinks = validateRiskLinks(payload.risk_links);
+      const accreditationLinks = validateAccreditationLinks(payload.accreditation_links);
+      const versionLinks = validateVersionLinks(payload.version_links);
+
+      const { data, error } = await serviceClient.rpc('save_governed_sop_draft', {
+        p_actor_id: userData.user.id,
+        p_version_id: versionId,
+        p_title_en: titleEn,
+        p_title_ar: titleAr,
+        p_process_name_en: processNameEn,
+        p_process_name_ar: processNameAr,
+        p_purpose_en: purposeEn,
+        p_purpose_ar: purposeAr,
+        p_process_owner_id: processOwnerId,
+        p_primary_policy_version_id: primaryPolicyVersionId,
+        p_governance_link_state: governanceLinkState,
+        p_scope_en: scopeEn,
+        p_scope_ar: scopeAr,
+        p_training_required: trainingRequired,
+        p_acknowledgment_required: acknowledgmentRequired,
+        p_competency_assessment_required: competencyAssessmentRequired,
+        p_acknowledgment_sla_days: acknowledgmentSlaDays,
+        p_training_renewal_months: trainingRenewalMonths,
+        p_content_mode: contentMode,
+        p_transcription_status: transcriptionStatus,
+        p_procedure_sections: sections,
+        p_procedure_steps: steps,
+        p_department_scopes: deptScopes,
+        p_role_scopes: roleScopes,
+        p_definitions: definitions,
+        p_role_responsibilities: roleResponsibilities,
+        p_monitoring_kpis: monitoringKpis,
+        p_risk_links: riskLinks,
+        p_accreditation_links: accreditationLinks,
+        p_version_links: versionLinks,
+      });
+
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      if (!validateSaveSopDraftProof(data, versionId)) {
+        return errorResponse('Save draft response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'v14e1r_start_governed_document_revision') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set(['source_version_id', 'revision_type', 'revision_reason']), 'START_REVISION_PAYLOAD');
+      const sourceVersionId = requireCanonicalUuid(payload.source_version_id, 'source_version_id');
+
+      let revisionType = 'minor';
+      if (payload.revision_type !== undefined && payload.revision_type !== null) {
+        if (typeof payload.revision_type !== 'string') throw new Error('INVALID_REVISION_TYPE');
+        const rt = payload.revision_type.trim();
+        if (!validRevisionTypes.has(rt)) throw new Error('INVALID_REVISION_TYPE');
+        revisionType = rt;
+      }
+      const revisionReason = boundedString(payload.revision_reason, 1000, 'revision_reason');
+
+      const { data, error } = await serviceClient.rpc('start_governed_document_revision', {
+        p_actor_id: userData.user.id,
+        p_source_version_id: sourceVersionId,
+        p_revision_type: revisionType,
+        p_revision_reason: revisionReason,
+      });
+
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      if (!validateStartRevisionProof(data, sourceVersionId)) {
+        return errorResponse('Start revision response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'v14e1r_submit_governed_document_for_review') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set(['version_id', 'submission_note']), 'SUBMIT_REVIEW_PAYLOAD');
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+      const submissionNote = boundedString(payload.submission_note, 2000, 'submission_note');
+
+      const { data, error } = await serviceClient.rpc('submit_governed_document_for_review', {
+        p_actor_id: userData.user.id,
+        p_version_id: versionId,
+        p_submission_note: submissionNote,
+      });
+
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      if (!validateSubmitReviewProof(data, versionId)) {
+        return errorResponse('Submit review response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'v14e1r_record_governed_document_approval_decision') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, [
+        'actor_id', 'p_actor_id',
+        'approver_id', 'p_approver_id',
+        'approver_role', 'p_approver_role',
+        'stage_id', 'request_stage_id',
+        'organization_id', 'p_organization_id',
+        'workflow_type', 'linked_item_type', 'linked_item_id',
+      ]);
+      assertOnlyAllowedKeys(payload, new Set(['approval_request_id', 'decision', 'decision_note']), 'RECORD_DECISION_PAYLOAD');
+
+      const approvalRequestId = requireCanonicalUuid(payload.approval_request_id, 'approval_request_id');
+
+      if (typeof payload.decision !== 'string') {
+        throw new Error('INVALID_DECISION');
+      }
+      const rawDecision = boundedString(payload.decision, 50, 'decision', true)!;
+      if (!validApprovalDecisions.has(rawDecision)) {
+        throw new Error('INVALID_DECISION');
+      }
+      const decision = rawDecision;
+      const decisionNote = boundedString(payload.decision_note, 2000, 'decision_note');
+
+      // ------------------------------------------------------------
+      // MANDATORY EDGE PATH-A PREFLIGHT (SERVICE-ROLE READS)
+      // ------------------------------------------------------------
+      const { data: reqRow, error: reqErr } = await serviceClient
+        .from('approval_requests')
+        .select('id, organization_id, workflow_type, linked_item_type, linked_item_id, request_status')
+        .eq('id', approvalRequestId)
+        .single();
+
+      if (reqErr || !reqRow) {
+        const e = mapV14e1rDatabaseError(action, 'PATCH202_APPROVAL_REQUEST_NOT_FOUND');
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      const { data: actorProfile, error: profileErr } = await serviceClient
+        .from('profiles')
+        .select('id, organization_id, is_active')
+        .eq('id', userData.user.id)
+        .single();
+
+      if (profileErr || !actorProfile || !actorProfile.organization_id || actorProfile.is_active === false) {
+        const e = mapV14e1rDatabaseError(action, 'PATCH202_ACTOR_NOT_AUTHORIZED');
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      if (reqRow.organization_id !== actorProfile.organization_id) {
+        const e = mapV14e1rDatabaseError(action, 'PATCH202_ACTOR_CROSS_ORG_FORBIDDEN');
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      if (reqRow.workflow_type !== 'document_control' || reqRow.linked_item_type !== 'document_version') {
+        return errorResponse('Invalid workflow type for governed document approval.', 400, 'PATCH206_INVALID_WORKFLOW_TYPE', 'This action strictly supports document_control on document_version.', { action });
+      }
+
+      const { data: linkedVer, error: verErr } = await serviceClient
+        .from('document_versions')
+        .select('id, document_id, controlled_documents(organization_id)')
+        .eq('id', reqRow.linked_item_id)
+        .single();
+
+      if (verErr || !linkedVer) {
+        const e = mapV14e1rDatabaseError(action, 'PATCH202_VERSION_NOT_FOUND');
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+      const docOrg = (linkedVer.controlled_documents as { organization_id?: string })?.organization_id;
+      if (docOrg !== actorProfile.organization_id) {
+        const e = mapV14e1rDatabaseError(action, 'PATCH202_ACTOR_CROSS_ORG_FORBIDDEN');
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      if (!['pending', 'partially_approved'].includes(reqRow.request_status)) {
+        return errorResponse('Approval request is not open for review.', 409, 'PATCH206_REQUEST_NOT_OPEN', 'The approval request is already closed or completed.', { action });
+      }
+
+      const { data: stageRows, error: stageErr } = await serviceClient
+        .from('approval_request_stages')
+        .select('id, stage_order, stage_status')
+        .eq('approval_request_id', approvalRequestId);
+
+      if (stageErr || !stageRows || stageRows.length === 0) {
+        return errorResponse('No approval stages instantiated.', 409, 'PATCH206_NO_STAGES_INSTANTIATED', 'The approval request has no instantiated stages.', { action });
+      }
+
+      const inProgressStages = stageRows.filter((s: { stage_status?: string }) => s.stage_status === 'in_progress');
+      if (inProgressStages.length !== 1) {
+        return errorResponse('Approval request stage state is invalid.', 409, 'PATCH206_INVALID_STAGE_STATE', `Expected exactly 1 in-progress stage, found ${inProgressStages.length}.`, { action });
+      }
+
+      // EXACT 5-PARAMETER RPC CALL (NO p_decision_metadata or sixth argument)
+      const { data, error } = await serviceClient.rpc('record_approval_decision', {
+        p_approval_request_id: approvalRequestId,
+        p_approver_id: userData.user.id,
+        p_decision: decision,
+        p_decision_note: decisionNote,
+        p_approver_role: null,
+      });
+
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      if (!validateApprovalDecisionProof(data, approvalRequestId)) {
+        return errorResponse('Record decision response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'v14e1r_finalize_governed_document_approval') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set(['version_id', 'approval_note']), 'FINALIZE_APPROVAL_PAYLOAD');
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+      const approvalNote = boundedString(payload.approval_note, 2000, 'approval_note');
+
+      const { data, error } = await serviceClient.rpc('finalize_governed_document_approval', {
+        p_actor_id: userData.user.id,
+        p_version_id: versionId,
+        p_approval_note: approvalNote,
+      });
+
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      if (!validateFinalizeApprovalProof(data, versionId)) {
+        return errorResponse('Finalize approval response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
   }
 
   const { data, error } = await serviceClient.rpc('v72_execute_privileged_action', {
