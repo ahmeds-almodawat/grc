@@ -12,7 +12,7 @@ const seen = new Set();
 let ok = true;
 
 for (const file of files) {
-  const prefix = file.match(/^([^_]+)/)?.[1];
+  const prefix = file.match(/^(\d{3}[a-z]?)/)?.[1];
   if (!prefix) {
     console.warn(`WARN: migration has no numeric prefix: ${file}`);
     continue;

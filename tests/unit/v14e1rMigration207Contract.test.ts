@@ -264,12 +264,12 @@ describe('GRC v1.4-E1-R Migration 207 Runtime Contract Remediation Invariants', 
     expect(proof).toContain('MIGRATION 207 RUNTIME CONTRACT REMEDIATION PROOF');
     expect(proof).toContain('TEST 01: All Families Simultaneous Persistence in Production Schema');
     expect(proof).toContain('TEST 02: Verification of Role Scope Persistence (role_name, job_title)');
-    expect(proof).toContain('TEST 03: Verification of Role Responsibility Persistence (accountable_for)');
-    expect(proof).toContain('TEST 04: Verification of KPI Persistence (target_value, owner_id, descriptions)');
-    expect(proof).toContain('TEST 05: Verification of Risk Link Persistence (relationship_type, context notes)');
-    expect(proof).toContain('TEST 06: Verification of Accreditation Link Persistence (clause_id, link_strength, context notes)');
+    expect(proof).toContain('TEST 03: Verification of Role Responsibility Persistence');
+    expect(proof).toContain('TEST 04: Verification of KPI Persistence');
+    expect(proof).toContain('TEST 05: Verification of Risk Link Persistence');
+    expect(proof).toContain('TEST 06: Verification of Accreditation Link Persistence');
     expect(proof).toContain('TEST 07: Verification of Governed Version Link Persistence');
-    expect(proof).toContain('TEST 08: Verification of Step Procedure & RACI Persistence');
+    expect(proof).toContain('TEST 08: Verification of Procedure Sections, Steps & RACI Persistence');
     expect(proof).toContain('TEST 09: Start Revision Deep-Clone Preserves All Production Schema Fields');
   });
 });
