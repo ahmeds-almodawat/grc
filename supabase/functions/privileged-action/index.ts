@@ -37,6 +37,7 @@ import {
   validContentModes,
   validTranscriptionStatuses,
   validGovernanceLinkStates,
+  resolveCreateGovernanceLinkState,
   validRevisionTypes,
   validApprovalDecisions,
 } from '../_shared/v14e1rGovernedDocumentBridge.ts';
@@ -4391,20 +4392,7 @@ Deno.serve(async (request) => {
       const purposeAr = boundedString(payload.purpose_ar, 5000, 'purpose_ar');
       const processOwnerId = optionalCanonicalUuid(payload.process_owner_id, 'process_owner_id');
       const primaryPolicyVersionId = optionalCanonicalUuid(payload.primary_policy_version_id, 'primary_policy_version_id');
-
-      let governanceLinkState = 'linked';
-      if (payload.governance_link_state !== undefined && payload.governance_link_state !== null) {
-        if (typeof payload.governance_link_state !== 'string') throw new Error('INVALID_GOVERNANCE_LINK_STATE');
-        const gls = payload.governance_link_state.trim();
-        if (!validGovernanceLinkStates.has(gls)) throw new Error('INVALID_GOVERNANCE_LINK_STATE');
-        governanceLinkState = gls;
-      }
-      if (governanceLinkState === 'linked' && !primaryPolicyVersionId) {
-        throw new Error('PATCH206_LINKED_STATE_REQUIRES_POLICY');
-      }
-      if (governanceLinkState === 'not_applicable' && primaryPolicyVersionId) {
-        throw new Error('PATCH206_NOT_APPLICABLE_FORBIDS_POLICY');
-      }
+      const governanceLinkState = resolveCreateGovernanceLinkState(payload.governance_link_state, primaryPolicyVersionId);
 
       const scopeEn = boundedString(payload.scope_en, 5000, 'scope_en');
       const scopeAr = boundedString(payload.scope_ar, 5000, 'scope_ar');

@@ -35,6 +35,7 @@ import {
   mapV14e1rDatabaseError,
   validTranscriptionStatuses,
   validGovernanceLinkStates,
+  resolveCreateGovernanceLinkState,
   validRiskRelationshipTypes,
   validAccreditationLinkStrengths,
   validVersionRelationshipTypes,
@@ -232,14 +233,87 @@ describe('GRC v1.4-E1-R2 Edge v13 Governed SOP Bridge: Behavioral & Architectura
   });
 
   // ==========================================================================
-  // SECTION D: Governance Link State Validation
+  // SECTION D: Governance Link State Validation & Pure Creation Resolver
   // ==========================================================================
-  describe('D. Governance link state validation', () => {
-    it('accepts exact 3 authoritative governance link states', () => {
+  describe('D. Governance link state validation & pure creation resolver', () => {
+    const validPolicyId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+
+    it('accepts exact 3 authoritative governance link states in enum set', () => {
       expect(validGovernanceLinkStates.has('linked')).toBe(true);
       expect(validGovernanceLinkStates.has('legacy_pending')).toBe(true);
       expect(validGovernanceLinkStates.has('not_applicable')).toBe(true);
       expect(validGovernanceLinkStates.size).toBe(3);
+    });
+
+    it('1. omitted state + no policy => not_applicable', () => {
+      expect(resolveCreateGovernanceLinkState(undefined, null)).toBe('not_applicable');
+      expect(resolveCreateGovernanceLinkState(null, null)).toBe('not_applicable');
+      expect(resolveCreateGovernanceLinkState(undefined, undefined)).toBe('not_applicable');
+      expect(resolveCreateGovernanceLinkState('', null)).toBe('not_applicable');
+    });
+
+    it('2. omitted state + valid policy UUID => linked', () => {
+      expect(resolveCreateGovernanceLinkState(undefined, validPolicyId)).toBe('linked');
+      expect(resolveCreateGovernanceLinkState(null, validPolicyId)).toBe('linked');
+      expect(resolveCreateGovernanceLinkState('', validPolicyId)).toBe('linked');
+    });
+
+    it('3. explicit linked + valid policy => linked', () => {
+      expect(resolveCreateGovernanceLinkState('linked', validPolicyId)).toBe('linked');
+      expect(resolveCreateGovernanceLinkState(' linked ', validPolicyId)).toBe('linked');
+    });
+
+    it('4. explicit linked + no policy => PATCH206_LINKED_STATE_REQUIRES_POLICY', () => {
+      expect(() => resolveCreateGovernanceLinkState('linked', null)).toThrow(
+        'PATCH206_LINKED_STATE_REQUIRES_POLICY'
+      );
+      expect(() => resolveCreateGovernanceLinkState('linked', undefined)).toThrow(
+        'PATCH206_LINKED_STATE_REQUIRES_POLICY'
+      );
+      expect(() => resolveCreateGovernanceLinkState('linked', '')).toThrow(
+        'PATCH206_LINKED_STATE_REQUIRES_POLICY'
+      );
+    });
+
+    it('5. explicit not_applicable + no policy => not_applicable', () => {
+      expect(resolveCreateGovernanceLinkState('not_applicable', null)).toBe('not_applicable');
+      expect(resolveCreateGovernanceLinkState('not_applicable', undefined)).toBe('not_applicable');
+      expect(resolveCreateGovernanceLinkState(' not_applicable ', null)).toBe('not_applicable');
+    });
+
+    it('6. explicit not_applicable + policy => PATCH206_NOT_APPLICABLE_FORBIDS_POLICY', () => {
+      expect(() => resolveCreateGovernanceLinkState('not_applicable', validPolicyId)).toThrow(
+        'PATCH206_NOT_APPLICABLE_FORBIDS_POLICY'
+      );
+    });
+
+    it('7. explicit legacy_pending is accepted with or without policy', () => {
+      expect(resolveCreateGovernanceLinkState('legacy_pending', null)).toBe('legacy_pending');
+      expect(resolveCreateGovernanceLinkState('legacy_pending', validPolicyId)).toBe('legacy_pending');
+    });
+
+    it('8. invalid state => INVALID_GOVERNANCE_LINK_STATE', () => {
+      expect(() => resolveCreateGovernanceLinkState('unlinked', null)).toThrow(
+        'INVALID_GOVERNANCE_LINK_STATE'
+      );
+      expect(() => resolveCreateGovernanceLinkState('pending', null)).toThrow(
+        'INVALID_GOVERNANCE_LINK_STATE'
+      );
+      expect(() => resolveCreateGovernanceLinkState('optional', validPolicyId)).toThrow(
+        'INVALID_GOVERNANCE_LINK_STATE'
+      );
+    });
+
+    it('9. non-string state => INVALID_GOVERNANCE_LINK_STATE', () => {
+      expect(() => resolveCreateGovernanceLinkState(123 as any, null)).toThrow(
+        'INVALID_GOVERNANCE_LINK_STATE'
+      );
+      expect(() => resolveCreateGovernanceLinkState(true as any, null)).toThrow(
+        'INVALID_GOVERNANCE_LINK_STATE'
+      );
+      expect(() => resolveCreateGovernanceLinkState({} as any, null)).toThrow(
+        'INVALID_GOVERNANCE_LINK_STATE'
+      );
     });
   });
 

@@ -191,6 +191,39 @@ export function assertOnlyAllowedKeys(
   }
 }
 
+export function resolveCreateGovernanceLinkState(
+  rawState: unknown,
+  primaryPolicyVersionId: string | null | undefined
+): string {
+  const hasPolicy =
+    primaryPolicyVersionId !== null &&
+    primaryPolicyVersionId !== undefined &&
+    primaryPolicyVersionId !== '';
+
+  if (rawState === undefined || rawState === null || rawState === '') {
+    return hasPolicy ? 'linked' : 'not_applicable';
+  }
+
+  if (typeof rawState !== 'string') {
+    throw new Error('INVALID_GOVERNANCE_LINK_STATE');
+  }
+
+  const trimmed = rawState.trim();
+  if (!validGovernanceLinkStates.has(trimmed)) {
+    throw new Error('INVALID_GOVERNANCE_LINK_STATE');
+  }
+
+  if (trimmed === 'linked' && !hasPolicy) {
+    throw new Error('PATCH206_LINKED_STATE_REQUIRES_POLICY');
+  }
+
+  if (trimmed === 'not_applicable' && hasPolicy) {
+    throw new Error('PATCH206_NOT_APPLICABLE_FORBIDS_POLICY');
+  }
+
+  return trimmed;
+}
+
 // ----------------------------------------------------------------------------
 // 1. Stage Configuration Validator
 // ----------------------------------------------------------------------------
