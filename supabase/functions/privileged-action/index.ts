@@ -30,10 +30,13 @@ import {
   validateStrictInteger,
   optionalStrictInteger,
   assertNoIdentityOverrides,
+  assertOnlyAllowedKeys,
+  asPlainObject,
   validCriticalityLevels,
   validConfidentialityLevels,
   validContentModes,
   validTranscriptionStatuses,
+  validGovernanceLinkStates,
   validRevisionTypes,
   validApprovalDecisions,
 } from '../_shared/v14e1rGovernedDocumentBridge.ts';
@@ -4301,7 +4304,13 @@ Deno.serve(async (request) => {
 
   if (action === 'v14e1r_configure_approval_authority_rule_stages') {
     try {
-      const payload = asObject(requestBody.payload);
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, [
+        'actor_id', 'p_actor_id',
+        'organization_id', 'p_organization_id',
+        'stage_order',
+      ]);
+      assertOnlyAllowedKeys(payload, new Set(['authority_rule_id', 'stages']), 'CONFIGURE_STAGES_PAYLOAD');
       const { authorityRuleId, stages } = validateStageConfigInput(payload);
 
       const { data, error } = await serviceClient.rpc('configure_approval_authority_rule_stages', {
@@ -4328,8 +4337,40 @@ Deno.serve(async (request) => {
 
   if (action === 'v14e1r_create_governed_sop_draft') {
     try {
-      const payload = asObject(requestBody.payload);
+      const payload = asPlainObject(requestBody.payload);
       assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set([
+        'title_en',
+        'title_ar',
+        'process_name_en',
+        'process_name_ar',
+        'purpose_en',
+        'purpose_ar',
+        'process_owner_id',
+        'primary_policy_version_id',
+        'governance_link_state',
+        'scope_en',
+        'scope_ar',
+        'department_id',
+        'criticality_level',
+        'confidentiality_level',
+        'content_mode',
+        'training_required',
+        'acknowledgment_required',
+        'competency_assessment_required',
+        'acknowledgment_sla_days',
+        'training_renewal_months',
+        'procedure_sections',
+        'procedure_steps',
+        'department_scopes',
+        'role_scopes',
+        'definitions',
+        'role_responsibilities',
+        'monitoring_kpis',
+        'risk_links',
+        'accreditation_links',
+        'version_links',
+      ]), 'CREATE_SOP_PAYLOAD');
 
       const { data: actorProfile, error: profileErr } = await serviceClient
         .from('profiles')
@@ -4350,28 +4391,45 @@ Deno.serve(async (request) => {
       const purposeAr = boundedString(payload.purpose_ar, 5000, 'purpose_ar');
       const processOwnerId = optionalCanonicalUuid(payload.process_owner_id, 'process_owner_id');
       const primaryPolicyVersionId = optionalCanonicalUuid(payload.primary_policy_version_id, 'primary_policy_version_id');
-      const governanceLinkState = boundedString(payload.governance_link_state, 100, 'governance_link_state');
+
+      let governanceLinkState = 'linked';
+      if (payload.governance_link_state !== undefined && payload.governance_link_state !== null) {
+        if (typeof payload.governance_link_state !== 'string') throw new Error('INVALID_GOVERNANCE_LINK_STATE');
+        const gls = payload.governance_link_state.trim();
+        if (!validGovernanceLinkStates.has(gls)) throw new Error('INVALID_GOVERNANCE_LINK_STATE');
+        governanceLinkState = gls;
+      }
+      if (governanceLinkState === 'linked' && !primaryPolicyVersionId) {
+        throw new Error('PATCH206_LINKED_STATE_REQUIRES_POLICY');
+      }
+      if (governanceLinkState === 'not_applicable' && primaryPolicyVersionId) {
+        throw new Error('PATCH206_NOT_APPLICABLE_FORBIDS_POLICY');
+      }
+
       const scopeEn = boundedString(payload.scope_en, 5000, 'scope_en');
       const scopeAr = boundedString(payload.scope_ar, 5000, 'scope_ar');
       const departmentId = optionalCanonicalUuid(payload.department_id, 'department_id');
 
       let criticalityLevel = 'medium';
       if (payload.criticality_level !== undefined && payload.criticality_level !== null) {
-        const c = String(payload.criticality_level).trim();
+        if (typeof payload.criticality_level !== 'string') throw new Error('INVALID_CRITICALITY_LEVEL');
+        const c = payload.criticality_level.trim();
         if (!validCriticalityLevels.has(c)) throw new Error('INVALID_CRITICALITY_LEVEL');
         criticalityLevel = c;
       }
 
       let confidentialityLevel = 'internal';
       if (payload.confidentiality_level !== undefined && payload.confidentiality_level !== null) {
-        const c = String(payload.confidentiality_level).trim();
+        if (typeof payload.confidentiality_level !== 'string') throw new Error('INVALID_CONFIDENTIALITY_LEVEL');
+        const c = payload.confidentiality_level.trim();
         if (!validConfidentialityLevels.has(c)) throw new Error('INVALID_CONFIDENTIALITY_LEVEL');
         confidentialityLevel = c;
       }
 
       let contentMode = 'structured';
       if (payload.content_mode !== undefined && payload.content_mode !== null) {
-        const cm = String(payload.content_mode).trim();
+        if (typeof payload.content_mode !== 'string') throw new Error('INVALID_CONTENT_MODE');
+        const cm = payload.content_mode.trim();
         if (!validContentModes.has(cm)) throw new Error('INVALID_CONTENT_MODE');
         contentMode = cm;
       }
@@ -4446,8 +4504,40 @@ Deno.serve(async (request) => {
 
   if (action === 'v14e1r_save_governed_sop_draft') {
     try {
-      const payload = asObject(requestBody.payload);
+      const payload = asPlainObject(requestBody.payload);
       assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set([
+        'version_id',
+        'title_en',
+        'title_ar',
+        'process_name_en',
+        'process_name_ar',
+        'purpose_en',
+        'purpose_ar',
+        'process_owner_id',
+        'primary_policy_version_id',
+        'governance_link_state',
+        'scope_en',
+        'scope_ar',
+        'content_mode',
+        'transcription_status',
+        'training_required',
+        'acknowledgment_required',
+        'competency_assessment_required',
+        'acknowledgment_sla_days',
+        'training_renewal_months',
+        'procedure_sections',
+        'procedure_steps',
+        'department_scopes',
+        'role_scopes',
+        'definitions',
+        'role_responsibilities',
+        'monitoring_kpis',
+        'risk_links',
+        'accreditation_links',
+        'version_links',
+      ]), 'SAVE_SOP_PAYLOAD');
+
       const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
 
       const titleEn = boundedString(payload.title_en, 500, 'title_en');
@@ -4458,20 +4548,36 @@ Deno.serve(async (request) => {
       const purposeAr = boundedString(payload.purpose_ar, 5000, 'purpose_ar');
       const processOwnerId = optionalCanonicalUuid(payload.process_owner_id, 'process_owner_id');
       const primaryPolicyVersionId = optionalCanonicalUuid(payload.primary_policy_version_id, 'primary_policy_version_id');
-      const governanceLinkState = boundedString(payload.governance_link_state, 100, 'governance_link_state');
+
+      let governanceLinkState: string | null = null;
+      if (payload.governance_link_state !== undefined && payload.governance_link_state !== null) {
+        if (typeof payload.governance_link_state !== 'string') throw new Error('INVALID_GOVERNANCE_LINK_STATE');
+        const gls = payload.governance_link_state.trim();
+        if (!validGovernanceLinkStates.has(gls)) throw new Error('INVALID_GOVERNANCE_LINK_STATE');
+        governanceLinkState = gls;
+      }
+      if (governanceLinkState === 'linked' && primaryPolicyVersionId === null && payload.primary_policy_version_id !== undefined) {
+        throw new Error('PATCH206_LINKED_STATE_REQUIRES_POLICY');
+      }
+      if (governanceLinkState === 'not_applicable' && primaryPolicyVersionId) {
+        throw new Error('PATCH206_NOT_APPLICABLE_FORBIDS_POLICY');
+      }
+
       const scopeEn = boundedString(payload.scope_en, 5000, 'scope_en');
       const scopeAr = boundedString(payload.scope_ar, 5000, 'scope_ar');
 
       let contentMode: string | null = null;
       if (payload.content_mode !== undefined && payload.content_mode !== null) {
-        const cm = String(payload.content_mode).trim();
+        if (typeof payload.content_mode !== 'string') throw new Error('INVALID_CONTENT_MODE');
+        const cm = payload.content_mode.trim();
         if (!validContentModes.has(cm)) throw new Error('INVALID_CONTENT_MODE');
         contentMode = cm;
       }
 
       let transcriptionStatus: string | null = null;
       if (payload.transcription_status !== undefined && payload.transcription_status !== null) {
-        const ts = String(payload.transcription_status).trim();
+        if (typeof payload.transcription_status !== 'string') throw new Error('INVALID_TRANSCRIPTION_STATUS');
+        const ts = payload.transcription_status.trim();
         if (!validTranscriptionStatuses.has(ts)) throw new Error('INVALID_TRANSCRIPTION_STATUS');
         transcriptionStatus = ts;
       }
@@ -4544,13 +4650,15 @@ Deno.serve(async (request) => {
 
   if (action === 'v14e1r_start_governed_document_revision') {
     try {
-      const payload = asObject(requestBody.payload);
+      const payload = asPlainObject(requestBody.payload);
       assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set(['source_version_id', 'revision_type', 'revision_reason']), 'START_REVISION_PAYLOAD');
       const sourceVersionId = requireCanonicalUuid(payload.source_version_id, 'source_version_id');
 
       let revisionType = 'minor';
       if (payload.revision_type !== undefined && payload.revision_type !== null) {
-        const rt = String(payload.revision_type).trim();
+        if (typeof payload.revision_type !== 'string') throw new Error('INVALID_REVISION_TYPE');
+        const rt = payload.revision_type.trim();
         if (!validRevisionTypes.has(rt)) throw new Error('INVALID_REVISION_TYPE');
         revisionType = rt;
       }
@@ -4581,8 +4689,9 @@ Deno.serve(async (request) => {
 
   if (action === 'v14e1r_submit_governed_document_for_review') {
     try {
-      const payload = asObject(requestBody.payload);
+      const payload = asPlainObject(requestBody.payload);
       assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set(['version_id', 'submission_note']), 'SUBMIT_REVIEW_PAYLOAD');
       const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
       const submissionNote = boundedString(payload.submission_note, 2000, 'submission_note');
 
@@ -4610,7 +4719,7 @@ Deno.serve(async (request) => {
 
   if (action === 'v14e1r_record_governed_document_approval_decision') {
     try {
-      const payload = asObject(requestBody.payload);
+      const payload = asPlainObject(requestBody.payload);
       assertNoIdentityOverrides(payload, [
         'actor_id', 'p_actor_id',
         'approver_id', 'p_approver_id',
@@ -4619,9 +4728,13 @@ Deno.serve(async (request) => {
         'organization_id', 'p_organization_id',
         'workflow_type', 'linked_item_type', 'linked_item_id',
       ]);
+      assertOnlyAllowedKeys(payload, new Set(['approval_request_id', 'decision', 'decision_note']), 'RECORD_DECISION_PAYLOAD');
 
       const approvalRequestId = requireCanonicalUuid(payload.approval_request_id, 'approval_request_id');
 
+      if (typeof payload.decision !== 'string') {
+        throw new Error('INVALID_DECISION');
+      }
       const rawDecision = boundedString(payload.decision, 50, 'decision', true)!;
       if (!validApprovalDecisions.has(rawDecision)) {
         throw new Error('INVALID_DECISION');
@@ -4724,8 +4837,9 @@ Deno.serve(async (request) => {
 
   if (action === 'v14e1r_finalize_governed_document_approval') {
     try {
-      const payload = asObject(requestBody.payload);
+      const payload = asPlainObject(requestBody.payload);
       assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set(['version_id', 'approval_note']), 'FINALIZE_APPROVAL_PAYLOAD');
       const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
       const approvalNote = boundedString(payload.approval_note, 2000, 'approval_note');
 

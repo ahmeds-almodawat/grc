@@ -3,6 +3,7 @@
  *
  * Provides strict validation, response proof validation, Edge Path-A preflight,
  * and safe error mapping for governed SOP and document control operations.
+ * Aligned with Migration 207 authoritative database contract.
  */
 
 export const canonicalUuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -37,16 +38,36 @@ export const validCriticalityLevels = new Set(['low', 'medium', 'high', 'critica
 export const validConfidentialityLevels = new Set(['public', 'internal', 'confidential', 'restricted']);
 export const validContentModes = new Set(['structured', 'legacy_controlled_document']);
 export const validTranscriptionStatuses = new Set([
-  'not_applicable',
+  'not_required',
   'pending',
-  'in_progress',
-  'transcribed',
-  'failed',
-  'verified',
+  'complete',
+]);
+export const validGovernanceLinkStates = new Set([
+  'linked',
+  'legacy_pending',
+  'not_applicable',
 ]);
 export const validRevisionTypes = new Set(['minor', 'major']);
 export const validApprovalDecisions = new Set(['approved', 'rejected', 'returned', 'abstained']);
 export const validRaciTypes = new Set(['R', 'A', 'C', 'I']);
+export const validRiskRelationshipTypes = new Set([
+  'mitigates',
+  'risk_if_not_followed',
+  'operational_context',
+]);
+export const validAccreditationLinkStrengths = new Set([
+  'primary',
+  'supporting',
+  'reference',
+  'gap',
+]);
+export const validVersionRelationshipTypes = new Set([
+  'implements_policy',
+  'references_sop',
+  'supersedes_version',
+  'supported_by_sop',
+  'related_governance',
+]);
 
 export function asPlainObject(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -156,6 +177,20 @@ export function assertNoIdentityOverrides(
   }
 }
 
+export function assertOnlyAllowedKeys(
+  obj: Record<string, unknown>,
+  allowedKeys: Set<string>,
+  entityName: string,
+  index?: number
+): void {
+  const prefix = index !== undefined ? `${entityName}_AT_${index}` : entityName;
+  for (const key of Object.keys(obj)) {
+    if (!allowedKeys.has(key)) {
+      throw new Error(`UNKNOWN_FIELD_${key.toUpperCase()}_IN_${prefix.toUpperCase()}`);
+    }
+  }
+}
+
 // ----------------------------------------------------------------------------
 // 1. Stage Configuration Validator
 // ----------------------------------------------------------------------------
@@ -168,6 +203,16 @@ export interface NormalizedStage {
   required_decision_count: number;
   allow_self_approval: boolean;
 }
+
+const allowedStageKeys = new Set([
+  'stage_key',
+  'stage_name_en',
+  'stage_name_ar',
+  'reviewer_user_id',
+  'reviewer_role',
+  'required_decision_count',
+  'allow_self_approval',
+]);
 
 export function validateStageConfigInput(payload: Record<string, unknown>): {
   authorityRuleId: string;
@@ -188,11 +233,13 @@ export function validateStageConfigInput(payload: Record<string, unknown>): {
   }
 
   const normalizedStages: NormalizedStage[] = [];
-  for (const stage of payload.stages) {
+  for (let idx = 0; idx < payload.stages.length; idx++) {
+    const stage = payload.stages[idx];
     if (!stage || typeof stage !== 'object' || Array.isArray(stage)) {
       throw new Error('PATCH206_INVALID_STAGE_STRUCTURE');
     }
     const s = stage as Record<string, unknown>;
+    assertOnlyAllowedKeys(s, allowedStageKeys, 'STAGE_CONFIG', idx);
 
     const stageKey = boundedString(s.stage_key, 50, 'stage_key', true)!;
     if (!/^[a-z][a-z0-9_]{1,49}$/.test(stageKey)) {
@@ -253,6 +300,16 @@ export function validateStageConfigInput(payload: Record<string, unknown>): {
 // ----------------------------------------------------------------------------
 // 2. Nested Collections SOP Validator (Sections, Steps, RACI, Links, etc.)
 // ----------------------------------------------------------------------------
+const allowedProcedureSectionKeys = new Set([
+  'id',
+  'client_key',
+  'sequence_number',
+  'title_en',
+  'title_ar',
+  'description_en',
+  'description_ar',
+]);
+
 export function validateProcedureSections(sections: unknown): Record<string, unknown>[] | null {
   if (sections === null || sections === undefined) return null;
   if (!Array.isArray(sections)) throw new Error('INVALID_PROCEDURE_SECTIONS_ARRAY');
@@ -263,14 +320,15 @@ export function validateProcedureSections(sections: unknown): Record<string, unk
       throw new Error(`INVALID_PROCEDURE_SECTION_OBJECT_AT_${idx}`);
     }
     const s = sec as Record<string, unknown>;
+    assertOnlyAllowedKeys(s, allowedProcedureSectionKeys, 'PROCEDURE_SECTION', idx);
+
     const id = optionalCanonicalUuid(s.id, `procedure_section_id_${idx}`);
     const clientKey = boundedString(s.client_key, 100, `section_client_key_${idx}`);
     if (clientKey && !/^[a-zA-Z0-9_-]{1,100}$/.test(clientKey)) {
       throw new Error(`INVALID_CLIENT_KEY_SYNTAX_SECTION_${idx}`);
     }
-    const sectionCode = boundedString(s.section_code, 50, `section_code_${idx}`);
-    const seqNum = optionalStrictInteger(s.sequence_number, `section_sequence_${idx}`, 1, 10000);
-    const titleEn = boundedString(s.title_en, 500, `section_title_en_${idx}`);
+    const seqNum = validateStrictInteger(s.sequence_number, `section_sequence_${idx}`, 1, 10000);
+    const titleEn = boundedString(s.title_en, 500, `section_title_en_${idx}`, true)!;
     const titleAr = boundedString(s.title_ar, 500, `section_title_ar_${idx}`);
     const descEn = boundedString(s.description_en, 5000, `section_description_en_${idx}`);
     const descAr = boundedString(s.description_ar, 5000, `section_description_ar_${idx}`);
@@ -278,15 +336,46 @@ export function validateProcedureSections(sections: unknown): Record<string, unk
     return {
       ...(id ? { id } : {}),
       ...(clientKey ? { client_key: clientKey } : {}),
-      ...(sectionCode ? { section_code: sectionCode } : {}),
-      ...(seqNum !== null ? { sequence_number: seqNum } : {}),
-      ...(titleEn ? { title_en: titleEn } : {}),
+      sequence_number: seqNum,
+      title_en: titleEn,
       ...(titleAr ? { title_ar: titleAr } : {}),
       ...(descEn ? { description_en: descEn } : {}),
       ...(descAr ? { description_ar: descAr } : {}),
     };
   });
 }
+
+const allowedRaciAssignmentKeys = new Set([
+  'raci_type',
+  'role_name',
+  'role_label_ar',
+  'job_title',
+  'sequence_number',
+]);
+
+const allowedProcedureStepKeys = new Set([
+  'id',
+  'client_key',
+  'section_id',
+  'section_client_key',
+  'sequence_number',
+  'responsible_role',
+  'action_instruction_en',
+  'action_instruction_ar',
+  'required_control_id',
+  'expected_evidence_record_en',
+  'expected_evidence_record_ar',
+  'timing_sla_en',
+  'timing_sla_ar',
+  'is_decision_point',
+  'decision_criteria_en',
+  'decision_criteria_ar',
+  'criticality',
+  'escalation_trigger_en',
+  'escalation_trigger_ar',
+  'escalation_destination_role',
+  'raci_assignments',
+]);
 
 export function validateProcedureSteps(steps: unknown): Record<string, unknown>[] | null {
   if (steps === null || steps === undefined) return null;
@@ -298,6 +387,8 @@ export function validateProcedureSteps(steps: unknown): Record<string, unknown>[
       throw new Error(`INVALID_PROCEDURE_STEP_OBJECT_AT_${idx}`);
     }
     const st = step as Record<string, unknown>;
+    assertOnlyAllowedKeys(st, allowedProcedureStepKeys, 'PROCEDURE_STEP', idx);
+
     const id = optionalCanonicalUuid(st.id, `procedure_step_id_${idx}`);
     const clientKey = boundedString(st.client_key, 100, `step_client_key_${idx}`);
     if (clientKey && !/^[a-zA-Z0-9_-]{1,100}$/.test(clientKey)) {
@@ -308,14 +399,34 @@ export function validateProcedureSteps(steps: unknown): Record<string, unknown>[
     if (sectionClientKey && !/^[a-zA-Z0-9_-]{1,100}$/.test(sectionClientKey)) {
       throw new Error(`INVALID_CLIENT_KEY_SYNTAX_STEP_SECTION_${idx}`);
     }
-    const seqNum = optionalStrictInteger(st.sequence_number, `step_sequence_${idx}`, 1, 10000);
-    const stepNumber = boundedString(st.step_number, 50, `step_number_${idx}`);
-    const titleEn = boundedString(st.title_en, 500, `step_title_en_${idx}`);
-    const titleAr = boundedString(st.title_ar, 500, `step_title_ar_${idx}`);
-    const instructionEn = boundedString(st.instruction_en, 10000, `step_instruction_en_${idx}`);
-    const instructionAr = boundedString(st.instruction_ar, 10000, `step_instruction_ar_${idx}`);
-    const policyRef = boundedString(st.policy_reference, 255, `step_policy_reference_${idx}`);
-    const criticalityFlag = optionalStrictBoolean(st.criticality_flag, `step_criticality_flag_${idx}`);
+    const seqNum = validateStrictInteger(st.sequence_number, `step_sequence_${idx}`, 1, 10000);
+    const responsibleRole = boundedString(st.responsible_role, 100, `step_responsible_role_${idx}`);
+    const actionInstructionEn = boundedString(st.action_instruction_en, 10000, `step_action_instruction_en_${idx}`, true)!;
+    const actionInstructionAr = boundedString(st.action_instruction_ar, 10000, `step_action_instruction_ar_${idx}`);
+    const requiredControlId = optionalCanonicalUuid(st.required_control_id, `step_required_control_id_${idx}`);
+    const expectedEvidenceRecordEn = boundedString(st.expected_evidence_record_en, 5000, `step_expected_evidence_record_en_${idx}`);
+    const expectedEvidenceRecordAr = boundedString(st.expected_evidence_record_ar, 5000, `step_expected_evidence_record_ar_${idx}`);
+    const timingSlaEn = boundedString(st.timing_sla_en, 255, `step_timing_sla_en_${idx}`);
+    const timingSlaAr = boundedString(st.timing_sla_ar, 255, `step_timing_sla_ar_${idx}`);
+    const isDecisionPoint = validateStrictBoolean(st.is_decision_point, `step_is_decision_point_${idx}`, false);
+    const decisionCriteriaEn = boundedString(st.decision_criteria_en, 5000, `step_decision_criteria_en_${idx}`);
+    const decisionCriteriaAr = boundedString(st.decision_criteria_ar, 5000, `step_decision_criteria_ar_${idx}`);
+
+    let criticality = 'medium';
+    if (st.criticality !== undefined && st.criticality !== null) {
+      if (typeof st.criticality !== 'string') {
+        throw new Error('INVALID_CRITICALITY_LEVEL');
+      }
+      const c = st.criticality.trim();
+      if (!validCriticalityLevels.has(c)) {
+        throw new Error('INVALID_CRITICALITY_LEVEL');
+      }
+      criticality = c;
+    }
+
+    const escalationTriggerEn = boundedString(st.escalation_trigger_en, 5000, `step_escalation_trigger_en_${idx}`);
+    const escalationTriggerAr = boundedString(st.escalation_trigger_ar, 5000, `step_escalation_trigger_ar_${idx}`);
+    const escalationDestRole = boundedString(st.escalation_destination_role, 100, `step_escalation_destination_role_${idx}`);
 
     let raciAssignments: Record<string, unknown>[] | null = null;
     if (st.raci_assignments !== undefined && st.raci_assignments !== null) {
@@ -330,6 +441,11 @@ export function validateProcedureSteps(steps: unknown): Record<string, unknown>[
           throw new Error(`INVALID_RACI_OBJECT_AT_STEP_${idx}_RACI_${rIdx}`);
         }
         const r = raci as Record<string, unknown>;
+        assertOnlyAllowedKeys(r, allowedRaciAssignmentKeys, `STEP_${idx}_RACI`, rIdx);
+
+        if (typeof r.raci_type !== 'string') {
+          throw new Error('PATCH206_INVALID_RACI_TYPE');
+        }
         const raciType = boundedString(r.raci_type, 1, `raci_type_${idx}_${rIdx}`, true)!.toUpperCase();
         if (!validRaciTypes.has(raciType)) {
           throw new Error('PATCH206_INVALID_RACI_TYPE');
@@ -354,14 +470,22 @@ export function validateProcedureSteps(steps: unknown): Record<string, unknown>[
       ...(clientKey ? { client_key: clientKey } : {}),
       ...(sectionId ? { section_id: sectionId } : {}),
       ...(sectionClientKey ? { section_client_key: sectionClientKey } : {}),
-      ...(seqNum !== null ? { sequence_number: seqNum } : {}),
-      ...(stepNumber ? { step_number: stepNumber } : {}),
-      ...(titleEn ? { title_en: titleEn } : {}),
-      ...(titleAr ? { title_ar: titleAr } : {}),
-      ...(instructionEn ? { instruction_en: instructionEn } : {}),
-      ...(instructionAr ? { instruction_ar: instructionAr } : {}),
-      ...(policyRef ? { policy_reference: policyRef } : {}),
-      ...(criticalityFlag !== null ? { criticality_flag: criticalityFlag } : {}),
+      sequence_number: seqNum,
+      ...(responsibleRole ? { responsible_role: responsibleRole } : {}),
+      action_instruction_en: actionInstructionEn,
+      ...(actionInstructionAr ? { action_instruction_ar: actionInstructionAr } : {}),
+      ...(requiredControlId ? { required_control_id: requiredControlId } : {}),
+      ...(expectedEvidenceRecordEn ? { expected_evidence_record_en: expectedEvidenceRecordEn } : {}),
+      ...(expectedEvidenceRecordAr ? { expected_evidence_record_ar: expectedEvidenceRecordAr } : {}),
+      ...(timingSlaEn ? { timing_sla_en: timingSlaEn } : {}),
+      ...(timingSlaAr ? { timing_sla_ar: timingSlaAr } : {}),
+      is_decision_point: isDecisionPoint,
+      ...(decisionCriteriaEn ? { decision_criteria_en: decisionCriteriaEn } : {}),
+      ...(decisionCriteriaAr ? { decision_criteria_ar: decisionCriteriaAr } : {}),
+      criticality,
+      ...(escalationTriggerEn ? { escalation_trigger_en: escalationTriggerEn } : {}),
+      ...(escalationTriggerAr ? { escalation_trigger_ar: escalationTriggerAr } : {}),
+      ...(escalationDestRole ? { escalation_destination_role: escalationDestRole } : {}),
       ...(raciAssignments ? { raci_assignments: raciAssignments } : {}),
     };
   });
@@ -374,6 +498,8 @@ export function validateDepartmentScopes(scopes: unknown): string[] | null {
   return scopes.map((d, idx) => requireCanonicalUuid(d, `department_scope_${idx}`));
 }
 
+const allowedRoleScopeKeys = new Set(['role_name', 'job_title']);
+
 export function validateRoleScopes(roles: unknown): Record<string, unknown>[] | null {
   if (roles === null || roles === undefined) return null;
   if (!Array.isArray(roles)) throw new Error('INVALID_ROLE_SCOPES_ARRAY');
@@ -381,16 +507,31 @@ export function validateRoleScopes(roles: unknown): Record<string, unknown>[] | 
   return roles.map((r, idx) => {
     if (!r || typeof r !== 'object' || Array.isArray(r)) throw new Error(`INVALID_ROLE_SCOPE_OBJECT_AT_${idx}`);
     const obj = r as Record<string, unknown>;
-    const roleName = boundedString(obj.role_name, 100, `role_scope_name_${idx}`, true)!;
-    const roleLabelAr = boundedString(obj.role_label_ar, 100, `role_scope_label_ar_${idx}`);
-    const isMandatory = validateStrictBoolean(obj.is_mandatory, `role_scope_is_mandatory_${idx}`, true);
+    assertOnlyAllowedKeys(obj, allowedRoleScopeKeys, 'ROLE_SCOPE', idx);
+
+    const roleName = boundedString(obj.role_name, 100, `role_scope_name_${idx}`);
+    const jobTitle = boundedString(obj.job_title, 150, `role_scope_job_title_${idx}`);
+
+    if (!roleName && !jobTitle) {
+      throw new Error(`PATCH206_ROLE_SCOPE_REQUIRES_ROLE_OR_TITLE_AT_${idx}`);
+    }
+
     return {
-      role_name: roleName,
-      ...(roleLabelAr ? { role_label_ar: roleLabelAr } : {}),
-      is_mandatory: isMandatory,
+      ...(roleName ? { role_name: roleName } : {}),
+      ...(jobTitle ? { job_title: jobTitle } : {}),
     };
   });
 }
+
+const allowedDefinitionKeys = new Set([
+  'id',
+  'term_en',
+  'term_ar',
+  'abbreviation',
+  'definition_en',
+  'definition_ar',
+  'sequence_number',
+]);
 
 export function validateDefinitions(definitions: unknown): Record<string, unknown>[] | null {
   if (definitions === null || definitions === undefined) return null;
@@ -399,24 +540,42 @@ export function validateDefinitions(definitions: unknown): Record<string, unknow
   return definitions.map((def, idx) => {
     if (!def || typeof def !== 'object' || Array.isArray(def)) throw new Error(`INVALID_DEFINITION_OBJECT_AT_${idx}`);
     const d = def as Record<string, unknown>;
+    assertOnlyAllowedKeys(d, allowedDefinitionKeys, 'DEFINITION', idx);
+
     const id = optionalCanonicalUuid(d.id, `definition_id_${idx}`);
-    const termEn = boundedString(d.term_en, 255, `definition_term_en_${idx}`, true)!;
+    const termEn = boundedString(d.term_en, 255, `definition_term_en_${idx}`);
     const termAr = boundedString(d.term_ar, 255, `definition_term_ar_${idx}`);
+    const abbrev = boundedString(d.abbreviation, 50, `definition_abbreviation_${idx}`);
     const defEn = boundedString(d.definition_en, 5000, `definition_def_en_${idx}`, true)!;
     const defAr = boundedString(d.definition_ar, 5000, `definition_def_ar_${idx}`);
-    const abbrev = boundedString(d.abbreviation ?? d.acronym, 50, `definition_abbreviation_${idx}`);
     const seq = optionalStrictInteger(d.sequence_number, `definition_seq_${idx}`, 1, 10000);
+
+    if (!termEn && !termAr && !abbrev) {
+      throw new Error(`PATCH206_DEFINITION_REQUIRES_TERM_OR_ABBREVIATION_AT_${idx}`);
+    }
+
     return {
       ...(id ? { id } : {}),
-      term_en: termEn,
+      ...(termEn ? { term_en: termEn } : {}),
       ...(termAr ? { term_ar: termAr } : {}),
+      ...(abbrev ? { abbreviation: abbrev } : {}),
       definition_en: defEn,
       ...(defAr ? { definition_ar: defAr } : {}),
-      ...(abbrev ? { abbreviation: abbrev } : {}),
       ...(seq !== null ? { sequence_number: seq } : {}),
     };
   });
 }
+
+const allowedRoleResponsibilityKeys = new Set([
+  'id',
+  'sequence_number',
+  'role_name',
+  'job_title',
+  'responsibility_en',
+  'responsibility_ar',
+  'accountable_for_en',
+  'accountable_for_ar',
+]);
 
 export function validateRoleResponsibilities(responsibilities: unknown): Record<string, unknown>[] | null {
   if (responsibilities === null || responsibilities === undefined) return null;
@@ -425,24 +584,46 @@ export function validateRoleResponsibilities(responsibilities: unknown): Record<
   return responsibilities.map((resp, idx) => {
     if (!resp || typeof resp !== 'object' || Array.isArray(resp)) throw new Error(`INVALID_RESPONSIBILITY_OBJECT_AT_${idx}`);
     const r = resp as Record<string, unknown>;
+    assertOnlyAllowedKeys(r, allowedRoleResponsibilityKeys, 'ROLE_RESPONSIBILITY', idx);
+
     const id = optionalCanonicalUuid(r.id, `responsibility_id_${idx}`);
-    const roleName = boundedString(r.role_name, 100, `responsibility_role_name_${idx}`, true)!;
-    const roleLabelAr = boundedString(r.role_label_ar, 100, `responsibility_role_label_ar_${idx}`);
+    const roleName = boundedString(r.role_name, 100, `responsibility_role_name_${idx}`);
     const jobTitle = boundedString(r.job_title, 150, `responsibility_job_title_${idx}`);
+
+    if (!roleName && !jobTitle) {
+      throw new Error(`PATCH206_RESPONSIBILITY_REQUIRES_ROLE_OR_TITLE_AT_${idx}`);
+    }
+
     const respEn = boundedString(r.responsibility_en, 5000, `responsibility_resp_en_${idx}`, true)!;
     const respAr = boundedString(r.responsibility_ar, 5000, `responsibility_resp_ar_${idx}`);
+    const accEn = boundedString(r.accountable_for_en, 5000, `responsibility_acc_en_${idx}`);
+    const accAr = boundedString(r.accountable_for_ar, 5000, `responsibility_acc_ar_${idx}`);
     const seq = optionalStrictInteger(r.sequence_number, `responsibility_seq_${idx}`, 1, 10000);
+
     return {
       ...(id ? { id } : {}),
-      role_name: roleName,
-      ...(roleLabelAr ? { role_label_ar: roleLabelAr } : {}),
+      ...(roleName ? { role_name: roleName } : {}),
       ...(jobTitle ? { job_title: jobTitle } : {}),
       responsibility_en: respEn,
       ...(respAr ? { responsibility_ar: respAr } : {}),
+      ...(accEn ? { accountable_for_en: accEn } : {}),
+      ...(accAr ? { accountable_for_ar: accAr } : {}),
       ...(seq !== null ? { sequence_number: seq } : {}),
     };
   });
 }
+
+const allowedMonitoringKpiKeys = new Set([
+  'id',
+  'sequence_number',
+  'kpi_name_en',
+  'kpi_name_ar',
+  'target_value',
+  'measurement_frequency',
+  'owner_id',
+  'description_en',
+  'description_ar',
+]);
 
 export function validateMonitoringKpis(kpis: unknown): Record<string, unknown>[] | null {
   if (kpis === null || kpis === undefined) return null;
@@ -451,24 +632,40 @@ export function validateMonitoringKpis(kpis: unknown): Record<string, unknown>[]
   return kpis.map((kpi, idx) => {
     if (!kpi || typeof kpi !== 'object' || Array.isArray(kpi)) throw new Error(`INVALID_KPI_OBJECT_AT_${idx}`);
     const k = kpi as Record<string, unknown>;
+    assertOnlyAllowedKeys(k, allowedMonitoringKpiKeys, 'MONITORING_KPI', idx);
+
     const id = optionalCanonicalUuid(k.id, `kpi_id_${idx}`);
     const kpiNameEn = boundedString(k.kpi_name_en, 255, `kpi_name_en_${idx}`, true)!;
     const kpiNameAr = boundedString(k.kpi_name_ar, 255, `kpi_name_ar_${idx}`);
-    const metricDesc = boundedString(k.metric_description, 2000, `kpi_metric_desc_${idx}`);
-    const targetThreshold = boundedString(k.target_threshold, 100, `kpi_target_threshold_${idx}`);
+    const targetValue = boundedString(k.target_value, 255, `kpi_target_value_${idx}`, true)!;
     const freq = boundedString(k.measurement_frequency, 50, `kpi_measurement_freq_${idx}`);
+    const ownerId = optionalCanonicalUuid(k.owner_id, `kpi_owner_id_${idx}`);
+    const descEn = boundedString(k.description_en, 5000, `kpi_description_en_${idx}`);
+    const descAr = boundedString(k.description_ar, 5000, `kpi_description_ar_${idx}`);
     const seq = optionalStrictInteger(k.sequence_number, `kpi_seq_${idx}`, 1, 10000);
+
     return {
       ...(id ? { id } : {}),
       kpi_name_en: kpiNameEn,
       ...(kpiNameAr ? { kpi_name_ar: kpiNameAr } : {}),
-      ...(metricDesc ? { metric_description: metricDesc } : {}),
-      ...(targetThreshold ? { target_threshold: targetThreshold } : {}),
+      target_value: targetValue,
       ...(freq ? { measurement_frequency: freq } : {}),
+      ...(ownerId ? { owner_id: ownerId } : {}),
+      ...(descEn ? { description_en: descEn } : {}),
+      ...(descAr ? { description_ar: descAr } : {}),
       ...(seq !== null ? { sequence_number: seq } : {}),
     };
   });
 }
+
+const allowedRiskLinkKeys = new Set([
+  'id',
+  'risk_id',
+  'relationship_type',
+  'context_note_en',
+  'context_note_ar',
+  'sequence_number',
+]);
 
 export function validateRiskLinks(links: unknown): Record<string, unknown>[] | null {
   if (links === null || links === undefined) return null;
@@ -477,20 +674,44 @@ export function validateRiskLinks(links: unknown): Record<string, unknown>[] | n
   return links.map((link, idx) => {
     if (!link || typeof link !== 'object' || Array.isArray(link)) throw new Error(`INVALID_RISK_LINK_OBJECT_AT_${idx}`);
     const l = link as Record<string, unknown>;
+    assertOnlyAllowedKeys(l, allowedRiskLinkKeys, 'RISK_LINK', idx);
+
     const id = optionalCanonicalUuid(l.id, `risk_link_id_${idx}`);
     const riskId = requireCanonicalUuid(l.risk_id, `risk_link_risk_id_${idx}`);
-    const mitigationType = boundedString(l.mitigation_type, 50, `risk_link_mitigation_type_${idx}`);
-    const notes = boundedString(l.notes, 2000, `risk_link_notes_${idx}`);
+
+    let relType = 'mitigates';
+    if (l.relationship_type !== undefined && l.relationship_type !== null) {
+      if (typeof l.relationship_type !== 'string') throw new Error('PATCH206_INVALID_RISK_RELATIONSHIP_TYPE');
+      const rt = l.relationship_type.trim();
+      if (!validRiskRelationshipTypes.has(rt)) {
+        throw new Error('PATCH206_INVALID_RISK_RELATIONSHIP_TYPE');
+      }
+      relType = rt;
+    }
+
+    const contextNoteEn = boundedString(l.context_note_en, 5000, `risk_link_context_note_en_${idx}`);
+    const contextNoteAr = boundedString(l.context_note_ar, 5000, `risk_link_context_note_ar_${idx}`);
     const seq = optionalStrictInteger(l.sequence_number, `risk_link_seq_${idx}`, 1, 10000);
+
     return {
       ...(id ? { id } : {}),
       risk_id: riskId,
-      ...(mitigationType ? { mitigation_type: mitigationType } : {}),
-      ...(notes ? { notes } : {}),
+      relationship_type: relType,
+      ...(contextNoteEn ? { context_note_en: contextNoteEn } : {}),
+      ...(contextNoteAr ? { context_note_ar: contextNoteAr } : {}),
       ...(seq !== null ? { sequence_number: seq } : {}),
     };
   });
 }
+
+const allowedAccreditationLinkKeys = new Set([
+  'id',
+  'clause_id',
+  'link_strength',
+  'context_note_en',
+  'context_note_ar',
+  'sequence_number',
+]);
 
 export function validateAccreditationLinks(links: unknown): Record<string, unknown>[] | null {
   if (links === null || links === undefined) return null;
@@ -499,20 +720,44 @@ export function validateAccreditationLinks(links: unknown): Record<string, unkno
   return links.map((link, idx) => {
     if (!link || typeof link !== 'object' || Array.isArray(link)) throw new Error(`INVALID_ACCREDITATION_LINK_OBJECT_AT_${idx}`);
     const l = link as Record<string, unknown>;
+    assertOnlyAllowedKeys(l, allowedAccreditationLinkKeys, 'ACCREDITATION_LINK', idx);
+
     const id = optionalCanonicalUuid(l.id, `accreditation_link_id_${idx}`);
-    const reqId = requireCanonicalUuid(l.requirement_id, `accreditation_link_req_id_${idx}`);
-    const complianceType = boundedString(l.compliance_type, 50, `accreditation_compliance_type_${idx}`);
-    const notes = boundedString(l.notes, 2000, `accreditation_notes_${idx}`);
+    const clauseId = requireCanonicalUuid(l.clause_id, `accreditation_link_clause_id_${idx}`);
+
+    let linkStrength = 'primary';
+    if (l.link_strength !== undefined && l.link_strength !== null) {
+      if (typeof l.link_strength !== 'string') throw new Error('PATCH206_INVALID_ACCREDITATION_LINK_STRENGTH');
+      const ls = l.link_strength.trim();
+      if (!validAccreditationLinkStrengths.has(ls)) {
+        throw new Error('PATCH206_INVALID_ACCREDITATION_LINK_STRENGTH');
+      }
+      linkStrength = ls;
+    }
+
+    const contextNoteEn = boundedString(l.context_note_en, 5000, `accreditation_context_note_en_${idx}`);
+    const contextNoteAr = boundedString(l.context_note_ar, 5000, `accreditation_context_note_ar_${idx}`);
     const seq = optionalStrictInteger(l.sequence_number, `accreditation_seq_${idx}`, 1, 10000);
+
     return {
       ...(id ? { id } : {}),
-      requirement_id: reqId,
-      ...(complianceType ? { compliance_type: complianceType } : {}),
-      ...(notes ? { notes } : {}),
+      clause_id: clauseId,
+      link_strength: linkStrength,
+      ...(contextNoteEn ? { context_note_en: contextNoteEn } : {}),
+      ...(contextNoteAr ? { context_note_ar: contextNoteAr } : {}),
       ...(seq !== null ? { sequence_number: seq } : {}),
     };
   });
 }
+
+const allowedVersionLinkKeys = new Set([
+  'id',
+  'target_version_id',
+  'relationship_type',
+  'context_note_en',
+  'context_note_ar',
+  'sequence_number',
+]);
 
 export function validateVersionLinks(links: unknown): Record<string, unknown>[] | null {
   if (links === null || links === undefined) return null;
@@ -521,15 +766,32 @@ export function validateVersionLinks(links: unknown): Record<string, unknown>[] 
   return links.map((link, idx) => {
     if (!link || typeof link !== 'object' || Array.isArray(link)) throw new Error(`INVALID_VERSION_LINK_OBJECT_AT_${idx}`);
     const l = link as Record<string, unknown>;
+    assertOnlyAllowedKeys(l, allowedVersionLinkKeys, 'VERSION_LINK', idx);
+
     const id = optionalCanonicalUuid(l.id, `version_link_id_${idx}`);
     const targetVerId = requireCanonicalUuid(l.target_version_id, `version_link_target_ver_id_${idx}`);
-    const relType = boundedString(l.relationship_type, 50, `version_link_rel_type_${idx}`);
-    const notes = boundedString(l.notes, 2000, `version_link_notes_${idx}`);
+
+    let relType = 'related_governance';
+    if (l.relationship_type !== undefined && l.relationship_type !== null) {
+      if (typeof l.relationship_type !== 'string') throw new Error('PATCH206_INVALID_VERSION_RELATIONSHIP_TYPE');
+      const rt = l.relationship_type.trim();
+      if (!validVersionRelationshipTypes.has(rt)) {
+        throw new Error('PATCH206_INVALID_VERSION_RELATIONSHIP_TYPE');
+      }
+      relType = rt;
+    }
+
+    const contextNoteEn = boundedString(l.context_note_en, 5000, `version_link_context_note_en_${idx}`);
+    const contextNoteAr = boundedString(l.context_note_ar, 5000, `version_link_context_note_ar_${idx}`);
+    const seq = optionalStrictInteger(l.sequence_number, `version_link_seq_${idx}`, 1, 10000);
+
     return {
       ...(id ? { id } : {}),
       target_version_id: targetVerId,
-      ...(relType ? { relationship_type: relType } : {}),
-      ...(notes ? { notes } : {}),
+      relationship_type: relType,
+      ...(contextNoteEn ? { context_note_en: contextNoteEn } : {}),
+      ...(contextNoteAr ? { context_note_ar: contextNoteAr } : {}),
+      ...(seq !== null ? { sequence_number: seq } : {}),
     };
   });
 }
@@ -717,7 +979,7 @@ export function mapV14e1rDatabaseError(action: string, error: unknown): SafeErro
   const row = asPlainObject(error);
   const rawMessage = String(row.message ?? row.details ?? error ?? '');
   const knownMatch = rawMessage.match(
-    /(PATCH\w+|INVALID_UUID_\w+|PROHIBITED_IDENTITY_OVERRIDE_\w+|REQUIRED_\w+|MAX_LENGTH_EXCEEDED_\w+|MAX_COUNT_EXCEEDED_\w+|INVALID_INTEGER_\w+|INVALID_BOOLEAN_\w+|INVALID_STRING_\w+|INVALID_CRITICALITY_LEVEL|INVALID_CONFIDENTIALITY_LEVEL|INVALID_CONTENT_MODE|INVALID_TRANSCRIPTION_STATUS|INVALID_DECISION|INVALID_REVISION_TYPE|PAYLOAD_BYTE_BOUND_EXCEEDED)/
+    /(PATCH\w+|UNKNOWN_FIELD_\w+|INVALID_UUID_\w+|PROHIBITED_IDENTITY_OVERRIDE_\w+|REQUIRED_\w+|MAX_LENGTH_EXCEEDED_\w+|MAX_COUNT_EXCEEDED_\w+|INVALID_INTEGER_\w+|INVALID_BOOLEAN_\w+|INVALID_STRING_\w+|INVALID_CRITICALITY_LEVEL|INVALID_CONFIDENTIALITY_LEVEL|INVALID_CONTENT_MODE|INVALID_TRANSCRIPTION_STATUS|INVALID_GOVERNANCE_LINK_STATE|INVALID_DECISION|INVALID_REVISION_TYPE|PAYLOAD_BYTE_BOUND_EXCEEDED)/
   );
   const code = knownMatch ? knownMatch[1] : 'E1R2_OPERATION_FAILED';
 
@@ -739,7 +1001,7 @@ export function mapV14e1rDatabaseError(action: string, error: unknown): SafeErro
     status = 404;
     safeDetail = 'The requested governed document resource was not found.';
   } else if (
-    /PATCH206_EMPTY_STAGE_CONFIGURATION|PATCH206_INVALID_STAGE_AUTH_SELECTOR|PATCH206_INVALID_STAGE_REVIEWER_ROLE|PATCH206_INVALID_STAGE_REVIEWER_USER|PATCH206_INSUFFICIENT_STAGE_REVIEWERS|PATCH206_USER_STAGE_REQUIRES_COUNT_ONE|PATCH206_INVALID_STAGE_KEY_SYNTAX|PATCH206_INVALID_REQUIRED_DECISION_COUNT|PATCH206_INVALID_STAGE_STRUCTURE|PATCH206_SOP_STEP_RACI_INCOMPLETE|PATCH206_INVALID_RACI_TYPE|PATCH206_UNRESOLVED_SECTION_KEY|PATCH206_INVALID_WORKFLOW_TYPE|INVALID_UUID|PROHIBITED_IDENTITY_OVERRIDE|REQUIRED_|MAX_LENGTH_EXCEEDED|MAX_COUNT_EXCEEDED|INVALID_INTEGER_|INVALID_BOOLEAN_|INVALID_STRING_|INVALID_PROCEDURE_|INVALID_RACI_|INVALID_CLIENT_KEY_|INVALID_CRITICALITY|INVALID_CONFIDENTIALITY|INVALID_CONTENT_MODE|INVALID_TRANSCRIPTION_STATUS|INVALID_DECISION|INVALID_REVISION_TYPE|PAYLOAD_BYTE_BOUND_EXCEEDED/i.test(
+    /PATCH206_EMPTY_STAGE_CONFIGURATION|PATCH206_INVALID_STAGE_AUTH_SELECTOR|PATCH206_INVALID_STAGE_REVIEWER_ROLE|PATCH206_INVALID_STAGE_REVIEWER_USER|PATCH206_INSUFFICIENT_STAGE_REVIEWERS|PATCH206_USER_STAGE_REQUIRES_COUNT_ONE|PATCH206_INVALID_STAGE_KEY_SYNTAX|PATCH206_INVALID_REQUIRED_DECISION_COUNT|PATCH206_INVALID_STAGE_STRUCTURE|PATCH206_SOP_STEP_RACI_INCOMPLETE|PATCH206_INVALID_RACI_TYPE|PATCH206_UNRESOLVED_SECTION_KEY|PATCH206_INVALID_WORKFLOW_TYPE|PATCH206_ROLE_SCOPE_REQUIRES_ROLE_OR_TITLE|PATCH206_DEFINITION_REQUIRES_TERM_OR_ABBREVIATION|PATCH206_RESPONSIBILITY_REQUIRES_ROLE_OR_TITLE|PATCH206_INVALID_RISK_RELATIONSHIP_TYPE|PATCH206_INVALID_ACCREDITATION_LINK_STRENGTH|PATCH206_INVALID_VERSION_RELATIONSHIP_TYPE|PATCH206_LINKED_STATE_REQUIRES_POLICY|PATCH206_NOT_APPLICABLE_FORBIDS_POLICY|UNKNOWN_FIELD_|INVALID_UUID|PROHIBITED_IDENTITY_OVERRIDE|REQUIRED_|MAX_LENGTH_EXCEEDED|MAX_COUNT_EXCEEDED|INVALID_INTEGER_|INVALID_BOOLEAN_|INVALID_STRING_|INVALID_PROCEDURE_|INVALID_RACI_|INVALID_CLIENT_KEY_|INVALID_CRITICALITY|INVALID_CONFIDENTIALITY|INVALID_CONTENT_MODE|INVALID_TRANSCRIPTION_STATUS|INVALID_GOVERNANCE_LINK_STATE|INVALID_DECISION|INVALID_REVISION_TYPE|PAYLOAD_BYTE_BOUND_EXCEEDED/i.test(
       code
     )
   ) {
