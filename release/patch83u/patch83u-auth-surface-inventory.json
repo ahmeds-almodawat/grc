@@ -23,10 +23,10 @@
     "views_without_explicit_migration_grant_count": 193,
     "retained_live_broad_security_definer_count": 2,
     "target_broad_security_definer_count": 4,
-    "reviewed_restricted_security_definer_count": 90,
+    "reviewed_restricted_security_definer_count": 94,
     "acl_reachable_materialized_view_count": 0,
     "legacy_browser_base_table_hardening_count": 29,
-    "reviewed_patch83u_migration_ceiling": 207
+    "reviewed_patch83u_migration_ceiling": 208
   },
   "search_grc_global": {
     "disposition": "authenticated_edge_bridge_with_caller_jwt_rls",
@@ -23033,7 +23033,7 @@
         "allowed_purpose": null
       },
       {
-        "source": "target_migrations_171_207",
+        "source": "target_migrations_171_208",
         "schema": "public",
         "name": "patch83u_credential_access_allowed",
         "signature": "public.patch83u_credential_access_allowed()",
@@ -23052,7 +23052,7 @@
         "allowed_purpose": "Credential version, state, email, and session freshness decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_207",
+        "source": "target_migrations_171_208",
         "schema": "public",
         "name": "patch83u_profile_update_allowed",
         "signature": "public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)",
@@ -23071,7 +23071,7 @@
         "allowed_purpose": "Same-organization credential-active profile update decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_207",
+        "source": "target_migrations_171_208",
         "schema": "public",
         "name": "patch83u_user_role_mutation_allowed",
         "signature": "public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)",
@@ -23167,6 +23167,26 @@
         ]
       },
       {
+        "source": "migration208_service_role_acl_review",
+        "schema": "public",
+        "name": "cancel_training_assignment_with_reason",
+        "signature": "public.cancel_training_assignment_with_reason(p_assignment_id uuid, p_reason text, p_actor_id uuid)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+        "definition_line": 755,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:634 revoke execute public, anon, authenticated",
+          "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:635 grant execute service_role",
+          "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:864 revoke execute public, anon, authenticated",
+          "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:865 grant execute service_role"
+        ]
+      },
+      {
         "source": "migration202_service_role_acl_review",
         "schema": "public",
         "name": "complete_governed_document_review",
@@ -23185,7 +23205,7 @@
         ]
       },
       {
-        "source": "migration205_service_role_acl_review",
+        "source": "migration208_service_role_acl_review",
         "schema": "public",
         "name": "complete_training_assignment",
         "signature": "public.complete_training_assignment(p_assignment_id uuid, p_evidence_id uuid, p_actor_id uuid)",
@@ -23194,14 +23214,16 @@
         "authenticated_execute": false,
         "service_role_execute": true,
         "disposition": "service_role_only",
-        "definition_file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
-        "definition_line": 1053,
+        "definition_file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+        "definition_line": 393,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:517 revoke execute public, anon, authenticated",
           "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:518 grant execute service_role",
           "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1122 revoke execute public, anon, authenticated",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1123 grant execute service_role"
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1123 grant execute service_role",
+          "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:511 revoke execute public, anon, authenticated",
+          "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:512 grant execute service_role"
         ]
       },
       {
@@ -24393,7 +24415,7 @@
         ]
       },
       {
-        "source": "migration205_service_role_acl_review",
+        "source": "migration208_service_role_acl_review",
         "schema": "public",
         "name": "record_competency_assessment",
         "signature": "public.record_competency_assessment(p_assignment_id uuid, p_user_id uuid, p_competency_area text, p_result text, p_score numeric, p_evidence_id uuid, p_notes text, p_actor_id uuid)",
@@ -24402,14 +24424,16 @@
         "authenticated_execute": false,
         "service_role_execute": true,
         "disposition": "service_role_only",
-        "definition_file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
-        "definition_line": 1128,
+        "definition_file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+        "definition_line": 515,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:679 revoke execute public, anon, authenticated",
           "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:680 grant execute service_role",
           "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1205 revoke execute public, anon, authenticated",
-          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1206 grant execute service_role"
+          "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1206 grant execute service_role",
+          "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:638 revoke execute public, anon, authenticated",
+          "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:639 grant execute service_role"
         ]
       },
       {
@@ -24462,6 +24486,26 @@
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/196_f1r2_business_cycle_remediation.sql:1902 revoke execute public,anon,authenticated,service_role"
+        ]
+      },
+      {
+        "source": "migration208_service_role_acl_review",
+        "schema": "public",
+        "name": "reopen_training_assignment_with_reason",
+        "signature": "public.reopen_training_assignment_with_reason(p_assignment_id uuid, p_reason text, p_actor_id uuid)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+        "definition_line": 868,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:715 revoke execute public, anon, authenticated",
+          "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:716 grant execute service_role",
+          "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:977 revoke execute public, anon, authenticated",
+          "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:978 grant execute service_role"
         ]
       },
       {
@@ -24669,6 +24713,26 @@
         ]
       },
       {
+        "source": "migration208_service_role_acl_review",
+        "schema": "public",
+        "name": "start_training_assignment",
+        "signature": "public.start_training_assignment(p_assignment_id uuid, p_actor_id uuid)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+        "definition_line": 311,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:481 revoke execute public, anon, authenticated",
+          "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:482 grant execute service_role",
+          "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:389 revoke execute public, anon, authenticated",
+          "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:390 grant execute service_role"
+        ]
+      },
+      {
         "source": "migration206_service_role_acl_review",
         "schema": "public",
         "name": "submit_governed_document_for_review",
@@ -24779,6 +24843,26 @@
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1072 grant execute service_role",
           "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1080 revoke execute public, anon, authenticated",
           "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:1081 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration208_service_role_acl_review",
+        "schema": "public",
+        "name": "waive_training_assignment_with_reason",
+        "signature": "public.waive_training_assignment_with_reason(p_assignment_id uuid, p_reason text, p_actor_id uuid)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+        "definition_line": 642,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:598 revoke execute public, anon, authenticated",
+          "supabase/migrations/092_patch29_training_acknowledgment_governance.sql:599 grant execute service_role",
+          "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:751 revoke execute public, anon, authenticated",
+          "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:752 grant execute service_role"
         ]
       }
     ],
