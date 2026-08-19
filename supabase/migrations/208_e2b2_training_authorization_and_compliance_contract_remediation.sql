@@ -1516,7 +1516,7 @@ as
 select
   tp.id as program_id,
   cd.document_title as sop_title,
-  cd.document_title_ar as sop_title_ar,
+  tp.title_ar as sop_title_ar,
   cd.id as linked_sop_id,
   p.id as user_id,
   p.full_name_en as user_name_en,
