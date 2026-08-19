@@ -294,6 +294,9 @@ DECLARE
 BEGIN
   RAISE NOTICE '--- Starting Section B: 26 Behavioral Scenarios Verification ---';
 
+  PERFORM set_config('request.jwt.claim.sub', v_gov_a::text, true);
+  PERFORM set_config('request.jwt.claims', jsonb_build_object('role', 'service_role', 'sub', v_gov_a)::text, true);
+
   -- 1. Setup Organizations
   INSERT INTO public.organizations (id, name_en, is_active)
   VALUES (v_org_a, 'Org Alpha', true), (v_org_b, 'Org Beta', true)
@@ -337,18 +340,77 @@ BEGIN
     (v_gov_b,  v_org_b, v_dept_b1, 'Gov Admin B', 'gov.b@beta.test', 'GB', true, 'active')
   ON CONFLICT (id) DO UPDATE SET is_active = true, organization_id = EXCLUDED.organization_id, department_id = EXCLUDED.department_id;
 
+  -- 3B. Setup Patch83U Credential States (required for active user_roles lifecycle)
+  IF to_regclass('public.user_credential_states') IS NOT NULL THEN
+    INSERT INTO public.user_credential_states (
+      user_id,
+      organization_id,
+      auth_email,
+      identity_mode,
+      credential_state,
+      requested_lifecycle,
+      credential_version,
+      session_valid_after
+    )
+    VALUES
+      (
+        v_emp_a1, v_org_a, 'emp.a1@alpha.test',
+        'legacy_verified', 'active', 'active', 1, to_timestamp(0)
+      ),
+      (
+        v_emp_a2, v_org_a, 'emp.a2@alpha.test',
+        'legacy_verified', 'active', 'active', 1, to_timestamp(0)
+      ),
+      (
+        v_mgr_a, v_org_a, 'mgr.a@alpha.test',
+        'legacy_verified', 'active', 'active', 1, to_timestamp(0)
+      ),
+      (
+        v_mgr_b, v_org_a, 'mgr.b@alpha.test',
+        'legacy_verified', 'active', 'active', 1, to_timestamp(0)
+      ),
+      (
+        v_gov_a, v_org_a, 'gov.a@alpha.test',
+        'legacy_verified', 'active', 'active', 1, to_timestamp(0)
+      ),
+      (
+        v_exec_a, v_org_a, 'exec.a@alpha.test',
+        'legacy_verified', 'active', 'active', 1, to_timestamp(0)
+      ),
+      (
+        v_aud_a, v_org_a, 'aud.a@alpha.test',
+        'legacy_verified', 'active', 'active', 1, to_timestamp(0)
+      ),
+      (
+        v_emp_b1, v_org_b, 'emp.b1@beta.test',
+        'legacy_verified', 'active', 'active', 1, to_timestamp(0)
+      ),
+      (
+        v_gov_b, v_org_b, 'gov.b@beta.test',
+        'legacy_verified', 'active', 'active', 1, to_timestamp(0)
+      )
+    ON CONFLICT (user_id) DO UPDATE SET
+      organization_id = EXCLUDED.organization_id,
+      auth_email = EXCLUDED.auth_email,
+      identity_mode = EXCLUDED.identity_mode,
+      credential_state = EXCLUDED.credential_state,
+      requested_lifecycle = EXCLUDED.requested_lifecycle,
+      credential_version = EXCLUDED.credential_version,
+      session_valid_after = EXCLUDED.session_valid_after;
+  END IF;
+
   -- 4. Setup User Roles
   DELETE FROM public.user_roles WHERE user_id IN (v_emp_a1, v_emp_a2, v_mgr_a, v_mgr_b, v_gov_a, v_exec_a, v_aud_a, v_emp_b1, v_gov_b);
   INSERT INTO public.user_roles (user_id, role, scope, organization_id, department_id, is_active)
   VALUES
-    (v_emp_a1, 'employee', 'global', v_org_a, null, true),
-    (v_emp_a2, 'employee', 'global', v_org_a, null, true),
+    (v_emp_a1, 'employee', 'assigned_only', v_org_a, null, true),
+    (v_emp_a2, 'employee', 'assigned_only', v_org_a, null, true),
     (v_mgr_a,  'department_manager', 'department', v_org_a, v_dept_a, true),
     (v_mgr_b,  'department_manager', 'department', v_org_a, v_dept_b, true),
     (v_gov_a,  'governance_admin', 'global', v_org_a, null, true),
     (v_exec_a, 'executive', 'global', v_org_a, null, true),
     (v_aud_a,  'auditor', 'global', v_org_a, null, true),
-    (v_emp_b1, 'employee', 'global', v_org_b, null, true),
+    (v_emp_b1, 'employee', 'assigned_only', v_org_b, null, true),
     (v_gov_b,  'governance_admin', 'global', v_org_b, null, true);
 
   -- 5. Setup Controlled Documents & Initial Versions
