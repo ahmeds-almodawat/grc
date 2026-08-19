@@ -11,13 +11,13 @@
 --    and document_acknowledgment_requirements)
 -- 5. Hardened Governed Training Operational RPCs:
 --    - start_training_assignment (owner-only, active, startable, formal training required check)
---    - complete_training_assignment (governed version-bound formal training certifier controls)
---    - record_competency_assessment (no self-assessment, manager/governance authority only)
+--    - complete_training_assignment (exact Edge v13 args: p_assignment_id, p_evidence_id, p_actor_id; certifier controls)
+--    - record_competency_assessment (exact 8 args, no defaults, p_actor_id required, subject match, competency required)
 --    - waive_training_assignment_with_reason (bounded reason 3-1000, open states only)
 --    - cancel_training_assignment_with_reason (bounded reason 3-1000, open states only, no completed cancel)
 --    - reopen_training_assignment_with_reason (bounded reason 3-1000, closed states only)
 --    - record_document_acknowledgment (strengthened org tenancy & target eligibility validation)
---    - publish_sop_training_obligations (materialized specific_users ack reqs & dual training/competency obligations)
+--    - publish_sop_training_obligations (materialized specific_users ack reqs, dual training/competency obligations, valid cycle_type)
 -- 6. Corrected Compliance & Reporting Read Models (Security Invoker Views):
 --    - v_patch29_sop_acknowledgment_gap
 --    - v_patch29_competency_gap_dashboard
@@ -98,12 +98,36 @@ drop policy if exists "grc_training_events_select_policy" on public.training_eve
 -- 3. REMEDIATED SCOPED SELECT POLICIES
 -- ============================================================================
 
--- 3A. training_programs SELECT Policy (No broad active-program fallback for ordinary employees)
+-- 3A. training_programs SELECT Policy (With Program Owner tenancy proof & no broad fallback)
 create policy "grc_training_programs_select_policy" on public.training_programs
   for select to authenticated
   using (
-    -- 1. Program owner
-    (owner_user_id = auth.uid())
+    -- 1. Program owner (with organization tenancy verification)
+    (
+      owner_user_id = auth.uid()
+      and exists (
+        select 1 from public.profiles op
+        where op.id = auth.uid()
+          and op.is_active = true
+          and (
+            exists (
+              select 1 from public.controlled_documents cd
+              where cd.id in (training_programs.linked_sop_id, training_programs.linked_document_id)
+                and cd.organization_id = op.organization_id
+            )
+            or exists (
+              select 1 from public.departments d
+              where d.id = training_programs.department_id
+                and d.organization_id = op.organization_id
+            )
+            or exists (
+              select 1 from public.profiles cp
+              where cp.id = training_programs.created_by
+                and cp.organization_id = op.organization_id
+            )
+          )
+      )
+    )
     -- 2. Assigned employee
     or exists (
       select 1 from public.training_assignments ta
@@ -438,11 +462,11 @@ $$;
 revoke all on function public.start_training_assignment(uuid, uuid) from public, anon, authenticated;
 grant execute on function public.start_training_assignment(uuid, uuid) to service_role;
 
--- 4B. complete_training_assignment
+-- 4B. complete_training_assignment (Exact Edge v13 compatible signature & order: p_assignment_id, p_evidence_id, p_actor_id)
 create or replace function public.complete_training_assignment(
   p_assignment_id uuid,
-  p_actor_id uuid,
-  p_completion_evidence_id uuid default null
+  p_evidence_id uuid,
+  p_actor_id uuid
 )
 returns void
 language plpgsql
@@ -572,7 +596,7 @@ begin
   update public.training_assignments
   set status = 'completed',
       completed_at = now(),
-      completion_evidence_id = coalesce(p_completion_evidence_id, completion_evidence_id)
+      completion_evidence_id = coalesce(p_evidence_id, completion_evidence_id)
   where id = p_assignment_id;
 
   perform public.log_training_event(
@@ -586,16 +610,16 @@ $$;
 revoke all on function public.complete_training_assignment(uuid, uuid, uuid) from public, anon, authenticated;
 grant execute on function public.complete_training_assignment(uuid, uuid, uuid) to service_role;
 
--- 4C. record_competency_assessment
+-- 4C. record_competency_assessment (Exact 8 arguments, p_actor_id required, subject match & competency required validation)
 create or replace function public.record_competency_assessment(
   p_assignment_id uuid,
   p_user_id uuid,
   p_competency_area text,
   p_result text,
-  p_score numeric default null,
-  p_evidence_id uuid default null,
-  p_notes text default null,
-  p_actor_id uuid default null
+  p_score numeric,
+  p_evidence_id uuid,
+  p_notes text,
+  p_actor_id uuid
 )
 returns uuid
 language plpgsql
@@ -603,7 +627,6 @@ security definer
 set search_path = public, pg_temp
 as $$
 declare
-  v_effective_actor_id uuid;
   v_assessment_id uuid;
   v_target_org_id uuid;
   v_target_dept_id uuid;
@@ -613,20 +636,20 @@ declare
   v_actor_is_active boolean;
   v_actor_has_role boolean := false;
   v_assign record;
-  v_prog record;
+  v_version record;
+  v_sop_detail record;
+  v_comp_req boolean := false;
 begin
   if coalesce(current_setting('request.jwt.claim.role', true), current_user) <> 'service_role'
      and current_user <> 'service_role' then
     raise exception 'SERVICE_ROLE_REQUIRED';
   end if;
 
-  v_effective_actor_id := coalesce(p_actor_id, auth.uid());
-
-  if v_effective_actor_id is null then
+  if p_actor_id is null then
     raise exception 'ACTOR_REQUIRED: Competency assessment requires authenticated actor identity';
   end if;
 
-  if p_user_id = v_effective_actor_id then
+  if p_user_id = p_actor_id then
     raise exception 'SOD_VIOLATION_SELF_ASSESSMENT: Employees cannot assess their own competency';
   end if;
 
@@ -645,7 +668,7 @@ begin
 
   select is_active, organization_id into v_actor_is_active, v_actor_org_id
   from public.profiles
-  where id = v_effective_actor_id;
+  where id = p_actor_id;
 
   if v_actor_is_active is null or not v_actor_is_active then
     raise exception 'ACTOR_INACTIVE: Assessor profile is not active or does not exist';
@@ -655,6 +678,7 @@ begin
     raise exception 'CROSS_ORGANIZATION_DENIED';
   end if;
 
+  -- Assignment Validation (Subject Invariant & Competency-Required Check)
   if p_assignment_id is not null then
     select * into v_assign
     from public.training_assignments
@@ -664,43 +688,59 @@ begin
       raise exception 'PATCH29_ASSIGNMENT_NOT_FOUND: Specified training assignment does not exist';
     end if;
 
-    select * into v_prog
-    from public.training_programs
-    where id = v_assign.program_id;
+    if v_assign.assigned_to_user_id is null or v_assign.assigned_to_user_id <> p_user_id then
+      raise exception 'COMPETENCY_ASSIGNMENT_SUBJECT_MISMATCH: Target user does not match assignment subject';
+    end if;
 
-    if v_prog.owner_user_id = v_effective_actor_id then
-      v_actor_has_role := true;
+    -- Verify competency obligation is actually required for version-bound assignments
+    if v_assign.document_version_id is not null then
+      select * into v_version
+      from public.document_versions
+      where id = v_assign.document_version_id;
+
+      select * into v_sop_detail
+      from public.governed_sop_details
+      where version_id = v_assign.document_version_id;
+
+      if v_version.supersedes_version_id is null and coalesce(v_version.version_number, 1) = 1 then
+        v_comp_req := coalesce(v_sop_detail.competency_assessment_required, false);
+      else
+        v_comp_req := coalesce(v_sop_detail.competency_reassessment_required, false);
+      end if;
+
+      if not v_comp_req then
+        raise exception 'COMPETENCY_NOT_REQUIRED_FOR_ASSIGNMENT: Competency assessment is not required for this SOP version';
+      end if;
     end if;
   end if;
 
-  if not v_actor_has_role then
-    select exists (
-      select 1 from public.user_roles ur
-      where ur.user_id = v_effective_actor_id
-        and ur.is_active = true
-        and (
-          (
-            ur.role in ('super_admin', 'governance_admin', 'compliance_officer')
-            and ur.scope = 'global'
-            and ur.organization_id = v_actor_org_id
-          )
-          or (
-            ur.role = 'department_manager'
-            and ur.scope = 'department'
-            and ur.department_id is not null
-            and v_target_dept_id is not null
-            and ur.department_id = v_target_dept_id
-          )
-          or (
-            ur.role = 'division_head'
-            and ur.scope = 'division'
-            and ur.division_id is not null
-            and v_target_div_id is not null
-            and ur.division_id = v_target_div_id
-          )
+  -- Assessor Authority Check: Program owner alone CANNOT assess competency
+  select exists (
+    select 1 from public.user_roles ur
+    where ur.user_id = p_actor_id
+      and ur.is_active = true
+      and (
+        (
+          ur.role in ('super_admin', 'governance_admin', 'compliance_officer')
+          and ur.scope = 'global'
+          and ur.organization_id = v_actor_org_id
         )
-    ) into v_actor_has_role;
-  end if;
+        or (
+          ur.role = 'department_manager'
+          and ur.scope = 'department'
+          and ur.department_id is not null
+          and v_target_dept_id is not null
+          and ur.department_id = v_target_dept_id
+        )
+        or (
+          ur.role = 'division_head'
+          and ur.scope = 'division'
+          and ur.division_id is not null
+          and v_target_div_id is not null
+          and ur.division_id = v_target_div_id
+        )
+      )
+  ) into v_actor_has_role;
 
   if not v_actor_has_role then
     raise exception 'UNAUTHORIZED_ASSESSOR: Caller lacks authority to record competency assessment';
@@ -712,7 +752,7 @@ begin
         score = p_score,
         evidence_id = coalesce(p_evidence_id, evidence_id),
         notes = coalesce(p_notes, notes),
-        assessor_user_id = v_effective_actor_id,
+        assessor_user_id = p_actor_id,
         assessed_at = now()
     where assignment_id = p_assignment_id
     returning id into v_assessment_id;
@@ -722,14 +762,14 @@ begin
       evidence_id, notes, assessor_user_id, assessed_at
     ) values (
       p_assignment_id, p_user_id, coalesce(p_competency_area, 'SOP Standard Competency'),
-      p_result, p_score, p_evidence_id, p_notes, v_effective_actor_id, now()
+      p_result, p_score, p_evidence_id, p_notes, p_actor_id, now()
     ) returning id into v_assessment_id;
   end if;
 
   perform public.log_training_event(
     'competency_assessments', v_assessment_id, 'assessed',
-    'Competency assessment recorded: ' || p_result || ' by assessor ' || v_effective_actor_id::text,
-    v_effective_actor_id
+    'Competency assessment recorded: ' || p_result || ' by assessor ' || p_actor_id::text,
+    p_actor_id
   );
 
   return v_assessment_id;
@@ -1199,7 +1239,7 @@ $$;
 revoke all on function public.record_document_acknowledgment(uuid, uuid, uuid, text, text) from public, anon, authenticated;
 grant execute on function public.record_document_acknowledgment(uuid, uuid, uuid, text, text) to service_role;
 
--- 4H. publish_sop_training_obligations (Canonical Step 7 algorithm, specific_users materialized acks, dual obligation support)
+-- 4H. publish_sop_training_obligations (Canonical Step 7 algorithm, specific_users materialized acks, dual obligation support, valid cycle_type)
 create or replace function public.publish_sop_training_obligations(
   p_actor_id uuid,
   p_version_id uuid
@@ -1280,7 +1320,7 @@ begin
   from public.governed_sop_details
   where version_id = p_version_id;
 
-  -- Determine cycle & requirement obligations
+  -- Determine cycle & requirement obligations (valid cycle_type: initial | retraining)
   v_is_initial := (v_version.supersedes_version_id is null and coalesce(v_version.version_number, 1) = 1);
 
   if not v_is_initial then
@@ -1292,7 +1332,7 @@ begin
       raise exception 'ROLLOUT_DECISION_REQUIRED: Governed rollout requirements must be decided prior to publishing revision obligations';
     end if;
 
-    v_cycle_type := 'revision';
+    v_cycle_type := 'retraining';
     v_training_req := coalesce(v_sop_detail.retraining_required, false);
     v_comp_req := coalesce(v_sop_detail.competency_reassessment_required, false);
     v_ack_req := coalesce(v_sop_detail.reacknowledgment_required, true);

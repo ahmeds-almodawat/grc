@@ -101,10 +101,11 @@ describe('GRC v1.4-E2B2 Migration 208 Authorization & Compliance Contract Invari
     expect(sql208).not.toContain('drop policy patch83u_credential_gate');
   });
 
-  it('06: training_programs SELECT policy strictly eliminates broad active-program fallback for ordinary employees', () => {
+  it('06: training_programs SELECT policy strictly requires organization tenancy proof for program owner and eliminates broad employee fallback', () => {
     const tpPolicyMatch = sql208.match(/create policy "grc_training_programs_select_policy"[\s\S]*?;/i)?.[0];
     expect(tpPolicyMatch).toBeDefined();
     expect(tpPolicyMatch).toContain('owner_user_id = auth.uid()');
+    expect(tpPolicyMatch).toContain('cd.organization_id = op.organization_id');
     expect(tpPolicyMatch).toContain('ta.assigned_to_user_id = auth.uid()');
     expect(tpPolicyMatch).not.toContain('training_programs.active');
     expect(tpPolicyMatch).not.toMatch(/\b(?<!is_)active\s*=\s*true/i);
@@ -139,9 +140,11 @@ describe('GRC v1.4-E2B2 Migration 208 Authorization & Compliance Contract Invari
     expect(sql208).toContain("status = 'in_progress'");
   });
 
-  it('10: complete_training_assignment RPC checks version-bound formal training obligation and forbids employee self-completion', () => {
+  it('10: complete_training_assignment RPC preserves exact Edge v13 parameter names/order and checks version-bound formal training certifier authority', () => {
     const fnMatch = sql208.match(/create or replace function public\.complete_training_assignment[\s\S]*?\$\$[\s\S]*?\$\$;/i)?.[0];
     expect(fnMatch).toBeDefined();
+    expect(fnMatch).toContain('p_assignment_id uuid,\n  p_evidence_id uuid,\n  p_actor_id uuid');
+    expect(sql208).not.toContain('p_completion_evidence_id');
     expect(fnMatch).toContain('v_formal_training_required');
     expect(fnMatch).toContain('UNAUTHORIZED_TRAINING_COMPLETER: Caller lacks authority to certify training completion');
     expect(fnMatch).toContain("ur.role in ('super_admin', 'governance_admin', 'compliance_officer')");
@@ -150,13 +153,18 @@ describe('GRC v1.4-E2B2 Migration 208 Authorization & Compliance Contract Invari
     expect(fnMatch).not.toContain("'auditor'");
   });
 
-  it('11: record_competency_assessment RPC enforces segregation of duties and excludes executive/auditor as assessors', () => {
+  it('11: record_competency_assessment RPC preserves exact 8 arguments, requires p_actor_id, validates subject match, competency required, and removes program owner authority', () => {
     const fnMatch = sql208.match(/create or replace function public\.record_competency_assessment[\s\S]*?\$\$[\s\S]*?\$\$;/i)?.[0];
     expect(fnMatch).toBeDefined();
+    expect(fnMatch).toContain(
+      'p_assignment_id uuid,\n  p_user_id uuid,\n  p_competency_area text,\n  p_result text,\n  p_score numeric,\n  p_evidence_id uuid,\n  p_notes text,\n  p_actor_id uuid'
+    );
+    expect(fnMatch).toContain('ACTOR_REQUIRED: Competency assessment requires authenticated actor identity');
+    expect(fnMatch).toContain('COMPETENCY_ASSIGNMENT_SUBJECT_MISMATCH: Target user does not match assignment subject');
+    expect(fnMatch).toContain('COMPETENCY_NOT_REQUIRED_FOR_ASSIGNMENT: Competency assessment is not required for this SOP version');
     expect(fnMatch).toContain('SOD_VIOLATION_SELF_ASSESSMENT: Employees cannot assess their own competency');
     expect(fnMatch).toContain('UNAUTHORIZED_ASSESSOR: Caller lacks authority to record competency assessment');
-    expect(fnMatch).toContain("ur.role in ('super_admin', 'governance_admin', 'compliance_officer')");
-    expect(fnMatch).toContain("ur.role = 'department_manager'");
+    expect(fnMatch).not.toContain('v_prog.owner_user_id');
     expect(fnMatch).not.toContain("'executive'");
     expect(fnMatch).not.toContain("'auditor'");
   });
@@ -175,11 +183,15 @@ describe('GRC v1.4-E2B2 Migration 208 Authorization & Compliance Contract Invari
     expect(sql208).toContain('USER_NOT_ELIGIBLE_FOR_ACKNOWLEDGMENT: User is not within the required target population for this version');
   });
 
-  it('14: publish_sop_training_obligations materializes specific_users acknowledgment requirements and dual obligations', () => {
+  it('14: publish_sop_training_obligations materializes specific_users acknowledgment requirements, dual obligations, and valid cycle_type', () => {
     const fnMatch = sql208.match(/create or replace function public\.publish_sop_training_obligations[\s\S]*?\$\$[\s\S]*?\$\$;/i)?.[0];
     expect(fnMatch).toBeDefined();
     expect(fnMatch).toContain("requirement_scope = 'specific_users'");
     expect(fnMatch).not.toContain("'all_employees'");
+    expect(fnMatch).toContain("v_cycle_type := 'retraining';");
+    expect(fnMatch).toContain("v_cycle_type := 'initial';");
+    expect(fnMatch).not.toContain("cycle_type := 'revision'");
+    expect(fnMatch).not.toContain("cycle_type = 'revision'");
     expect(fnMatch).toContain('v_needs_assignment := (v_training_req or v_comp_req);');
   });
 
@@ -220,7 +232,7 @@ describe('GRC v1.4-E2B2 Migration 208 Authorization & Compliance Contract Invari
     expect(proof).toContain('MIGRATION 208 AUTHORIZATION & COMPLIANCE INVARIANTS PROOF');
     expect(proof).toContain('CHECK 1 PASSED');
     expect(proof).toContain('CHECK 8 PASSED');
-    expect(proof).toContain('ALL BEHAVIORAL CHECKS DETERMINISTICALLY VERIFIED (PASSED).');
+    expect(proof).toContain('ALL 26 BEHAVIORAL SCENARIOS DETERMINISTICALLY VERIFIED (PASSED).');
   });
 
   it('18: Patch83U proof reviewed ceiling is set to 208', () => {

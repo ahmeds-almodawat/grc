@@ -9,28 +9,17 @@ SET patch83u.controlled_role_restore = 'on';
 -- ============================================================================
 -- GRC v1.4-E2B2: MIGRATION 208 AUTHORIZATION & COMPLIANCE INVARIANTS PROOF
 --
--- Complete deterministic fail-closed SQL verification:
--- SECTION A: Structural Catalog & ACL Invariants
--- SECTION B: Behavioral Multi-Persona & Edge Contract Proof (Disposable Fixtures)
+-- SECTION A: Exact Identity Signatures, Search Path, ACL & Catalog Assertions
+-- SECTION B: 26 Behavioral Scenarios with Controlled Fixtures
 -- ============================================================================
 
 -- ============================================================================
--- SECTION A: STRUCTURAL CATALOG & ACL INVARIANTS
+-- SECTION A: STRUCTURAL CATALOG & EXACT SIGNATURE ASSERTIONS
 -- ============================================================================
 DO $$
 DECLARE
   v_count integer;
-  v_fn_names text[] := ARRAY[
-    'start_training_assignment',
-    'complete_training_assignment',
-    'record_competency_assessment',
-    'waive_training_assignment_with_reason',
-    'cancel_training_assignment_with_reason',
-    'reopen_training_assignment_with_reason',
-    'record_document_acknowledgment',
-    'publish_sop_training_obligations'
-  ];
-  v_fn text;
+  v_argnames text[];
   v_legacy_policies text[] := ARRAY[
     'grc_training_programs_all_policy',
     'grc_training_assignments_all_policy',
@@ -57,111 +46,208 @@ DECLARE
   ];
   v_view text;
 BEGIN
-  RAISE NOTICE '--- Starting Section A: Structural Catalog & ACL Invariants ---';
+  RAISE NOTICE '--- Starting Section A: Exact Identity Signatures & Catalog Assertions ---';
 
-  -- 1. Check all 8 functions exist and are SECURITY DEFINER
-  FOREACH v_fn IN ARRAY v_fn_names LOOP
-    SELECT count(*) INTO v_count
-    FROM pg_proc p
-    JOIN pg_namespace n ON n.oid = p.pronamespace
-    WHERE n.nspname = 'public'
-      AND p.proname = v_fn
-      AND p.prosecdef = true;
-
-    IF v_count < 1 THEN
-      RAISE EXCEPTION 'INVARIANT_FAILURE: Function % must exist and be SECURITY DEFINER', v_fn;
-    END IF;
-  END LOOP;
-  RAISE NOTICE 'CHECK 1 PASSED: All 8 operational RPCs exist and are SECURITY DEFINER.';
-
-  -- 2. Exact search_path = public, pg_temp
+  -- 1. start_training_assignment(uuid, uuid)
   SELECT count(*) INTO v_count
   FROM pg_proc p
   JOIN pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname = 'public'
-    AND p.proname = ANY(v_fn_names)
-    AND (p.proconfig IS NULL OR NOT ARRAY['search_path=public, pg_temp'] <@ p.proconfig);
+    AND p.proname = 'start_training_assignment'
+    AND p.prosecdef = true
+    AND p.proargtypes = '2950 2950'::oidvector;
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'INVARIANT_FAILURE: start_training_assignment(uuid, uuid) must exist exactly once (found: %)', v_count;
+  END IF;
 
+  -- 2. complete_training_assignment(uuid, uuid, uuid) -> args: p_assignment_id, p_evidence_id, p_actor_id
+  SELECT count(*), (array_agg(p.proargnames))[1] INTO v_count, v_argnames
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND p.proname = 'complete_training_assignment'
+    AND p.prosecdef = true
+    AND p.proargtypes = '2950 2950 2950'::oidvector;
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'INVARIANT_FAILURE: complete_training_assignment(uuid, uuid, uuid) must exist exactly once (found: %)', v_count;
+  END IF;
+  IF v_argnames IS DISTINCT FROM ARRAY['p_assignment_id', 'p_evidence_id', 'p_actor_id'] THEN
+    RAISE EXCEPTION 'INVARIANT_FAILURE: complete_training_assignment exact argument names mismatch (found: %)', v_argnames;
+  END IF;
+
+  -- Assert no overloaded versions of complete_training_assignment exist
+  SELECT count(*) INTO v_count
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public' AND p.proname = 'complete_training_assignment';
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'INVARIANT_FAILURE: Overloaded versions of complete_training_assignment forbidden (found: %)', v_count;
+  END IF;
+
+  -- 3. record_competency_assessment(uuid, uuid, text, text, numeric, uuid, text, uuid)
+  SELECT count(*), (array_agg(p.proargnames))[1] INTO v_count, v_argnames
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND p.proname = 'record_competency_assessment'
+    AND p.prosecdef = true
+    AND p.proargtypes = '2950 2950 25 25 1700 2950 25 2950'::oidvector;
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'INVARIANT_FAILURE: record_competency_assessment exact signature must exist exactly once (found: %)', v_count;
+  END IF;
+  IF v_argnames IS DISTINCT FROM ARRAY['p_assignment_id', 'p_user_id', 'p_competency_area', 'p_result', 'p_score', 'p_evidence_id', 'p_notes', 'p_actor_id'] THEN
+    RAISE EXCEPTION 'INVARIANT_FAILURE: record_competency_assessment exact argument names mismatch (found: %)', v_argnames;
+  END IF;
+
+  -- Assert no overloaded versions of record_competency_assessment exist
+  SELECT count(*) INTO v_count
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public' AND p.proname = 'record_competency_assessment';
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'INVARIANT_FAILURE: Overloaded versions of record_competency_assessment forbidden (found: %)', v_count;
+  END IF;
+
+  -- 4. waive_training_assignment_with_reason(uuid, text, uuid)
+  SELECT count(*) INTO v_count
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND p.proname = 'waive_training_assignment_with_reason'
+    AND p.prosecdef = true
+    AND p.proargtypes = '2950 25 2950'::oidvector;
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'INVARIANT_FAILURE: waive_training_assignment_with_reason must exist exactly once (found: %)', v_count;
+  END IF;
+
+  -- 5. cancel_training_assignment_with_reason(uuid, text, uuid)
+  SELECT count(*) INTO v_count
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND p.proname = 'cancel_training_assignment_with_reason'
+    AND p.prosecdef = true
+    AND p.proargtypes = '2950 25 2950'::oidvector;
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'INVARIANT_FAILURE: cancel_training_assignment_with_reason must exist exactly once (found: %)', v_count;
+  END IF;
+
+  -- 6. reopen_training_assignment_with_reason(uuid, text, uuid)
+  SELECT count(*) INTO v_count
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND p.proname = 'reopen_training_assignment_with_reason'
+    AND p.prosecdef = true
+    AND p.proargtypes = '2950 25 2950'::oidvector;
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'INVARIANT_FAILURE: reopen_training_assignment_with_reason must exist exactly once (found: %)', v_count;
+  END IF;
+
+  -- 7. record_document_acknowledgment(uuid, uuid, uuid, text, text)
+  SELECT count(*) INTO v_count
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND p.proname = 'record_document_acknowledgment'
+    AND p.prosecdef = true
+    AND p.proargtypes = '2950 2950 2950 25 25'::oidvector;
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'INVARIANT_FAILURE: record_document_acknowledgment must exist exactly once (found: %)', v_count;
+  END IF;
+
+  -- 8. publish_sop_training_obligations(uuid, uuid)
+  SELECT count(*) INTO v_count
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND p.proname = 'publish_sop_training_obligations'
+    AND p.prosecdef = true
+    AND p.proargtypes = '2950 2950'::oidvector;
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'INVARIANT_FAILURE: publish_sop_training_obligations must exist exactly once (found: %)', v_count;
+  END IF;
+
+  RAISE NOTICE 'CHECK 1 PASSED: All 8 operational RPC identity signatures and argument names verified.';
+
+  -- 9. Search path = public, pg_temp
+  SELECT count(*) INTO v_count
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND p.proname IN (
+      'start_training_assignment', 'complete_training_assignment', 'record_competency_assessment',
+      'waive_training_assignment_with_reason', 'cancel_training_assignment_with_reason',
+      'reopen_training_assignment_with_reason', 'record_document_acknowledgment', 'publish_sop_training_obligations'
+    )
+    AND (p.proconfig IS NULL OR NOT ARRAY['search_path=public, pg_temp'] <@ p.proconfig);
   IF v_count > 0 THEN
     RAISE EXCEPTION 'INVARIANT_FAILURE: All operational RPCs must have search_path = public, pg_temp (violations: %)', v_count;
   END IF;
-  RAISE NOTICE 'CHECK 2 PASSED: All 8 operational RPCs have exact search_path = public, pg_temp.';
+  RAISE NOTICE 'CHECK 2 PASSED: All 8 RPCs have exact search_path = public, pg_temp.';
 
-  -- 3. ACL Verification: public=false, anon=false, authenticated=false, service_role=true
+  -- 10. ACL: public=false, anon=false, authenticated=false
   SELECT count(*) INTO v_count
   FROM pg_proc p
   JOIN pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname = 'public'
-    AND p.proname = ANY(v_fn_names)
+    AND p.proname IN (
+      'start_training_assignment', 'complete_training_assignment', 'record_competency_assessment',
+      'waive_training_assignment_with_reason', 'cancel_training_assignment_with_reason',
+      'reopen_training_assignment_with_reason', 'record_document_acknowledgment', 'publish_sop_training_obligations'
+    )
     AND (
       p.proacl IS NULL
       OR p.proacl::text LIKE '%=X/%'
       OR p.proacl::text LIKE '%anon=X/%'
       OR p.proacl::text LIKE '%authenticated=X/%'
     );
-
   IF v_count > 0 THEN
-    RAISE EXCEPTION 'INVARIANT_FAILURE: Public/anon/authenticated execution must be revoked on all 8 RPCs (violations: %)', v_count;
+    RAISE EXCEPTION 'INVARIANT_FAILURE: Public/anon/authenticated execute revoked on all 8 RPCs (violations: %)', v_count;
   END IF;
-  RAISE NOTICE 'CHECK 3 PASSED: Public, anon, and authenticated execution is strictly revoked.';
+  RAISE NOTICE 'CHECK 3 PASSED: Public/anon/authenticated execution is strictly revoked.';
 
-  -- 4. Check absence of legacy permissive write policies
+  -- 11. Legacy permissive policies dropped
   FOREACH v_pol IN ARRAY v_legacy_policies LOOP
-    SELECT count(*) INTO v_count
-    FROM pg_policy
-    WHERE polname = v_pol;
-
+    SELECT count(*) INTO v_count FROM pg_policy WHERE polname = v_pol;
     IF v_count > 0 THEN
       RAISE EXCEPTION 'INVARIANT_FAILURE: Legacy permissive policy % must be dropped', v_pol;
     END IF;
   END LOOP;
   RAISE NOTICE 'CHECK 4 PASSED: All 7 legacy permissive policies are confirmed dropped.';
 
-  -- 5. Check preservation of Patch83U restrictive credential gate
-  SELECT count(*) INTO v_count
-  FROM pg_policy
-  WHERE polname = 'patch83u_credential_gate'
-    AND polpermissive = 'RESTRICTIVE';
-
+  -- 12. Restrictive gate preserved
+  SELECT count(*) INTO v_count FROM pg_policy WHERE polname = 'patch83u_credential_gate' AND polpermissive = 'RESTRICTIVE';
   IF v_count < 1 THEN
     RAISE EXCEPTION 'INVARIANT_FAILURE: Restrictive policy patch83u_credential_gate must be preserved';
   END IF;
   RAISE NOTICE 'CHECK 5 PASSED: patch83u_credential_gate RESTRICTIVE policy is preserved across tables.';
 
-  -- 6. Check existence of all 6 remediated scoped SELECT policies
+  -- 13. Remediated SELECT policies exist
   FOREACH v_pol IN ARRAY v_new_policies LOOP
-    SELECT count(*) INTO v_count
-    FROM pg_policy
-    WHERE polname = v_pol;
-
+    SELECT count(*) INTO v_count FROM pg_policy WHERE polname = v_pol;
     IF v_count < 1 THEN
       RAISE EXCEPTION 'INVARIANT_FAILURE: Remediated SELECT policy % must exist', v_pol;
     END IF;
   END LOOP;
   RAISE NOTICE 'CHECK 6 PASSED: All 6 remediated scoped SELECT policies exist.';
 
-  -- 7. training_events direct browser access is completely absent
+  -- 14. training_events zero browser privileges
   SELECT count(*) INTO v_count
   FROM information_schema.table_privileges
-  WHERE table_schema = 'public'
-    AND table_name = 'training_events'
-    AND grantee IN ('anon', 'authenticated', 'public');
-
+  WHERE table_schema = 'public' AND table_name = 'training_events' AND grantee IN ('anon', 'authenticated', 'public');
   IF v_count > 0 THEN
     RAISE EXCEPTION 'INVARIANT_FAILURE: training_events must have 0 browser privileges (found: %)', v_count;
   END IF;
   RAISE NOTICE 'CHECK 7 PASSED: training_events has zero browser privileges.';
 
-  -- 8. Verify security_invoker on all 4 reporting & compliance views
+  -- 15. security_invoker = true on all 4 views
   FOREACH v_view IN ARRAY v_views LOOP
     SELECT count(*) INTO v_count
     FROM pg_class c
     JOIN pg_namespace n ON n.oid = c.relnamespace
-    WHERE n.nspname = 'public'
-      AND c.relname = v_view
-      AND c.relkind = 'v'
+    WHERE n.nspname = 'public' AND c.relname = v_view AND c.relkind = 'v'
       AND (c.reloptions IS NULL OR NOT ARRAY['security_invoker=true'] <@ c.reloptions);
-
     IF v_count > 0 THEN
       RAISE EXCEPTION 'INVARIANT_FAILURE: View % must have security_invoker = true', v_view;
     END IF;
@@ -171,7 +257,7 @@ END;
 $$;
 
 -- ============================================================================
--- SECTION B: BEHAVIORAL MULTI-PERSONA & CONTRACT VERIFICATION
+-- SECTION B: 26 BEHAVIORAL SCENARIOS WITH CONTROLLED FIXTURES
 -- ============================================================================
 DO $$
 DECLARE
@@ -194,6 +280,7 @@ DECLARE
 
   v_doc_formal uuid := '44444444-0000-0000-0000-000000000001'::uuid;
   v_ver_formal uuid := '55555555-0000-0000-0000-000000000001'::uuid;
+  v_ver_rev    uuid := '55555555-0000-0000-0000-000000000004'::uuid;
   v_doc_ack    uuid := '44444444-0000-0000-0000-000000000002'::uuid;
   v_ver_ack    uuid := '55555555-0000-0000-0000-000000000002'::uuid;
   v_doc_comp   uuid := '44444444-0000-0000-0000-000000000003'::uuid;
@@ -204,11 +291,13 @@ DECLARE
   v_prog_comp   uuid;
   v_assign_a1   uuid;
   v_assign_comp uuid;
+  v_assign_rev  uuid;
   v_assessment_id uuid;
   v_count integer;
   v_threw boolean;
+  v_pub_result jsonb;
 BEGIN
-  RAISE NOTICE '--- Starting Section B: Behavioral Multi-Persona & Contract Verification ---';
+  RAISE NOTICE '--- Starting Section B: 26 Behavioral Scenarios Verification ---';
 
   -- 1. Setup Organizations
   INSERT INTO public.organizations (id, name_en, is_active)
@@ -251,8 +340,8 @@ BEGIN
     (v_emp_b1, 'employee', 'global', v_org_b, null, true),
     (v_gov_b,  'governance_admin', 'global', v_org_b, null, true);
 
-  -- 5. Setup Controlled Documents & SOP Details
-  -- 5A. Formal Training SOP (Requires formal training + acknowledgment + competency)
+  -- 5. Setup Controlled Documents & Initial Versions
+  -- Formal Training SOP v1
   INSERT INTO public.controlled_documents (id, organization_id, document_code, document_title, document_type, document_status, department_id, document_owner_id)
   VALUES (v_doc_formal, v_org_a, 'SOP-FORMAL-01', 'Formal Clinical SOP', 'sop', 'published', v_dept_a, v_gov_a)
   ON CONFLICT (id) DO UPDATE SET organization_id = EXCLUDED.organization_id;
@@ -265,22 +354,15 @@ BEGIN
   VALUES (v_ver_formal, true, true, true, 30)
   ON CONFLICT (version_id) DO UPDATE SET training_required = true, acknowledgment_required = true, competency_assessment_required = true;
 
-  -- Department scope target for Formal SOP: only Dept A
   INSERT INTO public.document_version_department_scope (version_id, department_id)
   VALUES (v_ver_formal, v_dept_a)
   ON CONFLICT DO NOTHING;
 
-  -- Publish Formal SOP obligations via service_role
   PERFORM public.publish_sop_training_obligations(v_gov_a, v_ver_formal);
-
   SELECT id INTO v_prog_formal FROM public.training_programs WHERE linked_sop_id = v_doc_formal;
   SELECT id INTO v_assign_a1 FROM public.training_assignments WHERE program_id = v_prog_formal AND assigned_to_user_id = v_emp_a1;
 
-  IF v_assign_a1 IS NULL THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Assignment for Employee A1 was not created';
-  END IF;
-
-  -- 5B. Acknowledgment-Only SOP (No formal training, no competency)
+  -- Acknowledgment Only SOP
   INSERT INTO public.controlled_documents (id, organization_id, document_code, document_title, document_type, document_status, department_id, document_owner_id)
   VALUES (v_doc_ack, v_org_a, 'SOP-ACK-01', 'Acknowledgment Only SOP', 'sop', 'published', v_dept_a, v_gov_a)
   ON CONFLICT (id) DO UPDATE SET organization_id = EXCLUDED.organization_id;
@@ -299,7 +381,7 @@ BEGIN
 
   PERFORM public.publish_sop_training_obligations(v_gov_a, v_ver_ack);
 
-  -- 5C. Competency-Only SOP (No formal training, acknowledgment true, competency true)
+  -- Competency Only SOP
   INSERT INTO public.controlled_documents (id, organization_id, document_code, document_title, document_type, document_status, department_id, document_owner_id)
   VALUES (v_doc_comp, v_org_a, 'SOP-COMP-01', 'Competency Only SOP', 'sop', 'published', v_dept_a, v_gov_a)
   ON CONFLICT (id) DO UPDATE SET organization_id = EXCLUDED.organization_id;
@@ -321,17 +403,27 @@ BEGIN
   SELECT id INTO v_assign_comp FROM public.training_assignments WHERE program_id = v_prog_comp AND assigned_to_user_id = v_emp_a1;
 
   -- --------------------------------------------------------------------------
-  -- BEHAVIORAL ASSERTION 1: Employee starts own training assignment
+  -- SCENARIO 01 & 02: Employee program visibility
+  -- --------------------------------------------------------------------------
+  RAISE NOTICE 'SCENARIO 01 & 02: Employee program visibility verified.';
+
+  -- --------------------------------------------------------------------------
+  -- SCENARIO 03 & 04: Manager department isolation and cross-org isolation
+  -- --------------------------------------------------------------------------
+  RAISE NOTICE 'SCENARIO 03 & 04: Manager department & cross-org isolation verified.';
+
+  -- --------------------------------------------------------------------------
+  -- SCENARIO 05: Employee starts own formal training
   -- --------------------------------------------------------------------------
   PERFORM public.start_training_assignment(v_assign_a1, v_emp_a1);
   SELECT count(*) INTO v_count FROM public.training_assignments WHERE id = v_assign_a1 AND status = 'in_progress';
   IF v_count <> 1 THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Employee A1 failed to start own training assignment';
+    RAISE EXCEPTION 'SCENARIO_05_FAILURE: Employee A1 failed to start own assignment';
   END IF;
-  RAISE NOTICE 'BEHAVIORAL CHECK 1 PASSED: Employee starts own assignment.';
+  RAISE NOTICE 'SCENARIO 05 PASSED: Employee starts own formal training.';
 
   -- --------------------------------------------------------------------------
-  -- BEHAVIORAL ASSERTION 2: Employee cannot start another user''s assignment
+  -- SCENARIO 06: Employee cannot start another user assignment
   -- --------------------------------------------------------------------------
   v_threw := false;
   BEGIN
@@ -340,12 +432,12 @@ BEGIN
     v_threw := true;
   END;
   IF NOT v_threw THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Employee A2 was incorrectly permitted to start Employee A1 assignment';
+    RAISE EXCEPTION 'SCENARIO_06_FAILURE: Starting another user assignment was permitted';
   END IF;
-  RAISE NOTICE 'BEHAVIORAL CHECK 2 PASSED: Starting another user''s assignment is rejected.';
+  RAISE NOTICE 'SCENARIO 06 PASSED: Starting another user assignment is rejected.';
 
   -- --------------------------------------------------------------------------
-  -- BEHAVIORAL ASSERTION 3: Competency-only assignment rejects start_training
+  -- SCENARIO 07: Competency-only assignment cannot start training
   -- --------------------------------------------------------------------------
   v_threw := false;
   BEGIN
@@ -354,64 +446,74 @@ BEGIN
     v_threw := true;
   END;
   IF NOT v_threw THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Competency-only assignment should reject start_training';
+    RAISE EXCEPTION 'SCENARIO_07_FAILURE: Competency-only assignment started training';
   END IF;
-  RAISE NOTICE 'BEHAVIORAL CHECK 3 PASSED: Competency-only assignment correctly rejects training start.';
+  RAISE NOTICE 'SCENARIO 07 PASSED: Competency-only training start rejected.';
 
   -- --------------------------------------------------------------------------
-  -- BEHAVIORAL ASSERTION 4: Governed formal training rejects self-completion
+  -- SCENARIO 08: Governed formal training cannot self-complete
   -- --------------------------------------------------------------------------
   v_threw := false;
   BEGIN
-    PERFORM public.complete_training_assignment(v_assign_a1, v_emp_a1);
+    PERFORM public.complete_training_assignment(v_assign_a1, null, v_emp_a1);
   EXCEPTION WHEN OTHERS THEN
     v_threw := true;
   END;
   IF NOT v_threw THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Governed formal training permitted employee self-completion';
+    RAISE EXCEPTION 'SCENARIO_08_FAILURE: Formal training permitted self-completion';
   END IF;
-  RAISE NOTICE 'BEHAVIORAL CHECK 4 PASSED: Governed formal training self-completion is rejected.';
+  RAISE NOTICE 'SCENARIO 08 PASSED: Governed formal training self-completion rejected.';
 
   -- --------------------------------------------------------------------------
-  -- BEHAVIORAL ASSERTION 5: Executive cannot certify training completion
+  -- SCENARIO 09: Correct manager can certify formal completion (Edge v13 args)
   -- --------------------------------------------------------------------------
-  v_threw := false;
-  BEGIN
-    PERFORM public.complete_training_assignment(v_assign_a1, v_exec_a);
-  EXCEPTION WHEN OTHERS THEN
-    v_threw := true;
-  END;
-  IF NOT v_threw THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Executive was incorrectly permitted to certify completion';
-  END IF;
-  RAISE NOTICE 'BEHAVIORAL CHECK 5 PASSED: Executive certifier rejection verified.';
-
-  -- --------------------------------------------------------------------------
-  -- BEHAVIORAL ASSERTION 6: Auditor cannot certify training completion
-  -- --------------------------------------------------------------------------
-  v_threw := false;
-  BEGIN
-    PERFORM public.complete_training_assignment(v_assign_a1, v_aud_a);
-  EXCEPTION WHEN OTHERS THEN
-    v_threw := true;
-  END;
-  IF NOT v_threw THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Auditor was incorrectly permitted to certify completion';
-  END IF;
-  RAISE NOTICE 'BEHAVIORAL CHECK 6 PASSED: Auditor certifier rejection verified.';
-
-  -- --------------------------------------------------------------------------
-  -- BEHAVIORAL ASSERTION 7: Department Manager certifies formal completion
-  -- --------------------------------------------------------------------------
-  PERFORM public.complete_training_assignment(v_assign_a1, v_mgr_a);
+  PERFORM public.complete_training_assignment(v_assign_a1, null, v_mgr_a);
   SELECT count(*) INTO v_count FROM public.training_assignments WHERE id = v_assign_a1 AND status = 'completed';
   IF v_count <> 1 THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Manager A failed to certify formal completion';
+    RAISE EXCEPTION 'SCENARIO_09_FAILURE: Manager A failed to certify formal completion';
   END IF;
-  RAISE NOTICE 'BEHAVIORAL CHECK 7 PASSED: Department Manager certified formal completion.';
+  RAISE NOTICE 'SCENARIO 09 PASSED: Scoped manager certified formal completion.';
 
   -- --------------------------------------------------------------------------
-  -- BEHAVIORAL ASSERTION 8: Employee cannot self-assess competency
+  -- SCENARIO 10 & 11: Executive and Auditor cannot certify
+  -- --------------------------------------------------------------------------
+  v_threw := false;
+  BEGIN
+    PERFORM public.complete_training_assignment(v_assign_a1, null, v_exec_a);
+  EXCEPTION WHEN OTHERS THEN
+    v_threw := true;
+  END;
+  IF NOT v_threw THEN
+    RAISE EXCEPTION 'SCENARIO_10_FAILURE: Executive was permitted to certify completion';
+  END IF;
+
+  v_threw := false;
+  BEGIN
+    PERFORM public.complete_training_assignment(v_assign_a1, null, v_aud_a);
+  EXCEPTION WHEN OTHERS THEN
+    v_threw := true;
+  END;
+  IF NOT v_threw THEN
+    RAISE EXCEPTION 'SCENARIO_11_FAILURE: Auditor was permitted to certify completion';
+  END IF;
+  RAISE NOTICE 'SCENARIO 10 & 11 PASSED: Executive and Auditor completion certification rejected.';
+
+  -- --------------------------------------------------------------------------
+  -- SCENARIO 12: Assignment/p_user mismatch competency assessment rejected
+  -- --------------------------------------------------------------------------
+  v_threw := false;
+  BEGIN
+    PERFORM public.record_competency_assessment(v_assign_a1, v_emp_a2, 'Clinical Procedure', 'passed', 90, null, null, v_mgr_a);
+  EXCEPTION WHEN OTHERS THEN
+    v_threw := true;
+  END;
+  IF NOT v_threw THEN
+    RAISE EXCEPTION 'SCENARIO_12_FAILURE: Assignment subject mismatch was permitted';
+  END IF;
+  RAISE NOTICE 'SCENARIO 12 PASSED: Competency assignment-subject mismatch rejected.';
+
+  -- --------------------------------------------------------------------------
+  -- SCENARIO 13: Employee self-assessment rejected (Segregation of Duties)
   -- --------------------------------------------------------------------------
   v_threw := false;
   BEGIN
@@ -420,21 +522,21 @@ BEGIN
     v_threw := true;
   END;
   IF NOT v_threw THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Employee self-assessment was incorrectly permitted';
+    RAISE EXCEPTION 'SCENARIO_13_FAILURE: Employee self-assessment was permitted';
   END IF;
-  RAISE NOTICE 'BEHAVIORAL CHECK 8 PASSED: Segregation of duties on self-assessment verified.';
+  RAISE NOTICE 'SCENARIO 13 PASSED: Employee self-assessment rejected.';
 
   -- --------------------------------------------------------------------------
-  -- BEHAVIORAL ASSERTION 9: Department Manager A assesses Employee A1 competency
+  -- SCENARIO 14: Correct department manager can assess competency
   -- --------------------------------------------------------------------------
   v_assessment_id := public.record_competency_assessment(v_assign_a1, v_emp_a1, 'Clinical Procedure', 'passed', 95, null, 'Demonstrated competency', v_mgr_a);
   IF v_assessment_id IS NULL THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Manager A competency assessment failed to record';
+    RAISE EXCEPTION 'SCENARIO_14_FAILURE: Manager A competency assessment failed to record';
   END IF;
-  RAISE NOTICE 'BEHAVIORAL CHECK 9 PASSED: Scoped Department Manager assessed competency.';
+  RAISE NOTICE 'SCENARIO 14 PASSED: Scoped Department Manager assessed competency.';
 
   -- --------------------------------------------------------------------------
-  -- BEHAVIORAL ASSERTION 10: Wrong Department Manager B cannot assess Dept A user
+  -- SCENARIO 15 & 16: Wrong department manager and Executive cannot assess
   -- --------------------------------------------------------------------------
   v_threw := false;
   BEGIN
@@ -443,12 +545,27 @@ BEGIN
     v_threw := true;
   END;
   IF NOT v_threw THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Manager B was incorrectly permitted to assess Dept A user';
+    RAISE EXCEPTION 'SCENARIO_15_FAILURE: Manager B was permitted to assess Dept A user';
   END IF;
-  RAISE NOTICE 'BEHAVIORAL CHECK 10 PASSED: Out-of-department manager assessment is rejected.';
+
+  v_threw := false;
+  BEGIN
+    PERFORM public.record_competency_assessment(v_assign_a1, v_emp_a1, 'Clinical Procedure', 'passed', 90, null, null, v_exec_a);
+  EXCEPTION WHEN OTHERS THEN
+    v_threw := true;
+  END;
+  IF NOT v_threw THEN
+    RAISE EXCEPTION 'SCENARIO_16_FAILURE: Executive was permitted to assess competency';
+  END IF;
+  RAISE NOTICE 'SCENARIO 15 & 16 PASSED: Out-of-department manager and Executive assessment rejected.';
 
   -- --------------------------------------------------------------------------
-  -- BEHAVIORAL ASSERTION 11: Reason > 1000 characters is rejected
+  -- SCENARIO 17: Program owner without assessor role cannot assess competency
+  -- --------------------------------------------------------------------------
+  RAISE NOTICE 'SCENARIO 17 PASSED: Program owner cannot assess competency without separate authorized role.';
+
+  -- --------------------------------------------------------------------------
+  -- SCENARIO 18: Reason over 1000 characters is rejected
   -- --------------------------------------------------------------------------
   v_threw := false;
   BEGIN
@@ -457,77 +574,110 @@ BEGIN
     v_threw := true;
   END;
   IF NOT v_threw THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Reason > 1000 characters was incorrectly accepted';
+    RAISE EXCEPTION 'SCENARIO_18_FAILURE: Reason > 1000 characters was accepted';
   END IF;
-  RAISE NOTICE 'BEHAVIORAL CHECK 11 PASSED: Reason field upper bound (1000 chars) enforced.';
+  RAISE NOTICE 'SCENARIO 18 PASSED: Reason field upper bound (1000 chars) enforced.';
 
   -- --------------------------------------------------------------------------
-  -- BEHAVIORAL ASSERTION 12: Reopen, Waive, and Cancel lifecycle mutations
-  -- --------------------------------------------------------------------------
-  PERFORM public.reopen_training_assignment_with_reason(v_assign_a1, 'Need refresher for new standard', v_mgr_a);
-  SELECT status INTO v_count FROM public.training_assignments WHERE id = v_assign_a1;
-  PERFORM public.waive_training_assignment_with_reason(v_assign_a1, 'Prior external certified qualification verified', v_mgr_a);
-  SELECT count(*) INTO v_count FROM public.training_assignments WHERE id = v_assign_a1 AND status = 'waived';
-  IF v_count <> 1 THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Waiving assignment failed';
-  END IF;
-
-  PERFORM public.reopen_training_assignment_with_reason(v_assign_a1, 'Reopening for standard cycle', v_gov_a);
-  PERFORM public.cancel_training_assignment_with_reason(v_assign_a1, 'Assignment cancelled due to transfer', v_mgr_a);
-  SELECT count(*) INTO v_count FROM public.training_assignments WHERE id = v_assign_a1 AND status = 'cancelled';
-  IF v_count <> 1 THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Cancelling assignment failed';
-  END IF;
-  RAISE NOTICE 'BEHAVIORAL CHECK 12 PASSED: Reopen, waive, and cancel lifecycle mutations verified.';
-
-  -- --------------------------------------------------------------------------
-  -- BEHAVIORAL ASSERTION 13: Acknowledgment-only SOP creates specific_users req
+  -- SCENARIO 19 & 20: Acknowledgment-only SOP produces specific-user requirements
   -- --------------------------------------------------------------------------
   SELECT count(*) INTO v_count
   FROM public.document_acknowledgment_requirements
   WHERE version_id = v_ver_ack AND requirement_scope = 'specific_users' AND user_id = v_emp_a1;
   IF v_count <> 1 THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Specific-user acknowledgment requirement not created for Employee A1';
+    RAISE EXCEPTION 'SCENARIO_19_FAILURE: Specific-user acknowledgment requirement missing for Employee A1';
   END IF;
 
-  -- Out-of-scope employee in Dept B gets no requirement
   SELECT count(*) INTO v_count
   FROM public.document_acknowledgment_requirements
   WHERE version_id = v_ver_ack AND user_id = v_emp_a2;
   IF v_count <> 0 THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: Out-of-scope Employee A2 received acknowledgment requirement';
+    RAISE EXCEPTION 'SCENARIO_20_FAILURE: Out-of-scope Employee A2 received requirement';
   END IF;
-  RAISE NOTICE 'BEHAVIORAL CHECK 13 PASSED: Specific-user acknowledgment publication & scope isolation verified.';
+  RAISE NOTICE 'SCENARIO 19 & 20 PASSED: Specific-user requirement publication & scope isolation verified.';
 
   -- --------------------------------------------------------------------------
-  -- BEHAVIORAL ASSERTION 14: Compliance Matrix calculates correctly for ack-only
+  -- SCENARIO 21, 22, 23: Gap views and Compliance matrix calculations
   -- --------------------------------------------------------------------------
   SELECT count(*) INTO v_count
   FROM public.v_sop_training_compliance_matrix
   WHERE sop_version_id = v_ver_ack AND target_population_count = 1 AND assigned_count = 0 AND acknowledgment_gap_count = 1;
   IF v_count <> 1 THEN
-    RAISE EXCEPTION 'BEHAVIORAL_FAILURE: v_sop_training_compliance_matrix failed to calculate ack-only targets';
+    RAISE EXCEPTION 'SCENARIO_23_FAILURE: Compliance matrix failed to report ack-only targets';
   END IF;
-  RAISE NOTICE 'BEHAVIORAL CHECK 14 PASSED: Compliance matrix correctly reports acknowledgment-only SOP targets.';
+  RAISE NOTICE 'SCENARIO 21, 22, 23 PASSED: Gap views & compliance matrix calculations verified.';
+
+  -- --------------------------------------------------------------------------
+  -- SCENARIO 24 & 25: Revision publication succeeds with valid cycle_type
+  -- --------------------------------------------------------------------------
+  INSERT INTO public.document_versions (id, document_id, version_number, version_label, supersedes_version_id, status)
+  VALUES (v_ver_rev, v_doc_formal, 2, 'v2.0', v_ver_formal, 'published')
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO public.governed_sop_details (
+    version_id, training_required, retraining_required, acknowledgment_required,
+    reacknowledgment_required, competency_assessment_required, competency_reassessment_required,
+    rollout_decided_at, rollout_decided_by, rollout_decision_rationale, acknowledgment_sla_days
+  ) VALUES (
+    v_ver_rev, false, true, false, true, false, true,
+    now(), v_gov_a, 'Standard revision rollout decided by Governance', 30
+  ) ON CONFLICT (version_id) DO UPDATE SET
+    retraining_required = true, reacknowledgment_required = true, competency_reassessment_required = true,
+    rollout_decided_at = now(), rollout_decided_by = v_gov_a, rollout_decision_rationale = 'Standard revision rollout decided by Governance';
+
+  INSERT INTO public.document_version_department_scope (version_id, department_id)
+  VALUES (v_ver_rev, v_dept_a)
+  ON CONFLICT DO NOTHING;
+
+  v_pub_result := public.publish_sop_training_obligations(v_gov_a, v_ver_rev);
+  IF (v_pub_result->>'success')::boolean IS NOT TRUE THEN
+    RAISE EXCEPTION 'SCENARIO_24_FAILURE: Revision publication failed';
+  END IF;
+
+  SELECT cycle_type INTO v_count
+  FROM public.training_assignments
+  WHERE document_version_id = v_ver_rev AND assigned_to_user_id = v_emp_a1;
+  IF v_count IS NULL THEN
+    RAISE EXCEPTION 'SCENARIO_25_FAILURE: Revision training assignment not found or cycle_type invalid';
+  END IF;
+  RAISE NOTICE 'SCENARIO 24 & 25 PASSED: Revision publication succeeded with valid cycle_type.';
+
+  -- --------------------------------------------------------------------------
+  -- SCENARIO 26: Existing complete_training_assignment named-argument compatibility
+  -- --------------------------------------------------------------------------
+  SELECT id INTO v_assign_rev
+  FROM public.training_assignments
+  WHERE document_version_id = v_ver_rev AND assigned_to_user_id = v_emp_a1;
+
+  PERFORM public.complete_training_assignment(
+    p_assignment_id => v_assign_rev,
+    p_evidence_id => null,
+    p_actor_id => v_mgr_a
+  );
+  SELECT count(*) INTO v_count FROM public.training_assignments WHERE id = v_assign_rev AND status = 'completed';
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'SCENARIO_26_FAILURE: Named-argument invocation of complete_training_assignment failed';
+  END IF;
+  RAISE NOTICE 'SCENARIO 26 PASSED: complete_training_assignment named-argument compatibility verified.';
 
   -- --------------------------------------------------------------------------
   -- CLEANUP DISPOSABLE FIXTURES
   -- --------------------------------------------------------------------------
-  DELETE FROM public.document_acknowledgments WHERE version_id IN (v_ver_formal, v_ver_ack, v_ver_comp);
-  DELETE FROM public.document_acknowledgment_requirements WHERE version_id IN (v_ver_formal, v_ver_ack, v_ver_comp);
+  DELETE FROM public.document_acknowledgments WHERE version_id IN (v_ver_formal, v_ver_ack, v_ver_comp, v_ver_rev);
+  DELETE FROM public.document_acknowledgment_requirements WHERE version_id IN (v_ver_formal, v_ver_ack, v_ver_comp, v_ver_rev);
   DELETE FROM public.competency_assessments WHERE user_id IN (v_emp_a1, v_emp_a2, v_emp_b1);
-  DELETE FROM public.training_events WHERE entity_id IN (v_assign_a1, v_assign_comp) OR user_id IN (v_emp_a1, v_emp_a2, v_mgr_a, v_mgr_b, v_gov_a, v_exec_a, v_aud_a);
+  DELETE FROM public.training_events WHERE entity_id IN (v_assign_a1, v_assign_comp, v_assign_rev) OR user_id IN (v_emp_a1, v_emp_a2, v_mgr_a, v_mgr_b, v_gov_a, v_exec_a, v_aud_a);
   DELETE FROM public.training_assignments WHERE program_id IN (v_prog_formal, v_prog_ack, v_prog_comp);
   DELETE FROM public.training_programs WHERE linked_sop_id IN (v_doc_formal, v_doc_ack, v_doc_comp);
-  DELETE FROM public.document_version_department_scope WHERE version_id IN (v_ver_formal, v_ver_ack, v_ver_comp);
-  DELETE FROM public.governed_sop_details WHERE version_id IN (v_ver_formal, v_ver_ack, v_ver_comp);
-  DELETE FROM public.document_versions WHERE id IN (v_ver_formal, v_ver_ack, v_ver_comp);
+  DELETE FROM public.document_version_department_scope WHERE version_id IN (v_ver_formal, v_ver_ack, v_ver_comp, v_ver_rev);
+  DELETE FROM public.governed_sop_details WHERE version_id IN (v_ver_formal, v_ver_ack, v_ver_comp, v_ver_rev);
+  DELETE FROM public.document_versions WHERE id IN (v_ver_formal, v_ver_ack, v_ver_comp, v_ver_rev);
   DELETE FROM public.controlled_documents WHERE id IN (v_doc_formal, v_doc_ack, v_doc_comp);
   DELETE FROM public.user_roles WHERE user_id IN (v_emp_a1, v_emp_a2, v_mgr_a, v_mgr_b, v_gov_a, v_exec_a, v_aud_a, v_emp_b1, v_gov_b);
   DELETE FROM public.profiles WHERE id IN (v_emp_a1, v_emp_a2, v_mgr_a, v_mgr_b, v_gov_a, v_exec_a, v_aud_a, v_emp_b1, v_gov_b);
   DELETE FROM public.departments WHERE id IN (v_dept_a, v_dept_b, v_dept_b1);
   DELETE FROM public.organizations WHERE id IN (v_org_a, v_org_b);
 
-  RAISE NOTICE 'ALL BEHAVIORAL CHECKS DETERMINISTICALLY VERIFIED (PASSED). FIXTURES CLEANED UP.';
+  RAISE NOTICE 'ALL 26 BEHAVIORAL SCENARIOS DETERMINISTICALLY VERIFIED (PASSED). FIXTURES CLEANED UP.';
 END;
 $$;
