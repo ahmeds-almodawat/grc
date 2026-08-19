@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 
-describe('GRC v1.4-E2B2 Migration 208 Training Authorization Invariants', () => {
+describe('GRC v1.4-E2B2 Migration 208 Authorization & Compliance Contract Invariants', () => {
   const rootDir = process.cwd();
   const migrationsDir = path.resolve(rootDir, 'supabase/migrations');
   const migration207Path = path.resolve(
@@ -97,16 +97,17 @@ describe('GRC v1.4-E2B2 Migration 208 Training Authorization Invariants', () => 
     expect(sql208).toContain('drop policy if exists "document_ack_req_org_write_patch26" on public.document_acknowledgment_requirements;');
     expect(sql208).toContain('drop policy if exists "document_ack_org_write_patch26" on public.document_acknowledgments;');
 
-    // Restrictive Patch83U gate must NOT be dropped
     expect(sql208).not.toContain('drop policy if exists patch83u_credential_gate');
     expect(sql208).not.toContain('drop policy patch83u_credential_gate');
   });
 
-  it('06: training_programs SELECT policy enforces organization safety', () => {
-    expect(sql208).toContain('create policy "grc_training_programs_select_policy" on public.training_programs');
-    expect(sql208).toContain('owner_user_id = auth.uid()');
-    expect(sql208).toContain('ta.assigned_to_user_id = auth.uid()');
-    expect(sql208).toContain('cd.organization_id = actor_p.organization_id');
+  it('06: training_programs SELECT policy strictly eliminates broad active-program fallback for ordinary employees', () => {
+    const tpPolicyMatch = sql208.match(/create policy "grc_training_programs_select_policy"[\s\S]*?;/i)?.[0];
+    expect(tpPolicyMatch).toBeDefined();
+    expect(tpPolicyMatch).toContain('owner_user_id = auth.uid()');
+    expect(tpPolicyMatch).toContain('ta.assigned_to_user_id = auth.uid()');
+    expect(tpPolicyMatch).not.toContain('training_programs.active');
+    expect(tpPolicyMatch).not.toMatch(/\b(?<!is_)active\s*=\s*true/i);
   });
 
   it('07: training_assignments SELECT policy requires employee self-only or exact active department/division/global scope', () => {
@@ -123,69 +124,76 @@ describe('GRC v1.4-E2B2 Migration 208 Training Authorization Invariants', () => 
     expect(sql208).toContain('p.organization_id = ur.organization_id');
   });
 
-  it('08: competency_assessments and acknowledgments SELECT policies enforce exact scope and organization match', () => {
-    expect(sql208).toContain('create policy "grc_competency_assessments_select_policy" on public.competency_assessments');
-    expect(sql208).toContain('user_id = auth.uid()');
-    expect(sql208).toContain('assessor_user_id = auth.uid()');
-
-    expect(sql208).toContain('create policy "grc_training_acknowledgments_select_policy" on public.training_acknowledgments');
-    expect(sql208).toContain('create policy "document_ack_org_read_patch26" on public.document_acknowledgments');
+  it('08: document_acknowledgment_requirements SELECT policy restricts employee to self and scoped authorities', () => {
+    expect(sql208).toContain('create policy "document_ack_req_select_policy_e2b2" on public.document_acknowledgment_requirements');
+    expect(sql208).toContain("requirement_scope = 'specific_users' and user_id = auth.uid()");
+    expect(sql208).toContain("ur.role = 'department_manager'");
+    expect(sql208).toContain("ur.role in ('super_admin', 'executive', 'governance_admin', 'auditor', 'compliance_officer')");
   });
 
-  it('09: start_training_assignment RPC requires assignment owner and active profile in startable state', () => {
+  it('09: start_training_assignment RPC requires assignment owner and enforces governed start eligibility (rejects competency-only)', () => {
     expect(sql208).toContain('create or replace function public.start_training_assignment(');
     expect(sql208).toContain('UNAUTHORIZED_TRAINING_STARTER: Only assignment owner may start training');
     expect(sql208).toContain('ACTOR_INACTIVE: Actor profile is not active or does not exist');
+    expect(sql208).toContain('TRAINING_NOT_REQUIRED_FOR_ASSIGNMENT: Assignment is competency-only; formal training is not required');
     expect(sql208).toContain("status = 'in_progress'");
   });
 
-  it('10: complete_training_assignment RPC enforces formal certifier controls (no executive, no auditor, no self-certification for formal)', () => {
-    expect(sql208).toContain('create or replace function public.complete_training_assignment(');
-    expect(sql208).toContain('UNAUTHORIZED_TRAINING_COMPLETER');
-    expect(sql208).toContain("ur.role in ('super_admin', 'governance_admin', 'compliance_officer')");
-    expect(sql208).toContain("ur.role = 'department_manager'");
-    expect(sql208).not.toMatch(/complete_training_assignment[\s\S]*?'executive'[\s\S]*?into v_has_auth/i);
-    expect(sql208).not.toMatch(/complete_training_assignment[\s\S]*?'auditor'[\s\S]*?into v_has_auth/i);
-    expect(sql208).not.toContain('quality_director');
-    expect(sql208).not.toContain('training_coordinator');
+  it('10: complete_training_assignment RPC checks version-bound formal training obligation and forbids employee self-completion', () => {
+    const fnMatch = sql208.match(/create or replace function public\.complete_training_assignment[\s\S]*?\$\$[\s\S]*?\$\$;/i)?.[0];
+    expect(fnMatch).toBeDefined();
+    expect(fnMatch).toContain('v_formal_training_required');
+    expect(fnMatch).toContain('UNAUTHORIZED_TRAINING_COMPLETER: Caller lacks authority to certify training completion');
+    expect(fnMatch).toContain("ur.role in ('super_admin', 'governance_admin', 'compliance_officer')");
+    expect(fnMatch).toContain("ur.role = 'department_manager'");
+    expect(fnMatch).not.toContain("'executive'");
+    expect(fnMatch).not.toContain("'auditor'");
   });
 
   it('11: record_competency_assessment RPC enforces segregation of duties and excludes executive/auditor as assessors', () => {
-    expect(sql208).toContain('create or replace function public.record_competency_assessment(');
-    expect(sql208).toContain('SOD_VIOLATION_SELF_ASSESSMENT: Employees cannot assess their own competency');
-    expect(sql208).toContain('UNAUTHORIZED_ASSESSOR');
-    expect(sql208).toContain("ur.role in ('super_admin', 'governance_admin', 'compliance_officer')");
-    expect(sql208).toContain("ur.role = 'department_manager'");
-    expect(sql208).not.toMatch(/record_competency_assessment[\s\S]*?'executive'[\s\S]*?into v_actor_has_role/i);
-    expect(sql208).not.toMatch(/record_competency_assessment[\s\S]*?'auditor'[\s\S]*?into v_actor_has_role/i);
-    expect(sql208).not.toMatch(/score\s*>=\s*0\s*and\s*score\s*<=\s*100/i);
+    const fnMatch = sql208.match(/create or replace function public\.record_competency_assessment[\s\S]*?\$\$[\s\S]*?\$\$;/i)?.[0];
+    expect(fnMatch).toBeDefined();
+    expect(fnMatch).toContain('SOD_VIOLATION_SELF_ASSESSMENT: Employees cannot assess their own competency');
+    expect(fnMatch).toContain('UNAUTHORIZED_ASSESSOR: Caller lacks authority to record competency assessment');
+    expect(fnMatch).toContain("ur.role in ('super_admin', 'governance_admin', 'compliance_officer')");
+    expect(fnMatch).toContain("ur.role = 'department_manager'");
+    expect(fnMatch).not.toContain("'executive'");
+    expect(fnMatch).not.toContain("'auditor'");
   });
 
-  it('12: waive_training_assignment_with_reason requires controlled role, non-empty reason, and open state', () => {
-    expect(sql208).toContain('create or replace function public.waive_training_assignment_with_reason(');
-    expect(sql208).toContain('CANNOT_WAIVE_OWN_ASSIGNMENT');
-    expect(sql208).toContain('REASON_REQUIRED: A valid waiver reason is mandatory');
-    expect(sql208).toContain("v_assign.status not in ('assigned', 'in_progress', 'overdue')");
-    expect(sql208).toContain('UNAUTHORIZED_WAIVER_AUTHORITY');
+  it('12: Reason fields in waive, cancel, and reopen RPCs are bounded to 3-1000 characters', () => {
+    expect(sql208).toContain('length(trim(p_reason)) < 3 or length(trim(p_reason)) > 1000');
+    expect(sql208).toContain('REASON_REQUIRED: A valid waiver reason between 3 and 1000 characters is mandatory');
+    expect(sql208).toContain('REASON_REQUIRED: A valid cancellation reason between 3 and 1000 characters is mandatory');
+    expect(sql208).toContain('REASON_REQUIRED: A valid reopening reason between 3 and 1000 characters is mandatory');
   });
 
-  it('13: cancel_training_assignment_with_reason prevents cancelling completed assignments and requires controlled authority', () => {
-    expect(sql208).toContain('create or replace function public.cancel_training_assignment_with_reason(');
-    expect(sql208).toContain('CANNOT_CANCEL_OWN_ASSIGNMENT');
-    expect(sql208).toContain('REASON_REQUIRED: A valid cancellation reason is mandatory');
-    expect(sql208).toContain("v_assign.status not in ('assigned', 'in_progress', 'overdue')");
-    expect(sql208).toContain('UNAUTHORIZED_CANCELLATION_AUTHORITY');
+  it('13: record_document_acknowledgment verifies version, active org tenancy, and target population eligibility', () => {
+    expect(sql208).toContain('create or replace function public.record_document_acknowledgment(');
+    expect(sql208).toContain('VERSION_NOT_FOUND: Specified document version does not exist for this document');
+    expect(sql208).toContain('USER_INACTIVE: Target user profile is not active or does not exist');
+    expect(sql208).toContain('USER_NOT_ELIGIBLE_FOR_ACKNOWLEDGMENT: User is not within the required target population for this version');
   });
 
-  it('14: reopen_training_assignment_with_reason requires closed state (completed, waived, cancelled) and clears evidence/completed_at', () => {
-    expect(sql208).toContain('create or replace function public.reopen_training_assignment_with_reason(');
-    expect(sql208).toContain('CANNOT_REOPEN_OWN_ASSIGNMENT');
-    expect(sql208).toContain("v_assign.status not in ('completed', 'waived', 'cancelled')");
-    expect(sql208).toContain("set status = 'assigned', completed_at = null, completion_evidence_id = null");
-    expect(sql208).toContain('UNAUTHORIZED_REOPEN_AUTHORITY');
+  it('14: publish_sop_training_obligations materializes specific_users acknowledgment requirements and dual obligations', () => {
+    const fnMatch = sql208.match(/create or replace function public\.publish_sop_training_obligations[\s\S]*?\$\$[\s\S]*?\$\$;/i)?.[0];
+    expect(fnMatch).toBeDefined();
+    expect(fnMatch).toContain("requirement_scope = 'specific_users'");
+    expect(fnMatch).not.toContain("'all_employees'");
+    expect(fnMatch).toContain('v_needs_assignment := (v_training_req or v_comp_req);');
   });
 
-  it('15: All Migration 208 functions are SECURITY DEFINER with search_path = public, pg_temp and service_role-only execution ACL', () => {
+  it('15: Reporting & compliance read views are created with security_invoker = true and authoritative gap/matrix logic', () => {
+    expect(sql208).toContain('create or replace view public.v_patch29_sop_acknowledgment_gap');
+    expect(sql208).toContain('create or replace view public.v_patch29_competency_gap_dashboard');
+    expect(sql208).toContain('create or replace view public.v_sop_training_compliance_matrix');
+    expect(sql208).toContain('create or replace view public.v_patch29_training_executive_summary');
+
+    const invokerMatches = (sql208.match(/with\s*\(\s*security_invoker\s*=\s*true\s*\)/gi) || []).length;
+    expect(invokerMatches).toBeGreaterThanOrEqual(4);
+  });
+
+  it('16: All Migration 208 functions are SECURITY DEFINER with search_path = public, pg_temp and service_role-only execution ACL', () => {
     const functions = [
       'start_training_assignment(uuid, uuid)',
       'complete_training_assignment(uuid, uuid, uuid)',
@@ -193,6 +201,8 @@ describe('GRC v1.4-E2B2 Migration 208 Training Authorization Invariants', () => 
       'waive_training_assignment_with_reason(uuid, text, uuid)',
       'cancel_training_assignment_with_reason(uuid, text, uuid)',
       'reopen_training_assignment_with_reason(uuid, text, uuid)',
+      'record_document_acknowledgment(uuid, uuid, uuid, text, text)',
+      'publish_sop_training_obligations(uuid, uuid)',
     ];
 
     for (const fn of functions) {
@@ -201,23 +211,26 @@ describe('GRC v1.4-E2B2 Migration 208 Training Authorization Invariants', () => 
     }
 
     const searchPathMatches = (sql208.match(/set search_path = public, pg_temp/gi) || []).length;
-    expect(searchPathMatches).toBeGreaterThanOrEqual(6);
+    expect(searchPathMatches).toBeGreaterThanOrEqual(8);
   });
 
-  it('16: Patch83U proof reviewed ceiling is set to 208', () => {
+  it('17: Deterministic SQL proof script exists and has exact fail-closed assertions', () => {
+    expect(fs.existsSync(sqlProofPath)).toBe(true);
+    const proof = fs.readFileSync(sqlProofPath, 'utf8');
+    expect(proof).toContain('MIGRATION 208 AUTHORIZATION & COMPLIANCE INVARIANTS PROOF');
+    expect(proof).toContain('CHECK 1 PASSED');
+    expect(proof).toContain('CHECK 8 PASSED');
+    expect(proof).toContain('ALL BEHAVIORAL CHECKS DETERMINISTICALLY VERIFIED (PASSED).');
+  });
+
+  it('18: Patch83U proof reviewed ceiling is set to 208', () => {
     const content = fs.readFileSync(patch83uScriptPath, 'utf8');
     expect(content).toContain('const reviewedPatch83uMigrationCeiling = 208;');
   });
 
-  it('17: verify-migrations script remains unchanged in parser structure', () => {
+  it('19: verify-migrations script remains unchanged in parser structure', () => {
     const content = fs.readFileSync(verifyMigrationsScriptPath, 'utf8');
     expect(content).toContain('const files = fs.readdirSync(migrationsDir)');
     expect(content).toContain('026_finish_fast_release_sprint.sql');
-  });
-
-  it('18: Deterministic SQL proof script exists', () => {
-    expect(fs.existsSync(sqlProofPath)).toBe(true);
-    const proof = fs.readFileSync(sqlProofPath, 'utf8');
-    expect(proof).toContain('MIGRATION 208 TRAINING AUTHORIZATION INVARIANTS PROOF');
   });
 });

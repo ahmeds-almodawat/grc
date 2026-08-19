@@ -871,22 +871,22 @@ function renderMarkdown(report) {
   ).join('\n');
   return `# Patch 83U authenticated browser surface inventory\n\n`
     + `Status: **${report.status.toUpperCase()}**\n\n`
-    + `This is a deterministic static replay of the ordered migration chain through reviewed migration 197 plus actual browser call sites. It is not live-catalog proof and does not claim any hosted catalog state.\n\n`
+    + `This is a deterministic static replay of the ordered migration chain through reviewed migration ${report.summary.reviewed_patch83u_migration_ceiling} plus actual browser call sites. It is not live-catalog proof and does not claim any hosted catalog state.\n\n`
     + `## Summary\n\n`
     + `- Direct browser RPCs: ${report.summary.direct_browser_rpc_count}\n`
     + `- Direct browser views: ${report.summary.direct_browser_view_count}\n`
     + `- Direct browser materialized views: ${report.summary.direct_browser_materialized_view_count}\n`
     + `- Unsafe surfaces: ${report.summary.unsafe_surface_count}\n`
     + `- Search transport: ${report.summary.search_transport}\n`
-    + `- Reviewed restricted migration 176–197 SECURITY DEFINER routines: ${report.summary.reviewed_restricted_security_definer_count}\n`
+    + `- Reviewed restricted migration 176–${report.summary.reviewed_patch83u_migration_ceiling} SECURITY DEFINER routines: ${report.summary.reviewed_restricted_security_definer_count}\n`
     + `- Target credential-gate migration present: ${report.summary.credential_gate_target_present ? 'yes' : 'no'}\n\n`
     + `## search_grc_global\n\n`
     + `Disposition: **${report.search_grc_global.disposition}**. The accepted design is the authenticated Edge bridge using an anon-key Supabase client carrying the caller Bearer token; the RPC remains SECURITY INVOKER and its complete view/base-table chain must remain security-invoker and credential-gated by RLS.\n\n`
     + `## ACL-reachable SECURITY DEFINER routines\n\n`
-    + `The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–197 permit exactly three Patch 83U RLS decision helpers. Every SECURITY DEFINER routine introduced, replaced, or renamed by migrations 176–197 must contain its own explicit revoke from PUBLIC/anon/authenticated plus either an explicit service_role-only grant or an explicit owner-only service_role revoke; migration 174's earlier dynamic revoke is not accepted as evidence for later migrations. Migration 198 and later fail closed until separately reviewed.\n\n`
+    + `The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–${report.summary.reviewed_patch83u_migration_ceiling} permit exactly three Patch 83U RLS decision helpers. Every SECURITY DEFINER routine introduced, replaced, or renamed by migrations 176–${report.summary.reviewed_patch83u_migration_ceiling} must contain its own explicit revoke from PUBLIC/anon/authenticated plus either an explicit service_role-only grant or an explicit owner-only service_role revoke; migration 174's earlier dynamic revoke is not accepted as evidence for later migrations. Migration ${report.summary.reviewed_patch83u_migration_ceiling + 1} and later fail closed until separately reviewed.\n\n`
     + `| Signature | Evidence source | PUBLIC | anon | authenticated | Disposition | Purpose |\n`
     + `|---|---|---:|---:|---:|---|---|\n${rpcRows || '| _none_ | | | | | | |'}\n\n`
-    + `### Reviewed restricted routines from migrations 176–197\n\n`
+    + `### Reviewed restricted routines from migrations 176–${report.summary.reviewed_patch83u_migration_ceiling}\n\n`
     + `These routines are not reachable by browser roles. They are listed explicitly so every reviewed definition and its migration-local ACL proof remain visible.\n\n`
     + `| Signature | Evidence source | service_role | Disposition | Definition evidence |\n`
     + `|---|---|---:|---|---|\n${restrictedRpcRows || '| _none_ | | | | |'}\n\n`
