@@ -298,12 +298,12 @@ describe('GRC v1.4-E2B2 Edge v14 Training & Acknowledgment Authorization Hardeni
       expect(edgeSource).toContain("rpc('publish_sop_training_obligations'");
     });
 
-    it('31. reconcile action returns 409 E2B3_RECONCILIATION_NOT_RELEASED', () => {
+    it('31. E2B3 successor releases reconciliation behind the Migration209 capability gate', () => {
       expect(edgeSource).toContain("action === 'reconcile_sop_training_population'");
-      expect(edgeSource).toContain('E2B3_RECONCILIATION_NOT_RELEASED');
-      const err = mapV14e2b2DatabaseError('reconcile_sop_training_population', new Error('E2B3_RECONCILIATION_NOT_RELEASED'));
+      expect(edgeSource).toContain('E2B3_MIGRATION_209_REQUIRED');
+      const err = mapV14e2b2DatabaseError('reconcile_sop_training_population', new Error('E2B3_MIGRATION_209_REQUIRED'));
       expect(err.status).toBe(409);
-      expect(err.code).toBe('E2B3_RECONCILIATION_NOT_RELEASED');
+      expect(err.code).toBe('E2B3_MIGRATION_209_REQUIRED');
     });
 
     it('32. payload size bound enforced at 64 KiB for E2B2 training actions', () => {
@@ -653,10 +653,10 @@ describe('GRC v1.4-E2B2 Edge v14 Training & Acknowledgment Authorization Hardeni
       expect(hash).toBe('6bc3d22305a093be7940c223f073d1a827a748392ebd47b3316b62d53646f7a9');
     });
 
-    it('35. Migration 209 is absent', () => {
+    it('35. Migration 209 is present as the single E2B3 successor migration', () => {
       const files = fs.readdirSync(path.resolve(rootDir, 'supabase/migrations'));
-      const has209 = files.some(f => f.startsWith('209_'));
-      expect(has209).toBe(false);
+      const migration209Files = files.filter(f => f.startsWith('209_'));
+      expect(migration209Files).toEqual(['209_e2b3_training_population_reconciliation.sql']);
     });
   });
 });

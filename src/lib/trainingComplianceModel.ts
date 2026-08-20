@@ -22,6 +22,7 @@ export interface TrainingCompliancePersona {
   canViewGovernanceCompliance: boolean;
   canPublishObligations: boolean;
   canDecideRollout: boolean;
+  canReconcilePopulation: boolean;
   isReadOnlyGlobal: boolean;
 }
 
@@ -55,6 +56,10 @@ export const E2B2_RELEASED_MUTATION_ACTIONS = [
   'publish_sop_training_obligations',
 ] as const;
 
+export const E2B3_RELEASED_MUTATION_ACTIONS = [
+  'reconcile_sop_training_population',
+] as const;
+
 const globalMutationRoles = new Set<AuthRole>([
   'super_admin',
   'governance_admin',
@@ -76,6 +81,9 @@ export function getTrainingCompliancePersona(
   roles: readonly AuthRoleAssignment[] | null | undefined,
 ): TrainingCompliancePersona {
   const hasGlobalMutation = hasTrainingRole(roles, globalMutationRoles);
+  const hasGlobalReconciliationAuthority = (roles ?? []).some(
+    (assignment) => globalMutationRoles.has(assignment.role) && assignment.scope === 'global',
+  );
   const hasManager = hasTrainingRole(roles, managerMutationRoles);
   const isReadOnlyGlobal = hasTrainingRole(roles, readOnlyGlobalRoles);
   const isEmployeeLike = hasTrainingRole(roles, ['employee', 'viewer', 'project_owner', 'milestone_owner', 'task_owner']);
@@ -91,6 +99,7 @@ export function getTrainingCompliancePersona(
     canViewGovernanceCompliance: hasGlobalMutation || isReadOnlyGlobal,
     canPublishObligations: hasGlobalMutation,
     canDecideRollout: hasGlobalMutation,
+    canReconcilePopulation: hasGlobalReconciliationAuthority,
     isReadOnlyGlobal,
   };
 }
@@ -255,6 +264,16 @@ export function buildRecordCompetencyAssessmentPayload(input: {
   };
 }
 
-export function isE2B3ReconcileReleasedInUi(): false {
-  return false;
+export function buildReconcilePopulationPayload(versionId: string): {
+  version_id: string;
+  confirm_reconciliation: true;
+} {
+  return {
+    version_id: versionId,
+    confirm_reconciliation: true,
+  };
+}
+
+export function isE2B3ReconcileReleasedInUi(): true {
+  return true;
 }

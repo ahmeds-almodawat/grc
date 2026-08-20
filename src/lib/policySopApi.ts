@@ -1540,19 +1540,31 @@ export async function reconcileSopTrainingPopulation(versionId: string): Promise
   version_id: string;
   program_id: string;
   cycle: number;
+  cycle_type: string;
+  target_population_count: number;
   newly_assigned_count: number;
-  inactive_cancelled_count: number;
+  reactivated_assignment_count: number;
+  cancelled_out_of_scope_count: number;
+  acknowledgment_requirements_created: number;
+  acknowledgment_requirements_reactivated: number;
+  acknowledgment_requirements_deactivated: number;
 }> {
   return invokePrivilegedAction<{
     success: boolean;
     version_id: string;
     program_id: string;
     cycle: number;
+    cycle_type: string;
+    target_population_count: number;
     newly_assigned_count: number;
-    inactive_cancelled_count: number;
+    reactivated_assignment_count: number;
+    cancelled_out_of_scope_count: number;
+    acknowledgment_requirements_created: number;
+    acknowledgment_requirements_reactivated: number;
+    acknowledgment_requirements_deactivated: number;
   }>(
     'reconcile_sop_training_population',
-    { version_id: versionId }
+    { version_id: versionId, confirm_reconciliation: true }
   );
 }
 

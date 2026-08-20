@@ -56,6 +56,11 @@ import {
   verifyProgramTenancy,
   resolveGovernedVersionTrainingRequirements,
 } from '../_shared/v14e2b2TrainingBridge.ts';
+import {
+  hasExactE2B3GlobalGovernanceRole,
+  hasExactE2B3TrainingReconciliationCapability,
+  isE2B3Migration209CapabilityUnavailable,
+} from '../_shared/v14e2b3TrainingReconciliationBridge.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -4344,13 +4349,119 @@ Deno.serve(async (request) => {
   }
 
   if (action === 'reconcile_sop_training_population') {
-    return errorResponse(
-      'Population reconciliation is part of GRC v1.4-E2B3 and is not yet released.',
-      409,
-      'E2B3_RECONCILIATION_NOT_RELEASED',
-      'The reconcile_sop_training_population privileged action is not released in GRC v1.4-E2B2.',
-      { action }
-    );
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, [
+        'p_actor_id',
+        'acting_user_id',
+        'authenticated_user_id',
+        'target_user_id',
+        'organization_id',
+        'p_organization_id',
+      ]);
+      assertOnlyAllowedKeys(
+        payload,
+        new Set(['version_id', 'confirm_reconciliation', 'actor_id']),
+        'RECONCILE_SOP_TRAINING_POPULATION_PAYLOAD'
+      );
+      validateLegacyActorId(payload, userData.user.id);
+
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+      const confirmReconciliation = validateStrictBoolean(
+        payload.confirm_reconciliation,
+        'confirm_reconciliation'
+      );
+      if (confirmReconciliation !== true) {
+        throw new Error('RECONCILIATION_CONFIRMATION_REQUIRED');
+      }
+
+      const capabilityProbe = await serviceClient.rpc(
+        'get_e2b3_training_reconciliation_capabilities'
+      );
+
+      if (capabilityProbe.error) {
+        if (isE2B3Migration209CapabilityUnavailable(capabilityProbe.error)) {
+          return errorResponse(
+            'Database migration 209 is required for SOP training population reconciliation.',
+            409,
+            'E2B3_MIGRATION_209_REQUIRED',
+            'Migration 209 installs the fail-closed population lifecycle reconciliation contract.',
+            { action }
+          );
+        }
+        const e = mapV14e2b2DatabaseError(action, capabilityProbe.error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      if (!hasExactE2B3TrainingReconciliationCapability(capabilityProbe.data)) {
+        return errorResponse(
+          'Database migration 209 capability contract is unavailable or incompatible.',
+          409,
+          'E2B3_MIGRATION_209_REQUIRED',
+          'The reconciliation capability must exactly match e2b3-training-population-v1 at schema version 209.',
+          { action }
+        );
+      }
+
+      const { actorProfile, userRoles } = await loadTrainingActorContext(userData.user.id);
+
+      const { data: version, error: verErr } = await serviceClient
+        .from('document_versions')
+        .select('id, document_id')
+        .eq('id', versionId)
+        .maybeSingle();
+      if (verErr || !version) throw new Error('DOCUMENT_VERSION_NOT_FOUND');
+
+      const { data: doc, error: docErr } = await serviceClient
+        .from('controlled_documents')
+        .select('id, organization_id, document_type, document_owner_id')
+        .eq('id', version.document_id)
+        .maybeSingle();
+      if (docErr || !doc) throw new Error('DOCUMENT_NOT_FOUND');
+      if (doc.document_type !== 'sop') throw new Error('INVALID_DOC_TYPE');
+      if (!doc.organization_id || doc.organization_id !== actorProfile.organization_id) {
+        throw new Error('TENANT_ISOLATION_VIOLATION');
+      }
+
+      const hasGlobal = hasExactE2B3GlobalGovernanceRole(userRoles, actorProfile.organization_id);
+      const isDocumentOwner = doc.document_owner_id === userData.user.id;
+      if (!hasGlobal && !isDocumentOwner) {
+        throw new Error('UNAUTHORIZED_GOVERNANCE_ROLE');
+      }
+
+      const { data: sopDetail, error: sopDetailErr } = await serviceClient
+        .from('governed_sop_details')
+        .select('version_id, training_obligations_published_at')
+        .eq('version_id', versionId)
+        .maybeSingle();
+      if (sopDetailErr || !sopDetail) {
+        throw new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+      }
+      if (!sopDetail.training_obligations_published_at) {
+        return errorResponse(
+          'Training obligations have not been published for this exact SOP version.',
+          409,
+          'TRAINING_OBLIGATIONS_NOT_PUBLISHED',
+          'Publish obligations for the selected SOP version before running population reconciliation.',
+          { action, version_id: versionId }
+        );
+      }
+
+      const { data, error } = await serviceClient.rpc('reconcile_sop_training_population', {
+        p_actor_id: userData.user.id,
+        p_version_id: versionId,
+      });
+
+      if (error) {
+        const e = mapV14e2b2DatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e2b2DatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
   }
 
   if (action === 'record_document_acknowledgment') {

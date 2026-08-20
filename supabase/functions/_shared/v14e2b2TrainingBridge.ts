@@ -446,6 +446,7 @@ export function mapV14e2b2DatabaseError(
     msg.startsWith('MISSING_STRICT_BOOLEAN_') ||
     msg.startsWith('INVALID_STRICT_BOOLEAN_') ||
     msg.startsWith('INVALID_NUMERIC_') ||
+    msg === 'RECONCILIATION_CONFIRMATION_REQUIRED' ||
     msg === 'INVALID_ACKNOWLEDGMENT_METHOD' ||
     msg === 'INVALID_COMPETENCY_RESULT' ||
     msg === 'REASON_TOO_LONG' ||
@@ -496,6 +497,7 @@ export function mapV14e2b2DatabaseError(
   if (
     msg === 'DOCUMENT_NOT_FOUND' ||
     msg === 'DOCUMENT_VERSION_NOT_FOUND' ||
+    msg === 'VERSION_NOT_FOUND' ||
     msg === 'ASSIGNMENT_NOT_FOUND' ||
     msg === 'TARGET_USER_NOT_FOUND' ||
     msg === 'PROGRAM_NOT_FOUND'
@@ -512,8 +514,11 @@ export function mapV14e2b2DatabaseError(
   // State / Capability / Constraint conflict errors (409)
   if (
     msg === 'E2B2_MIGRATION_208_REQUIRED' ||
-    msg === 'E2B3_RECONCILIATION_NOT_RELEASED' ||
+    msg === 'E2B3_MIGRATION_209_REQUIRED' ||
+    msg.startsWith('TRAINING_OBLIGATIONS_NOT_PUBLISHED') ||
     msg === 'GOVERNED_SOP_VERSION_CONTEXT_INVALID' ||
+    msg === 'INVALID_DOC_TYPE' ||
+    msg.startsWith('TRAINING_PROGRAM_NOT_PUBLISHED') ||
     msg === 'TRAINING_NOT_REQUIRED_FOR_ASSIGNMENT' ||
     msg === 'COMPETENCY_NOT_REQUIRED_FOR_ASSIGNMENT' ||
     msg === 'COMPETENCY_ASSIGNMENT_SUBJECT_MISMATCH' ||
@@ -529,8 +534,10 @@ export function mapV14e2b2DatabaseError(
       status: 409,
       code: msg === 'E2B2_MIGRATION_208_REQUIRED'
         ? 'E2B2_MIGRATION_208_REQUIRED'
-        : msg === 'E2B3_RECONCILIATION_NOT_RELEASED'
-        ? 'E2B3_RECONCILIATION_NOT_RELEASED'
+        : msg === 'E2B3_MIGRATION_209_REQUIRED'
+        ? 'E2B3_MIGRATION_209_REQUIRED'
+        : msg.startsWith('TRAINING_OBLIGATIONS_NOT_PUBLISHED')
+        ? 'TRAINING_OBLIGATIONS_NOT_PUBLISHED'
         : 'INVALID_LIFECYCLE_STATE',
       detail: 'The operation cannot be completed in the current lifecycle or migration state.',
       extra: { action },

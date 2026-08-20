@@ -562,7 +562,7 @@ export function analyzePatch83uAuthSurface({
     .sort((a, b) => a.signature.localeCompare(b.signature));
   const targetBroadSecurityDefiners = [];
   const reviewedRestrictedSecurityDefiners = [];
-  const reviewedPatch83uMigrationCeiling = 208;
+  const reviewedPatch83uMigrationCeiling = 209;
   const explicitServiceOnlyAclFloor = 176;
   const reviewedTargetSecurityDefinerAllowlist = new Set([
     'f1r2_create_work_item',
@@ -751,10 +751,10 @@ export function analyzePatch83uAuthSurface({
     status: findings.length ? 'fail' : 'pass',
     evidence: {
       browser_source: 'src/**/*.{ts,tsx}',
-      target_schema: 'ordered supabase/migrations/*.sql through reviewed migration 198',
+      target_schema: `ordered supabase/migrations/*.sql through reviewed migration ${reviewedPatch83uMigrationCeiling}`,
       deployed_function_catalog: deployedFunctionInventory ? 'release/patch83q/patch83q-live-security-definer-inventory.json' : 'not supplied',
       deployed_search_entries: deployedSearch.length,
-      note: 'Static target-schema proof through reviewed migration 198. No hosted catalog state is claimed.',
+      note: `Static target-schema proof through reviewed migration ${reviewedPatch83uMigrationCeiling}. No hosted catalog state is claimed.`,
     },
     summary: {
       direct_browser_rpc_count: directRpcs.length,

@@ -246,11 +246,12 @@ describe('GRC v1.4-E2B2 frontend training compliance contract', () => {
     });
   });
 
-  it('13: E2B3 reconciliation stays unreleased in the E2B2 UI', async () => {
-    const { E2B2_RELEASED_MUTATION_ACTIONS, isE2B3ReconcileReleasedInUi } = await import('../../src/lib/trainingComplianceModel');
-    expect(isE2B3ReconcileReleasedInUi()).toBe(false);
+  it('13: E2B3 reconciliation is released without changing the E2B2 action set', async () => {
+    const { E2B2_RELEASED_MUTATION_ACTIONS, E2B3_RELEASED_MUTATION_ACTIONS, isE2B3ReconcileReleasedInUi } = await import('../../src/lib/trainingComplianceModel');
+    expect(isE2B3ReconcileReleasedInUi()).toBe(true);
     expect(E2B2_RELEASED_MUTATION_ACTIONS).not.toContain('reconcile_sop_training_population');
-    expect(centerSource).not.toContain('Reconcile Population');
+    expect(E2B3_RELEASED_MUTATION_ACTIONS).toContain('reconcile_sop_training_population');
+    expect(centerSource).toContain('Reconcile Population');
     expect(trainingTabSource).not.toContain('Reconcile Population');
   });
 

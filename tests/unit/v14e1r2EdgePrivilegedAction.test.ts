@@ -1308,11 +1308,11 @@ describe('GRC v1.4-E1-R2 Edge v13 Governed SOP Bridge: Behavioral & Architectura
       expect(hash).toBe('8a8fd669be55e110cc0b4948df71787ab2fce33d76d50912f6ca0043af8ebd51');
     });
 
-    it('verifies no Migration 209 exists in repository', () => {
+    it('verifies Migration 209 exists exactly once with the E2B3 filename', () => {
       const migrationsDir = path.resolve(rootDir, 'supabase/migrations');
       const files = fs.readdirSync(migrationsDir);
-      const m209Files = files.filter((f) => f.startsWith('209'));
-      expect(m209Files.length).toBe(0);
+      const m209Files = files.filter((f) => f.startsWith('209_'));
+      expect(m209Files).toEqual(['209_e2b3_training_population_reconciliation.sql']);
     });
 
     it('verifies no direct browser execution grants in Migration 206 or Migration 207', () => {

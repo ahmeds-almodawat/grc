@@ -29,14 +29,14 @@ describe('GRC v1.4-E2B2 Migration 208 Authorization & Compliance Contract Invari
 
   const sql208 = fs.readFileSync(migration208Path, 'utf8');
 
-  it('01: Migration 208 exists exactly once and Migration 209 is absent', () => {
+  it('01: frozen Migration208 exists exactly once and E2B3 Migration209 is the only successor', () => {
     expect(fs.existsSync(migration208Path)).toBe(true);
     const m208Files = fs.readdirSync(migrationsDir).filter(f => f.startsWith('208_'));
     expect(m208Files).toHaveLength(1);
     expect(m208Files[0]).toBe('208_e2b2_training_authorization_and_compliance_contract_remediation.sql');
 
     const m209Files = fs.readdirSync(migrationsDir).filter(f => f.startsWith('209_'));
-    expect(m209Files).toHaveLength(0);
+    expect(m209Files).toEqual(['209_e2b3_training_population_reconciliation.sql']);
   });
 
   it('02: Migration 207 integrity hash is unchanged', () => {
@@ -235,9 +235,9 @@ describe('GRC v1.4-E2B2 Migration 208 Authorization & Compliance Contract Invari
     expect(proof).toContain('ALL 26 BEHAVIORAL SCENARIOS DETERMINISTICALLY VERIFIED (PASSED).');
   });
 
-  it('18: Patch83U proof reviewed ceiling is set to 208', () => {
+  it('18: Patch83U proof reviewed ceiling is set to 209', () => {
     const content = fs.readFileSync(patch83uScriptPath, 'utf8');
-    expect(content).toContain('const reviewedPatch83uMigrationCeiling = 208;');
+    expect(content).toContain('const reviewedPatch83uMigrationCeiling = 209;');
   });
 
   it('19: verify-migrations script remains unchanged in parser structure', () => {
