@@ -22,6 +22,7 @@ export interface TrainingCompliancePersona {
   canViewGovernanceCompliance: boolean;
   canPublishObligations: boolean;
   canDecideRollout: boolean;
+  canReconcilePopulation: boolean;
   isReadOnlyGlobal: boolean;
 }
 
@@ -53,6 +54,10 @@ export const E2B2_RELEASED_MUTATION_ACTIONS = [
   'reopen_training_assignment_with_reason',
   'decide_sop_rollout_requirements',
   'publish_sop_training_obligations',
+] as const;
+
+export const E2B3_RELEASED_MUTATION_ACTIONS = [
+  'reconcile_sop_training_population',
 ] as const;
 
 const globalMutationRoles = new Set<AuthRole>([
@@ -91,6 +96,7 @@ export function getTrainingCompliancePersona(
     canViewGovernanceCompliance: hasGlobalMutation || isReadOnlyGlobal,
     canPublishObligations: hasGlobalMutation,
     canDecideRollout: hasGlobalMutation,
+    canReconcilePopulation: hasGlobalMutation,
     isReadOnlyGlobal,
   };
 }
@@ -255,6 +261,16 @@ export function buildRecordCompetencyAssessmentPayload(input: {
   };
 }
 
-export function isE2B3ReconcileReleasedInUi(): false {
-  return false;
+export function buildReconcilePopulationPayload(versionId: string): {
+  version_id: string;
+  confirm_reconciliation: true;
+} {
+  return {
+    version_id: versionId,
+    confirm_reconciliation: true,
+  };
+}
+
+export function isE2B3ReconcileReleasedInUi(): true {
+  return true;
 }

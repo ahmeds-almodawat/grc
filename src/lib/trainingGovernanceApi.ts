@@ -4,6 +4,7 @@ import { invokePrivilegedAction, throwRpcActionError } from './privilegedAction'
 import {
   buildRecordCompetencyAssessmentPayload,
   buildRecordDocumentAcknowledgmentPayload,
+  buildReconcilePopulationPayload,
   buildStartTrainingPayload,
   type CompetencyAssessmentResult,
 } from './trainingComplianceModel';
@@ -171,6 +172,21 @@ export interface SopTrainingComplianceMatrixRow {
   competency_failed_count: number;
   competency_pending_count: number;
   renewal_due_count: number;
+}
+
+export interface TrainingPopulationReconciliationResult {
+  success: boolean;
+  version_id: string;
+  program_id: string;
+  cycle: number;
+  cycle_type: string;
+  target_population_count: number;
+  newly_assigned_count: number;
+  reactivated_assignment_count: number;
+  cancelled_out_of_scope_count: number;
+  acknowledgment_requirements_created: number;
+  acknowledgment_requirements_reactivated: number;
+  acknowledgment_requirements_deactivated: number;
 }
 
 export async function getTrainingPrograms(): Promise<TrainingProgramRow[]> {
@@ -598,6 +614,23 @@ export async function publishSopTrainingObligations(versionId: string): Promise<
     );
   } catch (error) {
     return throwRpcActionError(error, 'Publish Training Obligations', 'publish_sop_training_obligations');
+  }
+}
+
+export async function reconcileSopTrainingPopulation(
+  versionId: string,
+): Promise<TrainingPopulationReconciliationResult> {
+  try {
+    return await invokePrivilegedAction<TrainingPopulationReconciliationResult>(
+      'reconcile_sop_training_population',
+      buildReconcilePopulationPayload(versionId),
+    );
+  } catch (error) {
+    return throwRpcActionError(
+      error,
+      'Reconcile SOP Training Population',
+      'reconcile_sop_training_population',
+    );
   }
 }
 

@@ -13,6 +13,7 @@ import {
   getE2B2SopTrainingComplianceMatrixStrict,
   getE2B2TrainingAssignmentQueueStrict,
   publishSopTrainingObligations,
+  reconcileSopTrainingPopulation,
   recordCompetencyAssessment,
   recordDocumentAcknowledgment,
   reopenTrainingAssignment,
@@ -22,6 +23,7 @@ import {
   type SopAcknowledgmentGapRow,
   type SopTrainingComplianceMatrixRow,
   type TrainingAssignmentQueueRow,
+  type TrainingPopulationReconciliationResult,
 } from '../lib/trainingGovernanceApi';
 import {
   canShowEmployeeStart,
@@ -42,6 +44,7 @@ import {
   BookOpenCheck,
   CheckCircle2,
   FileCheck2,
+  RefreshCw,
   RotateCcw,
   ShieldCheck,
   SlidersHorizontal,
@@ -117,7 +120,7 @@ function actionErrorMessage(error: unknown, text: typeof en): string {
   if (/NOT_FOUND|DOCUMENT_VERSION_NOT_FOUND|ASSIGNMENT_NOT_FOUND|OBJECT_NOT_FOUND/i.test(message)) {
     return text.errorObjectNotFound;
   }
-  if (/E2B2_MIGRATION_208_REQUIRED|SCHEMA|PGRST|42703|E2B2_LIVE_READ_UNAVAILABLE/i.test(message)) {
+  if (/E2B2_MIGRATION_208_REQUIRED|E2B3_MIGRATION_209_REQUIRED|migration 209|SCHEMA|PGRST|42703|E2B2_LIVE_READ_UNAVAILABLE/i.test(message)) {
     return text.errorSchemaMismatch;
   }
   return text.errorActionFailed;
@@ -169,6 +172,9 @@ export function TrainingGovernanceCenter() {
   const [competencyScore, setCompetencyScore] = useState('');
   const [competencyNotes, setCompetencyNotes] = useState('');
   const [rollout, setRollout] = useState<RolloutState | null>(null);
+  const [reconcileTarget, setReconcileTarget] = useState<SopTrainingComplianceMatrixRow | null>(null);
+  const [reconcileConfirmed, setReconcileConfirmed] = useState(false);
+  const [reconciliationResult, setReconciliationResult] = useState<TrainingPopulationReconciliationResult | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -291,6 +297,25 @@ export function TrainingGovernanceCenter() {
       competency_reassessment_required: rollout.competency_reassessment_required,
       rationale: rollout.rationale,
     }));
+  };
+
+  const submitReconciliation = async () => {
+    if (!reconcileTarget || !reconcileConfirmed) return;
+    const key = `reconcile:${reconcileTarget.sop_version_id}`;
+    setBusy(key);
+    setFeedback(null);
+    try {
+      const result = await reconcileSopTrainingPopulation(reconcileTarget.sop_version_id);
+      setReconciliationResult(result);
+      setReconcileTarget(null);
+      setReconcileConfirmed(false);
+      setFeedback(text.reconciliationCompleted);
+      await refreshLiveData();
+    } catch (error) {
+      setFeedback(actionErrorMessage(error, text));
+    } finally {
+      setBusy(null);
+    }
   };
 
   const tabs: Array<{ id: TabKey; label: string; enabled: boolean; icon: typeof UserCheck }> = [
@@ -704,6 +729,20 @@ export function TrainingGovernanceCenter() {
                                   {text.publishTrainingObligations}
                                 </button>
                               )}
+                              {persona.canReconcilePopulation && (
+                                <button
+                                  className="btn-secondary"
+                                  disabled={busy === `reconcile:${row.sop_version_id}`}
+                                  onClick={() => {
+                                    setReconciliationResult(null);
+                                    setReconcileConfirmed(false);
+                                    setReconcileTarget(row);
+                                  }}
+                                >
+                                  <RefreshCw size={14} />
+                                  {text.reconcilePopulation}
+                                </button>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -747,6 +786,86 @@ export function TrainingGovernanceCenter() {
                   <button className="btn-primary" disabled={Boolean(busy)} onClick={submitRollout}>
                     {text.rolloutDecision}
                   </button>
+                </ModernCard>
+              )}
+              {reconcileTarget && persona.canReconcilePopulation && (
+                <ModernCard
+                  title={text.reconcilePopulation}
+                  subtitle={`${reconcileTarget.document_code || '-'} / ${reconcileTarget.version_label}`}
+                >
+                  <div className="form-grid">
+                    <div className="full-width">
+                      <strong>{text.reconciliationImpactTitle}</strong>
+                      <ul>
+                        <li>{text.reconciliationCreatesObligations}</li>
+                        <li>{text.reconciliationCancelsOpenObligations}</li>
+                        <li>{text.reconciliationPreservesHistory}</li>
+                      </ul>
+                    </div>
+                    <label className="full-width">
+                      <input
+                        type="checkbox"
+                        checked={reconcileConfirmed}
+                        onChange={(event) => setReconcileConfirmed(event.target.checked)}
+                      />
+                      {text.confirmReconciliation}
+                    </label>
+                    <div className="form-actions full-width">
+                      <button
+                        className="btn-secondary"
+                        type="button"
+                        onClick={() => {
+                          setReconcileTarget(null);
+                          setReconcileConfirmed(false);
+                        }}
+                      >
+                        {text.cancelConfirmation}
+                      </button>
+                      <button
+                        className="btn-primary"
+                        type="button"
+                        disabled={!reconcileConfirmed || Boolean(busy)}
+                        onClick={submitReconciliation}
+                      >
+                        <RefreshCw size={14} />
+                        {text.confirmAndReconcile}
+                      </button>
+                    </div>
+                  </div>
+                </ModernCard>
+              )}
+              {reconciliationResult && (
+                <ModernCard title={text.reconciliationResults} subtitle={reconciliationResult.version_id}>
+                  <div className="stats-grid">
+                    <div className="stat-card">
+                      <div className="stat-value">{reconciliationResult.target_population_count}</div>
+                      <div className="stat-label">{text.targetPopulation}</div>
+                    </div>
+                    <div className="stat-card success">
+                      <div className="stat-value">{reconciliationResult.newly_assigned_count}</div>
+                      <div className="stat-label">{text.newAssignments}</div>
+                    </div>
+                    <div className="stat-card success">
+                      <div className="stat-value">{reconciliationResult.reactivated_assignment_count}</div>
+                      <div className="stat-label">{text.reactivatedAssignments}</div>
+                    </div>
+                    <div className="stat-card warning">
+                      <div className="stat-value">{reconciliationResult.cancelled_out_of_scope_count}</div>
+                      <div className="stat-label">{text.cancelledOutOfScope}</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-value">{reconciliationResult.acknowledgment_requirements_created}</div>
+                      <div className="stat-label">{text.ackRequirementsCreated}</div>
+                    </div>
+                    <div className="stat-card success">
+                      <div className="stat-value">{reconciliationResult.acknowledgment_requirements_reactivated}</div>
+                      <div className="stat-label">{text.ackRequirementsReactivated}</div>
+                    </div>
+                    <div className="stat-card warning">
+                      <div className="stat-value">{reconciliationResult.acknowledgment_requirements_deactivated}</div>
+                      <div className="stat-label">{text.ackRequirementsDeactivated}</div>
+                    </div>
+                  </div>
                 </ModernCard>
               )}
             </div>
@@ -836,6 +955,22 @@ const en = {
   renewalDue: 'Renewal Due',
   rolloutDecision: 'Rollout Decision',
   publishTrainingObligations: 'Publish Training Obligations',
+  reconcilePopulation: 'Reconcile Population',
+  reconciliationImpactTitle: 'Confirm the population lifecycle impact',
+  reconciliationCreatesObligations: 'Newly eligible employees may receive training, competency, or acknowledgment obligations.',
+  reconciliationCancelsOpenObligations: 'Open obligations for employees leaving the target scope may be cancelled.',
+  reconciliationPreservesHistory: 'Historical completion and acknowledgment evidence is preserved.',
+  confirmReconciliation: 'I understand these changes and explicitly confirm population reconciliation.',
+  confirmAndReconcile: 'Confirm and Reconcile',
+  cancelConfirmation: 'Cancel',
+  reconciliationCompleted: 'Population reconciliation completed. Live compliance data refreshed.',
+  reconciliationResults: 'Reconciliation Results',
+  newAssignments: 'New Assignments',
+  reactivatedAssignments: 'Reactivated Assignments',
+  cancelledOutOfScope: 'Cancelled Out of Scope',
+  ackRequirementsCreated: 'Acknowledgment Requirements Created',
+  ackRequirementsReactivated: 'Acknowledgment Requirements Reactivated',
+  ackRequirementsDeactivated: 'Acknowledgment Requirements Deactivated',
   yes: 'Yes',
   no: 'No',
 };
@@ -919,6 +1054,22 @@ const ar: typeof en = {
   renewalDue: 'مستحق التجديد',
   rolloutDecision: 'قرار النشر',
   publishTrainingObligations: 'نشر التزامات التدريب',
+  reconcilePopulation: 'تسوية الفئة المستهدفة',
+  reconciliationImpactTitle: 'تأكيد أثر دورة حياة الفئة المستهدفة',
+  reconciliationCreatesObligations: 'قد يتلقى الموظفون المؤهلون حديثًا التزامات تدريب أو كفاءة أو إقرار.',
+  reconciliationCancelsOpenObligations: 'قد تُلغى الالتزامات المفتوحة للموظفين الذين غادروا النطاق المستهدف.',
+  reconciliationPreservesHistory: 'يتم الحفاظ على أدلة الإكمال والإقرار التاريخية.',
+  confirmReconciliation: 'أفهم هذه التغييرات وأؤكد صراحةً تسوية الفئة المستهدفة.',
+  confirmAndReconcile: 'تأكيد وتنفيذ التسوية',
+  cancelConfirmation: 'إلغاء',
+  reconciliationCompleted: 'اكتملت تسوية الفئة المستهدفة وتم تحديث بيانات الامتثال الحية.',
+  reconciliationResults: 'نتائج التسوية',
+  newAssignments: 'تعيينات جديدة',
+  reactivatedAssignments: 'تعيينات أُعيد تفعيلها',
+  cancelledOutOfScope: 'ملغاة لخروجها من النطاق',
+  ackRequirementsCreated: 'متطلبات إقرار جديدة',
+  ackRequirementsReactivated: 'متطلبات إقرار أُعيد تفعيلها',
+  ackRequirementsDeactivated: 'متطلبات إقرار عُطلت',
   yes: 'نعم',
   no: 'لا',
 };
