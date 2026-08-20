@@ -562,7 +562,7 @@ export function analyzePatch83uAuthSurface({
     .sort((a, b) => a.signature.localeCompare(b.signature));
   const targetBroadSecurityDefiners = [];
   const reviewedRestrictedSecurityDefiners = [];
-  const reviewedPatch83uMigrationCeiling = 209;
+  const reviewedPatch83uMigrationCeiling = 210;
   const explicitServiceOnlyAclFloor = 176;
   const reviewedTargetSecurityDefinerAllowlist = new Set([
     'f1r2_create_work_item',
@@ -883,7 +883,7 @@ function renderMarkdown(report) {
     + `## search_grc_global\n\n`
     + `Disposition: **${report.search_grc_global.disposition}**. The accepted design is the authenticated Edge bridge using an anon-key Supabase client carrying the caller Bearer token; the RPC remains SECURITY INVOKER and its complete view/base-table chain must remain security-invoker and credential-gated by RLS.\n\n`
     + `## ACL-reachable SECURITY DEFINER routines\n\n`
-    + `The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–${report.summary.reviewed_patch83u_migration_ceiling} permit exactly three Patch 83U RLS decision helpers. Every SECURITY DEFINER routine introduced, replaced, or renamed by migrations 176–${report.summary.reviewed_patch83u_migration_ceiling} must contain its own explicit revoke from PUBLIC/anon/authenticated plus either an explicit service_role-only grant or an explicit owner-only service_role revoke; migration 174's earlier dynamic revoke is not accepted as evidence for later migrations. Migration ${report.summary.reviewed_patch83u_migration_ceiling + 1} and later fail closed until separately reviewed.\n\n`
+    + `The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–${report.summary.reviewed_patch83u_migration_ceiling} permit exactly three Patch 83U RLS decision helpers plus the reviewed owner-only F1R2 work-item routine. Every SECURITY DEFINER routine introduced, replaced, or renamed by migrations 176–${report.summary.reviewed_patch83u_migration_ceiling} must contain its own explicit revoke from PUBLIC/anon/authenticated plus either an explicit service_role-only grant or an explicit owner-only service_role revoke; migration 174's earlier dynamic revoke is not accepted as evidence for later migrations. Migration ${report.summary.reviewed_patch83u_migration_ceiling + 1} and later fail closed until separately reviewed.\n\n`
     + `| Signature | Evidence source | PUBLIC | anon | authenticated | Disposition | Purpose |\n`
     + `|---|---|---:|---:|---:|---|---|\n${rpcRows || '| _none_ | | | | | | |'}\n\n`
     + `### Reviewed restricted routines from migrations 176–${report.summary.reviewed_patch83u_migration_ceiling}\n\n`
