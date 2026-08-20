@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 import { emptyLiveObject, emptyLiveArray } from './liveData';
 import { invokePrivilegedAction, throwRpcActionError } from './privilegedAction';
 import {
+  buildRecordCompetencyAssessmentPayload,
   buildRecordDocumentAcknowledgmentPayload,
   buildStartTrainingPayload,
   type CompetencyAssessmentResult,
@@ -14,6 +15,31 @@ const logApiWarning = (label: string, error: unknown) => {
 
 function stripUndefined<T extends Record<string, unknown>>(payload: T): Record<string, unknown> {
   return Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined));
+}
+
+export class E2B2LiveReadError extends Error {
+  readonly code = 'E2B2_LIVE_READ_UNAVAILABLE';
+  readonly source: string;
+
+  constructor(source: string) {
+    super(`${source} live read is unavailable.`);
+    this.name = 'E2B2LiveReadError';
+    this.source = source;
+  }
+}
+
+export async function runStrictE2B2Read<T>(
+  source: string,
+  query: () => Promise<{ data: T[] | null; error: unknown }>,
+): Promise<T[]> {
+  try {
+    const { data, error } = await query();
+    if (error) throw new E2B2LiveReadError(source);
+    return data ?? [];
+  } catch (error) {
+    if (error instanceof E2B2LiveReadError) throw error;
+    throw new E2B2LiveReadError(source);
+  }
 }
 
 export interface TrainingProgramRow {
@@ -32,11 +58,12 @@ export interface TrainingAssignmentQueueRow {
   id: string;
   program_id: string;
   assigned_to_user_id: string | null;
+  assigned_to_role?: string | null;
   assigned_to_department_id?: string | null;
-  document_version_id?: string | null;
   due_date: string | null;
   status: 'assigned' | 'in_progress' | 'completed' | 'overdue' | 'waived' | 'cancelled' | string;
   assigned_at?: string | null;
+  assigned_by?: string | null;
   completed_at?: string | null;
   completion_evidence_id?: string | null;
   program_title: string | null;
@@ -46,8 +73,6 @@ export interface TrainingAssignmentQueueRow {
   assigned_user_name_ar?: string | null;
   department_name_en?: string | null;
   department_name_ar?: string | null;
-  document_code?: string | null;
-  version_label?: string | null;
 }
 
 export interface SopAcknowledgmentGapRow {
@@ -178,6 +203,21 @@ export async function getTrainingAssignmentQueue(): Promise<TrainingAssignmentQu
   }
 }
 
+export async function getE2B2TrainingAssignmentQueueStrict(): Promise<TrainingAssignmentQueueRow[]> {
+  if (!supabase) throw new E2B2LiveReadError('Training assignment queue');
+  const client = supabase;
+  return runStrictE2B2Read('Training assignment queue', async () => {
+    const { data, error } = await client
+      .from('v_patch29_training_assignment_queue')
+      .select('*')
+      .order('assigned_at', { ascending: false });
+    return {
+      data: data as unknown as TrainingAssignmentQueueRow[] | null,
+      error,
+    };
+  });
+}
+
 export async function getOverdueTrainingAssignments(): Promise<TrainingAssignmentQueueRow[]> {
   if (!supabase) return emptyLiveArray();
   try {
@@ -207,6 +247,20 @@ export async function getSopAcknowledgmentGaps(): Promise<SopAcknowledgmentGapRo
   }
 }
 
+export async function getE2B2SopAcknowledgmentGapsStrict(): Promise<SopAcknowledgmentGapRow[]> {
+  if (!supabase) throw new E2B2LiveReadError('SOP acknowledgment gaps');
+  const client = supabase;
+  return runStrictE2B2Read('SOP acknowledgment gaps', async () => {
+    const { data, error } = await client
+      .from('v_patch29_sop_acknowledgment_gap')
+      .select('*');
+    return {
+      data: data as unknown as SopAcknowledgmentGapRow[] | null,
+      error,
+    };
+  });
+}
+
 export async function getCompetencyGaps(): Promise<CompetencyGapRow[]> {
   if (!supabase) return emptyLiveArray();
   try {
@@ -219,6 +273,20 @@ export async function getCompetencyGaps(): Promise<CompetencyGapRow[]> {
     logApiWarning('getCompetencyGaps', error);
     return emptyLiveArray();
   }
+}
+
+export async function getE2B2CompetencyGapsStrict(): Promise<CompetencyGapRow[]> {
+  if (!supabase) throw new E2B2LiveReadError('Competency gaps');
+  const client = supabase;
+  return runStrictE2B2Read('Competency gaps', async () => {
+    const { data, error } = await client
+      .from('v_patch29_competency_gap_dashboard')
+      .select('*');
+    return {
+      data: data as unknown as CompetencyGapRow[] | null,
+      error,
+    };
+  });
 }
 
 export async function getTrainingEvidenceIndex(): Promise<TrainingEvidenceRow[]> {
@@ -280,6 +348,21 @@ export async function getSopTrainingComplianceMatrix(): Promise<SopTrainingCompl
     logApiWarning('getSopTrainingComplianceMatrix', error);
     return emptyLiveArray();
   }
+}
+
+export async function getE2B2SopTrainingComplianceMatrixStrict(): Promise<SopTrainingComplianceMatrixRow[]> {
+  if (!supabase) throw new E2B2LiveReadError('SOP training compliance matrix');
+  const client = supabase;
+  return runStrictE2B2Read('SOP training compliance matrix', async () => {
+    const { data, error } = await client
+      .from('v_sop_training_compliance_matrix')
+      .select('*')
+      .order('document_code', { ascending: true });
+    return {
+      data: data as unknown as SopTrainingComplianceMatrixRow[] | null,
+      error,
+    };
+  });
 }
 
 // Legacy/unreleased Patch29-era wrappers are retained only for historical callers.
@@ -446,16 +529,11 @@ export async function recordCompetencyAssessment(payload: {
   actor_id?: string;
 }): Promise<string> {
   try {
+    const actionPayload = buildRecordCompetencyAssessmentPayload(payload);
     return await invokePrivilegedAction<string>(
       'record_competency_assessment',
       stripUndefined({
-        assignment_id: payload.assignment_id ?? null,
-        user_id: payload.user_id,
-        competency_area: payload.competency_area,
-        result: payload.result,
-        score: payload.score ?? null,
-        evidence_id: payload.evidence_id ?? null,
-        notes: payload.notes ?? null,
+        ...actionPayload,
         actor_id: payload.actor_id,
       })
     );

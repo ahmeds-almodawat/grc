@@ -5,9 +5,10 @@ import { StatusPill } from '../ModernCard';
 import { useAsyncData } from '../../hooks/useAsyncData';
 import { useI18n } from '../../i18n/I18nContext';
 import {
-  getSopTrainingComplianceMatrix,
+  getE2B2SopTrainingComplianceMatrixStrict,
   type SopTrainingComplianceMatrixRow,
 } from '../../lib/trainingGovernanceApi';
+import { formatLiveMetric, type LiveReadStatus } from '../../lib/trainingComplianceModel';
 import { PAGE_LOCATION_REGISTRY, PAGE_QUERY_PARAMETER } from '../../routes/pageLocation';
 
 const emptySummary = {
@@ -41,9 +42,13 @@ function summarize(rows: SopTrainingComplianceMatrixRow[]) {
 export function TrainingAckTab() {
   const { language, t } = useI18n();
   const text = language === 'ar' ? ar : en;
-  const matrix = useAsyncData(getSopTrainingComplianceMatrix, []);
+  const matrix = useAsyncData(getE2B2SopTrainingComplianceMatrixStrict, []);
   const rows = matrix.data ?? [];
-  const summary = useMemo(() => summarize(rows), [rows]);
+  const matrixStatus: LiveReadStatus = matrix.loading ? 'loading' : matrix.error ? 'error' : 'success';
+  const summary = useMemo(
+    () => (matrixStatus === 'success' ? summarize(rows) : null),
+    [matrixStatus, rows],
+  );
   const trainingCenterUrl = `?${PAGE_QUERY_PARAMETER}=${PAGE_LOCATION_REGISTRY.trainingGovernance}`;
 
   return (
@@ -61,24 +66,24 @@ export function TrainingAckTab() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
           <span className="text-xs text-slate-500 flex items-center gap-2"><BookOpenCheck size={14} />{text.trainingRequired}</span>
-          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{summary.training_target_count}</div>
-          <span className="text-[11px] text-slate-500 mt-0.5 inline-block">{text.assigned}: {summary.assigned_count}</span>
+          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{formatLiveMetric(summary?.training_target_count ?? 0, matrixStatus)}</div>
+          <span className="text-[11px] text-slate-500 mt-0.5 inline-block">{text.assigned}: {formatLiveMetric(summary?.assigned_count ?? 0, matrixStatus)}</span>
         </div>
         <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
           <span className="text-xs text-slate-500 flex items-center gap-2"><FileCheck2 size={14} />{text.acknowledgmentRequired}</span>
-          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{summary.acknowledgment_target_count}</div>
-          <span className="text-[11px] text-slate-500 mt-0.5 inline-block">{text.gap}: {summary.acknowledgment_gap_count}</span>
+          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{formatLiveMetric(summary?.acknowledgment_target_count ?? 0, matrixStatus)}</div>
+          <span className="text-[11px] text-slate-500 mt-0.5 inline-block">{text.gap}: {formatLiveMetric(summary?.acknowledgment_gap_count ?? 0, matrixStatus)}</span>
         </div>
         <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
           <span className="text-xs text-slate-500 flex items-center gap-2"><ShieldCheck size={14} />{text.competencyRequired}</span>
-          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{summary.competency_target_count}</div>
-          <span className="text-[11px] text-slate-500 mt-0.5 inline-block">{text.pending}: {summary.competency_pending_count}</span>
+          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{formatLiveMetric(summary?.competency_target_count ?? 0, matrixStatus)}</div>
+          <span className="text-[11px] text-slate-500 mt-0.5 inline-block">{text.pending}: {formatLiveMetric(summary?.competency_pending_count ?? 0, matrixStatus)}</span>
         </div>
       </div>
 
       <DataState
         loading={matrix.loading}
-        error={matrix.error}
+        error={matrix.error ? text.errorLiveReadUnavailable : null}
         empty={rows.length === 0}
         emptyTitle={text.empty}
         emptyMessage={text.empty}
@@ -154,6 +159,7 @@ const en = {
   no: 'No',
   empty: 'No governed SOP training obligations have been published yet.',
   openCenter: 'Open Training Governance Center',
+  errorLiveReadUnavailable: 'Live training compliance data is unavailable. Ask an administrator to verify the deployment contract.',
 };
 
 const ar: typeof en = {
@@ -177,4 +183,5 @@ const ar: typeof en = {
   no: 'لا',
   empty: 'لم يتم نشر التزامات تدريب لإجراءات تشغيل محكومة بعد.',
   openCenter: 'فتح مركز حوكمة التدريب',
+  errorLiveReadUnavailable: 'بيانات امتثال التدريب الحية غير متاحة. يرجى طلب التحقق من عقد النشر.',
 };

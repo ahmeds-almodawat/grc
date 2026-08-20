@@ -8,10 +8,10 @@ import {
   cancelTrainingAssignment,
   completeTrainingAssignment,
   decideSopRolloutRequirements,
-  getCompetencyGaps,
-  getSopAcknowledgmentGaps,
-  getSopTrainingComplianceMatrix,
-  getTrainingAssignmentQueue,
+  getE2B2CompetencyGapsStrict,
+  getE2B2SopAcknowledgmentGapsStrict,
+  getE2B2SopTrainingComplianceMatrixStrict,
+  getE2B2TrainingAssignmentQueueStrict,
   publishSopTrainingObligations,
   recordCompetencyAssessment,
   recordDocumentAcknowledgment,
@@ -24,15 +24,18 @@ import {
   type TrainingAssignmentQueueRow,
 } from '../lib/trainingGovernanceApi';
 import {
-  canShowCompletionCertification,
   canShowEmployeeStart,
-  canShowReopen,
-  canShowWaiveOrCancel,
   formatCompetencyScore,
+  formatLiveMetric,
+  getAssignmentRowActionEligibility,
   getTrainingCompliancePersona,
+  isMyObligationsLoading,
   isReasonLengthValid,
   isRolloutRationaleValid,
+  isTeamComplianceEmpty,
+  isTeamComplianceLoading,
   type CompetencyAssessmentResult,
+  type LiveReadStatus,
 } from '../lib/trainingComplianceModel';
 import {
   Award,
@@ -103,21 +106,25 @@ function statusTone(status: string): 'neutral' | 'good' | 'warning' | 'danger' {
   return 'neutral';
 }
 
-function actionErrorMessage(error: unknown): string {
+function actionErrorMessage(error: unknown, text: typeof en): string {
   const message = error instanceof Error ? error.message : String(error || '');
   if (/AUTHORIZATION_DENIED|UNAUTHORIZED|FORBIDDEN|permission/i.test(message)) {
-    return 'The backend rejected this operation for the current authenticated user.';
+    return text.errorAuthorizationDenied;
   }
   if (/INVALID_LIFECYCLE_STATE|INVALID_ASSIGNMENT_STATUS|CANNOT_|TRAINING_NOT_REQUIRED|COMPETENCY_NOT_REQUIRED/i.test(message)) {
-    return 'The operation is not valid for the current lifecycle state.';
+    return text.errorInvalidLifecycle;
   }
   if (/NOT_FOUND|DOCUMENT_VERSION_NOT_FOUND|ASSIGNMENT_NOT_FOUND|OBJECT_NOT_FOUND/i.test(message)) {
-    return 'The selected governed record could not be found.';
+    return text.errorObjectNotFound;
   }
-  if (/E2B2_MIGRATION_208_REQUIRED|SCHEMA|PGRST|42703/i.test(message)) {
-    return 'The deployed database contract does not match the E2B2 frontend contract.';
+  if (/E2B2_MIGRATION_208_REQUIRED|SCHEMA|PGRST|42703|E2B2_LIVE_READ_UNAVAILABLE/i.test(message)) {
+    return text.errorSchemaMismatch;
   }
-  return 'The action could not be completed.';
+  return text.errorActionFailed;
+}
+
+function liveReadErrorMessage(error: string | null, text: typeof en): string | null {
+  return error ? text.errorLiveReadUnavailable : null;
 }
 
 function sumMatrix(rows: SopTrainingComplianceMatrixRow[]): SopTrainingComplianceMatrixRow {
@@ -165,17 +172,36 @@ export function TrainingGovernanceCenter() {
   const [busy, setBusy] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  const assignments = useAsyncData(getTrainingAssignmentQueue, []);
-  const ackGaps = useAsyncData(getSopAcknowledgmentGaps, []);
-  const competencyGaps = useAsyncData(getCompetencyGaps, []);
-  const matrix = useAsyncData(getSopTrainingComplianceMatrix, []);
+  const assignments = useAsyncData(getE2B2TrainingAssignmentQueueStrict, []);
+  const ackGaps = useAsyncData(getE2B2SopAcknowledgmentGapsStrict, []);
+  const competencyGaps = useAsyncData(getE2B2CompetencyGapsStrict, []);
+  const matrix = useAsyncData(getE2B2SopTrainingComplianceMatrixStrict, []);
 
   const profileId = auth.profile?.id ?? null;
   const assignmentRows = assignments.data ?? [];
   const ackRows = ackGaps.data ?? [];
   const competencyRows = competencyGaps.data ?? [];
   const matrixRows = matrix.data ?? [];
-  const matrixSummary = useMemo(() => sumMatrix(matrixRows), [matrixRows]);
+  const matrixStatus: LiveReadStatus = matrix.loading ? 'loading' : matrix.error ? 'error' : 'success';
+  const matrixSummary = useMemo(
+    () => (matrixStatus === 'success' ? sumMatrix(matrixRows) : null),
+    [matrixRows, matrixStatus],
+  );
+  const myObligationsLoading = isMyObligationsLoading({
+    assignmentsLoading: assignments.loading,
+    acknowledgmentGapsLoading: ackGaps.loading,
+    competencyGapsLoading: competencyGaps.loading,
+  });
+  const teamComplianceLoading = isTeamComplianceLoading({
+    assignmentsLoading: assignments.loading,
+    acknowledgmentGapsLoading: ackGaps.loading,
+    competencyGapsLoading: competencyGaps.loading,
+  });
+  const teamComplianceEmpty = isTeamComplianceEmpty({
+    assignmentCount: assignmentRows.length,
+    acknowledgmentGapCount: ackRows.length,
+    competencyGapCount: competencyRows.length,
+  });
 
   const myAssignments = profileId
     ? assignmentRows.filter((row) => row.assigned_to_user_id === profileId)
@@ -211,7 +237,7 @@ export function TrainingGovernanceCenter() {
       setCompetencyNotes('');
       await refreshLiveData();
     } catch (error) {
-      setFeedback(actionErrorMessage(error));
+      setFeedback(actionErrorMessage(error, text));
     } finally {
       setBusy(null);
     }
@@ -234,6 +260,7 @@ export function TrainingGovernanceCenter() {
         competency_area: competencyArea.trim(),
         result: competencyResult,
         score: competencyScore.trim() ? Number(competencyScore) : null,
+        evidence_id: evidenceId.trim() || null,
         notes: competencyNotes.trim() || null,
       }));
       return;
@@ -285,22 +312,22 @@ export function TrainingGovernanceCenter() {
       <div className="stats-grid">
         <div className="stat-card">
           <BookOpenCheck size={20} />
-          <div className="stat-value">{matrixSummary.training_target_count}</div>
+          <div className="stat-value">{formatLiveMetric(matrixSummary?.training_target_count ?? 0, matrixStatus)}</div>
           <div className="stat-label">{text.trainingRequired}</div>
         </div>
         <div className="stat-card warning">
           <FileCheck2 size={20} />
-          <div className="stat-value">{matrixSummary.acknowledgment_gap_count}</div>
+          <div className="stat-value">{formatLiveMetric(matrixSummary?.acknowledgment_gap_count ?? 0, matrixStatus)}</div>
           <div className="stat-label">{text.acknowledgmentGaps}</div>
         </div>
         <div className="stat-card danger">
           <XCircle size={20} />
-          <div className="stat-value">{matrixSummary.competency_failed_count}</div>
+          <div className="stat-value">{formatLiveMetric(matrixSummary?.competency_failed_count ?? 0, matrixStatus)}</div>
           <div className="stat-label">{text.competencyGaps}</div>
         </div>
         <div className="stat-card success">
           <CheckCircle2 size={20} />
-          <div className="stat-value">{matrixSummary.completed_count}</div>
+          <div className="stat-value">{formatLiveMetric(matrixSummary?.completed_count ?? 0, matrixStatus)}</div>
           <div className="stat-label">{text.completed}</div>
         </div>
       </div>
@@ -329,8 +356,8 @@ export function TrainingGovernanceCenter() {
             <div className="tab-pane" data-e2b2-persona="employee">
               <ModernCard title={text.myObligations} subtitle={text.myObligationsSubtitle}>
                 <DataState
-                  loading={assignments.loading && ackGaps.loading && competencyGaps.loading}
-                  error={assignments.error || ackGaps.error || competencyGaps.error}
+                  loading={myObligationsLoading}
+                  error={liveReadErrorMessage(assignments.error || ackGaps.error || competencyGaps.error, text)}
                   empty={myAssignments.length === 0 && myAckRows.length === 0 && myCompetencyRows.length === 0}
                   emptyTitle={text.noMyObligations}
                   emptyMessage={text.noMyObligations}
@@ -340,7 +367,7 @@ export function TrainingGovernanceCenter() {
                       <thead>
                         <tr>
                           <th>{text.obligation}</th>
-                          <th>{text.sopVersion}</th>
+                          <th>{text.context}</th>
                           <th>{text.dueDate}</th>
                           <th>{text.status}</th>
                           <th>{text.actions}</th>
@@ -350,7 +377,7 @@ export function TrainingGovernanceCenter() {
                         {myAssignments.map((row) => (
                           <tr key={`assignment-${row.id}`}>
                             <td>{localizedName(language, row.program_title, row.program_title_ar)}</td>
-                            <td>{[row.document_code, row.version_label].filter(Boolean).join(' / ') || '-'}</td>
+                            <td>{localizedName(language, row.program_title, row.program_title_ar)}</td>
                             <td>{row.due_date || '-'}</td>
                             <td><StatusPill tone={statusTone(row.status)}>{row.status}</StatusPill></td>
                             <td>
@@ -421,49 +448,115 @@ export function TrainingGovernanceCenter() {
             <div className="tab-pane" data-e2b2-persona="manager">
               <ModernCard title={text.teamCompliance} subtitle={text.teamComplianceSubtitle}>
                 <DataState
-                  loading={assignments.loading}
-                  error={assignments.error}
-                  empty={assignmentRows.length === 0}
+                  loading={teamComplianceLoading}
+                  error={liveReadErrorMessage(assignments.error || ackGaps.error || competencyGaps.error, text)}
+                  empty={teamComplianceEmpty}
                   emptyTitle={text.noTeamObligations}
                   emptyMessage={text.noTeamObligations}
                 >
                   <div className="table-wrap">
+                    <h4>{text.trainingAssignments}</h4>
                     <table className="entity-table">
                       <thead>
                         <tr>
                           <th>{text.employee}</th>
                           <th>{text.department}</th>
                           <th>{text.trainingStatus}</th>
-                          <th>{text.sopVersion}</th>
+                          <th>{text.context}</th>
                           <th>{text.dueDate}</th>
                           <th>{text.actions}</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {assignmentRows.map((row) => (
-                          <tr key={row.id}>
-                            <td>{localizedName(language, row.assigned_user_name_en, row.assigned_user_name_ar)}</td>
-                            <td>{localizedName(language, row.department_name_en, row.department_name_ar)}</td>
-                            <td><StatusPill tone={statusTone(row.status)}>{row.status}</StatusPill></td>
-                            <td>{[row.document_code, row.version_label].filter(Boolean).join(' / ') || localizedName(language, row.program_title, row.program_title_ar)}</td>
-                            <td>{row.due_date || '-'}</td>
-                            <td>
-                              {persona.canCertifyCompletionCandidate && canShowCompletionCertification(row.status) && (
-                                <button className="btn-secondary" onClick={() => setAdminAction({ type: 'certify', row })}>{text.certifyCompletion}</button>
-                              )}
-                              {persona.canRecordCompetencyCandidate && (
-                                <button className="btn-secondary" onClick={() => setAdminAction({ type: 'competency', row })}>{text.recordCompetency}</button>
-                              )}
-                              {persona.canAdministerAssignmentCandidate && canShowWaiveOrCancel(row.status) && (
-                                <>
+                        {assignmentRows.map((row) => {
+                          const eligibility = getAssignmentRowActionEligibility({
+                            persona,
+                            actorUserId: profileId,
+                            subjectUserId: row.assigned_to_user_id,
+                            status: row.status,
+                          });
+                          return (
+                            <tr key={row.id}>
+                              <td>{localizedName(language, row.assigned_user_name_en, row.assigned_user_name_ar)}</td>
+                              <td>{localizedName(language, row.department_name_en, row.department_name_ar)}</td>
+                              <td><StatusPill tone={statusTone(row.status)}>{row.status}</StatusPill></td>
+                              <td>{localizedName(language, row.program_title, row.program_title_ar)}</td>
+                              <td>{row.due_date || '-'}</td>
+                              <td>
+                                {eligibility.canCertifyCompletion && (
+                                  <button className="btn-secondary" onClick={() => setAdminAction({ type: 'certify', row })}>{text.certifyCompletion}</button>
+                                )}
+                                {eligibility.canRecordCompetency && (
+                                  <button className="btn-secondary" onClick={() => setAdminAction({ type: 'competency', row })}>{text.recordCompetency}</button>
+                                )}
+                                {eligibility.canWaive && (
                                   <button className="btn-secondary" onClick={() => setAdminAction({ type: 'waive', row })}>{text.waive}</button>
+                                )}
+                                {eligibility.canCancel && (
                                   <button className="btn-secondary" onClick={() => setAdminAction({ type: 'cancel', row })}>{text.cancel}</button>
-                                </>
-                              )}
-                              {persona.canAdministerAssignmentCandidate && canShowReopen(row.status) && (
-                                <button className="btn-secondary" onClick={() => setAdminAction({ type: 'reopen', row })}>{text.reopen}</button>
-                              )}
+                                )}
+                                {eligibility.canReopen && (
+                                  <button className="btn-secondary" onClick={() => setAdminAction({ type: 'reopen', row })}>{text.reopen}</button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+
+                    <h4>{text.sopAcknowledgmentGaps}</h4>
+                    <table className="entity-table">
+                      <thead>
+                        <tr>
+                          <th>{text.employee}</th>
+                          <th>{text.department}</th>
+                          <th>{text.sopVersion}</th>
+                          <th>{text.dueDate}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ackRows.map((row) => (
+                          <tr key={`${row.user_id}-${row.version_id}`}>
+                            <td>{localizedName(language, row.user_name_en, row.user_name_ar)}</td>
+                            <td>{localizedName(language, row.department_name_en, row.department_name_ar)}</td>
+                            <td>
+                              <strong>{row.document_code || '-'}</strong>
+                              <div>{localizedName(language, row.sop_title, row.sop_title_ar)}</div>
+                              <small>{row.version_label || '-'}</small>
                             </td>
+                            <td>{row.due_date || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    <h4>{text.competencyGapsStatus}</h4>
+                    <table className="entity-table">
+                      <thead>
+                        <tr>
+                          <th>{text.employee}</th>
+                          <th>{text.competencyArea}</th>
+                          <th>{text.result}</th>
+                          <th>{text.score}</th>
+                          <th>{text.sopVersion}</th>
+                          <th>{text.dueDate}</th>
+                          <th>{text.assessor}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {competencyRows.map((row) => (
+                          <tr key={`${row.user_id}-${row.assignment_id ?? row.competency_area ?? 'pending'}`}>
+                            <td>{localizedName(language, row.user_name_en, row.user_name_ar)}</td>
+                            <td>{row.competency_area || text.competencyRequired}</td>
+                            <td><StatusPill tone={statusTone(row.result || 'pending')}>{row.result || 'pending'}</StatusPill></td>
+                            <td>{formatCompetencyScore(row.score)}</td>
+                            <td>
+                              <strong>{row.document_code || '-'}</strong>
+                              <div>{row.version_label || '-'}</div>
+                            </td>
+                            <td>{row.due_date || '-'}</td>
+                            <td>{localizedName(language, row.assessor_name_en, row.assessor_name_ar)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -500,6 +593,10 @@ export function TrainingGovernanceCenter() {
                           <input type="number" value={competencyScore} onChange={(event) => setCompetencyScore(event.target.value)} />
                         </label>
                         <label>
+                          {text.evidenceIdOptional}
+                          <input value={evidenceId} onChange={(event) => setEvidenceId(event.target.value)} />
+                        </label>
+                        <label>
                           {text.notes}
                           <textarea value={competencyNotes} onChange={(event) => setCompetencyNotes(event.target.value)} />
                         </label>
@@ -529,7 +626,7 @@ export function TrainingGovernanceCenter() {
               <ModernCard title={text.trainingCompliance} subtitle={persona.isReadOnlyGlobal ? text.readOnly : text.governanceSubtitle}>
                 <DataState
                   loading={matrix.loading}
-                  error={matrix.error}
+                  error={liveReadErrorMessage(matrix.error, text)}
                   empty={matrixRows.length === 0}
                   emptyTitle={text.noGovernedObligations}
                   emptyMessage={text.noGovernedObligations}
@@ -667,7 +764,7 @@ const en = {
   myObligations: 'My Obligations',
   myObligationsSubtitle: 'Assigned formal training, exact SOP version acknowledgments, and competency status visible to you.',
   teamCompliance: 'Team Compliance',
-  teamComplianceSubtitle: 'Scoped team training obligations visible through RLS and security-invoker views.',
+  teamComplianceSubtitle: 'Scoped Assignment Compliance visible through RLS and security-invoker views.',
   trainingCompliance: 'Training & Compliance',
   governanceSubtitle: 'Published SOP version requirements, target populations, and compliance status.',
   readOnly: 'Read-only governance view.',
@@ -675,6 +772,7 @@ const en = {
   noTeamObligations: 'No scoped team training obligations are currently visible.',
   noGovernedObligations: 'No governed SOP training obligations have been published yet.',
   obligation: 'Obligation',
+  context: 'Context',
   sopVersion: 'SOP / Version',
   dueDate: 'Due Date',
   status: 'State',
@@ -691,6 +789,9 @@ const en = {
   acknowledgmentNote: 'Optional acknowledgment note',
   employee: 'Employee',
   department: 'Department',
+  trainingAssignments: 'Training Assignments',
+  sopAcknowledgmentGaps: 'SOP Acknowledgment Gaps',
+  competencyGapsStatus: 'Competency Gaps / Status',
   trainingStatus: 'Training Status',
   certifyCompletion: 'Certify Completion',
   recordCompetency: 'Record Competency',
@@ -699,15 +800,23 @@ const en = {
   reopen: 'Reopen',
   actionDetails: 'Action Details',
   evidenceId: 'Evidence ID',
+  evidenceIdOptional: 'Evidence ID (optional)',
   competencyArea: 'Competency Area',
   result: 'Result',
   score: 'Score',
+  assessor: 'Assessor',
   notes: 'Notes',
   reason: 'Reason',
   reasonInvalid: 'Reason must be 3 to 1000 characters.',
   rationale: 'Rationale',
   rationaleInvalid: 'Rationale must be 5 to 4000 characters.',
   actionCompleted: 'Action completed. Live obligations refreshed.',
+  errorAuthorizationDenied: 'The backend rejected this operation for the current authenticated user.',
+  errorInvalidLifecycle: 'The operation is not valid for the current lifecycle state.',
+  errorObjectNotFound: 'The selected governed record could not be found.',
+  errorSchemaMismatch: 'The deployed database contract does not match the E2B2 frontend contract.',
+  errorActionFailed: 'The action could not be completed.',
+  errorLiveReadUnavailable: 'Live training compliance data is unavailable. Ask an administrator to verify the deployment contract.',
   trainingRequired: 'Training Required',
   acknowledgmentRequired: 'Acknowledgment Required',
   competencyRequired: 'Competency Required',
@@ -738,7 +847,7 @@ const ar: typeof en = {
   myObligations: 'التزاماتي',
   myObligationsSubtitle: 'التدريب الرسمي وإقرارات النسخ وحالة الكفاءة الظاهرة لك.',
   teamCompliance: 'امتثال الفريق',
-  teamComplianceSubtitle: 'التزامات تدريب الفريق ضمن النطاق الظاهر عبر سياسات RLS والعروض الآمنة.',
+  teamComplianceSubtitle: 'امتثال التعيينات ضمن النطاق الظاهر عبر سياسات RLS والعروض الآمنة.',
   trainingCompliance: 'التدريب والامتثال',
   governanceSubtitle: 'متطلبات نسخ إجراءات التشغيل المنشورة والفئات المستهدفة وحالة الامتثال.',
   readOnly: 'عرض حوكمي للقراءة فقط.',
@@ -746,6 +855,7 @@ const ar: typeof en = {
   noTeamObligations: 'لا توجد التزامات تدريب فريق ظاهرة ضمن نطاقك حالياً.',
   noGovernedObligations: 'لم يتم نشر التزامات تدريب لإجراءات تشغيل محكومة بعد.',
   obligation: 'الالتزام',
+  context: 'السياق',
   sopVersion: 'الإجراء / النسخة',
   dueDate: 'تاريخ الاستحقاق',
   status: 'الحالة',
@@ -762,6 +872,9 @@ const ar: typeof en = {
   acknowledgmentNote: 'ملاحظة إقرار اختيارية',
   employee: 'الموظف',
   department: 'القسم',
+  trainingAssignments: 'تعيينات التدريب',
+  sopAcknowledgmentGaps: 'فجوات إقرار إجراءات التشغيل',
+  competencyGapsStatus: 'فجوات / حالة الكفاءة',
   trainingStatus: 'حالة التدريب',
   certifyCompletion: 'اعتماد الإكمال',
   recordCompetency: 'تسجيل الكفاءة',
@@ -770,15 +883,23 @@ const ar: typeof en = {
   reopen: 'إعادة فتح',
   actionDetails: 'تفاصيل الإجراء',
   evidenceId: 'معرف الدليل',
+  evidenceIdOptional: 'معرف الدليل (اختياري)',
   competencyArea: 'مجال الكفاءة',
   result: 'النتيجة',
   score: 'الدرجة',
+  assessor: 'المقيم',
   notes: 'ملاحظات',
   reason: 'السبب',
   reasonInvalid: 'يجب أن يكون السبب بين 3 و1000 حرف.',
   rationale: 'المبرر',
   rationaleInvalid: 'يجب أن يكون المبرر بين 5 و4000 حرف.',
   actionCompleted: 'اكتمل الإجراء وتم تحديث الالتزامات الحية.',
+  errorAuthorizationDenied: 'رفض الخادم هذا الإجراء للمستخدم المصادق الحالي.',
+  errorInvalidLifecycle: 'لا يمكن تنفيذ الإجراء في حالة دورة الحياة الحالية.',
+  errorObjectNotFound: 'تعذر العثور على السجل المحكوم المحدد.',
+  errorSchemaMismatch: 'عقد قاعدة البيانات المنشور لا يطابق عقد واجهة E2B2.',
+  errorActionFailed: 'تعذر إكمال الإجراء.',
+  errorLiveReadUnavailable: 'بيانات امتثال التدريب الحية غير متاحة. يرجى طلب التحقق من عقد النشر.',
   trainingRequired: 'التدريب مطلوب',
   acknowledgmentRequired: 'الإقرار مطلوب',
   competencyRequired: 'الكفاءة مطلوبة',
