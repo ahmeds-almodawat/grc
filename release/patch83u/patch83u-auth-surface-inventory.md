@@ -2,7 +2,7 @@
 
 Status: **PASS**
 
-This is a deterministic static replay of the ordered migration chain through reviewed migration 197 plus actual browser call sites. It is not live-catalog proof and does not claim any hosted catalog state.
+This is a deterministic static replay of the ordered migration chain through reviewed migration 208 plus actual browser call sites. It is not live-catalog proof and does not claim any hosted catalog state.
 
 ## Summary
 
@@ -11,7 +11,7 @@ This is a deterministic static replay of the ordered migration chain through rev
 - Direct browser materialized views: 0
 - Unsafe surfaces: 0
 - Search transport: authenticated_edge_bridge
-- Reviewed restricted migration 176–197 SECURITY DEFINER routines: 90
+- Reviewed restricted migration 176–208 SECURITY DEFINER routines: 95
 - Target credential-gate migration present: yes
 
 ## search_grc_global
@@ -20,18 +20,18 @@ Disposition: **authenticated_edge_bridge_with_caller_jwt_rls**. The accepted des
 
 ## ACL-reachable SECURITY DEFINER routines
 
-The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–197 permit exactly three Patch 83U RLS decision helpers. Every SECURITY DEFINER routine introduced, replaced, or renamed by migrations 176–197 must contain its own explicit revoke from PUBLIC/anon/authenticated plus either an explicit service_role-only grant or an explicit owner-only service_role revoke; migration 174's earlier dynamic revoke is not accepted as evidence for later migrations. Migration 198 and later fail closed until separately reviewed.
+The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–208 permit exactly three Patch 83U RLS decision helpers. Every SECURITY DEFINER routine introduced, replaced, or renamed by migrations 176–208 must contain its own explicit revoke from PUBLIC/anon/authenticated plus either an explicit service_role-only grant or an explicit owner-only service_role revoke; migration 174's earlier dynamic revoke is not accepted as evidence for later migrations. Migration 209 and later fail closed until separately reviewed.
 
 | Signature | Evidence source | PUBLIC | anon | authenticated | Disposition | Purpose |
 |---|---|---:|---:|---:|---|---|
 | `public.current_user_org_id()` | retained_patch83q_live_catalog | no | no | yes | allowed | Read-only caller organization identity helper retained by Patch 83Q. |
 | `public.has_any_role(text[])` | retained_patch83q_live_catalog | yes | yes | yes | allowed | Read-only RLS role decision helper retained by Patch 83Q. |
 | `public.f1r2_create_work_item(p_actor_id uuid,p_item_type text,p_payload jsonb)` | migration197_service_role_acl_review | no | no | no | allowed |  |
-| `public.patch83u_credential_access_allowed()` | target_migrations_171_207 | no | no | yes | allowed | Credential version, state, email, and session freshness decision used by restrictive RLS. |
-| `public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)` | target_migrations_171_207 | no | no | yes | allowed | Same-organization credential-active profile update decision used by restrictive RLS. |
-| `public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)` | target_migrations_171_207 | no | no | yes | allowed | Credential-active canonical role/scope mutation decision used by restrictive RLS. |
+| `public.patch83u_credential_access_allowed()` | target_migrations_171_208 | no | no | yes | allowed | Credential version, state, email, and session freshness decision used by restrictive RLS. |
+| `public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)` | target_migrations_171_208 | no | no | yes | allowed | Same-organization credential-active profile update decision used by restrictive RLS. |
+| `public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)` | target_migrations_171_208 | no | no | yes | allowed | Credential-active canonical role/scope mutation decision used by restrictive RLS. |
 
-### Reviewed restricted routines from migrations 176–197
+### Reviewed restricted routines from migrations 176–208
 
 These routines are not reachable by browser roles. They are listed explicitly so every reviewed definition and its migration-local ACL proof remain visible.
 
@@ -41,8 +41,9 @@ These routines are not reachable by browser roles. They are listed explicitly so
 | `public.acc_v13_update_work_item_status(p_actor_id uuid,p_item_type text,p_item_id uuid,p_status text,p_progress_percent numeric,p_delay_reason text default null)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1034` |
 | `public.activate_governed_document_version(p_actor_id uuid, p_version_id uuid, p_effective_date date default current_date)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1146` |
 | `public.can_close_ovr(p_ovr_report_id uuid)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1769` |
+| `public.cancel_training_assignment_with_reason(p_assignment_id uuid, p_reason text, p_actor_id uuid)` | migration208_service_role_acl_review | yes | service_role_only | `supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:896` |
 | `public.complete_governed_document_review(p_actor_id uuid, p_trigger_id uuid, p_outcome text, p_outcome_note text)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1322` |
-| `public.complete_training_assignment(p_assignment_id uuid, p_evidence_id uuid, p_actor_id uuid)` | migration205_service_role_acl_review | yes | service_role_only | `supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1053` |
+| `public.complete_training_assignment(p_assignment_id uuid, p_evidence_id uuid, p_actor_id uuid)` | migration208_service_role_acl_review | yes | service_role_only | `supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:466` |
 | `public.configure_approval_authority_rule_stages(p_actor_id uuid, p_authority_rule_id uuid, p_stages jsonb)` | migration206_service_role_acl_review | yes | service_role_only | `supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:418` |
 | `public.create_governed_policy_draft(p_actor_id uuid, p_organization_id uuid, p_title_en text, p_title_ar text, p_purpose_en text, p_purpose_ar text, p_policy_statement_en text, p_policy_statement_ar text, p_scope_en text default null, p_scope_ar text default null, p_principles_en text default null, p_principles_ar text default null, p_exceptions_summary_en text default null, p_exceptions_summary_ar text default null, p_non_compliance_escalation_en text default null, p_non_compliance_escalation_ar text default null, p_department_id uuid default null, p_criticality_level text default 'medium', p_confidentiality_level text default 'internal', p_content_mode text default 'structured', p_requirements jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:169` |
 | `public.create_governed_sop_draft(p_actor_id uuid, p_organization_id uuid, p_title_en text, p_title_ar text default null, p_process_name_en text default null, p_process_name_ar text default null, p_purpose_en text default null, p_purpose_ar text default null, p_process_owner_id uuid default null, p_primary_policy_version_id uuid default null, p_governance_link_state text default null, p_scope_en text default null, p_scope_ar text default null, p_department_id uuid default null, p_criticality_level text default 'medium', p_confidentiality_level text default 'internal', p_training_required boolean default false, p_acknowledgment_required boolean default false, p_competency_assessment_required boolean default false, p_acknowledgment_sla_days integer default 30, p_training_renewal_months integer default 12, p_content_mode text default 'structured', p_procedure_sections jsonb default '[]'::jsonb, p_procedure_steps jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb, p_definitions jsonb default '[]'::jsonb, p_role_responsibilities jsonb default '[]'::jsonb, p_monitoring_kpis jsonb default '[]'::jsonb, p_risk_links jsonb default '[]'::jsonb, p_accreditation_links jsonb default '[]'::jsonb, p_version_links jsonb default '[]'::jsonb)` | migration206_service_role_acl_review | yes | service_role_only | `supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:1753` |
@@ -105,13 +106,15 @@ These routines are not reachable by browser roles. They are listed explicitly so
 | `public.patch83u_reconcile_credential_state_standard_impl(p_actor_id uuid, p_target_user_id uuid, p_request_id text, p_employee_id_confirmation text)` | migration176_service_role_acl_review | no | owner_only | `supabase/migrations/176_patch83u_last_super_admin_recovery.sql:125` |
 | `public.patch83u_reconcile_last_super_admin_recovery(p_actor_id uuid, p_target_user_id uuid, p_request_id text, p_employee_id_confirmation text)` | migration176_service_role_acl_review | no | owner_only | `supabase/migrations/176_patch83u_last_super_admin_recovery.sql:133` |
 | `public.patch83u_reconcile_provisioning(p_actor_id uuid, p_provisioning_id uuid, p_request_id text, p_employee_id_confirmation text)` | migration189_service_role_acl_review | yes | service_role_only | `supabase/migrations/189_patch83u_post_provisioning_role_activation.sql:393` |
-| `public.publish_sop_training_obligations(p_actor_id uuid, p_version_id uuid)` | migration205_service_role_acl_review | yes | service_role_only | `supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:591` |
+| `public.publish_sop_training_obligations(p_actor_id uuid, p_version_id uuid)` | migration208_service_role_acl_review | yes | service_role_only | `supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:1243` |
 | `public.reconcile_sop_training_population(p_actor_id uuid, p_version_id uuid)` | migration205_service_role_acl_review | yes | service_role_only | `supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:825` |
 | `public.record_approval_decision(p_approval_request_id uuid, p_approver_id uuid, p_decision text, p_decision_note text default null, p_approver_role text default null)` | migration206_service_role_acl_review | yes | service_role_only | `supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:572` |
-| `public.record_competency_assessment(p_assignment_id uuid, p_user_id uuid, p_competency_area text, p_result text, p_score numeric, p_evidence_id uuid, p_notes text, p_actor_id uuid)` | migration205_service_role_acl_review | yes | service_role_only | `supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:1128` |
+| `public.record_competency_assessment(p_assignment_id uuid, p_user_id uuid, p_competency_area text, p_result text, p_score numeric, p_evidence_id uuid, p_notes text, p_actor_id uuid)` | migration208_service_role_acl_review | yes | service_role_only | `supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:614` |
+| `public.record_document_acknowledgment(p_document_id uuid, p_version_id uuid, p_user_id uuid, p_acknowledgment_method text default 'manual', p_acknowledgment_note text default null)` | migration208_service_role_acl_review | yes | service_role_only | `supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:1122` |
 | `public.refresh_milestone_progress(target_milestone_id uuid)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:856` |
 | `public.refresh_ovr_executive_analytics_snapshot_v1(p_actor_id uuid)` | migration194_service_role_acl_review | yes | service_role_only | `supabase/migrations/194_ovr_executive_analytics_foundation.sql:811` |
 | `public.refresh_project_progress(target_project_id uuid)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:876` |
+| `public.reopen_training_assignment_with_reason(p_assignment_id uuid, p_reason text, p_actor_id uuid)` | migration208_service_role_acl_review | yes | service_role_only | `supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:1009` |
 | `public.request_evidence_gate_waiver(p_entity_type text, p_entity_id uuid, p_waiver_reason text, p_actor_user_id uuid, p_expires_on date default null)` | migration200_service_role_acl_review | yes | service_role_only | `supabase/migrations/200_evidence_waiver_request_uniqueness.sql:456` |
 | `public.request_policy_sop_exception(p_actor_id uuid, p_version_id uuid, p_reason text, p_scope_description text, p_start_date date, p_end_date date, p_risk_summary text default null, p_compensating_controls text default null)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1383` |
 | `public.retire_governed_document(p_actor_id uuid, p_document_id uuid, p_retirement_reason text)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1234` |
@@ -121,12 +124,14 @@ These routines are not reachable by browser roles. They are listed explicitly so
 | `public.save_governed_sop_draft(p_actor_id uuid, p_version_id uuid, p_title_en text, p_title_ar text, p_process_name_en text, p_process_name_ar text, p_purpose_en text, p_purpose_ar text, p_process_owner_id uuid, p_primary_policy_version_id uuid, p_governance_link_state text, p_scope_en text, p_scope_ar text, p_training_required boolean default false, p_acknowledgment_required boolean default false, p_competency_assessment_required boolean default false, p_acknowledgment_sla_days integer default 30, p_training_renewal_months integer default 12, p_procedure_steps jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb, p_definitions jsonb default '[]'::jsonb, p_role_responsibilities jsonb default '[]'::jsonb, p_monitoring_kpis jsonb default '[]'::jsonb)` | migration203_service_role_acl_review | yes | service_role_only | `supabase/migrations/203_governed_sop_structured_content_expansion.sql:526` |
 | `public.save_governed_sop_draft(p_actor_id uuid, p_version_id uuid, p_title_en text, p_title_ar text, p_process_name_en text, p_process_name_ar text, p_purpose_en text, p_purpose_ar text, p_process_owner_id uuid, p_primary_policy_version_id uuid, p_governance_link_state text, p_scope_en text, p_scope_ar text, p_training_required boolean default false, p_acknowledgment_required boolean default false, p_competency_assessment_required boolean default false, p_acknowledgment_sla_days integer default 30, p_training_renewal_months integer default 12, p_procedure_steps jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:646` |
 | `public.start_governed_document_revision(p_actor_id uuid, p_source_version_id uuid, p_revision_type text default 'minor', p_revision_reason text default null)` | migration206_service_role_acl_review | yes | service_role_only | `supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:1880` |
+| `public.start_training_assignment(p_assignment_id uuid, p_actor_id uuid)` | migration208_service_role_acl_review | yes | service_role_only | `supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:374` |
 | `public.submit_governed_document_for_review(p_actor_id uuid, p_version_id uuid, p_submission_note text default null)` | migration206_service_role_acl_review | yes | service_role_only | `supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:879` |
 | `public.trigger_governed_document_review(p_actor_id uuid, p_document_id uuid, p_trigger_type text, p_source_entity_type text default null, p_source_entity_id uuid default null, p_due_date date default (current_date + interval '30 days')` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1278` |
 | `public.validate_department_scope()` | migration201_service_role_acl_review | yes | service_role_only | `supabase/migrations/201_governed_policy_sop_core_foundation.sql:305` |
 | `public.validate_governed_doc_ver_link_tenancy()` | migration206_service_role_acl_review | no | owner_only | `supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:202` |
 | `public.validate_policy_version_type()` | migration201_service_role_acl_review | yes | service_role_only | `supabase/migrations/201_governed_policy_sop_core_foundation.sql:169` |
 | `public.validate_sop_version_type()` | migration204_service_role_acl_review | yes | service_role_only | `supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:153` |
+| `public.waive_training_assignment_with_reason(p_assignment_id uuid, p_reason text, p_actor_id uuid)` | migration208_service_role_acl_review | yes | service_role_only | `supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:783` |
 
 ## Materialized views
 
@@ -238,12 +243,12 @@ No browser-referenced or ACL-reachable materialized view exists in the target re
 | `v_patch24_overdue_audit_findings` | view | yes | 3 | yes | approved_browser_read_view |
 | `v_patch24_repeat_audit_findings` | view | yes | 2 | yes | approved_browser_read_view |
 | `v_patch29_accreditation_training_readiness` | view | yes | 3 | yes | approved_browser_read_view |
-| `v_patch29_competency_gap_dashboard` | view | yes | 2 | yes | approved_browser_read_view |
+| `v_patch29_competency_gap_dashboard` | view | yes | 6 | yes | approved_browser_read_view |
 | `v_patch29_overdue_training_assignments` | view | yes | 4 | yes | approved_browser_read_view |
-| `v_patch29_sop_acknowledgment_gap` | view | yes | 5 | yes | approved_browser_read_view |
+| `v_patch29_sop_acknowledgment_gap` | view | yes | 7 | yes | approved_browser_read_view |
 | `v_patch29_training_assignment_queue` | view | yes | 4 | yes | approved_browser_read_view |
 | `v_patch29_training_evidence_index` | view | yes | 4 | yes | approved_browser_read_view |
-| `v_patch29_training_executive_summary` | view | yes | 6 | yes | approved_browser_read_view |
+| `v_patch29_training_executive_summary` | view | yes | 10 | yes | approved_browser_read_view |
 | `v_patch29_training_program_register` | view | yes | 3 | yes | approved_browser_read_view |
 | `v_patch30_accreditation_readiness_summary` | view | yes | 1 | yes | approved_browser_read_view |
 | `v_patch30_board_pack_truth_snapshot` | view | yes | 1 | yes | approved_browser_read_view |
@@ -458,7 +463,7 @@ No browser-referenced or ACL-reachable materialized view exists in the target re
 | `v_setup_readiness_checklist` | view | yes | 11 | yes | approved_browser_read_view |
 | `v_sop_procedure_step_matrix` | view | yes | 4 | yes | approved_browser_read_view |
 | `v_sop_traceability_matrix` | view | yes | 11 | yes | approved_browser_read_view |
-| `v_sop_training_compliance_matrix` | view | yes | 6 | yes | approved_browser_read_view |
+| `v_sop_training_compliance_matrix` | view | yes | 7 | yes | approved_browser_read_view |
 | `v_staging_validation_checks` | view | yes | 2 | yes | approved_browser_read_view |
 | `v_staging_validation_summary` | view | yes | 4 | yes | approved_browser_read_view |
 | `v_uat_findings_queue` | view | yes | 1 | yes | approved_browser_read_view |
