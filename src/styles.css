@@ -1113,6 +1113,63 @@ html[dir="rtl"] body {
   min-height: 110px;
 }
 
+.ovr-governed-versions {
+  border-block: 1px solid var(--border);
+  padding-block: 18px;
+}
+
+.ovr-governed-versions h4,
+.ovr-governed-version-main,
+.ovr-governed-version-actions,
+.search-input-wrap,
+.ovr-version-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ovr-governed-version-list,
+.ovr-version-selector {
+  display: grid;
+  gap: 8px;
+}
+
+.ovr-governed-version-row,
+.ovr-version-option {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.ovr-governed-version-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ovr-governed-version-main p,
+.ovr-governed-version-main small,
+.ovr-version-option small {
+  display: block;
+  margin: 4px 0 0;
+}
+
+.ovr-version-option {
+  cursor: pointer;
+  align-items: flex-start;
+}
+
+.search-input-wrap input {
+  flex: 1;
+}
+
+@media (max-width: 720px) {
+  .ovr-governed-version-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 /* v1.1 analytics, KPI gauges, heatmaps and radar */
 .analytics-page {
   gap: 18px;

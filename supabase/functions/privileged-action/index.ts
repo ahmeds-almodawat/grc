@@ -61,6 +61,12 @@ import {
   hasExactE2B3TrainingReconciliationCapability,
   isE2B3Migration209CapabilityUnavailable,
 } from '../_shared/v14e2b3TrainingReconciliationBridge.ts';
+import {
+  hasExactF1GlobalGovernanceRole,
+  hasExactF1OvrGovernedVersionCapability,
+  isF1Migration210CapabilityUnavailable,
+  mapF1OvrGovernedVersionError,
+} from '../_shared/v14f1OvrGovernedVersionBridge.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -219,6 +225,11 @@ const patch29TrainingActions = new Set([
   'reopen_training_assignment_with_reason',
 ]);
 
+const f1OvrGovernedVersionActions = new Set([
+  'link_ovr_governed_document_version',
+  'unlink_ovr_governed_document_version',
+]);
+
 const allowedActions = new Set([
   'ovr_executive_dashboard_analytics',
   'search_grc_global',
@@ -261,6 +272,7 @@ const allowedActions = new Set([
   ...patch24AuditActions,
   ...patch26DocumentActions,
   ...patch29TrainingActions,
+  ...f1OvrGovernedVersionActions,
   ...patch68EvidenceClosureActions,
   ...patch76CutoverDecisionActions,
   ...patch77LivePilotActions,
@@ -4461,6 +4473,157 @@ Deno.serve(async (request) => {
     } catch (err) {
       const e = mapV14e2b2DatabaseError(action, err);
       return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (f1OvrGovernedVersionActions.has(action)) {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, [
+        'actor_id',
+        'p_actor_id',
+        'user_id',
+        'organization_id',
+        'document_id',
+        'acting_user_id',
+        'authenticated_user_id',
+        'target_user_id',
+      ]);
+
+      if (action === 'link_ovr_governed_document_version') {
+        assertOnlyAllowedKeys(
+          payload,
+          new Set(['ovr_id', 'version_id', 'note']),
+          'F1_LINK_OVR_GOVERNED_VERSION_PAYLOAD',
+        );
+      } else {
+        assertOnlyAllowedKeys(
+          payload,
+          new Set(['link_id', 'reason']),
+          'F1_UNLINK_OVR_GOVERNED_VERSION_PAYLOAD',
+        );
+      }
+
+      const ovrId = action === 'link_ovr_governed_document_version'
+        ? requireCanonicalUuid(payload.ovr_id, 'ovr_id')
+        : null;
+      const versionId = action === 'link_ovr_governed_document_version'
+        ? requireCanonicalUuid(payload.version_id, 'version_id')
+        : null;
+      const note = action === 'link_ovr_governed_document_version'
+        ? boundedString(payload.note, 1000, 'note')
+        : null;
+      const linkId = action === 'unlink_ovr_governed_document_version'
+        ? requireCanonicalUuid(payload.link_id, 'link_id')
+        : null;
+      const reason = action === 'unlink_ovr_governed_document_version'
+        ? boundedString(payload.reason, 1000, 'reason', true)
+        : null;
+      if (reason !== null && reason.length < 3) {
+        throw new Error('F1_UNLINK_REASON_LENGTH_REQUIRED');
+      }
+
+      // This exact capability check is the DB209-safe boundary. No Migration210
+      // view or mutation RPC is referenced above this point.
+      const capabilityProbe = await serviceClient.rpc(
+        'get_f1_ovr_governed_version_link_capabilities',
+      );
+      if (capabilityProbe.error) {
+        if (isF1Migration210CapabilityUnavailable(capabilityProbe.error)) {
+          return errorResponse(
+            'Database migration 210 is required for OVR governed-version links.',
+            409,
+            'F1_MIGRATION_210_REQUIRED',
+            'Migration210 installs the exact-version link capability contract.',
+            { action },
+          );
+        }
+        const mapped = mapF1OvrGovernedVersionError(capabilityProbe.error);
+        return errorResponse(mapped.error, mapped.status, mapped.code, mapped.detail, { action });
+      }
+      if (!hasExactF1OvrGovernedVersionCapability(capabilityProbe.data)) {
+        return errorResponse(
+          'Database migration 210 capability contract is unavailable or incompatible.',
+          409,
+          'F1_MIGRATION_210_REQUIRED',
+          'The capability must exactly match f1-ovr-governed-version-links-v1 at schema version 210.',
+          { action },
+        );
+      }
+
+      const { actorProfile, userRoles } = await loadTrainingActorContext(userData.user.id);
+      let targetOrganizationId: string;
+
+      if (action === 'link_ovr_governed_document_version') {
+        const { data: ovr, error: ovrError } = await serviceClient
+          .from('ovr_reports')
+          .select('id, organization_id')
+          .eq('id', ovrId as string)
+          .maybeSingle();
+        if (ovrError || !ovr) throw new Error('F1_OVR_NOT_FOUND');
+
+        const { data: version, error: versionError } = await serviceClient
+          .from('document_versions')
+          .select('id, document_id, approved_at, locked_at')
+          .eq('id', versionId as string)
+          .maybeSingle();
+        if (versionError || !version) throw new Error('F1_DOCUMENT_VERSION_NOT_FOUND');
+
+        const { data: document, error: documentError } = await serviceClient
+          .from('controlled_documents')
+          .select('id, organization_id, document_type')
+          .eq('id', version.document_id)
+          .maybeSingle();
+        if (documentError || !document) throw new Error('F1_DOCUMENT_NOT_FOUND');
+        if (!['policy', 'sop'].includes(document.document_type)) {
+          throw new Error('F1_POLICY_OR_SOP_REQUIRED');
+        }
+        if (!version.approved_at) throw new Error('F1_APPROVED_VERSION_REQUIRED');
+        if (!version.locked_at) throw new Error('F1_IMMUTABLE_VERSION_REQUIRED');
+        if (!ovr.organization_id || document.organization_id !== ovr.organization_id) {
+          throw new Error('F1_CROSS_ORGANIZATION_LINK_DENIED');
+        }
+        targetOrganizationId = ovr.organization_id;
+      } else {
+        const { data: link, error: linkError } = await serviceClient
+          .from('v_f1_ovr_governed_version_links')
+          .select('link_id, ovr_id, organization_id, document_id, document_type, version_id, approved_at, locked_at')
+          .eq('link_id', linkId as string)
+          .maybeSingle();
+        if (linkError || !link) throw new Error('F1_CANONICAL_LINK_NOT_FOUND');
+        if (!['policy', 'sop'].includes(link.document_type)) {
+          throw new Error('F1_POLICY_OR_SOP_REQUIRED');
+        }
+        if (!link.approved_at || !link.locked_at) {
+          throw new Error('F1_IMMUTABLE_VERSION_REQUIRED');
+        }
+        targetOrganizationId = link.organization_id;
+      }
+
+      if (!actorProfile.organization_id
+        || actorProfile.organization_id !== targetOrganizationId
+        || !hasExactF1GlobalGovernanceRole(userRoles, targetOrganizationId)) {
+        throw new Error('F1_EXACT_GLOBAL_GOVERNANCE_ROLE_REQUIRED');
+      }
+
+      const rpcResult = action === 'link_ovr_governed_document_version'
+        ? await serviceClient.rpc('link_ovr_governed_document_version', {
+            p_actor_id: userData.user.id,
+            p_ovr_id: ovrId,
+            p_version_id: versionId,
+            p_note: note,
+          })
+        : await serviceClient.rpc('unlink_ovr_governed_document_version', {
+            p_actor_id: userData.user.id,
+            p_link_id: linkId,
+            p_reason: reason,
+          });
+      if (rpcResult.error) throw rpcResult.error;
+
+      return jsonResponse({ ok: true, action, result: rpcResult.data }, 200);
+    } catch (error) {
+      const mapped = mapF1OvrGovernedVersionError(error);
+      return errorResponse(mapped.error, mapped.status, mapped.code, mapped.detail, { action });
     }
   }
 

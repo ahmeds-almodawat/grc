@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, FilePlus2, GitBranch, Printer, ShieldCheck, Upload, Workflow } from 'lucide-react';
+import { AlertTriangle, BookOpenCheck, FilePlus2, GitBranch, Link2, Printer, Search, ShieldCheck, Trash2, Upload, Workflow } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { EmptySupabaseNotice } from '../components/EmptySupabaseNotice';
@@ -33,6 +33,14 @@ import {
   createScenarioLabScenario,
   V99_SCENARIO_TAG,
 } from '../lib/scenarioLab';
+import {
+  getF1LinkableGovernedVersions,
+  getF1OvrGovernedVersionLinks,
+  linkF1OvrGovernedVersion,
+  unlinkF1OvrGovernedVersion,
+  type F1OvrGovernedVersionLink,
+} from '../lib/f1OvrGovernedVersionApi';
+import { canManageF1OvrGovernedVersionLinks } from '../lib/f1OvrGovernedVersionModel';
 
 const occurrenceCategories = [
   'medications',
@@ -315,6 +323,14 @@ export function OVR() {
   const isSubmittingOvrRef = useRef(false);
   const [message, setMessage] = useState<string | null>(null);
   const [selectedReport, setSelectedReport] = useState<OvrReportRow | null>(null);
+  const [showGovernedVersionSelector, setShowGovernedVersionSelector] = useState(false);
+  const [governedVersionSearch, setGovernedVersionSearch] = useState('');
+  const [selectedGovernedVersionId, setSelectedGovernedVersionId] = useState('');
+  const [governedVersionNote, setGovernedVersionNote] = useState('');
+  const [governedVersionToRemove, setGovernedVersionToRemove] = useState<F1OvrGovernedVersionLink | null>(null);
+  const [governedVersionRemoveReason, setGovernedVersionRemoveReason] = useState('');
+  const [governedVersionSaving, setGovernedVersionSaving] = useState(false);
+  const [governedVersionMessage, setGovernedVersionMessage] = useState<string | null>(null);
   const [evidenceUploadReport, setEvidenceUploadReport] = useState<OvrReportRow | null>(null);
   const [selectedDashboardReport, setSelectedDashboardReport] = useState<OvrReportRow | null>(null);
   const [correctiveProjectReport, setCorrectiveProjectReport] = useState<OvrReportRow | null>(null);
@@ -336,6 +352,18 @@ export function OVR() {
   const printableEvidence = useAsyncData(
     () => selectedReport ? getEvidenceForItem('ovr_report', selectedReport.id) : Promise.resolve([]),
     [selectedReport?.id],
+  );
+  const governedVersionLinks = useAsyncData(
+    () => selectedReport
+      ? getF1OvrGovernedVersionLinks(selectedReport.id)
+      : Promise.resolve([]),
+    [selectedReport?.id],
+  );
+  const linkableGovernedVersions = useAsyncData(
+    () => selectedReport && showGovernedVersionSelector
+      ? getF1LinkableGovernedVersions()
+      : Promise.resolve([]),
+    [selectedReport?.id, showGovernedVersionSelector],
   );
   const [workflowForm, setWorkflowForm] = useState({
     supervisor_investigation: '',
@@ -404,9 +432,69 @@ export function OVR() {
   const currentUserId = auth.profile?.id || '';
   const summaryData = isEmptyLiveObject(summary.data) ? null : summary.data;
   const workflowSummaryData = isEmptyLiveObject(workflowSummary.data) ? null : workflowSummary.data;
+  const canManageGovernedVersions = Boolean(selectedReport)
+    && canManageF1OvrGovernedVersionLinks(auth.roles, selectedReport?.organization_id || '');
+  const filteredLinkableGovernedVersions = useMemo(() => {
+    const query = governedVersionSearch.trim().toLowerCase();
+    const linkedVersionIds = new Set((governedVersionLinks.data || []).map(link => link.version_id));
+    return (linkableGovernedVersions.data || []).filter(version => {
+      if (linkedVersionIds.has(version.version_id)) return false;
+      if (!query) return true;
+      return [version.document_code, version.document_title, version.version_label]
+        .some(value => value?.toLowerCase().includes(query));
+    });
+  }, [governedVersionLinks.data, governedVersionSearch, linkableGovernedVersions.data]);
 
   const update = (key: keyof typeof form, value: string | boolean | string[]) => setForm(current => ({ ...current, [key]: value }));
   const updateWorkflowForm = (key: keyof typeof workflowForm, value: string) => setWorkflowForm(current => ({ ...current, [key]: value }));
+
+  const openGovernedVersionSelector = () => {
+    setSelectedGovernedVersionId('');
+    setGovernedVersionSearch('');
+    setGovernedVersionNote('');
+    setGovernedVersionMessage(null);
+    setShowGovernedVersionSelector(true);
+  };
+
+  const addGovernedVersionLink = async () => {
+    if (!selectedReport || !selectedGovernedVersionId || !canManageGovernedVersions) return;
+    setGovernedVersionSaving(true);
+    setGovernedVersionMessage(null);
+    try {
+      await linkF1OvrGovernedVersion({
+        ovrId: selectedReport.id,
+        versionId: selectedGovernedVersionId,
+        note: governedVersionNote,
+      });
+      await governedVersionLinks.refresh();
+      setShowGovernedVersionSelector(false);
+      setGovernedVersionMessage(t('ovr.governedVersions.linked'));
+    } catch (error) {
+      setGovernedVersionMessage(error instanceof Error ? error.message : t('common.error'));
+    } finally {
+      setGovernedVersionSaving(false);
+    }
+  };
+
+  const removeGovernedVersionLink = async () => {
+    if (!governedVersionToRemove || governedVersionRemoveReason.trim().length < 3 || !canManageGovernedVersions) return;
+    setGovernedVersionSaving(true);
+    setGovernedVersionMessage(null);
+    try {
+      await unlinkF1OvrGovernedVersion({
+        linkId: governedVersionToRemove.link_id,
+        reason: governedVersionRemoveReason,
+      });
+      await governedVersionLinks.refresh();
+      setGovernedVersionToRemove(null);
+      setGovernedVersionRemoveReason('');
+      setGovernedVersionMessage(t('ovr.governedVersions.removed'));
+    } catch (error) {
+      setGovernedVersionMessage(error instanceof Error ? error.message : t('common.error'));
+    } finally {
+      setGovernedVersionSaving(false);
+    }
+  };
 
   const synchronizeOpenOvr = (record: OvrAuthoritativePatchRecord, fetched?: OvrReportRow) => {
     setSelectedReport(current => current?.id === record.mutation.id
@@ -1022,6 +1110,65 @@ export function OVR() {
               <div><span>{t('common.status')}</span><strong>{t(`status.${selectedReport.status}`, cleanLabel(selectedReport.status))}</strong></div>
             </div>
 
+            <section className="ovr-governed-versions" aria-labelledby="ovr-governed-versions-title">
+              <div className="split-header">
+                <h4 id="ovr-governed-versions-title"><BookOpenCheck size={18} />{t('ovr.governedVersions.title')}</h4>
+                {canManageGovernedVersions ? (
+                  <button className="ghost-button small" type="button" onClick={openGovernedVersionSelector}>
+                    <Link2 size={16} />{t('ovr.governedVersions.add')}
+                  </button>
+                ) : null}
+              </div>
+              {governedVersionMessage ? <div className="notice-banner">{governedVersionMessage}</div> : null}
+              {governedVersionLinks.loading ? <DataState loading>{null}</DataState> : governedVersionLinks.error ? (
+                <div className="form-error">{governedVersionLinks.error}</div>
+              ) : (governedVersionLinks.data || []).length === 0 ? (
+                <p className="muted-text">{t('ovr.governedVersions.empty')}</p>
+              ) : (
+                <div className="ovr-governed-version-list">
+                  {(governedVersionLinks.data || []).map(link => {
+                    const versionState = link.superseded_by_version_id
+                      ? 'superseded'
+                      : link.is_historical_version
+                        ? 'historical'
+                        : 'current';
+                    return (
+                      <article className="ovr-governed-version-row" key={link.link_id}>
+                        <div className="ovr-governed-version-main">
+                          <span className="status-badge">{link.document_type === 'sop' ? 'SOP' : t('policy.type.policy', 'Policy')}</span>
+                          <div>
+                            <strong>{link.document_code ? `${link.document_code} · ` : ''}{link.document_title}</strong>
+                            <p><b>{t('ovr.governedVersions.exactVersion')}:</b> {link.version_label || `v${link.version_number}`}</p>
+                            <small>
+                              {t('ovr.governedVersions.approved')}: {formatDate(link.approved_at)}
+                              {link.effective_date ? ` · ${t('ovr.governedVersions.effective')}: ${formatDate(link.effective_date)}` : ''}
+                            </small>
+                          </div>
+                        </div>
+                        <div className="ovr-governed-version-actions">
+                          <StatusBadge status={t(`ovr.governedVersions.${versionState}`)} />
+                          {canManageGovernedVersions ? (
+                            <button
+                              className="icon-button"
+                              type="button"
+                              title={t('ovr.governedVersions.remove')}
+                              aria-label={t('ovr.governedVersions.remove')}
+                              onClick={() => {
+                                setGovernedVersionToRemove(link);
+                                setGovernedVersionRemoveReason('');
+                              }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          ) : null}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+
             <div className="form-grid two">
               {(isManagerFor(selectedReport) || isQuality) ? (
                 <label>{t('ovr.supervisorInvestigation')}<textarea rows={4} value={workflowForm.supervisor_investigation} onChange={event => updateWorkflowForm('supervisor_investigation', event.target.value)} /></label>
@@ -1134,6 +1281,71 @@ export function OVR() {
             <OvrPrintableReport report={selectedReport} evidence={printableEvidence.data || []} />
           </div>
         ) : null}
+      </Modal>
+
+      <Modal
+        size="large"
+        title={t('ovr.governedVersions.selectorTitle')}
+        open={showGovernedVersionSelector}
+        onClose={() => setShowGovernedVersionSelector(false)}
+      >
+        <div className="form-grid">
+          <div className="notice-banner warning full-width">
+            <AlertTriangle size={16} />{t('ovr.governedVersions.warning')}
+          </div>
+          <label className="field full-width">
+            <span>{t('ovr.governedVersions.search')}</span>
+            <div className="search-input-wrap"><Search size={16} /><input value={governedVersionSearch} onChange={event => setGovernedVersionSearch(event.target.value)} /></div>
+          </label>
+          <div className="ovr-version-selector full-width">
+            {linkableGovernedVersions.loading ? <DataState loading>{null}</DataState> : linkableGovernedVersions.error ? (
+              <div className="form-error">{linkableGovernedVersions.error}</div>
+            ) : filteredLinkableGovernedVersions.length === 0 ? (
+              <p className="muted-text">{t('ovr.governedVersions.noMatches')}</p>
+            ) : filteredLinkableGovernedVersions.map(version => (
+              <label className="ovr-version-option" key={version.version_id}>
+                <input
+                  type="radio"
+                  name="governed-version"
+                  value={version.version_id}
+                  checked={selectedGovernedVersionId === version.version_id}
+                  onChange={() => setSelectedGovernedVersionId(version.version_id)}
+                />
+                <span>
+                  <strong>{version.document_type === 'sop' ? 'SOP' : t('policy.type.policy', 'Policy')} · {version.document_code ? `${version.document_code} · ` : ''}{version.document_title}</strong>
+                  <small>{t('ovr.governedVersions.exactVersion')}: {version.version_label || `v${version.version_number}`} · {t(`ovr.governedVersions.${version.superseded_by_version_id ? 'superseded' : version.is_historical_version ? 'historical' : 'current'}`)}</small>
+                </span>
+              </label>
+            ))}
+          </div>
+          <label className="field full-width"><span>{t('ovr.governedVersions.note')}</span><textarea rows={3} maxLength={1000} value={governedVersionNote} onChange={event => setGovernedVersionNote(event.target.value)} /></label>
+          <div className="form-actions full-width">
+            <button className="ghost-button" type="button" onClick={() => setShowGovernedVersionSelector(false)}>{t('common.cancel')}</button>
+            <button className="primary-button" type="button" disabled={governedVersionSaving || !selectedGovernedVersionId} onClick={() => void addGovernedVersionLink()}>{governedVersionSaving ? t('common.saving') : t('common.save')}</button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        size="large"
+        title={t('ovr.governedVersions.removeTitle')}
+        open={Boolean(governedVersionToRemove)}
+        onClose={() => setGovernedVersionToRemove(null)}
+      >
+        <div className="form-grid">
+          <div className="notice-banner warning full-width"><AlertTriangle size={16} />{t('ovr.governedVersions.removeWarning')}</div>
+          {governedVersionToRemove ? (
+            <div className="detail-panel full-width">
+              <strong>{governedVersionToRemove.document_code ? `${governedVersionToRemove.document_code} · ` : ''}{governedVersionToRemove.document_title}</strong>
+              <p>{t('ovr.governedVersions.exactVersion')}: {governedVersionToRemove.version_label || `v${governedVersionToRemove.version_number}`}</p>
+            </div>
+          ) : null}
+          <label className="field full-width"><span>{t('ovr.governedVersions.removeReason')} *</span><textarea rows={4} minLength={3} maxLength={1000} required value={governedVersionRemoveReason} onChange={event => setGovernedVersionRemoveReason(event.target.value)} /></label>
+          <div className="form-actions full-width">
+            <button className="ghost-button" type="button" onClick={() => setGovernedVersionToRemove(null)}>{t('common.cancel')}</button>
+            <button className="danger-button" type="button" disabled={governedVersionSaving || governedVersionRemoveReason.trim().length < 3} onClick={() => void removeGovernedVersionLink()}>{t('ovr.governedVersions.remove')}</button>
+          </div>
+        </div>
       </Modal>
 
       <Modal size="large" title={t('ovr.createLinkedProject', 'Create corrective project')} open={Boolean(correctiveProjectReport)} onClose={() => setCorrectiveProjectReport(null)}>
