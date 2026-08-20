@@ -171,6 +171,207 @@ export function validateLegacyActorId(
   }
 }
 
+export interface GovernedSopVersionRow {
+  id: string;
+  document_id: string;
+  version_number: number;
+  supersedes_version_id: string | null;
+}
+
+export interface GovernedSopDetailsRow {
+  version_id: string;
+  training_required?: boolean | null;
+  retraining_required?: boolean | null;
+  competency_assessment_required?: boolean | null;
+  competency_reassessment_required?: boolean | null;
+}
+
+/**
+ * Resolves initial vs revision and determines formal training / competency requirements
+ * based strictly on version metadata and governed SOP details.
+ */
+export function resolveGovernedVersionTrainingRequirements(
+  version: GovernedSopVersionRow | null | undefined,
+  details: GovernedSopDetailsRow | null | undefined
+): {
+  isInitial: boolean;
+  formalTrainingRequired: boolean;
+  competencyRequired: boolean;
+} {
+  if (!version || !details || details.version_id !== version.id) {
+    throw new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+  }
+
+  const isInitial = version.supersedes_version_id === null && Number(version.version_number) === 1;
+
+  const formalTrainingRequired = isInitial
+    ? details.training_required === true
+    : details.retraining_required === true;
+
+  const competencyRequired = isInitial
+    ? details.competency_assessment_required === true
+    : details.competency_reassessment_required === true;
+
+  return {
+    isInitial,
+    formalTrainingRequired,
+    competencyRequired,
+  };
+}
+
+/**
+ * Verifies that all resolvable tenancy signals for a training program match the expected organization.
+ */
+export async function verifyProgramTenancy(
+  serviceClient: any,
+  program: {
+    id: string;
+    owner_user_id?: string | null;
+    linked_sop_id?: string | null;
+    linked_document_id?: string | null;
+    department_id?: string | null;
+    created_by?: string | null;
+  },
+  expectedOrganizationId: string
+): Promise<void> {
+  const resolvedOrgs = new Set<string>();
+
+  // A. Linked SOP / Document
+  const docId = program.linked_sop_id || program.linked_document_id;
+  if (docId) {
+    const { data: doc, error } = await serviceClient
+      .from('controlled_documents')
+      .select('organization_id')
+      .eq('id', docId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (doc?.organization_id) {
+      resolvedOrgs.add(doc.organization_id);
+    }
+  }
+
+  // B. Department
+  if (program.department_id) {
+    const { data: dept, error } = await serviceClient
+      .from('departments')
+      .select('organization_id')
+      .eq('id', program.department_id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (dept?.organization_id) {
+      resolvedOrgs.add(dept.organization_id);
+    }
+  }
+
+  // C. Owner
+  if (program.owner_user_id) {
+    const { data: ownerProf, error } = await serviceClient
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', program.owner_user_id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (ownerProf?.organization_id) {
+      resolvedOrgs.add(ownerProf.organization_id);
+    }
+  }
+
+  // D. Creator
+  if (program.created_by) {
+    const { data: creatorProf, error } = await serviceClient
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', program.created_by)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (creatorProf?.organization_id) {
+      resolvedOrgs.add(creatorProf.organization_id);
+    }
+  }
+
+  if (resolvedOrgs.size === 0) {
+    throw new Error('TRAINING_PROGRAM_TENANCY_MISMATCH');
+  }
+
+  for (const org of resolvedOrgs) {
+    if (org !== expectedOrganizationId) {
+      throw new Error('TRAINING_PROGRAM_TENANCY_MISMATCH');
+    }
+  }
+}
+
+/**
+ * Check whether an actor has an active global governance role in the target organization.
+ */
+export function hasActiveGlobalGovernanceRole(
+  userRoles: Array<{ role: string; scope: string; is_active?: boolean; organization_id?: string | null }>,
+  organizationId: string
+): boolean {
+  if (!organizationId) return false;
+  return userRoles.some(
+    (r) =>
+      r.is_active !== false &&
+      globalGovernanceRoles.has(r.role) &&
+      r.scope === 'global' &&
+      (r.organization_id === organizationId || r.organization_id === null)
+  );
+}
+
+/**
+ * Check whether an actor is an active department manager for a specific department in the target organization.
+ */
+export function hasActiveDepartmentManagerRole(
+  userRoles: Array<{ role: string; scope: string; is_active?: boolean; department_id?: string | null; organization_id?: string | null }>,
+  departmentId: string | null | undefined,
+  organizationId: string
+): boolean {
+  if (!departmentId || !organizationId) return false;
+  return userRoles.some(
+    (r) =>
+      r.is_active !== false &&
+      r.role === 'department_manager' &&
+      r.scope === 'department' &&
+      r.department_id === departmentId &&
+      r.organization_id === organizationId
+  );
+}
+
+/**
+ * Check whether an actor is an active division head for a specific division in the target organization.
+ */
+export function hasActiveDivisionHeadRole(
+  userRoles: Array<{ role: string; scope: string; is_active?: boolean; division_id?: string | null; organization_id?: string | null }>,
+  divisionId: string | null | undefined,
+  organizationId: string
+): boolean {
+  if (!divisionId || !organizationId) return false;
+  return userRoles.some(
+    (r) =>
+      r.is_active !== false &&
+      r.role === 'division_head' &&
+      r.scope === 'division' &&
+      r.division_id === divisionId &&
+      r.organization_id === organizationId
+  );
+}
+
+/**
+ * Check whether an actor has an active role matching a document acknowledgment requirement.
+ */
+export function hasActiveRoleForAcknowledgmentRequirement(
+  userRoles: Array<{ role: string; scope: string; is_active?: boolean; organization_id?: string | null }>,
+  requiredRoleName: string,
+  targetOrganizationId: string
+): boolean {
+  if (!requiredRoleName || !targetOrganizationId) return false;
+  return userRoles.some(
+    (r) =>
+      r.is_active !== false &&
+      r.role === requiredRoleName &&
+      (r.organization_id === targetOrganizationId || (r.scope === 'global' && r.organization_id === null))
+  );
+}
+
 /**
  * Map PostgreSQL and Preflight errors to controlled, stable status codes and error payloads.
  */
@@ -220,6 +421,7 @@ export function mapV14e2b2DatabaseError(
     msg === 'CALLER_PROFILE_INACTIVE' ||
     msg === 'CALLER_PROFILE_NOT_FOUND' ||
     msg === 'TENANT_ISOLATION_VIOLATION' ||
+    msg === 'TRAINING_PROGRAM_TENANCY_MISMATCH' ||
     msg === 'EMPLOYEE_CANNOT_COMPLETE_GOVERNED_TRAINING' ||
     msg === 'SOD_VIOLATION_SELF_ASSESSMENT' ||
     msg === 'UNAUTHORIZED_COMPLETION_CERTIFIER' ||
@@ -265,6 +467,7 @@ export function mapV14e2b2DatabaseError(
   if (
     msg === 'E2B2_MIGRATION_208_REQUIRED' ||
     msg === 'E2B3_RECONCILIATION_NOT_RELEASED' ||
+    msg === 'GOVERNED_SOP_VERSION_CONTEXT_INVALID' ||
     msg === 'TRAINING_NOT_REQUIRED_FOR_ASSIGNMENT' ||
     msg === 'COMPETENCY_NOT_REQUIRED_FOR_ASSIGNMENT' ||
     msg === 'COMPETENCY_ASSIGNMENT_SUBJECT_MISMATCH' ||
@@ -288,13 +491,13 @@ export function mapV14e2b2DatabaseError(
     };
   }
 
-  // Database 42703 (undefined column) or PGRST204 -> Migration capability probe failure
-  if (code === '42703' || code === 'PGRST204' || msg.includes('column') && msg.includes('does not exist')) {
+  // Unexpected schema column mismatch (500)
+  if (code === '42703' || code === 'PGRST204' || (msg.includes('column') && msg.includes('does not exist'))) {
     return {
-      error: 'E2B2_MIGRATION_208_REQUIRED',
-      status: 409,
-      code: 'E2B2_MIGRATION_208_REQUIRED',
-      detail: 'Database migration 208 is required for this operation.',
+      error: 'Database schema contract mismatch',
+      status: 500,
+      code: 'EDGE_SCHEMA_CONTRACT_MISMATCH',
+      detail: msg,
       extra: { action },
     };
   }
@@ -306,55 +509,4 @@ export function mapV14e2b2DatabaseError(
     detail: 'An unexpected database error occurred.',
     extra: { action },
   };
-}
-
-/**
- * Check whether an actor has an active global governance role in the target organization.
- */
-export function hasActiveGlobalGovernanceRole(
-  userRoles: Array<{ role: string; scope: string; is_active?: boolean; organization_id?: string | null }>,
-  organizationId: string
-): boolean {
-  return userRoles.some(
-    (r) =>
-      r.is_active !== false &&
-      globalGovernanceRoles.has(r.role) &&
-      (r.organization_id === organizationId || r.organization_id === null)
-  );
-}
-
-/**
- * Check whether an actor is an active department manager for a specific department.
- */
-export function hasActiveDepartmentManagerRole(
-  userRoles: Array<{ role: string; scope: string; is_active?: boolean; department_id?: string | null; organization_id?: string | null }>,
-  departmentId: string | null | undefined,
-  organizationId: string
-): boolean {
-  if (!departmentId) return false;
-  return userRoles.some(
-    (r) =>
-      r.is_active !== false &&
-      r.role === 'department_manager' &&
-      r.department_id === departmentId &&
-      (r.organization_id === organizationId || r.organization_id === null)
-  );
-}
-
-/**
- * Check whether an actor is an active division head for a specific division.
- */
-export function hasActiveDivisionHeadRole(
-  userRoles: Array<{ role: string; scope: string; is_active?: boolean; division_id?: string | null; organization_id?: string | null }>,
-  divisionId: string | null | undefined,
-  organizationId: string
-): boolean {
-  if (!divisionId) return false;
-  return userRoles.some(
-    (r) =>
-      r.is_active !== false &&
-      r.role === 'division_head' &&
-      r.division_id === divisionId &&
-      (r.organization_id === organizationId || r.organization_id === null)
-  );
 }

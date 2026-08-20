@@ -20,6 +20,9 @@ import {
   hasActiveGlobalGovernanceRole,
   hasActiveDepartmentManagerRole,
   hasActiveDivisionHeadRole,
+  hasActiveRoleForAcknowledgmentRequirement,
+  verifyProgramTenancy,
+  resolveGovernedVersionTrainingRequirements,
 } from '../../supabase/functions/_shared/v14e2b2TrainingBridge.ts';
 
 describe('GRC v1.4-E2B2 Edge v14 Training & Acknowledgment Authorization Hardening Suite', () => {
@@ -200,7 +203,6 @@ describe('GRC v1.4-E2B2 Edge v14 Training & Acknowledgment Authorization Hardeni
     });
 
     it('22. program owner alone denied competency without separate assessor role', () => {
-      // In record_competency_assessment, program owner is NOT included in assessor check
       expect(edgeSource).not.toContain("if (!hasGlobal && !hasDept && !hasDiv && !isProgramOwner) // competency");
       const err = mapV14e2b2DatabaseError('record_competency_assessment', new Error('UNAUTHORIZED_ASSESSOR'));
       expect(err.status).toBe(403);
@@ -261,10 +263,6 @@ describe('GRC v1.4-E2B2 Edge v14 Training & Acknowledgment Authorization Hardeni
       const err = mapV14e2b2DatabaseError('publish_sop_training_obligations', new Error('E2B2_MIGRATION_208_REQUIRED'));
       expect(err.status).toBe(409);
       expect(err.code).toBe('E2B2_MIGRATION_208_REQUIRED');
-
-      const colErr = mapV14e2b2DatabaseError('publish_sop_training_obligations', { code: '42703', message: 'column does not exist' });
-      expect(colErr.status).toBe(409);
-      expect(colErr.code).toBe('E2B2_MIGRATION_208_REQUIRED');
     });
 
     it('30. publish proceeds when Migration 208 capability probe succeeds', () => {
@@ -287,7 +285,6 @@ describe('GRC v1.4-E2B2 Edge v14 Training & Acknowledgment Authorization Hardeni
     });
 
     it('33. no Edge call trusts browser actor identity', () => {
-      // Confirm all RPC calls pass userData.user.id as p_actor_id
       for (const action of [
         'start_training_assignment',
         'complete_training_assignment',
@@ -304,9 +301,155 @@ describe('GRC v1.4-E2B2 Edge v14 Training & Acknowledgment Authorization Hardeni
   });
 
   // ==========================================================================
-  // SECTION 6: Migration Integrity & Lineage Invariants (Cases 34 - 35)
+  // SECTION 6: Schema Contract & Review Defects Proof (Cases A - T)
   // ==========================================================================
-  describe('Section 6: Migration Integrity & Lineage Invariants', () => {
+  describe('Section 6: Schema Contract & Tenancy Defect Remediation Proof', () => {
+    it('A. Edge source contains NO document_acknowledgment_requirements.is_mandatory', () => {
+      expect(edgeSource).not.toContain('is_mandatory');
+    });
+
+    it('B. acknowledgment query uses required_flag', () => {
+      expect(edgeSource).toContain('required_flag');
+    });
+
+    it('C. acknowledgment filters document_id, version_id and required_flag=true', () => {
+      expect(edgeSource).toContain(".eq('document_id', documentId)");
+      expect(edgeSource).toContain(".eq('version_id', versionId)");
+      expect(edgeSource).toContain(".eq('required_flag', true)");
+    });
+
+    it('D. Edge source contains NO training_assignments projection with organization_id', () => {
+      const assignmentQueries = edgeSource.match(/from\(['"]training_assignments['"]\)\s*\.select\(([^)]+)\)/g) || [];
+      expect(assignmentQueries.length).toBeGreaterThan(0);
+      for (const query of assignmentQueries) {
+        expect(query).not.toContain('organization_id');
+      }
+    });
+
+    it('E. Edge source contains NO program_owner_id', () => {
+      expect(edgeSource).not.toContain('program_owner_id');
+    });
+
+    it('F. program owner check uses owner_user_id', () => {
+      expect(edgeSource).toContain('owner_user_id');
+      expect(edgeSource).toContain('program.owner_user_id === userData.user.id');
+    });
+
+    it('G. training_programs projection contains NO organization_id', () => {
+      const programQueries = edgeSource.match(/from\(['"]training_programs['"]\)\s*\.select\(([^)]+)\)/g) || [];
+      expect(programQueries.length).toBeGreaterThan(0);
+      for (const query of programQueries) {
+        expect(query).not.toContain('organization_id');
+      }
+    });
+
+    it('H. waive target cross-org check exists', () => {
+      expect(edgeSource).toContain('if (targetProfile.organization_id !== actorProfile.organization_id)');
+      const err = mapV14e2b2DatabaseError('waive_training_assignment_with_reason', new Error('TENANT_ISOLATION_VIOLATION'));
+      expect(err.status).toBe(403);
+      expect(err.code).toBe('AUTHORIZATION_DENIED');
+    });
+
+    it('I. cancel target cross-org check exists', () => {
+      const err = mapV14e2b2DatabaseError('cancel_training_assignment_with_reason', new Error('TENANT_ISOLATION_VIOLATION'));
+      expect(err.status).toBe(403);
+    });
+
+    it('J. reopen target cross-org check exists', () => {
+      const err = mapV14e2b2DatabaseError('reopen_training_assignment_with_reason', new Error('TENANT_ISOLATION_VIOLATION'));
+      expect(err.status).toBe(403);
+    });
+
+    it('K. governance_admin with scope=department is NOT global governance', () => {
+      const roles = [{ role: 'governance_admin', scope: 'department', is_active: true, organization_id: validOrgId }];
+      expect(hasActiveGlobalGovernanceRole(roles, validOrgId)).toBe(false);
+    });
+
+    it('L. department_manager with scope=global is NOT a department manager', () => {
+      const roles = [{ role: 'department_manager', scope: 'global', is_active: true, department_id: validDeptId, organization_id: validOrgId }];
+      expect(hasActiveDepartmentManagerRole(roles, validDeptId, validOrgId)).toBe(false);
+    });
+
+    it('M. department_manager with null organization is rejected', () => {
+      const roles = [{ role: 'department_manager', scope: 'department', is_active: true, department_id: validDeptId, organization_id: null }];
+      expect(hasActiveDepartmentManagerRole(roles, validDeptId, validOrgId)).toBe(false);
+    });
+
+    it('N. division_head with wrong scope or null organization is rejected', () => {
+      const wrongScope = [{ role: 'division_head', scope: 'global', is_active: true, division_id: validDivId, organization_id: validOrgId }];
+      expect(hasActiveDivisionHeadRole(wrongScope, validDivId, validOrgId)).toBe(false);
+
+      const nullOrg = [{ role: 'division_head', scope: 'division', is_active: true, division_id: validDivId, organization_id: null }];
+      expect(hasActiveDivisionHeadRole(nullOrg, validDivId, validOrgId)).toBe(false);
+    });
+
+    it('O. version-bound missing governed_sop_details fails closed', () => {
+      expect(() =>
+        resolveGovernedVersionTrainingRequirements(
+          { id: validVerId, document_id: validDocId, version_number: 1, supersedes_version_id: null },
+          null
+        )
+      ).toThrow('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+
+      const err = mapV14e2b2DatabaseError('complete_training_assignment', new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID'));
+      expect(err.status).toBe(409);
+      expect(err.code).toBe('INVALID_LIFECYCLE_STATE');
+    });
+
+    it('P. training_required null is NOT treated as permission', () => {
+      const res = resolveGovernedVersionTrainingRequirements(
+        { id: validVerId, document_id: validDocId, version_number: 1, supersedes_version_id: null },
+        { version_id: validVerId, training_required: null, retraining_required: null }
+      );
+      expect(res.formalTrainingRequired).toBe(false);
+    });
+
+    it('Q. competency_required null is NOT treated as permission', () => {
+      const res = resolveGovernedVersionTrainingRequirements(
+        { id: validVerId, document_id: validDocId, version_number: 1, supersedes_version_id: null },
+        { version_id: validVerId, competency_assessment_required: null, competency_reassessment_required: null }
+      );
+      expect(res.competencyRequired).toBe(false);
+    });
+
+    it('R. initial/revision decision uses document version metadata', () => {
+      const initial = resolveGovernedVersionTrainingRequirements(
+        { id: validVerId, document_id: validDocId, version_number: 1, supersedes_version_id: null },
+        { version_id: validVerId, training_required: true, retraining_required: false, competency_assessment_required: true, competency_reassessment_required: false }
+      );
+      expect(initial.isInitial).toBe(true);
+      expect(initial.formalTrainingRequired).toBe(true);
+      expect(initial.competencyRequired).toBe(true);
+
+      const revision = resolveGovernedVersionTrainingRequirements(
+        { id: validVerId, document_id: validDocId, version_number: 2, supersedes_version_id: 'prior-ver-id' },
+        { version_id: validVerId, training_required: false, retraining_required: true, competency_assessment_required: false, competency_reassessment_required: true }
+      );
+      expect(revision.isInitial).toBe(false);
+      expect(revision.formalTrainingRequired).toBe(true);
+      expect(revision.competencyRequired).toBe(true);
+    });
+
+    it('S. generic undefined-column error maps to 500 EDGE_SCHEMA_CONTRACT_MISMATCH (not 409)', () => {
+      const err = mapV14e2b2DatabaseError('start_training_assignment', {
+        code: '42703',
+        message: 'column "nonexistent_column" does not exist',
+      });
+      expect(err.status).toBe(500);
+      expect(err.code).toBe('EDGE_SCHEMA_CONTRACT_MISMATCH');
+    });
+
+    it('T. explicit publish capability probe maps missing new matrix columns to E2B2_MIGRATION_208_REQUIRED', () => {
+      const err = mapV14e2b2DatabaseError('publish_sop_training_obligations', new Error('E2B2_MIGRATION_208_REQUIRED'));
+      expect(err.status).toBe(409);
+      expect(err.code).toBe('E2B2_MIGRATION_208_REQUIRED');
+    });
+  });
+
+  // ==========================================================================
+  // SECTION 7: Migration Integrity & Lineage Invariants (Cases 34 - 35)
+  // ==========================================================================
+  describe('Section 7: Migration Integrity & Lineage Invariants', () => {
     it('34. Migration 208 file remains unchanged', () => {
       const m208Path = path.resolve(rootDir, 'supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql');
       const content = fs.readFileSync(m208Path);

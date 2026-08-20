@@ -52,6 +52,9 @@ import {
   hasActiveGlobalGovernanceRole,
   hasActiveDepartmentManagerRole,
   hasActiveDivisionHeadRole,
+  hasActiveRoleForAcknowledgmentRequirement,
+  verifyProgramTenancy,
+  resolveGovernedVersionTrainingRequirements,
 } from '../_shared/v14e2b2TrainingBridge.ts';
 
 const corsHeaders = {
@@ -4284,9 +4287,16 @@ Deno.serve(async (request) => {
         const errText = String(probe.error.message || probe.error.details || '');
         const code = String(probe.error.code || '');
         if (code === '42703' || code === 'PGRST204' || errText.includes('column') || errText.includes('does not exist')) {
-          throw new Error('E2B2_MIGRATION_208_REQUIRED');
+          return errorResponse(
+            'Database migration 208 is required for publishing SOP training obligations.',
+            409,
+            'E2B2_MIGRATION_208_REQUIRED',
+            'Migration 208 adds training obligation population and compliance matrix columns required for publishing.',
+            { action }
+          );
         }
-        throw new Error(probe.error.message);
+        const e = mapV14e2b2DatabaseError(action, probe.error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
       }
 
       const { actorProfile, userRoles } = await loadTrainingActorContext(userData.user.id);
@@ -4392,8 +4402,10 @@ Deno.serve(async (request) => {
 
       const { data: reqs, error: reqsErr } = await serviceClient
         .from('document_acknowledgment_requirements')
-        .select('id, requirement_scope, user_id, department_id, role_name, is_mandatory')
-        .eq('version_id', versionId);
+        .select('id, document_id, version_id, requirement_scope, user_id, department_id, role_name, required_flag')
+        .eq('document_id', documentId)
+        .eq('version_id', versionId)
+        .eq('required_flag', true);
       if (reqsErr) throw new Error(reqsErr.message);
 
       if (reqs && reqs.length > 0) {
@@ -4405,10 +4417,10 @@ Deno.serve(async (request) => {
             return Boolean(r.department_id && r.department_id === actorProfile.department_id);
           }
           if (r.requirement_scope === 'role') {
-            return userRoles.some((ur: any) => ur.role === r.role_name && ur.is_active !== false);
+            return hasActiveRoleForAcknowledgmentRequirement(userRoles, r.role_name, actorProfile.organization_id);
           }
           if (r.requirement_scope === 'all_employees') {
-            return true;
+            return doc.organization_id === actorProfile.organization_id;
           }
           return false;
         });
@@ -4447,11 +4459,11 @@ Deno.serve(async (request) => {
 
       const assignmentId = requireCanonicalUuid(payload.assignment_id, 'assignment_id');
 
-      const { actorProfile } = await loadTrainingActorContext(userData.user.id);
+      await loadTrainingActorContext(userData.user.id);
 
       const { data: assign, error: assignErr } = await serviceClient
         .from('training_assignments')
-        .select('id, assigned_to_user_id, status, program_id, document_version_id, organization_id, cycle_type')
+        .select('id, program_id, assigned_to_user_id, status, document_version_id, cycle_type')
         .eq('id', assignmentId)
         .maybeSingle();
       if (assignErr || !assign) throw new Error('ASSIGNMENT_NOT_FOUND');
@@ -4460,28 +4472,28 @@ Deno.serve(async (request) => {
         throw new Error('PATCH29_ASSIGNMENT_FORBIDDEN');
       }
 
-      if (assign.organization_id && assign.organization_id !== actorProfile.organization_id) {
-        throw new Error('TENANT_ISOLATION_VIOLATION');
-      }
-
       if (!['assigned', 'overdue'].includes(assign.status)) {
         throw new Error('INVALID_ASSIGNMENT_STATUS');
       }
 
       if (assign.document_version_id) {
+        const { data: ver, error: verErr } = await serviceClient
+          .from('document_versions')
+          .select('id, document_id, version_number, supersedes_version_id')
+          .eq('id', assign.document_version_id)
+          .maybeSingle();
+        if (verErr || !ver) throw new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+
         const { data: sopDetails, error: sopErr } = await serviceClient
           .from('governed_sop_details')
-          .select('training_required, retraining_required')
+          .select('version_id, training_required, retraining_required, competency_assessment_required, competency_reassessment_required')
           .eq('version_id', assign.document_version_id)
           .maybeSingle();
-        if (!sopErr && sopDetails) {
-          const isRetraining = assign.cycle_type === 'retraining';
-          const formalReq = isRetraining
-            ? (sopDetails.retraining_required ?? sopDetails.training_required)
-            : sopDetails.training_required;
-          if (formalReq === false) {
-            throw new Error('TRAINING_NOT_REQUIRED_FOR_ASSIGNMENT');
-          }
+        if (sopErr || !sopDetails) throw new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+
+        const { formalTrainingRequired } = resolveGovernedVersionTrainingRequirements(ver, sopDetails);
+        if (formalTrainingRequired !== true) {
+          throw new Error('TRAINING_NOT_REQUIRED_FOR_ASSIGNMENT');
         }
       }
 
@@ -4516,14 +4528,10 @@ Deno.serve(async (request) => {
 
       const { data: assign, error: assignErr } = await serviceClient
         .from('training_assignments')
-        .select('id, assigned_to_user_id, status, program_id, document_version_id, organization_id, cycle_type')
+        .select('id, program_id, assigned_to_user_id, status, document_version_id, cycle_type')
         .eq('id', assignmentId)
         .maybeSingle();
       if (assignErr || !assign) throw new Error('ASSIGNMENT_NOT_FOUND');
-
-      if (assign.organization_id && assign.organization_id !== actorProfile.organization_id) {
-        throw new Error('TENANT_ISOLATION_VIOLATION');
-      }
 
       if (!['assigned', 'in_progress', 'overdue'].includes(assign.status)) {
         throw new Error('INVALID_ASSIGNMENT_STATUS');
@@ -4544,28 +4552,34 @@ Deno.serve(async (request) => {
 
       const { data: program, error: progErr } = await serviceClient
         .from('training_programs')
-        .select('id, program_owner_id, linked_sop_id, organization_id')
+        .select('id, owner_user_id, linked_document_id, linked_sop_id, department_id, created_by, training_type')
         .eq('id', assign.program_id)
         .maybeSingle();
       if (progErr || !program) throw new Error('PROGRAM_NOT_FOUND');
 
+      await verifyProgramTenancy(serviceClient, program, targetProfile.organization_id);
+
       let isGovernedFormal = false;
       if (assign.document_version_id) {
+        const { data: ver, error: verErr } = await serviceClient
+          .from('document_versions')
+          .select('id, document_id, version_number, supersedes_version_id')
+          .eq('id', assign.document_version_id)
+          .maybeSingle();
+        if (verErr || !ver) throw new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+
         const { data: sopDetails, error: sopErr } = await serviceClient
           .from('governed_sop_details')
-          .select('training_required, retraining_required')
+          .select('version_id, training_required, retraining_required, competency_assessment_required, competency_reassessment_required')
           .eq('version_id', assign.document_version_id)
           .maybeSingle();
-        if (!sopErr && sopDetails) {
-          const isRetraining = assign.cycle_type === 'retraining';
-          const formalReq = isRetraining
-            ? (sopDetails.retraining_required ?? sopDetails.training_required)
-            : sopDetails.training_required;
-          if (formalReq === false) {
-            throw new Error('TRAINING_NOT_REQUIRED_FOR_ASSIGNMENT');
-          }
-          isGovernedFormal = true;
+        if (sopErr || !sopDetails) throw new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+
+        const { formalTrainingRequired } = resolveGovernedVersionTrainingRequirements(ver, sopDetails);
+        if (formalTrainingRequired !== true) {
+          throw new Error('TRAINING_NOT_REQUIRED_FOR_ASSIGNMENT');
         }
+        isGovernedFormal = true;
       }
 
       if (isGovernedFormal && userData.user.id === assign.assigned_to_user_id) {
@@ -4575,7 +4589,7 @@ Deno.serve(async (request) => {
       const hasGlobal = hasActiveGlobalGovernanceRole(userRoles, actorProfile.organization_id);
       const hasDept = hasActiveDepartmentManagerRole(userRoles, targetProfile.department_id, actorProfile.organization_id);
       const hasDiv = hasActiveDivisionHeadRole(userRoles, targetProfile.division_id, actorProfile.organization_id);
-      const isProgramOwner = program.program_owner_id === userData.user.id;
+      const isProgramOwner = program.owner_user_id === userData.user.id;
 
       if (!hasGlobal && !hasDept && !hasDiv && !isProgramOwner) {
         throw new Error('UNAUTHORIZED_COMPLETION_CERTIFIER');
@@ -4648,31 +4662,32 @@ Deno.serve(async (request) => {
       if (assignmentId) {
         const { data: assign, error: assignErr } = await serviceClient
           .from('training_assignments')
-          .select('id, assigned_to_user_id, document_version_id, organization_id, cycle_type')
+          .select('id, program_id, assigned_to_user_id, document_version_id, cycle_type')
           .eq('id', assignmentId)
           .maybeSingle();
         if (assignErr || !assign) throw new Error('ASSIGNMENT_NOT_FOUND');
         if (assign.assigned_to_user_id !== userId) {
           throw new Error('COMPETENCY_ASSIGNMENT_SUBJECT_MISMATCH');
         }
-        if (assign.organization_id && assign.organization_id !== actorProfile.organization_id) {
-          throw new Error('TENANT_ISOLATION_VIOLATION');
-        }
 
         if (assign.document_version_id) {
+          const { data: ver, error: verErr } = await serviceClient
+            .from('document_versions')
+            .select('id, document_id, version_number, supersedes_version_id')
+            .eq('id', assign.document_version_id)
+            .maybeSingle();
+          if (verErr || !ver) throw new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+
           const { data: sopDetails, error: sopErr } = await serviceClient
             .from('governed_sop_details')
-            .select('competency_assessment_required, competency_reassessment_required')
+            .select('version_id, training_required, retraining_required, competency_assessment_required, competency_reassessment_required')
             .eq('version_id', assign.document_version_id)
             .maybeSingle();
-          if (!sopErr && sopDetails) {
-            const isRetraining = assign.cycle_type === 'retraining';
-            const compReq = isRetraining
-              ? (sopDetails.competency_reassessment_required ?? sopDetails.competency_assessment_required)
-              : sopDetails.competency_assessment_required;
-            if (compReq === false) {
-              throw new Error('COMPETENCY_NOT_REQUIRED_FOR_ASSIGNMENT');
-            }
+          if (sopErr || !sopDetails) throw new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+
+          const { competencyRequired } = resolveGovernedVersionTrainingRequirements(ver, sopDetails);
+          if (competencyRequired !== true) {
+            throw new Error('COMPETENCY_NOT_REQUIRED_FOR_ASSIGNMENT');
           }
         }
       }
@@ -4722,14 +4737,10 @@ Deno.serve(async (request) => {
 
       const { data: assign, error: assignErr } = await serviceClient
         .from('training_assignments')
-        .select('id, assigned_to_user_id, status, organization_id')
+        .select('id, assigned_to_user_id, status')
         .eq('id', assignmentId)
         .maybeSingle();
       if (assignErr || !assign) throw new Error('ASSIGNMENT_NOT_FOUND');
-
-      if (assign.organization_id && assign.organization_id !== actorProfile.organization_id) {
-        throw new Error('TENANT_ISOLATION_VIOLATION');
-      }
 
       if (!['assigned', 'in_progress', 'overdue'].includes(assign.status)) {
         throw new Error('INVALID_ASSIGNMENT_STATUS');
@@ -4747,6 +4758,9 @@ Deno.serve(async (request) => {
       if (targetProfErr || !targetProfile) throw new Error('TARGET_USER_NOT_FOUND');
       if (!targetProfile.is_active || targetProfile.user_status !== 'active') {
         throw new Error('TARGET_USER_NOT_FOUND');
+      }
+      if (targetProfile.organization_id !== actorProfile.organization_id) {
+        throw new Error('TENANT_ISOLATION_VIOLATION');
       }
 
       const hasGlobal = hasActiveGlobalGovernanceRole(userRoles, actorProfile.organization_id);
@@ -4789,14 +4803,10 @@ Deno.serve(async (request) => {
 
       const { data: assign, error: assignErr } = await serviceClient
         .from('training_assignments')
-        .select('id, assigned_to_user_id, status, organization_id')
+        .select('id, assigned_to_user_id, status')
         .eq('id', assignmentId)
         .maybeSingle();
       if (assignErr || !assign) throw new Error('ASSIGNMENT_NOT_FOUND');
-
-      if (assign.organization_id && assign.organization_id !== actorProfile.organization_id) {
-        throw new Error('TENANT_ISOLATION_VIOLATION');
-      }
 
       if (assign.status === 'completed') {
         throw new Error('CANNOT_CANCEL_COMPLETED_ASSIGNMENT');
@@ -4818,6 +4828,9 @@ Deno.serve(async (request) => {
       if (targetProfErr || !targetProfile) throw new Error('TARGET_USER_NOT_FOUND');
       if (!targetProfile.is_active || targetProfile.user_status !== 'active') {
         throw new Error('TARGET_USER_NOT_FOUND');
+      }
+      if (targetProfile.organization_id !== actorProfile.organization_id) {
+        throw new Error('TENANT_ISOLATION_VIOLATION');
       }
 
       const hasGlobal = hasActiveGlobalGovernanceRole(userRoles, actorProfile.organization_id);
@@ -4860,14 +4873,10 @@ Deno.serve(async (request) => {
 
       const { data: assign, error: assignErr } = await serviceClient
         .from('training_assignments')
-        .select('id, assigned_to_user_id, status, organization_id')
+        .select('id, assigned_to_user_id, status')
         .eq('id', assignmentId)
         .maybeSingle();
       if (assignErr || !assign) throw new Error('ASSIGNMENT_NOT_FOUND');
-
-      if (assign.organization_id && assign.organization_id !== actorProfile.organization_id) {
-        throw new Error('TENANT_ISOLATION_VIOLATION');
-      }
 
       if (!['completed', 'waived', 'cancelled'].includes(assign.status)) {
         throw new Error('CANNOT_REOPEN_OPEN_ASSIGNMENT');
@@ -4885,6 +4894,9 @@ Deno.serve(async (request) => {
       if (targetProfErr || !targetProfile) throw new Error('TARGET_USER_NOT_FOUND');
       if (!targetProfile.is_active || targetProfile.user_status !== 'active') {
         throw new Error('TARGET_USER_NOT_FOUND');
+      }
+      if (targetProfile.organization_id !== actorProfile.organization_id) {
+        throw new Error('TENANT_ISOLATION_VIOLATION');
       }
 
       const hasGlobal = hasActiveGlobalGovernanceRole(userRoles, actorProfile.organization_id);
