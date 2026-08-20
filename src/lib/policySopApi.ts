@@ -1559,7 +1559,6 @@ export async function reconcileSopTrainingPopulation(versionId: string): Promise
 export interface RecordDocumentAcknowledgmentInput {
   document_id: string;
   version_id: string;
-  user_id?: string;
   acknowledgment_method?: string;
   acknowledgment_note?: string;
 }
@@ -1584,6 +1583,9 @@ export interface SopTrainingComplianceMatrixRow {
   acknowledgment_required: boolean;
   competency_assessment_required: boolean;
   target_population_count: number;
+  training_target_count: number;
+  acknowledgment_target_count: number;
+  competency_target_count: number;
   assigned_count: number;
   in_progress_count: number;
   completed_count: number;
