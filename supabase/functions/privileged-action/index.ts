@@ -41,6 +41,21 @@ import {
   validRevisionTypes,
   validApprovalDecisions,
 } from '../_shared/v14e1rGovernedDocumentBridge.ts';
+import {
+  v14e2b2TrainingActions,
+  MAX_E2B2_PAYLOAD_BYTES,
+  validCompetencyResults,
+  globalGovernanceRoles,
+  optionalStrictFiniteNumber,
+  validateLegacyActorId,
+  mapV14e2b2DatabaseError,
+  hasActiveGlobalGovernanceRole,
+  hasActiveDepartmentManagerRole,
+  hasActiveDivisionHeadRole,
+  hasActiveRoleForAcknowledgmentRequirement,
+  verifyProgramTenancy,
+  resolveGovernedVersionTrainingRequirements,
+} from '../_shared/v14e2b2TrainingBridge.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -4141,153 +4156,773 @@ Deno.serve(async (request) => {
     return jsonResponse({ ok: true, action, result: data }, 200);
   }
 
-  if (action === 'decide_sop_rollout_requirements') {
-    const payload = requestBody.payload ?? {};
-    const { data, error } = await serviceClient.rpc('decide_sop_rollout_requirements', {
-      p_actor_id: userData.user.id,
-      p_version_id: payload.version_id,
-      p_retraining_required: Boolean(payload.retraining_required),
-      p_reacknowledgment_required: payload.reacknowledgment_required !== undefined ? Boolean(payload.reacknowledgment_required) : true,
-      p_competency_reassessment_required: Boolean(payload.competency_reassessment_required),
-      p_rationale: String(payload.rationale ?? ''),
-    });
-    if (error) {
-      const authFailure = /unauthorized|service_role_required|insufficient_authority|cross_organization/i.test(error.message);
-      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+  if (v14e2b2TrainingActions.has(action)) {
+    const payloadBytes = new TextEncoder().encode(JSON.stringify(requestPayload)).length;
+    if (payloadBytes > MAX_E2B2_PAYLOAD_BYTES) {
+      return errorResponse(
+        'Training or acknowledgment operation payload exceeds maximum allowable size.',
+        400,
+        'PAYLOAD_TOO_LARGE',
+        'The submitted payload exceeds the 64 KiB limit.',
+        { action },
+      );
     }
-    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  const loadTrainingActorContext = async (actorUserId: string) => {
+    const { data: actorProfile, error: profErr } = await serviceClient
+      .from('profiles')
+      .select('id, organization_id, department_id, division_id, is_active, user_status')
+      .eq('id', actorUserId)
+      .maybeSingle();
+
+    if (profErr || !actorProfile) {
+      throw new Error('CALLER_PROFILE_NOT_FOUND');
+    }
+    if (!actorProfile.is_active || actorProfile.user_status !== 'active') {
+      throw new Error('CALLER_PROFILE_INACTIVE');
+    }
+
+    const { data: userRoles, error: rolesErr } = await serviceClient
+      .from('user_roles')
+      .select('id, role, scope, organization_id, division_id, department_id, is_active')
+      .eq('user_id', actorUserId)
+      .eq('is_active', true);
+
+    if (rolesErr) {
+      throw new Error(rolesErr.message);
+    }
+
+    return { actorProfile, userRoles: userRoles ?? [] };
+  };
+
+  if (action === 'decide_sop_rollout_requirements') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload);
+      assertOnlyAllowedKeys(
+        payload,
+        new Set([
+          'version_id',
+          'retraining_required',
+          'reacknowledgment_required',
+          'competency_reassessment_required',
+          'rationale',
+          'actor_id',
+        ]),
+        'DECIDE_SOP_ROLLOUT_REQUIREMENTS_PAYLOAD'
+      );
+      validateLegacyActorId(payload, userData.user.id);
+
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+      const retrainingRequired = validateStrictBoolean(payload.retraining_required, 'retraining_required');
+      const reacknowledgmentRequired = validateStrictBoolean(payload.reacknowledgment_required, 'reacknowledgment_required');
+      const competencyReassessmentRequired = validateStrictBoolean(payload.competency_reassessment_required, 'competency_reassessment_required');
+      const rationale = boundedString(payload.rationale, 5, 4000, 'rationale', true) as string;
+
+      const { actorProfile, userRoles } = await loadTrainingActorContext(userData.user.id);
+
+      const { data: version, error: verErr } = await serviceClient
+        .from('document_versions')
+        .select('id, document_id')
+        .eq('id', versionId)
+        .maybeSingle();
+      if (verErr || !version) throw new Error('DOCUMENT_VERSION_NOT_FOUND');
+
+      const { data: doc, error: docErr } = await serviceClient
+        .from('controlled_documents')
+        .select('id, organization_id, document_owner_id')
+        .eq('id', version.document_id)
+        .maybeSingle();
+      if (docErr || !doc) throw new Error('DOCUMENT_NOT_FOUND');
+
+      if (doc.organization_id !== actorProfile.organization_id) {
+        throw new Error('TENANT_ISOLATION_VIOLATION');
+      }
+
+      const hasGlobal = hasActiveGlobalGovernanceRole(userRoles, actorProfile.organization_id);
+      const isDocOwner = doc.document_owner_id === userData.user.id;
+
+      if (!hasGlobal && !isDocOwner) {
+        throw new Error('UNAUTHORIZED_GOVERNANCE_ROLE');
+      }
+
+      const { data, error } = await serviceClient.rpc('decide_sop_rollout_requirements', {
+        p_actor_id: userData.user.id,
+        p_version_id: versionId,
+        p_retraining_required: retrainingRequired,
+        p_reacknowledgment_required: reacknowledgmentRequired,
+        p_competency_reassessment_required: competencyReassessmentRequired,
+        p_rationale: rationale,
+      });
+
+      if (error) {
+        const e = mapV14e2b2DatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e2b2DatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
   }
 
   if (action === 'publish_sop_training_obligations') {
-    const payload = requestBody.payload ?? {};
-    const { data, error } = await serviceClient.rpc('publish_sop_training_obligations', {
-      p_actor_id: userData.user.id,
-      p_version_id: payload.version_id,
-    });
-    if (error) {
-      const authFailure = /unauthorized|service_role_required|insufficient_authority|cross_organization/i.test(error.message);
-      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload);
+      assertOnlyAllowedKeys(payload, new Set(['version_id', 'actor_id']), 'PUBLISH_SOP_TRAINING_OBLIGATIONS_PAYLOAD');
+      validateLegacyActorId(payload, userData.user.id);
+
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+
+      // Migration 208 Capability Probe
+      const probe = await serviceClient
+        .from('v_sop_training_compliance_matrix')
+        .select('training_target_count, acknowledgment_target_count, competency_target_count')
+        .limit(1);
+
+      if (probe.error) {
+        const errText = String(probe.error.message || probe.error.details || '');
+        const code = String(probe.error.code || '');
+        if (code === '42703' || code === 'PGRST204' || errText.includes('column') || errText.includes('does not exist')) {
+          return errorResponse(
+            'Database migration 208 is required for publishing SOP training obligations.',
+            409,
+            'E2B2_MIGRATION_208_REQUIRED',
+            'Migration 208 adds training obligation population and compliance matrix columns required for publishing.',
+            { action }
+          );
+        }
+        const e = mapV14e2b2DatabaseError(action, probe.error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      const { actorProfile, userRoles } = await loadTrainingActorContext(userData.user.id);
+
+      const { data: version, error: verErr } = await serviceClient
+        .from('document_versions')
+        .select('id, document_id')
+        .eq('id', versionId)
+        .maybeSingle();
+      if (verErr || !version) throw new Error('DOCUMENT_VERSION_NOT_FOUND');
+
+      const { data: doc, error: docErr } = await serviceClient
+        .from('controlled_documents')
+        .select('id, organization_id, document_owner_id')
+        .eq('id', version.document_id)
+        .maybeSingle();
+      if (docErr || !doc) throw new Error('DOCUMENT_NOT_FOUND');
+
+      if (doc.organization_id !== actorProfile.organization_id) {
+        throw new Error('TENANT_ISOLATION_VIOLATION');
+      }
+
+      const hasGlobal = hasActiveGlobalGovernanceRole(userRoles, actorProfile.organization_id);
+      const isDocOwner = doc.document_owner_id === userData.user.id;
+
+      if (!hasGlobal && !isDocOwner) {
+        throw new Error('UNAUTHORIZED_GOVERNANCE_ROLE');
+      }
+
+      const { data, error } = await serviceClient.rpc('publish_sop_training_obligations', {
+        p_actor_id: userData.user.id,
+        p_version_id: versionId,
+      });
+
+      if (error) {
+        const e = mapV14e2b2DatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e2b2DatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
     }
-    return jsonResponse({ ok: true, action, result: data }, 200);
   }
 
   if (action === 'reconcile_sop_training_population') {
-    const payload = requestBody.payload ?? {};
-    const { data, error } = await serviceClient.rpc('reconcile_sop_training_population', {
-      p_actor_id: userData.user.id,
-      p_version_id: payload.version_id,
-    });
-    if (error) {
-      const authFailure = /unauthorized|service_role_required|insufficient_authority|cross_organization/i.test(error.message);
-      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
-    }
-    return jsonResponse({ ok: true, action, result: data }, 200);
+    return errorResponse(
+      'Population reconciliation is part of GRC v1.4-E2B3 and is not yet released.',
+      409,
+      'E2B3_RECONCILIATION_NOT_RELEASED',
+      'The reconcile_sop_training_population privileged action is not released in GRC v1.4-E2B2.',
+      { action }
+    );
   }
 
   if (action === 'record_document_acknowledgment') {
-    const payload = requestBody.payload ?? {};
-    // Employee self-acknowledgment enforces subject = authenticated actor unless admin
-    const targetUserId = payload.user_id ? String(payload.user_id) : userData.user.id;
-    const { data, error } = await serviceClient.rpc('record_document_acknowledgment', {
-      p_document_id: payload.document_id,
-      p_version_id: payload.version_id,
-      p_user_id: targetUserId,
-      p_acknowledgment_method: payload.acknowledgment_method ?? 'web_ui',
-      p_acknowledgment_note: payload.acknowledgment_note ?? null,
-    });
-    if (error) {
-      const authFailure = /unauthorized|service_role_required|cross_organization/i.test(error.message);
-      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, [
+        'user_id', 'p_user_id', 'target_user_id',
+        'p_actor_id', 'acting_user_id', 'authenticated_user_id',
+        'organization_id', 'p_organization_id'
+      ]);
+      assertOnlyAllowedKeys(
+        payload,
+        new Set(['document_id', 'version_id', 'acknowledgment_method', 'acknowledgment_note', 'actor_id']),
+        'RECORD_DOCUMENT_ACKNOWLEDGMENT_PAYLOAD'
+      );
+      validateLegacyActorId(payload, userData.user.id);
+
+      const documentId = requireCanonicalUuid(payload.document_id, 'document_id');
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+
+      if ('acknowledgment_method' in payload && payload.acknowledgment_method !== undefined && payload.acknowledgment_method !== null && payload.acknowledgment_method !== '') {
+        if (payload.acknowledgment_method !== 'web_ui') {
+          throw new Error('INVALID_ACKNOWLEDGMENT_METHOD');
+        }
+      }
+
+      const acknowledgmentNote = boundedString(payload.acknowledgment_note, 0, 4000, 'acknowledgment_note', false);
+
+      const { actorProfile, userRoles } = await loadTrainingActorContext(userData.user.id);
+
+      const { data: doc, error: docErr } = await serviceClient
+        .from('controlled_documents')
+        .select('id, organization_id')
+        .eq('id', documentId)
+        .maybeSingle();
+      if (docErr || !doc) throw new Error('DOCUMENT_NOT_FOUND');
+
+      const { data: ver, error: verErr } = await serviceClient
+        .from('document_versions')
+        .select('id, document_id')
+        .eq('id', versionId)
+        .maybeSingle();
+      if (verErr || !ver) throw new Error('DOCUMENT_VERSION_NOT_FOUND');
+      if (ver.document_id !== documentId) throw new Error('VERSION_DOCUMENT_MISMATCH');
+
+      if (doc.organization_id !== actorProfile.organization_id) {
+        throw new Error('TENANT_ISOLATION_VIOLATION');
+      }
+
+      const { data: reqs, error: reqsErr } = await serviceClient
+        .from('document_acknowledgment_requirements')
+        .select('id, document_id, version_id, requirement_scope, user_id, department_id, role_name, required_flag')
+        .eq('document_id', documentId)
+        .eq('version_id', versionId)
+        .eq('required_flag', true);
+      if (reqsErr) throw new Error(reqsErr.message);
+
+      if (reqs && reqs.length > 0) {
+        const isEligible = reqs.some((r: any) => {
+          if (r.requirement_scope === 'specific_users') {
+            return r.user_id === userData.user.id;
+          }
+          if (r.requirement_scope === 'department') {
+            return Boolean(r.department_id && r.department_id === actorProfile.department_id);
+          }
+          if (r.requirement_scope === 'role') {
+            return hasActiveRoleForAcknowledgmentRequirement(userRoles, r.role_name, actorProfile.organization_id);
+          }
+          if (r.requirement_scope === 'all_employees') {
+            return doc.organization_id === actorProfile.organization_id;
+          }
+          return false;
+        });
+
+        if (!isEligible) {
+          throw new Error('NOT_ELIGIBLE_FOR_ACKNOWLEDGMENT');
+        }
+      }
+
+      const { data, error } = await serviceClient.rpc('record_document_acknowledgment', {
+        p_document_id: documentId,
+        p_version_id: versionId,
+        p_user_id: userData.user.id,
+        p_acknowledgment_method: 'web_ui',
+        p_acknowledgment_note: acknowledgmentNote,
+      });
+
+      if (error) {
+        const e = mapV14e2b2DatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e2b2DatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
     }
-    return jsonResponse({ ok: true, action, result: data }, 200);
   }
 
   if (action === 'start_training_assignment') {
-    const payload = requestBody.payload ?? {};
-    const { data, error } = await serviceClient.rpc('start_training_assignment', {
-      p_assignment_id: payload.assignment_id,
-      p_actor_id: userData.user.id,
-    });
-    if (error) {
-      const authFailure = /unauthorized|service_role_required/i.test(error.message);
-      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload);
+      assertOnlyAllowedKeys(payload, new Set(['assignment_id', 'actor_id']), 'START_TRAINING_ASSIGNMENT_PAYLOAD');
+      validateLegacyActorId(payload, userData.user.id);
+
+      const assignmentId = requireCanonicalUuid(payload.assignment_id, 'assignment_id');
+
+      await loadTrainingActorContext(userData.user.id);
+
+      const { data: assign, error: assignErr } = await serviceClient
+        .from('training_assignments')
+        .select('id, program_id, assigned_to_user_id, status, document_version_id, cycle_type')
+        .eq('id', assignmentId)
+        .maybeSingle();
+      if (assignErr || !assign) throw new Error('ASSIGNMENT_NOT_FOUND');
+
+      if (assign.assigned_to_user_id !== userData.user.id) {
+        throw new Error('PATCH29_ASSIGNMENT_FORBIDDEN');
+      }
+
+      if (!['assigned', 'overdue'].includes(assign.status)) {
+        throw new Error('INVALID_ASSIGNMENT_STATUS');
+      }
+
+      if (assign.document_version_id) {
+        const { data: ver, error: verErr } = await serviceClient
+          .from('document_versions')
+          .select('id, document_id, version_number, supersedes_version_id')
+          .eq('id', assign.document_version_id)
+          .maybeSingle();
+        if (verErr || !ver) throw new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+
+        const { data: sopDetails, error: sopErr } = await serviceClient
+          .from('governed_sop_details')
+          .select('version_id, training_required, retraining_required, competency_assessment_required, competency_reassessment_required')
+          .eq('version_id', assign.document_version_id)
+          .maybeSingle();
+        if (sopErr || !sopDetails) throw new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+
+        const { formalTrainingRequired } = resolveGovernedVersionTrainingRequirements(ver, sopDetails);
+        if (formalTrainingRequired !== true) {
+          throw new Error('TRAINING_NOT_REQUIRED_FOR_ASSIGNMENT');
+        }
+      }
+
+      const { data, error } = await serviceClient.rpc('start_training_assignment', {
+        p_assignment_id: assignmentId,
+        p_actor_id: userData.user.id,
+      });
+
+      if (error) {
+        const e = mapV14e2b2DatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e2b2DatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
     }
-    return jsonResponse({ ok: true, action, result: data }, 200);
   }
 
   if (action === 'complete_training_assignment') {
-    const payload = requestBody.payload ?? {};
-    const { data, error } = await serviceClient.rpc('complete_training_assignment', {
-      p_assignment_id: payload.assignment_id,
-      p_evidence_id: payload.evidence_id ?? null,
-      p_actor_id: userData.user.id,
-    });
-    if (error) {
-      const authFailure = /unauthorized|service_role_required/i.test(error.message);
-      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload);
+      assertOnlyAllowedKeys(payload, new Set(['assignment_id', 'evidence_id', 'actor_id']), 'COMPLETE_TRAINING_ASSIGNMENT_PAYLOAD');
+      validateLegacyActorId(payload, userData.user.id);
+
+      const assignmentId = requireCanonicalUuid(payload.assignment_id, 'assignment_id');
+      const evidenceId = optionalCanonicalUuid(payload.evidence_id, 'evidence_id');
+
+      const { actorProfile, userRoles } = await loadTrainingActorContext(userData.user.id);
+
+      const { data: assign, error: assignErr } = await serviceClient
+        .from('training_assignments')
+        .select('id, program_id, assigned_to_user_id, status, document_version_id, cycle_type')
+        .eq('id', assignmentId)
+        .maybeSingle();
+      if (assignErr || !assign) throw new Error('ASSIGNMENT_NOT_FOUND');
+
+      if (!['assigned', 'in_progress', 'overdue'].includes(assign.status)) {
+        throw new Error('INVALID_ASSIGNMENT_STATUS');
+      }
+
+      const { data: targetProfile, error: targetProfErr } = await serviceClient
+        .from('profiles')
+        .select('id, organization_id, department_id, division_id, is_active, user_status')
+        .eq('id', assign.assigned_to_user_id)
+        .maybeSingle();
+      if (targetProfErr || !targetProfile) throw new Error('TARGET_USER_NOT_FOUND');
+      if (!targetProfile.is_active || targetProfile.user_status !== 'active') {
+        throw new Error('TARGET_USER_NOT_FOUND');
+      }
+      if (targetProfile.organization_id !== actorProfile.organization_id) {
+        throw new Error('TENANT_ISOLATION_VIOLATION');
+      }
+
+      const { data: program, error: progErr } = await serviceClient
+        .from('training_programs')
+        .select('id, owner_user_id, linked_document_id, linked_sop_id, department_id, created_by, training_type')
+        .eq('id', assign.program_id)
+        .maybeSingle();
+      if (progErr || !program) throw new Error('PROGRAM_NOT_FOUND');
+
+      await verifyProgramTenancy(serviceClient, program, targetProfile.organization_id);
+
+      let isGovernedFormal = false;
+      if (assign.document_version_id) {
+        const { data: ver, error: verErr } = await serviceClient
+          .from('document_versions')
+          .select('id, document_id, version_number, supersedes_version_id')
+          .eq('id', assign.document_version_id)
+          .maybeSingle();
+        if (verErr || !ver) throw new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+
+        const { data: sopDetails, error: sopErr } = await serviceClient
+          .from('governed_sop_details')
+          .select('version_id, training_required, retraining_required, competency_assessment_required, competency_reassessment_required')
+          .eq('version_id', assign.document_version_id)
+          .maybeSingle();
+        if (sopErr || !sopDetails) throw new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+
+        const { formalTrainingRequired } = resolveGovernedVersionTrainingRequirements(ver, sopDetails);
+        if (formalTrainingRequired !== true) {
+          throw new Error('TRAINING_NOT_REQUIRED_FOR_ASSIGNMENT');
+        }
+        isGovernedFormal = true;
+      }
+
+      if (isGovernedFormal && userData.user.id === assign.assigned_to_user_id) {
+        throw new Error('EMPLOYEE_CANNOT_COMPLETE_GOVERNED_TRAINING');
+      }
+
+      const hasGlobal = hasActiveGlobalGovernanceRole(userRoles, actorProfile.organization_id);
+      const hasDept = hasActiveDepartmentManagerRole(userRoles, targetProfile.department_id, actorProfile.organization_id);
+      const hasDiv = hasActiveDivisionHeadRole(userRoles, targetProfile.division_id, actorProfile.organization_id);
+      const isProgramOwner = program.owner_user_id === userData.user.id;
+
+      if (!hasGlobal && !hasDept && !hasDiv && !isProgramOwner) {
+        throw new Error('UNAUTHORIZED_COMPLETION_CERTIFIER');
+      }
+
+      const { data, error } = await serviceClient.rpc('complete_training_assignment', {
+        p_assignment_id: assignmentId,
+        p_evidence_id: evidenceId,
+        p_actor_id: userData.user.id,
+      });
+
+      if (error) {
+        const e = mapV14e2b2DatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e2b2DatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
     }
-    return jsonResponse({ ok: true, action, result: data }, 200);
   }
 
   if (action === 'record_competency_assessment') {
-    const payload = requestBody.payload ?? {};
-    const { data, error } = await serviceClient.rpc('record_competency_assessment', {
-      p_assignment_id: payload.assignment_id ?? null,
-      p_user_id: payload.user_id,
-      p_competency_area: payload.competency_area,
-      p_result: payload.result,
-      p_score: payload.score ?? null,
-      p_evidence_id: payload.evidence_id ?? null,
-      p_notes: payload.notes ?? null,
-      p_actor_id: userData.user.id,
-    });
-    if (error) {
-      const authFailure = /unauthorized|service_role_required|sod_violation|unauthorized_assessor|cross_organization/i.test(error.message);
-      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, [
+        'p_actor_id', 'acting_user_id', 'authenticated_user_id',
+        'organization_id', 'p_organization_id'
+      ]);
+      assertOnlyAllowedKeys(
+        payload,
+        new Set(['assignment_id', 'user_id', 'competency_area', 'result', 'score', 'evidence_id', 'notes', 'actor_id']),
+        'RECORD_COMPETENCY_ASSESSMENT_PAYLOAD'
+      );
+      validateLegacyActorId(payload, userData.user.id);
+
+      const userId = requireCanonicalUuid(payload.user_id, 'user_id');
+      const assignmentId = optionalCanonicalUuid(payload.assignment_id, 'assignment_id');
+      const competencyArea = boundedString(payload.competency_area, 1, 500, 'competency_area', true) as string;
+
+      const result = String(payload.result ?? '').trim();
+      if (!validCompetencyResults.has(result)) {
+        throw new Error('INVALID_COMPETENCY_RESULT');
+      }
+
+      const score = optionalStrictFiniteNumber(payload.score, 'score');
+      const evidenceId = optionalCanonicalUuid(payload.evidence_id, 'evidence_id');
+      const notes = boundedString(payload.notes, 0, 4000, 'notes', false);
+
+      const { actorProfile, userRoles } = await loadTrainingActorContext(userData.user.id);
+
+      if (userData.user.id === userId) {
+        throw new Error('SOD_VIOLATION_SELF_ASSESSMENT');
+      }
+
+      const { data: targetProfile, error: targetProfErr } = await serviceClient
+        .from('profiles')
+        .select('id, organization_id, department_id, division_id, is_active, user_status')
+        .eq('id', userId)
+        .maybeSingle();
+      if (targetProfErr || !targetProfile) throw new Error('TARGET_USER_NOT_FOUND');
+      if (!targetProfile.is_active || targetProfile.user_status !== 'active') {
+        throw new Error('TARGET_USER_NOT_FOUND');
+      }
+      if (targetProfile.organization_id !== actorProfile.organization_id) {
+        throw new Error('TENANT_ISOLATION_VIOLATION');
+      }
+
+      if (assignmentId) {
+        const { data: assign, error: assignErr } = await serviceClient
+          .from('training_assignments')
+          .select('id, program_id, assigned_to_user_id, document_version_id, cycle_type')
+          .eq('id', assignmentId)
+          .maybeSingle();
+        if (assignErr || !assign) throw new Error('ASSIGNMENT_NOT_FOUND');
+        if (assign.assigned_to_user_id !== userId) {
+          throw new Error('COMPETENCY_ASSIGNMENT_SUBJECT_MISMATCH');
+        }
+
+        if (assign.document_version_id) {
+          const { data: ver, error: verErr } = await serviceClient
+            .from('document_versions')
+            .select('id, document_id, version_number, supersedes_version_id')
+            .eq('id', assign.document_version_id)
+            .maybeSingle();
+          if (verErr || !ver) throw new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+
+          const { data: sopDetails, error: sopErr } = await serviceClient
+            .from('governed_sop_details')
+            .select('version_id, training_required, retraining_required, competency_assessment_required, competency_reassessment_required')
+            .eq('version_id', assign.document_version_id)
+            .maybeSingle();
+          if (sopErr || !sopDetails) throw new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+
+          const { competencyRequired } = resolveGovernedVersionTrainingRequirements(ver, sopDetails);
+          if (competencyRequired !== true) {
+            throw new Error('COMPETENCY_NOT_REQUIRED_FOR_ASSIGNMENT');
+          }
+        }
+      }
+
+      const hasGlobal = hasActiveGlobalGovernanceRole(userRoles, actorProfile.organization_id);
+      const hasDept = hasActiveDepartmentManagerRole(userRoles, targetProfile.department_id, actorProfile.organization_id);
+      const hasDiv = hasActiveDivisionHeadRole(userRoles, targetProfile.division_id, actorProfile.organization_id);
+
+      if (!hasGlobal && !hasDept && !hasDiv) {
+        throw new Error('UNAUTHORIZED_ASSESSOR');
+      }
+
+      const { data, error } = await serviceClient.rpc('record_competency_assessment', {
+        p_assignment_id: assignmentId,
+        p_user_id: userId,
+        p_competency_area: competencyArea,
+        p_result: result,
+        p_score: score,
+        p_evidence_id: evidenceId,
+        p_notes: notes,
+        p_actor_id: userData.user.id,
+      });
+
+      if (error) {
+        const e = mapV14e2b2DatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e2b2DatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
     }
-    return jsonResponse({ ok: true, action, result: data }, 200);
   }
 
   if (action === 'waive_training_assignment_with_reason') {
-    const payload = requestBody.payload ?? {};
-    const { data, error } = await serviceClient.rpc('waive_training_assignment_with_reason', {
-      p_assignment_id: payload.assignment_id,
-      p_reason: payload.reason,
-      p_actor_id: userData.user.id,
-    });
-    if (error) {
-      const authFailure = /unauthorized|service_role_required/i.test(error.message);
-      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload);
+      assertOnlyAllowedKeys(payload, new Set(['assignment_id', 'reason', 'actor_id']), 'WAIVE_ASSIGNMENT_PAYLOAD');
+      validateLegacyActorId(payload, userData.user.id);
+
+      const assignmentId = requireCanonicalUuid(payload.assignment_id, 'assignment_id');
+      const reason = boundedString(payload.reason, 3, 1000, 'reason', true) as string;
+
+      const { actorProfile, userRoles } = await loadTrainingActorContext(userData.user.id);
+
+      const { data: assign, error: assignErr } = await serviceClient
+        .from('training_assignments')
+        .select('id, assigned_to_user_id, status')
+        .eq('id', assignmentId)
+        .maybeSingle();
+      if (assignErr || !assign) throw new Error('ASSIGNMENT_NOT_FOUND');
+
+      if (!['assigned', 'in_progress', 'overdue'].includes(assign.status)) {
+        throw new Error('INVALID_ASSIGNMENT_STATUS');
+      }
+
+      if (assign.assigned_to_user_id === userData.user.id) {
+        throw new Error('UNAUTHORIZED_WAIVER_AUTHORITY');
+      }
+
+      const { data: targetProfile, error: targetProfErr } = await serviceClient
+        .from('profiles')
+        .select('id, organization_id, department_id, division_id, is_active, user_status')
+        .eq('id', assign.assigned_to_user_id)
+        .maybeSingle();
+      if (targetProfErr || !targetProfile) throw new Error('TARGET_USER_NOT_FOUND');
+      if (!targetProfile.is_active || targetProfile.user_status !== 'active') {
+        throw new Error('TARGET_USER_NOT_FOUND');
+      }
+      if (targetProfile.organization_id !== actorProfile.organization_id) {
+        throw new Error('TENANT_ISOLATION_VIOLATION');
+      }
+
+      const hasGlobal = hasActiveGlobalGovernanceRole(userRoles, actorProfile.organization_id);
+      const hasDept = hasActiveDepartmentManagerRole(userRoles, targetProfile.department_id, actorProfile.organization_id);
+      const hasDiv = hasActiveDivisionHeadRole(userRoles, targetProfile.division_id, actorProfile.organization_id);
+
+      if (!hasGlobal && !hasDept && !hasDiv) {
+        throw new Error('UNAUTHORIZED_WAIVER_AUTHORITY');
+      }
+
+      const { data, error } = await serviceClient.rpc('waive_training_assignment_with_reason', {
+        p_assignment_id: assignmentId,
+        p_reason: reason,
+        p_actor_id: userData.user.id,
+      });
+
+      if (error) {
+        const e = mapV14e2b2DatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e2b2DatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
     }
-    return jsonResponse({ ok: true, action, result: data }, 200);
   }
 
   if (action === 'cancel_training_assignment_with_reason') {
-    const payload = requestBody.payload ?? {};
-    const { data, error } = await serviceClient.rpc('cancel_training_assignment_with_reason', {
-      p_assignment_id: payload.assignment_id,
-      p_reason: payload.reason,
-      p_actor_id: userData.user.id,
-    });
-    if (error) {
-      const authFailure = /unauthorized|service_role_required/i.test(error.message);
-      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload);
+      assertOnlyAllowedKeys(payload, new Set(['assignment_id', 'reason', 'actor_id']), 'CANCEL_ASSIGNMENT_PAYLOAD');
+      validateLegacyActorId(payload, userData.user.id);
+
+      const assignmentId = requireCanonicalUuid(payload.assignment_id, 'assignment_id');
+      const reason = boundedString(payload.reason, 3, 1000, 'reason', true) as string;
+
+      const { actorProfile, userRoles } = await loadTrainingActorContext(userData.user.id);
+
+      const { data: assign, error: assignErr } = await serviceClient
+        .from('training_assignments')
+        .select('id, assigned_to_user_id, status')
+        .eq('id', assignmentId)
+        .maybeSingle();
+      if (assignErr || !assign) throw new Error('ASSIGNMENT_NOT_FOUND');
+
+      if (assign.status === 'completed') {
+        throw new Error('CANNOT_CANCEL_COMPLETED_ASSIGNMENT');
+      }
+
+      if (!['assigned', 'in_progress', 'overdue'].includes(assign.status)) {
+        throw new Error('INVALID_ASSIGNMENT_STATUS');
+      }
+
+      if (assign.assigned_to_user_id === userData.user.id) {
+        throw new Error('UNAUTHORIZED_CANCELLATION_AUTHORITY');
+      }
+
+      const { data: targetProfile, error: targetProfErr } = await serviceClient
+        .from('profiles')
+        .select('id, organization_id, department_id, division_id, is_active, user_status')
+        .eq('id', assign.assigned_to_user_id)
+        .maybeSingle();
+      if (targetProfErr || !targetProfile) throw new Error('TARGET_USER_NOT_FOUND');
+      if (!targetProfile.is_active || targetProfile.user_status !== 'active') {
+        throw new Error('TARGET_USER_NOT_FOUND');
+      }
+      if (targetProfile.organization_id !== actorProfile.organization_id) {
+        throw new Error('TENANT_ISOLATION_VIOLATION');
+      }
+
+      const hasGlobal = hasActiveGlobalGovernanceRole(userRoles, actorProfile.organization_id);
+      const hasDept = hasActiveDepartmentManagerRole(userRoles, targetProfile.department_id, actorProfile.organization_id);
+      const hasDiv = hasActiveDivisionHeadRole(userRoles, targetProfile.division_id, actorProfile.organization_id);
+
+      if (!hasGlobal && !hasDept && !hasDiv) {
+        throw new Error('UNAUTHORIZED_CANCELLATION_AUTHORITY');
+      }
+
+      const { data, error } = await serviceClient.rpc('cancel_training_assignment_with_reason', {
+        p_assignment_id: assignmentId,
+        p_reason: reason,
+        p_actor_id: userData.user.id,
+      });
+
+      if (error) {
+        const e = mapV14e2b2DatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e2b2DatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
     }
-    return jsonResponse({ ok: true, action, result: data }, 200);
   }
 
   if (action === 'reopen_training_assignment_with_reason') {
-    const payload = requestBody.payload ?? {};
-    const { data, error } = await serviceClient.rpc('reopen_training_assignment_with_reason', {
-      p_assignment_id: payload.assignment_id,
-      p_reason: payload.reason,
-      p_actor_id: userData.user.id,
-    });
-    if (error) {
-      const authFailure = /unauthorized|service_role_required/i.test(error.message);
-      return jsonResponse({ ok: false, error: error.message, action }, authFailure ? 403 : 409);
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload);
+      assertOnlyAllowedKeys(payload, new Set(['assignment_id', 'reason', 'actor_id']), 'REOPEN_ASSIGNMENT_PAYLOAD');
+      validateLegacyActorId(payload, userData.user.id);
+
+      const assignmentId = requireCanonicalUuid(payload.assignment_id, 'assignment_id');
+      const reason = boundedString(payload.reason, 3, 1000, 'reason', true) as string;
+
+      const { actorProfile, userRoles } = await loadTrainingActorContext(userData.user.id);
+
+      const { data: assign, error: assignErr } = await serviceClient
+        .from('training_assignments')
+        .select('id, assigned_to_user_id, status')
+        .eq('id', assignmentId)
+        .maybeSingle();
+      if (assignErr || !assign) throw new Error('ASSIGNMENT_NOT_FOUND');
+
+      if (!['completed', 'waived', 'cancelled'].includes(assign.status)) {
+        throw new Error('CANNOT_REOPEN_OPEN_ASSIGNMENT');
+      }
+
+      if (assign.assigned_to_user_id === userData.user.id) {
+        throw new Error('UNAUTHORIZED_REOPEN_AUTHORITY');
+      }
+
+      const { data: targetProfile, error: targetProfErr } = await serviceClient
+        .from('profiles')
+        .select('id, organization_id, department_id, division_id, is_active, user_status')
+        .eq('id', assign.assigned_to_user_id)
+        .maybeSingle();
+      if (targetProfErr || !targetProfile) throw new Error('TARGET_USER_NOT_FOUND');
+      if (!targetProfile.is_active || targetProfile.user_status !== 'active') {
+        throw new Error('TARGET_USER_NOT_FOUND');
+      }
+      if (targetProfile.organization_id !== actorProfile.organization_id) {
+        throw new Error('TENANT_ISOLATION_VIOLATION');
+      }
+
+      const hasGlobal = hasActiveGlobalGovernanceRole(userRoles, actorProfile.organization_id);
+      const hasDept = hasActiveDepartmentManagerRole(userRoles, targetProfile.department_id, actorProfile.organization_id);
+      const hasDiv = hasActiveDivisionHeadRole(userRoles, targetProfile.division_id, actorProfile.organization_id);
+
+      if (!hasGlobal && !hasDept && !hasDiv) {
+        throw new Error('UNAUTHORIZED_REOPEN_AUTHORITY');
+      }
+
+      const { data, error } = await serviceClient.rpc('reopen_training_assignment_with_reason', {
+        p_assignment_id: assignmentId,
+        p_reason: reason,
+        p_actor_id: userData.user.id,
+      });
+
+      if (error) {
+        const e = mapV14e2b2DatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e2b2DatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
     }
-    return jsonResponse({ ok: true, action, result: data }, 200);
   }
 
   if (v14e1rGovernedDocumentActions.has(action)) {
