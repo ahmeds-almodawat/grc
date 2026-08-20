@@ -3,11 +3,11 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   E2B3_TRAINING_RECONCILIATION_CONTRACT,
+  hasExactE2B3GlobalGovernanceRole,
   hasExactE2B3TrainingReconciliationCapability,
   isE2B3Migration209CapabilityUnavailable,
 } from '../../supabase/functions/_shared/v14e2b3TrainingReconciliationBridge.ts';
 import {
-  hasActiveGlobalGovernanceRole,
   mapV14e2b2DatabaseError,
   validateStrictBoolean,
 } from '../../supabase/functions/_shared/v14e2b2TrainingBridge.ts';
@@ -78,22 +78,36 @@ describe('GRC v1.4-E2B3 privileged-action Edge v15 reconciliation', () => {
     expect(reconcileRoute).toContain("new Set(['version_id', 'confirm_reconciliation', 'actor_id'])");
   });
 
-  it('07: canonical governance roles are permitted only as active global same-org roles', () => {
+  it('07: E2B3 canonical governance roles require active global exact-org assignments', () => {
     const org = 'org-a';
     for (const role of ['super_admin', 'governance_admin', 'compliance_officer']) {
-      expect(hasActiveGlobalGovernanceRole([
+      expect(hasExactE2B3GlobalGovernanceRole([
         { role, scope: 'global', is_active: true, organization_id: org },
       ], org)).toBe(true);
     }
   });
 
-  it('08: executive, auditor, and manager-only roles are denied', () => {
+  it('08: null, undefined, wrong-org, wrong-scope, inactive, and noncanonical assignments are denied', () => {
     const org = 'org-a';
+    for (const organization_id of [null, undefined, 'org-b']) {
+      expect(hasExactE2B3GlobalGovernanceRole([
+        { role: 'governance_admin', scope: 'global', is_active: true, organization_id },
+      ], org)).toBe(false);
+    }
+    for (const scope of ['assigned_only', 'department', 'division', 'unit']) {
+      expect(hasExactE2B3GlobalGovernanceRole([
+        { role: 'governance_admin', scope, is_active: true, organization_id: org },
+      ], org)).toBe(false);
+    }
+    expect(hasExactE2B3GlobalGovernanceRole([
+      { role: 'governance_admin', scope: 'global', is_active: false, organization_id: org },
+    ], org)).toBe(false);
     for (const role of ['executive', 'auditor', 'department_manager', 'division_head']) {
-      expect(hasActiveGlobalGovernanceRole([
+      expect(hasExactE2B3GlobalGovernanceRole([
         { role, scope: 'global', is_active: true, organization_id: org },
       ], org)).toBe(false);
     }
+    expect(reconcileRoute).toContain('hasExactE2B3GlobalGovernanceRole');
   });
 
   it('09: document-owner authority is same-org and follows active actor preflight', () => {
@@ -106,6 +120,24 @@ describe('GRC v1.4-E2B3 privileged-action Edge v15 reconciliation', () => {
     expect(reconcileRoute).toContain(".from('document_versions')");
     expect(reconcileRoute).toContain(".from('controlled_documents')");
     expect(reconcileRoute).toContain("doc.document_type !== 'sop'");
+  });
+
+  it('R1-01: DB209 marker preflight follows capability and blocks before reconciliation RPC', () => {
+    const capabilityIndex = reconcileRoute.indexOf("'get_e2b3_training_reconciliation_capabilities'");
+    const markerReadIndex = reconcileRoute.indexOf(".select('version_id, training_obligations_published_at')");
+    const markerBlockIndex = reconcileRoute.indexOf("'TRAINING_OBLIGATIONS_NOT_PUBLISHED'");
+    const reconciliationRpcIndex = reconcileRoute.indexOf("rpc('reconcile_sop_training_population'");
+    expect(markerReadIndex).toBeGreaterThan(capabilityIndex);
+    expect(markerBlockIndex).toBeGreaterThan(markerReadIndex);
+    expect(reconciliationRpcIndex).toBeGreaterThan(markerBlockIndex);
+  });
+
+  it('R1-02: DB208 capability failure returns before any DB209 publication-column read', () => {
+    const capabilityErrorIndex = reconcileRoute.indexOf('if (capabilityProbe.error)');
+    const markerReadIndex = reconcileRoute.indexOf('training_obligations_published_at');
+    expect(capabilityErrorIndex).toBeGreaterThan(-1);
+    expect(markerReadIndex).toBeGreaterThan(capabilityErrorIndex);
+    expect(reconcileRoute.slice(capabilityErrorIndex, markerReadIndex)).toContain('return errorResponse');
   });
 
   it('11: E2B2 actions and guards remain present', () => {
@@ -132,5 +164,12 @@ describe('GRC v1.4-E2B3 privileged-action Edge v15 reconciliation', () => {
       'reconcile_sop_training_population',
       new Error('E2B3_MIGRATION_209_REQUIRED'),
     )).toMatchObject({ status: 409, code: 'E2B3_MIGRATION_209_REQUIRED' });
+  });
+
+  it('R1-03: unpublished exact-version state maps to a stable lifecycle conflict', () => {
+    expect(mapV14e2b2DatabaseError(
+      'reconcile_sop_training_population',
+      new Error('TRAINING_OBLIGATIONS_NOT_PUBLISHED'),
+    )).toMatchObject({ status: 409, code: 'TRAINING_OBLIGATIONS_NOT_PUBLISHED' });
   });
 });

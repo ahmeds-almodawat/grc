@@ -57,6 +57,7 @@ import {
   resolveGovernedVersionTrainingRequirements,
 } from '../_shared/v14e2b2TrainingBridge.ts';
 import {
+  hasExactE2B3GlobalGovernanceRole,
   hasExactE2B3TrainingReconciliationCapability,
   isE2B3Migration209CapabilityUnavailable,
 } from '../_shared/v14e2b3TrainingReconciliationBridge.ts';
@@ -4422,10 +4423,28 @@ Deno.serve(async (request) => {
         throw new Error('TENANT_ISOLATION_VIOLATION');
       }
 
-      const hasGlobal = hasActiveGlobalGovernanceRole(userRoles, actorProfile.organization_id);
+      const hasGlobal = hasExactE2B3GlobalGovernanceRole(userRoles, actorProfile.organization_id);
       const isDocumentOwner = doc.document_owner_id === userData.user.id;
       if (!hasGlobal && !isDocumentOwner) {
         throw new Error('UNAUTHORIZED_GOVERNANCE_ROLE');
+      }
+
+      const { data: sopDetail, error: sopDetailErr } = await serviceClient
+        .from('governed_sop_details')
+        .select('version_id, training_obligations_published_at')
+        .eq('version_id', versionId)
+        .maybeSingle();
+      if (sopDetailErr || !sopDetail) {
+        throw new Error('GOVERNED_SOP_VERSION_CONTEXT_INVALID');
+      }
+      if (!sopDetail.training_obligations_published_at) {
+        return errorResponse(
+          'Training obligations have not been published for this exact SOP version.',
+          409,
+          'TRAINING_OBLIGATIONS_NOT_PUBLISHED',
+          'Publish obligations for the selected SOP version before running population reconciliation.',
+          { action, version_id: versionId }
+        );
       }
 
       const { data, error } = await serviceClient.rpc('reconcile_sop_training_population', {

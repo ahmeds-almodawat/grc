@@ -11,6 +11,32 @@ export interface E2B3TrainingReconciliationCapability {
   [key: string]: unknown;
 }
 
+export interface E2B3GovernanceRoleAssignment {
+  role: string;
+  scope: string;
+  is_active?: boolean;
+  organization_id?: string | null;
+}
+
+const E2B3_GLOBAL_GOVERNANCE_ROLES = new Set([
+  'super_admin',
+  'governance_admin',
+  'compliance_officer',
+]);
+
+export function hasExactE2B3GlobalGovernanceRole(
+  userRoles: readonly E2B3GovernanceRoleAssignment[],
+  organizationId: string,
+): boolean {
+  if (!organizationId) return false;
+  return userRoles.some((assignment) =>
+    assignment.is_active === true
+    && E2B3_GLOBAL_GOVERNANCE_ROLES.has(assignment.role)
+    && assignment.scope === 'global'
+    && assignment.organization_id === organizationId
+  );
+}
+
 export function hasExactE2B3TrainingReconciliationCapability(
   value: unknown,
 ): value is typeof E2B3_TRAINING_RECONCILIATION_CONTRACT {

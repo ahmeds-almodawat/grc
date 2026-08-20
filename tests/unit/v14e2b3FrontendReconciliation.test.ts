@@ -24,6 +24,17 @@ describe('GRC v1.4-E2B3 frontend population reconciliation contract', () => {
   });
 
   it.each([
+    'assigned_only',
+    'department',
+    'division',
+    'unit',
+  ] as const)('canonical governance role with %s scope does not see reconciliation', (scope) => {
+    expect(getTrainingCompliancePersona([
+      { role: 'governance_admin', scope },
+    ]).canReconcilePopulation).toBe(false);
+  });
+
+  it.each([
     'executive',
     'auditor',
     'department_manager',

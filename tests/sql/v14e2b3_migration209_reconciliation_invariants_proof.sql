@@ -27,12 +27,14 @@ begin
   join pg_namespace n on n.oid = p.pronamespace
   where n.nspname = 'public'
     and p.proname in (
+      'publish_sop_training_obligations',
+      'publish_sop_training_obligations_e2b2',
       'get_e2b3_training_reconciliation_capabilities',
       'reconcile_sop_training_population'
     )
     and p.prosecdef = true
     and array['search_path=public, pg_temp'] <@ p.proconfig;
-  if v_count <> 2 then
+  if v_count <> 4 then
     raise exception 'SECURITY_DEFINER_SEARCH_PATH_FAILURE: %', v_count;
   end if;
 
@@ -41,6 +43,8 @@ begin
   join pg_namespace n on n.oid = p.pronamespace
   where n.nspname = 'public'
     and p.proname in (
+      'publish_sop_training_obligations',
+      'publish_sop_training_obligations_e2b2',
       'get_e2b3_training_reconciliation_capabilities',
       'reconcile_sop_training_population'
     )
@@ -51,6 +55,27 @@ begin
     );
   if v_count <> 0 then
     raise exception 'SERVICE_ROLE_ACL_FAILURE: %', v_count;
+  end if;
+
+  select count(*) into v_count
+  from information_schema.columns
+  where table_schema = 'public'
+    and table_name = 'governed_sop_details'
+    and column_name in (
+      'training_obligations_published_at',
+      'training_obligations_published_by'
+    );
+  if v_count <> 2 then
+    raise exception 'VERSION_PUBLICATION_MARKER_COLUMNS_FAILURE: %', v_count;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'governed_sop_details_training_obligations_published_by_fkey'
+      and confdeltype = 'n'
+  ) then
+    raise exception 'VERSION_PUBLICATION_MARKER_FK_FAILURE';
   end if;
 
   if exists (
@@ -67,7 +92,7 @@ begin
     raise exception 'STALE_AUTHORITY_FAILURE';
   end if;
 
-  raise notice 'STRUCTURAL CASES PASSED: capability, ACL, search_path, stale authority absence';
+  raise notice 'STRUCTURAL CASES PASSED: publication marker, capability, ACL, search_path, stale authority absence';
 end;
 $$;
 
@@ -290,6 +315,14 @@ begin
     competency_assessment_required = excluded.competency_assessment_required,
     acknowledgment_sla_days = excluded.acknowledgment_sla_days;
 
+  -- These three fixtures represent versions explicitly published before the
+  -- original E2B3 lifecycle proof begins. R1 publication behavior is exercised
+  -- independently below through the public publication RPC.
+  update public.governed_sop_details
+  set training_obligations_published_at = now(),
+      training_obligations_published_by = v_gov
+  where version_id in (v_ver, v_ver_comp, v_ver_ack);
+
   -- Broad applicability plus narrow target overrides proves independent precedence.
   insert into public.document_version_department_scope (version_id, department_id)
   values (v_ver, v_dept_a), (v_ver, v_dept_b)
@@ -487,6 +520,161 @@ begin
   end if;
 
   raise notice 'ALL 31 E2B3 MIGRATION209 LIFECYCLE CASES DETERMINISTICALLY VERIFIED (PASSED).';
+end;
+$$;
+
+do $$
+declare
+  v_org uuid := 'e3b30000-0000-4000-8000-000000000001';
+  v_zero_dept uuid := 'e3b30000-0000-4000-8000-000000000014';
+  v_gov uuid := 'e3b30000-0000-4000-8000-000000000101';
+  v_owner uuid := 'e3b30000-0000-4000-8000-000000000102';
+  v_later_user uuid := 'e3b30000-0000-4000-8000-000000000124';
+  v_doc uuid := 'e3b30000-0000-4000-8000-000000000204';
+  v_v1 uuid := 'e3b30000-0000-4000-8000-000000000304';
+  v_v2 uuid := 'e3b30000-0000-4000-8000-000000000305';
+  v_program uuid;
+  v_result jsonb;
+  v_first_published_at timestamptz;
+  v_first_published_by uuid;
+  v_event_count_before integer;
+  v_event_count_after integer;
+  v_business_count integer;
+  v_threw boolean;
+begin
+  insert into public.departments (id, organization_id, code, name_en, is_active)
+  values (v_zero_dept, v_org, 'E2B3-ZERO', 'E2B3 Zero Population', true)
+  on conflict (id) do nothing;
+
+  insert into public.controlled_documents (
+    id, organization_id, document_code, document_title, document_type,
+    document_status, department_id, document_owner_id
+  ) values (
+    v_doc, v_org, 'E2B3-R1-SOP', 'E2B3 R1 Publication SOP', 'sop',
+    'approved', v_zero_dept, v_owner
+  ) on conflict (id) do nothing;
+
+  insert into public.document_versions (
+    id, document_id, version_number, version_label, supersedes_version_id, is_current_version
+  ) values
+    (v_v1, v_doc, 1, 'v1.0', null, false),
+    (v_v2, v_doc, 2, 'v2.0', v_v1, true)
+  on conflict (id) do nothing;
+
+  insert into public.governed_sop_details (
+    version_id, title_en, process_name_en, governance_link_state,
+    training_required, acknowledgment_required, competency_assessment_required,
+    retraining_required, reacknowledgment_required, competency_reassessment_required,
+    rollout_decided_at, rollout_decided_by, rollout_decision_rationale,
+    acknowledgment_sla_days
+  ) values
+    (
+      v_v1, 'E2B3 R1 SOP v1', 'R1 Publication', 'not_applicable',
+      true, true, false, false, false, false,
+      null, null, null, 10
+    ),
+    (
+      v_v2, 'E2B3 R1 SOP v2', 'R1 Publication', 'not_applicable',
+      false, false, false, true, true, false,
+      now(), v_gov, 'R1 exact-version rollout approved', 10
+    )
+  on conflict (version_id) do nothing;
+
+  insert into public.sop_version_training_target_scopes (
+    sop_version_id, scope_type, department_id, role_name, created_by
+  ) values
+    (v_v1, 'department', v_zero_dept, null, v_gov),
+    (v_v2, 'department', v_zero_dept, null, v_gov)
+  on conflict do nothing;
+
+  -- CASE R1-01: a legitimate zero-target V1 publication still records the marker.
+  v_result := public.publish_sop_training_obligations(v_gov, v_v1);
+  if v_result->>'assignments_created' <> '0'
+     or v_result->>'acknowledgment_requirements_created' <> '0'
+     or (select training_obligations_published_at from public.governed_sop_details where version_id = v_v1) is null then
+    raise exception 'R1_CASE_01_ZERO_POPULATION_PUBLICATION_FAILURE: %', v_result;
+  end if;
+
+  select training_obligations_published_at, training_obligations_published_by
+  into v_first_published_at, v_first_published_by
+  from public.governed_sop_details
+  where version_id = v_v1;
+
+  -- CASE R1-02: repeat publication preserves first-publication evidence.
+  perform public.publish_sop_training_obligations(v_owner, v_v1);
+  if (select training_obligations_published_at from public.governed_sop_details where version_id = v_v1) <> v_first_published_at
+     or (select training_obligations_published_by from public.governed_sop_details where version_id = v_v1) <> v_first_published_by then
+    raise exception 'R1_CASE_02_FIRST_PUBLICATION_EVIDENCE_REWRITE_FAILURE';
+  end if;
+
+  select id into v_program
+  from public.training_programs
+  where linked_sop_id = v_doc and training_type = 'sop_acknowledgment'
+  order by created_at, id
+  limit 1;
+
+  -- CASE R1-03: the persistent V1 program does not prove V2 publication.
+  if v_program is null
+     or (select training_obligations_published_at from public.governed_sop_details where version_id = v_v2) is not null then
+    raise exception 'R1_CASE_03_V1_PROGRAM_V2_STATE_FAILURE';
+  end if;
+
+  select count(*) into v_event_count_before
+  from public.training_events
+  where event_type like 'population_reconciliation_%';
+
+  -- CASE R1-04: unpublished V2 reconciliation fails before every V2 write.
+  v_threw := false;
+  begin
+    perform public.reconcile_sop_training_population(v_gov, v_v2);
+  exception when others then
+    v_threw := sqlerrm like '%TRAINING_OBLIGATIONS_NOT_PUBLISHED%';
+  end;
+  select
+    (select count(*) from public.training_assignments where document_version_id = v_v2)
+    + (select count(*) from public.document_acknowledgment_requirements where version_id = v_v2)
+  into v_business_count;
+  select count(*) into v_event_count_after
+  from public.training_events
+  where event_type like 'population_reconciliation_%';
+  if not v_threw or v_business_count <> 0 or v_event_count_after <> v_event_count_before then
+    raise exception 'R1_CASE_04_UNPUBLISHED_V2_WRITE_FAILURE: threw=%, writes=%, events=%/%',
+      v_threw, v_business_count, v_event_count_before, v_event_count_after;
+  end if;
+
+  -- CASE R1-05: explicit zero-target V2 publication records its own marker.
+  v_result := public.publish_sop_training_obligations(v_gov, v_v2);
+  if v_result->>'assignments_created' <> '0'
+     or v_result->>'acknowledgment_requirements_created' <> '0'
+     or (select training_obligations_published_at from public.governed_sop_details where version_id = v_v2) is null
+     or (select training_obligations_published_by from public.governed_sop_details where version_id = v_v2) <> v_gov then
+    raise exception 'R1_CASE_05_EXPLICIT_V2_PUBLICATION_FAILURE: %', v_result;
+  end if;
+
+  -- CASE R1-06: a later eligible employee can be reconciled after publication.
+  update public.profiles set department_id = v_zero_dept where id = v_later_user;
+  v_result := public.reconcile_sop_training_population(v_gov, v_v2);
+  if v_result->>'target_population_count' <> '1'
+     or v_result->>'newly_assigned_count' <> '1'
+     or v_result->>'acknowledgment_requirements_created' <> '1' then
+    raise exception 'R1_CASE_06_POST_PUBLICATION_RECONCILIATION_FAILURE: %', v_result;
+  end if;
+
+  -- CASE R1-07: V2 obligations are exact-version rows and repeat reconciliation is idempotent.
+  v_result := public.reconcile_sop_training_population(v_owner, v_v2);
+  if (select count(*) from public.training_assignments where document_version_id = v_v2 and assigned_to_user_id = v_later_user) <> 1
+     or (select count(*) from public.document_acknowledgment_requirements where version_id = v_v2 and user_id = v_later_user) <> 1
+     or v_result->>'newly_assigned_count' <> '0'
+     or v_result->>'reactivated_assignment_count' <> '0'
+     or v_result->>'cancelled_out_of_scope_count' <> '0'
+     or v_result->>'acknowledgment_requirements_created' <> '0'
+     or v_result->>'acknowledgment_requirements_reactivated' <> '0'
+     or v_result->>'acknowledgment_requirements_deactivated' <> '0' then
+    raise exception 'R1_CASE_07_EXACT_VERSION_IDEMPOTENCY_FAILURE: %', v_result;
+  end if;
+
+  raise notice 'ALL 7 E2B3 R1 VERSION-PUBLICATION CASES DETERMINISTICALLY VERIFIED (PASSED).';
+  raise notice 'ALL 38 E2B3 MIGRATION209 + R1 BEHAVIORAL CASES DETERMINISTICALLY VERIFIED (PASSED).';
 end;
 $$;
 

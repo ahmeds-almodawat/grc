@@ -8,7 +8,66 @@
 -- ============================================================================
 
 -- ============================================================================
--- 1. DB209 CAPABILITY CONTRACT (SERVICE ROLE ONLY)
+-- 1. VERSION-BOUND PUBLICATION EVIDENCE
+-- ============================================================================
+alter table public.governed_sop_details
+  add column if not exists training_obligations_published_at timestamptz null,
+  add column if not exists training_obligations_published_by uuid null;
+
+alter table public.governed_sop_details
+  add constraint governed_sop_details_training_obligations_published_by_fkey
+  foreign key (training_obligations_published_by)
+  references public.profiles(id)
+  on delete set null;
+
+-- Preserve the complete frozen Migration208 implementation under an internal
+-- service-only name, then wrap the exact external signature transactionally.
+alter function public.publish_sop_training_obligations(uuid, uuid)
+  rename to publish_sop_training_obligations_e2b2;
+
+revoke all on function public.publish_sop_training_obligations_e2b2(uuid, uuid) from public, anon, authenticated;
+grant execute on function public.publish_sop_training_obligations_e2b2(uuid, uuid) to service_role;
+
+create or replace function public.publish_sop_training_obligations(
+  p_actor_id uuid,
+  p_version_id uuid
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_result jsonb;
+begin
+  if coalesce(current_setting('request.jwt.claim.role', true), current_user) <> 'service_role'
+     and current_user <> 'service_role' then
+    raise exception 'SERVICE_ROLE_REQUIRED';
+  end if;
+
+  v_result := public.publish_sop_training_obligations_e2b2(
+    p_actor_id,
+    p_version_id
+  );
+
+  update public.governed_sop_details
+  set training_obligations_published_at = coalesce(training_obligations_published_at, now()),
+      training_obligations_published_by = coalesce(training_obligations_published_by, p_actor_id)
+  where version_id = p_version_id;
+
+  if not found then
+    raise exception 'GOVERNED_SOP_VERSION_CONTEXT_INVALID';
+  end if;
+
+  return v_result;
+end;
+$$;
+
+revoke all on function public.publish_sop_training_obligations(uuid, uuid) from public, anon, authenticated;
+grant execute on function public.publish_sop_training_obligations(uuid, uuid) to service_role;
+
+-- ============================================================================
+-- 2. DB209 CAPABILITY CONTRACT (SERVICE ROLE ONLY)
 -- ============================================================================
 create or replace function public.get_e2b3_training_reconciliation_capabilities()
 returns jsonb
@@ -34,7 +93,7 @@ revoke all on function public.get_e2b3_training_reconciliation_capabilities() fr
 grant execute on function public.get_e2b3_training_reconciliation_capabilities() to service_role;
 
 -- ============================================================================
--- 2. VERSION-BOUND SOP TRAINING POPULATION LIFECYCLE RECONCILIATION
+-- 3. VERSION-BOUND SOP TRAINING POPULATION LIFECYCLE RECONCILIATION
 -- ============================================================================
 create or replace function public.reconcile_sop_training_population(
   p_actor_id uuid,
@@ -151,6 +210,10 @@ begin
 
   if not found then
     raise exception 'GOVERNED_SOP_VERSION_CONTEXT_INVALID';
+  end if;
+
+  if v_sop_detail.training_obligations_published_at is null then
+    raise exception 'TRAINING_OBLIGATIONS_NOT_PUBLISHED: Publish obligations for this exact SOP version before running reconciliation';
   end if;
 
   select id into v_prog_id

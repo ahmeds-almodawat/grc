@@ -81,6 +81,9 @@ export function getTrainingCompliancePersona(
   roles: readonly AuthRoleAssignment[] | null | undefined,
 ): TrainingCompliancePersona {
   const hasGlobalMutation = hasTrainingRole(roles, globalMutationRoles);
+  const hasGlobalReconciliationAuthority = (roles ?? []).some(
+    (assignment) => globalMutationRoles.has(assignment.role) && assignment.scope === 'global',
+  );
   const hasManager = hasTrainingRole(roles, managerMutationRoles);
   const isReadOnlyGlobal = hasTrainingRole(roles, readOnlyGlobalRoles);
   const isEmployeeLike = hasTrainingRole(roles, ['employee', 'viewer', 'project_owner', 'milestone_owner', 'task_owner']);
@@ -96,7 +99,7 @@ export function getTrainingCompliancePersona(
     canViewGovernanceCompliance: hasGlobalMutation || isReadOnlyGlobal,
     canPublishObligations: hasGlobalMutation,
     canDecideRollout: hasGlobalMutation,
-    canReconcilePopulation: hasGlobalMutation,
+    canReconcilePopulation: hasGlobalReconciliationAuthority,
     isReadOnlyGlobal,
   };
 }

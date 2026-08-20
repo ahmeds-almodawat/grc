@@ -515,6 +515,7 @@ export function mapV14e2b2DatabaseError(
   if (
     msg === 'E2B2_MIGRATION_208_REQUIRED' ||
     msg === 'E2B3_MIGRATION_209_REQUIRED' ||
+    msg.startsWith('TRAINING_OBLIGATIONS_NOT_PUBLISHED') ||
     msg === 'GOVERNED_SOP_VERSION_CONTEXT_INVALID' ||
     msg === 'INVALID_DOC_TYPE' ||
     msg.startsWith('TRAINING_PROGRAM_NOT_PUBLISHED') ||
@@ -535,6 +536,8 @@ export function mapV14e2b2DatabaseError(
         ? 'E2B2_MIGRATION_208_REQUIRED'
         : msg === 'E2B3_MIGRATION_209_REQUIRED'
         ? 'E2B3_MIGRATION_209_REQUIRED'
+        : msg.startsWith('TRAINING_OBLIGATIONS_NOT_PUBLISHED')
+        ? 'TRAINING_OBLIGATIONS_NOT_PUBLISHED'
         : 'INVALID_LIFECYCLE_STATE',
       detail: 'The operation cannot be completed in the current lifecycle or migration state.',
       extra: { action },

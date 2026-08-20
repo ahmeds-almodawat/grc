@@ -28,6 +28,31 @@ describe('GRC v1.4-E2B3 Migration209 reconciliation contract', () => {
     expect(reconcile).toContain("raise exception 'SERVICE_ROLE_REQUIRED'");
   });
 
+  it('R1-01: Migration209 installs durable version-bound first-publication evidence', () => {
+    expect(migration209).toContain('training_obligations_published_at timestamptz null');
+    expect(migration209).toContain('training_obligations_published_by uuid null');
+    expect(migration209).toContain('references public.profiles(id)');
+    expect(migration209).toContain('on delete set null');
+  });
+
+  it('R1-02: the exact publication signature wraps frozen E2B2 behavior atomically', () => {
+    expect(migration209).toContain('rename to publish_sop_training_obligations_e2b2');
+    expect(migration209).toContain('v_result := public.publish_sop_training_obligations_e2b2(');
+    expect(migration209).toContain('training_obligations_published_at = coalesce(training_obligations_published_at, now())');
+    expect(migration209).toContain('training_obligations_published_by = coalesce(training_obligations_published_by, p_actor_id)');
+    expect(migration209).toContain('return v_result');
+  });
+
+  it('R1-03: reconciliation blocks an exact version before program lookup or mutation', () => {
+    const markerGate = reconcile.indexOf('v_sop_detail.training_obligations_published_at is null');
+    const programLookup = reconcile.indexOf('from public.training_programs');
+    const firstMutation = reconcile.search(/insert into public\.training_assignments|update public\.training_assignments/i);
+    expect(markerGate).toBeGreaterThan(-1);
+    expect(reconcile).toContain('TRAINING_OBLIGATIONS_NOT_PUBLISHED');
+    expect(programLookup).toBeGreaterThan(markerGate);
+    expect(firstMutation).toBeGreaterThan(markerGate);
+  });
+
   it('02: canonical global governance authority is allowed', () => {
     expect(reconcile).toContain("ur.role::text in ('super_admin', 'governance_admin', 'compliance_officer')");
     expect(reconcile).toContain("ur.scope::text = 'global'");
@@ -185,9 +210,11 @@ describe('GRC v1.4-E2B3 Migration209 reconciliation contract', () => {
     ]) expect(reconcile).toContain(event);
   });
 
-  it('isolated runtime proof covers all 31 lifecycle cases and rolls fixtures back', () => {
+  it('isolated runtime proof covers the retained 31 cases plus 7 R1 publication cases and rolls fixtures back', () => {
     const proof = fs.readFileSync(runtimeProofPath, 'utf8');
     expect(proof).toContain('ALL 31 E2B3 MIGRATION209 LIFECYCLE CASES DETERMINISTICALLY VERIFIED (PASSED).');
+    expect(proof).toContain('ALL 7 E2B3 R1 VERSION-PUBLICATION CASES DETERMINISTICALLY VERIFIED (PASSED).');
+    expect(proof).toContain('ALL 38 E2B3 MIGRATION209 + R1 BEHAVIORAL CASES DETERMINISTICALLY VERIFIED (PASSED).');
     expect(proof).toContain('rollback;');
   });
 });
