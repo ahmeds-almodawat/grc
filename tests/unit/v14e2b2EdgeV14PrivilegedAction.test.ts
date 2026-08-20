@@ -7,6 +7,8 @@ import {
   MAX_E2B2_PAYLOAD_BYTES,
   validCompetencyResults,
   globalGovernanceRoles,
+  canonicalGlobalAcknowledgmentRoles,
+  canonicalAssignedOnlyAcknowledgmentRoles,
   isCanonicalUuid,
   requireCanonicalUuid,
   optionalCanonicalUuid,
@@ -39,6 +41,32 @@ describe('GRC v1.4-E2B2 Edge v14 Training & Acknowledgment Authorization Hardeni
   const validOrgId = '77777777-7777-4777-8777-777777777777';
   const validDeptId = '88888888-8888-4888-8888-888888888888';
   const validDivId = '99999999-9999-4999-8999-999999999999';
+
+  function createMockServiceClient(tables: {
+    controlled_documents?: Array<{ id: string; organization_id?: string | null }>;
+    departments?: Array<{ id: string; organization_id?: string | null }>;
+    profiles?: Array<{ id: string; organization_id?: string | null }>;
+  }) {
+    return {
+      from(tableName: string) {
+        return {
+          select(_fields: string) {
+            return {
+              eq(colName: string, colVal: string) {
+                return {
+                  async maybeSingle() {
+                    const rows = (tables as any)[tableName] || [];
+                    const found = rows.find((r: any) => r[colName] === colVal);
+                    return { data: found || null, error: null };
+                  },
+                };
+              },
+            };
+          },
+        };
+      },
+    };
+  }
 
   // ==========================================================================
   // SECTION 1: Pure Validator & Helper Invariants (Cases 1 - 9)
@@ -301,7 +329,7 @@ describe('GRC v1.4-E2B2 Edge v14 Training & Acknowledgment Authorization Hardeni
   });
 
   // ==========================================================================
-  // SECTION 6: Schema Contract & Review Defects Proof (Cases A - T)
+  // SECTION 6: Schema Contract & Tenancy Defect Remediation Proof (Cases A - T)
   // ==========================================================================
   describe('Section 6: Schema Contract & Tenancy Defect Remediation Proof', () => {
     it('A. Edge source contains NO document_acknowledgment_requirements.is_mandatory', () => {
@@ -447,9 +475,177 @@ describe('GRC v1.4-E2B2 Edge v14 Training & Acknowledgment Authorization Hardeni
   });
 
   // ==========================================================================
-  // SECTION 7: Migration Integrity & Lineage Invariants (Cases 34 - 35)
+  // SECTION 7: Program Tenancy Signal Independent Resolution (Section 5 Cases A - E)
   // ==========================================================================
-  describe('Section 7: Migration Integrity & Lineage Invariants', () => {
+  describe('Section 7: Program Tenancy Signal Independent Resolution Suite', () => {
+    it('A. linked_sop_id resolves Org A and linked_document_id resolves Org A => PASS', async () => {
+      const client = createMockServiceClient({
+        controlled_documents: [
+          { id: 'sop-doc-1', organization_id: validOrgId },
+          { id: 'linked-doc-2', organization_id: validOrgId },
+        ],
+      });
+      await expect(
+        verifyProgramTenancy(
+          client,
+          {
+            id: 'prog-1',
+            linked_sop_id: 'sop-doc-1',
+            linked_document_id: 'linked-doc-2',
+          },
+          validOrgId
+        )
+      ).resolves.toBeUndefined();
+    });
+
+    it('B. linked_sop_id resolves Org A and linked_document_id resolves Org B, expected Org A => TRAINING_PROGRAM_TENANCY_MISMATCH', async () => {
+      const client = createMockServiceClient({
+        controlled_documents: [
+          { id: 'sop-doc-1', organization_id: validOrgId },
+          { id: 'linked-doc-2', organization_id: 'other-org-beta' },
+        ],
+      });
+      await expect(
+        verifyProgramTenancy(
+          client,
+          {
+            id: 'prog-1',
+            linked_sop_id: 'sop-doc-1',
+            linked_document_id: 'linked-doc-2',
+          },
+          validOrgId
+        )
+      ).rejects.toThrow('TRAINING_PROGRAM_TENANCY_MISMATCH');
+    });
+
+    it('C. linked_sop_id resolves Org A, linked_document_id resolves Org B, department + owner + creator resolve Org A => STILL FAIL', async () => {
+      const client = createMockServiceClient({
+        controlled_documents: [
+          { id: 'sop-doc-1', organization_id: validOrgId },
+          { id: 'linked-doc-2', organization_id: 'other-org-beta' },
+        ],
+        departments: [{ id: validDeptId, organization_id: validOrgId }],
+        profiles: [
+          { id: 'user-owner', organization_id: validOrgId },
+          { id: 'user-creator', organization_id: validOrgId },
+        ],
+      });
+      await expect(
+        verifyProgramTenancy(
+          client,
+          {
+            id: 'prog-1',
+            linked_sop_id: 'sop-doc-1',
+            linked_document_id: 'linked-doc-2',
+            department_id: validDeptId,
+            owner_user_id: 'user-owner',
+            created_by: 'user-creator',
+          },
+          validOrgId
+        )
+      ).rejects.toThrow('TRAINING_PROGRAM_TENANCY_MISMATCH');
+    });
+
+    it('D. linked_sop_id and linked_document_id contain the same document ID => safe deduplicated PASS', async () => {
+      const client = createMockServiceClient({
+        controlled_documents: [{ id: 'sop-doc-1', organization_id: validOrgId }],
+      });
+      await expect(
+        verifyProgramTenancy(
+          client,
+          {
+            id: 'prog-1',
+            linked_sop_id: 'sop-doc-1',
+            linked_document_id: 'sop-doc-1',
+          },
+          validOrgId
+        )
+      ).resolves.toBeUndefined();
+    });
+
+    it('E. no tenancy signal resolves => TRAINING_PROGRAM_TENANCY_MISMATCH', async () => {
+      const client = createMockServiceClient({});
+      await expect(
+        verifyProgramTenancy(
+          client,
+          {
+            id: 'prog-1',
+          },
+          validOrgId
+        )
+      ).rejects.toThrow('TRAINING_PROGRAM_TENANCY_MISMATCH');
+    });
+  });
+
+  // ==========================================================================
+  // SECTION 8: Acknowledgment Role Canonical Scope Taxonomy (Section 6 Cases A - L)
+  // ==========================================================================
+  describe('Section 8: Acknowledgment Role Canonical Scope Taxonomy Suite', () => {
+    it('A. governance_admin + global + matching org => true', () => {
+      const roles = [{ role: 'governance_admin', scope: 'global', organization_id: validOrgId, is_active: true }];
+      expect(hasActiveRoleForAcknowledgmentRequirement(roles, 'governance_admin', validOrgId)).toBe(true);
+    });
+
+    it('B. governance_admin + global + null org => true', () => {
+      const roles = [{ role: 'governance_admin', scope: 'global', organization_id: null, is_active: true }];
+      expect(hasActiveRoleForAcknowledgmentRequirement(roles, 'governance_admin', validOrgId)).toBe(true);
+    });
+
+    it('C. governance_admin + department => false', () => {
+      const roles = [{ role: 'governance_admin', scope: 'department', organization_id: validOrgId, is_active: true }];
+      expect(hasActiveRoleForAcknowledgmentRequirement(roles, 'governance_admin', validOrgId)).toBe(false);
+    });
+
+    it('D. department_manager + department + matching org => true', () => {
+      const roles = [{ role: 'department_manager', scope: 'department', organization_id: validOrgId, is_active: true }];
+      expect(hasActiveRoleForAcknowledgmentRequirement(roles, 'department_manager', validOrgId)).toBe(true);
+    });
+
+    it('E. department_manager + global + matching org => false', () => {
+      const roles = [{ role: 'department_manager', scope: 'global', organization_id: validOrgId, is_active: true }];
+      expect(hasActiveRoleForAcknowledgmentRequirement(roles, 'department_manager', validOrgId)).toBe(false);
+    });
+
+    it('F. department_manager + department + NULL org => false', () => {
+      const roles = [{ role: 'department_manager', scope: 'department', organization_id: null, is_active: true }];
+      expect(hasActiveRoleForAcknowledgmentRequirement(roles, 'department_manager', validOrgId)).toBe(false);
+    });
+
+    it('G. division_head + division + matching org => true', () => {
+      const roles = [{ role: 'division_head', scope: 'division', organization_id: validOrgId, is_active: true }];
+      expect(hasActiveRoleForAcknowledgmentRequirement(roles, 'division_head', validOrgId)).toBe(true);
+    });
+
+    it('H. division_head + department => false', () => {
+      const roles = [{ role: 'division_head', scope: 'department', organization_id: validOrgId, is_active: true }];
+      expect(hasActiveRoleForAcknowledgmentRequirement(roles, 'division_head', validOrgId)).toBe(false);
+    });
+
+    it('I. employee + assigned_only + matching org => true', () => {
+      const roles = [{ role: 'employee', scope: 'assigned_only', organization_id: validOrgId, is_active: true }];
+      expect(hasActiveRoleForAcknowledgmentRequirement(roles, 'employee', validOrgId)).toBe(true);
+    });
+
+    it('J. employee + global => false', () => {
+      const roles = [{ role: 'employee', scope: 'global', organization_id: validOrgId, is_active: true }];
+      expect(hasActiveRoleForAcknowledgmentRequirement(roles, 'employee', validOrgId)).toBe(false);
+    });
+
+    it('K. role from wrong organization => false', () => {
+      const roles = [{ role: 'employee', scope: 'assigned_only', organization_id: 'wrong-org', is_active: true }];
+      expect(hasActiveRoleForAcknowledgmentRequirement(roles, 'employee', validOrgId)).toBe(false);
+    });
+
+    it('L. inactive otherwise-valid role => false', () => {
+      const roles = [{ role: 'employee', scope: 'assigned_only', organization_id: validOrgId, is_active: false }];
+      expect(hasActiveRoleForAcknowledgmentRequirement(roles, 'employee', validOrgId)).toBe(false);
+    });
+  });
+
+  // ==========================================================================
+  // SECTION 9: Migration Integrity & Lineage Invariants (Cases 34 - 35)
+  // ==========================================================================
+  describe('Section 9: Migration Integrity & Lineage Invariants', () => {
     it('34. Migration 208 file remains unchanged', () => {
       const m208Path = path.resolve(rootDir, 'supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql');
       const content = fs.readFileSync(m208Path);

@@ -236,9 +236,17 @@ export async function verifyProgramTenancy(
 ): Promise<void> {
   const resolvedOrgs = new Set<string>();
 
-  // A. Linked SOP / Document
-  const docId = program.linked_sop_id || program.linked_document_id;
-  if (docId) {
+  // A. Linked SOP & Linked Document (independent evaluation)
+  const linkedDocumentIds = Array.from(
+    new Set(
+      [
+        program.linked_sop_id,
+        program.linked_document_id,
+      ].filter((id): id is string => Boolean(id))
+    )
+  );
+
+  for (const docId of linkedDocumentIds) {
     const { data: doc, error } = await serviceClient
       .from('controlled_documents')
       .select('organization_id')
@@ -355,21 +363,59 @@ export function hasActiveDivisionHeadRole(
   );
 }
 
+export const canonicalGlobalAcknowledgmentRoles = new Set([
+  'super_admin',
+  'executive',
+  'governance_admin',
+  'auditor',
+  'compliance_officer',
+]);
+
+export const canonicalAssignedOnlyAcknowledgmentRoles = new Set([
+  'project_owner',
+  'milestone_owner',
+  'task_owner',
+  'viewer',
+  'employee',
+]);
+
 /**
- * Check whether an actor has an active role matching a document acknowledgment requirement.
+ * Check whether an actor has an active role matching a document acknowledgment requirement
+ * adhering to canonical Patch83U role and scope taxonomy.
  */
 export function hasActiveRoleForAcknowledgmentRequirement(
   userRoles: Array<{ role: string; scope: string; is_active?: boolean; organization_id?: string | null }>,
   requiredRoleName: string,
   targetOrganizationId: string
 ): boolean {
-  if (!requiredRoleName || !targetOrganizationId) return false;
-  return userRoles.some(
-    (r) =>
-      r.is_active !== false &&
-      r.role === requiredRoleName &&
-      (r.organization_id === targetOrganizationId || (r.scope === 'global' && r.organization_id === null))
-  );
+  if (!userRoles || !Array.isArray(userRoles) || !requiredRoleName || !targetOrganizationId) return false;
+
+  return userRoles.some((r) => {
+    if (r.is_active === false || r.role !== requiredRoleName) return false;
+
+    // GLOBAL roles: scope must be 'global', org must match or be null
+    if (canonicalGlobalAcknowledgmentRoles.has(r.role)) {
+      return r.scope === 'global' && (r.organization_id === targetOrganizationId || r.organization_id === null || r.organization_id === undefined);
+    }
+
+    // DIVISION role: scope must be 'division', org must be exact non-null match
+    if (r.role === 'division_head') {
+      return r.scope === 'division' && r.organization_id === targetOrganizationId;
+    }
+
+    // DEPARTMENT role: scope must be 'department', org must be exact non-null match
+    if (r.role === 'department_manager') {
+      return r.scope === 'department' && r.organization_id === targetOrganizationId;
+    }
+
+    // ASSIGNED_ONLY roles: scope must be 'assigned_only', org must be exact non-null match
+    if (canonicalAssignedOnlyAcknowledgmentRoles.has(r.role)) {
+      return r.scope === 'assigned_only' && r.organization_id === targetOrganizationId;
+    }
+
+    // Any other or unknown role: false
+    return false;
+  });
 }
 
 /**
