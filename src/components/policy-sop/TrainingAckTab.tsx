@@ -1,51 +1,187 @@
-import { Award, Info, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Award, BookOpenCheck, FileCheck2, ShieldCheck } from 'lucide-react';
+import { useMemo } from 'react';
+import { DataState } from '../DataState';
+import { StatusPill } from '../ModernCard';
+import { useAsyncData } from '../../hooks/useAsyncData';
 import { useI18n } from '../../i18n/I18nContext';
+import {
+  getE2B2SopTrainingComplianceMatrixStrict,
+  type SopTrainingComplianceMatrixRow,
+} from '../../lib/trainingGovernanceApi';
+import { formatLiveMetric, type LiveReadStatus } from '../../lib/trainingComplianceModel';
+import { PAGE_LOCATION_REGISTRY, PAGE_QUERY_PARAMETER } from '../../routes/pageLocation';
+
+const emptySummary = {
+  training_target_count: 0,
+  acknowledgment_target_count: 0,
+  competency_target_count: 0,
+  assigned_count: 0,
+  in_progress_count: 0,
+  completed_count: 0,
+  overdue_count: 0,
+  acknowledged_count: 0,
+  acknowledgment_gap_count: 0,
+  competency_pending_count: 0,
+};
+
+function summarize(rows: SopTrainingComplianceMatrixRow[]) {
+  return rows.reduce((acc, row) => ({
+    training_target_count: acc.training_target_count + row.training_target_count,
+    acknowledgment_target_count: acc.acknowledgment_target_count + row.acknowledgment_target_count,
+    competency_target_count: acc.competency_target_count + row.competency_target_count,
+    assigned_count: acc.assigned_count + row.assigned_count,
+    in_progress_count: acc.in_progress_count + row.in_progress_count,
+    completed_count: acc.completed_count + row.completed_count,
+    overdue_count: acc.overdue_count + row.overdue_count,
+    acknowledged_count: acc.acknowledged_count + row.acknowledged_count,
+    acknowledgment_gap_count: acc.acknowledgment_gap_count + row.acknowledgment_gap_count,
+    competency_pending_count: acc.competency_pending_count + row.competency_pending_count,
+  }), emptySummary);
+}
 
 export function TrainingAckTab() {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
+  const text = language === 'ar' ? ar : en;
+  const matrix = useAsyncData(getE2B2SopTrainingComplianceMatrixStrict, []);
+  const rows = matrix.data ?? [];
+  const matrixStatus: LiveReadStatus = matrix.loading ? 'loading' : matrix.error ? 'error' : 'success';
+  const summary = useMemo(
+    () => (matrixStatus === 'success' ? summarize(rows) : null),
+    [matrixStatus, rows],
+  );
+  const trainingCenterUrl = `?${PAGE_QUERY_PARAMETER}=${PAGE_LOCATION_REGISTRY.trainingGovernance}`;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-e2b2-training-tab="v_sop_training_compliance_matrix">
       <div>
         <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
           <Award size={16} className="text-indigo-600 dark:text-indigo-400" />
-          {t('policy.trainingTab.title', 'Policy & SOP Training & Acknowledgments')}
+          {t('policy.trainingTab.title', text.title)}
         </h4>
         <p className="text-xs text-slate-500">
-          {t('policy.trainingTab.subtitle', 'Mandatory staff policy attestations, annual refreshers, and competency tracking.')}
+          {t('policy.trainingTab.subtitle', text.subtitle)}
         </p>
       </div>
 
-      <div className="p-4 rounded-xl border border-indigo-200 bg-indigo-50/60 dark:bg-indigo-950/30 dark:border-indigo-900/60 flex items-start gap-3">
-        <Info size={18} className="text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
-        <div className="text-xs text-indigo-900 dark:text-indigo-200 space-y-1">
-          <p className="font-bold">{t('policy.trainingTab.noticeTitle', 'Training Governance Integration — Active in Gate v1.4-E2')}</p>
-          <p>
-            {t(
-              'policy.trainingTab.noticeDesc',
-              'Governed policies and SOPs configure acknowledgment requirements here. Automated employee curriculum assignment, completion tracking, and reminder workflows are orchestrated in the Training Governance Center.'
-            )}
-          </p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <span className="text-xs text-slate-500 flex items-center gap-2"><BookOpenCheck size={14} />{text.trainingRequired}</span>
+          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{formatLiveMetric(summary?.training_target_count ?? 0, matrixStatus)}</div>
+          <span className="text-[11px] text-slate-500 mt-0.5 inline-block">{text.assigned}: {formatLiveMetric(summary?.assigned_count ?? 0, matrixStatus)}</span>
+        </div>
+        <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <span className="text-xs text-slate-500 flex items-center gap-2"><FileCheck2 size={14} />{text.acknowledgmentRequired}</span>
+          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{formatLiveMetric(summary?.acknowledgment_target_count ?? 0, matrixStatus)}</div>
+          <span className="text-[11px] text-slate-500 mt-0.5 inline-block">{text.gap}: {formatLiveMetric(summary?.acknowledgment_gap_count ?? 0, matrixStatus)}</span>
+        </div>
+        <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <span className="text-xs text-slate-500 flex items-center gap-2"><ShieldCheck size={14} />{text.competencyRequired}</span>
+          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">{formatLiveMetric(summary?.competency_target_count ?? 0, matrixStatus)}</div>
+          <span className="text-[11px] text-slate-500 mt-0.5 inline-block">{text.pending}: {formatLiveMetric(summary?.competency_pending_count ?? 0, matrixStatus)}</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-          <span className="text-xs text-slate-500">{t('policy.training.activeCurricula', 'Active Policy Curricula')}</span>
-          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">12</div>
-          <span className="text-[11px] text-emerald-600 font-medium mt-0.5 inline-block">100% compliant</span>
+      <DataState
+        loading={matrix.loading}
+        error={matrix.error ? text.errorLiveReadUnavailable : null}
+        empty={rows.length === 0}
+        emptyTitle={text.empty}
+        emptyMessage={text.empty}
+      >
+        <div className="table-wrap">
+          <table className="entity-table">
+            <thead>
+              <tr>
+                <th>{text.sopVersion}</th>
+                <th>{text.requirements}</th>
+                <th>{text.population}</th>
+                <th>{text.status}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.sop_version_id}>
+                  <td>
+                    <strong>{row.document_code || '-'}</strong>
+                    <div>{row.document_title}</div>
+                    <small>{row.version_label} / {row.document_status}</small>
+                  </td>
+                  <td>
+                    <StatusPill tone={row.training_required ? 'warning' : 'neutral'}>{text.trainingRequired}: {row.training_required ? text.yes : text.no}</StatusPill>
+                    <StatusPill tone={row.acknowledgment_required ? 'warning' : 'neutral'}>{text.acknowledgmentRequired}: {row.acknowledgment_required ? text.yes : text.no}</StatusPill>
+                    <StatusPill tone={row.competency_assessment_required ? 'warning' : 'neutral'}>{text.competencyRequired}: {row.competency_assessment_required ? text.yes : text.no}</StatusPill>
+                  </td>
+                  <td>
+                    {text.targetPopulation}: {row.target_population_count}<br />
+                    {text.trainingRequired}: {row.training_target_count}<br />
+                    {text.acknowledgmentRequired}: {row.acknowledgment_target_count}<br />
+                    {text.competencyRequired}: {row.competency_target_count}
+                  </td>
+                  <td>
+                    {text.assigned}: {row.assigned_count}<br />
+                    {text.inProgress}: {row.in_progress_count}<br />
+                    {text.completed}: {row.completed_count}<br />
+                    {text.overdue}: {row.overdue_count}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-          <span className="text-xs text-slate-500">{t('policy.training.pendingAttestations', 'Pending Attestations')}</span>
-          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">0</div>
-          <span className="text-[11px] text-slate-400 mt-0.5 inline-block">Within 30-day SLA</span>
-        </div>
-        <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-          <span className="text-xs text-slate-500">{t('policy.training.avgCompletion', 'Average Attestation Time')}</span>
-          <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">4.2 days</div>
-          <span className="text-[11px] text-slate-400 mt-0.5 inline-block">Target &lt; 14 days</span>
-        </div>
-      </div>
+      </DataState>
+
+      <a href={trainingCenterUrl} className="btn-secondary inline-flex items-center gap-2">
+        {text.openCenter}
+        <ArrowUpRight size={14} />
+      </a>
     </div>
   );
 }
+
+const en = {
+  title: 'Policy & SOP Training & Compliance',
+  subtitle: 'Live governed SOP training, acknowledgment, and competency obligations from DB208.',
+  trainingRequired: 'Training Required',
+  acknowledgmentRequired: 'Acknowledgment Required',
+  competencyRequired: 'Competency Required',
+  assigned: 'Assigned',
+  inProgress: 'In Progress',
+  completed: 'Completed',
+  overdue: 'Overdue',
+  pending: 'Pending',
+  gap: 'Gap',
+  sopVersion: 'SOP / Version',
+  requirements: 'Requirements',
+  population: 'Population',
+  status: 'Status',
+  targetPopulation: 'Target Population',
+  yes: 'Yes',
+  no: 'No',
+  empty: 'No governed SOP training obligations have been published yet.',
+  openCenter: 'Open Training Governance Center',
+  errorLiveReadUnavailable: 'Live training compliance data is unavailable. Ask an administrator to verify the deployment contract.',
+};
+
+const ar: typeof en = {
+  title: 'التدريب والامتثال للسياسات والإجراءات',
+  subtitle: 'التزامات التدريب والإقرار والكفاءة الحية لإجراءات التشغيل المحكومة من DB208.',
+  trainingRequired: 'التدريب مطلوب',
+  acknowledgmentRequired: 'الإقرار مطلوب',
+  competencyRequired: 'الكفاءة مطلوبة',
+  assigned: 'معين',
+  inProgress: 'قيد التنفيذ',
+  completed: 'مكتمل',
+  overdue: 'متأخر',
+  pending: 'معلق',
+  gap: 'الفجوة',
+  sopVersion: 'الإجراء / النسخة',
+  requirements: 'المتطلبات',
+  population: 'الفئة المستهدفة',
+  status: 'الحالة',
+  targetPopulation: 'الفئة المستهدفة',
+  yes: 'نعم',
+  no: 'لا',
+  empty: 'لم يتم نشر التزامات تدريب لإجراءات تشغيل محكومة بعد.',
+  openCenter: 'فتح مركز حوكمة التدريب',
+  errorLiveReadUnavailable: 'بيانات امتثال التدريب الحية غير متاحة. يرجى طلب التحقق من عقد النشر.',
+};

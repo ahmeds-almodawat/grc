@@ -1,47 +1,303 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { useI18n } from '../i18n/I18nContext';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { DataState } from '../components/DataState';
-import { KpiTile, ModernCard, StatusPill } from '../components/ModernCard';
-import { 
-  getTrainingPrograms,
-  getTrainingAssignmentQueue,
-  getOverdueTrainingAssignments,
-  getSopAcknowledgmentGaps,
-  getCompetencyGaps,
-  getTrainingEvidenceIndex,
-  getTrainingExecutiveSummary,
-  getAccreditationTrainingReadiness
+import { ModernCard, StatusPill } from '../components/ModernCard';
+import {
+  cancelTrainingAssignment,
+  completeTrainingAssignment,
+  decideSopRolloutRequirements,
+  getE2B2CompetencyGapsStrict,
+  getE2B2SopAcknowledgmentGapsStrict,
+  getE2B2SopTrainingComplianceMatrixStrict,
+  getE2B2TrainingAssignmentQueueStrict,
+  publishSopTrainingObligations,
+  recordCompetencyAssessment,
+  recordDocumentAcknowledgment,
+  reopenTrainingAssignment,
+  startOwnTrainingAssignment,
+  waiveTrainingAssignment,
+  type CompetencyGapRow,
+  type SopAcknowledgmentGapRow,
+  type SopTrainingComplianceMatrixRow,
+  type TrainingAssignmentQueueRow,
 } from '../lib/trainingGovernanceApi';
-import { GraduationCap, Award, BookOpen, Clock, FileCheck2, ShieldCheck, HelpCircle } from 'lucide-react';
+import {
+  canShowEmployeeStart,
+  formatCompetencyScore,
+  formatLiveMetric,
+  getAssignmentRowActionEligibility,
+  getTrainingCompliancePersona,
+  isMyObligationsLoading,
+  isReasonLengthValid,
+  isRolloutRationaleValid,
+  isTeamComplianceEmpty,
+  isTeamComplianceLoading,
+  type CompetencyAssessmentResult,
+  type LiveReadStatus,
+} from '../lib/trainingComplianceModel';
+import {
+  Award,
+  BookOpenCheck,
+  CheckCircle2,
+  FileCheck2,
+  RotateCcw,
+  ShieldCheck,
+  SlidersHorizontal,
+  UserCheck,
+  XCircle,
+} from 'lucide-react';
+
+type TabKey = 'my' | 'team' | 'governance';
+type AdminAction = 'certify' | 'competency' | 'waive' | 'cancel' | 'reopen';
+
+interface AdminActionState {
+  type: AdminAction;
+  row: TrainingAssignmentQueueRow;
+}
+
+interface RolloutState {
+  row: SopTrainingComplianceMatrixRow;
+  retraining_required: boolean;
+  reacknowledgment_required: boolean;
+  competency_reassessment_required: boolean;
+  rationale: string;
+}
+
+const emptySummary: SopTrainingComplianceMatrixRow = {
+  sop_version_id: 'summary',
+  document_id: 'summary',
+  organization_id: 'summary',
+  document_code: null,
+  document_title: '',
+  version_number: 0,
+  version_label: '',
+  document_status: '',
+  training_required: false,
+  acknowledgment_required: false,
+  competency_assessment_required: false,
+  target_population_count: 0,
+  training_target_count: 0,
+  acknowledgment_target_count: 0,
+  competency_target_count: 0,
+  assigned_count: 0,
+  in_progress_count: 0,
+  completed_count: 0,
+  overdue_count: 0,
+  waived_count: 0,
+  cancelled_count: 0,
+  acknowledged_count: 0,
+  acknowledgment_gap_count: 0,
+  competency_passed_count: 0,
+  competency_failed_count: 0,
+  competency_pending_count: 0,
+  renewal_due_count: 0,
+};
+
+function localizedName(language: 'en' | 'ar', en?: string | null, ar?: string | null): string {
+  return language === 'ar' ? ar || en || '-' : en || ar || '-';
+}
+
+function statusTone(status: string): 'neutral' | 'good' | 'warning' | 'danger' {
+  if (status === 'completed' || status === 'passed') return 'good';
+  if (status === 'overdue' || status === 'failed' || status === 'needs_retraining') return 'danger';
+  if (status === 'in_progress' || status === 'pending') return 'warning';
+  return 'neutral';
+}
+
+function actionErrorMessage(error: unknown, text: typeof en): string {
+  const message = error instanceof Error ? error.message : String(error || '');
+  if (/AUTHORIZATION_DENIED|UNAUTHORIZED|FORBIDDEN|permission/i.test(message)) {
+    return text.errorAuthorizationDenied;
+  }
+  if (/INVALID_LIFECYCLE_STATE|INVALID_ASSIGNMENT_STATUS|CANNOT_|TRAINING_NOT_REQUIRED|COMPETENCY_NOT_REQUIRED/i.test(message)) {
+    return text.errorInvalidLifecycle;
+  }
+  if (/NOT_FOUND|DOCUMENT_VERSION_NOT_FOUND|ASSIGNMENT_NOT_FOUND|OBJECT_NOT_FOUND/i.test(message)) {
+    return text.errorObjectNotFound;
+  }
+  if (/E2B2_MIGRATION_208_REQUIRED|SCHEMA|PGRST|42703|E2B2_LIVE_READ_UNAVAILABLE/i.test(message)) {
+    return text.errorSchemaMismatch;
+  }
+  return text.errorActionFailed;
+}
+
+function liveReadErrorMessage(error: string | null, text: typeof en): string | null {
+  return error ? text.errorLiveReadUnavailable : null;
+}
+
+function sumMatrix(rows: SopTrainingComplianceMatrixRow[]): SopTrainingComplianceMatrixRow {
+  return rows.reduce((acc, row) => ({
+    ...acc,
+    target_population_count: acc.target_population_count + row.target_population_count,
+    training_target_count: acc.training_target_count + row.training_target_count,
+    acknowledgment_target_count: acc.acknowledgment_target_count + row.acknowledgment_target_count,
+    competency_target_count: acc.competency_target_count + row.competency_target_count,
+    assigned_count: acc.assigned_count + row.assigned_count,
+    in_progress_count: acc.in_progress_count + row.in_progress_count,
+    completed_count: acc.completed_count + row.completed_count,
+    overdue_count: acc.overdue_count + row.overdue_count,
+    waived_count: acc.waived_count + row.waived_count,
+    cancelled_count: acc.cancelled_count + row.cancelled_count,
+    acknowledged_count: acc.acknowledged_count + row.acknowledged_count,
+    acknowledgment_gap_count: acc.acknowledgment_gap_count + row.acknowledgment_gap_count,
+    competency_passed_count: acc.competency_passed_count + row.competency_passed_count,
+    competency_failed_count: acc.competency_failed_count + row.competency_failed_count,
+    competency_pending_count: acc.competency_pending_count + row.competency_pending_count,
+    renewal_due_count: acc.renewal_due_count + row.renewal_due_count,
+  }), emptySummary);
+}
 
 export function TrainingGovernanceCenter() {
   const auth = useAuth();
-  const { language } = useI18n();
-  const [activeTab, setActiveTab] = useState<'summary' | 'programs' | 'assignments' | 'gaps' | 'evidence'>('summary');
-
-  // Load Data
-  const summary = useAsyncData(getTrainingExecutiveSummary, []);
-  const programs = useAsyncData(getTrainingPrograms, []);
-  const assignments = useAsyncData(getTrainingAssignmentQueue, []);
-  const overdue = useAsyncData(getOverdueTrainingAssignments, []);
-  const sopGaps = useAsyncData(getSopAcknowledgmentGaps, []);
-  const competencyGaps = useAsyncData(getCompetencyGaps, []);
-  const evidence = useAsyncData(getTrainingEvidenceIndex, []);
-  const readiness = useAsyncData(getAccreditationTrainingReadiness, []);
-
-  // Bilingual text dictionary
+  const { language, t } = useI18n();
   const text = language === 'ar' ? ar : en;
+  const persona = useMemo(() => getTrainingCompliancePersona(auth.roles), [auth.roles]);
+  const defaultTab: TabKey = persona.canViewMyObligations
+    ? 'my'
+    : persona.canViewTeamCompliance
+      ? 'team'
+      : 'governance';
+  const [activeTab, setActiveTab] = useState<TabKey>(defaultTab);
+  const [ackNotes, setAckNotes] = useState<Record<string, string>>({});
+  const [adminAction, setAdminAction] = useState<AdminActionState | null>(null);
+  const [reason, setReason] = useState('');
+  const [evidenceId, setEvidenceId] = useState('');
+  const [competencyArea, setCompetencyArea] = useState('');
+  const [competencyResult, setCompetencyResult] = useState<CompetencyAssessmentResult>('passed');
+  const [competencyScore, setCompetencyScore] = useState('');
+  const [competencyNotes, setCompetencyNotes] = useState('');
+  const [rollout, setRollout] = useState<RolloutState | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
-  const sumData = summary.data || {
-    active_programs_count: 0,
-    pending_assignments_count: 0,
-    completed_assignments_count: 0,
-    overdue_assignments_count: 0,
-    total_sop_gaps_count: 0,
-    competency_fails_count: 0
+  const assignments = useAsyncData(getE2B2TrainingAssignmentQueueStrict, []);
+  const ackGaps = useAsyncData(getE2B2SopAcknowledgmentGapsStrict, []);
+  const competencyGaps = useAsyncData(getE2B2CompetencyGapsStrict, []);
+  const matrix = useAsyncData(getE2B2SopTrainingComplianceMatrixStrict, []);
+
+  const profileId = auth.profile?.id ?? null;
+  const assignmentRows = assignments.data ?? [];
+  const ackRows = ackGaps.data ?? [];
+  const competencyRows = competencyGaps.data ?? [];
+  const matrixRows = matrix.data ?? [];
+  const matrixStatus: LiveReadStatus = matrix.loading ? 'loading' : matrix.error ? 'error' : 'success';
+  const matrixSummary = useMemo(
+    () => (matrixStatus === 'success' ? sumMatrix(matrixRows) : null),
+    [matrixRows, matrixStatus],
+  );
+  const myObligationsLoading = isMyObligationsLoading({
+    assignmentsLoading: assignments.loading,
+    acknowledgmentGapsLoading: ackGaps.loading,
+    competencyGapsLoading: competencyGaps.loading,
+  });
+  const teamComplianceLoading = isTeamComplianceLoading({
+    assignmentsLoading: assignments.loading,
+    acknowledgmentGapsLoading: ackGaps.loading,
+    competencyGapsLoading: competencyGaps.loading,
+  });
+  const teamComplianceEmpty = isTeamComplianceEmpty({
+    assignmentCount: assignmentRows.length,
+    acknowledgmentGapCount: ackRows.length,
+    competencyGapCount: competencyRows.length,
+  });
+
+  const myAssignments = profileId
+    ? assignmentRows.filter((row) => row.assigned_to_user_id === profileId)
+    : assignmentRows;
+  const myAckRows = profileId
+    ? ackRows.filter((row) => row.user_id === profileId)
+    : ackRows;
+  const myCompetencyRows = profileId
+    ? competencyRows.filter((row) => row.user_id === profileId)
+    : competencyRows;
+
+  const refreshLiveData = async () => {
+    await Promise.all([
+      assignments.refresh(),
+      ackGaps.refresh(),
+      competencyGaps.refresh(),
+      matrix.refresh(),
+    ]);
   };
+
+  const runAction = async (key: string, action: () => Promise<unknown>) => {
+    setBusy(key);
+    setFeedback(null);
+    try {
+      await action();
+      setFeedback(text.actionCompleted);
+      setAdminAction(null);
+      setRollout(null);
+      setReason('');
+      setEvidenceId('');
+      setCompetencyArea('');
+      setCompetencyScore('');
+      setCompetencyNotes('');
+      await refreshLiveData();
+    } catch (error) {
+      setFeedback(actionErrorMessage(error, text));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const submitAdminAction = async () => {
+    if (!adminAction) return;
+    const row = adminAction.row;
+    if (adminAction.type === 'certify') {
+      await runAction(`certify:${row.id}`, () => completeTrainingAssignment({
+        assignment_id: row.id,
+        evidence_id: evidenceId.trim() || null,
+      }));
+      return;
+    }
+    if (adminAction.type === 'competency') {
+      await runAction(`competency:${row.id}`, () => recordCompetencyAssessment({
+        assignment_id: row.id,
+        user_id: row.assigned_to_user_id || '',
+        competency_area: competencyArea.trim(),
+        result: competencyResult,
+        score: competencyScore.trim() ? Number(competencyScore) : null,
+        evidence_id: evidenceId.trim() || null,
+        notes: competencyNotes.trim() || null,
+      }));
+      return;
+    }
+    if (!isReasonLengthValid(reason)) {
+      setFeedback(text.reasonInvalid);
+      return;
+    }
+    if (adminAction.type === 'waive') {
+      await runAction(`waive:${row.id}`, () => waiveTrainingAssignment({ assignment_id: row.id, reason }));
+    } else if (adminAction.type === 'cancel') {
+      await runAction(`cancel:${row.id}`, () => cancelTrainingAssignment({ assignment_id: row.id, reason }));
+    } else {
+      await runAction(`reopen:${row.id}`, () => reopenTrainingAssignment({ assignment_id: row.id, reason }));
+    }
+  };
+
+  const submitRollout = async () => {
+    if (!rollout) return;
+    if (!isRolloutRationaleValid(rollout.rationale)) {
+      setFeedback(text.rationaleInvalid);
+      return;
+    }
+    await runAction(`rollout:${rollout.row.sop_version_id}`, () => decideSopRolloutRequirements({
+      version_id: rollout.row.sop_version_id,
+      retraining_required: rollout.retraining_required,
+      reacknowledgment_required: rollout.reacknowledgment_required,
+      competency_reassessment_required: rollout.competency_reassessment_required,
+      rationale: rollout.rationale,
+    }));
+  };
+
+  const tabs: Array<{ id: TabKey; label: string; enabled: boolean; icon: typeof UserCheck }> = [
+    { id: 'my', label: t('training.e2b2.myObligations', text.myObligations), enabled: persona.canViewMyObligations, icon: UserCheck },
+    { id: 'team', label: t('training.e2b2.teamCompliance', text.teamCompliance), enabled: persona.canViewTeamCompliance, icon: ShieldCheck },
+    { id: 'governance', label: t('training.e2b2.trainingCompliance', text.trainingCompliance), enabled: persona.canViewGovernanceCompliance, icon: Award },
+  ];
 
   return (
     <section className="page-section training-page">
@@ -53,179 +309,131 @@ export function TrainingGovernanceCenter() {
         </div>
       </div>
 
-      {/* KPI Tiles Grid */}
       <div className="stats-grid">
         <div className="stat-card">
-          <GraduationCap size={20} />
-          <div className="stat-value">{sumData.active_programs_count}</div>
-          <div className="stat-label">{text.activePrograms}</div>
+          <BookOpenCheck size={20} />
+          <div className="stat-value">{formatLiveMetric(matrixSummary?.training_target_count ?? 0, matrixStatus)}</div>
+          <div className="stat-label">{text.trainingRequired}</div>
         </div>
         <div className="stat-card warning">
-          <Clock size={20} />
-          <div className="stat-value">{sumData.pending_assignments_count}</div>
-          <div className="stat-label">{text.pendingAssignments}</div>
-        </div>
-        <div className="stat-card success">
           <FileCheck2 size={20} />
-          <div className="stat-value">{sumData.completed_assignments_count}</div>
-          <div className="stat-label">{text.completedAssignments}</div>
+          <div className="stat-value">{formatLiveMetric(matrixSummary?.acknowledgment_gap_count ?? 0, matrixStatus)}</div>
+          <div className="stat-label">{text.acknowledgmentGaps}</div>
         </div>
         <div className="stat-card danger">
-          <Clock size={20} />
-          <div className="stat-value">{sumData.overdue_assignments_count}</div>
-          <div className="stat-label">{text.overdueAssignments}</div>
+          <XCircle size={20} />
+          <div className="stat-value">{formatLiveMetric(matrixSummary?.competency_failed_count ?? 0, matrixStatus)}</div>
+          <div className="stat-label">{text.competencyGaps}</div>
+        </div>
+        <div className="stat-card success">
+          <CheckCircle2 size={20} />
+          <div className="stat-value">{formatLiveMetric(matrixSummary?.completed_count ?? 0, matrixStatus)}</div>
+          <div className="stat-label">{text.completed}</div>
         </div>
       </div>
 
-      {/* Inner page horizontal navigation bar */}
       <div className="hub-tab-layout">
         <div className="hub-tab-rail panel">
-          <button 
-            className={`hub-tab-button ${activeTab === 'summary' ? 'active' : ''}`}
-            onClick={() => setActiveTab('summary')}
-          >
-            {text.tabSummary}
-          </button>
-          <button 
-            className={`hub-tab-button ${activeTab === 'programs' ? 'active' : ''}`}
-            onClick={() => setActiveTab('programs')}
-          >
-            {text.tabPrograms}
-          </button>
-          <button 
-            className={`hub-tab-button ${activeTab === 'assignments' ? 'active' : ''}`}
-            onClick={() => setActiveTab('assignments')}
-          >
-            {text.tabAssignments}
-          </button>
-          <button 
-            className={`hub-tab-button ${activeTab === 'gaps' ? 'active' : ''}`}
-            onClick={() => setActiveTab('gaps')}
-          >
-            {text.tabGaps}
-          </button>
-          <button 
-            className={`hub-tab-button ${activeTab === 'evidence' ? 'active' : ''}`}
-            onClick={() => setActiveTab('evidence')}
-          >
-            {text.tabEvidence}
-          </button>
+          {tabs.filter((tab) => tab.enabled).map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                className={`hub-tab-button ${activeTab === tab.id ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                <Icon size={16} />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Tab content panel */}
         <div className="hub-tab-content">
-          {activeTab === 'summary' && (
-            <div className="tab-pane">
-              {/* Accreditation training readiness list */}
-              <ModernCard title={text.readinessTitle} subtitle={text.readinessSubtitle}>
-                <DataState loading={readiness.loading} error={readiness.error} empty={!readiness.data?.length}>
-                  <div className="table-wrap">
-                    <table className="entity-table">
-                      <thead>
-                        <tr>
-                          <th>{text.programName}</th>
-                          <th>{text.department}</th>
-                          <th>{text.assigned}</th>
-                          <th>{text.completed}</th>
-                          <th>{text.overdue}</th>
-                          <th>{text.completionRate}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(readiness.data || []).map((row: any) => (
-                          <tr key={row.program_id}>
-                            <td><strong>{language === 'ar' ? row.program_title_ar || row.program_title : row.program_title}</strong></td>
-                            <td>{language === 'ar' ? row.department_name_ar || row.department_name_en : row.department_name_en}</td>
-                            <td>{row.total_assigned}</td>
-                            <td>{row.total_completed}</td>
-                            <td>{row.total_overdue}</td>
-                            <td>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <div style={{ background: 'var(--border-color)', width: '60px', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
-                                  <div style={{ background: 'var(--success-color)', width: `${row.completion_rate}%`, height: '100%' }}></div>
-                                </div>
-                                <span>{row.completion_rate}%</span>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </DataState>
-              </ModernCard>
-            </div>
-          )}
+          {feedback && <div className="panel muted-panel">{feedback}</div>}
 
-          {activeTab === 'programs' && (
-            <div className="tab-pane">
-              <ModernCard title={text.programsTitle} subtitle={text.programsSubtitle}>
-                <DataState loading={programs.loading} error={programs.error} empty={!programs.data?.length}>
+          {activeTab === 'my' && persona.canViewMyObligations && (
+            <div className="tab-pane" data-e2b2-persona="employee">
+              <ModernCard title={text.myObligations} subtitle={text.myObligationsSubtitle}>
+                <DataState
+                  loading={myObligationsLoading}
+                  error={liveReadErrorMessage(assignments.error || ackGaps.error || competencyGaps.error, text)}
+                  empty={myAssignments.length === 0 && myAckRows.length === 0 && myCompetencyRows.length === 0}
+                  emptyTitle={text.noMyObligations}
+                  emptyMessage={text.noMyObligations}
+                >
                   <div className="table-wrap">
                     <table className="entity-table">
                       <thead>
                         <tr>
-                          <th>{text.programName}</th>
-                          <th>{text.trainingType}</th>
-                          <th>{text.department}</th>
-                          <th>{text.owner}</th>
-                          <th>{text.status}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(programs.data || []).map((row: any) => (
-                          <tr key={row.id}>
-                            <td><strong>{language === 'ar' ? row.title_ar || row.title : row.title}</strong></td>
-                            <td><StatusPill tone="neutral">{row.training_type}</StatusPill></td>
-                            <td>{language === 'ar' ? row.department_name_ar || row.department_name_en : row.department_name_en || text.allDepartments}</td>
-                            <td>{language === 'ar' ? row.owner_name_ar || row.owner_name_en : row.owner_name_en || text.unassigned}</td>
-                            <td>
-                              <StatusPill tone={row.active ? 'good' : 'neutral'}>
-                                {row.active ? text.active : text.inactive}
-                              </StatusPill>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </DataState>
-              </ModernCard>
-            </div>
-          )}
-
-          {activeTab === 'assignments' && (
-            <div className="tab-pane">
-              <ModernCard title={text.assignmentsTitle} subtitle={text.assignmentsSubtitle}>
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
-                  <StatusPill tone="danger">{text.overdueAssignmentsCount}: {overdue.data?.length || 0}</StatusPill>
-                </div>
-                <DataState loading={assignments.loading} error={assignments.error} empty={!assignments.data?.length}>
-                  <div className="table-wrap">
-                    <table className="entity-table">
-                      <thead>
-                        <tr>
-                          <th>{text.programName}</th>
-                          <th>{text.assignedUser}</th>
+                          <th>{text.obligation}</th>
+                          <th>{text.context}</th>
                           <th>{text.dueDate}</th>
                           <th>{text.status}</th>
+                          <th>{text.actions}</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {(assignments.data || []).map((row: any) => (
-                          <tr key={row.id}>
-                            <td>{language === 'ar' ? row.program_title_ar || row.program_title : row.program_title}</td>
-                            <td>{language === 'ar' ? row.assigned_user_name_ar || row.assigned_user_name_en : row.assigned_user_name_en || text.unassigned}</td>
-                            <td>{row.due_date || text.noDueDate}</td>
+                        {myAssignments.map((row) => (
+                          <tr key={`assignment-${row.id}`}>
+                            <td>{localizedName(language, row.program_title, row.program_title_ar)}</td>
+                            <td>{localizedName(language, row.program_title, row.program_title_ar)}</td>
+                            <td>{row.due_date || '-'}</td>
+                            <td><StatusPill tone={statusTone(row.status)}>{row.status}</StatusPill></td>
                             <td>
-                              <StatusPill tone={
-                                row.status === 'completed' ? 'good' : 
-                                row.status === 'overdue' ? 'danger' : 
-                                row.status === 'in_progress' ? 'warning' : 'neutral'
-                              }>
-                                {row.status}
-                              </StatusPill>
+                              {persona.canStartOwnTraining && canShowEmployeeStart(row.status) && (
+                                <button
+                                  className="btn-secondary"
+                                  disabled={busy === `start:${row.id}`}
+                                  onClick={() => runAction(`start:${row.id}`, () => startOwnTrainingAssignment(row.id))}
+                                >
+                                  {text.startTraining}
+                                </button>
+                              )}
                             </td>
+                          </tr>
+                        ))}
+                        {myAckRows.map((row) => (
+                          <tr key={`ack-${row.linked_sop_id}-${row.version_id}`}>
+                            <td>
+                              <strong>{row.document_code || '-'}</strong>
+                              <div>{localizedName(language, row.sop_title, row.sop_title_ar)}</div>
+                              <small>{language === 'ar' ? ar.attestation : en.attestation}</small>
+                            </td>
+                            <td>{row.version_label || '-'}</td>
+                            <td>{row.due_date || '-'}</td>
+                            <td><StatusPill tone="warning">{text.assigned}</StatusPill></td>
+                            <td>
+                              <textarea
+                                aria-label={text.acknowledgmentNote}
+                                value={ackNotes[row.version_id] ?? ''}
+                                onChange={(event) => setAckNotes({ ...ackNotes, [row.version_id]: event.target.value })}
+                                placeholder={text.acknowledgmentNote}
+                                rows={2}
+                              />
+                              {persona.canAcknowledgeOwnVersion && row.linked_sop_id && (
+                                <button
+                                  className="btn-primary"
+                                  disabled={busy === `ack:${row.version_id}`}
+                                  onClick={() => runAction(`ack:${row.version_id}`, () => recordDocumentAcknowledgment({
+                                    document_id: row.linked_sop_id as string,
+                                    version_id: row.version_id,
+                                    acknowledgment_note: ackNotes[row.version_id] ?? null,
+                                  }))}
+                                >
+                                  {text.acknowledge}
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                        {myCompetencyRows.map((row) => (
+                          <tr key={`competency-${row.assignment_id ?? row.user_id}-${row.competency_area ?? 'pending'}`}>
+                            <td>{row.competency_area || text.competencyRequired}</td>
+                            <td>{[row.document_code, row.version_label].filter(Boolean).join(' / ') || '-'}</td>
+                            <td>{row.due_date || '-'}</td>
+                            <td><StatusPill tone={statusTone(row.result || 'pending')}>{row.result || 'pending'}</StatusPill></td>
+                            <td>{formatCompetencyScore(row.score)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -236,54 +444,119 @@ export function TrainingGovernanceCenter() {
             </div>
           )}
 
-          {activeTab === 'gaps' && (
-            <div className="tab-pane" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <ModernCard title={text.sopGapsTitle} subtitle={text.sopGapsSubtitle}>
-                <DataState loading={sopGaps.loading} error={sopGaps.error} empty={!sopGaps.data?.length}>
+          {activeTab === 'team' && persona.canViewTeamCompliance && (
+            <div className="tab-pane" data-e2b2-persona="manager">
+              <ModernCard title={text.teamCompliance} subtitle={text.teamComplianceSubtitle}>
+                <DataState
+                  loading={teamComplianceLoading}
+                  error={liveReadErrorMessage(assignments.error || ackGaps.error || competencyGaps.error, text)}
+                  empty={teamComplianceEmpty}
+                  emptyTitle={text.noTeamObligations}
+                  emptyMessage={text.noTeamObligations}
+                >
                   <div className="table-wrap">
+                    <h4>{text.trainingAssignments}</h4>
                     <table className="entity-table">
                       <thead>
                         <tr>
-                          <th>{text.sopName}</th>
-                          <th>{text.assignedUser}</th>
+                          <th>{text.employee}</th>
                           <th>{text.department}</th>
+                          <th>{text.trainingStatus}</th>
+                          <th>{text.context}</th>
+                          <th>{text.dueDate}</th>
+                          <th>{text.actions}</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {(sopGaps.data || []).map((row: any, i: number) => (
-                          <tr key={i}>
-                            <td>{language === 'ar' ? row.sop_title_ar || row.sop_title : row.sop_title}</td>
-                            <td>{language === 'ar' ? row.user_name_ar || row.user_name_en : row.user_name_en}</td>
-                            <td>{language === 'ar' ? row.department_name_ar || row.department_name_en : row.department_name_en}</td>
+                        {assignmentRows.map((row) => {
+                          const eligibility = getAssignmentRowActionEligibility({
+                            persona,
+                            actorUserId: profileId,
+                            subjectUserId: row.assigned_to_user_id,
+                            status: row.status,
+                          });
+                          return (
+                            <tr key={row.id}>
+                              <td>{localizedName(language, row.assigned_user_name_en, row.assigned_user_name_ar)}</td>
+                              <td>{localizedName(language, row.department_name_en, row.department_name_ar)}</td>
+                              <td><StatusPill tone={statusTone(row.status)}>{row.status}</StatusPill></td>
+                              <td>{localizedName(language, row.program_title, row.program_title_ar)}</td>
+                              <td>{row.due_date || '-'}</td>
+                              <td>
+                                {eligibility.canCertifyCompletion && (
+                                  <button className="btn-secondary" onClick={() => setAdminAction({ type: 'certify', row })}>{text.certifyCompletion}</button>
+                                )}
+                                {eligibility.canRecordCompetency && (
+                                  <button className="btn-secondary" onClick={() => setAdminAction({ type: 'competency', row })}>{text.recordCompetency}</button>
+                                )}
+                                {eligibility.canWaive && (
+                                  <button className="btn-secondary" onClick={() => setAdminAction({ type: 'waive', row })}>{text.waive}</button>
+                                )}
+                                {eligibility.canCancel && (
+                                  <button className="btn-secondary" onClick={() => setAdminAction({ type: 'cancel', row })}>{text.cancel}</button>
+                                )}
+                                {eligibility.canReopen && (
+                                  <button className="btn-secondary" onClick={() => setAdminAction({ type: 'reopen', row })}>{text.reopen}</button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+
+                    <h4>{text.sopAcknowledgmentGaps}</h4>
+                    <table className="entity-table">
+                      <thead>
+                        <tr>
+                          <th>{text.employee}</th>
+                          <th>{text.department}</th>
+                          <th>{text.sopVersion}</th>
+                          <th>{text.dueDate}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ackRows.map((row) => (
+                          <tr key={`${row.user_id}-${row.version_id}`}>
+                            <td>{localizedName(language, row.user_name_en, row.user_name_ar)}</td>
+                            <td>{localizedName(language, row.department_name_en, row.department_name_ar)}</td>
+                            <td>
+                              <strong>{row.document_code || '-'}</strong>
+                              <div>{localizedName(language, row.sop_title, row.sop_title_ar)}</div>
+                              <small>{row.version_label || '-'}</small>
+                            </td>
+                            <td>{row.due_date || '-'}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                  </div>
-                </DataState>
-              </ModernCard>
 
-              <ModernCard title={text.competencyGapsTitle} subtitle={text.competencyGapsSubtitle}>
-                <DataState loading={competencyGaps.loading} error={competencyGaps.error} empty={!competencyGaps.data?.length}>
-                  <div className="table-wrap">
+                    <h4>{text.competencyGapsStatus}</h4>
                     <table className="entity-table">
                       <thead>
                         <tr>
-                          <th>{text.assignedUser}</th>
+                          <th>{text.employee}</th>
                           <th>{text.competencyArea}</th>
                           <th>{text.result}</th>
                           <th>{text.score}</th>
+                          <th>{text.sopVersion}</th>
+                          <th>{text.dueDate}</th>
                           <th>{text.assessor}</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {(competencyGaps.data || []).map((row: any, i: number) => (
-                          <tr key={i}>
-                            <td>{language === 'ar' ? row.user_name_ar || row.user_name_en : row.user_name_en}</td>
-                            <td>{row.competency_area || text.unassessed}</td>
-                            <td><StatusPill tone={row.result === 'passed' ? 'good' : 'danger'}>{row.result || 'pending'}</StatusPill></td>
-                            <td>{row.score !== null ? `${row.score}/100` : '-'}</td>
-                            <td>{language === 'ar' ? row.assessor_name_ar || row.assessor_name_en : row.assessor_name_en || '-'}</td>
+                        {competencyRows.map((row) => (
+                          <tr key={`${row.user_id}-${row.assignment_id ?? row.competency_area ?? 'pending'}`}>
+                            <td>{localizedName(language, row.user_name_en, row.user_name_ar)}</td>
+                            <td>{row.competency_area || text.competencyRequired}</td>
+                            <td><StatusPill tone={statusTone(row.result || 'pending')}>{row.result || 'pending'}</StatusPill></td>
+                            <td>{formatCompetencyScore(row.score)}</td>
+                            <td>
+                              <strong>{row.document_code || '-'}</strong>
+                              <div>{row.version_label || '-'}</div>
+                            </td>
+                            <td>{row.due_date || '-'}</td>
+                            <td>{localizedName(language, row.assessor_name_en, row.assessor_name_ar)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -291,30 +564,147 @@ export function TrainingGovernanceCenter() {
                   </div>
                 </DataState>
               </ModernCard>
+              {adminAction && (
+                <ModernCard title={text.actionDetails}>
+                  <div className="form-grid">
+                    {adminAction.type === 'certify' && (
+                      <label>
+                        {text.evidenceId}
+                        <input value={evidenceId} onChange={(event) => setEvidenceId(event.target.value)} />
+                      </label>
+                    )}
+                    {adminAction.type === 'competency' && (
+                      <>
+                        <label>
+                          {text.competencyArea}
+                          <input value={competencyArea} onChange={(event) => setCompetencyArea(event.target.value)} />
+                        </label>
+                        <label>
+                          {text.result}
+                          <select value={competencyResult} onChange={(event) => setCompetencyResult(event.target.value as CompetencyAssessmentResult)}>
+                            <option value="passed">passed</option>
+                            <option value="failed">failed</option>
+                            <option value="needs_retraining">needs_retraining</option>
+                            <option value="pending">pending</option>
+                          </select>
+                        </label>
+                        <label>
+                          {text.score}
+                          <input type="number" value={competencyScore} onChange={(event) => setCompetencyScore(event.target.value)} />
+                        </label>
+                        <label>
+                          {text.evidenceIdOptional}
+                          <input value={evidenceId} onChange={(event) => setEvidenceId(event.target.value)} />
+                        </label>
+                        <label>
+                          {text.notes}
+                          <textarea value={competencyNotes} onChange={(event) => setCompetencyNotes(event.target.value)} />
+                        </label>
+                      </>
+                    )}
+                    {['waive', 'cancel', 'reopen'].includes(adminAction.type) && (
+                      <label>
+                        {text.reason}
+                        <textarea value={reason} onChange={(event) => setReason(event.target.value)} />
+                      </label>
+                    )}
+                  </div>
+                  <button className="btn-primary" disabled={Boolean(busy)} onClick={submitAdminAction}>
+                    {adminAction.type === 'certify' ? text.certifyCompletion
+                      : adminAction.type === 'competency' ? text.recordCompetency
+                        : adminAction.type === 'waive' ? text.waive
+                          : adminAction.type === 'cancel' ? text.cancel
+                            : text.reopen}
+                  </button>
+                </ModernCard>
+              )}
             </div>
           )}
 
-          {activeTab === 'evidence' && (
-            <div className="tab-pane">
-              <ModernCard title={text.evidenceTitle} subtitle={text.evidenceSubtitle}>
-                <DataState loading={evidence.loading} error={evidence.error} empty={!evidence.data?.length}>
+          {activeTab === 'governance' && persona.canViewGovernanceCompliance && (
+            <div className="tab-pane" data-e2b2-persona={persona.isReadOnlyGlobal ? 'read-only-global' : 'governance'}>
+              <ModernCard title={text.trainingCompliance} subtitle={persona.isReadOnlyGlobal ? text.readOnly : text.governanceSubtitle}>
+                <DataState
+                  loading={matrix.loading}
+                  error={liveReadErrorMessage(matrix.error, text)}
+                  empty={matrixRows.length === 0}
+                  emptyTitle={text.noGovernedObligations}
+                  emptyMessage={text.noGovernedObligations}
+                >
                   <div className="table-wrap">
                     <table className="entity-table">
                       <thead>
                         <tr>
-                          <th>{text.fileName}</th>
-                          <th>{text.programName}</th>
-                          <th>{text.assignedUser}</th>
-                          <th>{text.uploadedAt}</th>
+                          <th>{text.sopVersion}</th>
+                          <th>{text.requirements}</th>
+                          <th>{text.population}</th>
+                          <th>{text.statusCounts}</th>
+                          <th>{text.acknowledgment}</th>
+                          <th>{text.competency}</th>
+                          <th>{text.actions}</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {(evidence.data || []).map((row: any) => (
-                          <tr key={row.evidence_id}>
-                            <td><code>{row.file_name}</code></td>
-                            <td>{row.program_title}</td>
-                            <td>{language === 'ar' ? row.user_name_ar || row.user_name_en : row.user_name_en}</td>
-                            <td>{new Date(row.uploaded_at).toLocaleString(language)}</td>
+                        {matrixRows.map((row) => (
+                          <tr key={row.sop_version_id}>
+                            <td>
+                              <strong>{row.document_code || '-'}</strong>
+                              <div>{row.document_title}</div>
+                              <small>{row.version_label} / {row.document_status}</small>
+                            </td>
+                            <td>
+                              <StatusPill tone={row.training_required ? 'warning' : 'neutral'}>{text.trainingRequired}: {row.training_required ? text.yes : text.no}</StatusPill>
+                              <StatusPill tone={row.acknowledgment_required ? 'warning' : 'neutral'}>{text.acknowledgmentRequired}: {row.acknowledgment_required ? text.yes : text.no}</StatusPill>
+                              <StatusPill tone={row.competency_assessment_required ? 'warning' : 'neutral'}>{text.competencyRequired}: {row.competency_assessment_required ? text.yes : text.no}</StatusPill>
+                            </td>
+                            <td>
+                              {text.targetPopulation}: {row.target_population_count}<br />
+                              {text.trainingRequired}: {row.training_target_count}<br />
+                              {text.acknowledgmentRequired}: {row.acknowledgment_target_count}<br />
+                              {text.competencyRequired}: {row.competency_target_count}
+                            </td>
+                            <td>
+                              {text.assigned}: {row.assigned_count}<br />
+                              {text.inProgress}: {row.in_progress_count}<br />
+                              {text.completed}: {row.completed_count}<br />
+                              {text.overdue}: {row.overdue_count}<br />
+                              {text.waived}: {row.waived_count}<br />
+                              {text.cancelled}: {row.cancelled_count}
+                            </td>
+                            <td>
+                              {text.acknowledged}: {row.acknowledged_count}<br />
+                              {text.gap}: {row.acknowledgment_gap_count}
+                            </td>
+                            <td>
+                              {text.passed}: {row.competency_passed_count}<br />
+                              {text.failed}: {row.competency_failed_count}<br />
+                              {text.pending}: {row.competency_pending_count}<br />
+                              {text.renewalDue}: {row.renewal_due_count}
+                            </td>
+                            <td>
+                              {persona.canDecideRollout && (
+                                <button className="btn-secondary" onClick={() => setRollout({
+                                  row,
+                                  retraining_required: row.training_required,
+                                  reacknowledgment_required: row.acknowledgment_required,
+                                  competency_reassessment_required: row.competency_assessment_required,
+                                  rationale: '',
+                                })}>
+                                  <SlidersHorizontal size={14} />
+                                  {text.rolloutDecision}
+                                </button>
+                              )}
+                              {persona.canPublishObligations && (
+                                <button
+                                  className="btn-primary"
+                                  disabled={busy === `publish:${row.sop_version_id}`}
+                                  onClick={() => runAction(`publish:${row.sop_version_id}`, () => publishSopTrainingObligations(row.sop_version_id))}
+                                >
+                                  <RotateCcw size={14} />
+                                  {text.publishTrainingObligations}
+                                </button>
+                              )}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -322,6 +712,43 @@ export function TrainingGovernanceCenter() {
                   </div>
                 </DataState>
               </ModernCard>
+              {rollout && (
+                <ModernCard title={text.rolloutDecision}>
+                  <div className="form-grid">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={rollout.retraining_required}
+                        onChange={(event) => setRollout({ ...rollout, retraining_required: event.target.checked })}
+                      />
+                      {text.trainingRequired}
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={rollout.reacknowledgment_required}
+                        onChange={(event) => setRollout({ ...rollout, reacknowledgment_required: event.target.checked })}
+                      />
+                      {text.acknowledgmentRequired}
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={rollout.competency_reassessment_required}
+                        onChange={(event) => setRollout({ ...rollout, competency_reassessment_required: event.target.checked })}
+                      />
+                      {text.competencyRequired}
+                    </label>
+                    <label>
+                      {text.rationale}
+                      <textarea value={rollout.rationale} onChange={(event) => setRollout({ ...rollout, rationale: event.target.value })} />
+                    </label>
+                  </div>
+                  <button className="btn-primary" disabled={Boolean(busy)} onClick={submitRollout}>
+                    {text.rolloutDecision}
+                  </button>
+                </ModernCard>
+              )}
             </div>
           )}
         </div>
@@ -330,107 +757,168 @@ export function TrainingGovernanceCenter() {
   );
 }
 
-// Translations dictionaries
 const en = {
-  eyebrow: 'Training & Change Management',
+  eyebrow: 'Governed Training',
   title: 'Training Governance Center',
-  subtitle: 'Governance, standard operating procedure (SOP) acknowledgments, and competency assessments tracker.',
-  activePrograms: 'Active Programs',
-  pendingAssignments: 'Pending assignments',
-  completedAssignments: 'Completed training',
-  overdueAssignments: 'Overdue programs',
-  tabSummary: 'Readiness & Summary',
-  tabPrograms: 'Training Register',
-  tabAssignments: 'Assignments Queue',
-  tabGaps: 'Compliance Gaps',
-  tabEvidence: 'Evidence Ledger',
-  readinessTitle: 'Accreditation Readiness Metrics',
-  readinessSubtitle: 'Rollout stats and completion percentage for CBAHI and quality orientation courses.',
-  programName: 'Program Name',
-  department: 'Department',
+  subtitle: 'Formal training, SOP acknowledgments, and competency assessment governance.',
+  myObligations: 'My Obligations',
+  myObligationsSubtitle: 'Assigned formal training, exact SOP version acknowledgments, and competency status visible to you.',
+  teamCompliance: 'Team Compliance',
+  teamComplianceSubtitle: 'Scoped Assignment Compliance visible through RLS and security-invoker views.',
+  trainingCompliance: 'Training & Compliance',
+  governanceSubtitle: 'Published SOP version requirements, target populations, and compliance status.',
+  readOnly: 'Read-only governance view.',
+  noMyObligations: 'No training or acknowledgment obligations are currently assigned.',
+  noTeamObligations: 'No scoped team training obligations are currently visible.',
+  noGovernedObligations: 'No governed SOP training obligations have been published yet.',
+  obligation: 'Obligation',
+  context: 'Context',
+  sopVersion: 'SOP / Version',
+  dueDate: 'Due Date',
+  status: 'State',
+  actions: 'Actions',
   assigned: 'Assigned',
+  inProgress: 'In Progress',
   completed: 'Completed',
   overdue: 'Overdue',
-  completionRate: 'Completion Rate',
-  programsTitle: 'Training Programs Registry',
-  programsSubtitle: 'Standard programs, SOPs, compliance obligation lessons, and training materials.',
-  trainingType: 'Training Type',
-  owner: 'Owner',
-  status: 'Status',
-  active: 'Active',
-  inactive: 'Inactive',
-  allDepartments: 'All Departments',
-  unassigned: 'Unassigned',
-  assignmentsTitle: 'All Training Assignments',
-  assignmentsSubtitle: 'Assignments and tasks allocated to individuals or departments.',
-  assignedUser: 'Assigned Operator',
-  dueDate: 'Due Date',
-  noDueDate: 'No due date',
-  overdueAssignmentsCount: 'Overdue assignments',
-  sopGapsTitle: 'SOP Acknowledgment Gaps',
-  sopGapsSubtitle: 'Active users who have not acknowledged latest mandatory SOP/policies.',
-  sopName: 'SOP Document',
-  competencyGapsTitle: 'Competency Assessments Gaps',
-  competencyGapsSubtitle: 'Assessments needing retraining, failures, or users missing assessments.',
+  waived: 'Waived',
+  cancelled: 'Cancelled',
+  startTraining: 'Start Training',
+  acknowledge: 'Acknowledge',
+  attestation: 'I confirm that I have read and understood this governed SOP version.',
+  acknowledgmentNote: 'Optional acknowledgment note',
+  employee: 'Employee',
+  department: 'Department',
+  trainingAssignments: 'Training Assignments',
+  sopAcknowledgmentGaps: 'SOP Acknowledgment Gaps',
+  competencyGapsStatus: 'Competency Gaps / Status',
+  trainingStatus: 'Training Status',
+  certifyCompletion: 'Certify Completion',
+  recordCompetency: 'Record Competency',
+  waive: 'Waive',
+  cancel: 'Cancel',
+  reopen: 'Reopen',
+  actionDetails: 'Action Details',
+  evidenceId: 'Evidence ID',
+  evidenceIdOptional: 'Evidence ID (optional)',
   competencyArea: 'Competency Area',
-  result: 'Assessment Result',
-  score: 'Assessed Score',
+  result: 'Result',
+  score: 'Score',
   assessor: 'Assessor',
-  unassessed: 'Not assessed yet',
-  evidenceTitle: 'Training Completion Evidence Index',
-  evidenceSubtitle: 'Attached files and PDFs serving as audit-ready compliance proof.',
-  fileName: 'File Name',
-  uploadedAt: 'Uploaded At'
+  notes: 'Notes',
+  reason: 'Reason',
+  reasonInvalid: 'Reason must be 3 to 1000 characters.',
+  rationale: 'Rationale',
+  rationaleInvalid: 'Rationale must be 5 to 4000 characters.',
+  actionCompleted: 'Action completed. Live obligations refreshed.',
+  errorAuthorizationDenied: 'The backend rejected this operation for the current authenticated user.',
+  errorInvalidLifecycle: 'The operation is not valid for the current lifecycle state.',
+  errorObjectNotFound: 'The selected governed record could not be found.',
+  errorSchemaMismatch: 'The deployed database contract does not match the E2B2 frontend contract.',
+  errorActionFailed: 'The action could not be completed.',
+  errorLiveReadUnavailable: 'Live training compliance data is unavailable. Ask an administrator to verify the deployment contract.',
+  trainingRequired: 'Training Required',
+  acknowledgmentRequired: 'Acknowledgment Required',
+  competencyRequired: 'Competency Required',
+  acknowledgmentGaps: 'Acknowledgment Gaps',
+  competencyGaps: 'Competency Gaps',
+  requirements: 'Requirements',
+  population: 'Population',
+  statusCounts: 'Status Counts',
+  acknowledgment: 'Acknowledgment',
+  competency: 'Competency',
+  targetPopulation: 'Target Population',
+  acknowledged: 'Acknowledged',
+  gap: 'Gap',
+  passed: 'Passed',
+  failed: 'Failed',
+  pending: 'Pending',
+  renewalDue: 'Renewal Due',
+  rolloutDecision: 'Rollout Decision',
+  publishTrainingObligations: 'Publish Training Obligations',
+  yes: 'Yes',
+  no: 'No',
 };
 
-const ar = {
-  eyebrow: 'التدريب وإدارة التغيير',
-  title: 'مركز حوكمة التدريب الكفاءات',
-  subtitle: 'حوكمة التدريب، وإقرارات السياسات والإجراءات القياسية (SOP)، ومتابعة تقييم الكفاءات.',
-  activePrograms: 'البرامج النشطة',
-  pendingAssignments: 'المهام المعلقة',
-  completedAssignments: 'التدريب المكتمل',
-  overdueAssignments: 'البرامج المتأخرة',
-  tabSummary: 'تقرير الجاهزية والملخص',
-  tabPrograms: 'سجل البرامج',
-  tabAssignments: 'قائمة المهام والتعيينات',
-  tabGaps: 'فجوات الامتثال والالتزام',
-  tabEvidence: 'دفتر أدلة الإثبات',
-  readinessTitle: 'مؤشرات جاهزية الاعتماد الأكاديمي',
-  readinessSubtitle: 'إحصائيات المتابعة ومعدل الاكتمال لدورات التوجيه والجودة الخاصة بـ سباهي (CBAHI).',
-  programName: 'اسم البرنامج',
-  department: 'القسم',
-  assigned: 'تم التعيين',
+const ar: typeof en = {
+  eyebrow: 'التدريب المحكوم',
+  title: 'مركز حوكمة التدريب',
+  subtitle: 'حوكمة التدريب الرسمي وإقرارات نسخ إجراءات التشغيل وتقييم الكفاءة.',
+  myObligations: 'التزاماتي',
+  myObligationsSubtitle: 'التدريب الرسمي وإقرارات النسخ وحالة الكفاءة الظاهرة لك.',
+  teamCompliance: 'امتثال الفريق',
+  teamComplianceSubtitle: 'امتثال التعيينات ضمن النطاق الظاهر عبر سياسات RLS والعروض الآمنة.',
+  trainingCompliance: 'التدريب والامتثال',
+  governanceSubtitle: 'متطلبات نسخ إجراءات التشغيل المنشورة والفئات المستهدفة وحالة الامتثال.',
+  readOnly: 'عرض حوكمي للقراءة فقط.',
+  noMyObligations: 'لا توجد التزامات تدريب أو إقرار معينة حالياً.',
+  noTeamObligations: 'لا توجد التزامات تدريب فريق ظاهرة ضمن نطاقك حالياً.',
+  noGovernedObligations: 'لم يتم نشر التزامات تدريب لإجراءات تشغيل محكومة بعد.',
+  obligation: 'الالتزام',
+  context: 'السياق',
+  sopVersion: 'الإجراء / النسخة',
+  dueDate: 'تاريخ الاستحقاق',
+  status: 'الحالة',
+  actions: 'الإجراءات',
+  assigned: 'معين',
+  inProgress: 'قيد التنفيذ',
   completed: 'مكتمل',
   overdue: 'متأخر',
-  completionRate: 'معدل الاكتمال',
-  programsTitle: 'سجل برامج التدريب والسياسات',
-  programsSubtitle: 'البرامج القياسية، إجراءات العمل القياسية (SOP)، ودروس التزامات الامتثال والمواد التدريبية.',
-  trainingType: 'نوع التدريب',
-  owner: 'المالك',
-  status: 'الحالة',
-  active: 'نشط',
-  inactive: 'غير نشط',
-  allDepartments: 'جميع الأقسام',
-  unassigned: 'غير معين',
-  assignmentsTitle: 'مهام التدريب والتعيينات',
-  assignmentsSubtitle: 'المهام والتعيينات الموزعة على الأفراد أو الأقسام.',
-  assignedUser: 'الموظف المعين',
-  dueDate: 'تاريخ الاستحقاق',
-  noDueDate: 'لا يوجد تاريخ استحقاق',
-  overdueAssignmentsCount: 'المهام المتأخرة',
-  sopGapsTitle: 'فجوات إقرارات السياسات (SOP)',
-  sopGapsSubtitle: 'الموظفون النشطون الذين لم يقروا بالسياسات الإلزامية القياسية الأخيرة.',
-  sopName: 'وثيقة السياسة (SOP)',
-  competencyGapsTitle: 'فجوات تقييم الكفاءات والمهارات',
-  competencyGapsSubtitle: 'التقييمات التي تحتاج إعادة تدريب، حالات الرسوب، أو الموظفون غير المقيمين.',
+  waived: 'معفى',
+  cancelled: 'ملغى',
+  startTraining: 'بدء التدريب',
+  acknowledge: 'إقرار',
+  attestation: 'أؤكد أنني قرأت وفهمت هذه النسخة المحكومة من إجراء التشغيل.',
+  acknowledgmentNote: 'ملاحظة إقرار اختيارية',
+  employee: 'الموظف',
+  department: 'القسم',
+  trainingAssignments: 'تعيينات التدريب',
+  sopAcknowledgmentGaps: 'فجوات إقرار إجراءات التشغيل',
+  competencyGapsStatus: 'فجوات / حالة الكفاءة',
+  trainingStatus: 'حالة التدريب',
+  certifyCompletion: 'اعتماد الإكمال',
+  recordCompetency: 'تسجيل الكفاءة',
+  waive: 'إعفاء',
+  cancel: 'إلغاء',
+  reopen: 'إعادة فتح',
+  actionDetails: 'تفاصيل الإجراء',
+  evidenceId: 'معرف الدليل',
+  evidenceIdOptional: 'معرف الدليل (اختياري)',
   competencyArea: 'مجال الكفاءة',
-  result: 'نتيجة التقييم',
-  score: 'درجة التقييم',
-  assessor: 'المُقيم',
-  unassessed: 'لم يتم تقييمه بعد',
-  evidenceTitle: 'سجل أدلة إثبات إتمام التدريب',
-  evidenceSubtitle: 'الملفات المرفقة وتقارير PDF التي تعمل كأدلة إثبات جاهزة للتدقيق.',
-  fileName: 'اسم الملف',
-  uploadedAt: 'تاريخ الرفع'
+  result: 'النتيجة',
+  score: 'الدرجة',
+  assessor: 'المقيم',
+  notes: 'ملاحظات',
+  reason: 'السبب',
+  reasonInvalid: 'يجب أن يكون السبب بين 3 و1000 حرف.',
+  rationale: 'المبرر',
+  rationaleInvalid: 'يجب أن يكون المبرر بين 5 و4000 حرف.',
+  actionCompleted: 'اكتمل الإجراء وتم تحديث الالتزامات الحية.',
+  errorAuthorizationDenied: 'رفض الخادم هذا الإجراء للمستخدم المصادق الحالي.',
+  errorInvalidLifecycle: 'لا يمكن تنفيذ الإجراء في حالة دورة الحياة الحالية.',
+  errorObjectNotFound: 'تعذر العثور على السجل المحكوم المحدد.',
+  errorSchemaMismatch: 'عقد قاعدة البيانات المنشور لا يطابق عقد واجهة E2B2.',
+  errorActionFailed: 'تعذر إكمال الإجراء.',
+  errorLiveReadUnavailable: 'بيانات امتثال التدريب الحية غير متاحة. يرجى طلب التحقق من عقد النشر.',
+  trainingRequired: 'التدريب مطلوب',
+  acknowledgmentRequired: 'الإقرار مطلوب',
+  competencyRequired: 'الكفاءة مطلوبة',
+  acknowledgmentGaps: 'فجوات الإقرار',
+  competencyGaps: 'فجوات الكفاءة',
+  requirements: 'المتطلبات',
+  population: 'الفئة المستهدفة',
+  statusCounts: 'أعداد الحالات',
+  acknowledgment: 'الإقرار',
+  competency: 'الكفاءة',
+  targetPopulation: 'الفئة المستهدفة',
+  acknowledged: 'تم الإقرار',
+  gap: 'الفجوة',
+  passed: 'ناجح',
+  failed: 'راسب',
+  pending: 'معلق',
+  renewalDue: 'مستحق التجديد',
+  rolloutDecision: 'قرار النشر',
+  publishTrainingObligations: 'نشر التزامات التدريب',
+  yes: 'نعم',
+  no: 'لا',
 };
