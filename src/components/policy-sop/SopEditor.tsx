@@ -484,7 +484,7 @@ export function SopEditor({
               className="p-2 text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-xl transition-colors shrink-0"
               title={t('common.back')}
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="directional-icon w-5 h-5" />
             </button>
 
             <div>

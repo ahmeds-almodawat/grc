@@ -14,6 +14,8 @@ import {
   createScenarioLabScenario,
   V99_SCENARIO_TAG,
 } from '../lib/scenarioLab';
+import { useI18n } from '../i18n/I18nContext';
+import { humanize } from '../lib/format';
 
 const riskLevels: RiskLevel[] = ['critical', 'high', 'medium', 'low'];
 const priorities: PriorityLevel[] = ['critical', 'high', 'medium', 'low'];
@@ -46,16 +48,17 @@ function DepartmentSelect({
   onChange: (value: string) => void;
   departments: DepartmentOption[];
 }) {
+  const { language, t } = useI18n();
   const autoId = useId();
   const selectId = id ?? autoId;
   return (
     <label className="field" htmlFor={selectId}>
-      <span>Department</span>
+      <span>{t('common.department', 'Department')}</span>
       <select id={selectId} value={value} onChange={event => onChange(event.target.value)}>
-        <option value="">Company-wide</option>
+        <option value="">{t('common.companyWide', 'Company-wide')}</option>
         {departments.map(department => (
           <option key={department.id} value={department.id}>
-            {department.name_en}
+            {language === 'ar' ? department.name_ar || department.name_en : department.name_en || department.name_ar}
           </option>
         ))}
       </select>
@@ -78,16 +81,17 @@ function PersonSelect({
   profiles: ProfileOption[];
   disabled?: boolean;
 }) {
+  const { language, t } = useI18n();
   const autoId = useId();
   const selectId = id ?? autoId;
   return (
     <label className="field" htmlFor={selectId}>
       <span>{label}</span>
       <select id={selectId} value={value} onChange={event => onChange(event.target.value)} disabled={disabled}>
-        <option value="">Unassigned</option>
+        <option value="">{t('common.unassigned', 'Unassigned')}</option>
         {profiles.map(profile => (
           <option key={profile.id} value={profile.id}>
-            {profile.full_name_en}
+            {language === 'ar' ? profile.full_name_ar || profile.full_name_en : profile.full_name_en || profile.full_name_ar}
           </option>
         ))}
       </select>
@@ -104,6 +108,7 @@ export function RiskForm({
   onDirtyChange,
   onSubmittingChange,
 }: SharedFormProps) {
+  const { language, t } = useI18n();
   const codeId = useId();
   const categoryId = useId();
   const titleId = useId();
@@ -179,7 +184,7 @@ export function RiskForm({
     event.preventDefault();
     setError(null);
     if (isSubmittingRef.current) return;
-    if (!canSubmit) return setError('Risk title and organization are required.');
+    if (!canSubmit) return setError(t('form.risk.required', 'Risk title and organization are required.'));
 
     isSubmittingRef.current = true;
     setSaving(true);
@@ -210,7 +215,7 @@ export function RiskForm({
       });
       onCreated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create risk.');
+      setError(err instanceof Error ? err.message : t('form.risk.failed', 'Failed to create risk.'));
     } finally {
       isSubmittingRef.current = false;
       setSaving(false);
@@ -244,60 +249,60 @@ export function RiskForm({
         <ScenarioFillButton onClick={fillSyntheticRisk} />
       </div>
       <label className="field" htmlFor={codeId}>
-        <span>Risk code</span>
+        <span>{t('form.risk.code', 'Risk code')}</span>
         <input id={codeId} value={riskCode} onChange={event => setRiskCode(event.target.value)} placeholder="FIN-001" />
       </label>
       <label className="field" htmlFor={categoryId}>
-        <span>Category</span>
+        <span>{t('risks.category', 'Category')}</span>
         <select id={categoryId} value={category} onChange={event => setCategory(event.target.value)}>
-          {riskCategories.map(item => <option key={item} value={item}>{item.replaceAll('_', ' ')}</option>)}
+          {riskCategories.map(item => <option key={item} value={item}>{humanize(item, language)}</option>)}
         </select>
       </label>
       <label className="field full-width" htmlFor={titleId}>
-        <span>Risk title *</span>
-        <input id={titleId} value={title} onChange={event => setTitle(event.target.value)} placeholder="Example: Government collection delay affecting cash flow" required />
+        <span>{t('form.risk.title', 'Risk title')} *</span>
+        <input id={titleId} value={title} onChange={event => setTitle(event.target.value)} placeholder={t('form.risk.titlePlaceholder', 'Example: Government collection delay affecting cash flow')} required />
       </label>
       <label className="field full-width" htmlFor={descId}>
-        <span>Description</span>
+        <span>{t('common.description', 'Description')}</span>
         <textarea id={descId} value={description} onChange={event => setDescription(event.target.value)} />
       </label>
       <DepartmentSelect value={departmentId} onChange={setDepartmentId} departments={departments} />
-      <PersonSelect label="Risk owner" value={ownerId} onChange={setOwnerId} profiles={profiles} />
+      <PersonSelect label={t('form.risk.owner', 'Risk owner')} value={ownerId} onChange={setOwnerId} profiles={profiles} />
       <label className="field" htmlFor={likelihoodId}>
-        <span>Likelihood 1-5</span>
+        <span>{t('form.risk.likelihood', 'Likelihood 1-5')}</span>
         <input id={likelihoodId} type="number" min="1" max="5" value={likelihood} onChange={event => setLikelihood(Number(event.target.value))} />
       </label>
       <label className="field" htmlFor={impactId}>
-        <span>Impact 1-5</span>
+        <span>{t('form.risk.impact', 'Impact 1-5')}</span>
         <input id={impactId} type="number" min="1" max="5" value={impact} onChange={event => setImpact(Number(event.target.value))} />
       </label>
       <label className="field" htmlFor={resLikelihoodId}>
-        <span>Residual likelihood 1-5</span>
+        <span>{t('form.risk.residualLikelihood', 'Residual likelihood 1-5')}</span>
         <input id={resLikelihoodId} type="number" min="1" max="5" value={residualLikelihood} onChange={event => setResidualLikelihood(Number(event.target.value))} />
       </label>
       <label className="field" htmlFor={resImpactId}>
-        <span>Residual impact 1-5</span>
+        <span>{t('form.risk.residualImpact', 'Residual impact 1-5')}</span>
         <input id={resImpactId} type="number" min="1" max="5" value={residualImpact} onChange={event => setResidualImpact(Number(event.target.value))} />
       </label>
       <label className="field" htmlFor={riskLevelId}>
-        <span>Risk level</span>
+        <span>{t('form.risk.level', 'Risk level')}</span>
         <select id={riskLevelId} value={riskLevel} onChange={event => setRiskLevel(event.target.value as RiskLevel)}>
-          {riskLevels.map(item => <option key={item} value={item}>{item}</option>)}
+          {riskLevels.map(item => <option key={item} value={item}>{humanize(item, language)}</option>)}
         </select>
       </label>
       <label className="field" htmlFor={responseTypeId}>
-        <span>Response</span>
+        <span>{t('form.risk.response', 'Response')}</span>
         <select id={responseTypeId} value={responseType} onChange={event => setResponseType(event.target.value)}>
-          {responseTypes.map(item => <option key={item} value={item}>{item}</option>)}
+          {responseTypes.map(item => <option key={item} value={item}>{humanize(item, language)}</option>)}
         </select>
       </label>
       <label className="field" htmlFor={nextReviewDateId}>
-        <span>Next review</span>
+        <span>{t('risks.nextReview', 'Next review')}</span>
         <input id={nextReviewDateId} type="date" value={nextReviewDate} onChange={event => setNextReviewDate(event.target.value)} />
       </label>
       <div className="form-actions full-width">
-        <button className="ghost-button" type="button" onClick={onCancel}>Cancel</button>
-        <button className="primary-button" disabled={saving || !canSubmit}>{saving ? 'Saving…' : 'Create Risk'}</button>
+        <button className="ghost-button" type="button" onClick={onCancel}>{t('common.cancel', 'Cancel')}</button>
+        <button className="primary-button" disabled={saving || !canSubmit}>{saving ? t('common.saving', 'Saving…') : t('form.risk.create', 'Create Risk')}</button>
       </div>
     </form>
   );
@@ -312,6 +317,7 @@ export function ComplianceForm({
   onDirtyChange,
   onSubmittingChange,
 }: SharedFormProps) {
+  const { language, t } = useI18n();
   const codeId = useId();
   const regulatorId = useId();
   const titleId = useId();
@@ -365,9 +371,9 @@ export function ComplianceForm({
     event.preventDefault();
     setError(null);
     if (isSubmittingRef.current) return;
-    if (!title.trim() || !organizationId) return setError('Compliance title and organization are required.');
+    if (!title.trim() || !organizationId) return setError(t('form.compliance.required'));
     if (dueDate && expiryDate && expiryDate < dueDate) {
-      return setError('Expiry date cannot precede due date.');
+      return setError(t('form.compliance.invalidExpiry'));
     }
 
     isSubmittingRef.current = true;
@@ -389,7 +395,7 @@ export function ComplianceForm({
       });
       onCreated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create compliance item.');
+      setError(err instanceof Error ? err.message : t('form.compliance.failed'));
     } finally {
       isSubmittingRef.current = false;
       setSaving(false);
@@ -400,29 +406,29 @@ export function ComplianceForm({
     <form className="form-grid" onSubmit={handleSubmit}>
       <ErrorBlock error={error} />
       <label className="field" htmlFor={codeId}>
-        <span>Code</span>
+        <span>{t('common.code')}</span>
         <input id={codeId} value={code} onChange={event => setCode(event.target.value)} placeholder="COMP-001" />
       </label>
       <label className="field" htmlFor={regulatorId}>
-        <span>Regulatory body</span>
+        <span>{t('form.compliance.regulator')}</span>
         <input id={regulatorId} value={regulator} onChange={event => setRegulator(event.target.value)} placeholder="MOH / Civil Defense / ZATCA" />
       </label>
       <label className="field full-width" htmlFor={titleId}>
-        <span>Requirement title *</span>
+        <span>{t('form.compliance.title')} *</span>
         <input id={titleId} value={title} onChange={event => setTitle(event.target.value)} required />
       </label>
       <label className="field full-width" htmlFor={descId}>
-        <span>Description</span>
+        <span>{t('common.description')}</span>
         <textarea id={descId} value={description} onChange={event => setDescription(event.target.value)} />
       </label>
       <label className="field" htmlFor={reqTypeId}>
-        <span>Requirement type</span>
+        <span>{t('form.compliance.type')}</span>
         <input id={reqTypeId} value={requirementType} onChange={event => setRequirementType(event.target.value)} />
       </label>
       <DepartmentSelect value={departmentId} onChange={setDepartmentId} departments={departments} />
-      <PersonSelect label="Owner" value={ownerId} onChange={setOwnerId} profiles={profiles} />
+      <PersonSelect label={t('common.owner')} value={ownerId} onChange={setOwnerId} profiles={profiles} />
       <label className="field" htmlFor={dueDateId}>
-        <span>Due date</span>
+        <span>{t('common.dueDate')}</span>
         <input
           id={dueDateId}
           type="date"
@@ -432,7 +438,7 @@ export function ComplianceForm({
         />
       </label>
       <label className="field" htmlFor={expiryDateId}>
-        <span>Expiry date</span>
+        <span>{t('form.compliance.expiry')}</span>
         <input
           id={expiryDateId}
           type="date"
@@ -442,18 +448,18 @@ export function ComplianceForm({
         />
       </label>
       <label className="field" htmlFor={reminderDaysId}>
-        <span>Reminder days before</span>
+        <span>{t('form.compliance.reminderDays')}</span>
         <input id={reminderDaysId} type="number" min="0" value={reminderDays} onChange={event => setReminderDays(Number(event.target.value))} />
       </label>
       <label className="field" htmlFor={riskLevelId}>
-        <span>Risk level</span>
+        <span>{t('risks.level')}</span>
         <select id={riskLevelId} value={riskLevel} onChange={event => setRiskLevel(event.target.value as RiskLevel)}>
-          {riskLevels.map(item => <option key={item} value={item}>{item}</option>)}
+          {riskLevels.map(item => <option key={item} value={item}>{humanize(item, language)}</option>)}
         </select>
       </label>
       <div className="form-actions full-width">
-        <button className="ghost-button" type="button" onClick={onCancel}>Cancel</button>
-        <button className="primary-button" disabled={saving || !title.trim()}>{saving ? 'Saving…' : 'Create Obligation'}</button>
+        <button className="ghost-button" type="button" onClick={onCancel}>{t('common.cancel')}</button>
+        <button className="primary-button" disabled={saving || !title.trim()}>{saving ? t('common.saving') : t('form.compliance.create')}</button>
       </div>
     </form>
   );
@@ -468,6 +474,7 @@ export function AuditFindingForm({
   onDirtyChange,
   onSubmittingChange,
 }: SharedFormProps) {
+  const { language, t } = useI18n();
   const codeId = useId();
   const auditTitleId = useId();
   const titleId = useId();
@@ -520,7 +527,7 @@ export function AuditFindingForm({
     event.preventDefault();
     setError(null);
     if (isSubmittingRef.current) return;
-    if (!title.trim() || !description.trim() || !organizationId) return setError('Finding title, description and organization are required.');
+    if (!title.trim() || !description.trim() || !organizationId) return setError(t('form.audit.required', 'Finding title, description and organization are required.'));
 
     isSubmittingRef.current = true;
     setSaving(true);
@@ -541,7 +548,7 @@ export function AuditFindingForm({
       });
       onCreated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create audit finding.');
+      setError(err instanceof Error ? err.message : t('form.audit.failed', 'Failed to create audit finding.'));
     } finally {
       isSubmittingRef.current = false;
       setSaving(false);
@@ -552,45 +559,45 @@ export function AuditFindingForm({
     <form className="form-grid" onSubmit={handleSubmit}>
       <ErrorBlock error={error} />
       <label className="field" htmlFor={codeId}>
-        <span>Finding code</span>
+        <span>{t('form.audit.code', 'Finding code')}</span>
         <input id={codeId} value={code} onChange={event => setCode(event.target.value)} placeholder="IA-2026-001" />
       </label>
       <label className="field" htmlFor={auditTitleId}>
-        <span>Audit title</span>
+        <span>{t('form.audit.auditTitle', 'Audit title')}</span>
         <input id={auditTitleId} value={auditTitle} onChange={event => setAuditTitle(event.target.value)} />
       </label>
       <label className="field full-width" htmlFor={titleId}>
-        <span>Finding title *</span>
+        <span>{t('form.audit.findingTitle', 'Finding title')} *</span>
         <input id={titleId} value={title} onChange={event => setTitle(event.target.value)} required />
       </label>
       <label className="field full-width" htmlFor={descId}>
-        <span>Description *</span>
+        <span>{t('common.description', 'Description')} *</span>
         <textarea id={descId} value={description} onChange={event => setDescription(event.target.value)} required />
       </label>
       <label className="field full-width" htmlFor={rootCauseId}>
-        <span>Root cause</span>
+        <span>{t('form.audit.rootCause', 'Root cause')}</span>
         <textarea id={rootCauseId} value={rootCause} onChange={event => setRootCause(event.target.value)} />
       </label>
       <label className="field full-width" htmlFor={recId}>
-        <span>Recommendation</span>
+        <span>{t('form.audit.recommendation', 'Recommendation')}</span>
         <textarea id={recId} value={recommendation} onChange={event => setRecommendation(event.target.value)} />
       </label>
       <DepartmentSelect value={departmentId} onChange={setDepartmentId} departments={departments} />
-      <PersonSelect label="Finding owner" value={ownerId} onChange={setOwnerId} profiles={profiles} />
-      <PersonSelect label="Auditor" value={auditorId} onChange={setAuditorId} profiles={profiles} />
+      <PersonSelect label={t('form.audit.owner', 'Finding owner')} value={ownerId} onChange={setOwnerId} profiles={profiles} />
+      <PersonSelect label={t('form.audit.auditor', 'Auditor')} value={auditorId} onChange={setAuditorId} profiles={profiles} />
       <label className="field" htmlFor={dueDateId}>
-        <span>Due date</span>
+        <span>{t('common.dueDate', 'Due date')}</span>
         <input id={dueDateId} type="date" value={dueDate} onChange={event => setDueDate(event.target.value)} />
       </label>
       <label className="field" htmlFor={riskLevelId}>
-        <span>Risk level</span>
+        <span>{t('form.risk.level', 'Risk level')}</span>
         <select id={riskLevelId} value={riskLevel} onChange={event => setRiskLevel(event.target.value as RiskLevel)}>
-          {riskLevels.map(item => <option key={item} value={item}>{item}</option>)}
+          {riskLevels.map(item => <option key={item} value={item}>{humanize(item, language)}</option>)}
         </select>
       </label>
       <div className="form-actions full-width">
-        <button className="ghost-button" type="button" onClick={onCancel}>Cancel</button>
-        <button className="primary-button" disabled={saving || !title.trim() || !description.trim()}>{saving ? 'Saving…' : 'Create Finding'}</button>
+        <button className="ghost-button" type="button" onClick={onCancel}>{t('common.cancel', 'Cancel')}</button>
+        <button className="primary-button" disabled={saving || !title.trim() || !description.trim()}>{saving ? t('common.saving', 'Saving…') : t('form.audit.create', 'Create Finding')}</button>
       </div>
     </form>
   );
@@ -605,6 +612,7 @@ export function DecisionForm({
   onDirtyChange,
   onSubmittingChange,
 }: SharedFormProps) {
+  const { language, t } = useI18n();
   const codeId = useId();
   const sourceId = useId();
   const titleId = useId();
@@ -654,7 +662,7 @@ export function DecisionForm({
     event.preventDefault();
     setError(null);
     if (isSubmittingRef.current) return;
-    if (!title.trim() || !text.trim() || !organizationId) return setError('Decision title, text and organization are required.');
+    if (!title.trim() || !text.trim() || !organizationId) return setError(t('form.governance.required', 'Decision title, text and organization are required.'));
 
     isSubmittingRef.current = true;
     setSaving(true);
@@ -674,7 +682,7 @@ export function DecisionForm({
       });
       onCreated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create governance decision.');
+      setError(err instanceof Error ? err.message : t('form.governance.failed', 'Failed to create governance decision.'));
     } finally {
       isSubmittingRef.current = false;
       setSaving(false);
@@ -685,45 +693,45 @@ export function DecisionForm({
     <form className="form-grid" onSubmit={handleSubmit}>
       <ErrorBlock error={error} />
       <label className="field" htmlFor={codeId}>
-        <span>Decision code</span>
+        <span>{t('form.governance.code', 'Decision code')}</span>
         <input id={codeId} value={code} onChange={event => setCode(event.target.value)} placeholder="CEO-2026-001" />
       </label>
       <label className="field" htmlFor={sourceId}>
-        <span>Source</span>
+        <span>{t('common.source', 'Source')}</span>
         <select id={sourceId} value={sourceType} onChange={event => setSourceType(event.target.value as SourceType)}>
-          {decisionSources.map(item => <option key={item} value={item}>{item.replaceAll('_', ' ')}</option>)}
+          {decisionSources.map(item => <option key={item} value={item}>{humanize(item, language)}</option>)}
         </select>
       </label>
       <label className="field full-width" htmlFor={titleId}>
-        <span>Decision title *</span>
+        <span>{t('form.governance.title', 'Decision title')} *</span>
         <input id={titleId} value={title} onChange={event => setTitle(event.target.value)} required />
       </label>
       <label className="field full-width" htmlFor={textId}>
-        <span>Decision text *</span>
+        <span>{t('form.governance.text', 'Decision text')} *</span>
         <textarea id={textId} value={text} onChange={event => setText(event.target.value)} required />
       </label>
       <DepartmentSelect value={departmentId} onChange={setDepartmentId} departments={departments} />
-      <PersonSelect label="Owner" value={ownerId} onChange={setOwnerId} profiles={profiles} />
-      <PersonSelect label="Sponsor" value={sponsorId} onChange={setSponsorId} profiles={profiles} />
+      <PersonSelect label={t('common.owner', 'Owner')} value={ownerId} onChange={setOwnerId} profiles={profiles} />
+      <PersonSelect label={t('form.governance.sponsor', 'Sponsor')} value={sponsorId} onChange={setSponsorId} profiles={profiles} />
       <label className="field" htmlFor={dueDateId}>
-        <span>Due date</span>
+        <span>{t('common.dueDate', 'Due date')}</span>
         <input id={dueDateId} type="date" value={dueDate} onChange={event => setDueDate(event.target.value)} />
       </label>
       <label className="field" htmlFor={priorityId}>
-        <span>Priority</span>
+        <span>{t('common.priority', 'Priority')}</span>
         <select id={priorityId} value={priority} onChange={event => setPriority(event.target.value as PriorityLevel)}>
-          {priorities.map(item => <option key={item} value={item}>{item}</option>)}
+          {priorities.map(item => <option key={item} value={item}>{humanize(item, language)}</option>)}
         </select>
       </label>
       <label className="field" htmlFor={riskLevelId}>
-        <span>Risk level</span>
+        <span>{t('form.risk.level', 'Risk level')}</span>
         <select id={riskLevelId} value={riskLevel} onChange={event => setRiskLevel(event.target.value as RiskLevel)}>
-          {riskLevels.map(item => <option key={item} value={item}>{item}</option>)}
+          {riskLevels.map(item => <option key={item} value={item}>{humanize(item, language)}</option>)}
         </select>
       </label>
       <div className="form-actions full-width">
-        <button className="ghost-button" type="button" onClick={onCancel}>Cancel</button>
-        <button className="primary-button" disabled={saving || !title.trim() || !text.trim()}>{saving ? 'Saving…' : 'Create Decision'}</button>
+        <button className="ghost-button" type="button" onClick={onCancel}>{t('common.cancel', 'Cancel')}</button>
+        <button className="primary-button" disabled={saving || !title.trim() || !text.trim()}>{saving ? t('common.saving', 'Saving…') : t('form.governance.create', 'Create Decision')}</button>
       </div>
     </form>
   );

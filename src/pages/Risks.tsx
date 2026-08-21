@@ -53,7 +53,7 @@ interface RiskDecisionState {
 
 export function Risks() {
   const auth = useAuth();
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
   const [riskFormDirty, setRiskFormDirty] = useState(false);
   const [riskFormSubmitting, setRiskFormSubmitting] = useState(false);
@@ -88,13 +88,13 @@ export function Risks() {
   const selectedWarnings = useMemo(() => {
     if (!selectedRisk) return [];
     return [
-      selectedRisk.appetite_breached ? 'Above appetite' : '',
-      selectedRisk.treatment_required && selectedRisk.treatment_status !== 'completed' ? 'Treatment required' : '',
-      selectedRisk.review_overdue ? 'Review overdue' : '',
-      selectedBlocker?.blocker_reason ? `Closure blocked: ${selectedBlocker.blocker_reason}` : '',
-      selectedRisk.escalation_required ? 'Executive or management escalation required' : '',
+      selectedRisk.appetite_breached ? t('risks.g.aboveAppetite', 'Above appetite') : '',
+      selectedRisk.treatment_required && selectedRisk.treatment_status !== 'completed' ? t('risks.treatmentRequired', 'Treatment required') : '',
+      selectedRisk.review_overdue ? t('risks.g.reviewOverdue', 'Review overdue') : '',
+      selectedBlocker?.blocker_reason ? `${t('risks.g.closureBlocked', 'Closure blocked')}: ${selectedBlocker.blocker_reason}` : '',
+      selectedRisk.escalation_required ? t('risks.g.escalationRequired', 'Executive or management escalation required') : '',
     ].filter(Boolean);
-  }, [selectedBlocker?.blocker_reason, selectedRisk]);
+  }, [selectedBlocker?.blocker_reason, selectedRisk, t]);
 
   async function refreshRiskWorkflow() {
     await Promise.all([
@@ -132,10 +132,10 @@ export function Risks() {
         setRiskEvents(events);
       }
     }).catch(error => {
-      if (!cancelled) setWorkflowMessage(error instanceof Error ? error.message : 'Unable to load risk workflow history.');
+      if (!cancelled) setWorkflowMessage(error instanceof Error ? error.message : t('risks.g.historyLoadError', 'Unable to load risk workflow history.'));
     });
     return () => { cancelled = true; };
-  }, [selectedRisk]);
+  }, [selectedRisk, t]);
 
   async function runRiskAction(label: string, action: () => Promise<unknown>) {
     setWorkflowBusy(true);
@@ -273,11 +273,11 @@ export function Risks() {
           loading={risks.loading}
           error={risks.error}
           empty={!risks.data?.length}
-          emptyTitle="No risks in your scope"
+          emptyTitle={t('risks.g.noRisks', 'No risks in your scope')}
           emptyMessage={
             canManageRisks
-              ? 'Start by adding an identified risk with an owner, treatment and review date.'
-              : 'No risk records are currently available for this read-only role and scope.'
+              ? t('risks.g.noRisksManage', 'Start by adding an identified risk with an owner, treatment and review date.')
+              : t('risks.g.noRisksReadOnly', 'No risk records are currently available for this read-only role and scope.')
           }
         >
           <EntityTable<RiskRow>
@@ -305,38 +305,38 @@ export function Risks() {
 
       <details className="panel" style={{ marginTop: '16px', border: 'none', background: 'transparent', boxShadow: 'none' }}>
         <summary style={{ cursor: 'pointer', fontWeight: 600, padding: '12px 16px', background: 'var(--panel-bg)', borderRadius: '8px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
-          Show risk workflow queues ({queueRows.length} active)
+          {t('risks.g.showWorkflowQueues', 'Show risk workflow queues')} ({queueRows.length} {t('audit.active', 'active')})
         </summary>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 <div className="panel">
         <div className="panel-header">
           
-          <span className="status-chip warning">{queueRows.length} active</span>
+          <span className="status-chip warning">{queueRows.length} {t('audit.active', 'active')}</span>
         </div>
         <div className="module-grid">
-          <div className="module-card danger"><strong>Appetite breaches</strong><span>{breachRows.length} risks above appetite or tolerance.</span></div>
-          <div className="module-card warning"><strong>Treatment queue</strong><span>{treatmentRows.length} treatment plans required or overdue.</span></div>
-          <div className="module-card warning"><strong>KRI alerts</strong><span>{kriRows.length} warning or critical early signals.</span></div>
-          <div className="module-card danger"><strong>Executive escalations</strong><span>{escalationRows.length} board or executive-visible risks.</span></div>
-          <div className="module-card"><strong>Closure blockers</strong><span>{blockerRows.filter(row => row.blocker_reason).length} risks blocked by evidence, review, KRI, acceptance or treatment rules.</span></div>
+          <div className="module-card danger"><strong>{t('risks.g.appetiteBreaches', 'Appetite breaches')}</strong><span>{breachRows.length} {t('risks.g.appetiteBreachesHint', 'risks above appetite or tolerance.')}</span></div>
+          <div className="module-card warning"><strong>{t('risks.g.treatmentQueue', 'Treatment queue')}</strong><span>{treatmentRows.length} {t('risks.g.treatmentQueueHint', 'treatment plans required or overdue.')}</span></div>
+          <div className="module-card warning"><strong>{t('risks.g.kriAlerts', 'KRI alerts')}</strong><span>{kriRows.length} {t('risks.g.kriAlertsHint', 'warning or critical early signals.')}</span></div>
+          <div className="module-card danger"><strong>{t('risks.g.executiveEscalations', 'Executive escalations')}</strong><span>{escalationRows.length} {t('risks.g.executiveEscalationsHint', 'board or executive-visible risks.')}</span></div>
+          <div className="module-card"><strong>{t('risks.g.closureBlockers', 'Closure blockers')}</strong><span>{blockerRows.filter(row => row.blocker_reason).length} {t('risks.g.closureBlockersHint', 'risks blocked by evidence, review, KRI, acceptance or treatment rules.')}</span></div>
         </div>
         <DataState
           loading={workflowQueue.loading}
           error={workflowQueue.error}
           empty={!queueRows.length}
-          emptyTitle="No risk workflow items"
-          emptyMessage="Risks needing review, treatment, acceptance, closure approval or escalation will appear here."
+          emptyTitle={t('risks.g.noWorkflowItems', 'No risk workflow items')}
+          emptyMessage={t('risks.g.noWorkflowItemsHint', 'Risks needing review, treatment, acceptance, closure approval or escalation will appear here.')}
         >
           <EntityTable
             rows={queueRows.slice(0, 12)}
             getRowKey={row => `${row.risk_id}-${row.queue_reason}`}
             columns={[
-              { key: 'risk', header: 'Risk', render: row => <button className="link-button" onClick={() => setSelectedRisk(riskRows.find(risk => risk.id === row.risk_id) || null)}>{row.risk_code || row.title}</button> },
-              { key: 'reason', header: 'Reason', render: row => humanize(row.queue_reason) },
-              { key: 'owner', header: 'Owner', render: row => row.risk_owner_name || '—' },
-              { key: 'due', header: 'Due', render: row => formatDate(row.due_date) },
-              { key: 'status', header: 'Status', render: row => <StatusBadge status={humanize(row.status)} /> },
-              { key: 'risk', header: 'Level', render: row => <span className={`risk-pill ${row.risk_level}`}>{row.risk_level}</span> },
+              { key: 'risk', header: t('common.risk', 'Risk'), render: row => <button className="link-button" onClick={() => setSelectedRisk(riskRows.find(risk => risk.id === row.risk_id) || null)}>{row.risk_code || row.title}</button> },
+              { key: 'reason', header: t('audit.g.reason', 'Reason'), render: row => humanize(row.queue_reason, language) },
+              { key: 'owner', header: t('common.owner', 'Owner'), render: row => row.risk_owner_name || '—' },
+              { key: 'due', header: t('common.dueDate', 'Due'), render: row => formatDate(row.due_date) },
+              { key: 'status', header: t('common.status', 'Status'), render: row => <StatusBadge status={humanize(row.status, language)} /> },
+              { key: 'risk', header: t('risks.level', 'Level'), render: row => <span className={`risk-pill ${row.risk_level}`}>{humanize(row.risk_level, language)}</span> },
             ]}
           />
         </DataState>
@@ -344,20 +344,20 @@ export function Risks() {
 
       <div className="panel">
         <div className="panel-header">
-          <div><h4>Treatment queue</h4><p className="muted">Treatment-required and overdue risks with accountable owner and due date.</p></div>
+          <div><h4>{t('risks.g.treatmentQueue', 'Treatment queue')}</h4><p className="muted">{t('risks.g.treatmentQueueDesc', 'Treatment-required and overdue risks with accountable owner and due date.')}</p></div>
           <span className="status-chip warning">{treatmentRows.length} queued</span>
         </div>
-        <DataState loading={treatmentQueue.loading} error={treatmentQueue.error} empty={!treatmentRows.length} emptyTitle="No treatment queue items">
+        <DataState loading={treatmentQueue.loading} error={treatmentQueue.error} empty={!treatmentRows.length} emptyTitle={t('risks.g.noTreatmentItems', 'No treatment queue items')}>
           <EntityTable
             rows={treatmentRows.slice(0, 12)}
             getRowKey={row => row.risk_id}
             columns={[
-              { key: 'risk', header: 'Risk', render: row => <button className="link-button" onClick={() => setSelectedRisk(riskRows.find(risk => risk.id === row.risk_id) || null)}>{row.risk_code || row.title}</button> },
-              { key: 'score', header: 'Residual', render: row => row.residual_score },
-              { key: 'status', header: 'Treatment', render: row => <StatusBadge status={humanize(row.treatment_status)} /> },
-              { key: 'owner', header: 'Owner', render: row => row.treatment_owner_name || '—' },
-              { key: 'due', header: 'Due', render: row => formatDate(row.treatment_due_date) },
-              { key: 'overdue', header: 'Overdue', render: row => row.treatment_overdue ? <span className="risk-pill high">Overdue</span> : <span className="status-chip good">On track</span> },
+              { key: 'risk', header: t('common.risk', 'Risk'), render: row => <button className="link-button" onClick={() => setSelectedRisk(riskRows.find(risk => risk.id === row.risk_id) || null)}>{row.risk_code || row.title}</button> },
+              { key: 'score', header: t('risks.g.residual', 'Residual'), render: row => row.residual_score },
+              { key: 'status', header: t('risks.treatment', 'Treatment'), render: row => <StatusBadge status={humanize(row.treatment_status)} /> },
+              { key: 'owner', header: t('common.owner', 'Owner'), render: row => row.treatment_owner_name || '—' },
+              { key: 'due', header: t('common.due', 'Due'), render: row => formatDate(row.treatment_due_date) },
+              { key: 'overdue', header: t('common.overdue', 'Overdue'), render: row => row.treatment_overdue ? <span className="risk-pill high">{t('common.overdue', 'Overdue')}</span> : <span className="status-chip good">{t('risks.g.onTrack', 'On track')}</span> },
             ]}
           />
         </DataState>
@@ -365,28 +365,28 @@ export function Risks() {
 
       <div className="two-column">
         <div className="panel">
-          <div className="panel-header"><div><h4>Appetite breaches</h4><p className="muted">Residual exposure outside approved tolerance.</p></div></div>
-          <DataState loading={appetiteBreaches.loading} error={appetiteBreaches.error} empty={!breachRows.length} emptyTitle="No appetite breaches">
+          <div className="panel-header"><div><h4>{t('risks.g.appetiteBreaches', 'Appetite breaches')}</h4><p className="muted">{t('risks.g.appetiteBreachesDesc', 'Residual exposure outside approved tolerance.')}</p></div></div>
+          <DataState loading={appetiteBreaches.loading} error={appetiteBreaches.error} empty={!breachRows.length} emptyTitle={t('risks.g.noAppetiteBreaches', 'No appetite breaches')}>
             <EntityTable
               rows={breachRows.slice(0, 8)}
               getRowKey={row => row.risk_id}
               columns={[
-                { key: 'risk', header: 'Risk', render: row => row.risk_code || row.title },
-                { key: 'score', header: 'Residual', render: row => `${row.residual_score}/${row.appetite_threshold}` },
-                { key: 'acceptance', header: 'Acceptance', render: row => <StatusBadge status={humanize(row.acceptance_status)} /> },
+                { key: 'risk', header: t('common.risk', 'Risk'), render: row => row.risk_code || row.title },
+                { key: 'score', header: t('risks.g.residual', 'Residual'), render: row => `${row.residual_score}/${row.appetite_threshold}` },
+                { key: 'acceptance', header: t('risks.g.acceptance', 'Acceptance'), render: row => <StatusBadge status={humanize(row.acceptance_status)} /> },
               ]}
             />
           </DataState>
         </div>
         <div className="panel">
-          <div className="panel-header"><div><h4>Closure blockers</h4><p className="muted">Risks cannot close while a blocker remains active.</p></div></div>
-          <DataState loading={closureBlockers.loading} error={closureBlockers.error} empty={!blockerRows.filter(row => row.blocker_reason).length} emptyTitle="No closure blockers">
+          <div className="panel-header"><div><h4>{t('risks.g.closureBlockers', 'Closure blockers')}</h4><p className="muted">{t('risks.g.closureBlockersDesc', 'Risks cannot close while a blocker remains active.')}</p></div></div>
+          <DataState loading={closureBlockers.loading} error={closureBlockers.error} empty={!blockerRows.filter(row => row.blocker_reason).length} emptyTitle={t('risks.g.noClosureBlockers', 'No closure blockers')}>
             <EntityTable
               rows={blockerRows.filter(row => row.blocker_reason).slice(0, 8)}
               getRowKey={row => row.risk_id}
               columns={[
-                { key: 'risk', header: 'Risk', render: row => row.risk_code || row.title },
-                { key: 'blocker', header: 'Blocker', render: row => row.blocker_reason || '—' },
+                { key: 'risk', header: t('common.risk', 'Risk'), render: row => row.risk_code || row.title },
+                { key: 'blocker', header: t('risks.g.blocker', 'Blocker'), render: row => row.blocker_reason || '—' },
               ]}
             />
           </DataState>
@@ -395,31 +395,31 @@ export function Risks() {
 
       <div className="two-column">
         <div className="panel">
-          <div className="panel-header"><div><h4>KRI alerts</h4><p className="muted">Warning and critical indicators tied to risk records.</p></div></div>
-          <DataState loading={kriAlerts.loading} error={kriAlerts.error} empty={!kriRows.length} emptyTitle="No KRI alerts">
+          <div className="panel-header"><div><h4>{t('risks.g.kriAlerts', 'KRI alerts')}</h4><p className="muted">{t('risks.g.kriAlertsDesc', 'Warning and critical indicators tied to risk records.')}</p></div></div>
+          <DataState loading={kriAlerts.loading} error={kriAlerts.error} empty={!kriRows.length} emptyTitle={t('risks.g.noKriAlerts', 'No KRI alerts')}>
             <EntityTable
               rows={kriRows.slice(0, 8)}
               getRowKey={row => row.kri_id}
               columns={[
                 { key: 'kri', header: 'KRI', render: row => row.kri_code || row.name_en },
-                { key: 'risk', header: 'Risk', render: row => row.risk_code || row.risk_title },
-                { key: 'value', header: 'Value', render: row => row.current_value ?? '—' },
-                { key: 'status', header: 'Status', render: row => <StatusBadge status={humanize(row.status)} /> },
+                { key: 'risk', header: t('common.risk', 'Risk'), render: row => row.risk_code || row.risk_title },
+                { key: 'value', header: t('risks.g.value', 'Value'), render: row => row.current_value ?? '—' },
+                { key: 'status', header: t('common.status', 'Status'), render: row => <StatusBadge status={humanize(row.status)} /> },
               ]}
             />
           </DataState>
         </div>
         <div className="panel">
-          <div className="panel-header"><div><h4>Executive escalations</h4><p className="muted">Critical or executive-visible risk exposure.</p></div></div>
-          <DataState loading={executiveEscalations.loading} error={executiveEscalations.error} empty={!escalationRows.length} emptyTitle="No executive escalations">
+          <div className="panel-header"><div><h4>{t('risks.g.executiveEscalations', 'Executive escalations')}</h4><p className="muted">{t('risks.g.executiveEscalationsDesc', 'Critical or executive-visible risk exposure.')}</p></div></div>
+          <DataState loading={executiveEscalations.loading} error={executiveEscalations.error} empty={!escalationRows.length} emptyTitle={t('risks.g.noExecutiveEscalations', 'No executive escalations')}>
             <EntityTable
               rows={escalationRows.slice(0, 8)}
               getRowKey={row => row.risk_id}
               columns={[
-                { key: 'risk', header: 'Risk', render: row => row.risk_code || row.title },
-                { key: 'score', header: 'Residual', render: row => row.residual_score },
-                { key: 'level', header: 'Escalation', render: row => humanize(row.escalation_level) },
-                { key: 'owner', header: 'Owner', render: row => row.executive_owner_name || '—' },
+                { key: 'risk', header: t('common.risk', 'Risk'), render: row => row.risk_code || row.title },
+                { key: 'score', header: t('risks.g.residual', 'Residual'), render: row => row.residual_score },
+                { key: 'level', header: t('risks.g.escalation', 'Escalation'), render: row => humanize(row.escalation_level) },
+                { key: 'owner', header: t('common.owner', 'Owner'), render: row => row.executive_owner_name || '—' },
               ]}
             />
           </DataState>
@@ -431,7 +431,7 @@ export function Risks() {
       </details>
       <Modal
         open={formOpen}
-        title="Create risk"
+        title={t('risks.g.createTitle', 'Create risk')}
         isDirty={riskFormDirty}
         isSubmitting={riskFormSubmitting}
         onClose={closeRiskForm}
@@ -450,7 +450,7 @@ export function Risks() {
         />
       </Modal>
 
-      <Modal open={Boolean(selectedRisk)} title="Risk workflow detail" onClose={() => setSelectedRisk(null)}>
+      <Modal open={Boolean(selectedRisk)} title={t('risks.g.workflowDetail', 'Risk workflow detail')} onClose={() => setSelectedRisk(null)}>
         {selectedRisk ? (
           <div className="form-grid">
             {selectedWarnings.length ? (
@@ -458,32 +458,32 @@ export function Risks() {
                 {selectedWarnings.map(warning => <div key={warning}>{warning}</div>)}
               </div>
             ) : null}
-            <div className="mini-card"><span>Risk</span><strong>{selectedRisk.risk_code || selectedRisk.title}</strong></div>
-            <div className="mini-card"><span>Inherent score</span><strong>{selectedRisk.inherent_score}</strong></div>
-            <div className="mini-card"><span>Residual score</span><strong>{selectedRisk.residual_score}</strong></div>
-            <div className="mini-card"><span>Appetite</span><strong>{selectedRisk.appetite_breached ? 'Breached' : 'Within appetite'}</strong></div>
-            <div className="mini-card"><span>Risk owner</span><strong>{ownerName(selectedRisk.risk_owner || selectedRisk.owner)}</strong></div>
-            <div className="mini-card"><span>Control owner</span><strong>{ownerName(selectedRisk.control_owner)}</strong></div>
-            <div className="mini-card"><span>Treatment owner</span><strong>{ownerName(selectedRisk.treatment_owner)}</strong></div>
-            <div className="mini-card"><span>Executive sponsor</span><strong>{ownerName(selectedRisk.executive_sponsor)}</strong></div>
-            <div className="mini-card"><span>Treatment</span><strong>{humanize(selectedRisk.treatment_status || 'not required')}</strong></div>
-            <div className="mini-card"><span>Acceptance</span><strong>{humanize(selectedRisk.acceptance_status || 'not required')}</strong></div>
-            <div className="mini-card"><span>Next review</span><strong>{formatDate(selectedRisk.next_review_date)}</strong></div>
-            <div className="mini-card"><span>Closure</span><strong>{selectedBlocker?.blocker_reason || selectedRisk.closure_reason || 'No active blocker'}</strong></div>
+            <div className="mini-card"><span>{t('common.risk', 'Risk')}</span><strong>{selectedRisk.risk_code || selectedRisk.title}</strong></div>
+            <div className="mini-card"><span>{t('risks.decision.inherentScore', 'Inherent score')}</span><strong>{selectedRisk.inherent_score}</strong></div>
+            <div className="mini-card"><span>{t('risks.decision.residualScore', 'Residual score')}</span><strong>{selectedRisk.residual_score}</strong></div>
+            <div className="mini-card"><span>{t('risks.appetite', 'Appetite')}</span><strong>{selectedRisk.appetite_breached ? t('status.breached', 'Breached') : t('risks.g.withinAppetite', 'Within appetite')}</strong></div>
+            <div className="mini-card"><span>{t('form.risk.owner', 'Risk owner')}</span><strong>{ownerName(selectedRisk.risk_owner || selectedRisk.owner)}</strong></div>
+            <div className="mini-card"><span>{t('risks.g.controlOwner', 'Control owner')}</span><strong>{ownerName(selectedRisk.control_owner)}</strong></div>
+            <div className="mini-card"><span>{t('risks.g.treatmentOwner', 'Treatment owner')}</span><strong>{ownerName(selectedRisk.treatment_owner)}</strong></div>
+            <div className="mini-card"><span>{t('risks.g.executiveSponsor', 'Executive sponsor')}</span><strong>{ownerName(selectedRisk.executive_sponsor)}</strong></div>
+            <div className="mini-card"><span>{t('risks.treatment', 'Treatment')}</span><strong>{humanize(selectedRisk.treatment_status || 'not_required')}</strong></div>
+            <div className="mini-card"><span>{t('risks.g.acceptance', 'Acceptance')}</span><strong>{humanize(selectedRisk.acceptance_status || 'not_required')}</strong></div>
+            <div className="mini-card"><span>{t('risks.nextReview', 'Next review')}</span><strong>{formatDate(selectedRisk.next_review_date)}</strong></div>
+            <div className="mini-card"><span>{t('risks.g.closure', 'Closure')}</span><strong>{selectedBlocker?.blocker_reason || selectedRisk.closure_reason || t('risks.g.noActiveBlocker', 'No active blocker')}</strong></div>
 
             <div className="panel full-width">
-              <h4>Linked sources</h4>
+              <h4>{t('risks.g.linkedSources', 'Linked sources')}</h4>
               <div className="module-grid">
                 <div className="mini-card"><span>OVR</span><strong>{selectedRisk.source_ovr_id || '—'}</strong></div>
-                <div className="mini-card"><span>Audit finding</span><strong>{selectedRisk.source_audit_finding_id || '—'}</strong></div>
-                <div className="mini-card"><span>Compliance</span><strong>{selectedRisk.source_compliance_id || '—'}</strong></div>
-                <div className="mini-card"><span>Project</span><strong>{selectedRisk.source_project_id || '—'}</strong></div>
+                <div className="mini-card"><span>{t('risks.g.auditFinding', 'Audit finding')}</span><strong>{selectedRisk.source_audit_finding_id || '—'}</strong></div>
+                <div className="mini-card"><span>{t('risks.g.compliance', 'Compliance')}</span><strong>{selectedRisk.source_compliance_id || '—'}</strong></div>
+                <div className="mini-card"><span>{t('risks.g.project', 'Project')}</span><strong>{selectedRisk.source_project_id || '—'}</strong></div>
               </div>
             </div>
 
             {selectedQueueRows.length ? (
               <div className="panel full-width">
-                <h4>Active workflow reasons</h4>
+                <h4>{t('risks.g.activeReasons', 'Active workflow reasons')}</h4>
                 <ul>
                   {selectedQueueRows.map(row => <li key={`${row.risk_id}-${row.queue_reason}`}>{humanize(row.queue_reason)} · {formatDate(row.due_date)}</li>)}
                 </ul>
@@ -491,50 +491,50 @@ export function Risks() {
             ) : null}
 
             <div className="panel full-width">
-              <h4>Reassessment history</h4>
+              <h4>{t('risks.g.reassessmentHistory', 'Reassessment history')}</h4>
               {riskHistory.length ? (
                 <EntityTable
                   rows={riskHistory}
                   getRowKey={row => row.id}
                   columns={[
-                    { key: 'date', header: 'Changed', render: row => formatDate(row.changed_at) },
-                    { key: 'old', header: 'Previous', render: row => `${row.previous_score ?? '—'} / ${row.previous_residual_score ?? '—'}` },
-                    { key: 'new', header: 'New', render: row => `${row.new_score ?? '—'} / ${row.new_residual_score ?? '—'}` },
-                    { key: 'reason', header: 'Reason', render: row => row.change_reason || '—' },
+                    { key: 'date', header: t('risks.g.changed', 'Changed'), render: row => formatDate(row.changed_at) },
+                    { key: 'old', header: t('risks.g.previous', 'Previous'), render: row => `${row.previous_score ?? '—'} / ${row.previous_residual_score ?? '—'}` },
+                    { key: 'new', header: t('risks.g.new', 'New'), render: row => `${row.new_score ?? '—'} / ${row.new_residual_score ?? '—'}` },
+                    { key: 'reason', header: t('audit.g.reason', 'Reason'), render: row => row.change_reason || '—' },
                   ]}
                 />
-              ) : <p className="muted">No reassessment history is visible yet.</p>}
+              ) : <p className="muted">{t('risks.g.noReassessmentHistory', 'No reassessment history is visible yet.')}</p>}
             </div>
 
             <div className="panel full-width">
-              <h4>Workflow events</h4>
+              <h4>{t('risks.g.workflowEvents', 'Workflow events')}</h4>
               {riskEvents.length ? (
                 <EntityTable
                   rows={riskEvents}
                   getRowKey={row => row.id}
                   columns={[
-                    { key: 'date', header: 'Date', render: row => formatDate(row.created_at) },
-                    { key: 'action', header: 'Action', render: row => humanize(row.action) },
-                    { key: 'status', header: 'Status', render: row => `${row.from_status || '—'} → ${row.to_status || '—'}` },
-                    { key: 'note', header: 'Note', render: row => row.note || '—' },
+                    { key: 'date', header: t('common.date', 'Date'), render: row => formatDate(row.created_at) },
+                    { key: 'action', header: t('common.actions', 'Action'), render: row => humanize(row.action, language) },
+                    { key: 'status', header: t('common.status', 'Status'), render: row => `${humanize(row.from_status, language) || '—'} → ${humanize(row.to_status, language) || '—'}` },
+                    { key: 'note', header: t('audit.g.noteComment', 'Note'), render: row => row.note || '—' },
                   ]}
                 />
-              ) : <p className="muted">No workflow events are visible yet.</p>}
+              ) : <p className="muted">{t('risks.g.noWorkflowEvents', 'No workflow events are visible yet.')}</p>}
             </div>
 
             {canManageRisks ? (
               <div className="form-actions full-width">
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'reassess', risk: selectedRisk })}>Reassess risk</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'request_acceptance', risk: selectedRisk })}>Request acceptance</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => void runRiskAction('Acceptance approval', () => approveRiskAcceptance({ risk_id: selectedRisk.id, reason: 'Approved from workflow center' }))}>Approve acceptance</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => void runRiskAction('Acceptance rejection', () => rejectRiskAcceptance({ risk_id: selectedRisk.id, reason: 'Rejected from workflow center' }))}>Reject acceptance</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'update_treatment', risk: selectedRisk })}>Update treatment</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => void runRiskAction('Treatment completion', () => completeRiskTreatment({ risk_id: selectedRisk.id, reason: 'Treatment completed from workflow center' }))}>Complete treatment</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'request_closure', risk: selectedRisk })}>Request closure</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => void runRiskAction('Closure approval', () => approveRiskClosure({ risk_id: selectedRisk.id, reason: 'Approved from workflow center' }))}>Approve closure</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'reopen', risk: selectedRisk })}>Reopen with reason</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'link_source', risk: selectedRisk })}>Link source</button>
-                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'mark_duplicate', risk: selectedRisk })}>Mark duplicate</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'reassess', risk: selectedRisk })}>{t('risks.g.reassess', 'Reassess risk')}</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'request_acceptance', risk: selectedRisk })}>{t('risks.g.requestAcceptance', 'Request acceptance')}</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => void runRiskAction(t('risks.g.acceptanceApproval', 'Acceptance approval'), () => approveRiskAcceptance({ risk_id: selectedRisk.id, reason: 'Approved from workflow center' }))}>{t('risks.g.approveAcceptance', 'Approve acceptance')}</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => void runRiskAction(t('risks.g.acceptanceRejection', 'Acceptance rejection'), () => rejectRiskAcceptance({ risk_id: selectedRisk.id, reason: 'Rejected from workflow center' }))}>{t('risks.g.rejectAcceptance', 'Reject acceptance')}</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'update_treatment', risk: selectedRisk })}>{t('risks.g.updateTreatment', 'Update treatment')}</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => void runRiskAction(t('risks.g.treatmentCompletion', 'Treatment completion'), () => completeRiskTreatment({ risk_id: selectedRisk.id, reason: 'Treatment completed from workflow center' }))}>{t('risks.g.completeTreatment', 'Complete treatment')}</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'request_closure', risk: selectedRisk })}>{t('audit.requestClosure', 'Request closure')}</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => void runRiskAction(t('risks.g.closureApproval', 'Closure approval'), () => approveRiskClosure({ risk_id: selectedRisk.id, reason: 'Approved from workflow center' }))}>{t('risks.g.approveClosure', 'Approve closure')}</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'reopen', risk: selectedRisk })}>{t('risks.g.reopen', 'Reopen with reason')}</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'link_source', risk: selectedRisk })}>{t('risks.g.linkSource', 'Link source')}</button>
+                <button className="ghost-button" disabled={workflowBusy} onClick={() => setDecisionDialog({ action: 'mark_duplicate', risk: selectedRisk })}>{t('risks.g.markDuplicate', 'Mark duplicate')}</button>
               </div>
             ) : null}
           </div>

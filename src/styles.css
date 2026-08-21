@@ -11044,3 +11044,7 @@ body[data-scroll-locked="true"] {
     box-shadow: none !important;
   }
 }
+.rtl-shell .directional-icon,
+[dir="rtl"] .directional-icon {
+  transform: scaleX(-1);
+}

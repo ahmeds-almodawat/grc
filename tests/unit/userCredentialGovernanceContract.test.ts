@@ -222,9 +222,9 @@ describe('Patch 83U credential governance contract', () => {
     const lifecycleEdge = edge.slice(lifecycleEdgeStart, genericPatch19Start);
     const provisioningGuard = lifecycleSql.indexOf('from public.user_account_provisioning q');
     const profileUpdate = lifecycleSql.indexOf('update public.profiles');
-    const actionMenu = ui.split('<Building2 size={14} /> Assign department')[1]
-      ?.split('<Download size={14} /> Export user')[0] ?? '';
-    const reactivateLabel = actionMenu.indexOf('Reactivate user');
+    const actionMenu = ui.split("<Building2 size={14} /> {t('userManagement.assignDepartmentSingle')}")[1]
+      ?.split("<Download size={14} /> {t('userManagement.exportUser')}")[0] ?? '';
+    const reactivateLabel = actionMenu.indexOf("t('userManagement.reactivateUser')");
     const archivedGuard = actionMenu.indexOf('actionMenuUser.user_status === "archived"');
 
     expect(lifecycleSql).toMatch(/begin\s+perform public\.patch83u_require_service_role\(\);/);
@@ -284,7 +284,7 @@ describe('Patch 83U credential governance contract', () => {
       .toBeGreaterThan(-1);
     expect(archivedGuard).toBeGreaterThan(reactivateLabel);
     expect(actionMenu.slice(reactivateLabel, archivedGuard)).toContain(') : null}');
-    expect(actionMenu.slice(archivedGuard)).toContain('Unarchive user');
+    expect(actionMenu.slice(archivedGuard)).toContain("t('userManagement.unarchiveUser')");
   });
 
   it('limits the controlled lifecycle marker to exact service-only terminal activation', () => {
@@ -470,6 +470,7 @@ describe('Patch 83U credential governance contract', () => {
     const edge = source('supabase/functions/privileged-action/index.ts');
     const api = source('src/lib/userManagementApi.ts');
     const ui = source('src/pages/UserManagementCenter.tsx');
+    const i18n = source('src/i18n/I18nContext.tsx');
     const workbook = source('src/utils/userWorkbook.ts');
 
     expect(edge).toContain('credential_proof_available: Boolean(credential)');
@@ -479,7 +480,8 @@ describe('Patch 83U credential governance contract', () => {
     expect(api).toContain("credential_proof_available: row.credential_proof_available === true");
     expect(api).not.toContain('auth_email: safeString(row.auth_email, safeString(row.email))');
     expect(ui).toContain('!actionMenuUser.credential_proof_available');
-    expect(ui).toContain('Unavailable (credential proof required)');
+    expect(ui).toContain("t('userManagement.identityUnavailable')");
+    expect(i18n).toContain("en: 'Identity mode: Unavailable (credential proof required)'");
     expect(workbook).toContain("row.auth_email ?? ''");
   });
 
@@ -521,6 +523,7 @@ describe('Patch 83U credential governance contract', () => {
   it('requires exact Super Admin reset proof, checks session absence without target sign-in, and never persists a password', () => {
     const edge = source('supabase/functions/privileged-action/index.ts');
     const ui = source('src/pages/UserManagementCenter.tsx');
+    const i18n = source('src/i18n/I18nContext.tsx');
     const credentialApi = source('src/lib/userCredentialApi.ts');
     const migration = source(patch83uMigration);
     const resetBlock = edge.split("if (action === 'patch83u_admin_reset_password')")[1]
@@ -688,6 +691,7 @@ describe('Patch 83U credential governance contract', () => {
     const edge = source('supabase/functions/privileged-action/index.ts');
     const api = source('src/lib/userManagementApi.ts');
     const ui = source('src/pages/UserManagementCenter.tsx');
+    const i18n = source('src/i18n/I18nContext.tsx');
     const migration = source(patch83uMigration);
     const beginReset = sqlFunction(migration, 'patch83u_begin_admin_reset');
     const finishReset = sqlFunction(migration, 'patch83u_finalize_admin_reset');
@@ -699,7 +703,8 @@ describe('Patch 83U credential governance contract', () => {
     expect(edge).toContain('password_changed_at,password_reset_at,provisioning_id');
     expect(edge).toContain('last_password_reset_at: credential?.password_reset_at ?? null');
     expect(api).toContain('last_password_reset_at: row.last_password_reset_at ?? null');
-    expect(ui).toContain('Last Password Reset: {detailUser.last_password_reset_at ?? "Never / unavailable"}');
+    expect(ui).toContain("{t('userManagement.lastPasswordReset')}: {detailUser.last_password_reset_at ?? t('userManagement.neverAvailable')}");
+    expect(i18n).toContain("'userManagement.lastPasswordReset': { en: 'Last Password Reset'");
     expect(beginReset).not.toContain('password_reset_at =');
     expect(abortReset).not.toContain('password_reset_at =');
     expect(finishReset).toContain('password_reset_at = v_now');

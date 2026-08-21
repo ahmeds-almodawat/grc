@@ -156,7 +156,7 @@ export function StartRevisionModal({
               className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50"
             >
               {submitting ? t('common.processing', 'Creating Draft...') : t('policy.revision.confirm', 'Create Revision Draft')}
-              <ArrowRight size={14} />
+              <ArrowRight size={14} className="directional-icon" />
             </button>
           </div>
         </form>
