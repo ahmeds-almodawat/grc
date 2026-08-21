@@ -11048,3 +11048,20 @@ body[data-scroll-locked="true"] {
 [dir="rtl"] .directional-icon {
   transform: scaleX(-1);
 }
+
+@media (max-width: 900px) {
+  /* v1.4-H: late placement intentionally wins over legacy compact controls. */
+  .modern-main-content :where(button, input, select),
+  .modal-card :where(button, input, select) {
+    min-height: 44px !important;
+  }
+
+  .modern-main-content button,
+  .modal-card button {
+    min-width: 44px !important;
+  }
+
+  :where(.modern-main-content, .modal-card) :where(.inline-actions, .form-actions, .toolbar) {
+    flex-wrap: wrap;
+  }
+}

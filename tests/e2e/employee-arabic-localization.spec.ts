@@ -30,6 +30,7 @@ const viewports = [
   { width: 1440, height: 900 },
   { width: 1366, height: 768 },
   { width: 1024, height: 768 },
+  { width: 768, height: 1024 },
   { width: 390, height: 844 },
 ];
 
@@ -478,8 +479,24 @@ test.describe('Patch 83U Phase 1 Employee Arabic localization', () => {
     expect(await visibleUnapprovedEnglish(page)).toEqual([]);
 
     await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.approvals}`);
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.getByRole('button', { name: 'اعتماد مهمة عربية', exact: true }).click();
+    const approvalDetail = page.getByRole('heading', { name: 'تفاصيل الموافقة المحددة', exact: true });
+    await expect(approvalDetail).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
     expect(await visibleUnapprovedEnglish(page)).toEqual([]);
+
+    await page.getByRole('button', { name: 'موافقة', exact: true }).click();
+    const approvalDialog = page.getByRole('dialog');
+    await expect(approvalDialog).toBeVisible();
+    const approvalBox = await approvalDialog.boundingBox();
+    expect(approvalBox).not.toBeNull();
+    expect(approvalBox!.x).toBeGreaterThanOrEqual(-1);
+    expect(approvalBox!.x + approvalBox!.width).toBeLessThanOrEqual(391);
+    expect(approvalBox!.y + approvalBox!.height).toBeLessThanOrEqual(845);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+    expect(await visibleUnapprovedEnglish(page)).toEqual([]);
+    await page.getByRole('button', { name: 'إلغاء', exact: true }).click();
 
     await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.evidence}`);
     await page.getByRole('button', { name: 'دليل اختبار عربي', exact: true }).click();
