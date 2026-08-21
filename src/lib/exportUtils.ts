@@ -9,12 +9,22 @@ export function toCsv(rows: Record<string, unknown>[]): string {
 
   const escape = (value: unknown) => {
     if (value === null || value === undefined) return '';
-    const raw = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    const source = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    const raw = typeof value === 'string' && /^[\t ]*[=+@-]/.test(source) ? `'${source}` : source;
     if (/[",\n\r]/.test(raw)) return `"${raw.replace(/"/g, '""')}"`;
     return raw;
   };
 
-  return [columns.join(','), ...rows.map((row) => columns.map((column) => escape(row[column])).join(','))].join('\n');
+  return [columns.join(','), ...rows.map((row) => columns.map((column) => escape(row[column])).join(','))].join('\r\n');
+}
+
+export function normalizeExportFileBaseName(fileBaseName: string): string {
+  return fileBaseName
+    .normalize('NFKC')
+    .trim()
+    .replace(/[^\p{L}\p{N}_-]+/gu, '_')
+    .replace(/^_+|_+$/g, '')
+    .toLocaleLowerCase() || 'grc-export';
 }
 
 export function downloadTextFile(fileName: string, content: string, mimeType: string) {
@@ -26,23 +36,32 @@ export function downloadTextFile(fileName: string, content: string, mimeType: st
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  URL.revokeObjectURL(url);
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 export function exportRows(fileBaseName: string, rows: Record<string, unknown>[], format: 'csv' | 'json') {
-  const safeName = fileBaseName.replace(/[^a-z0-9-_]+/gi, '_').toLowerCase();
+  const safeName = normalizeExportFileBaseName(fileBaseName);
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   if (format === 'json') {
     downloadTextFile(`${safeName}_${timestamp}.json`, JSON.stringify(rows, null, 2), 'application/json;charset=utf-8');
     return `${safeName}_${timestamp}.json`;
   }
 
-  downloadTextFile(`${safeName}_${timestamp}.csv`, toCsv(rows), 'text/csv;charset=utf-8');
+  downloadTextFile(`${safeName}_${timestamp}.csv`, `\uFEFF${toCsv(rows)}`, 'text/csv;charset=utf-8');
   return `${safeName}_${timestamp}.csv`;
 }
 
-export function printRows(title: string, rows: Record<string, unknown>[], direction: 'ltr' | 'rtl' = 'ltr') {
+export function buildPrintDocument(
+  title: string,
+  rows: Record<string, unknown>[],
+  direction: 'ltr' | 'rtl' = 'ltr',
+  generatedAt = new Date(),
+) {
   const columns = rows.length ? Object.keys(rows[0]) : [];
+  const locale = direction === 'rtl' ? 'ar-SA' : 'en-GB';
+  const labels = direction === 'rtl'
+    ? { generated: 'تاريخ الإنشاء', rows: 'عدد السجلات', limited: 'تم تحديد النسخة المطبوعة إلى أول 500 سجل.' }
+    : { generated: 'Generated', rows: 'Rows', limited: 'Print output is limited to the first 500 rows.' };
   const htmlRows = rows
     .slice(0, 500)
     .map(
@@ -53,38 +72,51 @@ export function printRows(title: string, rows: Record<string, unknown>[], direct
     )
     .join('');
 
-  const html = `<!doctype html>
-<html dir="${direction}">
+  return `<!doctype html>
+<html lang="${direction === 'rtl' ? 'ar' : 'en'}" dir="${direction}">
 <head>
   <meta charset="utf-8" />
   <title>${escapeHtml(title)}</title>
   <style>
-    body { font-family: Inter, Arial, sans-serif; margin: 24px; color: #0f172a; }
+    @page { size: A4 portrait; margin: 14mm; }
+    body { font-family: ${direction === 'rtl' ? 'Tahoma, Arial' : 'Inter, Arial'}, sans-serif; margin: 0; color: #0f172a; font-size: 10pt; line-height: 1.45; }
     h1 { font-size: 22px; margin-bottom: 4px; }
     .meta { color: #64748b; font-size: 12px; margin-bottom: 20px; }
+    .limit { color: #9f1239; font-weight: 700; }
     table { width: 100%; border-collapse: collapse; font-size: 11px; }
     th { background: #f1f5f9; text-align: start; }
     th, td { border: 1px solid #cbd5e1; padding: 6px 8px; vertical-align: top; }
     tr:nth-child(even) td { background: #f8fafc; }
-    @media print { body { margin: 12mm; } }
+    thead { display: table-header-group; }
+    tr, th, td { break-inside: avoid-page; overflow-wrap: anywhere; }
   </style>
 </head>
 <body>
   <h1>${escapeHtml(title)}</h1>
-  <div class="meta">Generated: ${new Date().toLocaleString()} · Rows: ${rows.length}</div>
+  <div class="meta">${labels.generated}: ${escapeHtml(new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(generatedAt))} · ${labels.rows}: ${rows.length}</div>
+  ${rows.length > 500 ? `<p class="limit">${labels.limited}</p>` : ''}
   <table>
-    <thead><tr>${columns.map((column) => `<th>${escapeHtml(column)}</th>`).join('')}</tr></thead>
+    <thead><tr>${columns.map((column) => `<th>${escapeHtml(formatColumnLabel(column))}</th>`).join('')}</tr></thead>
     <tbody>${htmlRows}</tbody>
   </table>
 </body>
 </html>`;
+}
 
-  const win = window.open('', '_blank', 'noopener,noreferrer');
+export function printRows(title: string, rows: Record<string, unknown>[], direction: 'ltr' | 'rtl' = 'ltr') {
+  const html = buildPrintDocument(title, rows, direction);
+
+  const win = window.open('', '_blank');
   if (!win) return;
+  win.opener = null;
   win.document.write(html);
   win.document.close();
   win.focus();
   win.print();
+}
+
+function formatColumnLabel(value: string): string {
+  return value.replaceAll('_', ' ').replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
 function formatCell(value: unknown): string {

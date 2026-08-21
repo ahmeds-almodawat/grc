@@ -3,6 +3,7 @@ import type { DetailedSopRecord } from '../../lib/policySopApi';
 import { X, Printer, BookOpen, ShieldAlert, GraduationCap, CheckCircle2, Shield, Award, Layers, AlertTriangle, Link2 } from 'lucide-react';
 import { DocumentStatusBadge } from './DocumentStatusBadge';
 import { DocumentVersionBadge } from './DocumentVersionBadge';
+import { ControlledDocumentPrintRecord } from './ControlledDocumentPrintRecord';
 
 interface SopPreviewModalProps {
   sop: DetailedSopRecord;
@@ -48,7 +49,10 @@ export function SopPreviewModal({ sop, onClose }: SopPreviewModalProps) {
         </div>
 
         {/* Printable Controlled Document Container */}
-        <div className="p-8 max-h-[80vh] overflow-y-auto bg-slate-900/50 space-y-8 text-slate-100 font-sans">
+        <article
+          className="governed-print-root governed-print-root--screen-preview controlled-document-print p-8 max-h-[80vh] overflow-y-auto bg-slate-900/50 space-y-8 text-slate-100 font-sans"
+          data-print-active="true"
+        >
           {/* Institutional Document Header Box */}
           <div className="border border-slate-700 rounded-xl p-6 bg-slate-950/70 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-4">
@@ -112,7 +116,7 @@ export function SopPreviewModal({ sop, onClose }: SopPreviewModalProps) {
                 <span className="font-semibold text-indigo-200">{t('sop.governingPolicy')}:</span>
                 {sop.governance_link_state === 'linked' && sop.primary_policy_document_code ? (
                   <span className="text-indigo-300">
-                    {sop.primary_policy_document_code} - {sop.primary_policy_document_title} (v{sop.primary_policy_version_label || '1.0'})
+                    {sop.primary_policy_document_code} - {sop.primary_policy_document_title} ({sop.primary_policy_version_label || t('controlledPrint.notRecorded')})
                   </span>
                 ) : (
                   <span className="text-slate-400 capitalize">{sop.governance_link_state?.replace('_', ' ')}</span>
@@ -120,6 +124,15 @@ export function SopPreviewModal({ sop, onClose }: SopPreviewModalProps) {
               </div>
             </div>
           </div>
+
+          <ControlledDocumentPrintRecord
+            versionLabel={sop.version_label}
+            versionNumber={sop.version_number}
+            isCurrentVersion={sop.is_current_version}
+            approvedBy={sop.approved_by}
+            approvedAt={sop.approved_at}
+            signOffRequired={sop.acknowledgment_required}
+          />
 
           {/* Purpose & Scope */}
           <div className="space-y-6">
@@ -498,7 +511,7 @@ export function SopPreviewModal({ sop, onClose }: SopPreviewModalProps) {
               </ul>
             </div>
           </div>
-        </div>
+        </article>
       </div>
     </div>
   );

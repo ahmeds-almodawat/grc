@@ -3,6 +3,7 @@ import { DetailedPolicyRecord } from '../../lib/policySopApi';
 import { DocumentStatusBadge } from './DocumentStatusBadge';
 import { DocumentVersionBadge } from './DocumentVersionBadge';
 import { useI18n } from '../../i18n/I18nContext';
+import { ControlledDocumentPrintRecord } from './ControlledDocumentPrintRecord';
 
 interface PolicyPreviewModalProps {
   isOpen: boolean;
@@ -56,7 +57,10 @@ export function PolicyPreviewModal({
 
         {/* Document Body (A4 Style) */}
         <div className="flex-1 overflow-y-auto p-8 bg-slate-100/60 dark:bg-slate-950/60">
-          <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 space-y-8 print:border-none print:shadow-none">
+          <article
+            className="governed-print-root governed-print-root--screen-preview controlled-document-print max-w-3xl mx-auto bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 space-y-8 print:border-none print:shadow-none"
+            data-print-active="true"
+          >
             {/* Institution Header */}
             <div className="border-b-2 border-slate-900 dark:border-slate-100 pb-4">
               <div className="flex justify-between items-start">
@@ -114,6 +118,14 @@ export function PolicyPreviewModal({
                 <span className="font-semibold text-slate-900 dark:text-slate-100">{policy.next_review_date || '—'}</span>
               </div>
             </div>
+
+            <ControlledDocumentPrintRecord
+              versionLabel={policy.version_label}
+              versionNumber={policy.version_number}
+              isCurrentVersion={policy.is_current_version}
+              approvedBy={policy.approved_by}
+              approvedAt={policy.approved_at}
+            />
 
             {/* 1. Purpose */}
             <div className="space-y-2">
@@ -249,7 +261,7 @@ export function PolicyPreviewModal({
                 )}
               </div>
             )}
-          </div>
+          </article>
         </div>
       </div>
     </div>
