@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, BookOpenCheck, FilePlus2, GitBranch, Link2, Printer, Search, ShieldCheck, Trash2, Upload, Workflow } from 'lucide-react';
+import { AlertTriangle, BookOpenCheck, ClipboardCheck, FilePlus2, GitBranch, Link2, Printer, RefreshCw, Search, ShieldCheck, Trash2, Upload, Workflow } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { EmptySupabaseNotice } from '../components/EmptySupabaseNotice';
@@ -41,6 +41,15 @@ import {
   type F1OvrGovernedVersionLink,
 } from '../lib/f1OvrGovernedVersionApi';
 import { canManageF1OvrGovernedVersionLinks } from '../lib/f1OvrGovernedVersionModel';
+import {
+  completeF2OvrGovernanceFeedbackReview,
+  getF2OvrGovernanceFeedback,
+  initiateF2OvrGovernanceFeedbackReview,
+  syncF2OvrCorrectiveActionCapaLink,
+  type F2OvrGovernanceFeedback,
+  type F2OvrReviewOutcome,
+} from '../lib/f2OvrGovernanceFeedbackApi';
+import { canManageF2OvrGovernanceFeedback } from '../lib/f2OvrGovernanceFeedbackModel';
 
 const occurrenceCategories = [
   'medications',
@@ -331,6 +340,14 @@ export function OVR() {
   const [governedVersionRemoveReason, setGovernedVersionRemoveReason] = useState('');
   const [governedVersionSaving, setGovernedVersionSaving] = useState(false);
   const [governedVersionMessage, setGovernedVersionMessage] = useState<string | null>(null);
+  const [feedbackSourceLink, setFeedbackSourceLink] = useState<F1OvrGovernedVersionLink | null>(null);
+  const [feedbackDueDate, setFeedbackDueDate] = useState('');
+  const [feedbackRationale, setFeedbackRationale] = useState('');
+  const [feedbackToComplete, setFeedbackToComplete] = useState<F2OvrGovernanceFeedback | null>(null);
+  const [feedbackOutcome, setFeedbackOutcome] = useState<F2OvrReviewOutcome>('no_change');
+  const [feedbackOutcomeNote, setFeedbackOutcomeNote] = useState('');
+  const [feedbackSaving, setFeedbackSaving] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [evidenceUploadReport, setEvidenceUploadReport] = useState<OvrReportRow | null>(null);
   const [selectedDashboardReport, setSelectedDashboardReport] = useState<OvrReportRow | null>(null);
   const [correctiveProjectReport, setCorrectiveProjectReport] = useState<OvrReportRow | null>(null);
@@ -356,6 +373,12 @@ export function OVR() {
   const governedVersionLinks = useAsyncData(
     () => selectedReport
       ? getF1OvrGovernedVersionLinks(selectedReport.id)
+      : Promise.resolve([]),
+    [selectedReport?.id],
+  );
+  const governanceFeedback = useAsyncData(
+    () => selectedReport
+      ? getF2OvrGovernanceFeedback(selectedReport.id)
       : Promise.resolve([]),
     [selectedReport?.id],
   );
@@ -434,6 +457,8 @@ export function OVR() {
   const workflowSummaryData = isEmptyLiveObject(workflowSummary.data) ? null : workflowSummary.data;
   const canManageGovernedVersions = Boolean(selectedReport)
     && canManageF1OvrGovernedVersionLinks(auth.roles, selectedReport?.organization_id || '');
+  const canManageFeedback = Boolean(selectedReport)
+    && canManageF2OvrGovernanceFeedback(auth.roles, selectedReport?.organization_id || '');
   const filteredLinkableGovernedVersions = useMemo(() => {
     const query = governedVersionSearch.trim().toLowerCase();
     const linkedVersionIds = new Set((governedVersionLinks.data || []).map(link => link.version_id));
@@ -493,6 +518,78 @@ export function OVR() {
       setGovernedVersionMessage(error instanceof Error ? error.message : t('common.error'));
     } finally {
       setGovernedVersionSaving(false);
+    }
+  };
+
+  const openFeedbackReview = (link: F1OvrGovernedVersionLink) => {
+    const due = new Date();
+    due.setDate(due.getDate() + 30);
+    setFeedbackSourceLink(link);
+    setFeedbackDueDate(due.toISOString().slice(0, 10));
+    setFeedbackRationale('');
+    setFeedbackMessage(null);
+  };
+
+  const initiateFeedbackReview = async () => {
+    if (!selectedReport || !feedbackSourceLink || !canManageFeedback) return;
+    setFeedbackSaving(true);
+    setFeedbackMessage(null);
+    try {
+      await initiateF2OvrGovernanceFeedbackReview({
+        ovrId: selectedReport.id,
+        documentLinkId: feedbackSourceLink.link_id,
+        dueDate: feedbackDueDate,
+        rationale: feedbackRationale,
+      });
+      await governanceFeedback.refresh();
+      setFeedbackSourceLink(null);
+      setFeedbackMessage(t('ovr.feedback.initiated'));
+    } catch (error) {
+      setFeedbackMessage(error instanceof Error ? error.message : t('common.error'));
+    } finally {
+      setFeedbackSaving(false);
+    }
+  };
+
+  const openFeedbackCompletion = (feedback: F2OvrGovernanceFeedback) => {
+    setFeedbackToComplete(feedback);
+    setFeedbackOutcome('no_change');
+    setFeedbackOutcomeNote('');
+    setFeedbackMessage(null);
+  };
+
+  const completeFeedbackReview = async () => {
+    if (!feedbackToComplete || !canManageFeedback) return;
+    setFeedbackSaving(true);
+    setFeedbackMessage(null);
+    try {
+      await completeF2OvrGovernanceFeedbackReview({
+        triggerId: feedbackToComplete.trigger_id,
+        outcome: feedbackOutcome,
+        outcomeNote: feedbackOutcomeNote,
+      });
+      await governanceFeedback.refresh();
+      setFeedbackToComplete(null);
+      setFeedbackMessage(t('ovr.feedback.completed'));
+    } catch (error) {
+      setFeedbackMessage(error instanceof Error ? error.message : t('common.error'));
+    } finally {
+      setFeedbackSaving(false);
+    }
+  };
+
+  const syncCorrectiveActionCapa = async () => {
+    if (!selectedReport || !canManageFeedback) return;
+    setFeedbackSaving(true);
+    setFeedbackMessage(null);
+    try {
+      await syncF2OvrCorrectiveActionCapaLink(selectedReport.id);
+      await governanceFeedback.refresh();
+      setFeedbackMessage(t('ovr.feedback.capaLinked'));
+    } catch (error) {
+      setFeedbackMessage(error instanceof Error ? error.message : t('common.error'));
+    } finally {
+      setFeedbackSaving(false);
     }
   };
 
@@ -1169,6 +1266,95 @@ export function OVR() {
               )}
             </section>
 
+            <section className="ovr-governance-feedback" aria-labelledby="ovr-governance-feedback-title">
+              <div className="split-header">
+                <h4 id="ovr-governance-feedback-title"><ClipboardCheck size={18} />{t('ovr.feedback.title')}</h4>
+                {canManageFeedback
+                  && selectedReport.linked_project_id
+                  && !(governanceFeedback.data || []).some(item => Boolean(item.capa_link_id)) ? (
+                  <button
+                    className="ghost-button small"
+                    type="button"
+                    disabled={feedbackSaving}
+                    onClick={() => void syncCorrectiveActionCapa()}
+                  >
+                    <RefreshCw size={16} />{t('ovr.feedback.linkCorrectiveAction')}
+                  </button>
+                ) : null}
+              </div>
+              {feedbackMessage ? <div className="notice-banner">{feedbackMessage}</div> : null}
+              {governanceFeedback.loading ? <DataState loading>{null}</DataState> : governanceFeedback.error ? (
+                <div className="form-error">{governanceFeedback.error}</div>
+              ) : (governanceFeedback.data || []).length === 0 ? (
+                <div className="ovr-feedback-empty">
+                  <p className="muted-text">{t('ovr.feedback.empty')}</p>
+                  {canManageFeedback ? (governedVersionLinks.data || []).map(link => (
+                    <button className="ghost-button small" type="button" key={link.link_id} onClick={() => openFeedbackReview(link)}>
+                      <ClipboardCheck size={16} />{t('ovr.feedback.initiate')} · {link.document_code || link.document_title}
+                    </button>
+                  )) : null}
+                </div>
+              ) : (
+                <div className="ovr-feedback-list">
+                  {(governanceFeedback.data || []).map(feedback => {
+                    const historicalSource = feedback.current_version_id !== null
+                      && feedback.source_version_id !== feedback.current_version_id;
+                    return (
+                      <article className="ovr-feedback-row" key={feedback.trigger_id}>
+                        <div className="ovr-feedback-heading">
+                          <div>
+                            <span className="status-badge">{feedback.document_type === 'sop' ? 'SOP' : t('policy.type.policy', 'Policy')}</span>
+                            <strong>{feedback.document_code ? `${feedback.document_code} · ` : ''}{feedback.document_title}</strong>
+                          </div>
+                          <StatusBadge status={humanize(feedback.review_status)} />
+                        </div>
+                        <div className="ovr-feedback-version-grid">
+                          <div>
+                            <span>{t('ovr.feedback.incidentSourceVersion')}</span>
+                            <strong>{feedback.source_version_label || `v${feedback.source_version_number}`}</strong>
+                            {historicalSource ? <small className="historical-source-badge">{t('ovr.feedback.historicalSource')}</small> : null}
+                          </div>
+                          <div>
+                            <span>{t('ovr.feedback.currentVersion')}</span>
+                            <strong>{feedback.current_version_label || (feedback.current_version_number ? `v${feedback.current_version_number}` : t('common.notConfigured'))}</strong>
+                          </div>
+                          <div><span>{t('ovr.feedback.dueDate')}</span><strong>{feedback.due_date ? formatDate(feedback.due_date) : '—'}</strong></div>
+                          <div><span>{t('ovr.feedback.reviewOwner')}</span><strong>{feedback.review_owner_id || '—'}</strong></div>
+                        </div>
+                        {feedback.outcome ? <p><b>{t('ovr.feedback.outcome')}:</b> {t(`ovr.feedback.outcome.${feedback.outcome}`)}</p> : null}
+                        {feedback.resulting_version_id ? <p><b>{t('ovr.feedback.resultingRevision')}:</b> {feedback.resulting_version_id}</p> : null}
+                        {feedback.corrective_action_project_id ? (
+                          <div className="ovr-feedback-project">
+                            <GitBranch size={16} />
+                            <span>{feedback.project_title || t('ovr.feedback.correctiveProject')}</span>
+                            <StatusBadge status={humanize(feedback.project_status || 'linked')} />
+                            <strong>{feedback.project_progress_percent ?? 0}%</strong>
+                          </div>
+                        ) : null}
+                        {canManageFeedback && ['open', 'in_progress'].includes(feedback.review_status) ? (
+                          <div className="form-actions">
+                            <button className="primary-button small" type="button" onClick={() => openFeedbackCompletion(feedback)}>
+                              <ClipboardCheck size={16} />{t('ovr.feedback.complete')}
+                            </button>
+                          </div>
+                        ) : null}
+                      </article>
+                    );
+                  })}
+                  {canManageFeedback ? (governedVersionLinks.data || []).filter(link => (
+                    !(governanceFeedback.data || []).some(feedback =>
+                      feedback.document_id === link.document_id
+                      && ['open', 'in_progress'].includes(feedback.review_status)
+                    )
+                  )).map(link => (
+                    <button className="ghost-button small" type="button" key={link.link_id} onClick={() => openFeedbackReview(link)}>
+                      <ClipboardCheck size={16} />{t('ovr.feedback.initiate')} · {link.document_code || link.document_title}
+                    </button>
+                  )) : null}
+                </div>
+              )}
+            </section>
+
             <div className="form-grid two">
               {(isManagerFor(selectedReport) || isQuality) ? (
                 <label>{t('ovr.supervisorInvestigation')}<textarea rows={4} value={workflowForm.supervisor_investigation} onChange={event => updateWorkflowForm('supervisor_investigation', event.target.value)} /></label>
@@ -1281,6 +1467,59 @@ export function OVR() {
             <OvrPrintableReport report={selectedReport} evidence={printableEvidence.data || []} />
           </div>
         ) : null}
+      </Modal>
+
+      <Modal
+        size="large"
+        title={t('ovr.feedback.initiateTitle')}
+        open={Boolean(feedbackSourceLink)}
+        onClose={() => setFeedbackSourceLink(null)}
+      >
+        <div className="form-grid">
+          <div className="notice-banner warning full-width">
+            <AlertTriangle size={16} />{t('ovr.feedback.sourceWarning')}
+          </div>
+          {feedbackSourceLink ? (
+            <div className="detail-panel full-width">
+              <strong>{feedbackSourceLink.document_code ? `${feedbackSourceLink.document_code} · ` : ''}{feedbackSourceLink.document_title}</strong>
+              <p>{t('ovr.feedback.incidentSourceVersion')}: {feedbackSourceLink.version_label || `v${feedbackSourceLink.version_number}`}</p>
+            </div>
+          ) : null}
+          <label className="field"><span>{t('ovr.feedback.dueDate')} *</span><input type="date" required value={feedbackDueDate} onChange={event => setFeedbackDueDate(event.target.value)} /></label>
+          <label className="field full-width"><span>{t('ovr.feedback.rationale')} *</span><textarea rows={5} minLength={3} maxLength={2000} required value={feedbackRationale} onChange={event => setFeedbackRationale(event.target.value)} /></label>
+          <div className="form-actions full-width">
+            <button className="ghost-button" type="button" onClick={() => setFeedbackSourceLink(null)}>{t('common.cancel')}</button>
+            <button className="primary-button" type="button" disabled={feedbackSaving || !feedbackDueDate || feedbackRationale.trim().length < 3} onClick={() => void initiateFeedbackReview()}>{feedbackSaving ? t('common.saving') : t('ovr.feedback.initiate')}</button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        size="large"
+        title={t('ovr.feedback.completeTitle')}
+        open={Boolean(feedbackToComplete)}
+        onClose={() => setFeedbackToComplete(null)}
+      >
+        <div className="form-grid">
+          {feedbackToComplete && !feedbackToComplete.source_version_is_current ? (
+            <div className="notice-banner warning full-width">
+              <AlertTriangle size={16} />{t('ovr.feedback.historicalRevisionWarning')}
+            </div>
+          ) : null}
+          <label className="field">
+            <span>{t('ovr.feedback.outcome')} *</span>
+            <select value={feedbackOutcome} onChange={event => setFeedbackOutcome(event.target.value as F2OvrReviewOutcome)}>
+              {(['no_change', 'minor_revision', 'major_revision', 'retire'] as F2OvrReviewOutcome[]).map(outcome => (
+                <option key={outcome} value={outcome}>{t(`ovr.feedback.outcome.${outcome}`)}</option>
+              ))}
+            </select>
+          </label>
+          <label className="field full-width"><span>{t('ovr.feedback.outcomeNote')} *</span><textarea rows={5} minLength={3} maxLength={2000} required value={feedbackOutcomeNote} onChange={event => setFeedbackOutcomeNote(event.target.value)} /></label>
+          <div className="form-actions full-width">
+            <button className="ghost-button" type="button" onClick={() => setFeedbackToComplete(null)}>{t('common.cancel')}</button>
+            <button className="primary-button" type="button" disabled={feedbackSaving || feedbackOutcomeNote.trim().length < 3} onClick={() => void completeFeedbackReview()}>{feedbackSaving ? t('common.saving') : t('ovr.feedback.complete')}</button>
+          </div>
+        </div>
       </Modal>
 
       <Modal

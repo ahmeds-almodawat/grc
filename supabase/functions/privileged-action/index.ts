@@ -67,6 +67,13 @@ import {
   isF1Migration210CapabilityUnavailable,
   mapF1OvrGovernedVersionError,
 } from '../_shared/v14f1OvrGovernedVersionBridge.ts';
+import {
+  F2_REVIEW_OUTCOMES,
+  hasExactF2GlobalGovernanceRole,
+  hasExactF2OvrGovernanceFeedbackCapability,
+  isF2Migration211CapabilityUnavailable,
+  mapF2OvrGovernanceFeedbackError,
+} from '../_shared/v14f2OvrGovernanceFeedbackBridge.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -230,6 +237,12 @@ const f1OvrGovernedVersionActions = new Set([
   'unlink_ovr_governed_document_version',
 ]);
 
+const f2OvrGovernanceFeedbackActions = new Set([
+  'initiate_ovr_governance_feedback_review',
+  'complete_ovr_governance_feedback_review',
+  'sync_ovr_corrective_action_capa_link',
+]);
+
 const allowedActions = new Set([
   'ovr_executive_dashboard_analytics',
   'search_grc_global',
@@ -273,6 +286,7 @@ const allowedActions = new Set([
   ...patch26DocumentActions,
   ...patch29TrainingActions,
   ...f1OvrGovernedVersionActions,
+  ...f2OvrGovernanceFeedbackActions,
   ...patch68EvidenceClosureActions,
   ...patch76CutoverDecisionActions,
   ...patch77LivePilotActions,
@@ -4623,6 +4637,180 @@ Deno.serve(async (request) => {
       return jsonResponse({ ok: true, action, result: rpcResult.data }, 200);
     } catch (error) {
       const mapped = mapF1OvrGovernedVersionError(error);
+      return errorResponse(mapped.error, mapped.status, mapped.code, mapped.detail, { action });
+    }
+  }
+
+  if (f2OvrGovernanceFeedbackActions.has(action)) {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, [
+        'actor_id',
+        'p_actor_id',
+        'user_id',
+        'organization_id',
+        'acting_user_id',
+        'authenticated_user_id',
+        'target_user_id',
+        'triggered_by',
+        'review_owner_id',
+        'document_id',
+        'version_id',
+        'project_id',
+      ]);
+
+      if (action === 'initiate_ovr_governance_feedback_review') {
+        assertOnlyAllowedKeys(
+          payload,
+          new Set(['ovr_id', 'document_link_id', 'due_date', 'rationale']),
+          'F2_INITIATE_OVR_GOVERNANCE_FEEDBACK_PAYLOAD',
+        );
+      } else if (action === 'complete_ovr_governance_feedback_review') {
+        assertOnlyAllowedKeys(
+          payload,
+          new Set(['trigger_id', 'outcome', 'outcome_note']),
+          'F2_COMPLETE_OVR_GOVERNANCE_FEEDBACK_PAYLOAD',
+        );
+      } else {
+        assertOnlyAllowedKeys(
+          payload,
+          new Set(['ovr_id']),
+          'F2_SYNC_OVR_CORRECTIVE_ACTION_CAPA_PAYLOAD',
+        );
+      }
+
+      const ovrId = action !== 'complete_ovr_governance_feedback_review'
+        ? requireCanonicalUuid(payload.ovr_id, 'ovr_id')
+        : null;
+      const documentLinkId = action === 'initiate_ovr_governance_feedback_review'
+        ? requireCanonicalUuid(payload.document_link_id, 'document_link_id')
+        : null;
+      const triggerId = action === 'complete_ovr_governance_feedback_review'
+        ? requireCanonicalUuid(payload.trigger_id, 'trigger_id')
+        : null;
+      const dueDate = action === 'initiate_ovr_governance_feedback_review'
+        ? boundedString(payload.due_date, 10, 'due_date', true)
+        : null;
+      const rationale = action === 'initiate_ovr_governance_feedback_review'
+        ? boundedString(payload.rationale, 2000, 'rationale', true)
+        : null;
+      const outcome = action === 'complete_ovr_governance_feedback_review'
+        ? boundedString(payload.outcome, 32, 'outcome', true)
+        : null;
+      const outcomeNote = action === 'complete_ovr_governance_feedback_review'
+        ? boundedString(payload.outcome_note, 2000, 'outcome_note', true)
+        : null;
+
+      if (dueDate !== null && !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
+        throw new Error('F2_REVIEW_DUE_DATE_INVALID');
+      }
+      if (rationale !== null && rationale.length < 3) {
+        throw new Error('F2_REVIEW_RATIONALE_LENGTH_REQUIRED');
+      }
+      if (outcome !== null && !F2_REVIEW_OUTCOMES.has(outcome)) {
+        throw new Error('F2_REVIEW_OUTCOME_INVALID');
+      }
+      if (outcomeNote !== null && outcomeNote.length < 3) {
+        throw new Error('F2_OUTCOME_NOTE_LENGTH_REQUIRED');
+      }
+
+      // This exact probe is the DB210-safe boundary. No Migration211 view or
+      // mutation RPC is referenced above this point.
+      const capabilityProbe = await serviceClient.rpc(
+        'get_f2_ovr_governance_feedback_capabilities',
+      );
+      if (capabilityProbe.error) {
+        if (isF2Migration211CapabilityUnavailable(capabilityProbe.error)) {
+          return errorResponse(
+            'Database migration 211 is required for OVR governance feedback.',
+            409,
+            'F2_MIGRATION_211_REQUIRED',
+            'Migration211 installs the OVR governance-feedback capability contract.',
+            { action },
+          );
+        }
+        const mapped = mapF2OvrGovernanceFeedbackError(capabilityProbe.error);
+        return errorResponse(mapped.error, mapped.status, mapped.code, mapped.detail, { action });
+      }
+      if (!hasExactF2OvrGovernanceFeedbackCapability(capabilityProbe.data)) {
+        return errorResponse(
+          'Database migration 211 capability contract is unavailable or incompatible.',
+          409,
+          'F2_MIGRATION_211_REQUIRED',
+          'The capability must exactly match f2-ovr-governance-feedback-v1 at schema version 211.',
+          { action },
+        );
+      }
+
+      const { actorProfile, userRoles } = await loadTrainingActorContext(userData.user.id);
+      let targetOrganizationId: string;
+
+      if (action === 'initiate_ovr_governance_feedback_review') {
+        const { data: link, error: linkError } = await serviceClient
+          .from('v_f1_ovr_governed_version_links')
+          .select('link_id, ovr_id, organization_id, document_type, version_id, approved_at, locked_at, is_historical_version')
+          .eq('link_id', documentLinkId as string)
+          .eq('ovr_id', ovrId as string)
+          .maybeSingle();
+        if (linkError || !link) throw new Error('F2_CANONICAL_F1_LINK_NOT_FOUND');
+        if (!['policy', 'sop'].includes(link.document_type)) {
+          throw new Error('F2_POLICY_OR_SOP_REQUIRED');
+        }
+        if (!link.approved_at || !link.locked_at) {
+          throw new Error('F2_IMMUTABLE_SOURCE_VERSION_REQUIRED');
+        }
+        targetOrganizationId = link.organization_id;
+      } else if (action === 'complete_ovr_governance_feedback_review') {
+        const { data: review, error: reviewError } = await serviceClient
+          .from('v_f2_ovr_governance_feedback')
+          .select('trigger_id, ovr_id, organization_id, source_version_id, current_version_id, review_status')
+          .eq('trigger_id', triggerId as string)
+          .maybeSingle();
+        if (reviewError || !review) throw new Error('F2_REVIEW_TRIGGER_NOT_FOUND');
+        if (!['open', 'in_progress'].includes(review.review_status)) {
+          throw new Error('F2_REVIEW_TRIGGER_NOT_OPEN');
+        }
+        targetOrganizationId = review.organization_id;
+      } else {
+        const { data: ovr, error: ovrError } = await serviceClient
+          .from('ovr_reports')
+          .select('id, organization_id')
+          .eq('id', ovrId as string)
+          .maybeSingle();
+        if (ovrError || !ovr) throw new Error('F2_OVR_NOT_FOUND');
+        targetOrganizationId = ovr.organization_id;
+      }
+
+      if (!actorProfile.organization_id
+        || actorProfile.organization_id !== targetOrganizationId
+        || !hasExactF2GlobalGovernanceRole(userRoles, targetOrganizationId)) {
+        throw new Error('F2_EXACT_GLOBAL_GOVERNANCE_ROLE_REQUIRED');
+      }
+
+      const rpcResult = action === 'initiate_ovr_governance_feedback_review'
+        ? await serviceClient.rpc('initiate_ovr_governance_feedback_review', {
+            p_actor_id: userData.user.id,
+            p_ovr_id: ovrId,
+            p_document_link_id: documentLinkId,
+            p_due_date: dueDate,
+            p_rationale: rationale,
+          })
+        : action === 'complete_ovr_governance_feedback_review'
+        ? await serviceClient.rpc('complete_ovr_governance_feedback_review', {
+            p_actor_id: userData.user.id,
+            p_trigger_id: triggerId,
+            p_outcome: outcome,
+            p_outcome_note: outcomeNote,
+          })
+        : await serviceClient.rpc('sync_ovr_corrective_action_capa_link', {
+            p_actor_id: userData.user.id,
+            p_ovr_id: ovrId,
+          });
+      if (rpcResult.error) throw rpcResult.error;
+
+      return jsonResponse({ ok: true, action, result: rpcResult.data }, 200);
+    } catch (error) {
+      const mapped = mapF2OvrGovernanceFeedbackError(error);
       return errorResponse(mapped.error, mapped.status, mapped.code, mapped.detail, { action });
     }
   }
