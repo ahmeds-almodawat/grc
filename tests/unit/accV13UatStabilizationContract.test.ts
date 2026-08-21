@@ -217,7 +217,7 @@ describe('ACC v1.3 UAT stabilization contracts', () => {
     expect(users).toContain('getUserManagementUser(userId)');
     expect(users).toContain('loading && isLive(users)');
     expect(users).toContain('roster-skeleton-row');
-    expect(users).toContain('Page {page} · up to {pageSize} users');
+    expect(users).toContain("{t('common.page')} {page} · {t('userManagement.upToUsers', 'up to')} {pageSize} {t('userManagement.users', 'users')}");
   });
 
   it('keeps a 25,000-user roster bounded to deterministic 50-row server pages', () => {

@@ -7,6 +7,10 @@ const ui = readFileSync(
   path.join(root, 'src/pages/UserManagementCenter.tsx'),
   'utf8',
 ).replace(/\r\n/g, '\n');
+const i18n = readFileSync(
+  path.join(root, 'src/i18n/I18nContext.tsx'),
+  'utf8',
+).replace(/\r\n/g, '\n');
 
 function section(start: string, end: string): string {
   const startIndex = ui.indexOf(start);
@@ -36,7 +40,8 @@ describe('Patch 83T User Import modal visibility contract', () => {
     expect(uploaderIndex).toBeGreaterThanOrEqual(0);
     expect(compatibilityIndex).toBeGreaterThan(uploaderIndex);
     expect(modal).not.toContain('importCompatibilityStatus === "compatible" || importFile');
-    expect(modal).toContain('Choose .xlsx workbook');
+    expect(modal).toContain("t('userManagement.chooseWorkbook')");
+    expect(i18n).toContain("en: 'Choose .xlsx workbook'");
     expect(modal).toContain('className="visually-hidden"');
     expect(modal).toContain('aria-disabled={importUploadDisabled}');
     expect(modal).toContain('aria-describedby={importUploadDescribedBy}');
@@ -51,10 +56,12 @@ describe('Patch 83T User Import modal visibility contract', () => {
     expect(modal).toContain('importCompatibilityStatus === "disabled"');
     expect(modal).toContain('PATCH83T_USER_IMPORT_FEATURE_DISABLED_MESSAGE');
     expect(modal).toContain('importCompatibilityStatus === "checking"');
-    expect(modal).toContain('Checking User Excel Import backend compatibility...');
+    expect(modal).toContain("t('userManagement.checkingCompatibility')");
+    expect(i18n).toContain("en: 'Checking User Excel Import backend compatibility...'");
     expect(modal).toContain('importCompatibilityStatus === "incompatible"');
     expect(modal).toContain('PATCH83T_USER_IMPORT_DEPLOYMENT_MESSAGE');
-    expect(modal).toContain('Retry compatibility check');
+    expect(modal).toContain("t('userManagement.retryCompatibility')");
+    expect(i18n).toContain("en: 'Retry compatibility check'");
     expect(modal.match(/>\s*Close\s*</g)).toBeNull();
   });
 

@@ -248,7 +248,7 @@ describe('Patch 83T execution security contract', () => {
 
     expect(api).toContain("USER_IMPORT_EXECUTION_CONFIRMATION = 'EXECUTE USER IMPORT'");
     expect(ui).toContain('USER_IMPORT_EXECUTION_CONFIRMATION');
-    expect(ui).toMatch(/aria-label=["']Exact execution confirmation["'][\s\S]*value=\{importConfirmation\}[\s\S]*setImportConfirmation/);
+    expect(ui).toMatch(/aria-label=\{t\('userManagement\.exactConfirmation'\)\}[\s\S]*value=\{importConfirmation\}[\s\S]*setImportConfirmation/);
     expect(ui).toMatch(/importConfirmation\s*!==\s*USER_IMPORT_EXECUTION_CONFIRMATION/);
     expect(api).toContain('execution_confirmation: executionConfirmation');
     expect(migration).toMatch(/p_payload\s*->>\s*'execution_confirmation'/);
