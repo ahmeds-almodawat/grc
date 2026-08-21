@@ -6,7 +6,7 @@ interface DocumentVersionBadgeProps {
 }
 
 export function DocumentVersionBadge({ versionLabel, versionNumber, isCurrent, className = '' }: DocumentVersionBadgeProps) {
-  const label = versionLabel || (versionNumber ? `v${versionNumber}.0` : 'v1.0');
+  const label = versionLabel || (versionNumber !== null && versionNumber !== undefined ? String(versionNumber) : '—');
 
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-medium ${isCurrent ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800' : 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'} ${className}`}>

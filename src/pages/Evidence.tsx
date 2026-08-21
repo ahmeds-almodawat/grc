@@ -173,7 +173,7 @@ function ChainOfCustodyTable({ rows }: { rows: EvidenceChainOfCustodyRow[] }) {
 }
 
 export function Evidence() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const auth = useAuth();
   const legacyEvidence = useAsyncData(getEvidenceQueue, []);
   const reviewQueue = useAsyncData(getEvidenceReviewQueue, []);
@@ -584,7 +584,7 @@ export function Evidence() {
       </div>
 
       {selectedPack ? (
-        <article className="governed-print-root evidence-pack-print" aria-hidden="true">
+        <article className="governed-print-root evidence-pack-print" data-print-active="true" dir={language === 'ar' ? 'rtl' : 'ltr'} aria-hidden="true">
           <header className="governed-print-header">
             <img src="/brand/almodawat-acc-logo.png" alt="Almodawat Assurance Control Center" />
             <div>

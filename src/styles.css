@@ -1614,9 +1614,38 @@ html[dir="rtl"] body {
   display: none;
 }
 
+.governed-print-root--screen-preview {
+  display: block;
+}
+
+.controlled-document-print-record {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: 8px;
+  background: var(--surface-subtle, #f8fafc);
+  font-size: 0.75rem;
+}
+
+.controlled-document-print-record > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.controlled-document-print-record span {
+  color: var(--text-muted, #64748b);
+}
+
+.controlled-document-print-record strong {
+  overflow-wrap: anywhere;
+}
+
 @media print {
   @page {
-    size: A4;
+    size: A4 portrait;
     margin: 14mm;
   }
 
@@ -1624,12 +1653,12 @@ html[dir="rtl"] body {
     visibility: hidden !important;
   }
 
-  .governed-print-root,
-  .governed-print-root * {
+  .governed-print-root[data-print-active="true"],
+  .governed-print-root[data-print-active="true"] * {
     visibility: visible !important;
   }
 
-  .governed-print-root {
+  .governed-print-root[data-print-active="true"] {
     display: block !important;
     position: absolute;
     inset: 0;
@@ -11063,5 +11092,76 @@ body[data-scroll-locked="true"] {
 
   :where(.modern-main-content, .modal-card) :where(.inline-actions, .form-actions, .toolbar) {
     flex-wrap: wrap;
+  }
+
+  .controlled-document-print-record {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* v1.4-I controlled print normalization. */
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  body {
+    margin: 0 !important;
+  }
+
+  html body #root .modern-topbar,
+  html body #root .modern-sidebar,
+  html body #root .mobile-nav-backdrop,
+  html body #root :where(button, input, select, textarea, [role="button"]) {
+    display: none !important;
+  }
+
+  .governed-print-root[data-print-active="true"] {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .governed-print-root[data-print-active="true"][dir="rtl"],
+  [dir="rtl"] .governed-print-root[data-print-active="true"] {
+    font-family: Tahoma, Arial, sans-serif;
+  }
+
+  .governed-print-root[data-print-active="true"] :where([class*="overflow-x"], [class*="overflow-y"]) {
+    overflow: visible !important;
+  }
+
+  .governed-print-root[data-print-active="true"] :where(h1, h2, h3, h4, thead) {
+    break-after: avoid-page;
+  }
+
+  .governed-print-root[data-print-active="true"] :where(tr, img, .controlled-document-print-record > div) {
+    break-inside: avoid-page;
+  }
+
+  .governed-print-root[data-print-active="true"] table {
+    table-layout: fixed;
+  }
+
+  .governed-print-root[data-print-active="true"] :where(th, td) {
+    overflow-wrap: anywhere;
+  }
+
+  .controlled-document-print-record {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3mm;
+    padding: 4mm;
+    border-radius: 2mm;
   }
 }

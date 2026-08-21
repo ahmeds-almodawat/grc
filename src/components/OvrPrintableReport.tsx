@@ -33,7 +33,7 @@ export function OvrPrintableReport({ report, evidence }: OvrPrintableReportProps
   const severity = report.severity_level ? t(`ovr.severity.${report.severity_level}`, humanize(report.severity_level)) : '—';
 
   return (
-    <article className="governed-print-root ovr-print-report" dir={language === 'ar' ? 'rtl' : 'ltr'} aria-hidden="true">
+    <article className="governed-print-root ovr-print-report" data-print-active="true" dir={language === 'ar' ? 'rtl' : 'ltr'} aria-hidden="true">
       <header className="governed-print-header">
         <img src="/brand/almodawat-acc-logo.png" alt="Almodawat Assurance Control Center" />
         <div>
