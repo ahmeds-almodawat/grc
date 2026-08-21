@@ -21,7 +21,7 @@ export function ExceptionsTab({ exceptions, loading = false }: ExceptionsTabProp
       </div>
 
       {loading ? (
-        <div className="p-8 text-center text-xs text-slate-400">Loading exceptions...</div>
+        <div className="p-8 text-center text-xs text-slate-400">{t('policy.exceptions.loading', 'Loading exceptions...')}</div>
       ) : exceptions.length === 0 ? (
         <div className="p-8 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 text-center text-xs text-slate-500 shadow-sm">
           <CheckCircle2 size={32} className="mx-auto text-emerald-500 mb-2" />

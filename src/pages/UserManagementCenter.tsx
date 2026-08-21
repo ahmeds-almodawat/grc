@@ -1311,7 +1311,7 @@ export function UserManagementCenter() {
       <DataState
         loading={loading && !summaryData}
         empty={!loading && !summaryData}
-        emptyTitle="User management summary is not available"
+        emptyTitle={t('userManagement.summaryUnavailable')}
         emptyMessage={getLiveResultMessage(summary)}
       >
         <div className="compact-kpi-row user-management-kpis">
@@ -1757,33 +1757,33 @@ export function UserManagementCenter() {
               </tbody>
             </table>
           </div>
-          <div className="roster-pagination" aria-label="User roster pagination">
-            <button className="ghost-button compact-button" type="button" disabled={loading || page === 1} onClick={() => setPage(value => Math.max(1, value - 1))}>Previous</button>
-            <span>Page {page} · up to {pageSize} users</span>
-            <button className="ghost-button compact-button" type="button" disabled={loading || userRows.length < pageSize} onClick={() => setPage(value => value + 1)}>Next</button>
+          <div className="roster-pagination" aria-label={t('userManagement.pagination')}>
+            <button className="ghost-button compact-button" type="button" disabled={loading || page === 1} onClick={() => setPage(value => Math.max(1, value - 1))}>{t('common.previous')}</button>
+            <span>{t('common.page')} {page} · {t('userManagement.upToUsers', 'up to')} {pageSize} {t('userManagement.users', 'users')}</span>
+            <button className="ghost-button compact-button" type="button" disabled={loading || userRows.length < pageSize} onClick={() => setPage(value => value + 1)}>{t('common.next')}</button>
           </div>
         </DataState>
       </ModernCard>
 
       <Modal
         open={Boolean(detailUser)}
-        title="User details"
+        title={t('userManagement.details')}
         onClose={() => setDetailUser(null)}
       >
         {detailUser ? (
           <div className="page-stack">
             <div className="kpi-grid">
               <KpiTile
-                label="Open projects"
+                label={t('userManagement.openProjects')}
                 value={detailUser.open_project_count}
               />
-              <KpiTile label="Open tasks" value={detailUser.open_task_count} />
+              <KpiTile label={t('userManagement.openTasks')} value={detailUser.open_task_count} />
               <KpiTile
-                label="Pending approvals"
+                label={t('userManagement.pendingApprovals')}
                 value={detailUser.pending_approval_count}
               />
               <KpiTile
-                label="Linked records"
+                label={t('userManagement.linkedRecords')}
                 value={linkedRecordCount(detailUser)}
                 tone={linkedRecordCount(detailUser) ? "warning" : "neutral"}
               />
@@ -1792,55 +1792,55 @@ export function UserManagementCenter() {
               <h4>{detailUser.full_name_en}</h4>
               <p>
                 {!detailUser.credential_proof_available
-                  ? "Identity mode: Unavailable (credential proof required)"
+                  ? t('userManagement.identityUnavailable')
                   : detailUser.managed_identity
-                    ? `Employee Login ID: ${detailUser.employee_no ?? "Missing"}`
+                    ? `${t('userManagement.employeeLoginId')}: ${detailUser.employee_no ?? t('common.missing', 'Missing')}`
                     : detailUser.identity_mode === "legacy_verified"
-                      ? `Profile Employee Reference: ${detailUser.employee_no ?? "Missing"}`
-                      : "Identity mode: Unverified"}
+                      ? `${t('userManagement.profileEmployeeReference')}: ${detailUser.employee_no ?? t('common.missing', 'Missing')}`
+                      : t('userManagement.identityUnverified')}
               </p>
               <p>
                 {!detailUser.credential_proof_available
-                  ? "Auth identity: Unavailable (credential proof required)"
+                  ? t('userManagement.authUnavailable')
                   : detailUser.managed_identity
-                    ? `Synthetic Auth Email: ${detailUser.synthetic_auth_email ?? "Missing"}`
+                    ? `${t('userManagement.syntheticAuthEmail')}: ${detailUser.synthetic_auth_email ?? t('common.missing', 'Missing')}`
                     : detailUser.identity_mode === "legacy_verified"
-                      ? `Legacy Auth Email: ${detailUser.auth_email ?? "Missing"}`
-                      : "Auth identity: Unverified; reconciliation required"}
+                      ? `${t('userManagement.legacyAuthEmail')}: ${detailUser.auth_email ?? t('common.missing', 'Missing')}`
+                      : t('userManagement.authUnverified')}
               </p>
-              <p>Contact Email: {detailUser.contact_email ?? "Not provided"}</p>
-              <p>Phone: {detailUser.phone ?? "Not provided"}</p>
-              <p>Credential State: {detailUser.credential_state ? humanize(detailUser.credential_state) : "Unavailable"}</p>
-              <p>Must Change Password: {detailUser.must_change_password ? "Yes" : "No"}</p>
-              <p>Last Password Reset: {detailUser.last_password_reset_at ?? "Never / unavailable"}</p>
-              <p>Provisioning State: {detailUser.provisioning_state ? humanize(detailUser.provisioning_state) : "Not provisioned by Patch 83U"}</p>
+              <p>{t('userManagement.contactEmail')}: {detailUser.contact_email ?? t('userManagement.notProvided')}</p>
+              <p>{t('userManagement.phone')}: {detailUser.phone ?? t('userManagement.notProvided')}</p>
+              <p>{t('userManagement.credentialState')}: {detailUser.credential_state ? humanize(detailUser.credential_state, language) : t('common.unavailable', 'Unavailable')}</p>
+              <p>{t('userManagement.mustChangePassword')}: {detailUser.must_change_password ? t('common.yes') : t('common.no')}</p>
+              <p>{t('userManagement.lastPasswordReset')}: {detailUser.last_password_reset_at ?? t('userManagement.neverAvailable')}</p>
+              <p>{t('userManagement.provisioningState')}: {detailUser.provisioning_state ? humanize(detailUser.provisioning_state, language) : t('userManagement.notProvisioned')}</p>
               <p>
-                Department: {detailUser.department_name ?? "Missing department"}
+                {t('common.department')}: {detailUser.department_name ?? t('userManagement.missingDepartment')}
               </p>
-              <p>Role(s): {roleSummary(detailUser)}</p>
-              <p>Status: {humanize(detailUser.user_status)}</p>
+              <p>{t('userManagement.roles')}: {roleSummary(detailUser)}</p>
+              <p>{t('common.status')}: {humanize(detailUser.user_status, language)}</p>
             </div>
             <div className="panel">
-              <h4>Lifecycle audit history</h4>
+              <h4>{t('userManagement.lifecycleHistory')}</h4>
               <DataState
                 empty={!auditRows.length}
-                emptyMessage="No Patch 19 user-management audit entries yet."
+                emptyMessage={t('userManagement.noLifecycleHistory')}
               >
                 <div className="table-scroll">
                   <table className="entity-table">
                     <thead>
                       <tr>
-                        <th>Action</th>
-                        <th>Reason</th>
-                        <th>Linked records</th>
-                        <th>Date</th>
+                        <th>{t('common.actions')}</th>
+                        <th>{t('audit.g.reason')}</th>
+                        <th>{t('userManagement.linkedRecords')}</th>
+                        <th>{t('common.date')}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {auditRows.map((row) => (
                         <tr key={row.id}>
-                          <td>{humanize(row.action)}</td>
-                          <td>{row.reason ?? "Not recorded"}</td>
+                          <td>{humanize(row.action, language)}</td>
+                          <td>{row.reason ?? t('userManagement.notRecorded')}</td>
                           <td>{row.linked_record_count}</td>
                           <td>{row.created_at}</td>
                         </tr>
@@ -1856,12 +1856,12 @@ export function UserManagementCenter() {
 
       <Modal
         open={Boolean(editUser)}
-        title="Edit profile"
+        title={t('userManagement.editProfile')}
         onClose={() => setEditUser(null)}
       >
         <div className="form-grid">
           <label className="field">
-            English name
+            {t('userManagement.englishName')}
             <input
               value={profileDraft.fullNameEn}
               onChange={(event) =>
@@ -1873,7 +1873,7 @@ export function UserManagementCenter() {
             />
           </label>
           <label className="field">
-            Arabic name
+            {t('userManagement.arabicName')}
             <input
               value={profileDraft.fullNameAr}
               onChange={(event) =>
@@ -1886,7 +1886,7 @@ export function UserManagementCenter() {
             />
           </label>
           <label className="field">
-            Employee ID
+            {t('userManagement.employeeId')}
             <input
               value={profileDraft.employeeNo}
               disabled={editUser?.managed_identity === true}
@@ -1899,7 +1899,7 @@ export function UserManagementCenter() {
             />
           </label>
           <label className="field">
-            Contact email (optional)
+            {t('userManagement.contactEmailOptional')}
             <input
               type="email"
               value={profileDraft.contactEmail}
@@ -1911,11 +1911,11 @@ export function UserManagementCenter() {
               }
             />
             {editUser?.managed_identity ? (
-              <span className="muted">Managed Employee IDs are immutable; use credential reconciliation for identity conflicts.</span>
+              <span className="muted">{t('userManagement.employeeIdImmutable')}</span>
             ) : null}
           </label>
           <label className="field">
-            Phone
+            {t('userManagement.phone')}
             <input
               type="tel"
               value={profileDraft.phone}
@@ -1928,7 +1928,7 @@ export function UserManagementCenter() {
             />
           </label>
           <label className="field">
-            Job title
+            {t('userManagement.jobTitle')}
             <input
               value={profileDraft.jobTitle}
               onChange={(event) =>
@@ -1940,7 +1940,7 @@ export function UserManagementCenter() {
             />
           </label>
           <label className="field">
-            User type
+            {t('userManagement.userType')}
             <select
               value={profileDraft.userType}
               onChange={(event) =>
@@ -1952,13 +1952,13 @@ export function UserManagementCenter() {
             >
               {userTypeOptions.map((type) => (
                 <option key={type} value={type}>
-                  {humanize(type)}
+                  {humanize(type, language)}
                 </option>
               ))}
             </select>
           </label>
           <label className="field full-width">
-            Reason
+            {t('audit.g.reason')}
             <textarea
               value={reason}
               onChange={(event) => setReason(event.target.value)}
@@ -1966,7 +1966,7 @@ export function UserManagementCenter() {
           </label>
           <div className="form-actions full-width">
             <button type="button" className="ghost-button" onClick={() => setEditUser(null)}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="button"
@@ -1974,7 +1974,7 @@ export function UserManagementCenter() {
               disabled={saving || writeDisabled}
               onClick={() => void submitProfile()}
             >
-              {saving ? "Saving..." : "Save profile"}
+              {saving ? t('common.saving') : t('userManagement.saveProfile')}
             </button>
           </div>
         </div>
@@ -1982,26 +1982,26 @@ export function UserManagementCenter() {
 
       <Modal
         open={Boolean(departmentUser)}
-        title="Assign/change department"
+        title={t('userManagement.changeDepartment')}
         onClose={() => setDepartmentUser(null)}
       >
         <div className="form-grid">
           <label className="field full-width">
-            Department
+            {t('common.department')}
             <select
               value={departmentDraft}
               onChange={(event) => setDepartmentDraft(event.target.value)}
             >
-              <option value="">No department</option>
+              <option value="">{t('userManagement.noDepartment')}</option>
               {departmentRows.map((department) => (
                 <option key={department.id} value={department.id}>
-                  {department.name_en}
+                  {language === 'ar' && department.name_ar ? department.name_ar : department.name_en}
                 </option>
               ))}
             </select>
           </label>
           <label className="field full-width">
-            Reason
+            {t('audit.g.reason')}
             <textarea
               value={reason}
               onChange={(event) => setReason(event.target.value)}
@@ -2013,7 +2013,7 @@ export function UserManagementCenter() {
               className="ghost-button"
               onClick={() => setDepartmentUser(null)}
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="button"
@@ -2021,7 +2021,7 @@ export function UserManagementCenter() {
               disabled={saving || writeDisabled}
               onClick={() => void submitDepartment()}
             >
-              {saving ? "Saving..." : "Save department"}
+              {saving ? t('common.saving') : t('userManagement.saveDepartment')}
             </button>
           </div>
         </div>
@@ -2029,65 +2029,64 @@ export function UserManagementCenter() {
 
       <Modal
         open={Boolean(roleUser)}
-        title="Assign/change role"
+        title={t('userManagement.changeRole')}
         onClose={() => setRoleUser(null)}
       >
         <div className="form-grid">
           <label className="field">
-            Role
+            {t('userManagement.role')}
             <select
               value={roleDraft}
               onChange={(event) => setRoleDraft(event.target.value as AppRole)}
             >
               {userRoleOptions.map((role) => (
                 <option key={role} value={role}>
-                  {humanize(role)}
+                  {humanize(role, language)}
                 </option>
               ))}
             </select>
           </label>
           <label className="field">
-            Scope
+            {t('userManagement.scope')}
             <select
               value={scopeDraft}
               onChange={(event) =>
                 setScopeDraft(event.target.value as AccessScope)
               }
             >
-              <option value="assigned_only">Assigned only</option>
-              <option value="department">Department</option>
-              <option value="global">Global</option>
+              <option value="assigned_only">{humanize('assigned_only', language)}</option>
+              <option value="department">{humanize('department', language)}</option>
+              <option value="global">{humanize('global', language)}</option>
             </select>
           </label>
           {scopeDraft === "department" ? (
             <label className="field full-width">
-              Department
+              {t('common.department')}
               <select
                 value={roleDepartmentDraft}
                 onChange={(event) => setRoleDepartmentDraft(event.target.value)}
               >
                 {departmentRows.map((department) => (
                   <option key={department.id} value={department.id}>
-                    {department.name_en}
+                    {language === 'ar' && department.name_ar ? department.name_ar : department.name_en}
                   </option>
                 ))}
               </select>
             </label>
           ) : null}
           <label className="field full-width">
-            Reason
+            {t('audit.g.reason')}
             <textarea
               value={reason}
               onChange={(event) => setReason(event.target.value)}
             />
           </label>
           <div className="notice-banner full-width">
-            This action assigns the selected role through the server bridge and
-            preserves the existing access model.
+            {t('userManagement.roleBridgeNotice')}
           </div>
           <div className="form-actions full-width">
             <button type="button" className="ghost-button" onClick={() => setRoleUser(null)}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="button"
@@ -2095,7 +2094,7 @@ export function UserManagementCenter() {
               disabled={saving || writeDisabled}
               onClick={() => void submitRole()}
             >
-              {saving ? "Saving..." : "Save role"}
+              {saving ? t('common.saving') : t('userManagement.saveRole')}
             </button>
           </div>
         </div>
@@ -2103,7 +2102,7 @@ export function UserManagementCenter() {
 
       <Modal
         open={Boolean(actionMenuUser)}
-        title={`Actions for ${actionMenuUser?.full_name_en ?? ""}`}
+        title={`${t('common.actions')} · ${language === 'ar' && actionMenuUser?.full_name_ar ? actionMenuUser.full_name_ar : actionMenuUser?.full_name_en ?? ''}`}
         onClose={() => setActionMenuUser(null)}
       >
         {actionMenuUser ? (
@@ -2117,7 +2116,7 @@ export function UserManagementCenter() {
                 setActionMenuUser(null);
               }}
             >
-              <KeyRound size={14} /> Assign role
+              <KeyRound size={14} /> {t('userManagement.assignRoleSingle')}
             </button>
             {hasAuthorizedSuperAdmin &&
             auth.patch83uCapabilities &&
@@ -2132,7 +2131,7 @@ export function UserManagementCenter() {
                     setActionMenuUser(null);
                   }}
                 >
-                  <KeyRound size={14} /> Reset temporary password
+                  <KeyRound size={14} /> {t('userManagement.resetTemporaryPassword')}
                 </button>
                 <button
                   type="button"
@@ -2143,7 +2142,7 @@ export function UserManagementCenter() {
                     setActionMenuUser(null);
                   }}
                 >
-                  <ShieldCheck size={14} /> Reconcile credential state
+                  <ShieldCheck size={14} /> {t('userManagement.reconcileCredential')}
                 </button>
               </>
             ) : null}
@@ -2156,7 +2155,7 @@ export function UserManagementCenter() {
                 setActionMenuUser(null);
               }}
             >
-              <Building2 size={14} /> Assign department
+              <Building2 size={14} /> {t('userManagement.assignDepartmentSingle')}
             </button>
             {actionMenuUser.user_status === "active" ||
             actionMenuUser.user_status === "invited" ? (
@@ -2170,7 +2169,7 @@ export function UserManagementCenter() {
                   setActionMenuUser(null);
                 }}
               >
-                <ShieldOff size={14} /> Deactivate user
+                <ShieldOff size={14} /> {t('userManagement.deactivateUser')}
               </button>
             ) : actionMenuUser.user_status === "inactive" ||
               actionMenuUser.user_status === "locked" ? (
@@ -2184,7 +2183,7 @@ export function UserManagementCenter() {
                   setActionMenuUser(null);
                 }}
               >
-                <RotateCcw size={14} /> Reactivate user
+                <RotateCcw size={14} /> {t('userManagement.reactivateUser')}
               </button>
             ) : null}
             {actionMenuUser.user_status === "archived" ? (
@@ -2198,7 +2197,7 @@ export function UserManagementCenter() {
                   setActionMenuUser(null);
                 }}
               >
-                <RotateCcw size={14} /> Unarchive user
+                <RotateCcw size={14} /> {t('userManagement.unarchiveUser')}
               </button>
             ) : (
               <button
@@ -2211,7 +2210,7 @@ export function UserManagementCenter() {
                   setActionMenuUser(null);
                 }}
               >
-                <Archive size={14} /> Archive user
+                <Archive size={14} /> {t('userManagement.archiveUser')}
               </button>
             )}
             <button
@@ -2222,7 +2221,7 @@ export function UserManagementCenter() {
                 setActionMenuUser(null);
               }}
             >
-              <Download size={14} /> Export user
+              <Download size={14} /> {t('userManagement.exportUser')}
             </button>
           </div>
         ) : null}
@@ -2551,7 +2550,7 @@ export function UserManagementCenter() {
 
       <Modal
         open={Boolean(resetUser)}
-        title="Super Admin temporary password reset"
+        title={t('userManagement.resetTitle')}
         onClose={() => {
           if (!saving) closePasswordReset();
         }}
@@ -2591,7 +2590,7 @@ export function UserManagementCenter() {
             <label className="field full-width">
               Type {ADMIN_RESET_CONFIRMATION_TEXT} exactly
               <input
-                aria-label="Reset password action confirmation"
+                aria-label={t('userManagement.resetActionConfirmation')}
                 autoComplete="off"
                 value={resetDraft.resetConfirmation}
                 onChange={(event) => setResetDraft((draft) => ({ ...draft, resetConfirmation: event.target.value }))}
@@ -2600,7 +2599,7 @@ export function UserManagementCenter() {
             <label className="field full-width">
               Type Employee ID {resetUser.employee_no ?? ""} exactly
               <input
-                aria-label="Reset Employee ID confirmation"
+                aria-label={t('userManagement.resetEmployeeConfirmation')}
                 autoComplete="off"
                 value={resetDraft.employeeIdConfirmation}
                 onChange={(event) => setResetDraft((draft) => ({ ...draft, employeeIdConfirmation: event.target.value }))}
@@ -2621,7 +2620,7 @@ export function UserManagementCenter() {
             {actionError ? <div className="form-error full-width">{actionError}</div> : null}
             <div className="form-actions full-width">
               <button type="button" className="ghost-button" disabled={saving} onClick={closePasswordReset}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
@@ -2640,7 +2639,7 @@ export function UserManagementCenter() {
                 }
                 onClick={() => void submitPasswordReset()}
               >
-                {saving ? "Resetting…" : "Reset password and revoke sessions"}
+                {saving ? t('userManagement.resetting') : t('userManagement.resetAndRevoke')}
               </button>
             </div>
           </div>
@@ -2649,7 +2648,7 @@ export function UserManagementCenter() {
 
       <Modal
         open={Boolean(credentialReconcileUser)}
-        title="Reconcile credential state"
+        title={t('userManagement.reconcileCredential')}
         onClose={() => {
           if (!saving) closeCredentialReconciliation();
         }}
@@ -2666,7 +2665,7 @@ export function UserManagementCenter() {
             <label className="field full-width">
               Type Employee ID {credentialReconcileUser.employee_no ?? ""} exactly
               <input
-                aria-label="Credential reconciliation Employee ID confirmation"
+                aria-label={t('userManagement.reconcileEmployeeConfirmation')}
                 autoComplete="off"
                 value={credentialReconcileConfirmation}
                 onChange={(event) => setCredentialReconcileConfirmation(event.target.value)}
@@ -2675,7 +2674,7 @@ export function UserManagementCenter() {
             {actionError ? <div className="form-error full-width">{actionError}</div> : null}
             <div className="form-actions full-width">
               <button type="button" className="ghost-button" disabled={saving} onClick={closeCredentialReconciliation}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
@@ -2688,7 +2687,7 @@ export function UserManagementCenter() {
                 }
                 onClick={() => void submitCredentialReconciliation()}
               >
-                {saving ? "Reconciling…" : "Reconcile from protected proof"}
+                {saving ? t('userManagement.reconciling') : t('userManagement.reconcileProof')}
               </button>
             </div>
           </div>
@@ -2697,7 +2696,7 @@ export function UserManagementCenter() {
 
       <Modal
         open={Boolean(lifecycle)}
-        title="Confirm user lifecycle action"
+        title={t('userManagement.lifecycleConfirmTitle')}
         onClose={() => setLifecycle(null)}
       >
         {lifecycle ? (
@@ -2721,7 +2720,7 @@ export function UserManagementCenter() {
               </p>
             </div>
             <label className="field full-width">
-              Reason required
+              {t('userManagement.reasonRequired')}
               <textarea
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}
@@ -2733,7 +2732,7 @@ export function UserManagementCenter() {
                 className="ghost-button"
                 onClick={() => setLifecycle(null)}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
@@ -2741,7 +2740,7 @@ export function UserManagementCenter() {
                 disabled={saving || writeDisabled || !reason.trim()}
                 onClick={() => void submitLifecycle()}
               >
-                {saving ? "Saving..." : `Confirm ${lifecycle.action}`}
+                {saving ? t('common.saving') : `${t('common.confirm')} ${humanize(lifecycle.action, language)}`}
               </button>
             </div>
           </div>
@@ -2750,7 +2749,7 @@ export function UserManagementCenter() {
 
       <Modal
         open={importOpen}
-        title="Preview User Excel Import"
+        title={t('userManagement.importPreviewTitle')}
         onClose={closeImport}
       >
         <div className="page-stack user-workbook-modal">
@@ -2766,7 +2765,7 @@ export function UserManagementCenter() {
               className="ghost-button"
               onClick={() => void downloadUserTemplate()}
             >
-              <FileDown size={16} /> Download Excel template
+              <FileDown size={16} /> {t('userManagement.downloadTemplate')}
             </button>
             {importValidation ? (
               <button
@@ -2774,13 +2773,13 @@ export function UserManagementCenter() {
                 className="ghost-button"
                 onClick={() => void downloadValidationErrors()}
               >
-                <FileDown size={16} /> Export validation errors
+                <FileDown size={16} /> {t('userManagement.exportValidationErrors')}
               </button>
             ) : null}
           </div>
           <div className="user-workbook-upload" aria-disabled={importUploadDisabled}>
             <div className="field">
-              <span>Upload User Excel File</span>
+              <span>{t('userManagement.uploadExcel')}</span>
               <span id="user-workbook-input-description" className="muted">
                 Accepts only a real .xlsx workbook. Previewing does not modify user data.
               </span>
@@ -2791,7 +2790,7 @@ export function UserManagementCenter() {
               className="visually-hidden"
               type="file"
               accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-              aria-label="User Excel workbook file input"
+              aria-label={t('userManagement.excelInputLabel')}
               aria-disabled={importUploadDisabled}
               aria-describedby={importUploadDescribedBy}
               disabled={importUploadDisabled}
@@ -2810,7 +2809,7 @@ export function UserManagementCenter() {
                   aria-describedby={importUploadDescribedBy}
                   disabled={importUploadDisabled}
                 >
-                  <UploadCloud size={16} /> Choose .xlsx workbook
+                  <UploadCloud size={16} /> {t('userManagement.chooseWorkbook')}
                 </button>
               </div>
             ) : (
@@ -2828,7 +2827,7 @@ export function UserManagementCenter() {
                     aria-describedby={importUploadDescribedBy}
                     disabled={importUploadDisabled}
                   >
-                    Replace file
+                    {t('userManagement.replaceFile')}
                   </button>
                   <button
                     type="button"
@@ -2836,7 +2835,7 @@ export function UserManagementCenter() {
                     onClick={resetImportFile}
                     disabled={importParsing}
                   >
-                    Remove file
+                    {t('userManagement.removeFile')}
                   </button>
                 </div>
               </div>
@@ -2857,7 +2856,7 @@ export function UserManagementCenter() {
               className="notice-banner"
               role="status"
             >
-              Checking User Excel Import backend compatibility...
+              {t('userManagement.checkingCompatibility')}
             </div>
           ) : null}
           {importCompatibilityStatus === "incompatible" ? (
@@ -2875,7 +2874,7 @@ export function UserManagementCenter() {
                   className="ghost-button"
                   onClick={() => void checkImportCompatibility(true)}
                 >
-                  <RefreshCw size={16} /> Retry compatibility check
+                  <RefreshCw size={16} /> {t('userManagement.retryCompatibility')}
                 </button>
               </div>
             </div>
@@ -2886,7 +2885,7 @@ export function UserManagementCenter() {
               className="notice-banner"
               role="status"
             >
-              Parsing and validating workbook…
+              {t('userManagement.parsingWorkbook')}
             </div>
           ) : null}
           {importParseError ? <div className="form-error">{importParseError}</div> : null}
@@ -2952,30 +2951,30 @@ export function UserManagementCenter() {
                   Showing the first 50 of {importValidation.rowCount} rows. All validated rows remain included in the controlled execution.
                 </div>
               ) : null}
-              <div className="table-scroll user-workbook-preview" aria-label="User Excel import preview">
+              <div className="table-scroll user-workbook-preview" aria-label={t('userManagement.importPreviewLabel')}>
                 <table className="entity-table">
                   <thead>
                     <tr>
-                      <th>Row</th>
-                      <th>Employee ID</th>
-                      <th>English name</th>
-                      <th>Arabic name</th>
-                      <th>Synthetic Auth email</th>
-                      <th>Contact email</th>
-                      <th>Original phone</th>
-                      <th>Normalized phone</th>
-                      <th>Department</th>
-                      <th>Job title</th>
-                      <th>Role</th>
-                      <th>Role scope</th>
-                      <th>Status</th>
-                      <th>User type</th>
-                      <th>Account action</th>
-                      <th>Matched profile</th>
-                      <th>Matched Auth identity</th>
-                      <th>Matched provisioning</th>
-                      <th>Planned action</th>
-                      <th>Validation</th>
+                      <th>{t('userManagement.row')}</th>
+                      <th>{t('userManagement.employeeId')}</th>
+                      <th>{t('userManagement.englishName')}</th>
+                      <th>{t('userManagement.arabicName')}</th>
+                      <th>{t('userManagement.syntheticAuthEmail')}</th>
+                      <th>{t('userManagement.contactEmail')}</th>
+                      <th>{t('userManagement.originalPhone')}</th>
+                      <th>{t('userManagement.normalizedPhone')}</th>
+                      <th>{t('common.department')}</th>
+                      <th>{t('userManagement.jobTitle')}</th>
+                      <th>{t('userManagement.role')}</th>
+                      <th>{t('userManagement.roleScope')}</th>
+                      <th>{t('common.status')}</th>
+                      <th>{t('userManagement.userType')}</th>
+                      <th>{t('userManagement.accountAction')}</th>
+                      <th>{t('userManagement.matchedProfile')}</th>
+                      <th>{t('userManagement.matchedAuth')}</th>
+                      <th>{t('userManagement.matchedProvisioning')}</th>
+                      <th>{t('userManagement.plannedAction')}</th>
+                      <th>{t('userManagement.validation')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -3038,9 +3037,9 @@ export function UserManagementCenter() {
                 </table>
               </div>
               <label className="field full-width">
-                Exact execution confirmation
+                {t('userManagement.exactConfirmation')}
                 <input
-                  aria-label="Exact execution confirmation"
+                  aria-label={t('userManagement.exactConfirmation')}
                   value={importConfirmation}
                   onChange={(event) => setImportConfirmation(event.target.value)}
                   placeholder={USER_IMPORT_EXECUTION_CONFIRMATION}
@@ -3056,7 +3055,7 @@ export function UserManagementCenter() {
                   className="ghost-button"
                   onClick={resetImportFile}
                 >
-                  Remove file
+                  {t('userManagement.removeFile')}
                 </button>
                 <button
                   type="button"
@@ -3073,7 +3072,7 @@ export function UserManagementCenter() {
                   }
                   onClick={() => void applyImport()}
                 >
-                  <FileUp size={16} /> Execute User Import
+                  <FileUp size={16} /> {t('userManagement.executeImport')}
                 </button>
               </div>
               {!hasAuthorizedImportRole ? (

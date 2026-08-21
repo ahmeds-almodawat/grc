@@ -227,7 +227,7 @@ export function PolicyEditor({
             className="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             title={t('common.back', 'Back to Policies')}
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft size={18} className="directional-icon" />
           </button>
           <div>
             <div className="flex items-center gap-2 flex-wrap">

@@ -282,7 +282,7 @@ export function PolicyRegister({
                       )}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <ChevronRight size={16} className="text-slate-300 group-hover:text-indigo-600 dark:text-slate-700 dark:group-hover:text-indigo-400 transition-colors inline-block" />
+                      <ChevronRight size={16} className="directional-icon text-slate-300 group-hover:text-indigo-600 dark:text-slate-700 dark:group-hover:text-indigo-400 transition-colors inline-block" />
                     </td>
                   </tr>
                 ))}

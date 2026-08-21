@@ -47,7 +47,7 @@ export function ReviewsDueTab({ triggers, onRefresh, loading = false }: ReviewsD
       </div>
 
       {loading ? (
-        <div className="p-8 text-center text-xs text-slate-400">Loading review triggers...</div>
+        <div className="p-8 text-center text-xs text-slate-400">{t('policy.reviewsDue.loading', 'Loading review triggers...')}</div>
       ) : triggers.length === 0 ? (
         <div className="p-8 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 text-center text-xs text-slate-500 shadow-sm">
           <CheckCircle2 size={32} className="mx-auto text-emerald-500 mb-2" />
@@ -105,7 +105,7 @@ export function ReviewsDueTab({ triggers, onRefresh, loading = false }: ReviewsD
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 {t('policy.reviewsDue.completeTitle', 'Complete Document Review')}
               </h3>
-              <button onClick={() => setSelectedTrigger(null)} className="text-slate-400 hover:text-slate-600">✕</button>
+              <button type="button" aria-label={t('common.close', 'Close')} onClick={() => setSelectedTrigger(null)} className="text-slate-400 hover:text-slate-600">✕</button>
             </div>
             <form onSubmit={handleCompleteReview} className="p-5 space-y-4">
               {error && <div className="p-2 text-xs bg-rose-50 text-rose-800 rounded">{error}</div>}
@@ -133,7 +133,7 @@ export function ReviewsDueTab({ triggers, onRefresh, loading = false }: ReviewsD
                   rows={3}
                   value={outcomeNote}
                   onChange={e => setOutcomeNote(e.target.value)}
-                  placeholder="Summarize review findings..."
+                  placeholder={t('policy.reviewsDue.findingsPlaceholder', 'Summarize review findings...')}
                   className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none"
                 />
               </div>
@@ -151,7 +151,7 @@ export function ReviewsDueTab({ triggers, onRefresh, loading = false }: ReviewsD
                   disabled={submitting}
                   className="px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg disabled:opacity-50"
                 >
-                  {submitting ? 'Submitting...' : t('common.save', 'Save Outcome')}
+                  {submitting ? t('common.submitting', 'Submitting...') : t('common.save', 'Save Outcome')}
                 </button>
               </div>
             </form>

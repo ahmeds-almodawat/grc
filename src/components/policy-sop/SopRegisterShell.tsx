@@ -41,7 +41,7 @@ export function SopRegisterShell({ sops, loading = false }: SopRegisterShellProp
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-xs text-slate-400">Loading SOP catalog...</div>
+          <div className="p-8 text-center text-xs text-slate-400">{t('sop.register.loading', 'Loading SOP catalog...')}</div>
         ) : sops.length === 0 ? (
           <div className="p-8 text-center text-xs text-slate-500">
             <Layers size={32} className="mx-auto text-slate-400 mb-2" />
@@ -80,7 +80,7 @@ export function SopRegisterShell({ sops, loading = false }: SopRegisterShellProp
                     <td className="py-3 px-4">
                       <DocumentStatusBadge status={row.document_status} effectiveDate={row.effective_date} />
                     </td>
-                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{row.step_count} steps</td>
+                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{row.step_count} {t('sop.register.stepsLabel', 'steps')}</td>
                   </tr>
                 ))}
               </tbody>
