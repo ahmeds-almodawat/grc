@@ -875,7 +875,17 @@ begin
   for update;
 
   if found then
-    if v_link.link_status <> 'active' then
+    case v_link.link_status
+    when 'active' then
+      return jsonb_build_object(
+        'capa_link_id', v_link.id,
+        'ovr_id', p_ovr_id,
+        'corrective_action_project_id', v_project_id,
+        'link_status', v_link.link_status,
+        'created', false,
+        'reactivated', false
+      );
+    when 'inactive' then
       update public.ovr_capa_evidence_links set link_status = 'active'
       where id = v_link.id returning * into v_link;
       v_reactivated := true;
@@ -889,7 +899,9 @@ begin
         )::text,
         p_actor_id
       );
-    end if;
+    else
+      raise exception 'F2_CAPA_LINK_STATUS_CONFLICT';
+    end case;
   else
     insert into public.ovr_capa_evidence_links (
       ovr_id, linked_entity_type, linked_entity_id, link_role, link_status, created_by

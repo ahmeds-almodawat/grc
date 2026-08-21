@@ -127,11 +127,18 @@ describe('GRC v1.4-F2 Migration211 governance feedback contract', () => {
     expect(migration).toContain('F2_CAPA_CROSS_ORGANIZATION_DENIED');
   });
 
-  it('makes CAPA sync idempotent, reactivates safely, and blocks pointer conflicts', () => {
+  it('makes CAPA sync idempotent, reactivates only inactive links, and fails closed on every other state', () => {
+    const sync = migration.slice(
+      migration.indexOf('create or replace function public.sync_ovr_corrective_action_capa_link'),
+      migration.indexOf('create or replace view public.v_f2_ovr_governance_feedback'),
+    );
     expect(migration).toContain('ovr_capa_evidence_links_f2_canonical_uniq');
     expect(migration).toContain('F2_CONFLICTING_CORRECTIVE_PROJECT_POINTERS');
-    expect(migration).toContain("set link_status = 'active'");
-    expect(migration).toContain("'reactivated', v_reactivated");
+    expect(sync).toMatch(/when 'active' then[\s\S]*return jsonb_build_object/);
+    expect(sync).toMatch(/when 'inactive' then[\s\S]*set link_status = 'active'/);
+    expect(sync).toContain("raise exception 'F2_CAPA_LINK_STATUS_CONFLICT'");
+    expect(sync).not.toMatch(/if v_link\.link_status <> 'active'/);
+    expect(sync).toContain("'reactivated', v_reactivated");
   });
 
   it('locks canonical CAPA browser writes and delegates reads to OVR RLS', () => {
@@ -196,7 +203,21 @@ describe('GRC v1.4-F2 privileged-action Edge v17', () => {
   });
 
   it('preflights active actor, target tenancy, exact global role, and historical link metadata', () => {
+    const actorContext = edge.slice(
+      edge.indexOf('const loadTrainingActorContext = async'),
+      edge.indexOf("if (action === 'decide_sop_rollout_requirements')"),
+    );
+    const validation = edgeRoute.indexOf('hasExactF2OvrGovernanceFeedbackCapability(capabilityProbe.data)');
+    const actorPreflight = edgeRoute.indexOf('loadTrainingActorContext(userData.user.id)');
     expect(edgeRoute).toContain('loadTrainingActorContext(userData.user.id)');
+    expect(actorContext).toContain('!actorProfile.is_active');
+    expect(actorContext).toContain("actorProfile.user_status !== 'active'");
+    expect(actorPreflight).toBeGreaterThan(validation);
+    for (const marker of [
+      ".from('v_f1_ovr_governed_version_links')",
+      ".from('v_f2_ovr_governance_feedback')",
+      ".from('ovr_reports')",
+    ]) expect(edgeRoute.indexOf(marker)).toBeGreaterThan(actorPreflight);
     expect(edgeRoute).toContain('hasExactF2GlobalGovernanceRole');
     expect(edgeRoute).toContain('is_historical_version');
     expect(edgeRoute).toContain('actorProfile.organization_id !== targetOrganizationId');
@@ -214,6 +235,7 @@ describe('GRC v1.4-F2 privileged-action Edge v17', () => {
     expect(mapF2OvrGovernanceFeedbackError(new Error('F2_EXACT_GLOBAL_GOVERNANCE_ROLE_REQUIRED')).status).toBe(403);
     expect(mapF2OvrGovernanceFeedbackError(new Error('F2_OVR_NOT_FOUND')).status).toBe(404);
     expect(mapF2OvrGovernanceFeedbackError(new Error('F2_OPEN_REVIEW_VERSION_CONFLICT')).status).toBe(409);
+    expect(mapF2OvrGovernanceFeedbackError(new Error('F2_CAPA_LINK_STATUS_CONFLICT')).status).toBe(409);
   });
 });
 
