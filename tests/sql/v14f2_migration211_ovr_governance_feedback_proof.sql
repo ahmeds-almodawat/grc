@@ -361,10 +361,42 @@ begin
   end if;
   execute 'reset role';
 
-  -- An active canonical link is a strict no-op, including review association.
+  -- CASE A: an existing active canonical link backfills a later missing review
+  -- association without touching the CAPA row, events, project, or OVR.
   update public.governed_document_review_triggers
      set corrective_action_project_id = null
    where id = v_retire_trigger;
+  select jsonb_build_object(
+    'links', (select jsonb_agg(jsonb_build_array(id, xmin::text, link_status) order by id)
+      from public.ovr_capa_evidence_links where ovr_id = v_ovr),
+    'events', (select jsonb_agg(jsonb_build_array(id, xmin::text) order by id)
+      from public.clinical_governance_events),
+    'projects', (select jsonb_agg(jsonb_build_array(id, xmin::text) order by id)
+      from public.projects where id in (v_project, v_project_2)),
+    'ovr', (select jsonb_agg(jsonb_build_array(id, xmin::text) order by id)
+      from public.ovr_reports where id = v_ovr)
+  ) into v_guard_before;
+  execute 'set local role service_role';
+  v_result := public.sync_ovr_corrective_action_capa_link(v_compliance, v_ovr);
+  execute 'reset role';
+  select jsonb_build_object(
+    'links', (select jsonb_agg(jsonb_build_array(id, xmin::text, link_status) order by id)
+      from public.ovr_capa_evidence_links where ovr_id = v_ovr),
+    'events', (select jsonb_agg(jsonb_build_array(id, xmin::text) order by id)
+      from public.clinical_governance_events),
+    'projects', (select jsonb_agg(jsonb_build_array(id, xmin::text) order by id)
+      from public.projects where id in (v_project, v_project_2)),
+    'ovr', (select jsonb_agg(jsonb_build_array(id, xmin::text) order by id)
+      from public.ovr_reports where id = v_ovr)
+  ) into v_guard_after;
+  if v_result->>'created' <> 'false' or v_result->>'reactivated' <> 'false'
+     or (v_result->>'capa_link_id')::uuid <> v_capa_link_id
+     or v_guard_before is distinct from v_guard_after
+     or (select corrective_action_project_id from public.governed_document_review_triggers where id = v_retire_trigger) <> v_project then
+    raise exception 'CASE_A_ACTIVE_CAPA_ASSOCIATION_FAILURE';
+  end if;
+
+  -- CASE B: once associated, the second active sync is a complete no-op.
   select jsonb_build_object(
     'links', (select jsonb_agg(jsonb_build_array(id, xmin::text, link_status) order by id)
       from public.ovr_capa_evidence_links where ovr_id = v_ovr),
@@ -395,11 +427,14 @@ begin
   if v_result->>'created' <> 'false' or v_result->>'reactivated' <> 'false'
      or (v_result->>'capa_link_id')::uuid <> v_capa_link_id
      or v_guard_before is distinct from v_guard_after then
-    raise exception 'CASE_39_ACTIVE_CAPA_LINK_NOT_IDEMPOTENT';
+    raise exception 'CASE_B_SECOND_ACTIVE_SYNC_NOT_NOOP';
   end if;
 
-  -- Only inactive can reactivate, preserving the ID and emitting one event.
+  -- CASE C: inactive links reactivate once and fill a missing association.
   update public.ovr_capa_evidence_links set link_status = 'inactive' where id = v_capa_link_id;
+  update public.governed_document_review_triggers
+     set corrective_action_project_id = null
+   where id = v_retire_trigger;
   select count(*) into v_before from public.clinical_governance_events
    where event_type = 'ovr_corrective_action_capa_link_reactivated' and entity_id = v_capa_link_id;
   execute 'set local role service_role';
@@ -410,22 +445,50 @@ begin
   if v_result->>'created' <> 'false' or v_result->>'reactivated' <> 'true'
      or (v_result->>'capa_link_id')::uuid <> v_capa_link_id
      or (select link_status from public.ovr_capa_evidence_links where id = v_capa_link_id) <> 'active'
-     or v_after <> v_before + 1 then
-    raise exception 'CASE_40_INACTIVE_CAPA_REACTIVATION_FAILURE';
+     or v_after <> v_before + 1
+     or (select corrective_action_project_id from public.governed_document_review_triggers where id = v_retire_trigger) <> v_project then
+    raise exception 'CASE_C_INACTIVE_CAPA_REACTIVATION_ASSOCIATION_FAILURE';
   end if;
+  select jsonb_build_object(
+    'links', (select jsonb_agg(jsonb_build_array(id, xmin::text, link_status) order by id)
+      from public.ovr_capa_evidence_links where ovr_id = v_ovr),
+    'reviews', (select jsonb_agg(jsonb_build_array(id, xmin::text, corrective_action_project_id) order by id)
+      from public.governed_document_review_triggers where source_entity_id = v_ovr),
+    'events', (select jsonb_agg(jsonb_build_array(id, xmin::text) order by id)
+      from public.clinical_governance_events),
+    'projects', (select jsonb_agg(jsonb_build_array(id, xmin::text) order by id)
+      from public.projects where id in (v_project, v_project_2)),
+    'ovr', (select jsonb_agg(jsonb_build_array(id, xmin::text) order by id)
+      from public.ovr_reports where id = v_ovr)
+  ) into v_guard_before;
   execute 'set local role service_role';
   v_result := public.sync_ovr_corrective_action_capa_link(v_compliance, v_ovr);
   execute 'reset role';
   select count(*) into v_after from public.clinical_governance_events
    where event_type = 'ovr_corrective_action_capa_link_reactivated' and entity_id = v_capa_link_id;
-  if v_result->>'reactivated' <> 'false' or v_after <> v_before + 1 then
-    raise exception 'CASE_40B_SECOND_SYNC_EMITTED_REACTIVATION_EVENT';
+  select jsonb_build_object(
+    'links', (select jsonb_agg(jsonb_build_array(id, xmin::text, link_status) order by id)
+      from public.ovr_capa_evidence_links where ovr_id = v_ovr),
+    'reviews', (select jsonb_agg(jsonb_build_array(id, xmin::text, corrective_action_project_id) order by id)
+      from public.governed_document_review_triggers where source_entity_id = v_ovr),
+    'events', (select jsonb_agg(jsonb_build_array(id, xmin::text) order by id)
+      from public.clinical_governance_events),
+    'projects', (select jsonb_agg(jsonb_build_array(id, xmin::text) order by id)
+      from public.projects where id in (v_project, v_project_2)),
+    'ovr', (select jsonb_agg(jsonb_build_array(id, xmin::text) order by id)
+      from public.ovr_reports where id = v_ovr)
+  ) into v_guard_after;
+  if v_result->>'created' <> 'false' or v_result->>'reactivated' <> 'false'
+     or v_after <> v_before + 1 or v_guard_before is distinct from v_guard_after then
+    raise exception 'CASE_C_SECOND_SYNC_NOT_NOOP';
   end if;
 
-  -- Pending, accepted, and rejected are conflicts. xmin snapshots prove that
-  -- all five protected tables remain byte-for-byte and write-for-write stable.
+  -- CASES D-F: conflict states fail before a missing review association can be filled.
   foreach v_status in array array['pending_review', 'accepted', 'rejected'] loop
     update public.ovr_capa_evidence_links set link_status = v_status where id = v_capa_link_id;
+    update public.governed_document_review_triggers
+       set corrective_action_project_id = null
+     where id = v_retire_trigger;
     select jsonb_build_object(
       'links', (select jsonb_agg(jsonb_build_array(id, xmin::text, link_status) order by id)
         from public.ovr_capa_evidence_links where ovr_id = v_ovr),
@@ -458,12 +521,13 @@ begin
       'ovr', (select jsonb_agg(jsonb_build_array(id, xmin::text) order by id)
         from public.ovr_reports where id = v_ovr)
     ) into v_guard_after;
-    if not v_threw or v_guard_before is distinct from v_guard_after then
-      raise exception 'CAPA_%_CONFLICT_DID_NOT_FAIL_CLOSED', upper(v_status);
+    if not v_threw or v_guard_before is distinct from v_guard_after
+       or (select corrective_action_project_id from public.governed_document_review_triggers where id = v_retire_trigger) is not null then
+      raise exception 'CASE_D_E_F_CAPA_CONFLICT_DID_NOT_FAIL_CLOSED: %', upper(v_status);
     end if;
   end loop;
   update public.ovr_capa_evidence_links set link_status = 'active' where id = v_capa_link_id;
-  raise notice 'F2 CAPA LIFECYCLE PROOF PASSED: active no-op; inactive single-event same-ID reactivation; pending_review/accepted/rejected zero-write conflicts';
+  raise notice 'F2-R2 CAPA CASES A-F PASSED: active association; second active no-op; inactive reactivation association; pending_review/accepted/rejected zero-write conflicts';
 
   execute 'reset role';
   update public.ovr_reports set linked_corrective_action_project_id = v_project_2 where id = v_ovr;

@@ -877,14 +877,9 @@ begin
   if found then
     case v_link.link_status
     when 'active' then
-      return jsonb_build_object(
-        'capa_link_id', v_link.id,
-        'ovr_id', p_ovr_id,
-        'corrective_action_project_id', v_project_id,
-        'link_status', v_link.link_status,
-        'created', false,
-        'reactivated', false
-      );
+      -- The CAPA bridge is already canonical, but a later F2 review may still
+      -- need its safe, one-time corrective-action association below.
+      null;
     when 'inactive' then
       update public.ovr_capa_evidence_links set link_status = 'active'
       where id = v_link.id returning * into v_link;
@@ -925,7 +920,7 @@ begin
      set corrective_action_project_id = v_project_id
    where trigger_type = 'ovr' and source_entity_type = 'ovr'
      and source_entity_id = p_ovr_id and source_document_link_id is not null
-     and (corrective_action_project_id is null or corrective_action_project_id = v_project_id);
+     and corrective_action_project_id is null;
 
   return jsonb_build_object(
     'capa_link_id', v_link.id,
