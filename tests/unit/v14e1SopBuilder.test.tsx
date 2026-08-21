@@ -726,7 +726,8 @@ describe('GRC v1.4-E1 / E1R Governed SOP Register & Structured Content Suite', (
 
       expect(screen.getAllByText('SOP-PHARM-2026-0001').length).toBeGreaterThan(0);
       expect(screen.getByText('Inpatient Chemotherapy Dispensing SOP')).toBeDefined();
-      expect(screen.getByText('POL-MED-2026-0001 - Medication Safety & Administration Policy (v1.0)')).toBeDefined();
+      expect(screen.getByText('POL-MED-2026-0001 - Medication Safety & Administration Policy (1.0)')).toBeDefined();
+      expect(screen.getByTestId('controlled-version-label').textContent).toBe('1.0');
       expect(screen.getByText('Chemotherapy Dispensing')).toBeDefined();
       expect(screen.getByText(/Body Surface Area/i)).toBeDefined();
       expect(screen.getByText(/Dual pharmacist sign-off timestamp in EHR/i)).toBeDefined();
