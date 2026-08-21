@@ -150,6 +150,8 @@ test.describe('UI-1 platform foundation visual gate', () => {
     await capture(page, testInfo, 'desktop-dark-home');
     await openPage(page, 'dashboard');
     await capture(page, testInfo, 'desktop-dark-executive');
+    await openPage(page, 'documents');
+    await capture(page, testInfo, 'desktop-dark-policy-register');
     await openPage(page, 'globalSearch');
     await capture(page, testInfo, 'desktop-dark-shared-search');
 
