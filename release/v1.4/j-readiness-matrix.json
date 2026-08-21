@@ -1,0 +1,68 @@
+{
+  "schema_version": "grc-v1.4-j-readiness-v1",
+  "generated_at": "2026-08-21T16:18:00+03:00",
+  "status": "J READINESS ONLY — NOT PRODUCTION RELEASE",
+  "source_parent_head": "8b2a1d0d0672a6253bb533baa4dcf58c170a6a8c",
+  "production_uat_executed": false,
+  "production_ready": false,
+  "synthetic_data_only": true,
+  "contains_secrets": false,
+  "contains_personal_identifiers": false,
+  "controlled_credentials": "NOT EXECUTED — REQUIRES CONTROLLED J UAT SESSION",
+  "roles": [
+    "super_admin",
+    "executive",
+    "governance_admin",
+    "division_head",
+    "department_manager",
+    "project_owner",
+    "milestone_owner",
+    "task_owner",
+    "auditor",
+    "compliance_officer",
+    "viewer",
+    "employee"
+  ],
+  "coverage": [
+    "route visibility",
+    "read/mutation separation",
+    "OVR",
+    "F1",
+    "F2",
+    "Policy/SOP",
+    "Training",
+    "Evidence",
+    "Risk",
+    "Audit",
+    "Approvals",
+    "Arabic/RTL",
+    "390px mobile",
+    "print",
+    "keyboard/accessibility",
+    "empty/restricted/error states"
+  ],
+  "validation": {
+    "full_vitest": "PASS — 90 files, 2051 tests",
+    "full_e2e": "PASS — 69 Playwright tests",
+    "typecheck": "PASS",
+    "production_build": "PASS",
+    "verify_migrations": "PASS — 166 files through migration 211",
+    "patch83u_auth_surface": "PASS — zero unsafe surfaces and zero findings",
+    "responsive_rtl": "PASS — 3 responsive tests, 6 employee Arabic tests, and 12-role J mobile crawl",
+    "controlled_print": "PASS — 1 A4 RTL print/PDF isolation test",
+    "diff_check": "PASS"
+  },
+  "production_actions": {
+    "database_writes": 0,
+    "edge_deployments": 0,
+    "frontend_deployments": 0,
+    "merges": 0,
+    "auth_or_session_control_changes": 0
+  },
+  "controlled_session_items": [
+    "real-persona authentication and session validation",
+    "production-like RLS data-boundary confirmation",
+    "business-owner acceptance and sign-off",
+    "controlled workflow mutations and rollback confirmation"
+  ]
+}
