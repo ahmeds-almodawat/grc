@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   FileText, ShieldCheck, Clock, AlertTriangle, Layers, Award,
-  UploadCloud, Plus, History, Filter
+  History
 } from 'lucide-react';
 import { DataState } from '../components/DataState';
 import { useI18n } from '../i18n/I18nContext';
@@ -18,6 +18,9 @@ import { ReviewsDueTab } from '../components/policy-sop/ReviewsDueTab';
 import { ExceptionsTab } from '../components/policy-sop/ExceptionsTab';
 import { TrainingAckTab } from '../components/policy-sop/TrainingAckTab';
 import { LegacyDocsTab } from '../components/policy-sop/LegacyDocsTab';
+import { PageHeader } from '../components/ui/PageHeader';
+import { MetricCard } from '../components/ui/MetricCard';
+import { Tabs } from '../components/ui/Tabs';
 
 type HubTab = 'policies' | 'sops' | 'reviews' | 'exceptions' | 'training' | 'legacy';
 
@@ -124,23 +127,30 @@ export function PolicyDocumentCenter() {
   }).length;
   const totalSops = sops.length;
 
+  const hubTabs = [
+    { id: 'policies', label: t('policy.hub.policies', 'Policies'), icon: <FileText size={14} />, badge: totalPolicies },
+    { id: 'sops', label: t('policy.hub.sops', 'SOPs (Procedures)'), icon: <Layers size={14} />, badge: totalSops },
+    { id: 'reviews', label: t('policy.hub.reviewsDue', 'Reviews Due'), icon: <Clock size={14} />, badge: reviewsDueCount },
+    { id: 'exceptions', label: t('policy.hub.exceptions', 'Exceptions / Waivers'), icon: <AlertTriangle size={14} /> },
+    { id: 'training', label: t('policy.hub.training', 'Training & Acknowledgments'), icon: <Award size={14} /> },
+    { id: 'legacy', label: t('policy.hub.legacy', 'Legacy Documents'), icon: <History size={14} /> },
+  ];
+
   return (
-    <section className="page-section document-page space-y-6">
-      {/* Hero Header */}
-      <div className="section-heading command-hero">
-        <div>
-          <p className="eyebrow">{t('documents.eyebrow', 'Institutional Governance & Document Control')}</p>
-          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-            {t('nav.policies', 'POLICIES & SOPs')}
-          </h3>
-          <p className="section-subtitle">
-            {t(
-              'documents.subtitle',
-              'Governed hospital policies, standard operating procedures, approval matrix, and compliance attestations.'
-            )}
-          </p>
-        </div>
-      </div>
+    <section className="page-section document-page platform-document-center">
+      <PageHeader
+        eyebrow={t('documents.eyebrow', 'Institutional Governance & Document Control')}
+        title={t('nav.policies', 'Policies & SOPs')}
+        subtitle={t(
+          'documents.subtitle',
+          'Governed hospital policies, standard operating procedures, approval matrix, and compliance attestations.'
+        )}
+        breadcrumbs={[
+          { label: t('nav.governance', 'Governance') },
+          { label: t('nav.policies', 'Policies & SOPs') },
+        ]}
+        icon={<FileText size={20} />}
+      />
 
       {/* View Switcher: Policy Editor vs SOP Editor vs Hub Register View */}
       {isCreatingNewPolicy || (editingPolicyId && currentPolicyDetail) ? (
@@ -165,70 +175,23 @@ export function PolicyDocumentCenter() {
           }}
         />
       ) : (
-        <div className="space-y-6">
-          {/* Summary Metric Cards */}
-          <div className="stats-grid">
-            <div className="stat-card">
-              <FileText size={20} className="text-indigo-600 dark:text-indigo-400" />
-              <div className="stat-value">{totalPolicies}</div>
-              <div className="stat-label">{t('policy.totalPolicies', 'Governed Policies')}</div>
-            </div>
-            <div className="stat-card success">
-              <ShieldCheck size={20} className="text-emerald-600 dark:text-emerald-400" />
-              <div className="stat-value">{activePolicies}</div>
-              <div className="stat-label">{t('policy.activeEffective', 'Active / Effective')}</div>
-            </div>
-            <div className="stat-card warning">
-              <Clock size={20} className="text-amber-600 dark:text-amber-400" />
-              <div className="stat-value">{reviewsDueCount}</div>
-              <div className="stat-label">{t('policy.reviewsDue30d', 'Reviews Due (< 30d)')}</div>
-            </div>
-            <div className="stat-card">
-              <Layers size={20} className="text-purple-600 dark:text-purple-400" />
-              <div className="stat-value">{totalSops}</div>
-              <div className="stat-label">{t('sop.totalSops', 'Standard Operating Procedures')}</div>
-            </div>
+        <div className="platform-document-center__workspace">
+          <div className="platform-metric-grid">
+            <MetricCard label={t('policy.totalPolicies', 'Governed Policies')} value={totalPolicies} icon={<FileText size={18} />} loading={loading} />
+            <MetricCard label={t('policy.activeEffective', 'Active / Effective')} value={activePolicies} icon={<ShieldCheck size={18} />} tone="success" loading={loading} />
+            <MetricCard label={t('policy.reviewsDue30d', 'Reviews Due (< 30d)')} value={reviewsDueCount} icon={<Clock size={18} />} tone="warning" loading={loading} />
+            <MetricCard label={t('sop.totalSops', 'Standard Operating Procedures')} value={totalSops} icon={<Layers size={18} />} tone="purple" loading={loading} />
           </div>
 
-          {/* Hub Main Tabs Panel */}
-          <div className="panel bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            {/* Hub Navigation Tab Bar */}
-            <div className="flex border-b border-slate-200 dark:border-slate-800 overflow-x-auto bg-slate-50/50 dark:bg-slate-900/60 scrollbar-none px-4 pt-2">
-              {[
-                { id: 'policies', label: t('policy.hub.policies', 'Policies'), icon: FileText, count: totalPolicies },
-                { id: 'sops', label: t('policy.hub.sops', 'SOPs (Procedures)'), icon: Layers, count: totalSops },
-                { id: 'reviews', label: t('policy.hub.reviewsDue', 'Reviews Due'), icon: Clock, count: reviewsDueCount },
-                { id: 'exceptions', label: t('policy.hub.exceptions', 'Exceptions / Waivers'), icon: AlertTriangle },
-                { id: 'training', label: t('policy.hub.training', 'Training & Acknowledgments'), icon: Award },
-                { id: 'legacy', label: t('policy.hub.legacy', 'Legacy Documents'), icon: History }
-              ].map(tab => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id as HubTab)}
-                    className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors ${
-                      isActive
-                        ? 'border-indigo-600 text-indigo-600 bg-white dark:bg-slate-900 dark:text-indigo-400'
-                        : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                    }`}
-                  >
-                    <Icon size={14} />
-                    {tab.label}
-                    {typeof tab.count === 'number' && (
-                      <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                        {tab.count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="platform-register-shell">
+            <Tabs
+              tabs={hubTabs}
+              activeId={activeTab}
+              onChange={(id) => setActiveTab(id as HubTab)}
+              label={t('policy.hub.navigation', 'Policy and SOP views')}
+            />
 
-            {/* Hub Content Area */}
-            <div className="p-6">
+            <div className="platform-register-shell__body" id={`${activeTab}-panel`} role="tabpanel">
               <DataState loading={loading} error={error ? error.message : null} empty={false}>
                 {activeTab === 'policies' && (
                   <PolicyRegister

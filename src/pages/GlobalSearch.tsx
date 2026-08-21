@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Search, Sparkles } from 'lucide-react';
 import { DataState } from '../components/DataState';
 import { StatusBadge } from '../components/StatusBadge';
+import { PageHeader } from '../components/ui/PageHeader';
+import { SearchField } from '../components/ui/FilterBar';
+import { ResponsiveTable, type ResponsiveTableColumn } from '../components/ui/ResponsiveTable';
 import { searchGlobal, type GlobalSearchResult } from '../lib/commandCenterApi';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -24,48 +27,54 @@ export function GlobalSearch() {
     }
   };
 
+  const columns: ResponsiveTableColumn<GlobalSearchResult>[] = [
+    { key: 'result', header: t('search.result'), primary: true, render: (row) => <div><strong>{row.title}</strong><p className="muted">{row.subtitle}</p></div> },
+    { key: 'type', header: t('search.type'), render: (row) => <span className="status-badge">{row.sourceType}</span> },
+    { key: 'department', header: t('common.department'), render: (row) => row.department },
+    { key: 'owner', header: t('common.owner'), render: (row) => row.owner },
+    { key: 'status', header: t('common.status'), render: (row) => <StatusBadge status={row.status} /> },
+    { key: 'risk', header: t('common.risk'), render: (row) => <span className={`risk-pill ${row.riskLevel}`}>{row.riskLevel}</span> },
+  ];
+
   return (
     <section className="page-section search-page">
-      <div className="section-heading command-hero">
-        <div>
-          <p className="eyebrow">{t('search.eyebrow')}</p>
-          <h3>{t('search.title')}</h3>
-          <p className="section-subtitle">{t('search.subtitle')}</p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow={t('search.eyebrow')}
+        title={t('search.title')}
+        subtitle={t('search.subtitle')}
+        breadcrumbs={[{ label: t('nav.home', 'Home') }, { label: t('search.title') }]}
+        icon={<Search size={20} />}
+      />
 
       <div className="panel search-command-box">
-        <div className="search-input-wrap">
-          <Search size={22} />
-          <input value={query} onChange={event => setQuery(event.target.value)} placeholder={t('search.placeholder')} onKeyDown={event => { if (event.key === 'Enter') void runSearch(); }} />
-          <button className="primary-button" onClick={() => void runSearch()} disabled={!query.trim() || loading}>{t('common.search')}</button>
+        <SearchField
+          value={query}
+          onChange={setQuery}
+          onSubmit={() => void runSearch()}
+          placeholder={t('search.placeholder')}
+          label={t('search.title')}
+          disabled={loading}
+        />
+        <div className="search-command-box__actions">
+          <p><Sparkles size={15} aria-hidden="true" /> {t('search.hint')}</p>
+          <button className="platform-primary-button" type="button" onClick={() => void runSearch()} disabled={!query.trim() || loading}>
+            <Search size={15} aria-hidden="true" />{t('common.search')}
+          </button>
         </div>
-        <p className="muted"><Sparkles size={15} /> {t('search.hint')}</p>
       </div>
 
       <DataState loading={loading} error={error} empty={results !== null && results.length === 0} emptyMessage={t('common.noData')}>
-        {results && (
-          <div className="panel">
-            <div className="panel-header"><h4>{t('search.results')}</h4><p>{results.length} {t('search.matches')}</p></div>
-            <div className="table-wrapper">
-              <table>
-                <thead><tr><th>{t('search.type')}</th><th>{t('search.result')}</th><th>{t('common.department')}</th><th>{t('common.owner')}</th><th>{t('common.status')}</th><th>{t('common.risk')}</th></tr></thead>
-                <tbody>
-                  {results.map(row => (
-                    <tr key={`${row.sourceTable}-${row.id}`}>
-                      <td><span className="status-badge">{row.sourceType}</span></td>
-                      <td><strong>{row.title}</strong><p className="muted">{row.subtitle}</p></td>
-                      <td>{row.department}</td>
-                      <td>{row.owner}</td>
-                      <td><StatusBadge status={row.status} /></td>
-                      <td><span className={`risk-pill ${row.riskLevel}`}>{row.riskLevel}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+        {results ? (
+          <section className="search-results-panel">
+            <header><h2>{t('search.results')}</h2><span>{results.length} {t('search.matches')}</span></header>
+            <ResponsiveTable
+              ariaLabel={t('search.results')}
+              columns={columns}
+              rows={results}
+              getRowKey={(row) => `${row.sourceTable}-${row.id}`}
+            />
+          </section>
+        ) : null}
       </DataState>
     </section>
   );

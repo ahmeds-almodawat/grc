@@ -692,6 +692,10 @@ export async function historyProof(page: Page) {
 }
 
 export async function waitForActivePatch83vUser(page: Page, role: Patch83vRole = 'super_admin') {
-  await expect(page.getByText(v14jRoleDisplayName(role)).first())
-    .toBeVisible();
+  const activeUser = page.getByText(v14jRoleDisplayName(role)).first();
+  if ((page.viewportSize()?.width ?? 1440) <= 900) {
+    await expect(activeUser).toBeAttached();
+  } else {
+    await expect(activeUser).toBeVisible();
+  }
 }
