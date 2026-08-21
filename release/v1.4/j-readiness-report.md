@@ -3,7 +3,7 @@
 **J READINESS ONLY — NOT PRODUCTION RELEASE**
 
 This package records hermetic source and browser readiness from parent HEAD
-`812e126f7c3d50168174207ed9eae54b9af99cf7`. It uses synthetic test identities,
+`8b2a1d0d0672a6253bb533baa4dcf58c170a6a8c`. It uses synthetic test identities,
 empty synthetic responses, and no production data.
 
 ## Scope

@@ -1,8 +1,8 @@
 {
   "schema_version": "grc-v1.4-j-readiness-v1",
-  "generated_at": "2026-08-21T14:10:43+03:00",
+  "generated_at": "2026-08-21T16:18:00+03:00",
   "status": "J READINESS ONLY — NOT PRODUCTION RELEASE",
-  "source_parent_head": "812e126f7c3d50168174207ed9eae54b9af99cf7",
+  "source_parent_head": "8b2a1d0d0672a6253bb533baa4dcf58c170a6a8c",
   "production_uat_executed": false,
   "production_ready": false,
   "synthetic_data_only": true,
