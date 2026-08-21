@@ -3266,16 +3266,16 @@
       ],
       "relation_type": "view",
       "definition_file": "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql",
-      "definition_line": 941,
+      "definition_line": 936,
       "security_invoker_declared": true,
       "security_invoker": true,
-      "security_invoker_evidence": "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:941",
+      "security_invoker_evidence": "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:936",
       "owner_bypass_prevented": true,
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": true,
       "grant_evidence": [
-        "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1028 revoke all public",
-        "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1032 grant select authenticated"
+        "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1023 revoke all public",
+        "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1027 grant select authenticated"
       ],
       "nested_views": [],
       "base_tables": [
@@ -23517,8 +23517,8 @@
         "definition_line": 682,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
-          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1013 revoke execute public, anon, authenticated",
-          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1021 grant execute service_role"
+          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1008 revoke execute public, anon, authenticated",
+          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1016 grant execute service_role"
         ]
       },
       {
@@ -24334,7 +24334,7 @@
         "definition_line": 486,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
-          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1009 revoke execute public, anon, authenticated, service_role"
+          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1004 revoke execute public, anon, authenticated, service_role"
         ]
       },
       {
@@ -24494,11 +24494,11 @@
         "service_role_execute": true,
         "disposition": "service_role_only",
         "definition_file": "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql",
-        "definition_line": 991,
+        "definition_line": 986,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
-          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1017 revoke execute public, anon, authenticated",
-          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1025 grant execute service_role"
+          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1012 revoke execute public, anon, authenticated",
+          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1020 grant execute service_role"
         ]
       },
       {
@@ -24532,8 +24532,8 @@
         "definition_line": 520,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
-          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1011 revoke execute public, anon, authenticated",
-          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1019 grant execute service_role"
+          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1006 revoke execute public, anon, authenticated",
+          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1014 grant execute service_role"
         ]
       },
       {
@@ -25235,8 +25235,8 @@
         "definition_line": 813,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
-          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1015 revoke execute public, anon, authenticated",
-          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1023 grant execute service_role"
+          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1010 revoke execute public, anon, authenticated",
+          "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:1018 grant execute service_role"
         ]
       },
       {

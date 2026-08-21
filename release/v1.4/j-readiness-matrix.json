@@ -1,8 +1,8 @@
 {
   "schema_version": "grc-v1.4-j-readiness-v1",
-  "generated_at": "2026-08-21T06:30:41+03:00",
+  "generated_at": "2026-08-21T14:10:43+03:00",
   "status": "J READINESS ONLY — NOT PRODUCTION RELEASE",
-  "source_parent_head": "54edbedf7243cacbf70eef2654e79c16a2d6698e",
+  "source_parent_head": "812e126f7c3d50168174207ed9eae54b9af99cf7",
   "production_uat_executed": false,
   "production_ready": false,
   "synthetic_data_only": true,
@@ -42,7 +42,7 @@
     "empty/restricted/error states"
   ],
   "validation": {
-    "full_vitest": "PASS — 90 files, 2050 tests",
+    "full_vitest": "PASS — 90 files, 2051 tests",
     "full_e2e": "PASS — 69 Playwright tests",
     "typecheck": "PASS",
     "production_build": "PASS",
