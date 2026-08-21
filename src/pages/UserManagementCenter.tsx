@@ -2102,7 +2102,7 @@ export function UserManagementCenter() {
 
       <Modal
         open={Boolean(actionMenuUser)}
-        title={`${t('common.actions')} · ${language === 'ar' && actionMenuUser?.full_name_ar ? actionMenuUser.full_name_ar : actionMenuUser?.full_name_en ?? ''}`}
+        title={`${t('userManagement.actionsFor')} ${language === 'ar' && actionMenuUser?.full_name_ar ? actionMenuUser.full_name_ar : actionMenuUser?.full_name_en ?? ''}`}
         onClose={() => setActionMenuUser(null)}
       >
         {actionMenuUser ? (

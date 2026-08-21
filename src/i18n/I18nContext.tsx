@@ -2802,6 +2802,7 @@ const translations: TranslationMap = {
   'userManagement.roleBridgeNotice': { en: 'This action assigns the selected role through the server bridge and preserves the existing access model.', ar: 'يعيّن هذا الإجراء الدور المحدد عبر جسر الخادم مع الحفاظ على نموذج الوصول الحالي.' },
   'userManagement.saveRole': { en: 'Save role', ar: 'حفظ الدور' },
   'userManagement.assignRoleSingle': { en: 'Assign role', ar: 'تعيين دور' },
+  'userManagement.actionsFor': { en: 'Actions for', ar: 'إجراءات للمستخدم' },
   'userManagement.resetTemporaryPassword': { en: 'Reset temporary password', ar: 'إعادة تعيين كلمة المرور المؤقتة' },
   'userManagement.reconcileCredential': { en: 'Reconcile credential state', ar: 'مطابقة حالة بيانات الاعتماد' },
   'userManagement.assignDepartmentSingle': { en: 'Assign department', ar: 'تعيين قسم' },
