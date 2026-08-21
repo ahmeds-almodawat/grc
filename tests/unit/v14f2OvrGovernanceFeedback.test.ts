@@ -127,18 +127,35 @@ describe('GRC v1.4-F2 Migration211 governance feedback contract', () => {
     expect(migration).toContain('F2_CAPA_CROSS_ORGANIZATION_DENIED');
   });
 
-  it('makes CAPA sync idempotent, reactivates only inactive links, and fails closed on every other state', () => {
+  it('preserves active CAPA rows while safely backfilling only missing review associations', () => {
     const sync = migration.slice(
       migration.indexOf('create or replace function public.sync_ovr_corrective_action_capa_link'),
       migration.indexOf('create or replace view public.v_f2_ovr_governance_feedback'),
     );
     expect(migration).toContain('ovr_capa_evidence_links_f2_canonical_uniq');
     expect(migration).toContain('F2_CONFLICTING_CORRECTIVE_PROJECT_POINTERS');
-    expect(sync).toMatch(/when 'active' then[\s\S]*return jsonb_build_object/);
+    const activeBranch = sync.slice(
+      sync.indexOf("when 'active' then"),
+      sync.indexOf("when 'inactive' then"),
+    );
+    expect(activeBranch).toContain('null;');
+    expect(activeBranch).not.toContain('return jsonb_build_object');
     expect(sync).toMatch(/when 'inactive' then[\s\S]*set link_status = 'active'/);
     expect(sync).toContain("raise exception 'F2_CAPA_LINK_STATUS_CONFLICT'");
     expect(sync).not.toMatch(/if v_link\.link_status <> 'active'/);
     expect(sync).toContain("'reactivated', v_reactivated");
+    expect(sync).toContain('and corrective_action_project_id is null;');
+  });
+
+  it('keeps the SQL runtime proof authoritative for active association, inactive reactivation, and pre-association conflicts', () => {
+    const proof = source('tests/sql/v14f2_migration211_ovr_governance_feedback_proof.sql');
+    for (const marker of [
+      'CASE_A_ACTIVE_CAPA_ASSOCIATION_FAILURE',
+      'CASE_B_SECOND_ACTIVE_SYNC_NOT_NOOP',
+      'CASE_C_INACTIVE_CAPA_REACTIVATION_ASSOCIATION_FAILURE',
+      'CASE_D_E_F_CAPA_CONFLICT_DID_NOT_FAIL_CLOSED',
+      'F2-R2 CAPA CASES A-F PASSED',
+    ]) expect(proof).toContain(marker);
   });
 
   it('locks canonical CAPA browser writes and delegates reads to OVR RLS', () => {
