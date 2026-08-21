@@ -1,6 +1,14 @@
 import { expect, type Page, type Route } from '@playwright/test';
+import {
+  buildV14jRoleAssignment,
+  V14J_DEPARTMENT_ID,
+  V14J_DIVISION_ID,
+  V14J_ORGANIZATION_ID,
+  v14jRoleDisplayName,
+  type V14jRole,
+} from '../helpers/v14jCrossRoleMatrix';
 
-export const PATCH83V_ORGANIZATION_ID = '00000000-0000-4000-8000-000000000083';
+export const PATCH83V_ORGANIZATION_ID = V14J_ORGANIZATION_ID;
 export const PATCH83V_USER_ID = '00000000-0000-4000-8000-000000000084';
 export const PATCH83V_REFRESH_TOKEN = 'patch83v-refresh-token-v1';
 
@@ -47,7 +55,7 @@ export type Patch83vBackend = {
   setCredentialResult: (result: CredentialResult) => void;
 };
 
-export type Patch83vRole = 'super_admin' | 'viewer';
+export type Patch83vRole = V14jRole;
 
 function deferred(): Deferred {
   let release!: () => void;
@@ -148,9 +156,9 @@ function userRoster() {
     deactivated_at: null,
     deactivated_by: null,
     deactivation_reason: null,
-    division_id: '00000000-0000-4000-8000-000000000085',
+    division_id: V14J_DIVISION_ID,
     division_name: 'Corporate',
-    department_id: '00000000-0000-4000-8000-000000000086',
+    department_id: V14J_DEPARTMENT_ID,
     department_code: 'IT',
     department_name: 'Information Technology',
     department_name_ar: 'تقنية المعلومات',
@@ -241,6 +249,7 @@ export async function installPatch83vBackend(
   page: Page,
   role: Patch83vRole = 'super_admin',
 ): Promise<Patch83vBackend> {
+  const assignment = buildV14jRoleAssignment(role);
   const accessTokenV1 = jwt(1);
   const accessTokenV2 = jwt(2);
   const proof: Patch83vProof = {
@@ -533,11 +542,11 @@ export async function installPatch83vBackend(
       response = {
         id: PATCH83V_USER_ID,
         email: 'patch83v.admin@example.test',
-        full_name_en: role === 'viewer' ? 'Patch 83V Viewer' : 'Patch 83V Admin',
+        full_name_en: v14jRoleDisplayName(role),
         full_name_ar: null,
         organization_id: PATCH83V_ORGANIZATION_ID,
-        division_id: null,
-        department_id: null,
+        division_id: assignment.divisionId ?? null,
+        department_id: assignment.departmentId ?? null,
         unit_id: null,
         is_active: true,
         user_status: 'active',
@@ -546,10 +555,10 @@ export async function installPatch83vBackend(
     } else if (table === 'user_roles') {
       response = [{
         role,
-        scope: role === 'viewer' ? 'assigned_only' : 'global',
+        scope: assignment.scope,
         organization_id: PATCH83V_ORGANIZATION_ID,
-        division_id: null,
-        department_id: null,
+        division_id: assignment.divisionId ?? null,
+        department_id: assignment.departmentId ?? null,
         unit_id: null,
         is_active: true,
       }];
@@ -562,17 +571,17 @@ export async function installPatch83vBackend(
             code: 'OLD',
             name_en: 'Archived Department',
             name_ar: 'قسم مؤرشف',
-            division_id: '00000000-0000-4000-8000-000000000085',
+            division_id: V14J_DIVISION_ID,
             organization_id: PATCH83V_ORGANIZATION_ID,
             is_active: false,
             archived_at: '2026-01-01T00:00:00.000Z',
           }]
         : [{
-            id: '00000000-0000-4000-8000-000000000086',
+            id: V14J_DEPARTMENT_ID,
             code: 'IT',
             name_en: 'Information Technology',
             name_ar: 'تقنية المعلومات',
-            division_id: '00000000-0000-4000-8000-000000000085',
+            division_id: V14J_DIVISION_ID,
             organization_id: PATCH83V_ORGANIZATION_ID,
             is_active: true,
             archived_at: null,
@@ -595,7 +604,7 @@ export async function installPatch83vBackend(
           }];
     } else if (table === 'divisions') {
       response = [{
-        id: '00000000-0000-4000-8000-000000000085',
+        id: V14J_DIVISION_ID,
         code: 'CORP',
         organization_id: PATCH83V_ORGANIZATION_ID,
         is_active: true,
@@ -683,6 +692,6 @@ export async function historyProof(page: Page) {
 }
 
 export async function waitForActivePatch83vUser(page: Page, role: Patch83vRole = 'super_admin') {
-  await expect(page.getByText(role === 'viewer' ? 'Patch 83V Viewer' : 'Patch 83V Admin').first())
+  await expect(page.getByText(v14jRoleDisplayName(role)).first())
     .toBeVisible();
 }
