@@ -1,10 +1,11 @@
 {
-  "generatedAt": "2026-06-17T21:40:21.570Z",
-  "routeCount": 61,
-  "navCount": 61,
-  "switchCount": 61,
+  "generatedAt": "2026-08-22T22:06:30.432Z",
+  "routeCount": 75,
+  "navCount": 72,
+  "switchCount": 75,
   "missingSwitch": [],
   "navWithoutRoute": [],
   "unusedSwitch": [],
+  "duplicateLocations": [],
   "status": "pass"
 }
