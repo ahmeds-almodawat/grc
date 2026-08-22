@@ -7,6 +7,7 @@ import './styles/dashboard-v11.css';
 import './styles/ui2-governance-policy-sop.css';
 import './styles/ui3-risk-compliance.css';
 import './styles/ui4-audit-capa.css';
+import './styles/ui5-training-ovr.css';
 import { I18nProvider } from './i18n/I18nContext';
 import { AuthProvider } from './auth/AuthProvider';
 import { initializeTheme, ThemeProvider } from './theme/ThemeContext';
