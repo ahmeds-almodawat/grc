@@ -567,6 +567,18 @@ export interface AuditFindingRow {
   audit_title: string | null;
   title: string;
   description: string;
+  finding_classification?: 'formal_finding' | 'advisory_observation';
+  finding_date?: string | null;
+  audit_period_end_date?: string | null;
+  observed_condition?: string | null;
+  effect_impact?: string | null;
+  recommendation?: string | null;
+  criteria?: string | null;
+  auditor_id?: string | null;
+  owner_id?: string | null;
+  reviewed_by?: string | null;
+  created_by?: string | null;
+  created_at?: string | null;
   risk_level: RiskLevel;
   due_date: string | null;
   status: string;

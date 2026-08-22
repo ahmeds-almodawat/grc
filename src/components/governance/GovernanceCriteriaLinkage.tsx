@@ -58,7 +58,7 @@ import { isRestrictedGovernanceLink, versionResolutionLabel } from '../../lib/ui
 import { formatDate, humanize } from '../../lib/format';
 
 export interface GovernanceCriteriaSource {
-  type: Extract<GovernanceSourceType, 'risk' | 'compliance_assessment'>;
+  type: Extract<GovernanceSourceType, 'risk' | 'compliance_assessment' | 'audit_finding' | 'capa'>;
   id: string;
   revisionId?: string | null;
   organizationId: string;
@@ -68,11 +68,14 @@ export interface GovernanceCriteriaSource {
 
 interface GovernanceCriteriaLinkageProps {
   source: GovernanceCriteriaSource;
-  mode: 'risk' | 'compliance';
+  mode: 'risk' | 'compliance' | 'audit' | 'capa';
   title: string;
-  canManage: boolean;
+  canManage?: boolean;
+  canSuggest?: boolean;
+  canReview?: boolean;
   requiredObligationId?: string | null;
   onReviewChange?: (review: GovernanceLinkageReview | null) => void;
+  onLinksChange?: (links: GovernanceCriteriaLink[]) => void;
 }
 
 type DocumentChoice = GovernedPolicyCatalogRow | GovernedSopCatalogRow;
@@ -112,13 +115,21 @@ export function GovernanceCriteriaLinkage({
   source,
   mode,
   title,
-  canManage,
+  canManage = false,
+  canSuggest,
+  canReview,
   requiredObligationId,
   onReviewChange,
+  onLinksChange,
 }: GovernanceCriteriaLinkageProps) {
   const { language } = useI18n();
   const text = useCallback((en: string, ar: string) => language === 'ar' ? ar : en, [language]);
-  const exactVersionRequired = source.type === 'compliance_assessment' || Boolean(source.revisionId);
+  const maySuggest = canSuggest ?? canManage;
+  const mayReview = canReview ?? canManage;
+  const exactVersionRequired = source.type === 'compliance_assessment'
+    || source.type === 'audit_finding'
+    || source.type === 'capa'
+    || Boolean(source.revisionId);
   const [links, setLinks] = useState<GovernanceCriteriaLink[]>([]);
   const [reviews, setReviews] = useState<GovernanceLinkageReview[]>([]);
   const [decisions, setDecisions] = useState<GovernanceCriteriaDecision[]>([]);
@@ -140,6 +151,7 @@ export function GovernanceCriteriaLinkage({
   const [notice, setNotice] = useState<string | null>(null);
   const [resolverWarnings, setResolverWarnings] = useState<string[]>([]);
   const [overrideRationale, setOverrideRationale] = useState('');
+  const [supplementalRationale, setSupplementalRationale] = useState('');
   const [decisionLinkId, setDecisionLinkId] = useState<string | null>(null);
   const [decisionType, setDecisionType] = useState<Exclude<GovernanceDecisionType, 'suggested'>>('confirmed');
   const [significance, setSignificance] = useState<GovernanceSignificance>('primary');
@@ -202,12 +214,13 @@ export function GovernanceCriteriaLinkage({
       setClauses(clauseRows);
       setEvidenceOptions(evidenceRows);
       onReviewChange?.(reviewRows[0] ?? null);
+      onLinksChange?.(scopedLinks);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : text('Governance Context could not be loaded.', 'تعذر تحميل سياق الحوكمة.'));
     } finally {
       setLoading(false);
     }
-  }, [onReviewChange, source.id, source.revisionId, source.type, text]);
+  }, [onLinksChange, onReviewChange, source.id, source.revisionId, source.type, text]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -219,7 +232,13 @@ export function GovernanceCriteriaLinkage({
       sourceEntityId: source.id,
       sourceRevisionId: source.revisionId,
       sourceDate: source.sourceDate,
-      reviewRationale: mode === 'risk' ? 'Risk Governance Context review.' : 'Compliance obligation and internal governance basis review.',
+      reviewRationale: mode === 'risk'
+        ? 'Risk Governance Context review.'
+        : mode === 'compliance'
+          ? 'Compliance obligation and internal governance basis review.'
+          : mode === 'audit'
+            ? 'Independent auditor determination of the exact governed criterion.'
+            : 'CAPA source inheritance and supplemental governance linkage review.',
     });
     return created.review_id;
   }
@@ -247,7 +266,7 @@ export function GovernanceCriteriaLinkage({
     const choices = kind === 'policy'
       ? policies.filter((item) => selectedPolicies.has(item.document_id))
       : sops.filter((item) => selectedSops.has(item.document_id));
-    if (!choices.length) return;
+    if (!choices.length || !maySuggest || (mode === 'capa' && supplementalRationale.trim().length < 3)) return;
     setBusy(true);
     setError(null);
     setResolverWarnings([]);
@@ -267,12 +286,19 @@ export function GovernanceCriteriaLinkage({
           resolutionMethod: resolution.method,
           resolutionDate: source.sourceDate,
           overrideRationale: resolution.method === 'reviewer_override' ? overrideRationale : null,
-          rationale: mode === 'risk' ? 'Governance Context relationship.' : 'Internal implementation basis for the assessed obligation.',
+          rationale: mode === 'risk'
+            ? 'Governance Context relationship.'
+            : mode === 'compliance'
+              ? 'Internal implementation basis for the assessed obligation.'
+              : mode === 'audit'
+                ? 'Auditor-determined criterion applicable at the audit resolution date.'
+                : supplementalRationale,
         });
       }
       setResolverWarnings(warnings);
       setSelectedPolicies(new Set());
       setSelectedSops(new Set());
+      if (mode === 'capa') setSupplementalRationale('');
       setNotice(warnings.length
         ? text('Some selections require version review before they can be added.', 'تتطلب بعض الاختيارات مراجعة الإصدار قبل إضافتها.')
         : text('Governance criteria added for review.', 'تمت إضافة معايير الحوكمة للمراجعة.'));
@@ -299,7 +325,7 @@ export function GovernanceCriteriaLinkage({
   }
 
   async function addDetailCriterion(item: PolicyRequirement | SopProcedureStep) {
-    if (!drilldown?.document.version_id || !('id' in item) || !item.id) return;
+    if (!drilldown?.document.version_id || !('id' in item) || !item.id || !maySuggest || (mode === 'capa' && supplementalRationale.trim().length < 3)) return;
     setBusy(true);
     try {
       const reviewId = await ensureReview();
@@ -312,7 +338,9 @@ export function GovernanceCriteriaLinkage({
         targetSopStepId: drilldown.kind === 'sop' ? item.id : null,
         resolutionMethod: 'direct_selection',
         resolutionDate: source.sourceDate,
-        rationale: drilldown.kind === 'policy' ? 'Specific governed policy requirement.' : 'Specific governed SOP procedure step.',
+        rationale: mode === 'capa'
+          ? supplementalRationale
+          : drilldown.kind === 'policy' ? 'Specific governed policy requirement.' : 'Specific governed SOP procedure step.',
       });
       setNotice(text('Detailed criterion added for review.', 'تمت إضافة المعيار التفصيلي للمراجعة.'));
       await load();
@@ -324,7 +352,7 @@ export function GovernanceCriteriaLinkage({
   }
 
   async function addOtherCriterion() {
-    if (!otherCriterionId) return;
+    if (!otherCriterionId || !maySuggest || (mode === 'capa' && supplementalRationale.trim().length < 3)) return;
     setBusy(true);
     try {
       const reviewId = await ensureReview();
@@ -336,7 +364,9 @@ export function GovernanceCriteriaLinkage({
         targetControlId: otherCriterion === 'control' ? otherCriterionId : null,
         resolutionMethod: 'direct_selection',
         resolutionDate: source.sourceDate,
-        rationale: otherCriterion === 'compliance_obligation' && otherCriterionId === requiredObligationId
+        rationale: mode === 'capa'
+          ? supplementalRationale
+          : otherCriterion === 'compliance_obligation' && otherCriterionId === requiredObligationId
           ? 'External obligation assessed by this Compliance assessment.'
           : 'Additional governed criterion relationship.',
       });
@@ -400,15 +430,24 @@ export function GovernanceCriteriaLinkage({
   }
 
   const otherOptions = otherCriterion === 'compliance_obligation' ? obligations : otherCriterion === 'control' ? controls : clauses;
+  const contextLabel = mode === 'risk'
+    ? text('Governance Context', 'سياق الحوكمة')
+    : mode === 'compliance'
+      ? text('Governance basis', 'أساس الحوكمة')
+      : mode === 'audit'
+        ? text('Audit criteria', 'معايير المراجعة')
+        : text('CAPA governance linkage', 'ربط حوكمة الإجراءات التصحيحية');
 
   return (
     <section className="ui3-governance-workspace" data-testid="governance-criteria-linkage" aria-labelledby="ui3-governance-title">
       <header className="ui3-section-header">
         <div>
-          <span><ShieldCheck size={15} /> {mode === 'risk' ? text('Governance Context', 'سياق الحوكمة') : text('Governance basis', 'أساس الحوكمة')}</span>
+          <span><ShieldCheck size={15} /> {contextLabel}</span>
           <h2 id="ui3-governance-title">{title}</h2>
-          <p>{exactVersionRequired
-            ? text('This review preserves exact approved document versions for the assessment date.', 'تحتفظ هذه المراجعة بإصدارات الوثائق المعتمدة الدقيقة لتاريخ التقييم.')
+          <p>{mode === 'capa'
+            ? text('Inherited source determinations are read-only. Supplemental links require a separate rationale and exact version.', 'تكون تحديدات المصدر الموروثة للقراءة فقط. تتطلب الروابط الإضافية مبرراً مستقلاً وإصداراً دقيقاً.')
+            : exactVersionRequired
+            ? text('This review preserves exact approved document versions for the governing resolution date.', 'تحتفظ هذه المراجعة بإصدارات الوثائق المعتمدة الدقيقة لتاريخ الحل الحاكم.')
             : text('Persistent context follows the Risk without rewriting historical assessment snapshots.', 'يتبع السياق المستمر الخطر دون إعادة كتابة لقطات التقييم التاريخية.')}</p>
         </div>
         <div className="ui3-governance-status">
@@ -423,6 +462,13 @@ export function GovernanceCriteriaLinkage({
       {notice ? <div className="ui3-alert ui3-alert--success" role="status"><CheckCircle2 size={16} /><span>{notice}</span></div> : null}
       {loading ? <div className="ui3-linkage-loading">{text('Loading governed relationships…', 'جار تحميل العلاقات المحكومة…')}</div> : null}
 
+      {mode === 'capa' ? (
+        <label className="ui3-full-field ui4-supplemental-rationale">
+          <span>{text('Supplemental-link rationale', 'مبرر الرابط الإضافي')}</span>
+          <textarea value={supplementalRationale} onChange={(event) => setSupplementalRationale(event.target.value)} placeholder={text('Required before adding a direct CAPA criterion.', 'مطلوب قبل إضافة معيار مباشر للإجراء التصحيحي.')} />
+        </label>
+      ) : null}
+
       <div className="ui3-selector-grid" aria-label={text('Governance document selectors', 'محددات وثائق الحوكمة')}>
         <fieldset className="ui3-document-selector">
           <legend><FileText size={16} /> {text('Related Policies', 'السياسات ذات الصلة')}</legend>
@@ -435,7 +481,7 @@ export function GovernanceCriteriaLinkage({
             {filteredPolicies.slice(0, 8).map((policy) => (
               <div className="ui3-selector-option" key={policy.document_id}>
                 <label>
-                  <input type="checkbox" checked={selectedPolicies.has(policy.document_id)} onChange={() => setSelectedPolicies((current) => toggleSet(current, policy.document_id))} />
+                  <input type="checkbox" disabled={!maySuggest} checked={selectedPolicies.has(policy.document_id)} onChange={() => setSelectedPolicies((current) => toggleSet(current, policy.document_id))} />
                   <span><strong>{policy.document_code || 'POL'}</strong><small>{policy.document_title}</small></span>
                   <em>v{policy.version_label || policy.version_number || '—'}</em>
                 </label>
@@ -445,7 +491,7 @@ export function GovernanceCriteriaLinkage({
               </div>
             ))}
           </div>
-          <button type="button" className="ui3-secondary-button" disabled={!canManage || busy || !selectedPolicies.size} title={!canManage ? text('Your role cannot change governance links.', 'لا يمكن لدورك تغيير روابط الحوكمة.') : undefined} onClick={() => void addDocuments('policy')}>
+          <button type="button" className="ui3-secondary-button" disabled={!maySuggest || busy || !selectedPolicies.size || (mode === 'capa' && supplementalRationale.trim().length < 3)} title={!maySuggest ? text('Your role cannot suggest governance links.', 'لا يمكن لدورك اقتراح روابط الحوكمة.') : undefined} onClick={() => void addDocuments('policy')}>
             <Plus size={15} /> {text('Add selected Policies', 'إضافة السياسات المحددة')}
           </button>
         </fieldset>
@@ -461,7 +507,7 @@ export function GovernanceCriteriaLinkage({
             {filteredSops.slice(0, 8).map((sop) => (
               <div className="ui3-selector-option" key={sop.document_id}>
                 <label>
-                  <input type="checkbox" checked={selectedSops.has(sop.document_id)} onChange={() => setSelectedSops((current) => toggleSet(current, sop.document_id))} />
+                  <input type="checkbox" disabled={!maySuggest} checked={selectedSops.has(sop.document_id)} onChange={() => setSelectedSops((current) => toggleSet(current, sop.document_id))} />
                   <span><strong>{sop.document_code || 'SOP'}</strong><small>{sop.document_title}</small></span>
                   <em>v{sop.version_label || sop.version_number || '—'}</em>
                 </label>
@@ -471,7 +517,7 @@ export function GovernanceCriteriaLinkage({
               </div>
             ))}
           </div>
-          <button type="button" className="ui3-secondary-button" disabled={!canManage || busy || !selectedSops.size} title={!canManage ? text('Your role cannot change governance links.', 'لا يمكن لدورك تغيير روابط الحوكمة.') : undefined} onClick={() => void addDocuments('sop')}>
+          <button type="button" className="ui3-secondary-button" disabled={!maySuggest || busy || !selectedSops.size || (mode === 'capa' && supplementalRationale.trim().length < 3)} title={!maySuggest ? text('Your role cannot suggest governance links.', 'لا يمكن لدورك اقتراح روابط الحوكمة.') : undefined} onClick={() => void addDocuments('sop')}>
             <Plus size={15} /> {text('Add selected SOPs', 'إضافة الإجراءات المحددة')}
           </button>
         </fieldset>
@@ -490,7 +536,7 @@ export function GovernanceCriteriaLinkage({
         <div>
           <label><span>{text('Criterion type', 'نوع المعيار')}</span><select value={otherCriterion} onChange={(event) => { setOtherCriterion(event.target.value as typeof otherCriterion); setOtherCriterionId(''); }}><option value="compliance_obligation">{text('Compliance Obligation', 'التزام الامتثال')}</option><option value="accreditation_clause">{text('Accreditation Clause', 'بند الاعتماد')}</option><option value="control">{text('Control', 'الضابط')}</option></select></label>
           <label><span>{text('Governed record', 'السجل المحكوم')}</span><select value={otherCriterionId} onChange={(event) => setOtherCriterionId(event.target.value)}><option value="">{text('Select a record', 'اختر سجلاً')}</option>{otherOptions.map((item) => <option value={item.id} key={item.id}>{item.code} — {item.title}{item.id === requiredObligationId ? ` (${text('assessed obligation', 'الالتزام المقيم')})` : ''}</option>)}</select></label>
-          <button type="button" className="ui3-secondary-button" disabled={!canManage || busy || !otherCriterionId} onClick={() => void addOtherCriterion()}><Plus size={15} /> {text('Add criterion', 'إضافة معيار')}</button>
+          <button type="button" className="ui3-secondary-button" disabled={!maySuggest || busy || !otherCriterionId || (mode === 'capa' && supplementalRationale.trim().length < 3)} onClick={() => void addOtherCriterion()}><Plus size={15} /> {text('Add criterion', 'إضافة معيار')}</button>
         </div>
       </details>
 
@@ -498,8 +544,8 @@ export function GovernanceCriteriaLinkage({
         <section className="ui3-criterion-drilldown" aria-label={text('Criterion drill-down', 'تفاصيل المعيار')}>
           <header><div><strong>{drilldown.document.document_code}</strong><span>{drilldown.document.document_title}</span></div><button type="button" className="ui3-icon-button" onClick={() => setDrilldown(null)} aria-label={text('Close drill-down', 'إغلاق التفاصيل')}>×</button></header>
           <div>
-            {drilldown.kind === 'policy' ? requirements.map((requirement) => <article key={requirement.id}><span>{String(requirement.sequence_number).padStart(2, '0')}</span><p>{language === 'ar' ? requirement.requirement_statement_ar || requirement.requirement_statement_en : requirement.requirement_statement_en}</p><button type="button" disabled={!canManage || busy} onClick={() => void addDetailCriterion(requirement)}>{text('Add requirement', 'إضافة المتطلب')}</button></article>) : null}
-            {drilldown.kind === 'sop' ? steps.map((step) => <article key={step.id}><span>{String(step.sequence_number).padStart(2, '0')}</span><p>{language === 'ar' ? step.action_instruction_ar || step.action_instruction_en : step.action_instruction_en}</p><button type="button" disabled={!canManage || busy} onClick={() => void addDetailCriterion(step)}>{text('Add step', 'إضافة الخطوة')}</button></article>) : null}
+            {drilldown.kind === 'policy' ? requirements.map((requirement) => <article key={requirement.id}><span>{String(requirement.sequence_number).padStart(2, '0')}</span><p>{language === 'ar' ? requirement.requirement_statement_ar || requirement.requirement_statement_en : requirement.requirement_statement_en}</p><button type="button" disabled={!maySuggest || busy || (mode === 'capa' && supplementalRationale.trim().length < 3)} onClick={() => void addDetailCriterion(requirement)}>{text('Add requirement', 'إضافة المتطلب')}</button></article>) : null}
+            {drilldown.kind === 'sop' ? steps.map((step) => <article key={step.id}><span>{String(step.sequence_number).padStart(2, '0')}</span><p>{language === 'ar' ? step.action_instruction_ar || step.action_instruction_en : step.action_instruction_en}</p><button type="button" disabled={!maySuggest || busy || (mode === 'capa' && supplementalRationale.trim().length < 3)} onClick={() => void addDetailCriterion(step)}>{text('Add step', 'إضافة الخطوة')}</button></article>) : null}
             {drilldown.kind === 'policy' && !requirements.length ? <p>{text('No requirements are visible for this version.', 'لا توجد متطلبات ظاهرة لهذا الإصدار.')}</p> : null}
             {drilldown.kind === 'sop' && !steps.length ? <p>{text('No procedure steps are visible for this version.', 'لا توجد خطوات إجراء ظاهرة لهذا الإصدار.')}</p> : null}
           </div>
@@ -507,7 +553,7 @@ export function GovernanceCriteriaLinkage({
       ) : null}
 
       <section className="ui3-link-register">
-        <div className="ui3-subsection-title"><div><Link2 size={17} /><span><strong>{text('Governed relationships', 'العلاقات المحكومة')}</strong><small>{links.length} {text('relationship records', 'سجلات علاقة')}</small></span></div>{canManage ? <button type="button" className="ui3-secondary-button" onClick={() => setShowCompletion((value) => !value)} disabled={!currentReview || currentReview.review_status === 'completed'}><ShieldCheck size={15} /> {text('Complete review', 'إكمال المراجعة')}</button> : null}</div>
+        <div className="ui3-subsection-title"><div><Link2 size={17} /><span><strong>{text('Governed relationships', 'العلاقات المحكومة')}</strong><small>{links.length} {text('relationship records', 'سجلات علاقة')}</small></span></div>{mayReview ? <button type="button" className="ui3-secondary-button" onClick={() => setShowCompletion((value) => !value)} disabled={!currentReview || currentReview.review_status === 'completed'}><ShieldCheck size={15} /> {text('Complete review', 'إكمال المراجعة')}</button> : null}</div>
         {!links.length && !loading ? <div className="ui3-empty-state"><Link2 size={22} /><strong>{text('No governance relationships recorded', 'لا توجد علاقات حوكمة مسجلة')}</strong><p>{text('A valid completed review may still conclude that no document applies, with rationale.', 'يمكن أن تخلص المراجعة المكتملة بشكل صحيح إلى عدم انطباق أي وثيقة مع ذكر المبرر.')}</p></div> : null}
         <div className="ui3-link-list">
           {links.map((link) => {
@@ -523,7 +569,7 @@ export function GovernanceCriteriaLinkage({
                 <div className="ui3-link-row__status"><span className={`ui3-status ui3-status--${link.decision_type === 'confirmed' ? 'success' : link.decision_type === 'rejected' ? 'danger' : 'warning'}`}>{humanize(link.decision_type || 'suggested', language)}</span><small>{humanize(link.significance || 'not_assessed', language)}</small></div>
                 <dl><div><dt>{text('Adherence', 'الالتزام')}</dt><dd>{humanize(link.adherence_status || 'not_assessed', language)}</dd></div><div><dt>{text('Adequacy', 'الكفاية')}</dt><dd>{humanize(link.adequacy_status || 'not_assessed', language)}</dd></div><div><dt>{text('Resolution', 'الحل')}</dt><dd>{humanize(link.resolution_method, language)}</dd></div><div><dt>{text('Evidence', 'الأدلة')}</dt><dd>{linkEvidence.length}</dd></div></dl>
                 <div className="ui3-link-row__lineage">{link.inherited ? <span><GitBranch size={14} /> {text('Inherited', 'موروث')}</span> : <span><Link2 size={14} /> {text('Direct', 'مباشر')}</span>}<small>{link.root_event_key}</small></div>
-                <button type="button" className="ui3-secondary-button" disabled={!canManage || busy} title={!canManage ? text('Reviewer permission is required.', 'يلزم إذن المراجع.') : undefined} onClick={() => { setDecisionLinkId(link.link_id); setDecisionRationale(''); }}>{link.current_decision_id ? text('Correct decision', 'تصحيح القرار') : text('Review link', 'مراجعة الرابط')}</button>
+                <button type="button" className="ui3-secondary-button" disabled={!mayReview || link.inherited || busy} title={link.inherited ? text('Inherited source determinations are read-only.', 'تحديدات المصدر الموروثة للقراءة فقط.') : !mayReview ? text('Independent reviewer permission is required.', 'يلزم إذن مراجع مستقل.') : undefined} onClick={() => { setDecisionLinkId(link.link_id); setDecisionRationale(''); }}>{link.inherited ? text('Source-owned', 'مملوك للمصدر') : link.current_decision_id ? text('Correct decision', 'تصحيح القرار') : text('Review link', 'مراجعة الرابط')}</button>
                 <details className="ui3-link-history"><summary><History size={14} /> {text('Decision history', 'سجل القرارات')} ({linkDecisions.length})</summary><ol>{linkDecisions.map((decision) => <li key={decision.id}><span className={`ui3-history-dot ui3-history-dot--${decision.decision_type}`} /><div><strong>{humanize(decision.decision_type, language)} · {formatDate(decision.decided_at)}</strong><p>{decision.rationale || text('No rationale recorded.', 'لا يوجد مبرر مسجل.')}</p><small>{decision.correction_reason ? `${text('Correction', 'تصحيح')}: ${decision.correction_reason}` : text('Original decision', 'القرار الأصلي')}</small></div></li>)}</ol></details>
               </article>
             );
