@@ -27,7 +27,44 @@ export interface RuntimeActionRegistryEntry {
 
 const pending = 'pending_review' as const;
 
+const ui4AuditCapaActions = [
+  'ui4_record_audit_criteria_dispute',
+  'ui4_create_capa',
+  'ui4_assign_capa',
+  'ui4_submit_capa_plan',
+  'ui4_approve_capa_plan',
+  'ui4_reject_capa_plan',
+  'ui4_create_capa_action_item',
+  'ui4_update_capa_action_item',
+  'ui4_submit_capa_completion',
+  'ui4_validate_capa_completion',
+  'ui4_reject_capa_completion',
+  'ui4_start_capa_effectiveness',
+  'ui4_complete_capa_effectiveness',
+  'ui4_request_capa_closure',
+  'ui4_approve_capa_closure',
+  'ui4_reject_capa_closure',
+  'ui4_reopen_capa',
+  'ui4_refresh_capa_inheritance',
+] as const;
+
+const ui4RuntimeActionEntries: RuntimeActionRegistryEntry[] = ui4AuditCapaActions.map((actionName) => ({
+  actionName,
+  actionTransport: 'authenticated_edge_bridge',
+  moduleName: actionName.includes('audit') ? 'Audit' : 'CAPA',
+  classification: 'workflow_runtime',
+  riskLevel: actionName.includes('approve') || actionName.includes('reject') || actionName.includes('closure') ? 'high' : 'medium',
+  requiredAccessLevel: actionName.includes('audit')
+    ? 'assigned auditee for disputes; assigned auditor or independent governance reviewer for criteria'
+    : 'CAPA owner/assignee or authorized governance reviewer according to the Patch 28 transition',
+  ownerRole: actionName.includes('audit') ? 'Audit Manager' : 'CAPA Governance Owner',
+  reviewStatus: pending,
+  directBrowserException: false,
+  notes: 'UI-4 workflow action uses the authenticated Edge bridge and service-role-only database contract.',
+}));
+
 export const runtimeActionRegistry: RuntimeActionRegistryEntry[] = [
+  ...ui4RuntimeActionEntries,
   { actionName: 'evaluate_evidence_gate', actionTransport: 'authenticated_edge_bridge', moduleName: 'Accreditation Assurance', classification: 'accreditation_assurance', riskLevel: 'high', requiredAccessLevel: 'governance_admin or compliance_officer', ownerRole: 'Quality Governance Lead', reviewStatus: pending, directBrowserException: false, notes: 'Evaluates evidence gates through the privileged action bridge.' },
   { actionName: 'evaluate_evidence_gate_for_entity', actionTransport: 'authenticated_edge_bridge', moduleName: 'Accreditation Assurance', classification: 'accreditation_assurance', riskLevel: 'high', requiredAccessLevel: 'governance_admin or compliance_officer', ownerRole: 'Quality Governance Lead', reviewStatus: pending, directBrowserException: false, notes: 'Entity wrapper for evidence gate evaluation through the privileged action bridge.' },
   { actionName: 'request_evidence_gate_waiver', actionTransport: 'authenticated_edge_bridge', moduleName: 'Accreditation Assurance', classification: 'accreditation_assurance', riskLevel: 'high', requiredAccessLevel: 'governance_admin or compliance_officer', ownerRole: 'Quality Governance Lead', reviewStatus: pending, directBrowserException: false, notes: 'Creates a governed evidence gate waiver request with audit trail.' },

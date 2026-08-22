@@ -146,6 +146,27 @@ const patch24AuditActions = new Set([
   'generate_audit_closure_pack_index',
 ]);
 
+const ui4AuditCapaActions = new Set([
+  'ui4_record_audit_criteria_dispute',
+  'ui4_create_capa',
+  'ui4_assign_capa',
+  'ui4_submit_capa_plan',
+  'ui4_approve_capa_plan',
+  'ui4_reject_capa_plan',
+  'ui4_create_capa_action_item',
+  'ui4_update_capa_action_item',
+  'ui4_submit_capa_completion',
+  'ui4_validate_capa_completion',
+  'ui4_reject_capa_completion',
+  'ui4_start_capa_effectiveness',
+  'ui4_complete_capa_effectiveness',
+  'ui4_request_capa_closure',
+  'ui4_approve_capa_closure',
+  'ui4_reject_capa_closure',
+  'ui4_reopen_capa',
+  'ui4_refresh_capa_inheritance',
+]);
+
 const patch68EvidenceClosureActions = new Set([
   'record_production_evidence_closure_action',
   'get_production_evidence_closure_action_history',
@@ -305,6 +326,7 @@ const allowedActions = new Set([
   ...patch22RiskActions,
   ...patch23EvidenceActions,
   ...patch24AuditActions,
+  ...ui4AuditCapaActions,
   ...patch26DocumentActions,
   ...patch29TrainingActions,
   ...f1OvrGovernedVersionActions,
@@ -3432,6 +3454,28 @@ Deno.serve(async (request) => {
     if (error) {
       const authorizationFailure =
         /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|CROSS_ORGANIZATION|REVIEWER|VALIDATOR|APPROVER|ADMIN|BLOCKED|EVIDENCE|WAIVER|REASON/i
+          .test(error.message);
+      return jsonResponse({
+        ok: false,
+        error: error.message,
+        code: error.code,
+        action,
+      }, authorizationFailure ? 403 : 409);
+    }
+
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
+  if (ui4AuditCapaActions.has(action)) {
+    const { data, error } = await serviceClient.rpc('ui4_audit_capa_workflow_bridge', {
+      p_actor_id: userData.user.id,
+      p_action: action,
+      p_payload: requestBody.payload ?? {},
+    });
+
+    if (error) {
+      const authorizationFailure =
+        /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|CROSS_ORGANIZATION|AUTHORITY|READ_ONLY|BLOCKED|EVIDENCE|EFFECTIVENESS|REASON/i
           .test(error.message);
       return jsonResponse({
         ok: false,
