@@ -49,7 +49,6 @@ describe("Patch 83T User Excel Import deployment feature flag", () => {
 
 describe("Patch 83U deployment compatibility feature flag", () => {
   it.each([
-    [undefined, false],
     ["", false],
     ["false", false],
     ["TRUE", false],
@@ -59,6 +58,12 @@ describe("Patch 83U deployment compatibility feature flag", () => {
     ["true", true],
   ])("maps %s to %s", (value, expected) => {
     expect(isPatch83uCredentialGovernanceEnabled(value)).toBe(expected);
+  });
+
+  it("defaults to the exact build-time flag value", () => {
+    const configured = import.meta.env.VITE_PATCH83U_CREDENTIAL_GOVERNANCE_ENABLED === "true";
+    expect(isPatch83uCredentialGovernanceEnabled()).toBe(configured);
+    expect(isPatch83uCredentialGovernanceEnabled(undefined)).toBe(configured);
   });
 
   it("pins the frontend, Edge, and schema contracts", () => {
