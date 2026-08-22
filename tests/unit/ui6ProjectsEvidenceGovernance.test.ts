@@ -11,6 +11,8 @@ const legacyEvidence = source('src/pages/Evidence.tsx');
 const api = source('src/lib/grcApi.ts');
 const fixtures = source('tests/e2e/ui6Fixtures.ts');
 const css = source('src/styles/ui6-projects-evidence.css');
+const patch23Audit = source('scripts/patch23-evidence-governance-audit.mjs');
+const patch23BridgeAudit = source('scripts/patch23-evidence-bridge-audit.mjs');
 
 describe('UI-6 Projects and Evidence governed workspaces', () => {
   it('publishes the locked ten-view Projects and Evidence families', () => {
@@ -96,5 +98,14 @@ describe('UI-6 Projects and Evidence governed workspaces', () => {
     expect(css).toContain('@media (max-width: 560px)');
     expect(css).not.toMatch(/letter-spacing:\s*-/);
     expect(fs.existsSync(path.join(root, 'supabase/migrations/215_ui6_projects_evidence.sql'))).toBe(false);
+  });
+
+  it('keeps the Patch 23 audit aligned with the composed UI-6 center and governed review console', () => {
+    expect(patch23Audit).toContain("read('src/pages/EvidenceCenter.tsx')");
+    expect(patch23Audit).toContain('EvidenceGovernanceConsole');
+    expect(patch23Audit).toContain('GovernedEvidenceAccess');
+    expect(patch23Audit).not.toContain("'generateEvidencePackIndex'");
+    expect(patch23BridgeAudit).toContain("action !== 'generate_evidence_pack_index'");
+    expect(patch23BridgeAudit).toContain('generic UI relationship marker');
   });
 });

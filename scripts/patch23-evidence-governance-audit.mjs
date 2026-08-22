@@ -15,7 +15,7 @@ function findMissing(source, required) {
 const migration = await read('supabase/migrations/085_patch23_evidence_bridge_governance.sql');
 const domain = await read('src/types/domain.ts');
 const api = await read('src/lib/grcApi.ts');
-const evidencePage = await read('src/pages/Evidence.tsx');
+const evidencePage = `${await read('src/pages/Evidence.tsx')}\n${await read('src/pages/EvidenceCenter.tsx')}`;
 
 const migrationChecks = [
   'evidence_code',
@@ -73,23 +73,23 @@ const apiChecks = [
   'approveEvidenceGateWaiver',
   'rejectEvidenceGateWaiver',
   'checkEvidenceGateStatus',
-  'generateEvidencePackIndex',
 ];
 
 const uiChecks = [
-  'Evidence Governance Center',
-  'Evidence review queue',
-  'Evidence gap dashboard',
-  'Evidence closure gate status',
-  'Sensitive evidence register',
-  'Evidence pack index',
-  'Chain of custody',
-  'Submit',
-  'Accept',
-  'Reject',
-  'Revision',
-  'Supersede',
-  'Lock',
+  'EvidenceGovernanceConsole',
+  'getEvidenceReviewQueue',
+  'getEvidenceGapDashboard',
+  'getEvidenceClosureGateStatus',
+  'getSensitiveEvidenceRegister',
+  'getEvidencePackIndex',
+  'getEvidenceChainOfCustody',
+  "openActionModal('evidence', 'submit'",
+  "openActionModal('evidence', 'accept'",
+  "openActionModal('evidence', 'reject'",
+  "openActionModal('evidence', 'revision'",
+  "openActionModal('evidence', 'supersede'",
+  "openActionModal('evidence', 'lock'",
+  'GovernedEvidenceAccess',
 ];
 
 const results = {
