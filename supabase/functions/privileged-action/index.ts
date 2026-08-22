@@ -243,6 +243,14 @@ const f2OvrGovernanceFeedbackActions = new Set([
   'sync_ovr_corrective_action_capa_link',
 ]);
 
+const governanceCriteriaLinkageActions = new Set([
+  'start_governance_linkage_review',
+  'suggest_governance_criterion_link',
+  'append_governance_criterion_decision',
+  'supersede_governance_criterion_link',
+  'complete_governance_linkage_review',
+]);
+
 const allowedActions = new Set([
   'ovr_executive_dashboard_analytics',
   'search_grc_global',
@@ -287,6 +295,7 @@ const allowedActions = new Set([
   ...patch29TrainingActions,
   ...f1OvrGovernedVersionActions,
   ...f2OvrGovernanceFeedbackActions,
+  ...governanceCriteriaLinkageActions,
   ...patch68EvidenceClosureActions,
   ...patch76CutoverDecisionActions,
   ...patch77LivePilotActions,
@@ -4812,6 +4821,137 @@ Deno.serve(async (request) => {
     } catch (error) {
       const mapped = mapF2OvrGovernanceFeedbackError(error);
       return errorResponse(mapped.error, mapped.status, mapped.code, mapped.detail, { action });
+    }
+  }
+
+  if (governanceCriteriaLinkageActions.has(action)) {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, [
+        'actor_id', 'p_actor_id', 'user_id', 'organization_id',
+        'acting_user_id', 'authenticated_user_id', 'target_user_id',
+        'created_by', 'reviewed_by', 'decision_actor_id',
+      ]);
+
+      const allowedKeys = action === 'start_governance_linkage_review'
+        ? new Set(['source_entity_type', 'source_entity_id', 'source_revision_id', 'source_date', 'review_rationale'])
+        : action === 'suggest_governance_criterion_link'
+        ? new Set([
+            'review_id', 'target_criterion_type', 'target_document_id', 'target_version_id',
+            'target_policy_requirement_id', 'target_sop_step_id', 'target_compliance_obligation_id',
+            'target_accreditation_clause_id', 'target_control_id', 'relationship_origin',
+            'resolution_method', 'resolution_date', 'override_rationale',
+            'root_source_entity_type', 'root_source_entity_id', 'parent_link_id', 'rationale',
+          ])
+        : action === 'append_governance_criterion_decision'
+        ? new Set([
+            'link_id', 'decision_type', 'significance', 'adherence_status', 'adequacy_status',
+            'rationale', 'correction_reason', 'supersedes_decision_id', 'evidence_file_ids',
+          ])
+        : action === 'supersede_governance_criterion_link'
+        ? new Set(['link_id', 'replacement_link_id', 'reason'])
+        : new Set(['review_id', 'review_outcome', 'review_rationale', 'uncertainty_recorded']);
+      assertOnlyAllowedKeys(payload, allowedKeys, `GOVERNANCE_CRITERIA_${action}_PAYLOAD`);
+
+      const capabilityProbe = await serviceClient.rpc('get_governance_criteria_linkage_capabilities');
+      const capability = capabilityProbe.data as Record<string, unknown> | null;
+      if (capabilityProbe.error
+        || capability?.contract_version !== 'governance-criteria-linkage-v1'
+        || capability?.schema_version !== 212) {
+        return errorResponse(
+          'Database migration 212 is required for governed criteria linkage.',
+          409,
+          'GOV_LINK_MIGRATION_212_REQUIRED',
+          'Migration 212 installs the normalized linkage and immutable-decision contract.',
+          { action },
+        );
+      }
+
+      const optionalDate = (value: unknown, fieldName: string): string | null => {
+        const date = boundedString(value, 10, fieldName);
+        if (date !== null && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+          throw new Error(`INVALID_DATE_${fieldName.toUpperCase()}`);
+        }
+        return date;
+      };
+      let rpcResult;
+
+      if (action === 'start_governance_linkage_review') {
+        rpcResult = await serviceClient.rpc('start_governance_linkage_review', {
+          p_actor_id: userData.user.id,
+          p_source_entity_type: boundedString(payload.source_entity_type, 32, 'source_entity_type', true),
+          p_source_entity_id: requireCanonicalUuid(payload.source_entity_id, 'source_entity_id'),
+          p_source_revision_id: optionalCanonicalUuid(payload.source_revision_id, 'source_revision_id'),
+          p_source_date: optionalDate(payload.source_date, 'source_date'),
+          p_review_rationale: boundedString(payload.review_rationale, 4000, 'review_rationale'),
+        });
+      } else if (action === 'suggest_governance_criterion_link') {
+        rpcResult = await serviceClient.rpc('suggest_governance_criterion_link', {
+          p_actor_id: userData.user.id,
+          p_review_id: requireCanonicalUuid(payload.review_id, 'review_id'),
+          p_target_criterion_type: boundedString(payload.target_criterion_type, 64, 'target_criterion_type', true),
+          p_target_document_id: optionalCanonicalUuid(payload.target_document_id, 'target_document_id'),
+          p_target_version_id: optionalCanonicalUuid(payload.target_version_id, 'target_version_id'),
+          p_target_policy_requirement_id: optionalCanonicalUuid(payload.target_policy_requirement_id, 'target_policy_requirement_id'),
+          p_target_sop_step_id: optionalCanonicalUuid(payload.target_sop_step_id, 'target_sop_step_id'),
+          p_target_compliance_obligation_id: optionalCanonicalUuid(payload.target_compliance_obligation_id, 'target_compliance_obligation_id'),
+          p_target_accreditation_clause_id: optionalCanonicalUuid(payload.target_accreditation_clause_id, 'target_accreditation_clause_id'),
+          p_target_control_id: optionalCanonicalUuid(payload.target_control_id, 'target_control_id'),
+          p_relationship_origin: boundedString(payload.relationship_origin, 32, 'relationship_origin') ?? 'direct',
+          p_resolution_method: boundedString(payload.resolution_method, 32, 'resolution_method') ?? 'direct_selection',
+          p_resolution_date: optionalDate(payload.resolution_date, 'resolution_date'),
+          p_override_rationale: boundedString(payload.override_rationale, 4000, 'override_rationale'),
+          p_root_source_entity_type: boundedString(payload.root_source_entity_type, 32, 'root_source_entity_type'),
+          p_root_source_entity_id: optionalCanonicalUuid(payload.root_source_entity_id, 'root_source_entity_id'),
+          p_parent_link_id: optionalCanonicalUuid(payload.parent_link_id, 'parent_link_id'),
+          p_rationale: boundedString(payload.rationale, 4000, 'rationale'),
+        });
+      } else if (action === 'append_governance_criterion_decision') {
+        const evidenceFileIds = payload.evidence_file_ids ?? [];
+        if (!Array.isArray(evidenceFileIds) || evidenceFileIds.length > 50) {
+          throw new Error('INVALID_EVIDENCE_FILE_IDS');
+        }
+        rpcResult = await serviceClient.rpc('append_governance_criterion_decision', {
+          p_actor_id: userData.user.id,
+          p_link_id: requireCanonicalUuid(payload.link_id, 'link_id'),
+          p_decision_type: boundedString(payload.decision_type, 32, 'decision_type', true),
+          p_significance: boundedString(payload.significance, 32, 'significance'),
+          p_adherence_status: boundedString(payload.adherence_status, 64, 'adherence_status'),
+          p_adequacy_status: boundedString(payload.adequacy_status, 64, 'adequacy_status'),
+          p_rationale: boundedString(payload.rationale, 4000, 'rationale'),
+          p_correction_reason: boundedString(payload.correction_reason, 4000, 'correction_reason'),
+          p_supersedes_decision_id: optionalCanonicalUuid(payload.supersedes_decision_id, 'supersedes_decision_id'),
+          p_evidence_file_ids: evidenceFileIds.map((id, index) => requireCanonicalUuid(id, `evidence_file_ids_${index}`)),
+        });
+      } else if (action === 'supersede_governance_criterion_link') {
+        rpcResult = await serviceClient.rpc('supersede_governance_criterion_link', {
+          p_actor_id: userData.user.id,
+          p_link_id: requireCanonicalUuid(payload.link_id, 'link_id'),
+          p_replacement_link_id: requireCanonicalUuid(payload.replacement_link_id, 'replacement_link_id'),
+          p_reason: boundedString(payload.reason, 4000, 'reason', true),
+        });
+      } else {
+        rpcResult = await serviceClient.rpc('complete_governance_linkage_review', {
+          p_actor_id: userData.user.id,
+          p_review_id: requireCanonicalUuid(payload.review_id, 'review_id'),
+          p_review_outcome: boundedString(payload.review_outcome, 64, 'review_outcome', true),
+          p_review_rationale: boundedString(payload.review_rationale, 4000, 'review_rationale', true),
+          p_uncertainty_recorded: validateStrictBoolean(payload.uncertainty_recorded, 'uncertainty_recorded', false),
+        });
+      }
+
+      if (rpcResult.error) throw rpcResult.error;
+      return jsonResponse({ ok: true, action, result: rpcResult.data }, 200);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const denied = /AUTHORITY|DENIED|ACTIVE_SAME_ORG|SERVICE_ROLE|ORGANIZATION/i.test(message);
+      return errorResponse(
+        'Governed criteria linkage operation failed.',
+        denied ? 403 : 409,
+        denied ? 'GOV_LINK_AUTHORIZATION_DENIED' : 'GOV_LINK_OPERATION_REJECTED',
+        message,
+        { action },
+      );
     }
   }
 
