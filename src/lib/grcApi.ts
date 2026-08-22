@@ -371,7 +371,7 @@ export async function getProjects(): Promise<ProjectRow[]> {
   try {
     const { data, error } = await supabase
       .from('projects')
-      .select('*, departments(name_en,name_ar), owner:profiles!projects_owner_id_fkey(full_name_en,full_name_ar)')
+      .select('*, departments(name_en,name_ar), owner:profiles!projects_owner_id_fkey(full_name_en,full_name_ar), sponsor:profiles!projects_sponsor_id_fkey(full_name_en,full_name_ar)')
       .order('target_end_date', { ascending: true, nullsFirst: false })
       .limit(100);
     if (error) throw error;
@@ -380,6 +380,31 @@ export async function getProjects(): Promise<ProjectRow[]> {
     logFallback('projects', error);
     return emptyLiveArray<any>();
   }
+}
+
+export interface ProjectCapaLinkRow {
+  link_id: string;
+  organization_id: string;
+  capa_id: string;
+  capa_code: string | null;
+  capa_title: string;
+  linked_item_type: string;
+  linked_item_id: string | null;
+  link_type: string | null;
+  required_flag: boolean;
+  created_at: string;
+}
+
+export async function getProjectCapaLinks(): Promise<ProjectCapaLinkRow[]> {
+  const client = requireLiveSupabase();
+  const { data, error } = await client
+    .from('v_patch28_capa_link_index')
+    .select('*')
+    .eq('linked_item_type', 'project')
+    .order('created_at', { ascending: false })
+    .limit(500);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ProjectCapaLinkRow[];
 }
 
 export async function getProjectMilestones(projectId: string): Promise<MilestoneRow[]> {

@@ -69,7 +69,7 @@ const ProductionHardeningLaunchCenter = lazy(() => import("./pages/ProductionHar
 import { ProductionGoNoGoCenter } from "./pages/ProductionGoNoGoCenter";
 import { Dashboard } from "./pages/Dashboard";
 import { Analytics } from "./pages/Analytics";
-const Projects = lazy(() => import("./pages/Projects").then(module => ({ default: module.Projects })));
+const Projects = lazy(() => import("./pages/ProjectPortfolioCenter").then(module => ({ default: module.ProjectPortfolioCenter })));
 import { Departments } from "./pages/Departments";
 import { Risks } from "./pages/Risks";
 import { Compliance } from "./pages/Compliance";
@@ -99,7 +99,7 @@ import { Admin } from "./pages/Admin";
 const UserManagementCenter = lazy(() => import("./pages/UserManagementCenter").then(module => ({ default: module.UserManagementCenter })));
 import { MyWork } from "./pages/MyWork";
 import { Approvals } from "./pages/Approvals";
-const Evidence = lazy(() => import("./pages/Evidence").then(module => ({ default: module.Evidence })));
+const Evidence = lazy(() => import("./pages/EvidenceCenter").then(module => ({ default: module.EvidenceCenter })));
 import { Escalations } from "./pages/Escalations";
 import { ImportExport } from "./pages/ImportExport";
 import { AccessControl } from "./pages/AccessControl";
@@ -257,7 +257,7 @@ function DailyOperationsHub({ setPage }: { setPage: (page: PageKey) => void }) {
           label: t("hub.tab.evidence"),
           description: t("hub.tab.evidence.desc"),
           icon: <FileCheck2 size={17} />,
-          content: <Evidence />,
+          content: <Evidence setPage={setPage} />,
         },
         {
           id: "projects",
@@ -1345,7 +1345,7 @@ export default function App() {
       case "approvals":
         return <Approvals />;
       case "evidence":
-        return <Evidence />;
+        return <Evidence setPage={setPage} />;
       case "importExport":
         return <ImportExport />;
       case "accessControl":

@@ -255,6 +255,7 @@ export interface ProjectRow {
   description: string | null;
   category: string;
   source_type: SourceType;
+  source_reference_id?: string | null;
   owner_id: string | null;
   sponsor_id: string | null;
   created_by?: string | null;
@@ -267,8 +268,12 @@ export interface ProjectRow {
   evidence_required: boolean;
   closure_approval_required: boolean;
   delay_reason: string | null;
+  cancellation_reason?: string | null;
+  created_at?: string;
+  updated_at?: string;
   departments?: { name_en: string | null; name_ar: string | null } | null;
   owner?: { full_name_en: string | null; full_name_ar: string | null } | null;
+  sponsor?: { full_name_en: string | null; full_name_ar: string | null } | null;
 }
 
 export interface MilestoneRow {
@@ -284,6 +289,8 @@ export interface MilestoneRow {
   progress_percent: number;
   evidence_required: boolean;
   delay_reason: string | null;
+  created_at?: string;
+  updated_at?: string;
   owner?: { full_name_en: string | null; full_name_ar: string | null } | null;
 }
 
@@ -302,6 +309,8 @@ export interface TaskRow {
   progress_percent: number;
   evidence_required: boolean;
   delay_reason: string | null;
+  created_at?: string;
+  updated_at?: string;
   owner?: { full_name_en: string | null; full_name_ar: string | null } | null;
   assignee?: { full_name_en: string | null; full_name_ar: string | null } | null;
 }
