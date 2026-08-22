@@ -559,6 +559,230 @@ button.ui5-table-row:hover {
   margin-block-end: 12px;
 }
 
+.ui5-ovr > .module-header {
+  margin-block-end: 0;
+}
+
+.ui5-ovr .ovr-confidential {
+  margin: 0;
+  border-radius: var(--platform-radius-md);
+}
+
+.ui5-ovr [data-testid='ui5-ovr-dashboard'] > .data-state-content > .stats-grid,
+.ui5-ovr [data-testid='ui5-ovr-dashboard'] > .stats-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.ui5-ovr [data-testid='ui5-ovr-dashboard'] .stat-card {
+  min-height: 96px;
+  border-block-start: 3px solid var(--platform-brand-primary);
+  border-radius: var(--platform-radius-lg);
+  box-shadow: var(--platform-shadow-soft);
+}
+
+.ui5-ovr [data-testid='ui5-ovr-dashboard'] .stat-card.warning { border-block-start-color: var(--platform-warning); }
+.ui5-ovr [data-testid='ui5-ovr-dashboard'] .stat-card.danger { border-block-start-color: var(--platform-danger); }
+.ui5-ovr [data-testid='ui5-ovr-dashboard'] .stat-card.success { border-block-start-color: var(--platform-success); }
+
+.ui5-ovr .panel {
+  border-color: var(--platform-border-default);
+  border-radius: var(--platform-radius-lg);
+  background: var(--platform-surface-primary);
+  box-shadow: var(--platform-shadow-soft);
+}
+
+.ui5-ovr .toolbar {
+  display: grid;
+  grid-template-columns: auto minmax(220px, 1fr) minmax(140px, auto) minmax(140px, auto);
+  gap: 8px;
+}
+
+.ui5-ovr .toolbar input,
+.ui5-ovr .toolbar select,
+.ui5-ovr .form-grid input,
+.ui5-ovr .form-grid select,
+.ui5-ovr .form-grid textarea {
+  min-width: 0;
+  border-color: var(--color-input-border);
+  border-radius: var(--platform-radius-md);
+  color: var(--platform-text-primary);
+  background: var(--color-input-background);
+}
+
+.ui5-ovr .card-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.ui5-ovr .mini-card {
+  min-width: 0;
+  border-radius: var(--platform-radius-md);
+  background: var(--platform-surface-secondary);
+}
+
+.ui5-reporter-suggestions {
+  display: grid;
+  gap: 12px;
+  margin-block: 14px;
+  padding: 16px;
+  border: 1px solid var(--platform-border-default);
+  border-inline-start: 3px solid var(--platform-brand-primary);
+  border-radius: var(--platform-radius-lg);
+  background: var(--platform-surface-secondary);
+}
+
+.ui5-reporter-suggestions > p,
+.ui5-rca-workspace > p {
+  margin: -4px 0 0;
+  color: var(--platform-text-muted);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.ui5-suggestion-option {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-block-end: 1px solid var(--platform-border-subtle);
+  cursor: pointer;
+}
+
+.ui5-suggestion-option > span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.ui5-suggestion-option strong {
+  font-size: 0.72rem;
+}
+
+.ui5-suggestion-option small {
+  overflow: hidden;
+  color: var(--platform-text-muted);
+  font-size: 0.66rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui5-ovr-workspace-detail {
+  display: grid;
+  min-width: 0;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--platform-border-default);
+  border-radius: var(--platform-radius-lg);
+  background: var(--platform-surface-primary);
+  box-shadow: var(--platform-shadow-soft);
+}
+
+.ui5-ovr-workspace-detail > .ovr-detail {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.ui5-ovr-workspace-detail .workflow-steps {
+  margin: 0;
+  overflow-x: auto;
+}
+
+.ui5-ovr-workspace-detail .detail-grid {
+  margin: 0;
+  border-color: var(--platform-border-subtle);
+}
+
+.ui5-ovr-workspace-detail .ovr-governance-feedback {
+  margin: 0;
+  border: 1px solid var(--platform-border-default);
+  border-radius: var(--platform-radius-lg);
+  background: var(--platform-surface-primary);
+}
+
+.ui5-ovr-workspace-detail .workflow-actions {
+  padding: 12px;
+  border: 1px solid var(--platform-border-default);
+  border-radius: var(--platform-radius-md);
+  background: var(--platform-surface-secondary);
+}
+
+.ui5-ovr-workspace-detail .ui3-gate-summary {
+  align-items: flex-start;
+}
+
+.ui5-rca-workspace {
+  border-inline-start: 3px solid var(--platform-purple);
+}
+
+.ui5-legacy-linkage {
+  border: 1px solid var(--platform-border-default);
+  border-radius: var(--platform-radius-md);
+  background: var(--platform-surface-secondary);
+}
+
+.ui5-legacy-linkage summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 12px;
+  color: var(--platform-text-muted);
+  font-size: 0.7rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.ui5-legacy-linkage > div {
+  display: grid;
+  gap: 0;
+  border-block-start: 1px solid var(--platform-border-default);
+}
+
+.ui5-legacy-linkage article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  padding: 9px 12px;
+  border-block-end: 1px solid var(--platform-border-subtle);
+}
+
+.ui5-legacy-linkage article > div {
+  display: grid;
+  gap: 3px;
+}
+
+.ui5-legacy-linkage small {
+  color: var(--platform-text-muted);
+  font-size: 0.66rem;
+}
+
+.ui3-review-uncertainty {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  color: var(--platform-text-secondary);
+  font-size: 0.72rem;
+}
+
+.ui3-review-uncertainty input {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 1180px) {
+  .ui5-ovr [data-testid='ui5-ovr-dashboard'] > .data-state-content > .stats-grid,
+  .ui5-ovr [data-testid='ui5-ovr-dashboard'] > .stats-grid,
+  .ui5-ovr .card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 820px) {
+  .ui5-ovr .toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ui5-ovr .toolbar > * { width: 100%; }
+  .ui5-ovr-workspace-detail > .ovr-detail { padding: 12px; }
+}
+
 @media (max-width: 1180px) {
   .ui5-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ui5-catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -590,4 +814,9 @@ button.ui5-table-row:hover {
   .ui5-distribution > div { grid-template-columns: 1fr; gap: 5px; }
   .ui5-form-grid { grid-template-columns: 1fr; }
   .ui5-span-all { grid-column: auto; }
+  .ui5-ovr [data-testid='ui5-ovr-dashboard'] > .data-state-content > .stats-grid,
+  .ui5-ovr [data-testid='ui5-ovr-dashboard'] > .stats-grid,
+  .ui5-ovr .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ui5-ovr .toolbar { grid-template-columns: 1fr; }
+  .ui5-ovr-workspace-detail .ui3-record-header { flex-direction: column; }
 }

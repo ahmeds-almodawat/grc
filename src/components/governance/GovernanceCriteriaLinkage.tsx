@@ -58,7 +58,7 @@ import { isRestrictedGovernanceLink, versionResolutionLabel } from '../../lib/ui
 import { formatDate, humanize } from '../../lib/format';
 
 export interface GovernanceCriteriaSource {
-  type: Extract<GovernanceSourceType, 'risk' | 'compliance_assessment' | 'audit_finding' | 'capa'>;
+  type: Extract<GovernanceSourceType, 'ovr' | 'risk' | 'compliance_assessment' | 'audit_finding' | 'capa'>;
   id: string;
   revisionId?: string | null;
   organizationId: string;
@@ -68,7 +68,7 @@ export interface GovernanceCriteriaSource {
 
 interface GovernanceCriteriaLinkageProps {
   source: GovernanceCriteriaSource;
-  mode: 'risk' | 'compliance' | 'audit' | 'capa';
+  mode: 'ovr' | 'risk' | 'compliance' | 'audit' | 'capa';
   title: string;
   canManage?: boolean;
   canSuggest?: boolean;
@@ -127,6 +127,7 @@ export function GovernanceCriteriaLinkage({
   const maySuggest = canSuggest ?? canManage;
   const mayReview = canReview ?? canManage;
   const exactVersionRequired = source.type === 'compliance_assessment'
+    || source.type === 'ovr'
     || source.type === 'audit_finding'
     || source.type === 'capa'
     || Boolean(source.revisionId);
@@ -161,6 +162,7 @@ export function GovernanceCriteriaLinkage({
   const [selectedEvidence, setSelectedEvidence] = useState<Set<string>>(new Set());
   const [reviewOutcome, setReviewOutcome] = useState<GovernanceReviewOutcome>('confirmed_relationship');
   const [reviewRationale, setReviewRationale] = useState('');
+  const [uncertaintyRecorded, setUncertaintyRecorded] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
   const [drilldown, setDrilldown] = useState<{ kind: 'policy' | 'sop'; document: DocumentChoice } | null>(null);
   const [requirements, setRequirements] = useState<PolicyRequirement[]>([]);
@@ -238,7 +240,9 @@ export function GovernanceCriteriaLinkage({
           ? 'Compliance obligation and internal governance basis review.'
           : mode === 'audit'
             ? 'Independent auditor determination of the exact governed criterion.'
-            : 'CAPA source inheritance and supplemental governance linkage review.',
+            : mode === 'ovr'
+              ? 'OVR investigation review of governed criteria applicable on the occurrence date.'
+              : 'CAPA source inheritance and supplemental governance linkage review.',
     });
     return created.review_id;
   }
@@ -282,7 +286,7 @@ export function GovernanceCriteriaLinkage({
           targetCriterionType: kind,
           targetDocumentId: choice.document_id,
           targetVersionId: resolution.versionId,
-          relationshipOrigin: 'direct',
+          relationshipOrigin: mode === 'ovr' ? 'investigator_confirmed' : 'direct',
           resolutionMethod: resolution.method,
           resolutionDate: source.sourceDate,
           overrideRationale: resolution.method === 'reviewer_override' ? overrideRationale : null,
@@ -292,7 +296,9 @@ export function GovernanceCriteriaLinkage({
               ? 'Internal implementation basis for the assessed obligation.'
               : mode === 'audit'
                 ? 'Auditor-determined criterion applicable at the audit resolution date.'
-                : supplementalRationale,
+                : mode === 'ovr'
+                  ? 'Investigator review of the governed document applicable on the occurrence date.'
+                  : supplementalRationale,
         });
       }
       setResolverWarnings(warnings);
@@ -336,6 +342,7 @@ export function GovernanceCriteriaLinkage({
         targetVersionId: drilldown.document.version_id,
         targetPolicyRequirementId: drilldown.kind === 'policy' ? item.id : null,
         targetSopStepId: drilldown.kind === 'sop' ? item.id : null,
+        relationshipOrigin: mode === 'ovr' ? 'investigator_confirmed' : 'direct',
         resolutionMethod: 'direct_selection',
         resolutionDate: source.sourceDate,
         rationale: mode === 'capa'
@@ -362,6 +369,7 @@ export function GovernanceCriteriaLinkage({
         targetComplianceObligationId: otherCriterion === 'compliance_obligation' ? otherCriterionId : null,
         targetAccreditationClauseId: otherCriterion === 'accreditation_clause' ? otherCriterionId : null,
         targetControlId: otherCriterion === 'control' ? otherCriterionId : null,
+        relationshipOrigin: mode === 'ovr' ? 'investigator_confirmed' : 'direct',
         resolutionMethod: 'direct_selection',
         resolutionDate: source.sourceDate,
         rationale: mode === 'capa'
@@ -416,10 +424,11 @@ export function GovernanceCriteriaLinkage({
         reviewId: currentReview.id,
         reviewOutcome,
         reviewRationale,
-        uncertaintyRecorded: reviewOutcome === 'insufficient_evidence',
+        uncertaintyRecorded: uncertaintyRecorded || reviewOutcome === 'insufficient_evidence',
       });
       setShowCompletion(false);
       setReviewRationale('');
+      setUncertaintyRecorded(false);
       setNotice(text('Governance review completed and retained.', 'اكتملت مراجعة الحوكمة وتم الاحتفاظ بها.'));
       await load();
     } catch (actionError) {
@@ -436,7 +445,9 @@ export function GovernanceCriteriaLinkage({
       ? text('Governance basis', 'أساس الحوكمة')
       : mode === 'audit'
         ? text('Audit criteria', 'معايير المراجعة')
-        : text('CAPA governance linkage', 'ربط حوكمة الإجراءات التصحيحية');
+        : mode === 'ovr'
+          ? text('Governance Linkage Review', 'مراجعة ربط الحوكمة')
+          : text('CAPA governance linkage', 'ربط حوكمة الإجراءات التصحيحية');
 
   return (
     <section className="ui3-governance-workspace" data-testid="governance-criteria-linkage" aria-labelledby="ui3-governance-title">
@@ -447,7 +458,9 @@ export function GovernanceCriteriaLinkage({
           <p>{mode === 'capa'
             ? text('Inherited source determinations are read-only. Supplemental links require a separate rationale and exact version.', 'تكون تحديدات المصدر الموروثة للقراءة فقط. تتطلب الروابط الإضافية مبرراً مستقلاً وإصداراً دقيقاً.')
             : exactVersionRequired
-            ? text('This review preserves exact approved document versions for the governing resolution date.', 'تحتفظ هذه المراجعة بإصدارات الوثائق المعتمدة الدقيقة لتاريخ الحل الحاكم.')
+            ? mode === 'ovr'
+              ? text('Policies and SOPs are resolved to the exact approved versions applicable on the occurrence date. Reporter suggestions remain suggestions until an investigator records an append-only decision.', 'يتم حل السياسات وإجراءات التشغيل إلى الإصدارات المعتمدة الدقيقة السارية في تاريخ الواقعة. تبقى اقتراحات المبلغ اقتراحات حتى يسجل المحقق قراراً غير قابل للتعديل.')
+              : text('This review preserves exact approved document versions for the governing resolution date.', 'تحتفظ هذه المراجعة بإصدارات الوثائق المعتمدة الدقيقة لتاريخ الحل الحاكم.')
             : text('Persistent context follows the Risk without rewriting historical assessment snapshots.', 'يتبع السياق المستمر الخطر دون إعادة كتابة لقطات التقييم التاريخية.')}</p>
         </div>
         <div className="ui3-governance-status">
@@ -595,6 +608,7 @@ export function GovernanceCriteriaLinkage({
           <div><strong>{text('Complete governance review', 'إكمال مراجعة الحوكمة')}</strong><p>{text('Zero-link outcomes are valid when the conclusion and rationale are explicit.', 'تكون نتائج عدم وجود روابط صالحة عندما تكون الخلاصة والمبرر واضحين.')}</p></div>
           <label><span>{text('Review outcome', 'نتيجة المراجعة')}</span><select value={reviewOutcome} onChange={(event) => setReviewOutcome(event.target.value as GovernanceReviewOutcome)}>{reviewOutcomes.map((value) => <option key={value} value={value}>{humanize(value, language)}</option>)}</select></label>
           <label><span>{text('Review rationale', 'مبرر المراجعة')}</span><textarea value={reviewRationale} onChange={(event) => setReviewRationale(event.target.value)} /></label>
+          <label className="ui3-review-uncertainty"><input type="checkbox" checked={uncertaintyRecorded} onChange={(event) => setUncertaintyRecorded(event.target.checked)} /><span>{text('Material uncertainty remains recorded', 'تم تسجيل استمرار عدم اليقين الجوهري')}</span></label>
           <div className="ui3-form-actions"><button type="button" className="ui3-secondary-button" onClick={() => setShowCompletion(false)}>{text('Cancel', 'إلغاء')}</button><button type="button" className="ui3-primary-button" disabled={busy || reviewRationale.trim().length < 3} onClick={() => void completeReview()}>{text('Complete review', 'إكمال المراجعة')}</button></div>
         </section>
       ) : null}
