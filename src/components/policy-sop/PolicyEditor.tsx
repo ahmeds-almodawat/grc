@@ -20,6 +20,7 @@ import { StartRevisionModal } from './StartRevisionModal';
 import { SubmitReviewModal } from './SubmitReviewModal';
 import { PolicyPreviewModal } from './PolicyPreviewModal';
 import { useI18n } from '../../i18n/I18nContext';
+import { PolicyDetailsView } from './PolicyDetailsView';
 
 interface PolicyEditorProps {
   initialPolicy?: DetailedPolicyRecord | null;
@@ -58,6 +59,7 @@ export function PolicyEditor({
   const isEditable = isDraft && !initialPolicy?.locked_at;
 
   const [activeTab, setActiveTab] = useState<EditorTab>('control');
+  const [workspaceMode, setWorkspaceMode] = useState<'details' | 'builder'>(initialPolicy ? 'details' : 'builder');
   const [isDirty, setIsDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -215,6 +217,40 @@ export function PolicyEditor({
       setErrorMsg(err.message || 'Failed to submit exception request.');
     }
   };
+
+  if (initialPolicy && workspaceMode === 'details') {
+    return (
+      <>
+        <PolicyDetailsView
+          policy={initialPolicy}
+          onBack={onBack}
+          onEdit={() => setWorkspaceMode('builder')}
+          onPreview={() => setShowPreviewModal(true)}
+          onStartRevision={() => setShowRevisionModal(true)}
+          onRequestException={() => setShowExceptionModal(true)}
+        />
+        {showRevisionModal ? (
+          <StartRevisionModal
+            isOpen={showRevisionModal}
+            onClose={() => setShowRevisionModal(false)}
+            onConfirm={handleStartRevision}
+            currentVersionLabel={initialPolicy.version_label}
+          />
+        ) : null}
+        {showExceptionModal ? (
+          <PolicyExceptionModal
+            isOpen={showExceptionModal}
+            onClose={() => setShowExceptionModal(false)}
+            onSubmit={handleRequestException}
+            versionId={initialPolicy.version_id}
+            policyCode={initialPolicy.document_code}
+            policyTitle={initialPolicy.title_en}
+          />
+        ) : null}
+        {showPreviewModal ? <PolicyPreviewModal isOpen={showPreviewModal} onClose={() => setShowPreviewModal(false)} policy={initialPolicy} /> : null}
+      </>
+    );
+  }
 
   return (
     <div className="space-y-6">

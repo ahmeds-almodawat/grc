@@ -21,14 +21,20 @@ import { LegacyDocsTab } from '../components/policy-sop/LegacyDocsTab';
 import { PageHeader } from '../components/ui/PageHeader';
 import { MetricCard } from '../components/ui/MetricCard';
 import { Tabs } from '../components/ui/Tabs';
+import type { PageNavigator } from '../routes/pageLocation';
 
 type HubTab = 'policies' | 'sops' | 'reviews' | 'exceptions' | 'training' | 'legacy';
 
-export function PolicyDocumentCenter() {
+interface PolicyDocumentCenterProps {
+  initialTab?: Extract<HubTab, 'policies' | 'sops'>;
+  setPage?: PageNavigator;
+}
+
+export function PolicyDocumentCenter({ initialTab = 'policies', setPage }: PolicyDocumentCenterProps) {
   const { t } = useI18n();
 
   // Hub Navigation State
-  const [activeTab, setActiveTab] = useState<HubTab>('policies');
+  const [activeTab, setActiveTab] = useState<HubTab>(initialTab);
 
   // Policy Editor State
   const [editingPolicyId, setEditingPolicyId] = useState<string | null>(null);
@@ -81,6 +87,17 @@ export function PolicyDocumentCenter() {
   useEffect(() => {
     refreshHubData();
   }, [refreshHubData]);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
+  const handleTabChange = (id: string) => {
+    const nextTab = id as HubTab;
+    setActiveTab(nextTab);
+    if (nextTab === 'policies') setPage?.('documents');
+    if (nextTab === 'sops') setPage?.('sops');
+  };
 
   // Load specific policy for editor
   const handleSelectPolicy = async (documentId: string, versionId?: string) => {
@@ -187,7 +204,7 @@ export function PolicyDocumentCenter() {
             <Tabs
               tabs={hubTabs}
               activeId={activeTab}
-              onChange={(id) => setActiveTab(id as HubTab)}
+              onChange={handleTabChange}
               label={t('policy.hub.navigation', 'Policy and SOP views')}
             />
 

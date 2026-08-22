@@ -37,6 +37,8 @@ import { StartRevisionModal } from './StartRevisionModal';
 import { SubmitReviewModal } from './SubmitReviewModal';
 import { PolicyExceptionModal } from './PolicyExceptionModal';
 import { SopPreviewModal } from './SopPreviewModal';
+import { SopDetailsView } from './SopDetailsView';
+import { SopFormsRecordsPanel } from './SopFormsRecordsPanel';
 import { 
   ArrowLeft, 
   Save, 
@@ -59,7 +61,8 @@ import {
   Users,
   Activity,
   Shield,
-  Award
+  Award,
+  Archive
 } from 'lucide-react';
 
 interface SopEditorProps {
@@ -93,7 +96,8 @@ export function SopEditor({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'control' | 'linkage' | 'purpose' | 'definitions' | 'responsibilities' | 'procedure' | 'risks_controls' | 'accreditation' | 'applicability' | 'training' | 'acknowledgment' | 'monitoring' | 'exceptions' | 'history'>('control');
+  const [workspaceMode, setWorkspaceMode] = useState<'details' | 'builder'>(initialSopId === 'new' ? 'builder' : 'details');
+  const [activeTab, setActiveTab] = useState<'control' | 'linkage' | 'purpose' | 'definitions' | 'responsibilities' | 'procedure' | 'forms_records' | 'risks_controls' | 'accreditation' | 'applicability' | 'training' | 'acknowledgment' | 'monitoring' | 'exceptions' | 'history'>('control');
   const [isDirty, setIsDirty] = useState(false);
 
   // Form Fields
@@ -172,6 +176,11 @@ export function SopEditor({
   // Populate Form from Record
   const populateForm = useCallback((record: DetailedSopRecord) => {
     setSop(record);
+    setWorkspaceMode(
+      record.document_status === 'draft' || record.document_status === 'under_revision'
+        ? 'builder'
+        : 'details',
+    );
     setTitleEn(record.title_en || record.document_title);
     setTitleAr(record.title_ar || '');
     setProcessNameEn(record.process_name_en || '');
@@ -472,8 +481,42 @@ export function SopEditor({
     );
   }
 
+  if (sop && workspaceMode === 'details') {
+    return (
+      <>
+        <SopDetailsView
+          sop={sop}
+          onBack={onBack}
+          onEdit={() => setWorkspaceMode('builder')}
+          onPreview={() => setShowPreviewModal(true)}
+          onStartRevision={() => setShowRevisionModal(true)}
+          onRequestException={() => setShowExceptionModal(true)}
+        />
+        {showRevisionModal ? (
+          <StartRevisionModal
+            isOpen={showRevisionModal}
+            onClose={() => setShowRevisionModal(false)}
+            onConfirm={handleConfirmStartRevision}
+            currentVersionLabel={sop.version_label}
+          />
+        ) : null}
+        {showExceptionModal ? (
+          <PolicyExceptionModal
+            isOpen={showExceptionModal}
+            onClose={() => setShowExceptionModal(false)}
+            onSubmit={handleConfirmException}
+            versionId={sop.version_id}
+            policyCode={sop.document_code}
+            policyTitle={sop.title_en}
+          />
+        ) : null}
+        {showPreviewModal ? <SopPreviewModal sop={sop} onClose={() => setShowPreviewModal(false)} /> : null}
+      </>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="ui2-sop-editor space-y-6">
       {/* Top Action & Metadata Header */}
       <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-sm space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -595,9 +638,9 @@ export function SopEditor({
       </div>
 
       {/* Editor Main Content & Tabbed Workspace */}
-      <div className="bg-slate-900/40 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+      <div className="ui2-sop-workspace bg-slate-900/40 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
         {/* Navigation Tabs */}
-        <div className="flex border-b border-slate-800 bg-slate-950/60 overflow-x-auto text-xs font-medium">
+        <div className="ui2-sop-tabs flex border-b border-slate-800 bg-slate-950/60 overflow-x-auto text-xs font-medium">
           <button
             onClick={() => setActiveTab('control')}
             className={`px-4 py-3 border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
@@ -691,6 +734,21 @@ export function SopEditor({
             <span>7. {t('sop.tab.risksAndControls')}</span>
             <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-900/60 text-indigo-300">
               {riskLinks.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('forms_records')}
+            className={`px-4 py-3 border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+              activeTab === 'forms_records'
+                ? 'border-indigo-500 text-indigo-400 bg-indigo-950/20 font-semibold'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+            }`}
+          >
+            <Archive className="w-3.5 h-3.5" />
+            <span>8. {t('sop.records.title', 'Forms & Records')}</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-900/60 text-indigo-300">
+              {procedureSteps.filter((step) => step.expected_evidence_record_en || step.expected_evidence_record_ar).length}
             </span>
           </button>
 
@@ -1258,6 +1316,10 @@ export function SopEditor({
                 isReadOnly={isLocked}
               />
             </div>
+          )}
+
+          {activeTab === 'forms_records' && (
+            <SopFormsRecordsPanel steps={procedureSteps} />
           )}
 
           {/* TAB 8: Accreditation & Regulatory Alignment */}

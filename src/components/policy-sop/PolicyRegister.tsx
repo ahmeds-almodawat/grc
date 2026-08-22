@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, Building2, Calendar, ChevronRight, Plus, User } from 'lucide-react';
 import type { GovernedPolicyCatalogRow } from '../../lib/policySopApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { StatusBadge } from '../StatusBadge';
 import { FilterBar, SearchField } from '../ui/FilterBar';
-import { ResponsiveTable, type ResponsiveTableColumn } from '../ui/ResponsiveTable';
+import { Pagination, ResponsiveTable, type ResponsiveTableColumn } from '../ui/ResponsiveTable';
 import { LoadingState, SystemState } from '../ui/SystemState';
 
 interface PolicyRegisterProps {
@@ -16,6 +16,7 @@ interface PolicyRegisterProps {
 }
 
 type SortField = 'document_code' | 'title' | 'effective_date' | 'status';
+const PAGE_SIZE = 8;
 
 export function PolicyRegister({
   policies,
@@ -31,6 +32,7 @@ export function PolicyRegister({
   const [reviewDueFilter, setReviewDueFilter] = useState(false);
   const [sortField, setSortField] = useState<SortField>('document_code');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [page, setPage] = useState(1);
 
   const filteredPolicies = useMemo(() => policies.filter((policy) => {
     if (searchTerm.trim()) {
@@ -60,6 +62,17 @@ export function PolicyRegister({
     if (sortField === 'status') comparison = (left.document_status || '').localeCompare(right.document_status || '');
     return sortDirection === 'asc' ? comparison : -comparison;
   }), [policies, searchTerm, statusFilter, departmentFilter, reviewDueFilter, sortField, sortDirection]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredPolicies.length / PAGE_SIZE));
+  const pageRows = filteredPolicies.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [departmentFilter, reviewDueFilter, searchTerm, sortDirection, sortField, statusFilter]);
+
+  useEffect(() => {
+    if (page > pageCount) setPage(pageCount);
+  }, [page, pageCount]);
 
   const resetFilters = () => {
     setSearchTerm('');
@@ -223,17 +236,20 @@ export function PolicyRegister({
           action={!hasActiveFilters ? <button type="button" onClick={onCreatePolicy} className="platform-primary-button"><Plus size={15} aria-hidden="true" />{t('policy.register.newPolicy', 'New Policy')}</button> : undefined}
         />
       ) : (
-        <ResponsiveTable
-          columns={columns}
-          rows={filteredPolicies}
-          getRowKey={(row) => row.document_id}
-          ariaLabel={t('policy.register.tableLabel', 'Governed policy register')}
-          renderMobileActions={(row) => (
-            <button className="platform-icon-button directional-icon" type="button" onClick={() => openPolicy(row)} aria-label={`${t('common.open', 'Open')} ${row.document_code || row.document_title}`}>
-              <ChevronRight size={16} aria-hidden="true" />
-            </button>
-          )}
-        />
+        <>
+          <ResponsiveTable
+            columns={columns}
+            rows={pageRows}
+            getRowKey={(row) => row.document_id}
+            ariaLabel={t('policy.register.tableLabel', 'Governed policy register')}
+            renderMobileActions={(row) => (
+              <button className="platform-icon-button directional-icon" type="button" onClick={() => openPolicy(row)} aria-label={`${t('common.open', 'Open')} ${row.document_code || row.document_title}`}>
+                <ChevronRight size={16} aria-hidden="true" />
+              </button>
+            )}
+          />
+          <Pagination page={page} pageCount={pageCount} onPageChange={setPage} label={t('policy.register.pagination', 'Policy register pagination')} summary={t('common.pageSummary', `Page ${page} of ${pageCount} · ${filteredPolicies.length} records`)} />
+        </>
       )}
     </div>
   );
