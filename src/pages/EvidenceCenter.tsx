@@ -39,7 +39,7 @@ import {
   getEvidenceReviewQueue,
   getSensitiveEvidenceRegister,
 } from '../lib/grcApi';
-import { formatDate, humanize } from '../lib/format';
+import { formatDate, humanize as humanizeValue } from '../lib/format';
 import type { EvidencePackIndexRow } from '../types/domain';
 import { Evidence as EvidenceGovernanceConsole } from './Evidence';
 
@@ -87,6 +87,56 @@ function statusTone(status: string) {
   return 'neutral';
 }
 
+const arabicEvidenceLabels: Record<string, string> = {
+  accepted: 'مقبول',
+  approved: 'معتمد',
+  verified: 'تم التحقق',
+  renewed: 'مجدد',
+  rejected: 'مرفوض',
+  expired: 'منتهي',
+  pending_review: 'بانتظار المراجعة',
+  submitted: 'مقدم للمراجعة',
+  needs_revision: 'يلزم التعديل',
+  waived: 'معفى',
+  pending: 'معلق',
+  draft: 'مسودة',
+  locked: 'مقفل',
+  superseded: 'مستبدل',
+  active: 'نشط',
+  overdue: 'متأخر',
+  satisfied: 'مستوفى',
+  open: 'مفتوح',
+  public: 'عام',
+  internal: 'داخلي',
+  confidential: 'سري',
+  restricted: 'مقيد',
+  highly_sensitive: 'شديد الحساسية',
+  document: 'مستند',
+  image: 'صورة',
+  video: 'فيديو',
+  audio: 'تسجيل صوتي',
+  spreadsheet: 'جدول بيانات',
+  certificate: 'شهادة',
+  report: 'تقرير',
+  screenshot: 'لقطة شاشة',
+  log: 'سجل',
+  other: 'أخرى',
+  project: 'مشروع',
+  milestone: 'مرحلة',
+  task: 'مهمة',
+  risk: 'مخاطر',
+  compliance: 'التزام',
+  audit_finding: 'ملاحظة مراجعة',
+  capa: 'إجراء تصحيحي ووقائي',
+  ovr: 'بلاغ واقعة',
+  policy: 'سياسة',
+  sop: 'إجراء تشغيل قياسي',
+  training: 'تدريب',
+  training_assignment: 'تكليف تدريبي',
+  training_program: 'برنامج تدريبي',
+  control: 'ضابط',
+};
+
 function relationshipRoute(itemType: string): PageKey | null {
   if (['project', 'milestone', 'task'].includes(itemType)) return 'projects';
   if (itemType === 'risk') return 'risks';
@@ -116,6 +166,8 @@ export function EvidenceCenter({ setPage }: EvidenceCenterProps) {
   const auth = useAuth();
   const { language } = useI18n();
   const text = (en: string, ar: string) => language === 'ar' ? ar : en;
+  const evidenceLabel = (value: string) => language === 'ar' ? arabicEvidenceLabels[value] || humanizeValue(value) : humanizeValue(value);
+  const humanize = evidenceLabel;
   const [view, setView] = useState<EvidenceView>('overview');
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -260,9 +312,9 @@ export function EvidenceCenter({ setPage }: EvidenceCenterProps) {
 
   const filters = <div className="ui6-filterbar" aria-label={text('Evidence filters', 'مرشحات الأدلة')}>
     <label className="ui6-search"><Search size={16} /><span className="sr-only">{text('Search evidence', 'البحث في الأدلة')}</span><input value={search} onChange={event => setSearch(event.target.value)} placeholder={text('Search evidence, code, source...', 'ابحث عن دليل أو رمز أو مصدر...')} /></label>
-    <label><span className="sr-only">{text('Review status', 'حالة المراجعة')}</span><select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}><option value="all">{text('All statuses', 'كل الحالات')}</option>{[...new Set(evidenceFiles.map(row => row.reviewStatus))].map(status => <option value={status} key={status}>{humanize(status)}</option>)}</select></label>
-    <label><span className="sr-only">{text('Evidence type', 'نوع الدليل')}</span><select value={typeFilter} onChange={event => setTypeFilter(event.target.value)}><option value="all">{text('All types', 'كل الأنواع')}</option>{[...new Set(evidenceFiles.map(row => row.evidenceType))].map(type => <option value={type} key={type}>{humanize(type)}</option>)}</select></label>
-    <label><span className="sr-only">{text('Sensitivity', 'الحساسية')}</span><select value={sensitivityFilter} onChange={event => setSensitivityFilter(event.target.value)}><option value="all">{text('All access levels', 'كل مستويات الوصول')}</option>{[...new Set(evidenceFiles.map(row => row.sensitivity))].map(value => <option value={value} key={value}>{humanize(value)}</option>)}</select></label>
+    <label><span className="sr-only">{text('Review status', 'حالة المراجعة')}</span><select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}><option value="all">{text('All statuses', 'كل الحالات')}</option>{[...new Set(evidenceFiles.map(row => row.reviewStatus))].map(status => <option value={status} key={status}>{evidenceLabel(status)}</option>)}</select></label>
+    <label><span className="sr-only">{text('Evidence type', 'نوع الدليل')}</span><select value={typeFilter} onChange={event => setTypeFilter(event.target.value)}><option value="all">{text('All types', 'كل الأنواع')}</option>{[...new Set(evidenceFiles.map(row => row.evidenceType))].map(type => <option value={type} key={type}>{evidenceLabel(type)}</option>)}</select></label>
+    <label><span className="sr-only">{text('Sensitivity', 'الحساسية')}</span><select value={sensitivityFilter} onChange={event => setSensitivityFilter(event.target.value)}><option value="all">{text('All access levels', 'كل مستويات الوصول')}</option>{[...new Set(evidenceFiles.map(row => row.sensitivity))].map(value => <option value={value} key={value}>{evidenceLabel(value)}</option>)}</select></label>
     <button type="button" className="ui6-icon-button" title={text('Clear filters', 'مسح المرشحات')} onClick={() => { setSearch(''); setStatusFilter('all'); setTypeFilter('all'); setSensitivityFilter('all'); }}><ListFilter size={17} /></button>
   </div>;
 
@@ -270,10 +322,10 @@ export function EvidenceCenter({ setPage }: EvidenceCenterProps) {
     <div className="ui6-evidence-row ui6-evidence-row--head" role="row"><span>{text('Evidence', 'الدليل')}</span><span>{text('Type', 'النوع')}</span><span>{text('Source / Usage', 'المصدر والاستخدام')}</span><span>{text('Owner', 'المالك')}</span><span>{text('Status', 'الحالة')}</span><span>{text('Uploaded', 'تاريخ الرفع')}</span></div>
     {filteredEvidence.map(row => <button type="button" className="ui6-evidence-row" role="row" onClick={() => openEvidence(row)} key={row.id}>
       <span><strong>{row.code || 'EVD'} · {row.title}</strong><small>{row.restricted ? <><Lock size={12} />{text('Restricted metadata', 'بيانات وصفية مقيدة')}</> : row.fileName}</small></span>
-      <span>{humanize(row.evidenceType)}</span>
+      <span>{evidenceLabel(row.evidenceType)}</span>
       <span>{row.links.length ? `${row.links.length} ${text(row.links.length === 1 ? 'governed use' : 'governed uses', 'استخدام محكوم')}` : text('Unlinked', 'غير مرتبط')}</span>
       <span>{row.uploadedBy || text('Not available', 'غير متاح')}</span>
-      <span><StatusChip tone={statusTone(row.reviewStatus)}>{humanize(row.reviewStatus)}</StatusChip></span>
+      <span><StatusChip tone={statusTone(row.reviewStatus)}>{evidenceLabel(row.reviewStatus)}</StatusChip></span>
       <span>{formatDate(row.createdAt)}</span>
     </button>)}
   </div>;

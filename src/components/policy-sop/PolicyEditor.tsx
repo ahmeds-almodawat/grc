@@ -253,7 +253,7 @@ export function PolicyEditor({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="ui2-policy-editor space-y-6">
       {/* Top Action & Navigation Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="flex items-center gap-3">

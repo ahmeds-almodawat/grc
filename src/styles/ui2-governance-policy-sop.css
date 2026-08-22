@@ -876,6 +876,7 @@
 .platform-document-center .overflow-x-auto { overflow-x: auto; }
 .platform-document-center .overflow-y-auto { overflow-y: auto; }
 
+.platform-document-center .ui2-policy-editor,
 .platform-document-center .ui2-sop-editor,
 .platform-document-center .ui2-sop-workspace {
   width: 100%;

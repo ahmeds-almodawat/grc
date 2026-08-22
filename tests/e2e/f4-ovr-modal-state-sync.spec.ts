@@ -243,39 +243,39 @@ test.describe('F4 H1 OVR modal state synchronization', () => {
     });
 
     await page.goto(`${baseUrl}/?page=ovr`);
+    await page.getByRole('button', { name: 'OVR Register', exact: true }).click();
     await page.getByRole('button', { name: 'Open workflow' }).click();
-    const dialog = page.getByRole('dialog', { name: 'OVR-H1-STATE-SYNC' });
-    await expect(dialog).toBeVisible();
-    const investigation = dialog.getByLabel('Investigation report / action taken');
+    const detail = page.getByTestId('ui5-ovr-detail');
+    await expect(detail).toBeVisible();
+    const investigation = detail.getByLabel('Investigation report / action taken');
     await investigation.fill('Governed manager review complete');
-    await dialog.getByRole('button', { name: 'Complete manager review' }).click();
+    await detail.getByRole('button', { name: 'Complete manager review' }).click();
 
-    await expect(dialog.getByText('Manager review', { exact: true }).first()).toBeVisible();
-    await expect(dialog.getByRole('button', { name: 'Complete manager review' })).toHaveCount(0);
-    await expect(dialog.getByText('OVR workflow updated.')).toBeVisible();
+    await expect(detail.getByText('Manager review', { exact: true }).first()).toBeVisible();
+    await expect(detail.getByRole('button', { name: 'Complete manager review' })).toHaveCount(0);
+    await expect(detail.getByText('OVR workflow updated.')).toBeVisible();
     await expect(investigation).toHaveValue('Governed manager review complete');
-    await expect(dialog).toHaveAttribute('dir', 'ltr');
+    await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
     expect(proof.getMutationCalls()).toBe(1);
     expect(navigationCount).toBe(1);
 
     expect(proof.getPostMutationReads()).toBe(2);
-    await dialog.getByRole('button', { name: 'Close' }).click();
-    await expect(dialog).toHaveCount(0);
+    await detail.getByRole('button', { name: 'OVR register', exact: true }).click();
+    await expect(detail).toHaveCount(0);
 
-    const reportRow = page.getByRole('row').filter({ hasText: 'OVR-H1-STATE-SYNC' });
-    await expect(reportRow.getByText('Manager review', { exact: true })).toBeVisible();
+    const reportRecord = page.getByTestId('ui5-ovr-register').locator('tbody tr, article').filter({ hasText: 'OVR-H1-STATE-SYNC' });
+    await expect(reportRecord.getByText('Manager review', { exact: true })).toBeVisible();
     expect(proof.getPostMutationReads()).toBe(2);
 
-    await reportRow.getByRole('button', { name: 'Open workflow' }).click();
-    await expect(dialog.getByText('Manager review', { exact: true }).first()).toBeVisible();
-    await expect(dialog.getByRole('button', { name: 'Complete manager review' })).toHaveCount(0);
+    await reportRecord.getByRole('button', { name: 'Open workflow' }).click();
+    await expect(detail.getByText('Manager review', { exact: true }).first()).toBeVisible();
+    await expect(detail.getByRole('button', { name: 'Complete manager review' })).toHaveCount(0);
     expect(proof.getMutationCalls()).toBe(1);
     expect(navigationCount).toBe(1);
 
     await expect.poll(() => proof.getPostMutationReads(), { timeout: 5000 }).toBeGreaterThanOrEqual(3);
-    await expect(reportRow.getByText('Manager review', { exact: true })).toBeVisible();
-    await expect(dialog.getByText('Manager review', { exact: true }).first()).toBeVisible();
-    await expect(dialog.getByRole('button', { name: 'Complete manager review' })).toHaveCount(0);
+    await expect(detail.getByText('Manager review', { exact: true }).first()).toBeVisible();
+    await expect(detail.getByRole('button', { name: 'Complete manager review' })).toHaveCount(0);
     expect(proof.getMutationCalls()).toBe(1);
   });
 
@@ -284,22 +284,24 @@ test.describe('F4 H1 OVR modal state synchronization', () => {
     const proof = await installMocks(page, 'quality_validation', { staleReads: 1, pauseSecondRead: true });
 
     await page.goto(`${baseUrl}/?page=ovr`);
+    await page.getByRole('button', { name: 'OVR Register', exact: true }).click();
     await page.getByRole('button', { name: 'Open workflow' }).click();
-    const dialog = page.getByRole('dialog', { name: 'OVR-H1-STATE-SYNC' });
-    await expect(dialog).toBeVisible();
-    await dialog.getByLabel('Investigation report / action taken').fill('Governed manager review complete');
-    await dialog.getByRole('button', { name: 'Complete manager review' }).click();
+    const detail = page.getByTestId('ui5-ovr-detail');
+    await expect(detail).toBeVisible();
+    await detail.getByLabel('Investigation report / action taken').fill('Governed manager review complete');
+    await detail.getByRole('button', { name: 'Complete manager review' }).click();
 
     await expect.poll(() => proof.getPostMutationReads(), { timeout: 5000 }).toBeGreaterThanOrEqual(2);
-    await expect(dialog.getByText('Manager review', { exact: true }).first()).toBeVisible();
-    const reportRow = page.getByRole('row').filter({ hasText: 'OVR-H1-STATE-SYNC' });
-    await expect(reportRow.getByText('Manager review', { exact: true })).toBeVisible();
+    await expect(detail.getByText('Manager review', { exact: true }).first()).toBeVisible();
     expect(proof.getMutationCalls()).toBe(1);
 
     proof.releaseSecondRead();
-    await expect(reportRow.getByText('Quality validation', { exact: true })).toBeVisible();
-    await expect(dialog.getByText('Quality validation', { exact: true }).first()).toBeVisible();
-    await expect(dialog.getByRole('button', { name: 'Complete manager review' })).toHaveCount(0);
+    await expect(detail.getByText('Quality validation', { exact: true }).first()).toBeVisible();
+    await expect(detail.getByRole('button', { name: 'Complete manager review' })).toHaveCount(0);
     expect(proof.getMutationCalls()).toBe(1);
+
+    await detail.getByRole('button', { name: 'OVR register', exact: true }).click();
+    const reportRecord = page.getByTestId('ui5-ovr-register').locator('tbody tr, article').filter({ hasText: 'OVR-H1-STATE-SYNC' });
+    await expect(reportRecord.getByText('Quality validation', { exact: true })).toBeVisible();
   });
 });

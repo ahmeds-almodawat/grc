@@ -360,6 +360,8 @@ const translations: TranslationMap = {
   'nav.security': { en: 'Security & Audit Controls', ar: 'الأمن وضوابط التدقيق' },
   'nav.admin': { en: 'Admin & Organization', ar: 'الإعدادات والهيكل التنظيمي' },
   'nav.menu': { en: 'Menu', ar: 'القائمة' },
+  'nav.mobileNavigation': { en: 'Mobile navigation', ar: 'التنقل عبر الجوال' },
+  'nav.more': { en: 'More', ar: 'المزيد' },
   'nav.openMenu': { en: 'Open navigation', ar: 'فتح قائمة التنقل' },
   'nav.closeMenu': { en: 'Close navigation', ar: 'إغلاق قائمة التنقل' },
 

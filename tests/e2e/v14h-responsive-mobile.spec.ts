@@ -138,8 +138,8 @@ test.describe('GRC v1.4-H responsive and mobile completion', () => {
     await page.setViewportSize({ width: 390, height: 844 });
 
     for (const target of [
-      { pageKey: 'risks' as const, button: 'New Risk' },
-      { pageKey: 'audit' as const, button: 'New Finding' },
+      { pageKey: 'risks' as const, button: 'New risk' },
+      { pageKey: 'audit' as const, button: 'New finding' },
     ]) {
       await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY[target.pageKey]}`);
       await waitForActivePatch83vUser(page);
