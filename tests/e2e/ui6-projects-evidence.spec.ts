@@ -197,6 +197,11 @@ test.describe('UI-6 Projects and Evidence locked workspace', () => {
     await capture(page, testInfo, '12C2-evidence-multi-source-detail');
 
     await page.getByRole('button', { name: 'Evidence Repository', exact: true }).click();
+    await page.locator('.ui6-evidence-row').filter({ hasText: 'OVR Competency Reinforcement Record' }).click();
+    await expect(page.getByText(/Mandatory competency refresher assignment/)).toBeVisible();
+    await expect(page.getByTestId('ui6-evidence-relationships').getByRole('button', { name: 'Open source' })).toHaveCount(3);
+
+    await page.getByRole('button', { name: 'Evidence Repository', exact: true }).click();
     await page.locator('.ui6-evidence-row').filter({ hasText: 'Restricted Patient Safety Investigation' }).click();
     await expect(page.getByText('Restricted evidence metadata is shown only within the authorized evidence record scope.', { exact: true })).toBeVisible();
     await expect(page.getByText('Restricted', { exact: true }).first()).toBeVisible();

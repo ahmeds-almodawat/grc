@@ -126,6 +126,7 @@ const evidenceLinks = [
   ['evidence-ui6-5', 'capa', 'capa-ui6-42', 'CAPA-0042 · Corrective action delivery', true],
   ['evidence-ui6-5', 'project', 'project-ui6-5', 'CAPA-0042 Corrective Action Delivery', false],
   ['evidence-ui6-6', 'ovr', 'ovr-ui5-1', 'OVR-2026-001 · Competency follow-up', true],
+  ['evidence-ui6-6', 'training', 'training-assignment-ui5-2', 'Mandatory competency refresher assignment', false],
   ['evidence-ui6-6', 'task', 'task-ui6-6-3', 'Submit independent evidence', false],
   ['evidence-ui6-7', 'policy', 'policy-1', 'POL-001 · Enterprise Clinical Governance Policy', true],
   ['evidence-ui6-7', 'project', 'project-ui6-7', 'Policy and SOP Control Alignment', false],

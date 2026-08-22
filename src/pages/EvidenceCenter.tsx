@@ -95,6 +95,7 @@ function relationshipRoute(itemType: string): PageKey | null {
   if (itemType === 'capa') return 'capa';
   if (itemType === 'ovr') return 'ovr';
   if (itemType === 'policy') return 'documents';
+  if (['training', 'training_assignment', 'training_program'].includes(itemType)) return 'trainingGovernance';
   if (itemType === 'control') return 'governance';
   return null;
 }

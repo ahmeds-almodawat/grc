@@ -76,6 +76,8 @@ describe('UI-6 Projects and Evidence governed workspaces', () => {
     expect(fixtures).toContain("['evidence-ui6-8', 'project'");
     expect(fixtures).toContain("['evidence-ui6-8', 'milestone'");
     expect(fixtures).toContain("['evidence-ui6-8', 'task'");
+    expect(fixtures).toContain("['evidence-ui6-6', 'training'");
+    expect(evidence).toContain("return 'trainingGovernance'");
   });
 
   it('keeps visual fixtures test-only and runtime source free of fixture imports', () => {
