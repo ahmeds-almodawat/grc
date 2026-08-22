@@ -23,6 +23,7 @@ const migration = source('supabase/migrations/213_ui3_risk_compliance_governance
 const linkageMigration = source('supabase/migrations/212_governance_criteria_linkage_foundation.sql');
 const edge = source('supabase/functions/privileged-action/index.ts');
 const css = source('src/styles/ui3-risk-compliance.css');
+const riskAudit = source('scripts/patch22-risk-workflow-audit.mjs');
 
 const completedReview = {
   id: 'review', review_status: 'completed', review_outcome: 'no_applicable_document', review_rationale: 'No governed document applies.',
@@ -187,5 +188,12 @@ describe('UI-3 Risk, Compliance, and governance criteria linkage', () => {
     expect(migration).toContain("'compliance_assessment_source_available', true");
     expect(versionResolutionLabel('overlapping_candidates')).toBe('Overlapping approved versions require review');
     expect(api).toContain("selectRows<Ui3ComplianceObligation>('v_ui3_compliance_obligation_register'");
+  });
+
+  it('keeps the Patch 22 workflow audit aligned with the accepted UI-3 risk contract', () => {
+    for (const marker of ['Governed risk workflow', 'Governance review required', 'GovernedDecisionDialog', 'decideUi3RiskReassessment']) {
+      expect(riskAudit).toContain(marker);
+    }
+    expect(riskAudit).not.toContain("'Patch 22 workflow queues'");
   });
 });
