@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, BarChart3, BookOpenCheck, CheckCircle2, ChevronRight, ClipboardCheck, FileBarChart, FileCheck2, FilePlus2, GitBranch, LayoutDashboard, Link2, ListChecks, Printer, RefreshCw, Search, ShieldCheck, Target, Trash2, Upload, Workflow } from 'lucide-react';
+import { AlertTriangle, BarChart3, BookOpenCheck, CheckCircle2, ChevronRight, ClipboardCheck, FileBarChart, FileCheck2, FilePlus2, GitBranch, History, LayoutDashboard, Link2, ListChecks, Printer, RefreshCw, Search, ShieldCheck, Target, Trash2, Upload, Workflow } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { EmptySupabaseNotice } from '../components/EmptySupabaseNotice';
@@ -1064,6 +1064,7 @@ export function OVR() {
       else setWorkspaceView('report');
       return;
     }
+    if (showForm) closeNewReportForm();
     if (['detail', 'investigations', 'root_cause', 'actions', 'review'].includes(view) && !selectedReport && effectiveReports[0]) {
       openReport(effectiveReports[0]);
     }

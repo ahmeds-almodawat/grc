@@ -68,7 +68,7 @@ export interface GovernanceCriteriaSource {
 
 interface GovernanceCriteriaLinkageProps {
   source: GovernanceCriteriaSource;
-  mode: 'ovr' | 'risk' | 'compliance' | 'audit' | 'capa';
+  mode: 'risk' | 'compliance' | 'ovr' | 'audit' | 'capa';
   title: string;
   canManage?: boolean;
   canSuggest?: boolean;

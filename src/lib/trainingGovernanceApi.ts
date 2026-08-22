@@ -48,6 +48,8 @@ export interface TrainingProgramRow {
   title: string;
   title_ar?: string | null;
   training_type: string;
+  linked_document_id?: string | null;
+  linked_sop_id?: string | null;
   department_name_en?: string | null;
   department_name_ar?: string | null;
   owner_name_en?: string | null;

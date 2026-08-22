@@ -485,6 +485,7 @@ button.ui3-table-row:hover { background: var(--color-table-hover); }
 }
 .ui3-document-selector > header,
 .ui3-governance-decision > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-block-end: 10px; }
+.ui3-document-selector > legend { display: inline-flex; align-items: center; gap: 6px; }
 .ui3-document-selector h3,
 .ui3-document-selector p,
 .ui3-governance-decision p { margin: 0; }

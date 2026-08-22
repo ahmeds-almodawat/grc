@@ -12,6 +12,7 @@ import {
   getE2B2SopAcknowledgmentGapsStrict,
   getE2B2SopTrainingComplianceMatrixStrict,
   getE2B2TrainingAssignmentQueueStrict,
+  getTrainingPrograms,
   publishSopTrainingObligations,
   reconcileSopTrainingPopulation,
   recordCompetencyAssessment,
@@ -23,6 +24,7 @@ import {
   type SopAcknowledgmentGapRow,
   type SopTrainingComplianceMatrixRow,
   type TrainingAssignmentQueueRow,
+  type TrainingProgramRow,
   type TrainingPopulationReconciliationResult,
 } from '../lib/trainingGovernanceApi';
 import {
@@ -187,12 +189,14 @@ export function TrainingGovernanceCenter() {
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const assignments = useAsyncData(getE2B2TrainingAssignmentQueueStrict, []);
+  const programs = useAsyncData(getTrainingPrograms, []);
   const ackGaps = useAsyncData(getE2B2SopAcknowledgmentGapsStrict, []);
   const competencyGaps = useAsyncData(getE2B2CompetencyGapsStrict, []);
   const matrix = useAsyncData(getE2B2SopTrainingComplianceMatrixStrict, []);
 
   const profileId = auth.profile?.id ?? null;
   const assignmentRows = assignments.data ?? [];
+  const programRows = programs.data ?? [];
   const ackRows = ackGaps.data ?? [];
   const competencyRows = competencyGaps.data ?? [];
   const matrixRows = matrix.data ?? [];
@@ -227,6 +231,14 @@ export function TrainingGovernanceCenter() {
       .includes(query);
   });
   const selectedAssignment = assignmentRows.find((row) => row.id === selectedAssignmentId) ?? assignmentRows[0] ?? null;
+  const programById = useMemo(
+    () => new Map(programRows.map((row) => [row.id, row] as const)),
+    [programRows],
+  );
+  const selectedProgram = selectedAssignment ? programById.get(selectedAssignment.program_id) ?? null : null;
+  const selectedMatrixVersion = selectedProgram?.linked_sop_id
+    ? matrixRows.find((row) => row.document_id === selectedProgram.linked_sop_id) ?? null
+    : null;
   const selectedSubjectId = selectedAssignment?.assigned_to_user_id ?? profileId;
   const selectedAcknowledgments = selectedSubjectId ? ackRows.filter((row) => row.user_id === selectedSubjectId) : [];
   const selectedCompetencies = selectedSubjectId ? competencyRows.filter((row) => row.user_id === selectedSubjectId) : [];
@@ -258,6 +270,7 @@ export function TrainingGovernanceCenter() {
   const refreshLiveData = async () => {
     await Promise.all([
       assignments.refresh(),
+      programs.refresh(),
       ackGaps.refresh(),
       competencyGaps.refresh(),
       matrix.refresh(),
@@ -419,7 +432,7 @@ export function TrainingGovernanceCenter() {
 
       {activeTab === 'register' ? <div className="ui5-screen" data-testid="ui5-training-register">
         <div className="ui3-filter-bar ui5-filter-bar"><label className="ui3-search"><Search size={15} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={copy('Search employee, program, department, or status', 'ابحث عن موظف أو برنامج أو إدارة أو حالة')} /></label><span>{filteredAssignments.length} {copy('assignments', 'تكليفاً')}</span></div>
-        <section className="ui3-surface ui3-register-surface"><div className="ui5-table ui5-training-table"><div className="ui5-table-head"><span>{copy('Training assignment', 'تكليف التدريب')}</span><span>{text.employee}</span><span>{text.department}</span><span>{text.dueDate}</span><span>{text.status}</span><span /></div>{filteredAssignments.map((row) => <button type="button" className="ui5-table-row" key={row.id} onClick={() => openAssignment(row)}><span><strong>{localizedName(language, row.program_title, row.program_title_ar)}</strong><small>{row.training_type || copy('Formal learning', 'تعلم رسمي')}</small></span><span>{localizedName(language, row.assigned_user_name_en, row.assigned_user_name_ar)}</span><span>{localizedName(language, row.department_name_en, row.department_name_ar)}</span><span>{row.due_date || '—'}</span><span><StatusPill tone={statusTone(row.status)}>{row.status}</StatusPill></span><ChevronRight size={15} /></button>)}</div></section>
+        <section className="ui3-surface ui3-register-surface"><div className="ui5-table ui5-training-table"><div className="ui5-table-head"><span>{copy('Training assignment', 'تكليف التدريب')}</span><span>{text.employee}</span><span>{text.department}</span><span>{text.dueDate}</span><span>{text.status}</span><span /></div>{filteredAssignments.map((row) => { const program = programById.get(row.program_id); const sourceLabel = program?.linked_sop_id ? copy('SOP-linked obligation', 'التزام مرتبط بإجراء') : program?.linked_document_id ? copy('Policy-linked obligation', 'التزام مرتبط بسياسة') : row.training_type || copy('Formal learning', 'تعلم رسمي'); return <button type="button" className="ui5-table-row" key={row.id} onClick={() => openAssignment(row)}><span><strong>{localizedName(language, row.program_title, row.program_title_ar)}</strong><small>{sourceLabel}</small></span><span>{localizedName(language, row.assigned_user_name_en, row.assigned_user_name_ar)}</span><span>{localizedName(language, row.department_name_en, row.department_name_ar)}</span><span>{row.due_date || '—'}</span><span><StatusPill tone={statusTone(row.status)}>{row.status}</StatusPill></span><ChevronRight size={15} /></button>; })}</div></section>
       </div> : null}
 
       {activeTab === 'detail' ? <div className="ui5-screen" data-testid="ui5-training-detail">
@@ -431,7 +444,7 @@ export function TrainingGovernanceCenter() {
             <article className={selectedCompetencies.some((row) => row.result === 'passed') ? 'complete' : ''}><Award size={18} /><span>{copy('Competency assessment', 'تقييم الكفاءة')}</span><strong>{selectedCompetencies[0]?.result || copy('Pending', 'معلق')}</strong><small>{formatCompetencyScore(selectedCompetencies[0]?.score)}</small></article>
             <article><History size={18} /><span>{copy('Expiry / retraining', 'الانتهاء / إعادة التدريب')}</span><strong>{selectedCompetencies.some((row) => row.result === 'needs_retraining') ? copy('Retraining due', 'إعادة التدريب مستحقة') : copy('Monitored', 'قيد المتابعة')}</strong><small>{selectedCompetencies[0]?.due_date || selectedAssignment.due_date || '—'}</small></article>
           </div>
-          <div className="ui3-detail-layout"><main className="ui3-stack"><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{copy('Governed obligation', 'الالتزام المحكوم')}</span><h2>{copy('Learning and evidence chain', 'سلسلة التعلم والأدلة')}</h2></div><ListChecks size={20} /></div><div className="ui3-data-grid"><div><span>{copy('Program', 'البرنامج')}</span><strong>{localizedName(language, selectedAssignment.program_title, selectedAssignment.program_title_ar)}</strong></div><div><span>{copy('Assignment state', 'حالة التكليف')}</span><strong>{selectedAssignment.status}</strong></div><div><span>{copy('Completion evidence', 'دليل الإكمال')}</span><strong>{selectedAssignment.completion_evidence_id || copy('Not linked', 'غير مرتبط')}</strong></div><div><span>{copy('Acknowledgment gaps', 'فجوات الإقرار')}</span><strong>{selectedAcknowledgments.length}</strong></div><div><span>{copy('Competency records', 'سجلات الكفاءة')}</span><strong>{selectedCompetencies.length}</strong></div><div><span>{copy('Assignee', 'المكلف')}</span><strong>{localizedName(language, selectedAssignment.assigned_user_name_en, selectedAssignment.assigned_user_name_ar)}</strong></div></div></section></main><aside className="ui3-stack"><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{copy('Governed actions', 'الإجراءات المحكومة')}</span><h2>{copy('Assignment controls', 'ضوابط التكليف')}</h2></div><SlidersHorizontal size={20} /></div><div className="ui5-action-stack">{selectedEligibility?.canCertifyCompletion ? <button type="button" onClick={() => setAdminAction({ type: 'certify', row: selectedAssignment })}>{text.certifyCompletion}</button> : null}{selectedEligibility?.canRecordCompetency ? <button type="button" onClick={() => setAdminAction({ type: 'competency', row: selectedAssignment })}>{text.recordCompetency}</button> : null}{selectedEligibility?.canWaive ? <button type="button" onClick={() => setAdminAction({ type: 'waive', row: selectedAssignment })}>{text.waive}</button> : null}{selectedEligibility?.canCancel ? <button type="button" onClick={() => setAdminAction({ type: 'cancel', row: selectedAssignment })}>{text.cancel}</button> : null}{selectedEligibility?.canReopen ? <button type="button" onClick={() => setAdminAction({ type: 'reopen', row: selectedAssignment })}>{text.reopen}</button> : null}</div></section></aside></div>
+          <div className="ui3-detail-layout"><main className="ui3-stack"><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{copy('Governed obligation', 'الالتزام المحكوم')}</span><h2>{copy('Learning and evidence chain', 'سلسلة التعلم والأدلة')}</h2></div><ListChecks size={20} /></div><div className="ui3-data-grid"><div><span>{copy('Program', 'البرنامج')}</span><strong>{localizedName(language, selectedAssignment.program_title, selectedAssignment.program_title_ar)}</strong></div><div><span>{copy('Governed source', 'المصدر المحكوم')}</span><strong>{selectedProgram?.linked_sop_id ? copy('SOP-linked obligation', 'التزام مرتبط بإجراء') : selectedProgram?.linked_document_id ? copy('Policy-linked obligation', 'التزام مرتبط بسياسة') : copy('Program governance', 'حوكمة البرنامج')}</strong></div><div><span>{copy('Governed source version', 'إصدار المصدر المحكوم')}</span><strong>{selectedMatrixVersion ? `${selectedMatrixVersion.document_code} / ${selectedMatrixVersion.version_label}` : copy('Retained by source workflow', 'محفوظ بسير عمل المصدر')}</strong></div><div><span>{copy('Assignment state', 'حالة التكليف')}</span><strong>{selectedAssignment.status}</strong></div><div><span>{copy('Completion evidence', 'دليل الإكمال')}</span><strong>{selectedAssignment.completion_evidence_id || copy('Not linked', 'غير مرتبط')}</strong></div><div><span>{copy('Acknowledgment gaps', 'فجوات الإقرار')}</span><strong>{selectedAcknowledgments.length}</strong></div><div><span>{copy('Competency records', 'سجلات الكفاءة')}</span><strong>{selectedCompetencies.length}</strong></div><div><span>{copy('Assignee', 'المكلف')}</span><strong>{localizedName(language, selectedAssignment.assigned_user_name_en, selectedAssignment.assigned_user_name_ar)}</strong></div></div></section></main><aside className="ui3-stack"><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{copy('Governed actions', 'الإجراءات المحكومة')}</span><h2>{copy('Assignment controls', 'ضوابط التكليف')}</h2></div><SlidersHorizontal size={20} /></div><div className="ui5-action-stack">{selectedEligibility?.canCertifyCompletion ? <button type="button" onClick={() => setAdminAction({ type: 'certify', row: selectedAssignment })}>{text.certifyCompletion}</button> : null}{selectedEligibility?.canRecordCompetency ? <button type="button" onClick={() => setAdminAction({ type: 'competency', row: selectedAssignment })}>{text.recordCompetency}</button> : null}{selectedEligibility?.canWaive ? <button type="button" onClick={() => setAdminAction({ type: 'waive', row: selectedAssignment })}>{text.waive}</button> : null}{selectedEligibility?.canCancel ? <button type="button" onClick={() => setAdminAction({ type: 'cancel', row: selectedAssignment })}>{text.cancel}</button> : null}{selectedEligibility?.canReopen ? <button type="button" onClick={() => setAdminAction({ type: 'reopen', row: selectedAssignment })}>{text.reopen}</button> : null}</div></section></aside></div>
         </> : <section className="ui3-surface"><p>{text.noTeamObligations}</p></section>}
       </div> : null}
 
