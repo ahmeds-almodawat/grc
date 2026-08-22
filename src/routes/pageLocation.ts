@@ -40,6 +40,7 @@ export type PageKey =
   | "commandCenter"
   | "globalSearch"
   | "documents"
+  | "sops"
   | "relationships"
   | "releaseCandidate"
   | "productionRelease"
@@ -122,6 +123,7 @@ export const PAGE_LOCATION_REGISTRY = {
   commandCenter: "command-center",
   globalSearch: "global-search",
   documents: "documents",
+  sops: "sops",
   relationships: "relationships",
   releaseCandidate: "release-candidate",
   productionRelease: "production-release",

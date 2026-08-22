@@ -2065,6 +2065,7 @@ const translations: TranslationMap = {
   'navTree.item.committeeAutomation': { en: 'Committees', ar: 'اللجان' },
   'navTree.item.smartReviews': { en: 'Review Calendar', ar: 'تقويم المراجعات' },
   'navTree.item.documents': { en: 'Document Control', ar: 'ضبط الوثائق' },
+  'navTree.item.sops': { en: 'SOP Register', ar: 'سجل إجراءات التشغيل القياسية' },
   'navTree.item.departmentScorecards': { en: 'Department Scorecards', ar: 'بطاقات أداء الأقسام' },
   'navTree.item.evidenceVault': { en: 'Evidence Vault', ar: 'مستودع الأدلة' },
   'navTree.item.bilingualDictionary': { en: 'Bilingual Dictionary', ar: 'القاموس ثنائي اللغة' },

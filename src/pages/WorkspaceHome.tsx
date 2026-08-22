@@ -8,6 +8,8 @@ import {
   FolderKanban,
   Hospital,
   KeyRound,
+  Landmark,
+  BookCopy,
   Search,
   ShieldAlert,
   SlidersHorizontal,
@@ -54,6 +56,30 @@ export function WorkspaceHome({ setPage }: WorkspaceHomeProps) {
   );
 
   const cards: ModuleCard[] = [
+    {
+      key: 'governance',
+      page: 'governance',
+      icon: <Landmark size={22} />,
+      title: t('home.module.governance', 'Governance Hub'),
+      description: t('home.module.governance.desc', 'Review governed documents, lifecycle health, decisions, and ownership.'),
+      tone: 'navy',
+    },
+    {
+      key: 'policies',
+      page: 'documents',
+      icon: <FolderKanban size={22} />,
+      title: t('home.module.policies', 'Policy Register'),
+      description: t('home.module.policies.desc', 'Open institutional policy records, versions, requirements, and reviews.'),
+      tone: 'blue',
+    },
+    {
+      key: 'sops',
+      page: 'sops',
+      icon: <BookCopy size={22} />,
+      title: t('home.module.sops', 'SOP Register'),
+      description: t('home.module.sops.desc', 'Open governed procedures, steps, controls, records, and training obligations.'),
+      tone: 'green',
+    },
     {
       key: 'ovr',
       page: 'ovr',

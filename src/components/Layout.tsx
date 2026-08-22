@@ -276,7 +276,8 @@ const navTree: NavTreeGroup[] = [
     children: [
       { key: "evidence", label: "Evidence Library", icon: <FileCheck2 size={16} /> },
       { key: "evidenceVault", label: "Evidence Vault", icon: <FileStack size={16} /> },
-      { key: "documents", label: "Policies", icon: <FolderKanban size={16} /> },
+      { key: "documents", label: "Policy Register", icon: <FolderKanban size={16} /> },
+      { key: "sops", label: "SOP Register", icon: <BookCopy size={16} /> },
       {
         key: "bilingualDictionary",
         label: "Bilingual Dictionary",

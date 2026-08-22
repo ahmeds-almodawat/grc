@@ -298,7 +298,7 @@ function DailyOperationsHub({ setPage }: { setPage: (page: PageKey) => void }) {
   );
 }
 
-function GrcHub() {
+function GrcHub({ setPage }: { setPage: PageNavigator }) {
   const { t } = useI18n();
   const auth = useAuth();
   const auditorReadOnly =
@@ -340,7 +340,7 @@ function GrcHub() {
       label: t("hub.tab.governance"),
       description: t("hub.tab.governance.desc"),
       icon: <Landmark size={17} />,
-      content: <Governance />,
+      content: <Governance setPage={setPage} />,
     },
     {
       id: "committee",
@@ -1285,7 +1285,7 @@ export default function App() {
       case "dailyOperationsHub" as any:
         return <DailyOperationsHub setPage={setPage} />;
       case "grcHub":
-        return <GrcHub />;
+        return <GrcHub setPage={setPage} />;
       case "qualityHub":
         return <QualitySafetyHub />;
       case "accreditationHub" as any:
@@ -1329,7 +1329,7 @@ export default function App() {
       case "ovrRisk":
         return <OvrRiskIndicators />;
       case "governance":
-        return <Governance />;
+        return <Governance setPage={setPage} />;
       case "escalations":
         return <Escalations />;
       case "approvals":
@@ -1357,7 +1357,9 @@ export default function App() {
       case "globalSearch":
         return <GlobalSearch />;
       case "documents":
-        return <PolicyDocumentCenter />;
+        return <PolicyDocumentCenter initialTab="policies" setPage={setPage} />;
+      case "sops":
+        return <PolicyDocumentCenter initialTab="sops" setPage={setPage} />;
       case "relationships":
         return <RelationshipMap />;
       case "releaseCandidate":

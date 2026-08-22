@@ -134,6 +134,7 @@ export const pageGroups: Record<PageKey, PageGroup> = {
   commandCenter: "executive",
   globalSearch: "personal",
   documents: "reports",
+  sops: "reports",
   relationships: "quality",
   releaseCandidate: "release",
   productionRelease: "release",
