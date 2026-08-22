@@ -538,6 +538,8 @@ export function analyzePatch83uAuthSurface({
     ['patch83u_credential_access_allowed', 'Credential version, state, email, and session freshness decision used by restrictive RLS.'],
     ['patch83u_profile_update_allowed', 'Same-organization credential-active profile update decision used by restrictive RLS.'],
     ['patch83u_user_role_mutation_allowed', 'Credential-active canonical role/scope mutation decision used by restrictive RLS.'],
+    ['governance_linkage_source_readable', 'Read-only GOV-LINK source visibility decision used by restrictive RLS.'],
+    ['governance_linkage_target_readable', 'Read-only GOV-LINK target visibility and redaction decision used by restrictive RLS.'],
   ]);
   const liveBroadSecurityDefiners = (deployedFunctionInventory?.functions || [])
     .filter((item) => item.security_definer && (item.public_execute || item.anon_execute || item.authenticated_execute))
@@ -562,7 +564,7 @@ export function analyzePatch83uAuthSurface({
     .sort((a, b) => a.signature.localeCompare(b.signature));
   const targetBroadSecurityDefiners = [];
   const reviewedRestrictedSecurityDefiners = [];
-  const reviewedPatch83uMigrationCeiling = 211;
+  const reviewedPatch83uMigrationCeiling = 213;
   const explicitServiceOnlyAclFloor = 176;
   const reviewedTargetSecurityDefinerAllowlist = new Set([
     'f1r2_create_work_item',
@@ -587,12 +589,14 @@ export function analyzePatch83uAuthSurface({
         evidence: ['PostgreSQL default PUBLIC EXECUTE'],
       };
       const requiresExplicitServiceOnlyAcl = migrationNumber >= explicitServiceOnlyAclFloor
-        && migrationNumber <= reviewedPatch83uMigrationCeiling;
-      const migrationEvidencePrefix = `${definition.definition_file}:`;
-      const explicitRevokeEvidence = recordedAcl.evidence
-        .filter((item) =>
-          item.includes(migrationEvidencePrefix)
-          && (item.includes('revoke execute') || item.includes('revoke all')))
+        && migrationNumber <= reviewedPatch83uMigrationCeiling
+        && !targetRlsHelperAllowlist.has(name);
+      const reviewedAclEvidence = recordedAcl.evidence.filter((item) => {
+        const evidenceMigration = Number(item.match(/^supabase\/migrations\/(\d+)_/)?.[1] ?? 0);
+        return evidenceMigration >= migrationNumber && evidenceMigration <= reviewedPatch83uMigrationCeiling;
+      });
+      const explicitRevokeEvidence = reviewedAclEvidence
+        .filter((item) => item.includes('revoke execute') || item.includes('revoke all'))
         .join(' ');
       const hasExplicitBrowserRevoke = requiresExplicitServiceOnlyAcl
         && /\bpublic\b/.test(explicitRevokeEvidence)
@@ -600,15 +604,13 @@ export function analyzePatch83uAuthSurface({
         && /\bauthenticated\b/.test(explicitRevokeEvidence);
       const hasExplicitServiceGrant = requiresExplicitServiceOnlyAcl
         && recordedAcl.service_role === true
-        && recordedAcl.evidence.some((item) =>
-          item.includes(migrationEvidencePrefix)
-          && item.includes('grant execute')
+        && reviewedAclEvidence.some((item) =>
+          item.includes('grant execute')
           && /\bservice_role\b/.test(item));
       const hasExplicitOwnerOnlyRevoke = requiresExplicitServiceOnlyAcl
         && recordedAcl.service_role !== true
-        && recordedAcl.evidence.some((item) =>
-          item.includes(migrationEvidencePrefix)
-          && item.includes('revoke execute')
+        && reviewedAclEvidence.some((item) =>
+          item.includes('revoke execute')
           && /\bservice_role\b/.test(item));
       const explicitServiceOnlyAclProven = hasExplicitBrowserRevoke
         && (hasExplicitServiceGrant || hasExplicitOwnerOnlyRevoke)
@@ -680,7 +682,7 @@ export function analyzePatch83uAuthSurface({
         definition_file: definition.definition_file,
         definition_line: definition.definition_line,
         acl_evidence: acl.evidence,
-        allowed: migrationNumber <= 174
+        allowed: migrationNumber <= reviewedPatch83uMigrationCeiling
           && Boolean(allowedPurpose)
           && !acl.public
           && !acl.anon
@@ -883,7 +885,7 @@ function renderMarkdown(report) {
     + `## search_grc_global\n\n`
     + `Disposition: **${report.search_grc_global.disposition}**. The accepted design is the authenticated Edge bridge using an anon-key Supabase client carrying the caller Bearer token; the RPC remains SECURITY INVOKER and its complete view/base-table chain must remain security-invoker and credential-gated by RLS.\n\n`
     + `## ACL-reachable SECURITY DEFINER routines\n\n`
-    + `The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–${report.summary.reviewed_patch83u_migration_ceiling} permit exactly three Patch 83U RLS decision helpers plus the reviewed owner-only F1R2 work-item routine. Every SECURITY DEFINER routine introduced, replaced, or renamed by migrations 176–${report.summary.reviewed_patch83u_migration_ceiling} must contain its own explicit revoke from PUBLIC/anon/authenticated plus either an explicit service_role-only grant or an explicit owner-only service_role revoke; migration 174's earlier dynamic revoke is not accepted as evidence for later migrations. Migration ${report.summary.reviewed_patch83u_migration_ceiling + 1} and later fail closed until separately reviewed.\n\n`
+    + `The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–${report.summary.reviewed_patch83u_migration_ceiling} permit the five reviewed RLS decision helpers plus the reviewed owner-only F1R2 work-item routine. Every other SECURITY DEFINER routine introduced, replaced, or forward-hardened by migrations 176–${report.summary.reviewed_patch83u_migration_ceiling} must have an explicit revoke from PUBLIC/anon/authenticated plus either a service_role-only grant or an explicit owner-only service_role revoke in the reviewed chain. Migration ${report.summary.reviewed_patch83u_migration_ceiling + 1} and later fail closed until separately reviewed.\n\n`
     + `| Signature | Evidence source | PUBLIC | anon | authenticated | Disposition | Purpose |\n`
     + `|---|---|---:|---:|---:|---|---|\n${rpcRows || '| _none_ | | | | | | |'}\n\n`
     + `### Reviewed restricted routines from migrations 176–${report.summary.reviewed_patch83u_migration_ceiling}\n\n`

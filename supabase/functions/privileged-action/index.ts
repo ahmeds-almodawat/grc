@@ -244,11 +244,25 @@ const f2OvrGovernanceFeedbackActions = new Set([
 ]);
 
 const governanceCriteriaLinkageActions = new Set([
+  'resolve_governance_document_version_candidates',
   'start_governance_linkage_review',
   'suggest_governance_criterion_link',
   'append_governance_criterion_decision',
   'supersede_governance_criterion_link',
   'complete_governance_linkage_review',
+]);
+
+const ui3RiskComplianceActions = new Set([
+  'create_compliance_obligation',
+  'create_compliance_assessment',
+  'submit_compliance_assessment',
+  'approve_compliance_assessment',
+  'reject_compliance_assessment',
+  'record_compliance_finding',
+  'create_compliance_remediation',
+  'update_compliance_remediation',
+  'approve_risk_reassessment',
+  'reject_risk_reassessment',
 ]);
 
 const allowedActions = new Set([
@@ -296,6 +310,7 @@ const allowedActions = new Set([
   ...f1OvrGovernedVersionActions,
   ...f2OvrGovernanceFeedbackActions,
   ...governanceCriteriaLinkageActions,
+  ...ui3RiskComplianceActions,
   ...patch68EvidenceClosureActions,
   ...patch76CutoverDecisionActions,
   ...patch77LivePilotActions,
@@ -4833,7 +4848,9 @@ Deno.serve(async (request) => {
         'created_by', 'reviewed_by', 'decision_actor_id',
       ]);
 
-      const allowedKeys = action === 'start_governance_linkage_review'
+      const allowedKeys = action === 'resolve_governance_document_version_candidates'
+        ? new Set(['document_id', 'source_date', 'department_id'])
+        : action === 'start_governance_linkage_review'
         ? new Set(['source_entity_type', 'source_entity_id', 'source_revision_id', 'source_date', 'review_rationale'])
         : action === 'suggest_governance_criterion_link'
         ? new Set([
@@ -4857,7 +4874,7 @@ Deno.serve(async (request) => {
       const capability = capabilityProbe.data as Record<string, unknown> | null;
       if (capabilityProbe.error
         || capability?.contract_version !== 'governance-criteria-linkage-v1'
-        || capability?.schema_version !== 212) {
+        || Number(capability?.schema_version ?? 0) < 212) {
         return errorResponse(
           'Database migration 212 is required for governed criteria linkage.',
           409,
@@ -4876,7 +4893,25 @@ Deno.serve(async (request) => {
       };
       let rpcResult;
 
-      if (action === 'start_governance_linkage_review') {
+      if (action === 'resolve_governance_document_version_candidates') {
+        const { actorProfile } = await loadTrainingActorContext(userData.user.id);
+        const documentId = requireCanonicalUuid(payload.document_id, 'document_id');
+        const visibleDocument = await rlsClient
+          .from('controlled_documents')
+          .select('id')
+          .eq('id', documentId)
+          .eq('organization_id', actorProfile.organization_id)
+          .maybeSingle();
+        if (visibleDocument.error || !visibleDocument.data) {
+          throw new Error('GOV_LINK_TARGET_DOCUMENT_READ_DENIED');
+        }
+        rpcResult = await serviceClient.rpc('resolve_governance_document_version_candidates', {
+          p_organization_id: actorProfile.organization_id,
+          p_document_id: documentId,
+          p_source_date: optionalDate(payload.source_date, 'source_date'),
+          p_department_id: optionalCanonicalUuid(payload.department_id, 'department_id'),
+        });
+      } else if (action === 'start_governance_linkage_review') {
         rpcResult = await serviceClient.rpc('start_governance_linkage_review', {
           p_actor_id: userData.user.id,
           p_source_entity_type: boundedString(payload.source_entity_type, 32, 'source_entity_type', true),
@@ -4949,6 +4984,93 @@ Deno.serve(async (request) => {
         'Governed criteria linkage operation failed.',
         denied ? 403 : 409,
         denied ? 'GOV_LINK_AUTHORIZATION_DENIED' : 'GOV_LINK_OPERATION_REJECTED',
+        message,
+        { action },
+      );
+    }
+  }
+
+  if (ui3RiskComplianceActions.has(action)) {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, [
+        'actor_id', 'p_actor_id', 'user_id', 'organization_id', 'p_organization_id',
+        'acting_user_id', 'authenticated_user_id', 'created_by', 'approved_by', 'reviewed_by',
+      ]);
+
+      const allowedKeysByAction: Record<string, Set<string>> = {
+        create_compliance_obligation: new Set([
+          'obligation_code', 'regulatory_body', 'framework', 'clause_reference', 'title',
+          'requirement_text', 'applicability', 'owner_id', 'department_id', 'risk_level',
+          'review_frequency', 'next_review_date', 'evidence_required', 'notes',
+        ]),
+        create_compliance_assessment: new Set([
+          'obligation_id', 'assessment_code', 'assessment_title', 'assessment_period_start',
+          'assessment_period_end', 'assessment_date', 'assessment_method', 'scope_description',
+          'department_id', 'responsible_owner_id', 'reviewer_id', 'result', 'conclusion_summary',
+          'evidence_reference', 'evidence_file_id', 'rationale',
+        ]),
+        submit_compliance_assessment: new Set(['assessment_id', 'conclusion_summary', 'rationale']),
+        approve_compliance_assessment: new Set(['assessment_id', 'conclusion_summary', 'rationale']),
+        reject_compliance_assessment: new Set(['assessment_id', 'conclusion_summary', 'rationale']),
+        record_compliance_finding: new Set([
+          'assessment_id', 'finding_code', 'finding_description', 'severity', 'materiality',
+          'responsible_owner_id', 'department_id', 'due_date', 'evidence_reference',
+          'evidence_file_id', 'root_cause_category', 'root_cause_description', 'rationale',
+        ]),
+        create_compliance_remediation: new Set([
+          'finding_id', 'action_code', 'action_description', 'owner_id', 'due_date',
+          'action_status', 'evidence_reference', 'evidence_file_id', 'rationale',
+        ]),
+        update_compliance_remediation: new Set([
+          'remediation_action_id', 'action_status', 'evidence_reference', 'evidence_file_id', 'rationale',
+        ]),
+        approve_risk_reassessment: new Set(['reassessment_id', 'governance_review_id', 'rationale']),
+        reject_risk_reassessment: new Set(['reassessment_id', 'rationale']),
+      };
+      assertOnlyAllowedKeys(payload, allowedKeysByAction[action], `UI3_${action}_PAYLOAD`);
+
+      const normalized: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(payload)) {
+        if (key.endsWith('_id')) {
+          normalized[key] = optionalCanonicalUuid(value, key);
+        } else if (key.endsWith('_date') || key.endsWith('_start') || key.endsWith('_end')) {
+          const date = boundedString(value, 10, key);
+          if (date !== null && !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error(`INVALID_DATE_${key.toUpperCase()}`);
+          normalized[key] = date;
+        } else if (key === 'evidence_required') {
+          normalized[key] = validateStrictBoolean(value, key, true);
+        } else {
+          normalized[key] = boundedString(value, 4000, key);
+        }
+      }
+
+      const capabilityProbe = await serviceClient.rpc('get_governance_criteria_linkage_capabilities');
+      const capability = capabilityProbe.data as Record<string, unknown> | null;
+      if (capabilityProbe.error || Number(capability?.schema_version ?? 0) < 213) {
+        return errorResponse(
+          'Database migration 213 is required for UI-3 Risk and Compliance workflows.',
+          409,
+          'UI3_MIGRATION_213_REQUIRED',
+          'Migration 213 installs the canonical Compliance assessment/finding model and Risk governance-review gate.',
+          { action },
+        );
+      }
+
+      const rpcResult = await serviceClient.rpc('ui3_risk_compliance_workflow_bridge', {
+        p_actor_id: userData.user.id,
+        p_action: action,
+        p_payload: normalized,
+      });
+      if (rpcResult.error) throw rpcResult.error;
+      return jsonResponse({ ok: true, action, result: rpcResult.data }, 200);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const denied = /AUTHORITY|DENIED|ACTIVE_ACTOR|CROSS_ORGANIZATION|SERVICE_ROLE/i.test(message);
+      return errorResponse(
+        'UI-3 Risk or Compliance operation failed.',
+        denied ? 403 : 409,
+        denied ? 'UI3_AUTHORIZATION_DENIED' : 'UI3_OPERATION_REJECTED',
         message,
         { action },
       );

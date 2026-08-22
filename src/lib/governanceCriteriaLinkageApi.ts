@@ -1,7 +1,7 @@
 import { invokePrivilegedAction } from './privilegedAction';
 import { requireSupabase } from './supabase';
 
-export type GovernanceSourceType = 'ovr' | 'risk' | 'audit_finding' | 'capa';
+export type GovernanceSourceType = 'ovr' | 'risk' | 'audit_finding' | 'capa' | 'compliance_assessment';
 export type GovernanceCriterionType =
   | 'policy'
   | 'policy_requirement'
@@ -182,6 +182,63 @@ export async function getCurrentGovernanceCriteriaLinks(source: {
   return (data ?? []) as GovernanceCriteriaLink[];
 }
 
+export async function getGovernanceLinkageReviews(source: {
+  type: GovernanceSourceType;
+  id: string;
+  revisionId?: string | null;
+}): Promise<GovernanceLinkageReview[]> {
+  let query = requireSupabase()
+    .from('governance_linkage_reviews')
+    .select('*')
+    .eq('source_entity_type', source.type)
+    .eq('source_entity_id', source.id);
+  query = source.revisionId
+    ? query.eq('source_revision_id', source.revisionId)
+    : query.is('source_revision_id', null);
+  const { data, error } = await query.order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as GovernanceLinkageReview[];
+}
+
+export async function getGovernanceCriteriaDecisionHistory(linkIds: string[]): Promise<GovernanceCriteriaDecision[]> {
+  if (!linkIds.length) return [];
+  const { data, error } = await requireSupabase()
+    .from('governance_criteria_link_decisions')
+    .select('*')
+    .in('link_id', linkIds)
+    .order('decided_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as GovernanceCriteriaDecision[];
+}
+
+export async function getGovernanceCriteriaLineage(linkIds: string[]): Promise<GovernanceLinkLineage[]> {
+  if (!linkIds.length) return [];
+  const client = requireSupabase();
+  const [parents, children] = await Promise.all([
+    client.from('governance_criteria_link_lineage').select('*').in('parent_link_id', linkIds),
+    client.from('governance_criteria_link_lineage').select('*').in('child_link_id', linkIds),
+  ]);
+  if (parents.error) throw new Error(parents.error.message);
+  if (children.error) throw new Error(children.error.message);
+  const byKey = new Map<string, GovernanceLinkLineage>();
+  [...(parents.data ?? []), ...(children.data ?? [])].forEach((row) => {
+    const typed = row as GovernanceLinkLineage;
+    byKey.set(`${typed.parent_link_id}:${typed.child_link_id}:${typed.lineage_type}`, typed);
+  });
+  return [...byKey.values()];
+}
+
+export async function getGovernanceCriteriaEvidence(decisionIds: string[]): Promise<GovernanceLinkEvidence[]> {
+  if (!decisionIds.length) return [];
+  const { data, error } = await requireSupabase()
+    .from('governance_criteria_link_evidence')
+    .select('*')
+    .in('decision_id', decisionIds)
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as GovernanceLinkEvidence[];
+}
+
 export async function getGovernanceLinkageReviewQueue(): Promise<GovernanceLinkageReview[]> {
   const { data, error } = await requireSupabase()
     .from('v_governance_linkage_review_queue')
@@ -211,14 +268,11 @@ export async function resolveGovernanceDocumentVersionCandidates(input: {
   sourceDate: string | null;
   departmentId?: string | null;
 }): Promise<GovernanceVersionResolverCandidate[]> {
-  const { data, error } = await requireSupabase().rpc('resolve_governance_document_version_candidates', {
-    p_organization_id: input.organizationId,
-    p_document_id: input.documentId,
-    p_source_date: input.sourceDate,
-    p_department_id: input.departmentId ?? null,
+  return invokePrivilegedAction<GovernanceVersionResolverCandidate[]>('resolve_governance_document_version_candidates', {
+    document_id: input.documentId,
+    source_date: input.sourceDate,
+    department_id: input.departmentId ?? null,
   });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as GovernanceVersionResolverCandidate[];
 }
 
 export function startGovernanceLinkageReview(input: {

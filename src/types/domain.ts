@@ -523,6 +523,11 @@ export interface RiskReassessmentHistoryRow {
   change_reason: string | null;
   changed_by: string | null;
   changed_at: string;
+  assessment_status?: 'recorded' | 'under_review' | 'approved' | 'rejected';
+  governance_review_id?: string | null;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  review_rationale?: string | null;
 }
 
 export interface RiskWorkflowEventRow {
