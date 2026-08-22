@@ -4,12 +4,12 @@
 
 ```json
 {
-  "generated_at": "2026-07-17T21:12:58.843Z",
+  "generated_at": "2026-08-22T16:31:57.824Z",
   "db_container": "supabase_db_grc-control-center",
   "db_query_status": "passed_authoritative_live_schema_inventory",
   "db_query_error": null,
   "frontend_rpc_total": 0,
-  "authenticated_edge_bridge_call_total": 85,
+  "authenticated_edge_bridge_call_total": 140,
   "unique_frontend_rpc_total": 0,
   "database_function_total": 388,
   "database_security_definer_functions": 388,
@@ -21,7 +21,7 @@
   "service_role_only_rpc_called_by_frontend": 0,
   "service_role_only_rpc_without_bridge_plan": 0,
   "reviewed_service_role_only_rpc_catalog_count": 20,
-  "reviewed_rpc_edge_bridged_count": 7,
+  "reviewed_rpc_edge_bridged_count": 6,
   "bridge_artifacts": {
     "edge_function": true,
     "service_dispatcher_migration": true,
@@ -341,7 +341,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 786
+          "line": 828
         }
       ],
       "current_security_mode": "security_definer",
@@ -365,7 +365,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 794
+          "line": 836
         }
       ],
       "current_security_mode": "security_definer",
@@ -389,11 +389,11 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1823
+          "line": 1865
         },
         {
           "file": "src/lib/userManagementApi.ts",
-          "line": 700
+          "line": 720
         }
       ],
       "current_security_mode": "security_definer",
@@ -417,11 +417,11 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1838
+          "line": 1880
         },
         {
           "file": "src/lib/userManagementApi.ts",
-          "line": 715
+          "line": 735
         }
       ],
       "current_security_mode": "security_definer",
@@ -445,7 +445,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2014
+          "line": 2040
         }
       ],
       "current_security_mode": "security_definer",
@@ -465,13 +465,8 @@
       "v700_reviewed_frontend_line": 1241,
       "current_frontend_call_present": false,
       "current_frontend_locations": [],
-      "authenticated_edge_bridge_present": true,
-      "authenticated_edge_bridge_locations": [
-        {
-          "file": "src/lib/grcApi.ts",
-          "line": 2041
-        }
-      ],
+      "authenticated_edge_bridge_present": false,
+      "authenticated_edge_bridge_locations": [],
       "current_security_mode": "security_definer",
       "current_grant_status": {
         "public": false,
@@ -481,7 +476,7 @@
       },
       "recommended_action": "convert_to_edge_function",
       "recommendation": "Verify OVR access and create only tenant-scoped records in an authenticated Edge Function.",
-      "remediation_status": "authenticated_edge_function_bridge_present"
+      "remediation_status": "direct_browser_call_removed_or_guarded"
     },
     {
       "rpc_name": "create_system_health_snapshot",
@@ -656,7 +651,7 @@ None detected.
 - `assign_user_role` - reviewed at `src/lib/grcApi.ts:986` - security_definer - grants={"public":false,"anon":false,"authenticated":false,"service_role":true} - **convert_to_edge_function** - authenticated_edge_function_bridge_present
 - `deactivate_user_role` - reviewed at `src/lib/grcApi.ts:1002` - security_definer - grants={"public":false,"anon":false,"authenticated":false,"service_role":true} - **convert_to_edge_function** - authenticated_edge_function_bridge_present
 - `update_ovr_workflow` - reviewed at `src/lib/grcApi.ts:1226` - security_definer - grants={"public":false,"anon":false,"authenticated":false,"service_role":true} - **convert_to_edge_function** - authenticated_edge_function_bridge_present
-- `create_ovr_corrective_action_project` - reviewed at `src/lib/grcApi.ts:1241` - security_definer - grants={"public":false,"anon":false,"authenticated":false,"service_role":true} - **convert_to_edge_function** - authenticated_edge_function_bridge_present
+- `create_ovr_corrective_action_project` - reviewed at `src/lib/grcApi.ts:1241` - security_definer - grants={"public":false,"anon":false,"authenticated":false,"service_role":true} - **convert_to_edge_function** - direct_browser_call_removed_or_guarded
 - `create_system_health_snapshot` - reviewed at `src/lib/hardeningApi.ts:149` - security_definer - grants={"public":false,"anon":false,"authenticated":false,"service_role":true} - **keep_server_only** - direct_browser_call_removed_or_guarded
 - `generate_due_reminders` - reviewed at `src/lib/operationsApi.ts:178` - security_definer - grants={"public":false,"anon":false,"authenticated":false,"service_role":true} - **keep_server_only** - direct_browser_call_removed_or_guarded
 - `seed_v33_production_proof_defaults` - reviewed at `src/lib/productionProofApi.ts:106` - security_definer - grants={"public":false,"anon":false,"authenticated":false,"service_role":true} - **remove_from_frontend_seed_release_tool** - direct_browser_call_removed_or_guarded

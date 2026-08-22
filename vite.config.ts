@@ -53,7 +53,7 @@ function pageChunk(id: string) {
   }
 
   if (
-    /Risks|Compliance|Audit|Governance|RiskAppetiteKriCenter|CommitteeActionAutomationCenter|AutomationIntelligenceCenter|SmartReviewCalendar/.test(n)
+    /Risks|Compliance|Audit|Capa|Governance|RiskAppetiteKriCenter|CommitteeActionAutomationCenter|AutomationIntelligenceCenter|SmartReviewCalendar/.test(n)
   ) {
     return 'pages-grc';
   }

@@ -23,6 +23,7 @@ export type PageKey =
   | "risks"
   | "compliance"
   | "audit"
+  | "capa"
   | "ovr"
   | "ovrRisk"
   | "governance"
@@ -106,6 +107,7 @@ export const PAGE_LOCATION_REGISTRY = {
   risks: "risks",
   compliance: "compliance",
   audit: "audit",
+  capa: "capa",
   ovr: "ovr",
   ovrRisk: "ovr-risk",
   governance: "governance",

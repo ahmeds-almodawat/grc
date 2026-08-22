@@ -117,6 +117,7 @@ export const pageGroups: Record<PageKey, PageGroup> = {
   risks: "grc",
   compliance: "grc",
   audit: "grc",
+  capa: "grc",
   ovr: "personal",
   ovrRisk: "quality",
   governance: "grc",

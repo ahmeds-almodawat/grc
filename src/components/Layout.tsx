@@ -242,6 +242,7 @@ const navTree: NavTreeGroup[] = [
     children: [
       { key: "risks", label: "Risk Register", icon: <ShieldAlert size={16} /> },
       { key: "audit", label: "Audit", icon: <FileSearch size={16} /> },
+      { key: "capa", label: "CAPA", icon: <ClipboardList size={16} /> },
       { key: "compliance", label: "Compliance", icon: <ClipboardCheck size={16} /> },
       { key: "governance", label: "Governance", icon: <Landmark size={16} /> },
       { key: "committeeAutomation", label: "Committees", icon: <Landmark size={16} /> },

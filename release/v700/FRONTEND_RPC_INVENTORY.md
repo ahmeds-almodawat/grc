@@ -1,10 +1,10 @@
 # v7.0 Frontend RPC Inventory
 
-Generated: 2026-08-16T18:53:06.696Z
+Generated: 2026-08-22T16:31:57.527Z
 
 - Direct frontend RPC calls: 0
-- Authenticated Edge bridge calls: 104
-- Unique RPC names: 100
+- Authenticated Edge bridge calls: 140
+- Unique RPC names: 132
 
 ## Classification counts
 
@@ -13,8 +13,8 @@ Generated: 2026-08-16T18:53:06.696Z
   "accreditation_assurance": 8,
   "read_only_search": 1,
   "production_readiness": 28,
-  "workflow_runtime_review": 10,
-  "unknown_requires_review": 9,
+  "workflow_runtime_review": 16,
+  "unknown_requires_review": 39,
   "workflow_runtime": 13,
   "privileged_admin_review": 1,
   "privileged_admin": 16,
@@ -39,6 +39,17 @@ Generated: 2026-08-16T18:53:06.696Z
 - `create_executive_truth_snapshot` (1 call site)
 - `refresh_executive_truth_snapshot` (1 call site)
 - `record_executive_truth_event` (1 call site)
+- `link_ovr_governed_document_version` (1 call site)
+- `unlink_ovr_governed_document_version` (1 call site)
+- `initiate_ovr_governance_feedback_review` (1 call site)
+- `complete_ovr_governance_feedback_review` (1 call site)
+- `sync_ovr_corrective_action_capa_link` (1 call site)
+- `resolve_governance_document_version_candidates` (1 call site)
+- `start_governance_linkage_review` (1 call site)
+- `suggest_governance_criterion_link` (1 call site)
+- `append_governance_criterion_decision` (1 call site)
+- `supersede_governance_criterion_link` (1 call site)
+- `complete_governance_linkage_review` (1 call site)
 - `ovr_executive_dashboard_analytics` (1 call site)
 - `f1r2_list_my_work` (1 call site)
 - `acknowledge_escalation_event` (1 call site)
@@ -68,6 +79,21 @@ Generated: 2026-08-16T18:53:06.696Z
 - `f1r2_get_evidence_pack` (1 call site)
 - `f1r2_relink_evidence_parent` (1 call site)
 - `f1r2_finalize_corrective_ovr` (1 call site)
+- `create_governed_policy_draft` (1 call site)
+- `save_governed_policy_draft` (1 call site)
+- `create_governed_sop_draft` (1 call site)
+- `save_governed_sop_draft` (1 call site)
+- `start_governed_document_revision` (1 call site)
+- `submit_governed_document_for_review` (1 call site)
+- `activate_governed_document_version` (1 call site)
+- `retire_governed_document` (1 call site)
+- `request_policy_sop_exception` (1 call site)
+- `trigger_governed_document_review` (1 call site)
+- `complete_governed_document_review` (1 call site)
+- `decide_sop_rollout_requirements` (2 call sites)
+- `publish_sop_training_obligations` (2 call sites)
+- `reconcile_sop_training_population` (2 call sites)
+- `record_document_acknowledgment` (2 call sites)
 - `record_production_evidence_closure_action` (1 call site)
 - `get_production_evidence_closure_action_history` (1 call site)
 - `create_controlled_production_cutover_decision` (1 call site)
@@ -115,6 +141,12 @@ Generated: 2026-08-16T18:53:06.696Z
 - `record_competency_assessment` (1 call site)
 - `reopen_training_assignment_with_reason` (1 call site)
 - `link_training_evidence` (1 call site)
+- `create_compliance_obligation` (1 call site)
+- `create_compliance_assessment` (1 call site)
+- `submit_compliance_assessment` (1 call site)
+- `record_compliance_finding` (1 call site)
+- `create_compliance_remediation` (1 call site)
+- `update_compliance_remediation` (1 call site)
 - `patch83t_get_user_import_capabilities` (1 call site)
 - `list_user_management_roster` (1 call site)
 - `patch83t_user_import_identity_references` (1 call site)

@@ -78,10 +78,10 @@ describe('GRC v1.4-E2A Governed SOP Traceability Engine & Contracts', () => {
     expect(sql).not.toContain('sop_version_control_links');
   });
 
-  it('Patch83U proof script reviewed ceiling is set to 213', () => {
+  it('Patch83U proof script reviewed ceiling is set to 214', () => {
     const proofScriptPath = path.resolve(process.cwd(), 'scripts/patch83u-auth-surface-proof.mjs');
     const content = fs.readFileSync(proofScriptPath, 'utf8');
-    expect(content).toContain('const reviewedPatch83uMigrationCeiling = 213;');
+    expect(content).toContain('const reviewedPatch83uMigrationCeiling = 214;');
   });
 
   it('correctly models typed SOP Risk links with relationship semantics', () => {

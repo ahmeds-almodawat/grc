@@ -74,6 +74,7 @@ import { Departments } from "./pages/Departments";
 import { Risks } from "./pages/Risks";
 import { Compliance } from "./pages/Compliance";
 import { Audit } from "./pages/Audit";
+import { Capa } from "./pages/Capa";
 const OVR = lazy(() => import("./pages/OVR").then(module => ({ default: module.OVR })));
 import { OvrRiskIndicators } from "./pages/OvrRiskIndicators";
 const AccreditationCenter = lazy(() => import("./pages/AccreditationCenter").then(module => ({ default: module.AccreditationCenter })));
@@ -336,6 +337,13 @@ function GrcHub({ setPage }: { setPage: PageNavigator }) {
       content: <Audit />,
     },
     {
+      id: "capa",
+      label: t("hub.tab.capa", "CAPA"),
+      description: t("hub.tab.capa.desc", "Corrective and preventive action lifecycle"),
+      icon: <ClipboardList size={17} />,
+      content: <Capa />,
+    },
+    {
       id: "governance",
       label: t("hub.tab.governance"),
       description: t("hub.tab.governance.desc"),
@@ -364,7 +372,7 @@ function GrcHub({ setPage }: { setPage: PageNavigator }) {
       subtitle={t("hub.grc.subtitle")}
       tabs={
         auditorReadOnly
-          ? tabs.filter((tab) => ["risks", "audit"].includes(tab.id))
+          ? tabs.filter((tab) => ["risks", "audit", "capa"].includes(tab.id))
           : tabs
       }
     />
@@ -1324,6 +1332,8 @@ export default function App() {
         return <Compliance />;
       case "audit":
         return <Audit />;
+      case "capa":
+        return <Capa />;
       case "ovr":
         return <OVR />;
       case "ovrRisk":
