@@ -121,7 +121,7 @@ test.describe('UI-1 platform foundation visual gate', () => {
     await expectDesktopTopbarContained(page);
     await capture(page, testInfo, 'desktop-light-shared-search');
 
-    expect(backend.proof.writeRequests.filter((request) => !request.includes('ovr_executive_dashboard_analytics'))).toEqual([]);
+    expect(backend.proof.writeRequests).toEqual([]);
     expect(backend.proof.pageErrors).toEqual([]);
   });
 
@@ -155,7 +155,7 @@ test.describe('UI-1 platform foundation visual gate', () => {
     await openPage(page, 'globalSearch');
     await capture(page, testInfo, 'desktop-dark-shared-search');
 
-    expect(backend.proof.writeRequests.filter((request) => !request.includes('ovr_executive_dashboard_analytics'))).toEqual([]);
+    expect(backend.proof.writeRequests).toEqual([]);
     expect(backend.proof.pageErrors).toEqual([]);
   });
 
@@ -187,7 +187,7 @@ test.describe('UI-1 platform foundation visual gate', () => {
     expect((await shellGeometry(page)).overflow).toBeLessThanOrEqual(1);
     await capture(page, testInfo, 'mobile-390-rtl-drawer');
 
-    expect(backend.proof.writeRequests.filter((request) => !request.includes('ovr_executive_dashboard_analytics'))).toEqual([]);
+    expect(backend.proof.writeRequests).toEqual([]);
     expect(backend.proof.pageErrors).toEqual([]);
   });
 });
