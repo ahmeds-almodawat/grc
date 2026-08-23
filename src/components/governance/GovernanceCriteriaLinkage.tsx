@@ -58,7 +58,7 @@ import { isRestrictedGovernanceLink, versionResolutionLabel } from '../../lib/ui
 import { formatDate, humanize } from '../../lib/format';
 
 export interface GovernanceCriteriaSource {
-  type: Extract<GovernanceSourceType, 'ovr' | 'risk' | 'compliance_assessment' | 'audit_finding' | 'capa'>;
+  type: Extract<GovernanceSourceType, 'ovr' | 'risk' | 'compliance_assessment' | 'compliance_finding' | 'audit_finding' | 'capa'>;
   id: string;
   revisionId?: string | null;
   organizationId: string;

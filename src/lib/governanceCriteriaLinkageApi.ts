@@ -1,7 +1,7 @@
 import { invokePrivilegedAction } from './privilegedAction';
 import { requireSupabase } from './supabase';
 
-export type GovernanceSourceType = 'ovr' | 'risk' | 'audit_finding' | 'capa' | 'compliance_assessment';
+export type GovernanceSourceType = 'ovr' | 'risk' | 'audit_finding' | 'capa' | 'compliance_assessment' | 'compliance_finding';
 export type GovernanceCriterionType =
   | 'policy'
   | 'policy_requirement'
@@ -378,5 +378,22 @@ export function completeGovernanceLinkageReview(input: {
     review_outcome: input.reviewOutcome,
     review_rationale: input.reviewRationale,
     uncertainty_recorded: input.uncertaintyRecorded ?? false,
+  });
+}
+
+export function evaluateGovernanceDocumentReviewTrigger(input: {
+  documentId: string;
+  dueDate?: string | null;
+}): Promise<{
+  document_id: string;
+  trigger_id?: string;
+  triggered: boolean;
+  status?: 'open';
+  reason?: 'pattern_threshold_not_met' | 'review_already_open';
+  confirmed_event_count?: number;
+}> {
+  return invokePrivilegedAction('evaluate_governance_document_review_trigger', {
+    document_id: input.documentId,
+    due_date: input.dueDate ?? null,
   });
 }

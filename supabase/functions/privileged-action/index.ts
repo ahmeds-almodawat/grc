@@ -271,6 +271,7 @@ const governanceCriteriaLinkageActions = new Set([
   'append_governance_criterion_decision',
   'supersede_governance_criterion_link',
   'complete_governance_linkage_review',
+  'evaluate_governance_document_review_trigger',
 ]);
 
 const ui3RiskComplianceActions = new Set([
@@ -4897,7 +4898,9 @@ Deno.serve(async (request) => {
         'created_by', 'reviewed_by', 'decision_actor_id',
       ]);
 
-      const allowedKeys = action === 'resolve_governance_document_version_candidates'
+      const allowedKeys = action === 'evaluate_governance_document_review_trigger'
+        ? new Set(['document_id', 'due_date'])
+        : action === 'resolve_governance_document_version_candidates'
         ? new Set(['document_id', 'source_date', 'department_id'])
         : action === 'start_governance_linkage_review'
         ? new Set(['source_entity_type', 'source_entity_id', 'source_revision_id', 'source_date', 'review_rationale'])
@@ -4923,7 +4926,7 @@ Deno.serve(async (request) => {
       const capability = capabilityProbe.data as Record<string, unknown> | null;
       if (capabilityProbe.error
         || capability?.contract_version !== 'governance-criteria-linkage-v1'
-        || Number(capability?.schema_version ?? 0) < 212) {
+        || Number(capability?.schema_version ?? 0) < (action === 'evaluate_governance_document_review_trigger' ? 218 : 212)) {
         return errorResponse(
           'Database migration 212 is required for governed criteria linkage.',
           409,
@@ -4942,7 +4945,13 @@ Deno.serve(async (request) => {
       };
       let rpcResult;
 
-      if (action === 'resolve_governance_document_version_candidates') {
+      if (action === 'evaluate_governance_document_review_trigger') {
+        rpcResult = await serviceClient.rpc('evaluate_governance_document_review_trigger', {
+          p_actor_id: userData.user.id,
+          p_document_id: requireCanonicalUuid(payload.document_id, 'document_id'),
+          p_due_date: optionalDate(payload.due_date, 'due_date'),
+        });
+      } else if (action === 'resolve_governance_document_version_candidates') {
         const { actorProfile } = await loadTrainingActorContext(userData.user.id);
         const documentId = requireCanonicalUuid(payload.document_id, 'document_id');
         const visibleDocument = await rlsClient

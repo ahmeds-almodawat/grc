@@ -140,7 +140,11 @@ test.describe('UI-3 populated Risk and Compliance visual evidence', () => {
 
     await page.getByRole('button', { name: 'Obligation and Internal Governance Basis', exact: true }).click();
     await expect(page.getByTestId('governance-criteria-linkage')).toBeVisible();
-    await expect(page.getByText('Exact-version snapshot')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Finding and Internal Governance Basis' })).toBeVisible();
+    await expect(page.getByText('Related Policies', { exact: true })).toBeVisible();
+    await expect(page.getByText('Related SOPs', { exact: true })).toBeVisible();
+    await expect(page.getByText('v2.0 · Jan 15, 2026')).toBeVisible();
+    await expect(page.getByText('v3.0 · Feb 01, 2026')).toBeVisible();
     await capture(page, testInfo, '15-compliance-governance-basis');
     await page.locator('.ui3-link-register').scrollIntoViewIfNeeded();
     await expect(page.getByText('OBL-CBAHI-MM-05 · Safe medication administration')).toBeVisible();
