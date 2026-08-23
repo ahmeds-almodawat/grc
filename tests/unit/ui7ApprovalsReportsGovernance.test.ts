@@ -239,10 +239,13 @@ describe('UI-7 Reports and governed analytics (required proofs 32-61)', () => {
     expect(css).not.toMatch(/#[0-9a-f]{3,8}/i);
   });
 
-  it('advances the migration ceiling only for the UI-7 participant read contract', () => {
+  it('advances the migration ceiling only for the UI-7 governed read contracts', () => {
     const migrationNames = fs.readdirSync(path.join(root, 'supabase/migrations'));
     expect(migrationNames.filter(name => name.startsWith('215_'))).toEqual([
       '215_ui7_approval_participant_read_contract.sql',
+    ]);
+    expect(migrationNames.filter(name => name.startsWith('216_'))).toEqual([
+      '216_ui7_my_work_training_read_contract.sql',
     ]);
     expect(migrationNames).toContain('214_ui4_audit_capa_governance.sql');
   });
