@@ -21,7 +21,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { MetricCard } from '../components/ui/MetricCard';
 import { PageHeader } from '../components/ui/PageHeader';
 import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
-import { getDepartments, getGovernanceDecisions, getOrganizations, getProfiles } from '../lib/grcApi';
+import { getDepartments, getGovernanceDecisions, getOrganizations, getProfiles, getRecentGovernedActivity } from '../lib/grcApi';
 import {
   listGovernedPolicies,
   listGovernedSops,
@@ -86,6 +86,7 @@ export function Governance({ setPage }: GovernanceProps) {
   const [departmentFilter, setDepartmentFilter] = useState('all');
 
   const decisions = useAsyncData(getGovernanceDecisions, []);
+  const recentActivity = useAsyncData(getRecentGovernedActivity, []);
   const departments = useAsyncData(getDepartments, []);
   const profiles = useAsyncData(getProfiles, []);
   const organizations = useAsyncData(getOrganizations, []);
@@ -93,6 +94,7 @@ export function Governance({ setPage }: GovernanceProps) {
   const sops = useAsyncData(listGovernedSops, []);
   const organizationId = organizations.data?.[0]?.id || '';
   const decisionRows = decisions.data || [];
+  const activityRows = recentActivity.data || [];
 
   const documentRows = useMemo(() => [
     ...(policies.data || []).map((row) => toDocumentRow(row, 'Policy')),
@@ -244,14 +246,14 @@ export function Governance({ setPage }: GovernanceProps) {
 
         <aside className="ui2-surface ui2-activity-feed" aria-labelledby="governance-activity-title">
           <div className="ui2-section-heading"><div><p>{t('governance.monitoring', 'Monitoring')}</p><h2 id="governance-activity-title">{t('governance.recentActivity', 'Recent governed activity')}</h2></div><Activity size={17} /></div>
-          {decisionRows.length ? (
-            <ol>{decisionRows.slice(0, 6).map((decision) => (
-              <li key={decision.id}>
-                <span className={decision.status === 'completed' || decision.status === 'closed' ? 'is-complete' : 'is-open'}>{decision.status === 'completed' || decision.status === 'closed' ? <CheckCircle2 size={14} /> : <CalendarClock size={14} />}</span>
-                <div><strong>{decision.title}</strong><small>{decision.decision_code || t('governance.decision', 'Decision')} · {formatDate(decision.due_date)}</small></div>
+          {activityRows.length ? (
+            <ol>{activityRows.slice(0, 6).map((activity) => (
+              <li key={`${activity.activity_type}-${activity.activity_id}`}>
+                <span className={activity.status === 'completed' || activity.status === 'closed' || activity.status === 'confirmed' ? 'is-complete' : 'is-open'}>{activity.status === 'completed' || activity.status === 'closed' || activity.status === 'confirmed' ? <CheckCircle2 size={14} /> : <CalendarClock size={14} />}</span>
+                <div><strong>{activity.title}</strong><small>{activity.reference_code || humanize(activity.activity_type)} · {formatDate(activity.occurred_at)}</small></div>
               </li>
             ))}</ol>
-          ) : <p className="ui2-empty-copy">{t('governance.noActivity', 'No governed decision activity is available for the current scope.')}</p>}
+          ) : <p className="ui2-empty-copy">{t('governance.noActivity', 'No governed activity is available for the current scope.')}</p>}
         </aside>
       </div>
 

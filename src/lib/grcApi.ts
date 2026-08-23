@@ -687,6 +687,34 @@ export async function getGovernanceDecisions(): Promise<GovernanceDecisionRow[]>
   }
 }
 
+export interface RecentGovernedActivityRow {
+  activity_id: string;
+  organization_id: string;
+  activity_type: 'governance_decision' | 'document_review' | 'criteria_linkage';
+  title: string;
+  reference_code: string | null;
+  status: string;
+  occurred_at: string;
+  due_date: string | null;
+}
+
+export async function getRecentGovernedActivity(): Promise<RecentGovernedActivityRow[]> {
+  if (!supabase) return emptyLiveArray<RecentGovernedActivityRow>();
+
+  try {
+    const { data, error } = await supabase
+      .from('v_recent_governed_activity')
+      .select('*')
+      .order('occurred_at', { ascending: false })
+      .limit(12);
+    if (error) throw error;
+    return (data as RecentGovernedActivityRow[] | null) ?? [];
+  } catch (error) {
+    logFallback('recent governed activity', error);
+    return emptyLiveArray<RecentGovernedActivityRow>();
+  }
+}
+
 export async function getMyWork(): Promise<MyWorkRow[]> {
   requireLiveSupabase();
   const rows = await invokePrivilegedAction<MyWorkRow[]>('f1r2_list_my_work', {});

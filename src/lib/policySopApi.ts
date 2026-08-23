@@ -1140,7 +1140,7 @@ export async function listDepartments(): Promise<Array<{ id: string; name: strin
 export async function listProfiles(): Promise<Array<{ id: string; full_name: string; email: string; job_title: string | null }>> {
   if (!supabase) return [];
   try {
-    const { data } = await supabase.from('profiles').select('id, full_name, email, job_title').eq('active_flag', true).order('full_name');
+    const { data } = await supabase.from('profiles').select('id, full_name, email, job_title').eq('is_active', true).order('full_name');
     return data || [];
   } catch {
     return [];
