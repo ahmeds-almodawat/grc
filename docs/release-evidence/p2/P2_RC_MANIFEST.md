@@ -2,13 +2,13 @@
 
 - Branch: `codex/v1.4-full-ui-implementation`
 - Accepted P2 start: `526008c84a38b593796573ce10fe54a5a8001a8e`
-- Functional freeze source: `46ae4370b1df6ce676a059c753a050df38b36432`
+- Functional freeze source: `4dd02adb9297d461e2336881a5d6bbae2ee92b7f`
 - Certification evidence: this document's containing commit
 - Target base: `main`
 - Migration ceiling: `222`
 - P1 migrations: `217`, `218`, `219`
 - P2 migrations: `220`, `221`, `222`
-- Unit tests: `2197/2197`
+- Unit tests: `2199/2199`
 - Playwright tests: `95/95`
 - SQL proofs: `9/9`
 - Readiness matrix: `19 PASS`, `2 DEFERRED-NONBLOCKING`, `0 BLOCKED`

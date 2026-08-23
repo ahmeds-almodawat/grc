@@ -8,7 +8,7 @@ available through governed authenticated reads, and a fresh normal local Auth
 login completed the Patch83U, profile, RBAC, and authenticated application
 chain.
 
-RC functional freeze source commit: `46ae4370b1df6ce676a059c753a050df38b36432`.
+RC functional freeze source commit: `4dd02adb9297d461e2336881a5d6bbae2ee92b7f`.
 The certification-evidence commit is the commit containing this document; the
 exact pushed RC HEAD is recorded by the PR and the final P2 gate report.
 
@@ -23,6 +23,8 @@ exact pushed RC HEAD is recorded by the PR and the final P2 gate report.
   the browser criterion gate inside an RLS-scoped security-invoker view.
 - The desktop topbar explicitly retains a single action row across platform
   font metrics, closing the Linux CI geometry failure without changing mobile.
+- The production-data scanner distinguishes UI field descriptors and computed
+  chart aggregates from runtime records while retaining literal-record denial.
 - No P2 migration creates business data, broad browser DML, anonymous access,
   or a security-definer browser oracle.
 
@@ -54,7 +56,7 @@ Review triggers open a review and cannot revise, approve, or publish content.
 | Gate | Result |
 | --- | --- |
 | Type/lint | PASS |
-| Unit | PASS - 108 files, 2197/2197 tests |
+| Unit | PASS - 109 files, 2199/2199 tests |
 | SQL/migration/RLS | PASS - 9 rollback-safe scripts |
 | Full Playwright | PASS - 95/95 tests |
 | Production build | PASS |
@@ -62,6 +64,7 @@ Review triggers open a review and cannot revise, approve, or publish content.
 | Strict RLS/view audits | PASS - 0 critical/high findings |
 | Dependency audit | PASS - 0 production vulnerabilities |
 | Lock consistency | PASS |
+| Production-data static audit | PASS - 0 blocking findings |
 | Secret scan | PASS - no real credential exposure |
 | Data preservation | PASS - 251 rows, digest `-2436037550171164277` |
 

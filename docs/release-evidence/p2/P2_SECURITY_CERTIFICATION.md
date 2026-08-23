@@ -14,6 +14,8 @@ Release-level security checks pass with no unresolved critical/high defect.
 - Audit criterion helper: remains service-role-only; no arbitrary-ID boolean oracle exposed.
 - Browser service-role use: none.
 - Production dependency vulnerabilities: 0.
+- Production-data static audit: 0 blocking findings; fixture-based regression
+  proof retains literal runtime-record detection.
 - Repository/evidence secret scan: no real JWT, private key, password assignment, token,
   or service-role credential. Two key-shaped unit fixtures are synthetic rejection cases.
 
@@ -21,4 +23,3 @@ Five findings from an older broad-execute detector were adjudicated as intended
 fixed-search-path, stable, restrictive RLS decision helpers already allowlisted
 by the authoritative Patch83U inventory. The current Patch83U and runtime bridge
 audits report no unsafe callable surface.
-
