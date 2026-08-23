@@ -99,6 +99,7 @@ import { Admin } from "./pages/Admin";
 const UserManagementCenter = lazy(() => import("./pages/UserManagementCenter").then(module => ({ default: module.UserManagementCenter })));
 import { MyWork } from "./pages/MyWork";
 import { Approvals } from "./pages/Approvals";
+import { ReportsAnalyticsCenter } from "./pages/ReportsAnalyticsCenter";
 const Evidence = lazy(() => import("./pages/EvidenceCenter").then(module => ({ default: module.EvidenceCenter })));
 import { Escalations } from "./pages/Escalations";
 import { ImportExport } from "./pages/ImportExport";
@@ -243,7 +244,7 @@ function DailyOperationsHub({ setPage }: { setPage: (page: PageKey) => void }) {
           label: t("hub.tab.myWork"),
           description: t("hub.tab.myWork.desc"),
           icon: <UserCheck size={17} />,
-          content: <MyWork />,
+          content: <MyWork setPage={setPage} />,
         },
         {
           id: "ovr",
@@ -292,7 +293,7 @@ function DailyOperationsHub({ setPage }: { setPage: (page: PageKey) => void }) {
           label: t("hub.tab.approvals"),
           description: t("hub.tab.approvals.desc"),
           icon: <ClipboardCheck size={17} />,
-          content: <Approvals />,
+          content: <Approvals setPage={setPage} />,
         },
       ]}
     />
@@ -502,58 +503,8 @@ function EvidenceDocumentsHub() {
   );
 }
 
-function ReportsHub() {
-  const { t } = useI18n();
-  const auth = useAuth();
-  const readOnlyReporting =
-    auth.roles.some(
-      (role) => role.role === "viewer" || role.role === "auditor",
-    ) &&
-    !auth.roles.some((role) =>
-      [
-        "super_admin",
-        "executive",
-        "governance_admin",
-        "division_head",
-        "department_manager",
-        "compliance_officer",
-      ].includes(role.role),
-    );
-  const tabs = [
-    {
-      id: "executiveTruth",
-      label: t("hub.tab.executiveTruth", "Executive Summary"),
-      description: t("hub.tab.executiveTruth.desc", "Executive Truth Center."),
-      icon: <BarChart3 size={17} />,
-      content: <ExecutiveTruthCenter />,
-    },
-    {
-      id: "reportBuilder",
-      label: t("hub.tab.reportBuilder"),
-      description: t("hub.tab.reportBuilder.desc"),
-      icon: <BookCopy size={17} />,
-      content: <AdvancedReportBuilder />,
-    },
-    {
-      id: "customReports",
-      label: t("hub.tab.customReports"),
-      description: t("hub.tab.customReports.desc"),
-      icon: <ClipboardList size={17} />,
-      content: <CustomReports />,
-    },
-  ];
-  return (
-    <TabbedHub hideTabRail
-      eyebrow={t("hub.reports.eyebrow")}
-      title={t("hub.reports.title")}
-      subtitle={t("hub.reports.subtitle")}
-      tabs={
-        readOnlyReporting
-          ? tabs.filter((tab) => ["customReports"].includes(tab.id))
-          : tabs
-      }
-    />
-  );
+function ReportsHub({ setPage }: { setPage: PageNavigator }) {
+  return <ReportsAnalyticsCenter setPage={setPage} />;
 }
 
 function AdminSystemControls() {
@@ -1301,7 +1252,7 @@ export default function App() {
       case "evidenceHub" as any:
         return <EvidenceDocumentsHub />;
       case "reportsHub":
-        return <ReportsHub />;
+        return <ReportsHub setPage={setPage} />;
       case "adminHub":
         return <AdminMaintenanceHub setPage={setPage} />;
       case "productionOperatorConsole":
@@ -1321,7 +1272,7 @@ export default function App() {
       case "analytics":
         return <Analytics />;
       case "myWork":
-        return <MyWork />;
+        return <MyWork setPage={setPage} />;
       case "projects":
         return <Projects setPage={setPage} />;
       case "departments":
@@ -1343,7 +1294,7 @@ export default function App() {
       case "escalations":
         return <Escalations />;
       case "approvals":
-        return <Approvals />;
+        return <Approvals setPage={setPage} />;
       case "evidence":
         return <Evidence setPage={setPage} />;
       case "importExport":
