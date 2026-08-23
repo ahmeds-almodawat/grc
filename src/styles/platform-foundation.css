@@ -612,6 +612,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  flex-wrap: nowrap;
   min-width: 0;
   gap: 5px;
 }
