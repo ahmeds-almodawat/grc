@@ -17,6 +17,9 @@
 | Real local authenticated browser chain | PASS |
 | `git diff --check` | PASS |
 
+The focused desktop topbar test passed five repeated runs after the Linux CI
+font-metric wrap was corrected; the complete UI-1 light/dark/mobile/RTL spec
+also passed.
+
 The Vite build reports only the existing large-chunk advisory; compilation and
 asset emission complete successfully.
-

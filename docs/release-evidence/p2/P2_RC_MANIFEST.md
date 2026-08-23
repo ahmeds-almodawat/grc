@@ -2,7 +2,7 @@
 
 - Branch: `codex/v1.4-full-ui-implementation`
 - Accepted P2 start: `526008c84a38b593796573ce10fe54a5a8001a8e`
-- Functional freeze source: `40b5c896eae54dcd102fac0e5d4ccb38fdd85ecb`
+- Functional freeze source: `46ae4370b1df6ce676a059c753a050df38b36432`
 - Certification evidence: this document's containing commit
 - Target base: `main`
 - Migration ceiling: `222`
@@ -18,4 +18,3 @@
 - Merge: not authorized in P2
 
 The immutable pushed commit and PR head are the authoritative exact RC artifact.
-

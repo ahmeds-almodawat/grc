@@ -8,7 +8,7 @@ available through governed authenticated reads, and a fresh normal local Auth
 login completed the Patch83U, profile, RBAC, and authenticated application
 chain.
 
-RC functional freeze source commit: `40b5c896eae54dcd102fac0e5d4ccb38fdd85ecb`.
+RC functional freeze source commit: `46ae4370b1df6ce676a059c753a050df38b36432`.
 The certification-evidence commit is the commit containing this document; the
 exact pushed RC HEAD is recorded by the PR and the final P2 gate report.
 
@@ -21,6 +21,8 @@ exact pushed RC HEAD is recorded by the PR and the final P2 gate report.
   accepted My Work queue.
 - Migration 222 keeps the Audit criterion helper service-role-only and derives
   the browser criterion gate inside an RLS-scoped security-invoker view.
+- The desktop topbar explicitly retains a single action row across platform
+  font metrics, closing the Linux CI geometry failure without changing mobile.
 - No P2 migration creates business data, broad browser DML, anonymous access,
   or a security-definer browser oracle.
 
@@ -73,4 +75,3 @@ type drift. Historical files were not edited to conceal this. P3 must verify
 the target staging ledger and drift before applying the forward migrations.
 
 No staging, Production, hosted Supabase, or Vercel operation was performed.
-
