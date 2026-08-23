@@ -333,9 +333,10 @@ const navTree: NavTreeGroup[] = [
     id: "admin",
     label: "Admin & Organization",
     hint: "Users, access, setup",
-    page: "admin",
+    page: "adminHub",
     icon: <LockKeyhole size={18} />,
     children: [
+      { key: "adminHub", label: "Administration Overview", icon: <Gauge size={16} /> },
       { key: "admin", label: "User Management", icon: <Users size={16} /> },
       {
         key: "accessControl",

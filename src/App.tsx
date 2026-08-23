@@ -97,6 +97,7 @@ import { RuntimeWorkflowActionsCenter } from "./pages/RuntimeWorkflowActionsCent
 import { Governance } from "./pages/Governance";
 import { Admin } from "./pages/Admin";
 const UserManagementCenter = lazy(() => import("./pages/UserManagementCenter").then(module => ({ default: module.UserManagementCenter })));
+const AdministrationCenter = lazy(() => import("./pages/AdministrationCenter").then(module => ({ default: module.AdministrationCenter })));
 import { MyWork } from "./pages/MyWork";
 import { Approvals } from "./pages/Approvals";
 import { ReportsAnalyticsCenter } from "./pages/ReportsAnalyticsCenter";
@@ -1254,7 +1255,7 @@ export default function App() {
       case "reportsHub":
         return <ReportsHub setPage={setPage} />;
       case "adminHub":
-        return <AdminMaintenanceHub setPage={setPage} />;
+        return <AdministrationCenter setPage={setPage} />;
       case "productionOperatorConsole":
         return <ProductionOperatorConsole setPage={setPage} />;
       case "productionEvidenceClosure":
