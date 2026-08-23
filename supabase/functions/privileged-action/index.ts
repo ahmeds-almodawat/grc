@@ -286,6 +286,10 @@ const ui3RiskComplianceActions = new Set([
   'reject_risk_reassessment',
 ]);
 
+const ui7ApprovalActions = new Set([
+  'ui7_record_approval_decision',
+]);
+
 const allowedActions = new Set([
   'ovr_executive_dashboard_analytics',
   'search_grc_global',
@@ -333,6 +337,7 @@ const allowedActions = new Set([
   ...f2OvrGovernanceFeedbackActions,
   ...governanceCriteriaLinkageActions,
   ...ui3RiskComplianceActions,
+  ...ui7ApprovalActions,
   ...patch68EvidenceClosureActions,
   ...patch76CutoverDecisionActions,
   ...patch77LivePilotActions,
@@ -6105,6 +6110,143 @@ Deno.serve(async (request) => {
     } catch (err) {
       const e = mapV14e1rDatabaseError(action, err);
       return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'ui7_record_approval_decision') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id', 'approver_id']);
+      assertOnlyAllowedKeys(
+        payload,
+        new Set(['approval_request_id', 'decision', 'decision_note']),
+        'UI7_APPROVAL_DECISION_PAYLOAD',
+      );
+      const approvalRequestId = requireCanonicalUuid(payload.approval_request_id, 'approval_request_id');
+      const decision = boundedString(payload.decision, 16, 'decision', true)!;
+      const decisionNote = boundedString(payload.decision_note, 2000, 'decision_note');
+      if (!['approved', 'rejected', 'returned'].includes(decision)) {
+        return errorResponse('Invalid approval decision.', 400, 'UI7_INVALID_DECISION', 'Use approved, rejected, or returned.', { action });
+      }
+      if (decision !== 'approved' && !decisionNote) {
+        return errorResponse('A decision rationale is required.', 400, 'UI7_DECISION_NOTE_REQUIRED', 'Rejected and returned decisions require a rationale.', { action });
+      }
+
+      const [{ data: actor, error: actorError }, { data: requestRow, error: requestError }, { data: actorRoleRows, error: actorRoleError }] = await Promise.all([
+        serviceClient.from('profiles').select('id,organization_id,is_active,user_status').eq('id', userData.user.id).single(),
+        serviceClient.from('approval_requests').select('id,organization_id,workflow_type,action_type,department_id,requested_by,request_status,authority_rule_id').eq('id', approvalRequestId).single(),
+        serviceClient.from('user_roles').select('role').eq('user_id', userData.user.id).eq('is_active', true),
+      ]);
+      if (actorError || actorRoleError || !actor || actor.is_active === false || actor.user_status !== 'active') {
+        return errorResponse('Active approver required.', 403, 'UI7_ACTIVE_APPROVER_REQUIRED', 'The signed-in profile is not active.', { action });
+      }
+      if (requestError || !requestRow) {
+        return errorResponse('Approval request not found.', 404, 'UI7_APPROVAL_NOT_FOUND', 'The approval request is not visible to the governed action.', { action });
+      }
+      if (!actor.organization_id || actor.organization_id !== requestRow.organization_id) {
+        return errorResponse('Approval organization mismatch.', 403, 'UI7_APPROVAL_ORGANIZATION_MISMATCH', 'Cross-organization approval is forbidden.', { action });
+      }
+      const activeActorRoles = (actorRoleRows ?? []).map((row) => row.role);
+      if (activeActorRoles.length === 1 && activeActorRoles[0] === 'viewer') {
+        return errorResponse('Viewer access is read-only.', 403, 'UI7_APPROVAL_VIEWER_READ_ONLY', 'Viewer-only actors cannot record approval decisions.', { action });
+      }
+      if (!['pending', 'partially_approved', 'escalated'].includes(requestRow.request_status)) {
+        return errorResponse('Approval request is not open.', 409, 'UI7_APPROVAL_NOT_OPEN', 'Completed decisions are immutable.', { action });
+      }
+
+      const [{ data: stageRows, error: stageError }, { data: rule, error: ruleError }] = await Promise.all([
+        serviceClient.from('approval_request_stages').select('id,assigned_user_id,assigned_role,allow_self_approval,stage_status').eq('approval_request_id', approvalRequestId).eq('stage_status', 'in_progress').limit(2),
+        requestRow.authority_rule_id
+          ? serviceClient.from('approval_authority_rules').select('id,organization_id,approver_user_id,approver_role,allow_self_approval,active_flag,effective_date,expiry_date').eq('id', requestRow.authority_rule_id).maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+      ]);
+      if (stageError || ruleError || (stageRows?.length ?? 0) > 1) {
+        return errorResponse('Approval authority state is invalid.', 409, 'UI7_APPROVAL_AUTHORITY_STATE_INVALID', 'The current approval stage or rule could not be resolved exactly once.', { action });
+      }
+      const stage = stageRows?.[0] ?? null;
+      if (!stage && !rule) {
+        return errorResponse('Approval authority is unmatched.', 403, 'UI7_APPROVAL_AUTHORITY_UNMATCHED', 'No active authority rule or stage permits this decision.', { action });
+      }
+      if (rule && (
+        rule.organization_id !== requestRow.organization_id
+        || rule.active_flag !== true
+        || (rule.effective_date && rule.effective_date > new Date().toISOString().slice(0, 10))
+        || (rule.expiry_date && rule.expiry_date < new Date().toISOString().slice(0, 10))
+      )) {
+        return errorResponse('Approval authority is inactive.', 403, 'UI7_APPROVAL_AUTHORITY_INACTIVE', 'The matched authority rule is not active for this date and organization.', { action });
+      }
+
+      const selfApprovalAllowed = stage?.allow_self_approval ?? rule?.allow_self_approval ?? false;
+      if (requestRow.requested_by === userData.user.id && !selfApprovalAllowed) {
+        return errorResponse('Self-approval is blocked.', 403, 'UI7_SELF_APPROVAL_BLOCKED', 'Separation of duties forbids this decision.', { action });
+      }
+
+      let authorized = stage?.assigned_user_id === userData.user.id || rule?.approver_user_id === userData.user.id;
+      const requiredRole = stage?.assigned_role ?? rule?.approver_role ?? null;
+      if (!authorized && requiredRole) {
+        const { data: roleRows, error: roleError } = await serviceClient
+          .from('user_roles')
+          .select('id')
+          .eq('user_id', userData.user.id)
+          .eq('organization_id', requestRow.organization_id)
+          .eq('role', requiredRole)
+          .eq('is_active', true)
+          .limit(1);
+        if (roleError) {
+          return errorResponse('Approval authority could not be verified.', 409, 'UI7_APPROVAL_ROLE_CHECK_FAILED', 'The role check failed closed.', { action });
+        }
+        authorized = Boolean(roleRows?.length);
+      }
+      if (!authorized) {
+        const delegatorId = stage?.assigned_user_id ?? rule?.approver_user_id ?? null;
+        let delegationQuery = serviceClient
+          .from('approval_delegations')
+          .select('id')
+          .eq('organization_id', requestRow.organization_id)
+          .eq('delegate_id', userData.user.id)
+          .eq('active_flag', true)
+          .lte('effective_from', new Date().toISOString())
+          .gte('effective_to', new Date().toISOString())
+          .or(`workflow_type.is.null,workflow_type.eq.${requestRow.workflow_type}`)
+          .or(`action_type.is.null,action_type.eq.${requestRow.action_type}`)
+          .limit(1);
+        if (delegatorId) delegationQuery = delegationQuery.eq('delegator_id', delegatorId);
+        const { data: delegationRows, error: delegationError } = await delegationQuery;
+        if (delegationError) {
+          return errorResponse('Delegated authority could not be verified.', 409, 'UI7_APPROVAL_DELEGATION_CHECK_FAILED', 'The delegation check failed closed.', { action });
+        }
+        authorized = Boolean(delegationRows?.length);
+      }
+      if (!authorized) {
+        return errorResponse('Approval decision denied.', 403, 'UI7_APPROVAL_AUTHORITY_REQUIRED', 'The signed-in user is not the current approver or delegate.', { action });
+      }
+
+      const { data, error } = await serviceClient.rpc('record_approval_decision', {
+        p_approval_request_id: approvalRequestId,
+        p_approver_id: userData.user.id,
+        p_decision: decision,
+        p_decision_note: decisionNote,
+        p_approver_role: requiredRole,
+      });
+      if (error) {
+        const authorizationFailure = /AUTHORITY|APPROVER|SELF_APPROVAL|ORGANIZATION|ALREADY_CLOSED|NO_IN_PROGRESS_STAGE/i.test(error.message);
+        return errorResponse(
+          authorizationFailure ? 'Approval decision denied.' : 'Approval decision failed safely.',
+          authorizationFailure ? 403 : 409,
+          authorizationFailure ? 'UI7_APPROVAL_DECISION_DENIED' : 'UI7_APPROVAL_DECISION_FAILED',
+          error.message,
+          { action },
+        );
+      }
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (error) {
+      return errorResponse(
+        'Approval decision failed safely.',
+        409,
+        'UI7_APPROVAL_DECISION_FAILED',
+        error instanceof Error ? error.message : 'Unexpected approval decision error.',
+        { action },
+      );
     }
   }
 
