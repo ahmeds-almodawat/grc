@@ -559,24 +559,17 @@ Views whose original declarations were owner-executed (the target catalog harden
 - `v35_final_blocker_board`
 - `v35_operator_console`
 - `v_activity_timeline`
-- `v_admin_safety_console`
 - `v_automation_command_summary`
 - `v_automation_rule_catalog`
-- `v_bilingual_dictionary_status`
 - `v_board_pack_summary`
 - `v_committee_action_automation`
 - `v_consolidation_defect_dashboard`
-- `v_cross_module_relationship_map`
 - `v_data_retention_readiness`
 - `v_department_execution_summary`
 - `v_department_scorecard_v2`
 - `v_deployment_readiness_gates`
-- `v_document_center_items`
-- `v_document_center_summary`
 - `v_due_reminder_queue`
 - `v_escalation_center`
-- `v_executive_command_stream`
-- `v_executive_command_summary`
 - `v_executive_exception_dashboard`
 - `v_executive_grc_summary`
 - `v_final_acceptance_tests`
@@ -593,7 +586,6 @@ Views whose original declarations were owner-executed (the target catalog harden
 - `v_load_test_seed_status`
 - `v_manager_inbox`
 - `v_migration_runbook_status`
-- `v_migration_verification_matrix`
 - `v_mobile_readiness_gates`
 - `v_module_payload_pressure`
 - `v_monthly_grc_trend`
@@ -601,7 +593,6 @@ Views whose original declarations were owner-executed (the target catalog harden
 - `v_operational_followup_summary`
 - `v_permission_test_personas`
 - `v_print_report_index`
-- `v_production_cutover_checklist`
 - `v_qa_readiness_summary`
 - `v_qa_test_case_library`
 - `v_qa_test_runs_summary`
@@ -615,10 +606,6 @@ Views whose original declarations were owner-executed (the target catalog harden
 - `v_staging_validation_checks`
 - `v_staging_validation_summary`
 - `v_ui_performance_summary`
-- `v_v31_go_live_scorecard`
-- `v_v31_module_readiness`
-- `v_v31_pilot_acceptance`
-- `v_v31_support_handover`
 - `v_v33_pilot_waves`
 - `v_v33_production_artifacts`
 - `v_v33_production_proof_gates`
@@ -670,7 +657,7 @@ The audited legacy base-table correction is exact and grants SELECT only after R
 | `v50_query_optimization_items` | credential-gated global metadata | yes | yes |
 | `v50_scale_test_plans` | credential-gated global metadata | yes | yes |
 
-184 direct browser views rely on an ACL outside an explicit per-view repository GRANT. Their call sites prove product intent; final hosted catalog ACL evidence remains mandatory.
+183 direct browser views rely on an ACL outside an explicit per-view repository GRANT. Their call sites prove product intent; final hosted catalog ACL evidence remains mandatory.
 
 ## Proof command
 
