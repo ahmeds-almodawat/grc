@@ -116,7 +116,7 @@ test.describe('GRC v1.4-J cross-role UAT readiness', () => {
     const emptyBackend = await installPatch83vBackend(emptyPage, 'viewer');
     await emptyPage.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.approvals}`);
     await waitForActivePatch83vUser(emptyPage, 'viewer');
-    await expect(emptyPage.getByText('No approvals match the selected filter')).toBeVisible();
+    await expect(emptyPage.getByText('No approvals in scope')).toBeVisible();
     expect(emptyBackend.proof.writeRequests).toEqual([]);
     await emptyPage.close();
 

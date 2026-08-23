@@ -68,7 +68,7 @@ describe('UI-7 My Work contract (required proofs 1-16)', () => {
 
   it('uses governed source drill-down and preserves four explicit actionability states', () => {
     for (const state of ['actionable', 'read_only', 'blocked', 'completed']) expect(api).toContain(`'${state}'`);
-    expect(myWork).toContain("item.actionability === 'actionable' ? item.requiredAction");
+    expect(myWork).toContain("item.actionability === 'actionable' ? workLabel(item.requiredAction)");
     expect(myWork).toContain("item.actionability === 'blocked'");
     expect(myWork).toContain('setPage(item.route as PageKey)');
   });
