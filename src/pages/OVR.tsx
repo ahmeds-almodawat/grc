@@ -1090,7 +1090,7 @@ export function OVR() {
       />
 
       <nav className="ui5-workspace-tabs" aria-label={language === 'ar' ? 'عروض مساحة عمل البلاغات' : 'OVR workspace views'}>
-        {ovrTabs.map(tab => { const Icon = tab.icon; return <button type="button" key={tab.id} className={workspaceView === tab.id ? 'active' : ''} onClick={() => openWorkspaceView(tab.id)}><Icon size={15} />{tab.label}</button>; })}
+        {ovrTabs.map(tab => { const Icon = tab.icon; return <button type="button" key={tab.id} aria-current={workspaceView === tab.id ? 'page' : undefined} className={workspaceView === tab.id ? 'active' : ''} onClick={() => openWorkspaceView(tab.id)}><Icon size={15} />{tab.label}</button>; })}
       </nav>
 
       <div className="notice-banner ovr-confidential">

@@ -401,7 +401,7 @@ export function TrainingGovernanceCenter() {
       <nav className="ui5-workspace-tabs" aria-label={copy('Training workspace views', 'عروض مساحة عمل التدريب')}>
         {tabs.filter((tab) => tab.enabled).map((tab) => {
           const Icon = tab.icon;
-          return <button type="button" key={tab.id} className={activeTab === tab.id ? 'active' : ''} onClick={() => setActiveTab(tab.id)}><Icon size={15} />{tab.label}</button>;
+          return <button type="button" key={tab.id} aria-current={activeTab === tab.id ? 'page' : undefined} className={activeTab === tab.id ? 'active' : ''} onClick={() => setActiveTab(tab.id)}><Icon size={15} />{tab.label}</button>;
         })}
       </nav>
 

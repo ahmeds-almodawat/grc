@@ -364,6 +364,7 @@ const translations: TranslationMap = {
   'nav.more': { en: 'More', ar: 'المزيد' },
   'nav.openMenu': { en: 'Open navigation', ar: 'فتح قائمة التنقل' },
   'nav.closeMenu': { en: 'Close navigation', ar: 'إغلاق قائمة التنقل' },
+  'accessibility.skipToContent': { en: 'Skip to main content', ar: 'تخطي إلى المحتوى الرئيسي' },
 
   'nav.commandCenter': { en: 'Command Center', ar: 'مركز القيادة' },
   'nav.globalSearch': { en: 'Global Search', ar: 'البحث الشامل' },
@@ -2084,6 +2085,7 @@ const translations: TranslationMap = {
   'navTree.item.analytics': { en: 'Analytics', ar: 'التحليلات' },
   'navTree.item.reportBuilder': { en: 'Report Builder', ar: 'منشئ التقارير' },
   'navTree.item.boardPacks': { en: 'Board Packs', ar: 'حزم مجلس الإدارة' },
+  'navTree.item.adminHub': { en: 'Administration Overview', ar: 'نظرة عامة على الإدارة' },
   'navTree.item.admin': { en: 'User Management', ar: 'إدارة المستخدمين' },
   'navTree.item.accessControl': { en: 'Access Control', ar: 'ضبط الوصول' },
   'navTree.item.setupCenter': { en: 'Organization Setup', ar: 'إعداد المنشأة' },

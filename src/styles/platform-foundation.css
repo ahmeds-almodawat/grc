@@ -224,6 +224,33 @@ textarea {
   letter-spacing: 0;
 }
 
+.platform-skip-link {
+  position: fixed;
+  inset-block-start: 8px;
+  inset-inline-start: 8px;
+  z-index: 120;
+  max-width: calc(100vw - 16px);
+  padding: 9px 12px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--platform-brand-primary);
+  border: 2px solid var(--platform-surface-primary);
+  border-radius: var(--platform-radius-md);
+  box-shadow: var(--platform-shadow-elevated);
+  transform: translateY(calc(-100% - 16px));
+}
+
+.platform-skip-link:focus {
+  outline: 3px solid var(--platform-focus);
+  outline-offset: 2px;
+  transform: translateY(0);
+}
+
+.modern-main-content:focus {
+  outline: none;
+}
+
 /* Global application shell */
 .modern-app-shell {
   display: grid;
@@ -2200,6 +2227,15 @@ button.platform-metric-card:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  :where(.modern-app-shell, .modal-backdrop, .platform-drawer) *,
+  :where(.modern-app-shell, .modal-backdrop, .platform-drawer) *::before,
+  :where(.modern-app-shell, .modal-backdrop, .platform-drawer) *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
   .modern-app-shell,
   .modern-sidebar,
   .platform-loading-state__spinner,

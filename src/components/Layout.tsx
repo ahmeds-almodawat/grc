@@ -669,6 +669,7 @@ function NavButton({
     <button
       key={item.key}
       className={`nav-item ${page === item.key ? "active" : ""}`}
+      aria-current={page === item.key ? "page" : undefined}
       onClick={() => setPage(item.key)}
       type="button"
     >
@@ -694,6 +695,7 @@ function NavTreeButton({
   return (
     <button
       className={`nav-child-item ${page === item.key ? "active" : ""}`}
+      aria-current={page === item.key ? "page" : undefined}
       onClick={() => setPage(item.key)}
       type="button"
     >
@@ -835,6 +837,9 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
       dir={direction}
       data-sidebar-collapsed={sidebarCollapsed ? "true" : "false"}
     >
+      <a className="platform-skip-link" href="#platform-main-content">
+        {t("accessibility.skipToContent", "Skip to main content")}
+      </a>
       <div
         className={`mobile-nav-backdrop ${mobileNavigationOpen ? "is-open" : ""}`}
         role="presentation"
@@ -884,6 +889,7 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
                 <button
                   key={group.id}
                   className={`nav-group-trigger nav-group-trigger--single ${groupActive ? "active" : ""}`}
+                  aria-current={group.page === page ? "page" : undefined}
                   onClick={() => setPage(group.page as PageKey)}
                   type="button"
                 >
@@ -909,6 +915,7 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
                   }}
                   type="button"
                   aria-expanded={expanded}
+                  aria-controls={`nav-group-${group.id}`}
                 >
                   {group.icon}
                   <span>
@@ -921,7 +928,7 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
                   />
                 </button>
                 {expanded ? (
-                  <div className="nav-child-list">
+                  <div className="nav-child-list" id={`nav-group-${group.id}`}>
                     {group.children.map((item) => (
                       <NavTreeButton
                         key={item.key}
@@ -994,9 +1001,11 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
       </aside>
 
       <main
+        id="platform-main-content"
         className="main-content modern-main-content"
         data-page-key={page}
         data-page-location={PAGE_LOCATION_REGISTRY[page]}
+        tabIndex={-1}
       >
         <header className="topbar modern-topbar">
           <div className="topbar-context">
@@ -1077,12 +1086,15 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
         {children}
       </main>
       <nav className="mobile-bottom-nav" aria-label={t("nav.mobileNavigation", "Mobile navigation")}>
-        {mobileDestinations.map((item) => (
-          <button className={item.key === page || allowedNavTree.find((group) => group.id === activeGroupId)?.page === item.key ? "is-active" : ""} type="button" onClick={() => setPage(item.key)} key={item.key}>
-            {item.icon}
-            <span>{item.label}</span>
-          </button>
-        ))}
+        {mobileDestinations.map((item) => {
+          const active = item.key === page || allowedNavTree.find((group) => group.id === activeGroupId)?.page === item.key;
+          return (
+            <button className={active ? "is-active" : ""} aria-current={active ? "page" : undefined} type="button" onClick={() => setPage(item.key)} key={item.key}>
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
         <button type="button" onClick={() => setMobileNavigationOpen(true)} aria-expanded={mobileNavigationOpen} aria-controls="primary-navigation-drawer">
           <MoreHorizontal size={19} aria-hidden="true" />
           <span>{t("nav.more", "More")}</span>

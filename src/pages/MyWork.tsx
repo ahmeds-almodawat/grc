@@ -37,6 +37,56 @@ type WorkView = 'overview' | Ui7WorkBucket;
 
 const OPEN_APPROVALS = new Set(['pending', 'partially_approved', 'escalated']);
 
+const arabicWorkLabels: Record<string, string> = {
+  approval: 'اعتماد',
+  training: 'تدريب',
+  evidence_bridge: 'الأدلة',
+  audit: 'مراجعة',
+  capa: 'إجراء تصحيحي ووقائي',
+  document: 'مستند',
+  clinical_governance: 'حوكمة سريرية',
+  ovr: 'بلاغ OVR',
+  risk: 'مخاطر',
+  compliance: 'امتثال',
+  project: 'مشروع',
+  task: 'مهمة',
+  milestone: 'مرحلة',
+  training_assignment: 'تكليف تدريبي',
+  evidence_collection_request: 'طلب جمع أدلة',
+  audit_finding: 'نتيجة مراجعة',
+  capa_action_item: 'بند إجراء تصحيحي ووقائي',
+  document_acknowledgment: 'إقرار مستند',
+  governance_notice: 'إشعار حوكمة',
+  committee_decision: 'قرار لجنة',
+  assigned: 'مسند',
+  accepted: 'مقبول',
+  pending: 'معلق',
+  in_progress: 'قيد التنفيذ',
+  under_review: 'قيد المراجعة',
+  action_required: 'إجراء مطلوب',
+  blocked: 'متعطل',
+  completed: 'مكتمل',
+  recorded: 'مسجل',
+  approved: 'معتمد',
+  returned: 'معاد',
+  rejected: 'مرفوض',
+  'review approval': 'مراجعة الاعتماد',
+  'complete training': 'إكمال التدريب',
+  'verify evidence': 'التحقق من الدليل',
+  'provide evidence': 'تقديم الدليل',
+  'review response': 'مراجعة الرد',
+  'respond to audit': 'الرد على المراجعة',
+  'complete assigned action': 'إكمال الإجراء المسند',
+  'acknowledge document': 'الإقرار بالمستند',
+  'open investigation': 'فتح التحقيق',
+  'open risk action': 'فتح إجراء المخاطر',
+  'open remediation': 'فتح المعالجة',
+  'open task': 'فتح المهمة',
+  'open milestone': 'فتح المرحلة',
+  'open project': 'فتح المشروع',
+  'open source record': 'فتح سجل المصدر',
+};
+
 function toneForWork(item: Ui7WorkItem) {
   if (item.actionability === 'completed') return 'good';
   if (item.actionability === 'blocked' || ui7WorkBucket(item) === 'overdue') return 'danger';
@@ -61,6 +111,7 @@ export function MyWork({ setPage }: MyWorkProps) {
   const auth = useAuth();
   const { language } = useI18n();
   const text = (en: string, ar: string) => language === 'ar' ? ar : en;
+  const workLabel = (value: string) => language === 'ar' ? arabicWorkLabels[value.toLowerCase()] || value : humanize(value);
   const [view, setView] = useState<WorkView>('overview');
   const [search, setSearch] = useState('');
   const [moduleFilter, setModuleFilter] = useState('all');
@@ -147,11 +198,11 @@ export function MyWork({ setPage }: MyWorkProps) {
     <div className="ui7-work-row ui7-work-row--head" role="row"><span>{text('Work item', 'بند العمل')}</span><span>{text('Module', 'الوحدة')}</span><span>{text('Requester / owner', 'مقدم الطلب / المالك')}</span><span>{text('Due / age', 'الاستحقاق / العمر')}</span><span>{text('Status', 'الحالة')}</span><span>{text('Required action', 'الإجراء المطلوب')}</span></div>
     {displayedItems.map((item) => <article className="ui7-work-row" role="row" key={item.id} data-actionability={item.actionability}>
       <span><strong>{item.title}</strong><small>{item.description || text('No additional source context recorded.', 'لم يسجل سياق إضافي للمصدر.')}</small>{item.blockedReason ? <em><AlertTriangle size={13} />{item.blockedReason}</em> : null}</span>
-      <span><StatusChip>{humanize(item.sourceModule)}</StatusChip><small>{humanize(item.sourceType)}</small></span>
+      <span><StatusChip>{workLabel(item.sourceModule)}</StatusChip><small>{workLabel(item.sourceType)}</small></span>
       <span><strong>{item.requester || item.owner || text('Assigned to me', 'مسند إلي')}</strong><small>{item.delegated ? text('Delegated authority', 'صلاحية مفوضة') : text('Direct responsibility', 'مسؤولية مباشرة')}</small></span>
       <span><strong>{formatDate(item.dueDate)}</strong><small>{item.createdAt ? `${text('Received', 'تم الاستلام')} ${formatDate(item.createdAt)}` : text('Age unavailable', 'العمر غير متاح')}</small></span>
-      <span><StatusChip tone={toneForWork(item)}>{item.actionability === 'read_only' ? text('Read-only', 'للقراءة فقط') : item.actionability === 'blocked' ? text('Blocked', 'متعطل') : humanize(item.status)}</StatusChip></span>
-      <span>{assignmentNeedsResponse(item) ? <button type="button" className="ui7-row-action" onClick={() => setAssignmentResponse(item)}>{text('Respond to assignment', 'الرد على الإسناد')}<ArrowRight size={15} /></button> : item.route ? <button type="button" className="ui7-row-action" onClick={() => openSource(item)}>{item.actionability === 'actionable' ? item.requiredAction : item.actionability === 'blocked' ? text('Open blocked source', 'فتح المصدر المتعطل') : text('View source', 'عرض المصدر')}<ArrowRight size={15} /></button> : <StatusChip>{text('Information only', 'للمعلومات فقط')}</StatusChip>}</span>
+      <span><StatusChip tone={toneForWork(item)}>{item.actionability === 'read_only' ? text('Read-only', 'للقراءة فقط') : item.actionability === 'blocked' ? text('Blocked', 'متعطل') : workLabel(item.status)}</StatusChip></span>
+      <span>{assignmentNeedsResponse(item) ? <button type="button" className="ui7-row-action" onClick={() => setAssignmentResponse(item)}>{text('Respond to assignment', 'الرد على الإسناد')}<ArrowRight size={15} /></button> : item.route ? <button type="button" className="ui7-row-action" onClick={() => openSource(item)}>{item.actionability === 'actionable' ? workLabel(item.requiredAction) : item.actionability === 'blocked' ? text('Open blocked source', 'فتح المصدر المتعطل') : text('View source', 'عرض المصدر')}<ArrowRight size={15} /></button> : <StatusChip>{text('Information only', 'للمعلومات فقط')}</StatusChip>}</span>
     </article>)}
   </div> : <div className="ui7-empty"><CheckCircle2 size={24} /><strong>{text('No priority work', 'لا توجد أعمال ذات أولوية')}</strong><p>{text('No overdue or due-soon work matches the active filters.', 'لا توجد أعمال متأخرة أو مستحقة قريباً تطابق المرشحات النشطة.')}</p></div>;
 
@@ -169,13 +220,13 @@ export function MyWork({ setPage }: MyWorkProps) {
 
     <div className="ui7-filterbar" aria-label={text('My Work filters', 'مرشحات أعمالي')}>
       <label className="ui7-search"><Search size={16} /><span className="sr-only">{text('Search work', 'البحث في الأعمال')}</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={text('Search work, requester, action...', 'ابحث عن عمل أو مقدم طلب أو إجراء...')} /></label>
-      <label><span className="sr-only">{text('Module', 'الوحدة')}</span><select value={moduleFilter} onChange={(event) => setModuleFilter(event.target.value)}><option value="all">{text('All modules', 'كل الوحدات')}</option>{modules.map((module) => <option value={module} key={module}>{humanize(module)}</option>)}</select></label>
+      <label><span className="sr-only">{text('Module', 'الوحدة')}</span><select value={moduleFilter} onChange={(event) => setModuleFilter(event.target.value)}><option value="all">{text('All modules', 'كل الوحدات')}</option>{modules.map((module) => <option value={module} key={module}>{workLabel(module)}</option>)}</select></label>
       <label><span className="sr-only">{text('Priority', 'الأولوية')}</span><select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)}><option value="all">{text('All priorities', 'كل الأولويات')}</option><option value="critical">{text('Critical', 'حرجة')}</option><option value="high">{text('High', 'عالية')}</option><option value="medium">{text('Medium', 'متوسطة')}</option><option value="low">{text('Low', 'منخفضة')}</option></select></label>
       <button type="button" className="ui7-icon-button" title={text('Clear filters', 'مسح المرشحات')} onClick={() => { setSearch(''); setModuleFilter('all'); setPriorityFilter('all'); }}><Filter size={17} /></button>
     </div>
 
     <DataState loading={data.loading} error={data.error} empty={!data.loading && !data.error && !items.length} emptyTitle={text('No governed work assigned', 'لا توجد أعمال محكومة مسندة')} emptyMessage={text('No legitimate assigned, delegated, or recently actioned work is visible in your current scope.', 'لا توجد أعمال مسندة أو مفوضة أو منفذة مؤخراً ظاهرة ضمن نطاقك الحالي.')}>
-      {view === 'overview' ? <div data-testid="ui7-my-work-overview"><div className="ui7-metric-grid"><Metric icon={<ClipboardCheck size={20} />} label={text('Total assigned', 'إجمالي المسند')} value={items.length} note={text('Visible authorized scope', 'النطاق المصرح الظاهر')} tone="primary" /><Metric icon={<Clock3 size={20} />} label={text('Due soon', 'مستحقة قريباً')} value={dueSoon.length} note={text('Within seven days', 'خلال سبعة أيام')} tone="warning" /><Metric icon={<AlertTriangle size={20} />} label={text('Overdue', 'متأخرة')} value={overdue.length} note={text('Needs attention', 'تحتاج اهتماماً')} tone="danger" /><Metric icon={<CheckCircle2 size={20} />} label={text('Completed / recent', 'مكتملة / حديثة')} value={completed.length} note={text('Immutable source outcomes', 'نتائج مصدر غير قابلة للتغيير')} tone="good" /></div><div className="ui7-dashboard-grid"><section className="ui7-surface ui7-span-7"><div className="ui7-section-heading"><div><span>{text('Workload', 'عبء العمل')}</span><h2>{text('Current responsibility mix', 'مزيج المسؤوليات الحالي')}</h2></div><ListChecks size={20} /></div><div className="ui7-workload-bars">{modules.map((module) => { const count = items.filter((item) => item.sourceModule === module).length; return <button type="button" key={module} onClick={() => { setModuleFilter(module); setView('pending'); }}><span><strong>{humanize(module)}</strong><small>{count} {text('items', 'بنود')}</small></span><i><b style={{ width: `${items.length ? Math.max(8, count / items.length * 100) : 0}%` }} /></i></button>; })}</div></section><section className="ui7-surface ui7-span-5"><div className="ui7-section-heading"><div><span>{text('Actionability', 'قابلية التنفيذ')}</span><h2>{text('What you can do now', 'ما يمكنك فعله الآن')}</h2></div><ShieldCheck size={20} /></div><div className="ui7-stat-list"><button type="button" onClick={() => setView('pending')}><span>{text('Actionable now', 'قابلة للتنفيذ الآن')}</span><strong>{actionable.length}</strong></button><button type="button" onClick={() => setView('overdue')}><span>{text('Overdue', 'متأخرة')}</span><strong>{overdue.length}</strong></button><button type="button" onClick={() => setView('delegated')}><span>{text('Delegated / reassigned', 'مفوضة / معاد إسنادها')}</span><strong>{delegated.length}</strong></button><div><span>{text('Read-only / blocked', 'للقراءة فقط / متعطلة')}</span><strong>{items.filter((item) => ['read_only', 'blocked'].includes(item.actionability)).length}</strong></div></div></section><section className="ui7-surface ui7-span-12"><div className="ui7-section-heading"><div><span>{text('Priority queue', 'قائمة الأولويات')}</span><h2>{text('Overdue and due-soon responsibilities', 'المسؤوليات المتأخرة والمستحقة قريباً')}</h2></div><CalendarClock size={20} /></div>{workList}</section></div></div> : <section className="ui7-surface" data-testid={`ui7-my-work-${view}`}><div className="ui7-section-heading"><div><span>{text('Personal queue', 'القائمة الشخصية')}</span><h2>{text(humanize(view), view === 'pending' ? 'المعلقة لدي' : view === 'due_soon' ? 'مستحقة قريباً' : view === 'overdue' ? 'متأخرة' : view === 'completed' ? 'منفذة مؤخراً' : 'مفوضة')}</h2></div><StatusChip tone={view === 'overdue' ? 'danger' : view === 'completed' ? 'good' : 'primary'}>{filtered.length}</StatusChip></div>{filtered.length ? workList : <div className="ui7-empty"><CheckCircle2 size={24} /><strong>{text('No matching work', 'لا توجد أعمال مطابقة')}</strong><p>{text('Adjust the active filters or choose another queue.', 'عدّل المرشحات النشطة أو اختر قائمة أخرى.')}</p></div>}</section>}
+      {view === 'overview' ? <div data-testid="ui7-my-work-overview"><div className="ui7-metric-grid"><Metric icon={<ClipboardCheck size={20} />} label={text('Total assigned', 'إجمالي المسند')} value={items.length} note={text('Visible authorized scope', 'النطاق المصرح الظاهر')} tone="primary" /><Metric icon={<Clock3 size={20} />} label={text('Due soon', 'مستحقة قريباً')} value={dueSoon.length} note={text('Within seven days', 'خلال سبعة أيام')} tone="warning" /><Metric icon={<AlertTriangle size={20} />} label={text('Overdue', 'متأخرة')} value={overdue.length} note={text('Needs attention', 'تحتاج اهتماماً')} tone="danger" /><Metric icon={<CheckCircle2 size={20} />} label={text('Completed / recent', 'مكتملة / حديثة')} value={completed.length} note={text('Immutable source outcomes', 'نتائج مصدر غير قابلة للتغيير')} tone="good" /></div><div className="ui7-dashboard-grid"><section className="ui7-surface ui7-span-7"><div className="ui7-section-heading"><div><span>{text('Workload', 'عبء العمل')}</span><h2>{text('Current responsibility mix', 'مزيج المسؤوليات الحالي')}</h2></div><ListChecks size={20} /></div><div className="ui7-workload-bars">{modules.map((module) => { const count = items.filter((item) => item.sourceModule === module).length; return <button type="button" key={module} onClick={() => { setModuleFilter(module); setView('pending'); }}><span><strong>{workLabel(module)}</strong><small>{count} {text('items', 'بنود')}</small></span><i><b style={{ width: `${items.length ? Math.max(8, count / items.length * 100) : 0}%` }} /></i></button>; })}</div></section><section className="ui7-surface ui7-span-5"><div className="ui7-section-heading"><div><span>{text('Actionability', 'قابلية التنفيذ')}</span><h2>{text('What you can do now', 'ما يمكنك فعله الآن')}</h2></div><ShieldCheck size={20} /></div><div className="ui7-stat-list"><button type="button" onClick={() => setView('pending')}><span>{text('Actionable now', 'قابلة للتنفيذ الآن')}</span><strong>{actionable.length}</strong></button><button type="button" onClick={() => setView('overdue')}><span>{text('Overdue', 'متأخرة')}</span><strong>{overdue.length}</strong></button><button type="button" onClick={() => setView('delegated')}><span>{text('Delegated / reassigned', 'مفوضة / معاد إسنادها')}</span><strong>{delegated.length}</strong></button><div><span>{text('Read-only / blocked', 'للقراءة فقط / متعطلة')}</span><strong>{items.filter((item) => ['read_only', 'blocked'].includes(item.actionability)).length}</strong></div></div></section><section className="ui7-surface ui7-span-12"><div className="ui7-section-heading"><div><span>{text('Priority queue', 'قائمة الأولويات')}</span><h2>{text('Overdue and due-soon responsibilities', 'المسؤوليات المتأخرة والمستحقة قريباً')}</h2></div><CalendarClock size={20} /></div>{workList}</section></div></div> : <section className="ui7-surface" data-testid={`ui7-my-work-${view}`}><div className="ui7-section-heading"><div><span>{text('Personal queue', 'القائمة الشخصية')}</span><h2>{text(humanize(view), view === 'pending' ? 'المعلقة لدي' : view === 'due_soon' ? 'مستحقة قريباً' : view === 'overdue' ? 'متأخرة' : view === 'completed' ? 'منفذة مؤخراً' : 'مفوضة')}</h2></div><StatusChip tone={view === 'overdue' ? 'danger' : view === 'completed' ? 'good' : 'primary'}>{filtered.length}</StatusChip></div>{filtered.length ? workList : <div className="ui7-empty"><CheckCircle2 size={24} /><strong>{text('No matching work', 'لا توجد أعمال مطابقة')}</strong><p>{text('Adjust the active filters or choose another queue.', 'عدّل المرشحات النشطة أو اختر قائمة أخرى.')}</p></div>}</section>}
     </DataState>
 
     <Modal open={Boolean(assignmentResponse)} title={assignmentResponse?.title || text('Assignment response', 'الرد على الإسناد')} onClose={() => setAssignmentResponse(null)}>
