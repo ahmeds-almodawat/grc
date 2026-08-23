@@ -57,7 +57,7 @@ begin
   end if;
 
   select public.get_governance_criteria_linkage_capabilities() into v_capabilities;
-  if (v_capabilities ->> 'schema_version')::integer <> 214
+  if (v_capabilities ->> 'schema_version')::integer < 214
      or coalesce((v_capabilities ->> 'audit_independence_available')::boolean, false) is not true
      or coalesce((v_capabilities ->> 'capa_inheritance_available')::boolean, false) is not true then
     raise exception 'UI4_PROOF_CAPABILITIES_INVALID';

@@ -42,7 +42,7 @@ begin
 
   select (public.get_governance_criteria_linkage_capabilities()->>'schema_version')::integer
   into v_schema_version;
-  if v_schema_version <> 213 then
+  if v_schema_version < 213 then
     raise exception 'UI3_PROOF_CAPABILITY_CEILING_MISMATCH: %', v_schema_version;
   end if;
 end;

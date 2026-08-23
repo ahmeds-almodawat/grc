@@ -274,19 +274,32 @@ begin
     null, null, v_policy_link, 'Inherited from the OVR root'
   );
   v_inherited_link := (v_result->>'link_id')::uuid;
-  perform public.append_governance_criterion_decision(
-    v_actor, v_inherited_link, 'confirmed', 'primary', 'noncompliance', 'adequate',
-    'Inherited confirmation', null, null, '{}'::uuid[]
+  v_threw := false;
+  begin
+    perform public.append_governance_criterion_decision(
+      v_actor, v_inherited_link, 'confirmed', 'primary', 'noncompliance', 'adequate',
+      'Inherited confirmation', null, null, '{}'::uuid[]
+    );
+  exception when others then
+    v_threw := sqlerrm like '%INHERITED_GOVERNANCE_LINK_READ_ONLY%';
+  end;
+  if not v_threw then raise exception 'CASE_15_INHERITED_PUBLIC_CONFIRMATION_ALLOWED'; end if;
+  insert into public.governance_criteria_link_decisions (
+    organization_id, link_id, decision_type, significance, adherence_status,
+    adequacy_status, actor_id, rationale
+  ) values (
+    v_org, v_inherited_link, 'confirmed', 'primary', 'noncompliance', 'adequate',
+    v_actor, 'Trusted inheritance fixture matching the UI-4 service-only function.'
   );
   execute 'reset role';
   if not exists (
     select 1 from public.governance_criteria_links i join public.governance_criteria_links p on p.id = v_policy_link
     where i.id = v_inherited_link and i.root_source_entity_type = p.root_source_entity_type
       and i.root_source_entity_id = p.root_source_entity_id
-  ) then raise exception 'CASE_15_INHERITED_ROOT_CHANGED'; end if;
+  ) then raise exception 'CASE_16_INHERITED_ROOT_CHANGED'; end if;
   if (select count(distinct root_event_key) from public.v_confirmed_governance_criteria_truth
       where link_id in (v_policy_link, v_inherited_link)) <> 1 then
-    raise exception 'CASE_16_INHERITANCE_DOUBLE_COUNTED_ROOT';
+    raise exception 'CASE_17_INHERITANCE_DOUBLE_COUNTED_ROOT';
   end if;
 
   -- Restricted labels are redacted for a non-governance source reader.
@@ -299,7 +312,7 @@ begin
     'app_metadata', jsonb_build_object('organization_id', v_org)
   )::text, true);
   if (select target_display_label from public.v_current_governance_criteria_links where link_id = v_policy_link) is distinct from '[restricted]' then
-    raise exception 'CASE_17_RESTRICTED_TARGET_LABEL_NOT_REDACTED';
+    raise exception 'CASE_18_RESTRICTED_TARGET_LABEL_NOT_REDACTED';
   end if;
   v_threw := false;
   begin
@@ -307,7 +320,7 @@ begin
       organization_id, source_entity_type, source_entity_id, review_status
     ) values (v_org, 'ovr', v_ovr, 'under_review');
   exception when others then v_threw := true; end;
-  if not v_threw then raise exception 'CASE_18_BROWSER_DIRECT_INSERT_ALLOWED'; end if;
+  if not v_threw then raise exception 'CASE_19_BROWSER_DIRECT_INSERT_ALLOWED'; end if;
   execute 'reset role';
 
   execute 'set local role anon';

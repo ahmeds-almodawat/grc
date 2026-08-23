@@ -2,16 +2,16 @@
 
 Status: **PASS**
 
-This is a deterministic static replay of the ordered migration chain through reviewed migration 211 plus actual browser call sites. It is not live-catalog proof and does not claim any hosted catalog state.
+This is a deterministic static replay of the ordered migration chain through reviewed migration 218 plus actual browser call sites. It is not live-catalog proof and does not claim any hosted catalog state.
 
 ## Summary
 
 - Direct browser RPCs: 0
-- Direct browser views: 360
+- Direct browser views: 373
 - Direct browser materialized views: 0
 - Unsafe surfaces: 0
 - Search transport: authenticated_edge_bridge
-- Reviewed restricted migration 176–211 SECURITY DEFINER routines: 105
+- Reviewed restricted migration 176–218 SECURITY DEFINER routines: 124
 - Target credential-gate migration present: yes
 
 ## search_grc_global
@@ -20,18 +20,20 @@ Disposition: **authenticated_edge_bridge_with_caller_jwt_rls**. The accepted des
 
 ## ACL-reachable SECURITY DEFINER routines
 
-The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–211 permit exactly three Patch 83U RLS decision helpers plus the reviewed owner-only F1R2 work-item routine. Every SECURITY DEFINER routine introduced, replaced, or renamed by migrations 176–211 must contain its own explicit revoke from PUBLIC/anon/authenticated plus either an explicit service_role-only grant or an explicit owner-only service_role revoke; migration 174's earlier dynamic revoke is not accepted as evidence for later migrations. Migration 212 and later fail closed until separately reviewed.
+The retained live Patch 83Q inventory permits exactly two documented read-only helpers. Target migrations 171–218 permit the five reviewed RLS decision helpers plus the reviewed owner-only F1R2 work-item routine. Every other SECURITY DEFINER routine introduced, replaced, or forward-hardened by migrations 176–218 must have an explicit revoke from PUBLIC/anon/authenticated plus either a service_role-only grant or an explicit owner-only service_role revoke in the reviewed chain. Migration 219 and later fail closed until separately reviewed.
 
 | Signature | Evidence source | PUBLIC | anon | authenticated | Disposition | Purpose |
 |---|---|---:|---:|---:|---|---|
 | `public.current_user_org_id()` | retained_patch83q_live_catalog | no | no | yes | allowed | Read-only caller organization identity helper retained by Patch 83Q. |
 | `public.has_any_role(text[])` | retained_patch83q_live_catalog | yes | yes | yes | allowed | Read-only RLS role decision helper retained by Patch 83Q. |
 | `public.f1r2_create_work_item(p_actor_id uuid,p_item_type text,p_payload jsonb)` | migration197_service_role_acl_review | no | no | no | allowed |  |
-| `public.patch83u_credential_access_allowed()` | target_migrations_171_211 | no | no | yes | allowed | Credential version, state, email, and session freshness decision used by restrictive RLS. |
-| `public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)` | target_migrations_171_211 | no | no | yes | allowed | Same-organization credential-active profile update decision used by restrictive RLS. |
-| `public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)` | target_migrations_171_211 | no | no | yes | allowed | Credential-active canonical role/scope mutation decision used by restrictive RLS. |
+| `public.governance_linkage_source_readable(p_organization_id uuid, p_source_entity_type text, p_source_entity_id uuid)` | target_migrations_171_218 | no | no | yes | allowed | Read-only GOV-LINK source visibility decision used by restrictive RLS. |
+| `public.governance_linkage_target_readable(p_organization_id uuid, p_target_criterion_type text, p_target_document_id uuid, p_target_version_id uuid, p_target_policy_requirement_id uuid, p_target_sop_step_id uuid, p_target_compliance_obligation_id uuid, p_target_accreditation_clause_id uuid, p_target_control_id uuid)` | target_migrations_171_218 | no | no | yes | allowed | Read-only GOV-LINK target visibility and redaction decision used by restrictive RLS. |
+| `public.patch83u_credential_access_allowed()` | target_migrations_171_218 | no | no | yes | allowed | Credential version, state, email, and session freshness decision used by restrictive RLS. |
+| `public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)` | target_migrations_171_218 | no | no | yes | allowed | Same-organization credential-active profile update decision used by restrictive RLS. |
+| `public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)` | target_migrations_171_218 | no | no | yes | allowed | Credential-active canonical role/scope mutation decision used by restrictive RLS. |
 
-### Reviewed restricted routines from migrations 176–211
+### Reviewed restricted routines from migrations 176–218
 
 These routines are not reachable by browser roles. They are listed explicitly so every reviewed definition and its migration-local ACL proof remain visible.
 
@@ -40,8 +42,10 @@ These routines are not reachable by browser roles. They are listed explicitly so
 | `public.acc_v13_authorize_evidence_access(p_actor_id uuid,p_evidence_file_id uuid,p_intent text default 'view')` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1830` |
 | `public.acc_v13_update_work_item_status(p_actor_id uuid,p_item_type text,p_item_id uuid,p_status text,p_progress_percent numeric,p_delay_reason text default null)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1034` |
 | `public.activate_governed_document_version(p_actor_id uuid, p_version_id uuid, p_effective_date date default current_date)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1146` |
+| `public.append_governance_criterion_decision(p_actor_id uuid, p_link_id uuid, p_decision_type text, p_significance text default null, p_adherence_status text default null, p_adequacy_status text default null, p_rationale text default null, p_correction_reason text default null, p_supersedes_decision_id uuid default null, p_evidence_file_ids uuid[] default '{}'::uuid[])` | migration214_service_role_acl_review | yes | service_role_only | `supabase/migrations/214_ui4_audit_capa_governance.sql:200` |
 | `public.can_close_ovr(p_ovr_report_id uuid)` | migration196_service_role_acl_review | no | owner_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:1769` |
 | `public.cancel_training_assignment_with_reason(p_assignment_id uuid, p_reason text, p_actor_id uuid)` | migration208_service_role_acl_review | yes | service_role_only | `supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:896` |
+| `public.complete_governance_linkage_review(p_actor_id uuid, p_review_id uuid, p_review_outcome text, p_review_rationale text, p_uncertainty_recorded boolean default false)` | migration212_service_role_acl_review | yes | service_role_only | `supabase/migrations/212_governance_criteria_linkage_foundation.sql:928` |
 | `public.complete_governed_document_review(p_actor_id uuid, p_trigger_id uuid, p_outcome text, p_outcome_note text)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1322` |
 | `public.complete_ovr_governance_feedback_review(p_actor_id uuid, p_trigger_id uuid, p_outcome text, p_outcome_note text)` | migration211_service_role_acl_review | yes | service_role_only | `supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:682` |
 | `public.complete_training_assignment(p_assignment_id uuid, p_evidence_id uuid, p_actor_id uuid)` | migration208_service_role_acl_review | yes | service_role_only | `supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:466` |
@@ -53,6 +57,7 @@ These routines are not reachable by browser roles. They are listed explicitly so
 | `public.decide_policy_sop_exception(p_actor_id uuid, p_exception_id uuid, p_decision text, p_decision_note text default null)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1456` |
 | `public.decide_sop_rollout_requirements(p_actor_id uuid, p_version_id uuid, p_retraining_required boolean, p_reacknowledgment_required boolean, p_competency_reassessment_required boolean, p_rationale text)` | migration205_service_role_acl_review | yes | service_role_only | `supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql:280` |
 | `public.enforce_policy_sop_version_immutability()` | migration206_service_role_acl_review | no | owner_only | `supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:356` |
+| `public.evaluate_governance_document_review_trigger(p_actor_id uuid, p_document_id uuid, p_due_date date default (current_date + 30)` | migration218_service_role_acl_review | yes | service_role_only | `supabase/migrations/218_p1_governance_linkage_completion.sql:456` |
 | `public.f1_require_exact_governance_authority(p_actor_id uuid, p_organization_id uuid)` | migration210_service_role_acl_review | no | owner_only | `supabase/migrations/210_f1_ovr_governed_version_links.sql:237` |
 | `public.f1r2_active_actor(p_actor_id uuid)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:77` |
 | `public.f1r2_actor_can_manage_item(p_actor_id uuid,p_item_type text,p_item_id uuid)` | migration196_service_role_acl_review | yes | service_role_only | `supabase/migrations/196_f1r2_business_cycle_remediation.sql:135` |
@@ -98,6 +103,11 @@ These routines are not reachable by browser roles. They are listed explicitly so
 | `public.get_effective_document_version(p_document_id uuid, p_target_date date default current_date)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:135` |
 | `public.get_f1_ovr_governed_version_link_capabilities()` | migration210_service_role_acl_review | yes | service_role_only | `supabase/migrations/210_f1_ovr_governed_version_links.sql:445` |
 | `public.get_f2_ovr_governance_feedback_capabilities()` | migration211_service_role_acl_review | yes | service_role_only | `supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:986` |
+| `public.get_governance_criteria_linkage_capabilities()` | migration218_service_role_acl_review | yes | service_role_only | `supabase/migrations/218_p1_governance_linkage_completion.sql:550` |
+| `public.governance_linkage_actor_authorized(p_actor_id uuid, p_organization_id uuid, p_source_entity_type text, p_source_entity_id uuid, p_authority text)` | migration218_service_role_acl_review | no | owner_only | `supabase/migrations/218_p1_governance_linkage_completion.sql:85` |
+| `public.governance_linkage_require_service_role()` | migration212_service_role_acl_review | no | owner_only | `supabase/migrations/212_governance_criteria_linkage_foundation.sql:591` |
+| `public.governance_linkage_resolution_snapshot(p_target_criterion_type text, p_target_document_id uuid, p_target_version_id uuid, p_target_policy_requirement_id uuid, p_target_sop_step_id uuid, p_target_compliance_obligation_id uuid, p_target_accreditation_clause_id uuid, p_target_control_id uuid, p_resolution_date date, p_resolution_method text)` | migration212_service_role_acl_review | no | owner_only | `supabase/migrations/212_governance_criteria_linkage_foundation.sql:711` |
+| `public.governance_linkage_source_context(p_source_entity_type text, p_source_entity_id uuid, p_source_revision_id uuid default null)` | migration218_service_role_acl_review | no | owner_only | `supabase/migrations/218_p1_governance_linkage_completion.sql:31` |
 | `public.guard_staged_approval_mutations()` | migration206_service_role_acl_review | no | owner_only | `supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:310` |
 | `public.initiate_ovr_governance_feedback_review(p_actor_id uuid, p_ovr_id uuid, p_document_link_id uuid, p_due_date date, p_rationale text)` | migration211_service_role_acl_review | yes | service_role_only | `supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:520` |
 | `public.link_ovr_governed_document_version(p_actor_id uuid, p_ovr_id uuid, p_version_id uuid, p_note text default null)` | migration210_service_role_acl_review | yes | service_role_only | `supabase/migrations/210_f1_ovr_governed_version_links.sql:275` |
@@ -125,17 +135,28 @@ These routines are not reachable by browser roles. They are listed explicitly so
 | `public.reopen_training_assignment_with_reason(p_assignment_id uuid, p_reason text, p_actor_id uuid)` | migration208_service_role_acl_review | yes | service_role_only | `supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:1009` |
 | `public.request_evidence_gate_waiver(p_entity_type text, p_entity_id uuid, p_waiver_reason text, p_actor_user_id uuid, p_expires_on date default null)` | migration200_service_role_acl_review | yes | service_role_only | `supabase/migrations/200_evidence_waiver_request_uniqueness.sql:456` |
 | `public.request_policy_sop_exception(p_actor_id uuid, p_version_id uuid, p_reason text, p_scope_description text, p_start_date date, p_end_date date, p_risk_summary text default null, p_compensating_controls text default null)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1383` |
+| `public.resolve_governance_document_version_candidates(p_organization_id uuid, p_document_id uuid, p_source_date date, p_department_id uuid default null)` | migration212_service_role_acl_review | yes | service_role_only | `supabase/migrations/212_governance_criteria_linkage_foundation.sql:465` |
 | `public.retire_governed_document(p_actor_id uuid, p_document_id uuid, p_retirement_reason text)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1234` |
 | `public.save_governed_policy_draft(p_actor_id uuid, p_version_id uuid, p_title_en text, p_title_ar text, p_purpose_en text, p_purpose_ar text, p_policy_statement_en text, p_policy_statement_ar text, p_scope_en text, p_scope_ar text, p_principles_en text, p_principles_ar text, p_exceptions_summary_en text, p_exceptions_summary_ar text, p_non_compliance_escalation_en text, p_non_compliance_escalation_ar text, p_requirements jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:485` |
 | `public.save_governed_sop_draft(p_actor_id uuid, p_version_id uuid, p_title_en text default null, p_title_ar text default null, p_process_name_en text default null, p_process_name_ar text default null, p_purpose_en text default null, p_purpose_ar text default null, p_process_owner_id uuid default null, p_primary_policy_version_id uuid default null, p_governance_link_state text default null, p_scope_en text default null, p_scope_ar text default null, p_training_required boolean default null, p_acknowledgment_required boolean default null, p_competency_assessment_required boolean default null, p_acknowledgment_sla_days integer default null, p_training_renewal_months integer default null, p_content_mode text default null, p_transcription_status text default null, p_procedure_sections jsonb default null, p_procedure_steps jsonb default null, p_department_scopes uuid[] default null, p_role_scopes jsonb default null, p_definitions jsonb default null, p_role_responsibilities jsonb default null, p_monitoring_kpis jsonb default null, p_risk_links jsonb default null, p_accreditation_links jsonb default null, p_version_links jsonb default null)` | migration207_service_role_acl_review | yes | service_role_only | `supabase/migrations/207_governed_sop_runtime_contract_remediation.sql:21` |
 | `public.save_governed_sop_draft(p_actor_id uuid, p_version_id uuid, p_title_en text default null, p_title_ar text default null, p_process_name_en text default null, p_process_name_ar text default null, p_purpose_en text default null, p_purpose_ar text default null, p_process_owner_id uuid default null, p_primary_policy_version_id uuid default null, p_governance_link_state text default null, p_scope_en text default null, p_scope_ar text default null, p_training_required boolean default null, p_acknowledgment_required boolean default null, p_competency_assessment_required boolean default null, p_acknowledgment_sla_days integer default null, p_training_renewal_months integer default null, p_procedure_steps jsonb default null, p_department_scopes uuid[] default null, p_role_scopes jsonb default null, p_definitions jsonb default null, p_role_responsibilities jsonb default null, p_monitoring_kpis jsonb default null, p_risk_links jsonb default null, p_accreditation_links jsonb default null)` | migration204_service_role_acl_review | yes | service_role_only | `supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql:424` |
 | `public.save_governed_sop_draft(p_actor_id uuid, p_version_id uuid, p_title_en text, p_title_ar text, p_process_name_en text, p_process_name_ar text, p_purpose_en text, p_purpose_ar text, p_process_owner_id uuid, p_primary_policy_version_id uuid, p_governance_link_state text, p_scope_en text, p_scope_ar text, p_training_required boolean default false, p_acknowledgment_required boolean default false, p_competency_assessment_required boolean default false, p_acknowledgment_sla_days integer default 30, p_training_renewal_months integer default 12, p_procedure_steps jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb, p_definitions jsonb default '[]'::jsonb, p_role_responsibilities jsonb default '[]'::jsonb, p_monitoring_kpis jsonb default '[]'::jsonb)` | migration203_service_role_acl_review | yes | service_role_only | `supabase/migrations/203_governed_sop_structured_content_expansion.sql:526` |
 | `public.save_governed_sop_draft(p_actor_id uuid, p_version_id uuid, p_title_en text, p_title_ar text, p_process_name_en text, p_process_name_ar text, p_purpose_en text, p_purpose_ar text, p_process_owner_id uuid, p_primary_policy_version_id uuid, p_governance_link_state text, p_scope_en text, p_scope_ar text, p_training_required boolean default false, p_acknowledgment_required boolean default false, p_competency_assessment_required boolean default false, p_acknowledgment_sla_days integer default 30, p_training_renewal_months integer default 12, p_procedure_steps jsonb default '[]'::jsonb, p_department_scopes uuid[] default '{}'::uuid[], p_role_scopes jsonb default '[]'::jsonb)` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:646` |
+| `public.start_governance_linkage_review(p_actor_id uuid, p_source_entity_type text, p_source_entity_id uuid, p_source_revision_id uuid default null, p_source_date date default null, p_review_rationale text default null)` | migration212_service_role_acl_review | yes | service_role_only | `supabase/migrations/212_governance_criteria_linkage_foundation.sql:672` |
 | `public.start_governed_document_revision(p_actor_id uuid, p_source_version_id uuid, p_revision_type text default 'minor', p_revision_reason text default null)` | migration211_service_role_acl_review | yes | service_role_only | `supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:200` |
 | `public.start_training_assignment(p_assignment_id uuid, p_actor_id uuid)` | migration208_service_role_acl_review | yes | service_role_only | `supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql:374` |
 | `public.submit_governed_document_for_review(p_actor_id uuid, p_version_id uuid, p_submission_note text default null)` | migration206_service_role_acl_review | yes | service_role_only | `supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:879` |
+| `public.suggest_governance_criterion_link(p_actor_id uuid, p_review_id uuid, p_target_criterion_type text, p_target_document_id uuid default null, p_target_version_id uuid default null, p_target_policy_requirement_id uuid default null, p_target_sop_step_id uuid default null, p_target_compliance_obligation_id uuid default null, p_target_accreditation_clause_id uuid default null, p_target_control_id uuid default null, p_relationship_origin text default 'direct', p_resolution_method text default 'direct_selection', p_resolution_date date default null, p_override_rationale text default null, p_root_source_entity_type text default null, p_root_source_entity_id uuid default null, p_parent_link_id uuid default null, p_rationale text default null)` | migration212_service_role_acl_review | yes | service_role_only | `supabase/migrations/212_governance_criteria_linkage_foundation.sql:751` |
+| `public.supersede_governance_criterion_link(p_actor_id uuid, p_link_id uuid, p_replacement_link_id uuid, p_reason text)` | migration212_service_role_acl_review | yes | service_role_only | `supabase/migrations/212_governance_criteria_linkage_foundation.sql:890` |
 | `public.sync_ovr_corrective_action_capa_link(p_actor_id uuid, p_ovr_id uuid)` | migration211_service_role_acl_review | yes | service_role_only | `supabase/migrations/211_f2_ovr_governance_feedback_loop.sql:813` |
 | `public.trigger_governed_document_review(p_actor_id uuid, p_document_id uuid, p_trigger_type text, p_source_entity_type text default null, p_source_entity_id uuid default null, p_due_date date default (current_date + interval '30 days')` | migration202_service_role_acl_review | yes | service_role_only | `supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql:1278` |
+| `public.ui3_risk_compliance_workflow_bridge(p_actor_id uuid, p_action text, p_payload jsonb default '{}'::jsonb)` | migration213_service_role_acl_review | yes | service_role_only | `supabase/migrations/213_ui3_risk_compliance_governance.sql:543` |
+| `public.ui3_risk_governance_review_complete(p_risk_id uuid)` | migration213_service_role_acl_review | yes | service_role_only | `supabase/migrations/213_ui3_risk_compliance_governance.sql:514` |
+| `public.ui3_write_compliance_event(p_organization_id uuid, p_assessment_id uuid, p_finding_id uuid, p_remediation_action_id uuid, p_event_type text, p_from_status text, p_to_status text, p_actor_id uuid, p_note text, p_metadata jsonb default '{}'::jsonb)` | migration213_service_role_acl_review | yes | service_role_only | `supabase/migrations/213_ui3_risk_compliance_governance.sql:488` |
+| `public.ui4_audit_capa_workflow_bridge(p_actor_id uuid, p_action text, p_payload jsonb default '{}'::jsonb)` | migration214_service_role_acl_review | yes | service_role_only | `supabase/migrations/214_ui4_audit_capa_governance.sql:425` |
+| `public.ui4_audit_finding_has_legitimate_criterion(p_audit_finding_id uuid)` | migration214_service_role_acl_review | yes | service_role_only | `supabase/migrations/214_ui4_audit_capa_governance.sql:246` |
+| `public.ui4_capa_governance_source(p_source_type text, p_source_id uuid)` | migration218_service_role_acl_review | no | owner_only | `supabase/migrations/218_p1_governance_linkage_completion.sql:186` |
+| `public.ui4_inherit_governance_links_to_capa(p_actor_id uuid, p_capa_id uuid)` | migration214_service_role_acl_review | yes | service_role_only | `supabase/migrations/214_ui4_audit_capa_governance.sql:332` |
 | `public.unlink_ovr_governed_document_version(p_actor_id uuid, p_link_id uuid, p_reason text)` | migration210_service_role_acl_review | yes | service_role_only | `supabase/migrations/210_f1_ovr_governed_version_links.sql:378` |
 | `public.validate_department_scope()` | migration201_service_role_acl_review | yes | service_role_only | `supabase/migrations/201_governed_policy_sop_core_foundation.sql:305` |
 | `public.validate_governed_doc_ver_link_tenancy()` | migration206_service_role_acl_review | no | owner_only | `supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:202` |
@@ -171,10 +192,12 @@ No browser-referenced or ACL-reachable materialized view exists in the target re
 | `v_bilingual_dictionary_status` | view | yes | 1 | yes | approved_browser_read_view |
 | `v_board_pack_summary` | view | yes | 11 | yes | approved_browser_read_view |
 | `v_committee_action_automation` | view | yes | 4 | yes | approved_browser_read_view |
+| `v_confirmed_governance_criteria_truth` | view | yes | 4 | yes | approved_browser_read_view |
 | `v_consolidated_release_packages` | view | yes | 1 | yes | approved_browser_read_view |
 | `v_consolidation_defect_dashboard` | view | yes | 1 | yes | approved_browser_read_view |
-| `v_critical_attention_items` | view | yes | 8 | yes | approved_browser_read_view |
+| `v_critical_attention_items` | view | yes | 9 | yes | approved_browser_read_view |
 | `v_cross_module_relationship_map` | view | yes | 7 | yes | approved_browser_read_view |
+| `v_current_governance_criteria_links` | view | yes | 4 | yes | approved_browser_read_view |
 | `v_data_retention_readiness` | view | yes | 8 | yes | approved_browser_read_view |
 | `v_delay_reason_queue` | view | yes | 5 | yes | approved_browser_read_view |
 | `v_department_execution_summary` | view | yes | 7 | yes | approved_browser_read_view |
@@ -202,6 +225,7 @@ No browser-referenced or ACL-reachable materialized view exists in the target re
 | `v_final_go_live_gateboard` | view | yes | 1 | yes | approved_browser_read_view |
 | `v_final_handover_signoffs` | view | yes | 1 | yes | approved_browser_read_view |
 | `v_final_owner_clearance` | view | yes | 1 | yes | approved_browser_read_view |
+| `v_governance_linkage_review_queue` | view | yes | 5 | yes | approved_browser_read_view |
 | `v_governed_policy_catalog` | view | yes | 6 | yes | approved_browser_read_view |
 | `v_governed_sop_catalog` | view | yes | 6 | yes | approved_browser_read_view |
 | `v_grc_kpi_scorecard` | view | yes | 13 | yes | approved_browser_read_view |
@@ -255,6 +279,12 @@ No browser-referenced or ACL-reachable materialized view exists in the target re
 | `v_patch24_audit_finding_workflow_queue` | view | yes | 7 | yes | approved_browser_read_view |
 | `v_patch24_overdue_audit_findings` | view | yes | 3 | yes | approved_browser_read_view |
 | `v_patch24_repeat_audit_findings` | view | yes | 2 | yes | approved_browser_read_view |
+| `v_patch27_active_approval_delegations` | view | yes | 2 | yes | approved_browser_read_view |
+| `v_patch27_active_authority_rules` | view | yes | 1 | yes | approved_browser_read_view |
+| `v_patch27_approval_decision_history` | view | yes | 3 | yes | approved_browser_read_view |
+| `v_patch28_capa_closure_blockers` | view | yes | 2 | yes | approved_browser_read_view |
+| `v_patch28_capa_link_index` | view | yes | 2 | yes | approved_browser_read_view |
+| `v_patch28_capa_register` | view | yes | 3 | yes | approved_browser_read_view |
 | `v_patch29_accreditation_training_readiness` | view | yes | 3 | yes | approved_browser_read_view |
 | `v_patch29_competency_gap_dashboard` | view | yes | 6 | yes | approved_browser_read_view |
 | `v_patch29_overdue_training_assignments` | view | yes | 4 | yes | approved_browser_read_view |
@@ -316,6 +346,7 @@ No browser-referenced or ACL-reachable materialized view exists in the target re
 | `v_patch38_job_title_register` | view | yes | 1 | yes | approved_browser_read_view |
 | `v_patch38_master_data_exception_register` | view | yes | 6 | yes | approved_browser_read_view |
 | `v_patch38_master_data_ownership_register` | view | yes | 9 | yes | approved_browser_read_view |
+| `v_patch38_my_work_queue` | view | yes | 23 | yes | approved_browser_read_view |
 | `v_patch38_quality_indicator_register` | view | yes | 3 | yes | approved_browser_read_view |
 | `v_patch39_accreditation_blocker_summary` | view | yes | 9 | yes | approved_browser_read_view |
 | `v_patch39_committee_action_queue` | view | yes | 4 | yes | approved_browser_read_view |
@@ -456,6 +487,7 @@ No browser-referenced or ACL-reachable materialized view exists in the target re
 | `v_real_uat_run_queue` | view | yes | 4 | yes | approved_browser_read_view |
 | `v_real_uat_signoff_readiness` | view | yes | 2 | yes | approved_browser_read_view |
 | `v_real_workflow_execution_summary` | view | yes | 7 | yes | approved_browser_read_view |
+| `v_recent_governed_activity` | view | yes | 5 | yes | approved_browser_read_view |
 | `v_recurring_review_queue` | view | yes | 3 | yes | approved_browser_read_view |
 | `v_release_candidate_gates` | view | yes | 2 | yes | approved_browser_read_view |
 | `v_release_factory_checks` | view | yes | 1 | yes | approved_browser_read_view |
@@ -482,6 +514,8 @@ No browser-referenced or ACL-reachable materialized view exists in the target re
 | `v_uat_findings_queue` | view | yes | 1 | yes | approved_browser_read_view |
 | `v_uat_readiness_dashboard` | view | yes | 4 | yes | approved_browser_read_view |
 | `v_ui_performance_summary` | view | yes | 2 | yes | approved_browser_read_view |
+| `v_ui3_compliance_obligation_register` | view | yes | 4 | yes | approved_browser_read_view |
+| `v_ui4_audit_criteria_contract` | view | yes | 6 | yes | approved_browser_read_view |
 | `v_ultra_release_summary` | view | yes | 7 | yes | approved_browser_read_view |
 | `v_user_management_roster` | view | yes | 9 | yes | approved_browser_read_view |
 | `v_user_management_summary` | view | yes | 3 | yes | approved_browser_read_view |
@@ -524,9 +558,6 @@ Views whose original declarations were owner-executed (the target catalog harden
 - `v35_data_quality_radar`
 - `v35_final_blocker_board`
 - `v35_operator_console`
-- `v_accreditation_gap_dashboard`
-- `v_accreditation_readiness_summary`
-- `v_accreditation_requirement_matrix`
 - `v_activity_timeline`
 - `v_admin_safety_console`
 - `v_automation_command_summary`
@@ -535,10 +566,8 @@ Views whose original declarations were owner-executed (the target catalog harden
 - `v_board_pack_summary`
 - `v_committee_action_automation`
 - `v_consolidation_defect_dashboard`
-- `v_critical_attention_items`
 - `v_cross_module_relationship_map`
 - `v_data_retention_readiness`
-- `v_delay_reason_queue`
 - `v_department_execution_summary`
 - `v_department_scorecard_v2`
 - `v_deployment_readiness_gates`
@@ -641,7 +670,7 @@ The audited legacy base-table correction is exact and grants SELECT only after R
 | `v50_query_optimization_items` | credential-gated global metadata | yes | yes |
 | `v50_scale_test_plans` | credential-gated global metadata | yes | yes |
 
-193 direct browser views rely on an ACL outside an explicit per-view repository GRANT. Their call sites prove product intent; final hosted catalog ACL evidence remains mandatory.
+184 direct browser views rely on an ACL outside an explicit per-view repository GRANT. Their call sites prove product intent; final hosted catalog ACL evidence remains mandatory.
 
 ## Proof command
 

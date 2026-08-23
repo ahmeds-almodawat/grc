@@ -252,10 +252,10 @@ describe('GRC v1.4-E1-R Migration 207 Runtime Contract Remediation Invariants', 
   });
 
   // 30 Patch83U reviewed ceiling >= 207
-  it('30: Patch83U reviewed ceiling equals 214', () => {
+  it('30: Patch83U reviewed ceiling includes P1 migration 218', () => {
     const proofScriptPath = path.resolve(rootDir, 'scripts/patch83u-auth-surface-proof.mjs');
     const content = fs.readFileSync(proofScriptPath, 'utf8');
-    expect(content).toContain('const reviewedPatch83uMigrationCeiling = 214;');
+    expect(content).toContain('const reviewedPatch83uMigrationCeiling = 218;');
   });
 
   it('Deterministic SQL proof script exists and covers Migration 207 production schema persistence', () => {

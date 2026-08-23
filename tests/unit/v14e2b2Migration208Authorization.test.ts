@@ -235,9 +235,9 @@ describe('GRC v1.4-E2B2 Migration 208 Authorization & Compliance Contract Invari
     expect(proof).toContain('ALL 26 BEHAVIORAL SCENARIOS DETERMINISTICALLY VERIFIED (PASSED).');
   });
 
-  it('18: Patch83U proof reviewed ceiling is set to 214', () => {
+  it('18: Patch83U proof reviewed ceiling includes P1 migration 218', () => {
     const content = fs.readFileSync(patch83uScriptPath, 'utf8');
-    expect(content).toContain('const reviewedPatch83uMigrationCeiling = 214;');
+    expect(content).toContain('const reviewedPatch83uMigrationCeiling = 218;');
   });
 
   it('19: verify-migrations script remains unchanged in parser structure', () => {
