@@ -12,6 +12,7 @@ import {
 const root = process.cwd();
 const source = (file: string) => fs.readFileSync(path.join(root, file), 'utf8');
 const migration = source('supabase/migrations/214_ui4_audit_capa_governance.sql');
+const reconciliation = source('supabase/migrations/230_p3_capa_action_item_contract_reconciliation.sql');
 const auditPage = source('src/pages/Audit.tsx');
 const capaPage = source('src/pages/Capa.tsx');
 const linkage = source('src/components/governance/GovernanceCriteriaLinkage.tsx');
@@ -89,6 +90,15 @@ describe('UI-4 Audit and canonical Patch 28 CAPA', () => {
     expect(capaPage).toContain("'ui4_complete_capa_effectiveness'");
     expect(capaPage).toContain("'ui4_approve_capa_closure'");
     expect(capaPage).toContain('triggerGovernedDocumentReview');
+  });
+
+  it('reconciles the shared v100 and Patch 28 action-item table without losing tenant provenance', () => {
+    expect(reconciliation).toContain("alter column capa_case_id drop not null");
+    expect(reconciliation).toContain('check (num_nonnulls(capa_case_id, capa_id) = 1)');
+    expect(reconciliation).toContain('v_capa.organization_id');
+    expect(reconciliation).toContain("('open'::text)::public.work_status");
+    expect(reconciliation).toContain("status = p_status::public.work_status");
+    expect(reconciliation).toContain("auth.role() is distinct from 'service_role'");
   });
 
   it('routes every UI-4 mutation through the authenticated privileged Edge bridge', () => {
