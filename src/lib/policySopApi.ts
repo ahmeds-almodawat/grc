@@ -1,6 +1,22 @@
 import { supabase } from './supabase';
 import { invokePrivilegedAction } from './privilegedAction';
 
+type CanonicalLocalizedName = {
+  name_en?: string | null;
+  name_ar?: string | null;
+};
+
+type CanonicalProfileName = {
+  full_name_en?: string | null;
+  full_name_ar?: string | null;
+};
+
+const localizedName = (record?: CanonicalLocalizedName | null) =>
+  record?.name_en || record?.name_ar || null;
+
+const profileName = (record?: CanonicalProfileName | null) =>
+  record?.full_name_en || record?.full_name_ar || null;
+
 // ----------------------------------------------------------------------------
 // Catalog & Read Types
 // ----------------------------------------------------------------------------
@@ -520,7 +536,7 @@ export async function getGovernedPolicyDetail(documentId: string, versionId?: st
     // 1. Fetch document root
     const { data: doc, error: docErr } = await supabase
       .from('controlled_documents')
-      .select('*, departments(id, name, code), profiles!controlled_documents_document_owner_id_fkey(id, full_name)')
+      .select('*, departments(id, name_en, name_ar, code), profiles!controlled_documents_document_owner_id_fkey(id, full_name_en, full_name_ar)')
       .eq('id', documentId)
       .single();
     if (docErr || !doc) throw docErr || new Error('DOCUMENT_NOT_FOUND');
@@ -567,14 +583,14 @@ export async function getGovernedPolicyDetail(documentId: string, versionId?: st
     // 7. Fetch review events
     const { data: events } = await supabase
       .from('document_review_events')
-      .select('*, profiles(full_name)')
+      .select('*, profiles(full_name_en, full_name_ar)')
       .eq('document_id', documentId)
       .order('created_at', { ascending: false });
 
     // 8. Fetch exceptions
     const { data: exceptions } = await supabase
       .from('policy_sop_exceptions')
-      .select('*, profiles!policy_sop_exceptions_requested_by_fkey(full_name)')
+      .select('*, profiles!policy_sop_exceptions_requested_by_fkey(full_name_en, full_name_ar)')
       .eq('document_id', documentId)
       .order('created_at', { ascending: false });
 
@@ -601,9 +617,9 @@ export async function getGovernedPolicyDetail(documentId: string, versionId?: st
       document_status: doc.document_status,
       workflow_stage: doc.workflow_stage,
       department_id: doc.department_id,
-      department_name: doc.departments?.name || null,
+      department_name: localizedName(doc.departments),
       document_owner_id: doc.document_owner_id,
-      document_owner_name: doc.profiles?.full_name || null,
+      document_owner_name: profileName(doc.profiles),
       effective_date: doc.effective_date,
       next_review_date: doc.next_review_date,
       expiry_date: doc.expiry_date,
@@ -660,7 +676,7 @@ export async function getGovernedPolicyDetail(documentId: string, versionId?: st
         from_status: ev.from_status,
         to_status: ev.to_status,
         actor_id: ev.actor_id,
-        actor_name: ev.profiles?.full_name || null,
+        actor_name: profileName(ev.profiles),
         event_note: ev.event_note,
         created_at: ev.created_at
       })),
@@ -676,7 +692,7 @@ export async function getGovernedPolicyDetail(documentId: string, versionId?: st
         risk_assessment_summary: ex.risk_assessment_summary,
         compensating_controls: ex.compensating_controls,
         requested_by: ex.requested_by,
-        requested_by_name: ex.profiles?.full_name || null,
+        requested_by_name: profileName(ex.profiles),
         requested_at: ex.requested_at,
         status: ex.status,
         decision_by: ex.decision_by,
@@ -728,7 +744,7 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
     // 1. Fetch document root
     const { data: doc, error: docErr } = await supabase
       .from('controlled_documents')
-      .select('*, departments(id, name, code), profiles!controlled_documents_document_owner_id_fkey(id, full_name)')
+      .select('*, departments(id, name_en, name_ar, code), profiles!controlled_documents_document_owner_id_fkey(id, full_name_en, full_name_ar)')
       .eq('id', documentId)
       .single();
     if (docErr || !doc) throw docErr || new Error('DOCUMENT_NOT_FOUND');
@@ -749,14 +765,14 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
     // 3. Fetch SOP details
     const { data: details } = await supabase
       .from('governed_sop_details')
-      .select('*, profiles!governed_sop_details_process_owner_id_fkey(id, full_name)')
+      .select('*, profiles!governed_sop_details_process_owner_id_fkey(id, full_name_en, full_name_ar)')
       .eq('version_id', ver.id)
       .maybeSingle();
 
     // 4. Fetch procedure steps with mapped control code/title
     const { data: steps } = await supabase
       .from('sop_procedure_steps')
-      .select('*, control_library_items(code, title)')
+      .select('*, control_library_items(control_code, title, control_type, key_control)')
       .eq('sop_version_id', ver.id)
       .order('sequence_number', { ascending: true });
 
@@ -777,7 +793,7 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
     // 7. Fetch monitoring KPIs
     const { data: kpis } = await supabase
       .from('sop_monitoring_kpis')
-      .select('*, profiles!sop_monitoring_kpis_owner_id_fkey(full_name)')
+      .select('*, profiles!sop_monitoring_kpis_owner_id_fkey(full_name_en, full_name_ar)')
       .eq('sop_version_id', ver.id)
       .order('sequence_number', { ascending: true });
 
@@ -815,14 +831,14 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
     // 11. Fetch review events
     const { data: events } = await supabase
       .from('document_review_events')
-      .select('*, profiles(full_name)')
+      .select('*, profiles(full_name_en, full_name_ar)')
       .eq('document_id', documentId)
       .order('created_at', { ascending: false });
 
     // 12. Fetch exceptions
     const { data: exceptions } = await supabase
       .from('policy_sop_exceptions')
-      .select('*, profiles!policy_sop_exceptions_requested_by_fkey(full_name)')
+      .select('*, profiles!policy_sop_exceptions_requested_by_fkey(full_name_en, full_name_ar), decision_profiles:profiles!policy_sop_exceptions_decision_by_fkey(full_name_en, full_name_ar)')
       .eq('document_id', documentId)
       .order('created_at', { ascending: false });
 
@@ -858,11 +874,11 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
     const derivedControlsMap = new Map<string, SopDerivedControl>();
     (steps || []).forEach(s => {
       if (s.required_control_id && s.control_library_items) {
-        const ctrl = s.control_library_items as unknown as { code?: string; title?: string; control_type?: string; key_control?: boolean };
+        const ctrl = s.control_library_items as unknown as { control_code?: string; title?: string; control_type?: string; key_control?: boolean };
         if (!derivedControlsMap.has(s.required_control_id)) {
           derivedControlsMap.set(s.required_control_id, {
             control_id: s.required_control_id,
-            control_code: ctrl?.code || null,
+            control_code: ctrl?.control_code || null,
             control_title: ctrl?.title || 'Untitled Control',
             control_type: ctrl?.control_type || 'preventive',
             key_control: ctrl?.key_control ?? false,
@@ -918,9 +934,9 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
       document_status: doc.document_status,
       workflow_stage: doc.workflow_stage,
       department_id: doc.department_id,
-      department_name: doc.departments?.name || null,
+      department_name: localizedName(doc.departments),
       document_owner_id: doc.document_owner_id,
-      document_owner_name: doc.profiles?.full_name || null,
+      document_owner_name: profileName(doc.profiles),
       effective_date: doc.effective_date,
       next_review_date: doc.next_review_date,
       expiry_date: doc.expiry_date,
@@ -942,7 +958,7 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
       process_name_en: details?.process_name_en || '',
       process_name_ar: details?.process_name_ar || null,
       process_owner_id: details?.process_owner_id || null,
-      process_owner_name: details?.profiles?.full_name || null,
+      process_owner_name: profileName(details?.profiles),
       purpose_en: details?.purpose_en || '',
       purpose_ar: details?.purpose_ar || null,
       scope_en: details?.scope_en || null,
@@ -960,7 +976,7 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
       content_mode: details?.content_mode || 'structured',
       transcription_status: details?.transcription_status || 'not_required',
       procedure_steps: (steps || []).map(s => {
-        const ctrl = s.control_library_items as unknown as { code?: string; title?: string } | undefined;
+        const ctrl = s.control_library_items as unknown as { control_code?: string; title?: string } | undefined;
         return {
           id: s.id,
           sequence_number: s.sequence_number,
@@ -968,7 +984,7 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
           action_instruction_en: s.action_instruction_en,
           action_instruction_ar: s.action_instruction_ar,
           required_control_id: s.required_control_id,
-          required_control_code: ctrl?.code || null,
+          required_control_code: ctrl?.control_code || null,
           required_control_title: ctrl?.title || null,
           expected_evidence_record_en: s.expected_evidence_record_en,
           expected_evidence_record_ar: s.expected_evidence_record_ar,
@@ -1003,7 +1019,7 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
         accountable_for_ar: r.accountable_for_ar
       })),
       monitoring_kpis: (kpis || []).map(k => {
-        const prof = k.profiles as unknown as { full_name?: string } | undefined;
+        const prof = k.profiles as unknown as CanonicalProfileName | undefined;
         return {
           id: k.id,
           sequence_number: k.sequence_number,
@@ -1012,7 +1028,7 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
           target_value: k.target_value,
           measurement_frequency: k.measurement_frequency,
           owner_id: k.owner_id,
-          owner_name: prof?.full_name || null,
+          owner_name: profileName(prof),
           description_en: k.description_en,
           description_ar: k.description_ar
         };
@@ -1068,7 +1084,7 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
         from_status: ev.from_status,
         to_status: ev.to_status,
         actor_id: ev.actor_id,
-        actor_name: ev.profiles?.full_name || null,
+        actor_name: profileName(ev.profiles),
         event_note: ev.event_note,
         created_at: ev.created_at
       })),
@@ -1084,11 +1100,11 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
         risk_assessment_summary: ex.risk_assessment_summary,
         compensating_controls: ex.compensating_controls,
         requested_by: ex.requested_by,
-        requested_by_name: ex.profiles?.full_name || null,
+        requested_by_name: profileName(ex.profiles),
         requested_at: ex.requested_at,
         status: ex.status,
         decision_by: ex.decision_by,
-        decision_by_name: ex.decision_profiles?.full_name || null,
+        decision_by_name: profileName(ex.decision_profiles),
         decision_at: ex.decision_at,
         decision_note: ex.decision_note
       })),
@@ -1130,8 +1146,16 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
 export async function listDepartments(): Promise<Array<{ id: string; name: string; code: string }>> {
   if (!supabase) return [];
   try {
-    const { data } = await supabase.from('departments').select('id, name, code').order('name');
-    return data || [];
+    const { data, error } = await supabase
+      .from('departments')
+      .select('id, name_en, name_ar, code')
+      .order('name_en');
+    if (error) throw error;
+    return (data || []).map((department) => ({
+      id: department.id,
+      name: localizedName(department) || department.code,
+      code: department.code,
+    }));
   } catch {
     return [];
   }
@@ -1140,8 +1164,18 @@ export async function listDepartments(): Promise<Array<{ id: string; name: strin
 export async function listProfiles(): Promise<Array<{ id: string; full_name: string; email: string; job_title: string | null }>> {
   if (!supabase) return [];
   try {
-    const { data } = await supabase.from('profiles').select('id, full_name, email, job_title').eq('is_active', true).order('full_name');
-    return data || [];
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, full_name_en, full_name_ar, email, job_title')
+      .eq('is_active', true)
+      .order('full_name_en');
+    if (error) throw error;
+    return (data || []).map((profile) => ({
+      id: profile.id,
+      full_name: profileName(profile) || profile.email,
+      email: profile.email,
+      job_title: profile.job_title,
+    }));
   } catch {
     return [];
   }
@@ -1150,8 +1184,17 @@ export async function listProfiles(): Promise<Array<{ id: string; full_name: str
 export async function listControls(): Promise<Array<{ id: string; code: string; title: string }>> {
   if (!supabase) return [];
   try {
-    const { data } = await supabase.from('controls').select('id, code, title').order('code');
-    return data || [];
+    const { data, error } = await supabase
+      .from('control_library_items')
+      .select('id, control_code, title')
+      .eq('is_active', true)
+      .order('control_code');
+    if (error) throw error;
+    return (data || []).map((control) => ({
+      id: control.id,
+      code: control.control_code || 'UNASSIGNED',
+      title: control.title,
+    }));
   } catch {
     return [];
   }
@@ -1160,8 +1203,17 @@ export async function listControls(): Promise<Array<{ id: string; code: string; 
 export async function listAccreditationClauses(): Promise<Array<{ id: string; clause_number: string; title: string }>> {
   if (!supabase) return [];
   try {
-    const { data } = await supabase.from('accreditation_clauses').select('id, clause_number, title').order('clause_number');
-    return data || [];
+    const { data, error } = await supabase
+      .from('accreditation_clauses')
+      .select('id, clause_code, clause_title')
+      .eq('active', true)
+      .order('clause_code');
+    if (error) throw error;
+    return (data || []).map((clause) => ({
+      id: clause.id,
+      clause_number: clause.clause_code,
+      title: clause.clause_title,
+    }));
   } catch {
     return [];
   }
@@ -1180,7 +1232,7 @@ export async function fetchActiveRisks(organizationId: string): Promise<Array<{
   try {
     const { data, error } = await supabase
       .from('risks')
-      .select('id, risk_code, title, status, risk_level, department_id, departments(name)')
+      .select('id, risk_code, title, status, risk_level, department_id, departments(name_en, name_ar)')
       .eq('organization_id', organizationId)
       .not('status', 'in', '("closed","cancelled")')
       .order('risk_code', { ascending: true });
@@ -1193,7 +1245,7 @@ export async function fetchActiveRisks(organizationId: string): Promise<Array<{
       status: r.status,
       risk_level: r.risk_level,
       department_id: r.department_id,
-      department_name: (r.departments as unknown as { name?: string })?.name || null
+      department_name: localizedName(r.departments as unknown as CanonicalLocalizedName)
     }));
   } catch (error) {
     console.warn('[PolicySopApi] fetchActiveRisks fallback:', error);
