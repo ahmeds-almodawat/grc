@@ -4905,6 +4905,15 @@ Deno.serve(async (request) => {
   if (governanceCriteriaLinkageActions.has(action)) {
     try {
       const payload = asPlainObject(requestBody.payload);
+      const rlsClient = createClient(supabaseUrl, anonKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'x-patch83u-frontend-contract-version': PATCH83U_FRONTEND_CONTRACT_VERSION,
+          },
+        },
+      });
       assertNoIdentityOverrides(payload, [
         'actor_id', 'p_actor_id', 'user_id', 'organization_id',
         'acting_user_id', 'authenticated_user_id', 'target_user_id',
