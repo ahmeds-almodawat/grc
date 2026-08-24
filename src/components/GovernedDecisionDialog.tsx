@@ -61,13 +61,13 @@ export function GovernedDecisionDialog({
 }: GovernedDecisionDialogProps) {
   const { t } = useI18n();
 
-  const initialValues = useMemo(() => {
-    const map: Record<string, any> = {};
-    for (const f of fields) {
-      map[f.id] = f.defaultValue !== undefined ? f.defaultValue : '';
-    }
-    return map;
-  }, [fields]);
+  const initialValuesSignature = JSON.stringify(
+    fields.map((field) => [field.id, field.defaultValue !== undefined ? field.defaultValue : '']),
+  );
+  const initialValues = useMemo<Record<string, any>>(
+    () => Object.fromEntries(JSON.parse(initialValuesSignature) as Array<[string, string | number]>),
+    [initialValuesSignature],
+  );
 
   const [values, setValues] = useState<Record<string, any>>(initialValues);
   const [internalSubmitting, setInternalSubmitting] = useState(false);
