@@ -107,9 +107,9 @@ describe('GRC v1.4-E2B1 Governed SOP Training & Competency Invariants', () => {
     expect(edgeSource).toContain('reopen_training_assignment_with_reason');
   });
 
-  it('Patch83U proof reviewed ceiling includes P1 migration 218', () => {
+  it('Patch83U proof reviewed ceiling includes P3 migration 224', () => {
     const content = fs.readFileSync(patch83uScriptPath, 'utf8');
-    expect(content).toContain('const reviewedPatch83uMigrationCeiling = 218;');
+    expect(content).toContain('const reviewedPatch83uMigrationCeiling = 224;');
   });
 
   it('Migration 205 restricts rollout decision authority strictly to Quality and Governance authorities', () => {
