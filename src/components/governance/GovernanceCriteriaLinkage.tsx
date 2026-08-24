@@ -181,11 +181,13 @@ export function GovernanceCriteriaLinkage({
 
   const filteredPolicies = useMemo(() => {
     const query = policySearch.trim().toLowerCase();
-    return policies.filter((policy) => !query || `${policy.document_code} ${policy.document_title}`.toLowerCase().includes(query));
+    return policies.filter((policy) => policy.version_id && policy.approved_at && policy.locked_at
+      && (!query || `${policy.document_code} ${policy.document_title}`.toLowerCase().includes(query)));
   }, [policies, policySearch]);
   const filteredSops = useMemo(() => {
     const query = sopSearch.trim().toLowerCase();
-    return sops.filter((sop) => !query || `${sop.document_code} ${sop.document_title}`.toLowerCase().includes(query));
+    return sops.filter((sop) => sop.version_id && sop.approved_at && sop.locked_at
+      && (!query || `${sop.document_code} ${sop.document_title}`.toLowerCase().includes(query)));
   }, [sops, sopSearch]);
 
   const load = useCallback(async () => {

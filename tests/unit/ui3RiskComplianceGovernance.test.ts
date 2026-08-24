@@ -188,6 +188,11 @@ describe('UI-3 Risk, Compliance, and governance criteria linkage', () => {
     expect(component).not.toContain('[onLinksChange, onReviewChange, source.id');
   });
 
+  it('25. offers only approved and locked document versions as governed criteria', () => {
+    expect(component).toContain('policy.version_id && policy.approved_at && policy.locked_at');
+    expect(component).toContain('sop.version_id && sop.approved_at && sop.locked_at');
+  });
+
   it('normalizes assessment result and finding eligibility without conflating records', () => {
     expect(resultTone('compliant')).toBe('success');
     expect(resultTone('noncompliant')).toBe('danger');
