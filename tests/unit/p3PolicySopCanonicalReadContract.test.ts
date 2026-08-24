@@ -53,4 +53,9 @@ describe('P3 Policy and SOP canonical read contracts', () => {
     expect(source).toContain(".select('step_id, raci_type, role_name, role_label_ar, job_title, sequence_number')");
     expect(source).toContain('raci_assignments: stepRaciAssignments');
   });
+
+  it('strips read-only control labels from strict SOP mutation payloads', () => {
+    expect(source.match(/required_control_code: _code, required_control_title: _title/g)).toHaveLength(2);
+    expect(source).toContain('{ ...input, ...(procedureSteps ? { procedure_steps: procedureSteps } : {}) }');
+  });
 });

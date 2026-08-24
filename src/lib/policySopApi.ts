@@ -1427,9 +1427,10 @@ export interface CreateSopDraftInput {
 }
 
 export async function createGovernedSopDraft(input: CreateSopDraftInput): Promise<{ document_id: string; version_id: string; document_code: string }> {
+  const procedureSteps = input.procedure_steps?.map(({ required_control_code: _code, required_control_title: _title, ...step }) => step);
   return invokePrivilegedAction<{ document_id: string; version_id: string; document_code: string }>(
     'create_governed_sop_draft',
-    input as unknown as Record<string, unknown>
+    { ...input, ...(procedureSteps ? { procedure_steps: procedureSteps } : {}) } as unknown as Record<string, unknown>
   );
 }
 
@@ -1462,9 +1463,10 @@ export interface SaveSopDraftInput {
 }
 
 export async function saveGovernedSopDraft(input: SaveSopDraftInput): Promise<{ success: boolean; version_id: string }> {
+  const procedureSteps = input.procedure_steps?.map(({ required_control_code: _code, required_control_title: _title, ...step }) => step);
   return invokePrivilegedAction<{ success: boolean; version_id: string }>(
     'save_governed_sop_draft',
-    input as unknown as Record<string, unknown>
+    { ...input, ...(procedureSteps ? { procedure_steps: procedureSteps } : {}) } as unknown as Record<string, unknown>
   );
 }
 
