@@ -131,10 +131,10 @@ describe('GOV-LINK-1 normalized and immutable foundation', () => {
     }
     expect(edgeRoute).toContain('p_actor_id: userData.user.id');
     expect(edgeRoute).toContain('GOV_LINK_MIGRATION_212_REQUIRED');
-    expect(edgeRoute).toContain('const rlsClient = createClient(supabaseUrl, anonKey');
-    expect(edgeRoute).toContain('Authorization: `Bearer ${token}`');
-    expect(edgeRoute).toContain("'x-patch83u-frontend-contract-version': PATCH83U_FRONTEND_CONTRACT_VERSION");
-    expect(edgeRoute).toContain("const visibleDocument = await rlsClient");
+    expect(edgeRoute).toContain('const { actorProfile } = await loadTrainingActorContext(userData.user.id)');
+    expect(edgeRoute).toContain('const visibleDocument = await serviceClient');
+    expect(edgeRoute).toContain(".eq('organization_id', actorProfile.organization_id)");
+    expect(edgeRoute).not.toContain('const rlsClient = createClient(supabaseUrl, anonKey');
   });
 
   it('uses module-aware authority without adding a platform role', () => {
