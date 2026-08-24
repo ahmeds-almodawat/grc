@@ -67,6 +67,7 @@ describe('UI-4 Audit and canonical Patch 28 CAPA', () => {
     expect(linkage).toContain('supplementalRationale.trim().length < 3');
     expect(linkage).toContain("link.inherited ? text('Source-owned'");
     expect(capaPage).toContain('Source inheritance and supplemental criteria');
+    expect(capaPage).toContain("sourceDate: selected.created_at?.slice(0, 10) ?? null");
   });
 
   it('enforces Patch 28 action, evidence, validation, and effectiveness closure blockers', () => {
