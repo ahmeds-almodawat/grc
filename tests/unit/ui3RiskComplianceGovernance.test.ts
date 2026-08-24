@@ -176,6 +176,11 @@ describe('UI-3 Risk, Compliance, and governance criteria linkage', () => {
     expect(css).not.toMatch(/letter-spacing:\s*-/);
   });
 
+  it('23. reads the canonical accreditation clause columns', () => {
+    expect(api).toContain(".select('id, clause_code, clause_title, active')");
+    expect(api).not.toContain(".select('id, clause_code, clause_number, clause_title, title, active')");
+  });
+
   it('normalizes assessment result and finding eligibility without conflating records', () => {
     expect(resultTone('compliant')).toBe('success');
     expect(resultTone('noncompliant')).toBe('danger');

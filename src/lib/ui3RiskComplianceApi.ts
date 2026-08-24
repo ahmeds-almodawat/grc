@@ -246,14 +246,14 @@ export async function getUi3ControlOptions(): Promise<Ui3GovernanceCriterionOpti
 export async function getUi3AccreditationClauseOptions(): Promise<Ui3GovernanceCriterionOption[]> {
   const { data, error } = await requireSupabase()
     .from('accreditation_clauses')
-    .select('id, clause_code, clause_number, clause_title, title, active')
+    .select('id, clause_code, clause_title, active')
     .eq('active', true)
     .order('clause_code', { ascending: true });
   if (error) throw new Error(error.message);
   return (data ?? []).map((row) => ({
     id: row.id,
-    code: row.clause_code ?? row.clause_number ?? 'CLAUSE',
-    title: row.clause_title ?? row.title ?? 'Accreditation clause',
+    code: row.clause_code ?? 'CLAUSE',
+    title: row.clause_title ?? 'Accreditation clause',
     active: row.active,
   }));
 }
