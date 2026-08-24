@@ -9,11 +9,9 @@ declare
   v_oid oid;
   v_definition text;
   v_old_guard constant text :=
-    'coalesce(current_setting(''request.jwt.claim.role'', true), current_user) <> ''service_role''
-     and current_user <> ''service_role''';
+    'coalesce(current_setting(''request.jwt.claim.role'', true), current_user) <> ''service_role''';
   v_new_guard constant text :=
-    'auth.role() is distinct from ''service_role''
-     and current_user <> ''service_role''';
+    'auth.role() is distinct from ''service_role''';
   v_functions constant regprocedure[] := array[
     'public.cancel_approval_request(uuid,uuid,text)'::regprocedure,
     'public.configure_approval_authority_rule_stages(uuid,uuid,jsonb)'::regprocedure,
@@ -42,6 +40,7 @@ $$;
 do $$
 declare
   v_remaining integer;
+  v_invalid integer;
 begin
   select count(*) into v_remaining
   from pg_proc p
@@ -52,6 +51,20 @@ begin
 
   if v_remaining <> 0 then
     raise exception 'PATCH226_STALE_PATCH27_SERVICE_ROLE_GUARDS_REMAIN: %', v_remaining;
+  end if;
+
+  select count(*) into v_invalid
+  from pg_proc p
+  join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public'
+    and p.prosrc like '%PATCH27_AUTHORITY_SERVICE_ROLE_REQUIRED%'
+    and (
+      p.prosrc not like '%auth.role() is distinct from ''service_role''%'
+      or p.prosrc not like '%and current_user <> ''service_role''%'
+    );
+
+  if v_invalid <> 0 then
+    raise exception 'PATCH226_INVALID_PATCH27_SERVICE_ROLE_GUARDS: %', v_invalid;
   end if;
 end;
 $$;

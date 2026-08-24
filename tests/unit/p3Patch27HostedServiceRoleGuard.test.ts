@@ -11,6 +11,7 @@ describe('P3 Patch27 hosted service-role guard compatibility', () => {
   it('replaces only the stale Patch27 guard with the canonical hosted role contract', () => {
     expect(sql).toContain("auth.role() is distinct from ''service_role''");
     expect(sql).toContain("request.jwt.claim.role");
+    expect(sql).toContain("and current_user <> ''service_role''");
     expect(sql).toContain('PATCH226_EXPECTED_SERVICE_ROLE_GUARD_NOT_FOUND');
     expect(sql).toContain('PATCH226_STALE_PATCH27_SERVICE_ROLE_GUARDS_REMAIN');
   });
