@@ -564,7 +564,7 @@ export function analyzePatch83uAuthSurface({
     .sort((a, b) => a.signature.localeCompare(b.signature));
   const targetBroadSecurityDefiners = [];
   const reviewedRestrictedSecurityDefiners = [];
-  const reviewedPatch83uMigrationCeiling = 224;
+  const reviewedPatch83uMigrationCeiling = 225;
   const explicitServiceOnlyAclFloor = 176;
   const reviewedTargetSecurityDefinerAllowlist = new Set([
     'f1r2_create_work_item',
