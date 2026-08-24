@@ -42,4 +42,9 @@ describe('P3 Policy and SOP canonical read contracts', () => {
     expect(source).toContain('departments(name_en, name_ar)');
     expect(source).not.toContain('departments(name)');
   });
+
+  it('maps the governed policy catalog version titles into the SOP picker contract', () => {
+    expect(source).toContain('title_en:version_title_en, title_ar:version_title_ar');
+    expect(source).not.toContain('document_code, title_en, title_ar, version_label');
+  });
 });

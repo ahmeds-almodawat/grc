@@ -728,7 +728,7 @@ export async function listEligibleGoverningPolicies(): Promise<EligibleGoverning
   try {
     const { data, error } = await supabase
       .from('v_governed_policy_catalog')
-      .select('version_id, document_id, document_code, title_en, title_ar, version_label, document_status, effective_date')
+      .select('version_id, document_id, document_code, title_en:version_title_en, title_ar:version_title_ar, version_label, document_status, effective_date')
       .order('document_code', { ascending: true });
     if (error) throw error;
     return (data as unknown as EligibleGoverningPolicy[]) || [];
