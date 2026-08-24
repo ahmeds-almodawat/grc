@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -126,6 +126,10 @@ export function GovernanceCriteriaLinkage({
   const text = useCallback((en: string, ar: string) => language === 'ar' ? ar : en, [language]);
   const maySuggest = canSuggest ?? canManage;
   const mayReview = canReview ?? canManage;
+  const onReviewChangeRef = useRef(onReviewChange);
+  const onLinksChangeRef = useRef(onLinksChange);
+  onReviewChangeRef.current = onReviewChange;
+  onLinksChangeRef.current = onLinksChange;
   const exactVersionRequired = source.type === 'compliance_assessment'
     || source.type === 'ovr'
     || source.type === 'audit_finding'
@@ -215,14 +219,14 @@ export function GovernanceCriteriaLinkage({
       setControls(controlRows);
       setClauses(clauseRows);
       setEvidenceOptions(evidenceRows);
-      onReviewChange?.(reviewRows[0] ?? null);
-      onLinksChange?.(scopedLinks);
+      onReviewChangeRef.current?.(reviewRows[0] ?? null);
+      onLinksChangeRef.current?.(scopedLinks);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : text('Governance Context could not be loaded.', 'تعذر تحميل سياق الحوكمة.'));
     } finally {
       setLoading(false);
     }
-  }, [onLinksChange, onReviewChange, source.id, source.revisionId, source.type, text]);
+  }, [source.id, source.revisionId, source.type, text]);
 
   useEffect(() => { void load(); }, [load]);
 

@@ -181,6 +181,13 @@ describe('UI-3 Risk, Compliance, and governance criteria linkage', () => {
     expect(api).not.toContain(".select('id, clause_code, clause_number, clause_title, title, active')");
   });
 
+  it('24. does not reload linkage data when parent callback identities change', () => {
+    expect(component).toContain('const onReviewChangeRef = useRef(onReviewChange);');
+    expect(component).toContain('const onLinksChangeRef = useRef(onLinksChange);');
+    expect(component).toContain('onLinksChangeRef.current?.(scopedLinks);');
+    expect(component).not.toContain('[onLinksChange, onReviewChange, source.id');
+  });
+
   it('normalizes assessment result and finding eligibility without conflating records', () => {
     expect(resultTone('compliant')).toBe('success');
     expect(resultTone('noncompliant')).toBe('danger');
