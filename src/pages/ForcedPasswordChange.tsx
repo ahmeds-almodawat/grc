@@ -53,7 +53,7 @@ export function ForcedPasswordChange() {
     setCaptchaToken(token);
     if (token) setCaptchaError(null);
   }, []);
-  const handleCaptchaUnavailable = useCallback((message: string) => {
+  const handleCaptchaUnavailable = useCallback((message: string | null) => {
     setCaptchaToken(null);
     setCaptchaError(message);
   }, []);

@@ -36,22 +36,40 @@ async function waitForServer(url: string) {
   throw new Error(`CAPTCHA test server did not start.\n${serverLog}`);
 }
 
-async function installTurnstileMock(page: Page) {
+async function installTurnstileMock(
+  page: Page,
+  options: { synchronousErrorCode?: string } = {},
+) {
+  const synchronousErrorCode = JSON.stringify(options.synchronousErrorCode ?? null);
   await page.route('https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/javascript',
       body: `
-        window.__patch83uTurnstile = { options: null, resetCount: 0 };
+        window.__patch83uTurnstile = {
+          options: null,
+          resetCount: 0,
+          renderCount: 0,
+          removeCount: 0,
+          synchronousErrorCode: ${synchronousErrorCode},
+          errorHandled: null,
+        };
         window.turnstile = {
           render(element, options) {
             window.__patch83uTurnstile.options = options;
+            window.__patch83uTurnstile.renderCount += 1;
+            if (window.__patch83uTurnstile.synchronousErrorCode) {
+              const errorCode = window.__patch83uTurnstile.synchronousErrorCode;
+              window.__patch83uTurnstile.synchronousErrorCode = null;
+              window.__patch83uTurnstile.errorHandled = options['error-callback'](errorCode);
+              return 'patch83u-widget';
+            }
             element.setAttribute('data-testid', 'turnstile-mock');
             element.textContent = 'Turnstile test challenge';
             return 'patch83u-widget';
           },
           reset() { window.__patch83uTurnstile.resetCount += 1; },
-          remove() {},
+          remove() { window.__patch83uTurnstile.removeCount += 1; },
         };
         window.__patch83uTurnstile.verify = (token) => window.__patch83uTurnstile.options.callback(token);
         window.__patch83uTurnstile.expire = () => window.__patch83uTurnstile.options['expired-callback']();
@@ -199,6 +217,43 @@ test.describe('Patch 83U required login CAPTCHA browser gate', () => {
 
     await expect(page.getByTestId('login-captcha-error')).toContainText('could not be loaded');
     await expect(page.getByRole('button', { name: 'Sign in' })).toBeDisabled();
+  });
+
+  test('preserves a synchronous provider error and offers a clean manual retry', async ({ page }) => {
+    await installTurnstileMock(page, { synchronousErrorCode: '300010' });
+    await page.goto(captchaBaseUrl);
+
+    await expect(page.getByTestId('login-captcha-error')).toContainText('provider code 300010');
+    await expect(page.getByText('CAPTCHA challenge unavailable. (300010)')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign in' })).toBeDisabled();
+    expect(await page.evaluate(() => (window as any).__patch83uTurnstile.errorHandled)).toBe(true);
+
+    await page.getByRole('button', { name: 'Retry CAPTCHA' }).click();
+    await expect(page.getByTestId('turnstile-mock')).toBeVisible();
+    await expect(page.getByTestId('login-captcha-error')).toHaveCount(0);
+    await expect.poll(
+      () => page.evaluate(() => (window as any).__patch83uTurnstile.renderCount),
+    ).toBe(2);
+    await expect.poll(
+      () => page.evaluate(() => (window as any).__patch83uTurnstile.removeCount),
+    ).toBe(1);
+  });
+
+  test('clears a solved token when the widget remounts for a language change', async ({ page }) => {
+    await installTurnstileMock(page);
+    await page.goto(captchaBaseUrl);
+
+    await completeCaptcha(page, 'language-remount-token');
+    await expect(page.getByRole('button', { name: 'Sign in' })).toBeEnabled();
+
+    await page.getByRole('button', { name: 'العربية' }).click();
+    await expect(page.getByRole('button', { name: 'تسجيل الدخول' })).toBeDisabled();
+    await expect.poll(
+      () => page.evaluate(() => (window as any).__patch83uTurnstile.renderCount),
+    ).toBe(2);
+    await expect.poll(
+      () => page.evaluate(() => (window as any).__patch83uTurnstile.removeCount),
+    ).toBe(1);
   });
 
   test('submits an invalid token to Supabase, reports rejection, and resets the challenge', async ({ page }) => {
