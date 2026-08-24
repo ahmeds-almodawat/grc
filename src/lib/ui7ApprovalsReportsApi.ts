@@ -223,6 +223,19 @@ export function decideUi7Approval(input: {
   });
 }
 
+export function finalizeUi7GovernedDocumentApproval(input: {
+  versionId: string;
+  note: string;
+}) {
+  return invokePrivilegedAction<{ document_id: string; version_id: string; status: string }>(
+    'v14e1r_finalize_governed_document_approval',
+    {
+      version_id: input.versionId,
+      approval_note: input.note.trim() || null,
+    },
+  );
+}
+
 async function reportSource<T extends Ui7ReportRow | Ui7GovernanceTruthRow | Ui7ApprovalRequest | Ui7ApprovalDecision>(
   table: string,
   order: string,

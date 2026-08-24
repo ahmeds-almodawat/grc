@@ -24,7 +24,7 @@ import { useAsyncData } from '../hooks/useAsyncData';
 import { useI18n } from '../i18n/I18nContext';
 import { formatDate, humanize } from '../lib/format';
 import { decideApproval, getApprovals, getEvidenceForItem } from '../lib/grcApi';
-import { decideUi7Approval, getUi7ApprovalWorkspace } from '../lib/ui7ApprovalsReportsApi';
+import { decideUi7Approval, finalizeUi7GovernedDocumentApproval, getUi7ApprovalWorkspace } from '../lib/ui7ApprovalsReportsApi';
 import {
   approvalAuthorityForActor,
   type Ui7ApprovalAuthority,
@@ -85,6 +85,7 @@ export function Approvals({ setPage }: ApprovalsProps) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [decision, setDecision] = useState<{ request: Ui7ApprovalRequest; decision: Decision } | null>(null);
+  const [documentFinalization, setDocumentFinalization] = useState<Ui7ApprovalRequest | null>(null);
   const [legacyDecision, setLegacyDecision] = useState<{ row: ApprovalRow; status: 'approved' | 'rejected' } | null>(null);
   const [selectedLegacyApproval, setSelectedLegacyApproval] = useState<ApprovalRow | null>(null);
 
@@ -149,12 +150,35 @@ export function Approvals({ setPage }: ApprovalsProps) {
 
   async function submitDecision(values: Record<string, unknown>) {
     if (!decision) return;
-    await decideUi7Approval({
+    const note = String(values.note ?? '').trim();
+    const result = await decideUi7Approval({
       approvalRequestId: decision.request.id,
       decision: decision.decision,
+      note,
+    });
+    if (
+      decision.decision === 'approved'
+      && result.request_status === 'approved'
+      && decision.request.workflow_type === 'document_control'
+      && decision.request.linked_item_type === 'document_version'
+      && decision.request.linked_item_id
+    ) {
+      await finalizeUi7GovernedDocumentApproval({
+        versionId: decision.request.linked_item_id,
+        note,
+      });
+    }
+    setDecision(null);
+    await data.refresh();
+  }
+
+  async function submitDocumentFinalization(values: Record<string, unknown>) {
+    if (!documentFinalization?.linked_item_id) return;
+    await finalizeUi7GovernedDocumentApproval({
+      versionId: documentFinalization.linked_item_id,
       note: String(values.note ?? '').trim(),
     });
-    setDecision(null);
+    setDocumentFinalization(null);
     await data.refresh();
   }
 
@@ -182,9 +206,14 @@ export function Approvals({ setPage }: ApprovalsProps) {
 
   function detailView(request: Ui7ApprovalRequest, authority: Ui7ApprovalAuthority | null) {
     const source = approvalRoute(request);
+    const canFinalizeDocument = request.workflow_type === 'document_control'
+      && request.linked_item_type === 'document_version'
+      && request.request_status === 'approved'
+      && request.final_decision === 'approved'
+      && Boolean(request.linked_item_id);
     return <div className="ui7-approval-detail" data-testid="ui7-approval-detail">
       <button type="button" className="ui7-back" onClick={() => setView(OPEN_STATUSES.has(request.request_status) ? 'inbox' : 'completed')}><ArrowLeft size={16} />{text('Approval inbox', 'صندوق الاعتمادات')}</button>
-      <header className="ui7-record-header"><div><span>{request.request_code || text('Governed approval', 'اعتماد محكوم')}</span><h1>{requestTitle(request)}</h1><p>{request.request_reason || text('No additional request rationale was recorded.', 'لم يسجل مبرر إضافي للطلب.')}</p><div><StatusChip tone={approvalTone(request.request_status)}>{humanize(request.request_status)}</StatusChip><StatusChip>{humanize(request.workflow_type)}</StatusChip>{authority?.delegated ? <StatusChip tone="primary">{text('Delegated authority', 'صلاحية مفوضة')}</StatusChip> : null}</div></div><div className="ui7-record-actions">{source ? <button type="button" className="ui7-secondary-button" onClick={() => setPage?.(source)}>{text('Open source', 'فتح المصدر')}<ArrowRight size={16} /></button> : null}</div></header>
+      <header className="ui7-record-header"><div><span>{request.request_code || text('Governed approval', 'اعتماد محكوم')}</span><h1>{requestTitle(request)}</h1><p>{request.request_reason || text('No additional request rationale was recorded.', 'لم يسجل مبرر إضافي للطلب.')}</p><div><StatusChip tone={approvalTone(request.request_status)}>{humanize(request.request_status)}</StatusChip><StatusChip>{humanize(request.workflow_type)}</StatusChip>{authority?.delegated ? <StatusChip tone="primary">{text('Delegated authority', 'صلاحية مفوضة')}</StatusChip> : null}</div></div><div className="ui7-record-actions">{canFinalizeDocument ? <button type="button" className="ui7-primary-button" onClick={() => setDocumentFinalization(request)}><ShieldCheck size={16} />{text('Finalize document approval', 'استكمال اعتماد الوثيقة')}</button> : null}{source ? <button type="button" className="ui7-secondary-button" onClick={() => setPage?.(source)}>{text('Open source', 'فتح المصدر')}<ArrowRight size={16} /></button> : null}</div></header>
       <div className="ui7-detail-grid"><main className="ui7-stack"><section className="ui7-surface"><div className="ui7-section-heading"><div><span>{text('Approval details', 'تفاصيل الاعتماد')}</span><h2>{text('Decision context', 'سياق القرار')}</h2></div><ClipboardCheck size={20} /></div><div className="ui7-definition-grid"><div><span>{text('Requested action', 'الإجراء المطلوب')}</span><strong>{humanize(request.action_type)}</strong></div><div><span>{text('Entity', 'الكيان')}</span><strong>{humanize(request.linked_item_type)}</strong></div><div><span>{text('Requester', 'مقدم الطلب')}</span><strong>{request.requester_name || text('Unavailable', 'غير متاح')}</strong></div><div><span>{text('Requested', 'تم الطلب')}</span><strong>{formatDate(request.requested_at)}</strong></div><div><span>{text('Due date', 'تاريخ الاستحقاق')}</span><strong>{formatDate(request.due_date)}</strong></div><div><span>{text('Approval progress', 'تقدم الاعتماد')}</span><strong>{request.received_approval_count} / {request.required_approval_count}</strong></div></div></section>
         <section className="ui7-surface" data-testid="ui7-approval-history"><div className="ui7-section-heading"><div><span>{text('Decision history', 'سجل القرارات')}</span><h2>{text('Immutable approval trail', 'مسار اعتماد غير قابل للتغيير')}</h2></div><History size={20} /></div><div className="ui7-timeline">{selectedHistory.length ? selectedHistory.map((row) => <div key={row.decision_id}><span className={`ui7-timeline-dot ui7-tone--${approvalTone(row.decision)}`} /><div><strong>{humanize(row.decision)}</strong><p>{row.decision_note || text('No decision note recorded.', 'لم تسجل ملاحظة قرار.')}</p><small>{row.approver_name || humanize(row.approver_role || 'authorized approver')} · {formatDate(row.decided_at)}</small></div></div>) : <div><span className="ui7-timeline-dot" /><div><strong>{text('Submitted for approval', 'أرسل للاعتماد')}</strong><p>{request.request_reason || text('Approval request created.', 'تم إنشاء طلب الاعتماد.')}</p><small>{formatDate(request.requested_at)}</small></div></div>}{request.final_decision ? <div><span className={`ui7-timeline-dot ui7-tone--${approvalTone(request.final_decision)}`} /><div><strong>{text('Final decision', 'القرار النهائي')}: {humanize(request.final_decision)}</strong><p>{request.final_decision_note || text('Final outcome recorded.', 'تم تسجيل النتيجة النهائية.')}</p><small>{formatDate(request.final_decision_at)}</small></div></div> : null}</div></section></main>
         <aside className="ui7-stack"><section className="ui7-surface ui7-decision-card"><div className="ui7-section-heading"><div><span>{text('Authority', 'الصلاحية')}</span><h2>{text('Decision gate', 'بوابة القرار')}</h2></div><ShieldCheck size={20} /></div><StatusChip tone={authority?.actionable ? 'good' : 'danger'}>{authority?.actionable ? text('Authorized now', 'مصرح الآن') : text('Fail closed', 'مغلقة عند الفشل')}</StatusChip><p>{authority?.reason || text('Approval authority is unavailable.', 'صلاحية الاعتماد غير متاحة.')}</p>{authority?.stage ? <div className="ui7-stage"><span>{text('Current stage', 'المرحلة الحالية')}</span><strong>{authority.stage.stage_name}</strong><small>{authority.stage.received_decision_count} / {authority.stage.required_decision_count} {text('decisions', 'قرارات')}</small></div> : null}{authority?.actionable ? <div className="ui7-decision-actions" data-testid="ui7-decision-workspace"><button type="button" className="ui7-primary-button" onClick={() => setDecision({ request, decision: 'approved' })}><CheckCircle2 size={16} />{text('Approve', 'اعتماد')}</button><button type="button" className="ui7-secondary-button" onClick={() => setDecision({ request, decision: 'returned' })}><FileClock size={16} />{text('Request changes', 'طلب تعديلات')}</button><button type="button" className="ui7-danger-button" onClick={() => setDecision({ request, decision: 'rejected' })}><XCircle size={16} />{text('Reject', 'رفض')}</button></div> : <div className="ui7-boundary"><AlertTriangle size={20} /><p>{OPEN_STATUSES.has(request.request_status) ? text('No decision controls are exposed because the signed-in actor is not the current authority.', 'لا تظهر ضوابط قرار لأن المستخدم الحالي ليس صاحب الصلاحية الحالية.') : text('Completed decisions remain immutable.', 'تبقى القرارات المكتملة غير قابلة للتغيير.')}</p></div>}</section></aside></div>
@@ -211,6 +240,7 @@ export function Approvals({ setPage }: ApprovalsProps) {
     {legacyApprovals.data?.length ? <section className="ui7-surface ui7-legacy-approvals" data-testid="ui7-f1r2-approvals"><div className="ui7-section-heading"><div><span>{text('Project delivery decisions', 'قرارات تسليم المشاريع')}</span><h2>{text('Item-scoped approval queue', 'قائمة اعتماد حسب البند')}</h2></div><ShieldCheck size={20} /></div><div className="ui7-legacy-approval-list">{legacyApprovals.data.map((row) => <article key={row.id}><button type="button" className="ui7-legacy-approval-title" onClick={() => setSelectedLegacyApproval(row)}><strong>{row.item_title}</strong><small>{row.requested_by_name || text('Requester unavailable', 'مقدم الطلب غير متاح')} · {formatDate(row.requested_at)}</small></button><StatusChip tone={approvalTone(row.status)}>{humanize(row.status)}</StatusChip>{row.status === 'pending' ? <div className="ui7-decision-actions"><button type="button" className="ui7-primary-button" onClick={() => setLegacyDecision({ row, status: 'approved' })}>{text('Approve', 'اعتماد')}</button><button type="button" className="ui7-danger-button" onClick={() => setLegacyDecision({ row, status: 'rejected' })}>{text('Reject', 'رفض')}</button></div> : <span className="ui7-context-note">{text('Decision recorded', 'تم تسجيل القرار')}</span>}</article>)}</div>{selectedLegacyApproval ? <div className="ui7-legacy-evidence"><div className="ui7-section-heading"><div><span>{text('Governed evidence', 'الأدلة المحكومة')}</span><h2>{selectedLegacyApproval.item_title}</h2></div><button type="button" className="ui7-secondary-button" onClick={() => setSelectedLegacyApproval(null)}>{text('Close', 'إغلاق')}</button></div><DataState loading={legacyEvidence.loading} error={legacyEvidence.error} empty={!legacyEvidence.data?.length} emptyMessage={text('No governed evidence is linked to this approval item.', 'لا توجد أدلة محكومة مرتبطة ببند الاعتماد هذا.')}><div className="governed-evidence-list">{(legacyEvidence.data || []).map((file) => <GovernedEvidenceAccess key={file.id} evidenceId={file.id} fileName={file.file_name} fileType={file.file_type} fileSize={file.file_size} description={file.description} />)}</div></DataState></div> : null}</section> : null}
 
     <GovernedDecisionDialog open={Boolean(decision)} title={decision?.decision === 'approved' ? text('Approve request', 'اعتماد الطلب') : decision?.decision === 'rejected' ? text('Reject request', 'رفض الطلب') : text('Request changes', 'طلب تعديلات')} subtitle={decision ? requestTitle(decision.request) : undefined} decisionVariant={decision?.decision === 'approved' ? 'approve' : decision?.decision === 'rejected' ? 'reject' : 'warning'} confirmLabel={decision?.decision === 'approved' ? text('Approve', 'اعتماد') : decision?.decision === 'rejected' ? text('Reject', 'رفض') : text('Return for changes', 'إعادة للتعديل')} warningNotice={text('The server will re-check active identity, organization, current stage, authority, delegation, separation of duties, and open state before recording the decision.', 'سيعيد الخادم التحقق من الهوية النشطة والمنشأة والمرحلة والصلاحية والتفويض وفصل المهام والحالة المفتوحة قبل تسجيل القرار.')} contextItems={decision ? [{ label: text('Request', 'الطلب'), value: decision.request.request_code || decision.request.id.slice(0, 8) }, { label: text('Workflow', 'سير العمل'), value: humanize(decision.request.workflow_type) }, { label: text('Requester', 'مقدم الطلب'), value: decision.request.requester_name || text('Unavailable', 'غير متاح') }, { label: text('Status', 'الحالة'), value: humanize(decision.request.request_status) }] : []} fields={[{ id: 'note', label: text('Decision rationale', 'مبرر القرار'), type: 'textarea', required: decision?.decision !== 'approved', placeholder: text('Record the decision rationale...', 'سجل مبرر القرار...'), autoFocus: true }]} onClose={() => setDecision(null)} onSubmit={submitDecision} />
+    <GovernedDecisionDialog open={Boolean(documentFinalization)} title={text('Finalize document approval', 'استكمال اعتماد الوثيقة')} subtitle={documentFinalization ? requestTitle(documentFinalization) : undefined} decisionVariant="approve" confirmLabel={text('Finalize approval', 'استكمال الاعتماد')} warningNotice={text('The server will verify that every approval stage is complete before locking this exact document version.', 'سيتحقق الخادم من اكتمال جميع مراحل الاعتماد قبل قفل هذا الإصدار المحدد من الوثيقة.')} contextItems={documentFinalization ? [{ label: text('Request', 'الطلب'), value: documentFinalization.request_code || documentFinalization.id.slice(0, 8) }, { label: text('Entity', 'الكيان'), value: humanize(documentFinalization.linked_item_type) }, { label: text('Status', 'الحالة'), value: humanize(documentFinalization.request_status) }] : []} fields={[{ id: 'note', label: text('Finalization note', 'ملاحظة الاستكمال'), type: 'textarea', required: false, placeholder: text('Record an optional finalization note...', 'سجل ملاحظة استكمال اختيارية...'), autoFocus: true }]} onClose={() => setDocumentFinalization(null)} onSubmit={submitDocumentFinalization} />
     <GovernedDecisionDialog open={Boolean(legacyDecision)} title={legacyDecision?.status === 'approved' ? t('approvals.approveDecisionTitle') : t('approvals.rejectDecisionTitle')} decisionVariant={legacyDecision?.status === 'approved' ? 'approve' : 'reject'} confirmLabel={legacyDecision?.status === 'approved' ? t('approvals.approve') : t('approvals.reject')} contextItems={legacyDecision ? [{ label: t('common.item'), value: legacyDecision.row.item_title }, { label: t('approvals.requestedBy'), value: legacyDecision.row.requested_by_name || '—' }] : []} fields={legacyDecision?.status === 'approved' ? [{ id: 'note', label: t('approvals.noteLabel'), type: 'textarea', defaultValue: t('approvals.defaultApprovalNote'), required: false, autoFocus: true }] : [{ id: 'note', label: t('approvals.rejectionReason'), type: 'textarea', defaultValue: '', required: true, hint: t('approvals.rejectionReasonRequired'), autoFocus: true }]} onClose={() => setLegacyDecision(null)} onSubmit={submitLegacyDecision} />
   </section>;
 }

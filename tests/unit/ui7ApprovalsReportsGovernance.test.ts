@@ -122,6 +122,15 @@ describe('UI-7 Approval contract (required proofs 17-31)', () => {
     expect(edge).toContain("action === 'ui7_record_approval_decision'");
   });
 
+  it('finalizes an approved document version and exposes an idempotent completion retry', () => {
+    expect(api).toContain("'v14e1r_finalize_governed_document_approval'");
+    expect(approvals).toContain("result.request_status === 'approved'");
+    expect(approvals).toContain("decision.request.linked_item_type === 'document_version'");
+    expect(approvals).toContain("text('Finalize document approval'");
+    expect(approvals).toContain('submitDocumentFinalization');
+    expect(edge).toContain("action === 'v14e1r_finalize_governed_document_approval'");
+  });
+
   it('revalidates actor, organization, stage, authority, delegation, SOD and stale state server-side', () => {
     for (const marker of ['UI7_APPROVAL_NOT_OPEN', 'UI7_APPROVAL_AUTHORITY_STATE_INVALID', 'UI7_APPROVAL_AUTHORITY_INACTIVE', 'UI7_SELF_APPROVAL_BLOCKED', 'UI7_APPROVAL_AUTHORITY_REQUIRED', 'UI7_APPROVAL_VIEWER_READ_ONLY']) expect(edge).toContain(marker);
     expect(edge).toContain('assertNoIdentityOverrides');
