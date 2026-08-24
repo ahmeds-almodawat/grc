@@ -47,4 +47,10 @@ describe('P3 Policy and SOP canonical read contracts', () => {
     expect(source).toContain('title_en:version_title_en, title_ar:version_title_ar');
     expect(source).not.toContain('document_code, title_en, title_ar, version_label');
   });
+
+  it('loads step RACI assignments required by the governed submission gate', () => {
+    expect(source).toContain(".from('sop_procedure_step_raci_assignments')");
+    expect(source).toContain(".select('step_id, raci_type, role_name, role_label_ar, job_title, sequence_number')");
+    expect(source).toContain('raci_assignments: stepRaciAssignments');
+  });
 });

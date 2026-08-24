@@ -282,6 +282,15 @@ export interface SopProcedureStep {
   escalation_trigger_en?: string | null;
   escalation_trigger_ar?: string | null;
   escalation_destination_role?: string | null;
+  raci_assignments?: SopStepRaciAssignment[];
+}
+
+export interface SopStepRaciAssignment {
+  raci_type: 'R' | 'A' | 'C' | 'I';
+  role_name: string;
+  role_label_ar?: string | null;
+  job_title?: string | null;
+  sequence_number?: number;
 }
 
 export interface SopDefinition {
@@ -776,6 +785,24 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
       .eq('sop_version_id', ver.id)
       .order('sequence_number', { ascending: true });
 
+    const stepIds = (steps || []).map(step => step.id);
+    let stepRaciAssignments: Array<{
+      step_id: string;
+      raci_type: 'R' | 'A' | 'C' | 'I';
+      role_name: string;
+      role_label_ar: string | null;
+      job_title: string | null;
+      sequence_number: number;
+    }> = [];
+    if (stepIds.length > 0) {
+      const { data: raciRows } = await supabase
+        .from('sop_procedure_step_raci_assignments')
+        .select('step_id, raci_type, role_name, role_label_ar, job_title, sequence_number')
+        .in('step_id', stepIds)
+        .order('sequence_number', { ascending: true });
+      stepRaciAssignments = (raciRows || []) as typeof stepRaciAssignments;
+    }
+
     // 5. Fetch definitions
     const { data: defs } = await supabase
       .from('sop_definitions')
@@ -996,7 +1023,10 @@ export async function getGovernedSopDetail(documentId: string, versionId?: strin
           criticality: s.criticality,
           escalation_trigger_en: s.escalation_trigger_en,
           escalation_trigger_ar: s.escalation_trigger_ar,
-          escalation_destination_role: s.escalation_destination_role
+          escalation_destination_role: s.escalation_destination_role,
+          raci_assignments: stepRaciAssignments
+            .filter(assignment => assignment.step_id === s.id)
+            .map(({ step_id: _stepId, ...assignment }) => assignment)
         };
       }),
       definitions: (defs || []).map(d => ({
