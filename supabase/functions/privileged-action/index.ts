@@ -2,12 +2,14 @@ import { createClient } from 'npm:@supabase/supabase-js@2.108.2';
 import { normalizeRosterPageRequest } from '../_shared/accV13RosterPaging.ts';
 import {
   v14e1rGovernedDocumentActions,
+  governedPolicySopLifecycleActions,
   MAX_E1R2_PAYLOAD_BYTES,
   validateStageConfigInput,
   validateProcedureSections,
   validateProcedureSteps,
   validateDepartmentScopes,
   validateRoleScopes,
+  validatePolicyRequirements,
   validateDefinitions,
   validateRoleResponsibilities,
   validateMonitoringKpis,
@@ -15,16 +17,24 @@ import {
   validateAccreditationLinks,
   validateVersionLinks,
   validateConfigureStagesProof,
+  validateCreatePolicyDraftProof,
+  validateSavePolicyDraftProof,
   validateCreateSopDraftProof,
   validateSaveSopDraftProof,
   validateStartRevisionProof,
   validateSubmitReviewProof,
+  validateActivateDocumentProof,
+  validateRetireDocumentProof,
+  validateRequestExceptionProof,
+  validateTriggerReviewProof,
+  validateCompleteReviewProof,
   validateApprovalDecisionProof,
   validateFinalizeApprovalProof,
   mapV14e1rDatabaseError,
   requireCanonicalUuid,
   optionalCanonicalUuid,
   boundedString,
+  optionalIsoDate,
   validateStrictBoolean,
   optionalStrictBoolean,
   validateStrictInteger,
@@ -40,6 +50,8 @@ import {
   resolveCreateGovernanceLinkState,
   validRevisionTypes,
   validApprovalDecisions,
+  validDocumentReviewTriggerTypes,
+  validDocumentReviewOutcomes,
 } from '../_shared/v14e1rGovernedDocumentBridge.ts';
 import {
   v14e2b2TrainingActions,
@@ -348,6 +360,7 @@ const allowedActions = new Set([
   ...patch83rDepartmentLifecycleActions,
   ...f1r2BusinessCycleActions,
   ...v14e1rGovernedDocumentActions,
+  ...governedPolicySopLifecycleActions,
 ]);
 
 const patch19LifecycleActions = new Set([
@@ -5753,7 +5766,161 @@ Deno.serve(async (request) => {
     }
   }
 
-  if (action === 'v14e1r_create_governed_sop_draft') {
+  if (action === 'create_governed_policy_draft') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set([
+        'title_en', 'title_ar', 'purpose_en', 'purpose_ar',
+        'policy_statement_en', 'policy_statement_ar', 'scope_en', 'scope_ar',
+        'principles_en', 'principles_ar', 'exceptions_summary_en', 'exceptions_summary_ar',
+        'non_compliance_escalation_en', 'non_compliance_escalation_ar',
+        'department_id', 'criticality_level', 'confidentiality_level', 'content_mode',
+        'requirements', 'department_scopes', 'role_scopes',
+      ]), 'CREATE_POLICY_PAYLOAD');
+
+      const { data: actorProfile, error: profileErr } = await serviceClient
+        .from('profiles')
+        .select('id, organization_id, is_active')
+        .eq('id', userData.user.id)
+        .single();
+      if (profileErr || !actorProfile || !actorProfile.organization_id || actorProfile.is_active === false) {
+        const e = mapV14e1rDatabaseError(action, 'PATCH202_ACTOR_NOT_AUTHORIZED');
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      const titleEn = boundedString(payload.title_en, 500, 'title_en', true)!;
+      const titleAr = boundedString(payload.title_ar, 500, 'title_ar');
+      const purposeEn = boundedString(payload.purpose_en, 5000, 'purpose_en');
+      const purposeAr = boundedString(payload.purpose_ar, 5000, 'purpose_ar');
+      const statementEn = boundedString(payload.policy_statement_en, 20000, 'policy_statement_en', true)!;
+      const statementAr = boundedString(payload.policy_statement_ar, 20000, 'policy_statement_ar');
+      const scopeEn = boundedString(payload.scope_en, 5000, 'scope_en');
+      const scopeAr = boundedString(payload.scope_ar, 5000, 'scope_ar');
+      const principlesEn = boundedString(payload.principles_en, 10000, 'principles_en');
+      const principlesAr = boundedString(payload.principles_ar, 10000, 'principles_ar');
+      const exceptionsEn = boundedString(payload.exceptions_summary_en, 5000, 'exceptions_summary_en');
+      const exceptionsAr = boundedString(payload.exceptions_summary_ar, 5000, 'exceptions_summary_ar');
+      const escalationEn = boundedString(payload.non_compliance_escalation_en, 5000, 'non_compliance_escalation_en');
+      const escalationAr = boundedString(payload.non_compliance_escalation_ar, 5000, 'non_compliance_escalation_ar');
+      const departmentId = optionalCanonicalUuid(payload.department_id, 'department_id');
+
+      let criticalityLevel = 'medium';
+      if (payload.criticality_level !== undefined && payload.criticality_level !== null) {
+        if (typeof payload.criticality_level !== 'string' || !validCriticalityLevels.has(payload.criticality_level.trim())) {
+          throw new Error('INVALID_CRITICALITY_LEVEL');
+        }
+        criticalityLevel = payload.criticality_level.trim();
+      }
+      let confidentialityLevel = 'internal';
+      if (payload.confidentiality_level !== undefined && payload.confidentiality_level !== null) {
+        if (typeof payload.confidentiality_level !== 'string' || !validConfidentialityLevels.has(payload.confidentiality_level.trim())) {
+          throw new Error('INVALID_CONFIDENTIALITY_LEVEL');
+        }
+        confidentialityLevel = payload.confidentiality_level.trim();
+      }
+      let contentMode = 'structured';
+      if (payload.content_mode !== undefined && payload.content_mode !== null) {
+        if (typeof payload.content_mode !== 'string' || !validContentModes.has(payload.content_mode.trim())) {
+          throw new Error('INVALID_CONTENT_MODE');
+        }
+        contentMode = payload.content_mode.trim();
+      }
+
+      const requirements = validatePolicyRequirements(payload.requirements) ?? [];
+      const departmentScopes = validateDepartmentScopes(payload.department_scopes) ?? [];
+      const roleScopes = validateRoleScopes(payload.role_scopes) ?? [];
+      const { data, error } = await serviceClient.rpc('create_governed_policy_draft', {
+        p_actor_id: userData.user.id,
+        p_organization_id: actorProfile.organization_id,
+        p_title_en: titleEn,
+        p_title_ar: titleAr,
+        p_purpose_en: purposeEn,
+        p_purpose_ar: purposeAr,
+        p_policy_statement_en: statementEn,
+        p_policy_statement_ar: statementAr,
+        p_scope_en: scopeEn,
+        p_scope_ar: scopeAr,
+        p_principles_en: principlesEn,
+        p_principles_ar: principlesAr,
+        p_exceptions_summary_en: exceptionsEn,
+        p_exceptions_summary_ar: exceptionsAr,
+        p_non_compliance_escalation_en: escalationEn,
+        p_non_compliance_escalation_ar: escalationAr,
+        p_department_id: departmentId,
+        p_criticality_level: criticalityLevel,
+        p_confidentiality_level: confidentialityLevel,
+        p_content_mode: contentMode,
+        p_requirements: requirements,
+        p_department_scopes: departmentScopes,
+        p_role_scopes: roleScopes,
+      });
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+      if (!validateCreatePolicyDraftProof(data)) {
+        return errorResponse('Create policy response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'save_governed_policy_draft') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set([
+        'version_id', 'title_en', 'title_ar', 'purpose_en', 'purpose_ar',
+        'policy_statement_en', 'policy_statement_ar', 'scope_en', 'scope_ar',
+        'principles_en', 'principles_ar', 'exceptions_summary_en', 'exceptions_summary_ar',
+        'non_compliance_escalation_en', 'non_compliance_escalation_ar',
+        'requirements', 'department_scopes', 'role_scopes',
+      ]), 'SAVE_POLICY_PAYLOAD');
+
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+      const requirements = validatePolicyRequirements(payload.requirements) ?? [];
+      const departmentScopes = validateDepartmentScopes(payload.department_scopes) ?? [];
+      const roleScopes = validateRoleScopes(payload.role_scopes) ?? [];
+      const { data, error } = await serviceClient.rpc('save_governed_policy_draft', {
+        p_actor_id: userData.user.id,
+        p_version_id: versionId,
+        p_title_en: boundedString(payload.title_en, 500, 'title_en', true),
+        p_title_ar: boundedString(payload.title_ar, 500, 'title_ar'),
+        p_purpose_en: boundedString(payload.purpose_en, 5000, 'purpose_en'),
+        p_purpose_ar: boundedString(payload.purpose_ar, 5000, 'purpose_ar'),
+        p_policy_statement_en: boundedString(payload.policy_statement_en, 20000, 'policy_statement_en', true),
+        p_policy_statement_ar: boundedString(payload.policy_statement_ar, 20000, 'policy_statement_ar'),
+        p_scope_en: boundedString(payload.scope_en, 5000, 'scope_en'),
+        p_scope_ar: boundedString(payload.scope_ar, 5000, 'scope_ar'),
+        p_principles_en: boundedString(payload.principles_en, 10000, 'principles_en'),
+        p_principles_ar: boundedString(payload.principles_ar, 10000, 'principles_ar'),
+        p_exceptions_summary_en: boundedString(payload.exceptions_summary_en, 5000, 'exceptions_summary_en'),
+        p_exceptions_summary_ar: boundedString(payload.exceptions_summary_ar, 5000, 'exceptions_summary_ar'),
+        p_non_compliance_escalation_en: boundedString(payload.non_compliance_escalation_en, 5000, 'non_compliance_escalation_en'),
+        p_non_compliance_escalation_ar: boundedString(payload.non_compliance_escalation_ar, 5000, 'non_compliance_escalation_ar'),
+        p_requirements: requirements,
+        p_department_scopes: departmentScopes,
+        p_role_scopes: roleScopes,
+      });
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+      if (!validateSavePolicyDraftProof(data, versionId)) {
+        return errorResponse('Save policy response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'v14e1r_create_governed_sop_draft' || action === 'create_governed_sop_draft') {
     try {
       const payload = asPlainObject(requestBody.payload);
       assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
@@ -5907,7 +6074,7 @@ Deno.serve(async (request) => {
     }
   }
 
-  if (action === 'v14e1r_save_governed_sop_draft') {
+  if (action === 'v14e1r_save_governed_sop_draft' || action === 'save_governed_sop_draft') {
     try {
       const payload = asPlainObject(requestBody.payload);
       assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
@@ -6053,7 +6220,7 @@ Deno.serve(async (request) => {
     }
   }
 
-  if (action === 'v14e1r_start_governed_document_revision') {
+  if (action === 'v14e1r_start_governed_document_revision' || action === 'start_governed_document_revision') {
     try {
       const payload = asPlainObject(requestBody.payload);
       assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
@@ -6085,14 +6252,17 @@ Deno.serve(async (request) => {
         return errorResponse('Start revision response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
       }
 
-      return jsonResponse({ ok: true, action, result: data }, 200);
+      const result = action === 'start_governed_document_revision'
+        ? { ...asPlainObject(data), version_id: asPlainObject(data).new_version_id }
+        : data;
+      return jsonResponse({ ok: true, action, result }, 200);
     } catch (err) {
       const e = mapV14e1rDatabaseError(action, err);
       return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
     }
   }
 
-  if (action === 'v14e1r_submit_governed_document_for_review') {
+  if (action === 'v14e1r_submit_governed_document_for_review' || action === 'submit_governed_document_for_review') {
     try {
       const payload = asPlainObject(requestBody.payload);
       assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
@@ -6115,6 +6285,156 @@ Deno.serve(async (request) => {
         return errorResponse('Submit review response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
       }
 
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'activate_governed_document_version') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set(['version_id', 'effective_date']), 'ACTIVATE_DOCUMENT_PAYLOAD');
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+      const effectiveDate = optionalIsoDate(payload.effective_date, 'effective_date');
+      const { data, error } = await serviceClient.rpc('activate_governed_document_version', {
+        p_actor_id: userData.user.id,
+        p_version_id: versionId,
+        ...(effectiveDate ? { p_effective_date: effectiveDate } : {}),
+      });
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+      if (!validateActivateDocumentProof(data, versionId)) {
+        return errorResponse('Activate document response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'retire_governed_document') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set(['document_id', 'retirement_reason']), 'RETIRE_DOCUMENT_PAYLOAD');
+      const documentId = requireCanonicalUuid(payload.document_id, 'document_id');
+      const retirementReason = boundedString(payload.retirement_reason, 2000, 'retirement_reason', true)!;
+      const { data, error } = await serviceClient.rpc('retire_governed_document', {
+        p_actor_id: userData.user.id,
+        p_document_id: documentId,
+        p_retirement_reason: retirementReason,
+      });
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+      if (!validateRetireDocumentProof(data, documentId)) {
+        return errorResponse('Retire document response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'request_policy_sop_exception') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set([
+        'version_id', 'reason', 'scope_description', 'start_date', 'end_date',
+        'risk_summary', 'compensating_controls',
+      ]), 'REQUEST_DOCUMENT_EXCEPTION_PAYLOAD');
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+      const startDate = optionalIsoDate(payload.start_date, 'start_date', true)!;
+      const endDate = optionalIsoDate(payload.end_date, 'end_date', true)!;
+      if (endDate < startDate) throw new Error('PATCH202_INVALID_EXCEPTION_DATES');
+      const { data, error } = await serviceClient.rpc('request_policy_sop_exception', {
+        p_actor_id: userData.user.id,
+        p_version_id: versionId,
+        p_reason: boundedString(payload.reason, 5000, 'reason', true),
+        p_scope_description: boundedString(payload.scope_description, 5000, 'scope_description', true),
+        p_start_date: startDate,
+        p_end_date: endDate,
+        p_risk_summary: boundedString(payload.risk_summary, 5000, 'risk_summary'),
+        p_compensating_controls: boundedString(payload.compensating_controls, 5000, 'compensating_controls'),
+      });
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+      if (!validateRequestExceptionProof(data)) {
+        return errorResponse('Request exception response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'trigger_governed_document_review') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set([
+        'document_id', 'trigger_type', 'source_entity_type', 'source_entity_id', 'due_date', 'trigger_note',
+      ]), 'TRIGGER_DOCUMENT_REVIEW_PAYLOAD');
+      const documentId = requireCanonicalUuid(payload.document_id, 'document_id');
+      const triggerType = boundedString(payload.trigger_type, 50, 'trigger_type', true)!;
+      if (!validDocumentReviewTriggerTypes.has(triggerType)) throw new Error('INVALID_TRIGGER_TYPE');
+      const dueDate = optionalIsoDate(payload.due_date, 'due_date');
+      const { data, error } = await serviceClient.rpc('trigger_governed_document_review', {
+        p_actor_id: userData.user.id,
+        p_document_id: documentId,
+        p_trigger_type: triggerType,
+        p_source_entity_type: boundedString(payload.source_entity_type, 100, 'source_entity_type'),
+        p_source_entity_id: optionalCanonicalUuid(payload.source_entity_id, 'source_entity_id'),
+        ...(dueDate ? { p_due_date: dueDate } : {}),
+        p_trigger_note: boundedString(payload.trigger_note, 2000, 'trigger_note'),
+      });
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+      if (!validateTriggerReviewProof(data, documentId)) {
+        return errorResponse('Trigger review response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'complete_governed_document_review') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set(['trigger_id', 'outcome', 'outcome_note']), 'COMPLETE_DOCUMENT_REVIEW_PAYLOAD');
+      const triggerId = requireCanonicalUuid(payload.trigger_id, 'trigger_id');
+      const outcome = boundedString(payload.outcome, 50, 'outcome', true)!;
+      if (!validDocumentReviewOutcomes.has(outcome)) throw new Error('INVALID_REVIEW_OUTCOME');
+      const { data, error } = await serviceClient.rpc('complete_governed_document_review', {
+        p_actor_id: userData.user.id,
+        p_trigger_id: triggerId,
+        p_outcome: outcome,
+        p_outcome_note: boundedString(payload.outcome_note, 2000, 'outcome_note'),
+      });
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+      if (!validateCompleteReviewProof(data, triggerId, outcome)) {
+        return errorResponse('Complete review response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
       return jsonResponse({ ok: true, action, result: data }, 200);
     } catch (err) {
       const e = mapV14e1rDatabaseError(action, err);

@@ -1289,7 +1289,7 @@ describe('GRC v1.4-E1-R2 Edge v13 Governed SOP Bridge: Behavioral & Architectura
     it('places credential-state verification strictly before E1-R2 dispatchers', () => {
       const authCheckIdx = edgeSource.indexOf('authClient.auth.getUser');
       const capCheckIdx = edgeSource.indexOf("serviceClient.rpc('patch83u_get_capabilities'");
-      const e1r2HandlerIdx = edgeSource.indexOf("if (action === 'v14e1r_create_governed_sop_draft')");
+      const e1r2HandlerIdx = edgeSource.indexOf("if (action === 'v14e1r_create_governed_sop_draft'");
 
       expect(authCheckIdx).toBeGreaterThan(0);
       expect(capCheckIdx).toBeGreaterThan(authCheckIdx);

@@ -1,10 +1,10 @@
 # v7.0 Frontend RPC Inventory
 
-Generated: 2026-08-22T16:31:57.527Z
+Generated: 2026-08-24T11:22:39.655Z
 
 - Direct frontend RPC calls: 0
-- Authenticated Edge bridge calls: 140
-- Unique RPC names: 132
+- Authenticated Edge bridge calls: 143
+- Unique RPC names: 134
 
 ## Classification counts
 
@@ -13,9 +13,9 @@ Generated: 2026-08-22T16:31:57.527Z
   "accreditation_assurance": 8,
   "read_only_search": 1,
   "production_readiness": 28,
-  "workflow_runtime_review": 16,
-  "unknown_requires_review": 39,
-  "workflow_runtime": 13,
+  "workflow_runtime_review": 18,
+  "unknown_requires_review": 29,
+  "workflow_runtime": 24,
   "privileged_admin_review": 1,
   "privileged_admin": 16,
   "user_management": 12,
@@ -50,8 +50,9 @@ Generated: 2026-08-22T16:31:57.527Z
 - `append_governance_criterion_decision` (1 call site)
 - `supersede_governance_criterion_link` (1 call site)
 - `complete_governance_linkage_review` (1 call site)
+- `evaluate_governance_document_review_trigger` (1 call site)
 - `ovr_executive_dashboard_analytics` (1 call site)
-- `f1r2_list_my_work` (1 call site)
+- `f1r2_list_my_work` (2 call sites)
 - `acknowledge_escalation_event` (1 call site)
 - `resolve_escalation_event` (1 call site)
 - `f1r2_create_work_item` (3 call sites)
@@ -147,6 +148,7 @@ Generated: 2026-08-22T16:31:57.527Z
 - `record_compliance_finding` (1 call site)
 - `create_compliance_remediation` (1 call site)
 - `update_compliance_remediation` (1 call site)
+- `ui7_record_approval_decision` (1 call site)
 - `patch83t_get_user_import_capabilities` (1 call site)
 - `list_user_management_roster` (1 call site)
 - `patch83t_user_import_identity_references` (1 call site)

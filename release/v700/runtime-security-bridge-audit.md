@@ -4,12 +4,12 @@
 
 ```json
 {
-  "generated_at": "2026-08-22T16:31:57.824Z",
+  "generated_at": "2026-08-24T11:22:40.193Z",
   "db_container": "supabase_db_grc-control-center",
   "db_query_status": "passed_authoritative_live_schema_inventory",
   "db_query_error": null,
   "frontend_rpc_total": 0,
-  "authenticated_edge_bridge_call_total": 140,
+  "authenticated_edge_bridge_call_total": 143,
   "unique_frontend_rpc_total": 0,
   "database_function_total": 388,
   "database_security_definer_functions": 388,
@@ -341,7 +341,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 828
+          "line": 881
         }
       ],
       "current_security_mode": "security_definer",
@@ -365,7 +365,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 836
+          "line": 889
         }
       ],
       "current_security_mode": "security_definer",
@@ -389,7 +389,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1865
+          "line": 1918
         },
         {
           "file": "src/lib/userManagementApi.ts",
@@ -417,7 +417,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1880
+          "line": 1933
         },
         {
           "file": "src/lib/userManagementApi.ts",
@@ -445,7 +445,7 @@
       "authenticated_edge_bridge_locations": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2040
+          "line": 2093
         }
       ],
       "current_security_mode": "security_definer",
