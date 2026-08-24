@@ -6640,7 +6640,7 @@ Deno.serve(async (request) => {
 
       const { data: linkedVer, error: verErr } = await serviceClient
         .from('document_versions')
-        .select('id, document_id, controlled_documents(organization_id)')
+        .select('id, document_id, controlled_documents!document_versions_document_id_fkey(organization_id)')
         .eq('id', reqRow.linked_item_id)
         .single();
 

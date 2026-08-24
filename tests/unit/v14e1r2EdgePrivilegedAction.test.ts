@@ -1296,6 +1296,13 @@ describe('GRC v1.4-E1-R2 Edge v13 Governed SOP Bridge: Behavioral & Architectura
       expect(e1r2HandlerIdx).toBeGreaterThan(capCheckIdx);
     });
 
+    it('resolves the governed document through the version document foreign key', () => {
+      expect(edgeSource).toContain(
+        'controlled_documents!document_versions_document_id_fkey(organization_id)',
+      );
+      expect(edgeSource).not.toContain(".select('id, document_id, controlled_documents(organization_id)')");
+    });
+
     it('verifies Migration 207 exists exactly once with exact filename and SHA256', () => {
       const migrationsDir = path.resolve(rootDir, 'supabase/migrations');
       const files = fs.readdirSync(migrationsDir);
