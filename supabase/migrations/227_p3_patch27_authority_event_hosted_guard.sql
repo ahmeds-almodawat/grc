@@ -56,9 +56,9 @@ begin
       'p_approval_request_id uuid, p_authority_rule_id uuid, p_event_type text, p_from_status text, p_to_status text, p_actor_id uuid, p_event_note text';
 
   if v_definition is null
-     or v_definition not like '%auth.role() IS DISTINCT FROM ''service_role''%'
-     or v_definition not like '%current_user <> ''service_role''%'
-     or v_definition like '%request.jwt.claim.role%' then
+     or lower(v_definition) not like '%auth.role() is distinct from ''service_role''%'
+     or lower(v_definition) not like '%current_user <> ''service_role''%'
+     or lower(v_definition) like '%request.jwt.claim.role%' then
     raise exception 'PATCH227_AUTHORITY_EVENT_GUARD_RECONCILIATION_FAILED';
   end if;
 end;
