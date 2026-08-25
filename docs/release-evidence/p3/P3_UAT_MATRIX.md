@@ -1,59 +1,71 @@
-# P3 Hosted Staging UAT Matrix
+# P3/P3.5 Hosted Staging UAT Matrix
 
-## Authenticated Smoke
+## Persona Matrix
 
-| Persona / area | Result | Evidence |
-| --- | --- | --- |
-| Super Admin Auth/Patch83U/profile/RBAC | PASS | Normal CAPTCHA login, forced password transition, fresh login, Home loaded |
-| Super Admin application routes | PASS | Home, Executive, Governance, Policy, SOP, Risk, Compliance, Audit, CAPA, Training, OVR, Projects, Evidence, My Work, Reports, Admin rendered without fatal error |
-| Executive Auth/Patch83U/profile/RBAC | PASS | Normal CAPTCHA login, forced password transition, fresh login |
-| Executive positive routes | PASS | Home, Executive Dashboard, Reports |
-| Executive negative routes | PASS | Direct Admin and Access Control navigation rejected |
-| Division Head | BLOCKED | Turnstile widget unavailable before Auth submission |
-| Department Manager | NOT RUN | Dependent on CAPTCHA recovery |
-| Contributor / Reporter | NOT RUN | Dependent on CAPTCHA recovery |
-| Read-only external auditor | NOT RUN | Dependent on CAPTCHA recovery |
+| Persona | Authentication/bootstrap | Positive scope | Negative scope |
+| --- | --- | --- | --- |
+| Super Admin | PASS | All release routes and governed actions | N/A |
+| Executive | PASS | Executive Dashboard and Reports | Administration denied |
+| Division Head | PASS | Division-scoped Risk | Administration denied |
+| Department Manager | PASS | Department-scoped Compliance | Administration denied |
+| Contributor / Reporter | PASS | Projects and assigned work | Risk register denied |
+| Read-only external auditor | PASS | Reports and governed reads | Import denied |
 
-No fatal browser console errors, authentication loops, unexpected 5xx, or new
-profile-bootstrap errors were observed in the completed hosted smoke.
+All six personas passed normal password Auth, Patch83U capability and credential
+bootstrap, profile resolution, RBAC bootstrap, and expected route scope during
+the controlled CAPTCHA-disabled bulk-UAT window. No session injection,
+service-role browser authentication, or RBAC/RLS weakening was used.
+
+The read-only final inventory reports eight Auth users/profiles, six active
+tagged UAT profiles, six tagged active roles, and eight total active roles.
+No identity or role mutation occurred during final non-human closure.
 
 ## Workflow Coverage
 
-| Workflow | Hosted read smoke | Rollback-safe contract proof | Hosted mutation UAT |
-| --- | --- | --- | --- |
-| Policy | PASS | PASS | NOT COMPLETE |
-| SOP | PASS | PASS | NOT COMPLETE |
-| Risk | PASS | PASS | NOT COMPLETE |
-| Compliance | PASS | PASS | NOT COMPLETE |
-| Audit | PASS | PASS | NOT COMPLETE |
-| CAPA | PASS | PASS | NOT COMPLETE |
-| Training | PASS | PASS | NOT COMPLETE |
-| OVR | PASS | PASS | NOT COMPLETE |
-| Projects | PASS | PASS | NOT COMPLETE |
-| Evidence | PASS | PASS | NOT COMPLETE |
-| My Work / Approvals | PASS | PASS | NOT COMPLETE |
-| Reports / analytics | PASS | PASS | Read/drill-down regression PASS; hosted persona matrix incomplete |
-| Admin / import | PASS as Super Admin | PASS | No import executed; staging flag remains disabled |
+| Workflow | Hosted result | Evidence |
+| --- | --- | --- |
+| Policy | PASS | Creation, approval, finalization, governed linkage |
+| SOP | PASS | Creation, approval, RACI/procedure, Policy linkage |
+| Risk | PASS | Reassessment and residual score persisted |
+| Compliance | PASS | Assessment advanced to review |
+| Audit | PASS | Finding and governance linkage reviewed |
+| CAPA | PASS | Plan, action, review, validation, and effectiveness gates exercised |
+| Training | PASS WITH DATA LIMIT | Route/contracts passed; no live programs existed |
+| OVR | PASS | Review/verdict passed; closure correctly blocked by evidence gate |
+| Projects | PASS | Tagged project created and verified |
+| Evidence/storage | PASS | Private upload verified; self-review denied by SoD |
+| My Work / Approvals | PASS | Assignment, participant scope, history, decisions |
+| Reports / analytics | PASS | Filters, reset, drill-down, unavailable-source truth |
+| Administration | PASS | Super Admin access and negative role gates |
+| Imports | NOT APPLICABLE | Both staging execution flags absent/default-disabled |
+| Notifications | NOT APPLICABLE | No mutable audited delivery contract in this release |
 
-## Governance Linkage
+## F23 Shared-Control Coverage
 
-The final rollback-safe proof suite passes suggested/confirmed/rejected links,
-Policy plus SOP, exact versions, Requirement/Step, Risk, Audit, Compliance,
-CAPA inheritance/provenance, analytics truth, and initiate-only review triggers.
-All required staging views and RPCs exist.
+- Search: Policy/SOP, My Work, Reports, and governed module instances passed.
+- Single and combined filters: passed.
+- Clear/reset and no-results states: passed.
+- Pagination first/last boundaries, disabled controls, and current-page
+  semantics: passed.
+- Role-scoped results: passed across the persona matrix.
+- Arabic/RTL representative controls: passed.
+- Keyboard-only shell navigation and visible focus: passed.
+- Modal initial focus, containment, Escape close, and focus return: passed.
+- Labels, errors, responsive table/action semantics, unnamed-button scan, and
+  duplicate-ID scan: passed.
+- Deeper manual screen-reader certification is nonblocking follow-up and is not
+  declared mandatory by the release contract.
 
-Hosted mutation UAT is NOT COMPLETE and the local/SQL evidence is not being
-substituted for the missing multi-persona staging run.
+## Import/Notification Closure
 
-## Disposable Persona Cleanup
+The dedicated `grc-staging` project has neither
+`VITE_DEPARTMENT_IMPORT_EXECUTION_ENABLED` nor
+`VITE_PATCH83T_USER_EXCEL_IMPORT_ENABLED`. The exact-lowercase flag contract
+therefore disables execution. Automated compatibility testing proves zero
+Patch83T requests when disabled and fail-closed behavior for incompatible
+contracts. A credential-free hosted execution attempt returned
+`401 UNAUTHORIZED_NO_AUTH_HEADER`; no import mutation was performed.
 
-- Six staging-only personas were created through governed provisioning.
-- Super Admin and Executive reached completed provisioning, then were
-  deactivated through `patch83u_apply_user_lifecycle`; credentials are disabled
-  and active roles are zero.
-- Four personas remain in `initial_change_required` because the canonical
-  lifecycle function forbids deactivation while provisioning is open. They
-  retain zero active roles and cannot bootstrap application authorization.
-- The temporary credential file was deleted and no credential is recorded in
-  Git or release evidence.
-
+Notification administration explicitly displays a disabled reason because no
+mutable, audited delivery contract or browser-governed provider configuration
+exists in this release. External email/SMS testing is therefore not applicable.

@@ -1,37 +1,61 @@
 # P4 Production Cutover Handoff
 
-## Gate
+## Authorization Gate
 
-P4 is NOT AUTHORIZED to start. Staging is not certified.
+P4 is not authorized until F22 real Turnstile certification passes and PR #129
+remains unmerged until that decision. All non-human P3/P3.5 gates are complete.
 
-## Required P3 Resume
+## Exact Starting State
 
-1. Restore normal Cloudflare Turnstile rendering without disabling CAPTCHA.
-2. Use governed admin reset/provisioning to issue new ephemeral credentials for
-   the four retained invited personas; no previous temporary credential exists.
-3. Complete first-login transitions and the full six-persona hosted positive
-   and negative RBAC/scope matrix.
-4. Complete hosted Policy/SOP and governance-link mutation UAT using tagged
-   records, including storage/import only where the staging contract permits.
-5. Clean all remaining disposable access through canonical lifecycle tooling.
-6. Commit the final certification evidence and deploy the exact clean ending RC
-   SHA to `grc-staging`.
-7. Perform the separately authorized Production read-only inventory only after
-   hosted staging UAT passes.
+- Production Supabase: `zbrjjecpsrzposhuarcn`
+- Production starting migration ceiling: 211
+- Staging Supabase: `zghsgzrdwbqdrpuxanac`
+- Staging migration source ceiling: 231
+- Frozen frontend product source:
+  `3c87eeb8e05427f295111c5188b95003082dfdb2`
+- Final evidence RC/deployment: exact PR head recorded in PR #129
+- Production writes during P3/P3.5: none
 
-## Current Technical State
+## Required Pre-217 Bridge
 
-- Staging migration ceiling: 223
-- Bridge required before original migration 217: proven and already applied to
-  staging without ledger manipulation
-- Historical migrations: unchanged
-- Local regression: 2205/2205 unit, 9/9 SQL, 95/95 Playwright, build PASS
-- PR #129: open, mergeable, not merged
-- Correction cycles used: 2 of 2
-- Remaining substantial correction cycles: 0
-- Production writes/config/Auth/deployment: none
+- SQL: `release/p3/p3-pre217-critical-attention-compatibility.sql`
+- SHA-256: `26CF8F06B26132BA8FFD81E60A216B46FFA209FBAA07257963736D30D6D71491`
+- Apply after canonical migrations 212-216 and before unchanged migration 217
+- Bridge writes no migration-ledger entry
+- Unknown view shape, owner, ACL, option, hash, or dependency must stop cutover
 
-Production compatibility and whether P4 requires the same bridge remain
-UNDETERMINED because the authorized Production read-only preflight is gated on
-successful staging UAT.
+## P4 Ordered Plan
 
+1. Confirm final staging Turnstile certification and exact PR/deployment SHA.
+2. Take a fresh provider backup/PITR checkpoint and export schema, data,
+   migration history, and roles.
+3. Reconfirm Production ceiling 211 and the reviewed legacy critical-view hash.
+4. Apply migrations 212-216 normally.
+5. Apply the exact pre-217 compatibility bridge without ledger manipulation.
+6. Apply unchanged migrations 217-231 normally and verify each ledger entry.
+7. Deploy the repository `privileged-action` with JWT required; Production
+   version 17 differs from the current source and staging version 10.
+8. Do not deploy staging-only legacy `admin-create-user`.
+9. Verify Production environment variables by name/scope. Required deltas must
+   retain Patch83U and canonical CAPTCHA/Turnstile settings; never copy staging
+   values or credentials.
+10. Deploy the exact authorized frontend RC to the intended Production Vercel
+    project `grc`, then run bounded Auth, Patch83U, RBAC, route, and security
+    smoke.
+
+## Rollback and Forward-Fix
+
+- Before migration writes: stop with no change if backup, bridge precondition,
+  environment, or source-equality proof fails.
+- During migrations: stop immediately on the first failed migration; preserve
+  logs and ledger state. Do not edit historical migrations or manually mark
+  failed versions applied.
+- Data/schema recovery: use the fresh provider checkpoint and governed exports;
+  do not use ad hoc destructive resets.
+- Frontend rollback: retain and use the previous immutable Production
+  deployment. Its Git SHA is historically unattested, so preserve its
+  deployment ID/URL before cutover.
+- Edge rollback: preserve the prior `privileged-action` version and redeploy
+  only through the governed function process.
+- Prefer a bounded forward-fix migration for a post-apply defect when rollback
+  would risk newer committed data.

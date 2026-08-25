@@ -182,6 +182,10 @@ test.describe('UI-9 responsive, dark, RTL and accessibility reconciliation', () 
     await openPage(page, 'adminHub');
     await expect(page.getByTestId('ui8-admin-overview')).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    const rtlUsersTab = page.locator('.ui8-tabs button').nth(1);
+    await rtlUsersTab.focus();
+    await page.keyboard.press('Tab');
+    await expect.poll(() => page.evaluate(() => document.activeElement !== document.body)).toBe(true);
     await expectContained(page);
     await capture(page, testInfo, '20-arabic-rtl-mobile-390');
 
@@ -193,7 +197,14 @@ test.describe('UI-9 responsive, dark, RTL and accessibility reconciliation', () 
     await newRisk.click();
     const dialog = page.getByRole('dialog', { name: 'Create risk' });
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole('button', { name: 'Close' })).toBeFocused();
+    const closeDialog = dialog.getByRole('button', { name: 'Close' });
+    await expect(closeDialog).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect.poll(() => dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true);
+    const lastDialogButton = dialog.getByRole('button').last();
+    await lastDialogButton.focus();
+    await page.keyboard.press('Tab');
+    await expect(closeDialog).toBeFocused();
     await capture(page, testInfo, '21-modal-keyboard-focus');
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
