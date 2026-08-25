@@ -244,6 +244,18 @@ describe('GRC v1.1 governed dashboard contract', () => {
     expect(handler).not.toMatch(/error:\s*(?:snapshotError|analyticsError)\.message/);
   });
 
+  it('does not misclassify missing aggregate configuration as an authorization denial', () => {
+    const classifier = edge.slice(
+      edge.indexOf('function isOvrAnalyticsAuthorizationFailure'),
+      edge.indexOf('const userRoleOptions'),
+    );
+    const handler = edge.slice(edge.indexOf("if (action === 'ovr_executive_dashboard_analytics')"), edge.indexOf('if (patch22RiskActions.has(action))'));
+    expect(classifier).toContain('DASHBOARD_ENTITLEMENT_REQUIRED');
+    expect(classifier).not.toContain('OVR_ANALYTICS_CONFIG_REQUIRED');
+    expect(classifier).not.toMatch(/\|REQUIRED\|/);
+    expect(handler.match(/isOvrAnalyticsAuthorizationFailure/g)).toHaveLength(2);
+  });
+
   it('keeps active and attention Project KPI drill filters aligned with their definitions', () => {
     expect(projectMatchesStatus(project({ status: 'delayed' }), 'operating')).toBe(true);
     expect(projectMatchesStatus(project({ status: 'delayed' }), 'attention')).toBe(true);

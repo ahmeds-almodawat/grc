@@ -425,6 +425,11 @@ function errorResponse(
   }, status);
 }
 
+function isOvrAnalyticsAuthorizationFailure(message: string) {
+  return /OVR_V11_SERVICE_ROLE_REQUIRED|OVR_ANALYTICS_(?:ACTIVE_ACTOR_REQUIRED|EXECUTIVE_ENTITLEMENT_REQUIRED|DASHBOARD_ENTITLEMENT_REQUIRED)|NOT_AUTHORIZED|ACCESS_DENIED/i
+    .test(message);
+}
+
 const userRoleOptions = new Set([
   'super_admin',
   'executive',
@@ -3123,8 +3128,7 @@ Deno.serve(async (request) => {
       { p_actor_id: userData.user.id },
     );
     if (snapshotError) {
-      const authorizationFailure = /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|EXECUTIVE|ENTITLEMENT|CREDENTIAL|IDENTITY/i
-        .test(snapshotError.message);
+      const authorizationFailure = isOvrAnalyticsAuthorizationFailure(snapshotError.message);
       console.error('OVR executive analytics snapshot refresh failed', {
         action,
         phase: 'snapshot_refresh',
@@ -3158,8 +3162,7 @@ Deno.serve(async (request) => {
     ]);
     const analyticsError = headlineResult.error ?? trendResult.error;
     if (analyticsError) {
-      const authorizationFailure = /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|EXECUTIVE|ENTITLEMENT|CREDENTIAL|IDENTITY|FILTER|QUERY_SHAPE/i
-        .test(analyticsError.message);
+      const authorizationFailure = isOvrAnalyticsAuthorizationFailure(analyticsError.message);
       console.error('OVR executive analytics query failed', {
         action,
         phase: 'fixed_query_family',
