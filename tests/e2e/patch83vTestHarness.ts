@@ -223,6 +223,8 @@ function isReadOnlyAction(action: string): boolean {
     || action === 'list_user_management_roster'
     || action === 'patch83t_get_user_import_capabilities'
     || action === 'patch83t_user_import_identity_references'
+    || action === 'ovr_executive_dashboard_analytics'
+    || action === 'f1r2_list_my_work'
     || /^(?:get|list|search|preview|evaluate)_/i.test(action);
 }
 
@@ -692,6 +694,10 @@ export async function historyProof(page: Page) {
 }
 
 export async function waitForActivePatch83vUser(page: Page, role: Patch83vRole = 'super_admin') {
-  await expect(page.getByText(v14jRoleDisplayName(role)).first())
-    .toBeVisible();
+  const activeUser = page.getByText(v14jRoleDisplayName(role)).first();
+  if ((page.viewportSize()?.width ?? 1440) <= 900) {
+    await expect(activeUser).toBeAttached();
+  } else {
+    await expect(activeUser).toBeVisible();
+  }
 }

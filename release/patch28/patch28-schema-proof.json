@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-02T23:34:06.818Z",
+  "generated_at": "2026-08-22T16:31:56.745Z",
   "migration_path": "supabase/migrations/091_patch28_capa_action_plan_hardening.sql",
   "migration_found": true,
   "missing_tables": [],

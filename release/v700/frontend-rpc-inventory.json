@@ -1,17 +1,17 @@
 {
   "summary": {
-    "generated_at": "2026-08-16T18:53:06.696Z",
+    "generated_at": "2026-08-25T00:48:40.967Z",
     "source": "src/**/*.{ts,tsx,js,jsx}",
     "frontend_rpc_call_count": 0,
-    "authenticated_edge_bridge_call_count": 104,
-    "unique_frontend_rpc_count": 100,
+    "authenticated_edge_bridge_call_count": 144,
+    "unique_frontend_rpc_count": 135,
     "classification_counts": {
       "accreditation_assurance": 8,
       "read_only_search": 1,
       "production_readiness": 28,
-      "workflow_runtime_review": 10,
-      "unknown_requires_review": 9,
-      "workflow_runtime": 13,
+      "workflow_runtime_review": 18,
+      "unknown_requires_review": 29,
+      "workflow_runtime": 25,
       "privileged_admin_review": 1,
       "privileged_admin": 16,
       "user_management": 12,
@@ -163,6 +163,138 @@
         ]
       },
       {
+        "rpc": "link_ovr_governed_document_version",
+        "locations": [
+          {
+            "file": "src/lib/f1OvrGovernedVersionApi.ts",
+            "line": 73,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime_review"
+          }
+        ]
+      },
+      {
+        "rpc": "unlink_ovr_governed_document_version",
+        "locations": [
+          {
+            "file": "src/lib/f1OvrGovernedVersionApi.ts",
+            "line": 84,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime_review"
+          }
+        ]
+      },
+      {
+        "rpc": "initiate_ovr_governance_feedback_review",
+        "locations": [
+          {
+            "file": "src/lib/f2OvrGovernanceFeedbackApi.ts",
+            "line": 57,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime_review"
+          }
+        ]
+      },
+      {
+        "rpc": "complete_ovr_governance_feedback_review",
+        "locations": [
+          {
+            "file": "src/lib/f2OvrGovernanceFeedbackApi.ts",
+            "line": 70,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime_review"
+          }
+        ]
+      },
+      {
+        "rpc": "sync_ovr_corrective_action_capa_link",
+        "locations": [
+          {
+            "file": "src/lib/f2OvrGovernanceFeedbackApi.ts",
+            "line": 78,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime_review"
+          }
+        ]
+      },
+      {
+        "rpc": "resolve_governance_document_version_candidates",
+        "locations": [
+          {
+            "file": "src/lib/governanceCriteriaLinkageApi.ts",
+            "line": 271,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "start_governance_linkage_review",
+        "locations": [
+          {
+            "file": "src/lib/governanceCriteriaLinkageApi.ts",
+            "line": 285,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "suggest_governance_criterion_link",
+        "locations": [
+          {
+            "file": "src/lib/governanceCriteriaLinkageApi.ts",
+            "line": 313,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "append_governance_criterion_decision",
+        "locations": [
+          {
+            "file": "src/lib/governanceCriteriaLinkageApi.ts",
+            "line": 345,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "supersede_governance_criterion_link",
+        "locations": [
+          {
+            "file": "src/lib/governanceCriteriaLinkageApi.ts",
+            "line": 363,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "complete_governance_linkage_review",
+        "locations": [
+          {
+            "file": "src/lib/governanceCriteriaLinkageApi.ts",
+            "line": 376,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "evaluate_governance_document_review_trigger",
+        "locations": [
+          {
+            "file": "src/lib/governanceCriteriaLinkageApi.ts",
+            "line": 395,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
         "rpc": "ovr_executive_dashboard_analytics",
         "locations": [
           {
@@ -178,9 +310,15 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 667,
+            "line": 720,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
+          },
+          {
+            "file": "src/lib/ui7ApprovalsReportsApi.ts",
+            "line": 169,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime_review"
           }
         ]
       },
@@ -189,7 +327,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 813,
+            "line": 881,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -200,7 +338,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 821,
+            "line": 889,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -211,19 +349,19 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 885,
+            "line": 953,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           },
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1286,
+            "line": 1354,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           },
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1307,
+            "line": 1375,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           }
@@ -234,7 +372,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1319,
+            "line": 1387,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime_review"
           }
@@ -245,7 +383,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1495,
+            "line": 1563,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           }
@@ -256,7 +394,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1550,
+            "line": 1618,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime_review"
           }
@@ -267,7 +405,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1557,
+            "line": 1625,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime_review"
           }
@@ -278,7 +416,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1576,
+            "line": 1644,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin_review"
           }
@@ -289,7 +427,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1634,
+            "line": 1702,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           }
@@ -300,7 +438,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1644,
+            "line": 1712,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           }
@@ -311,7 +449,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1662,
+            "line": 1730,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           }
@@ -322,7 +460,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1676,
+            "line": 1744,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           }
@@ -333,7 +471,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1736,
+            "line": 1804,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           }
@@ -344,7 +482,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1850,
+            "line": 1918,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           },
@@ -361,7 +499,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1865,
+            "line": 1933,
             "transport": "authenticated_edge_bridge",
             "classification": "privileged_admin"
           },
@@ -378,7 +516,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1879,
+            "line": 1947,
             "transport": "authenticated_edge_bridge",
             "classification": "user_management"
           }
@@ -389,7 +527,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 1949,
+            "line": 2017,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime_review"
           }
@@ -400,7 +538,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 2025,
+            "line": 2093,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -411,7 +549,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 2053,
+            "line": 2121,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime_review"
           }
@@ -422,7 +560,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 2068,
+            "line": 2136,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           }
@@ -433,7 +571,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 2072,
+            "line": 2140,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           }
@@ -444,7 +582,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 2076,
+            "line": 2144,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           }
@@ -455,7 +593,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 2093,
+            "line": 2161,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime_review"
           }
@@ -466,7 +604,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 2107,
+            "line": 2175,
             "transport": "authenticated_edge_bridge",
             "classification": "unknown_requires_review"
           }
@@ -477,7 +615,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 2124,
+            "line": 2192,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime_review"
           }
@@ -488,7 +626,7 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 2133,
+            "line": 2201,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime_review"
           }
@@ -499,9 +637,198 @@
         "locations": [
           {
             "file": "src/lib/grcApi.ts",
-            "line": 2148,
+            "line": 2216,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime_review"
+          }
+        ]
+      },
+      {
+        "rpc": "create_governed_policy_draft",
+        "locations": [
+          {
+            "file": "src/lib/policySopApi.ts",
+            "line": 1366,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime"
+          }
+        ]
+      },
+      {
+        "rpc": "save_governed_policy_draft",
+        "locations": [
+          {
+            "file": "src/lib/policySopApi.ts",
+            "line": 1394,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime"
+          }
+        ]
+      },
+      {
+        "rpc": "create_governed_sop_draft",
+        "locations": [
+          {
+            "file": "src/lib/policySopApi.ts",
+            "line": 1431,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime"
+          }
+        ]
+      },
+      {
+        "rpc": "save_governed_sop_draft",
+        "locations": [
+          {
+            "file": "src/lib/policySopApi.ts",
+            "line": 1467,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime"
+          }
+        ]
+      },
+      {
+        "rpc": "start_governed_document_revision",
+        "locations": [
+          {
+            "file": "src/lib/policySopApi.ts",
+            "line": 1478,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime"
+          }
+        ]
+      },
+      {
+        "rpc": "submit_governed_document_for_review",
+        "locations": [
+          {
+            "file": "src/lib/policySopApi.ts",
+            "line": 1489,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime"
+          }
+        ]
+      },
+      {
+        "rpc": "activate_governed_document_version",
+        "locations": [
+          {
+            "file": "src/lib/policySopApi.ts",
+            "line": 1499,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime"
+          }
+        ]
+      },
+      {
+        "rpc": "retire_governed_document",
+        "locations": [
+          {
+            "file": "src/lib/policySopApi.ts",
+            "line": 1509,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime"
+          }
+        ]
+      },
+      {
+        "rpc": "request_policy_sop_exception",
+        "locations": [
+          {
+            "file": "src/lib/policySopApi.ts",
+            "line": 1529,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime"
+          }
+        ]
+      },
+      {
+        "rpc": "trigger_governed_document_review",
+        "locations": [
+          {
+            "file": "src/lib/policySopApi.ts",
+            "line": 1545,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime"
+          }
+        ]
+      },
+      {
+        "rpc": "complete_governed_document_review",
+        "locations": [
+          {
+            "file": "src/lib/policySopApi.ts",
+            "line": 1556,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime"
+          }
+        ]
+      },
+      {
+        "rpc": "decide_sop_rollout_requirements",
+        "locations": [
+          {
+            "file": "src/lib/policySopApi.ts",
+            "line": 1586,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          },
+          {
+            "file": "src/lib/trainingGovernanceApi.ts",
+            "line": 594,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "publish_sop_training_obligations",
+        "locations": [
+          {
+            "file": "src/lib/policySopApi.ts",
+            "line": 1608,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          },
+          {
+            "file": "src/lib/trainingGovernanceApi.ts",
+            "line": 613,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "reconcile_sop_training_population",
+        "locations": [
+          {
+            "file": "src/lib/policySopApi.ts",
+            "line": 1636,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          },
+          {
+            "file": "src/lib/trainingGovernanceApi.ts",
+            "line": 626,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "record_document_acknowledgment",
+        "locations": [
+          {
+            "file": "src/lib/policySopApi.ts",
+            "line": 1663,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          },
+          {
+            "file": "src/lib/trainingGovernanceApi.ts",
+            "line": 500,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
           }
         ]
       },
@@ -906,7 +1233,7 @@
         "locations": [
           {
             "file": "src/lib/trainingGovernanceApi.ts",
-            "line": 145,
+            "line": 403,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -917,7 +1244,7 @@
         "locations": [
           {
             "file": "src/lib/trainingGovernanceApi.ts",
-            "line": 158,
+            "line": 416,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -928,7 +1255,7 @@
         "locations": [
           {
             "file": "src/lib/trainingGovernanceApi.ts",
-            "line": 171,
+            "line": 429,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -939,7 +1266,7 @@
         "locations": [
           {
             "file": "src/lib/trainingGovernanceApi.ts",
-            "line": 189,
+            "line": 447,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -950,7 +1277,7 @@
         "locations": [
           {
             "file": "src/lib/trainingGovernanceApi.ts",
-            "line": 201,
+            "line": 466,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -961,7 +1288,7 @@
         "locations": [
           {
             "file": "src/lib/trainingGovernanceApi.ts",
-            "line": 216,
+            "line": 488,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -972,7 +1299,7 @@
         "locations": [
           {
             "file": "src/lib/trainingGovernanceApi.ts",
-            "line": 228,
+            "line": 515,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -983,7 +1310,7 @@
         "locations": [
           {
             "file": "src/lib/trainingGovernanceApi.ts",
-            "line": 240,
+            "line": 530,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -994,7 +1321,7 @@
         "locations": [
           {
             "file": "src/lib/trainingGovernanceApi.ts",
-            "line": 257,
+            "line": 551,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -1005,7 +1332,7 @@
         "locations": [
           {
             "file": "src/lib/trainingGovernanceApi.ts",
-            "line": 269,
+            "line": 569,
             "transport": "authenticated_edge_bridge",
             "classification": "workflow_runtime"
           }
@@ -1016,9 +1343,97 @@
         "locations": [
           {
             "file": "src/lib/trainingGovernanceApi.ts",
-            "line": 281,
+            "line": 645,
             "transport": "authenticated_edge_bridge",
             "classification": "evidence_governance"
+          }
+        ]
+      },
+      {
+        "rpc": "create_compliance_obligation",
+        "locations": [
+          {
+            "file": "src/lib/ui3RiskComplianceApi.ts",
+            "line": 292,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "create_compliance_assessment",
+        "locations": [
+          {
+            "file": "src/lib/ui3RiskComplianceApi.ts",
+            "line": 296,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "submit_compliance_assessment",
+        "locations": [
+          {
+            "file": "src/lib/ui3RiskComplianceApi.ts",
+            "line": 300,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "record_compliance_finding",
+        "locations": [
+          {
+            "file": "src/lib/ui3RiskComplianceApi.ts",
+            "line": 311,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime_review"
+          }
+        ]
+      },
+      {
+        "rpc": "create_compliance_remediation",
+        "locations": [
+          {
+            "file": "src/lib/ui3RiskComplianceApi.ts",
+            "line": 315,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "update_compliance_remediation",
+        "locations": [
+          {
+            "file": "src/lib/ui3RiskComplianceApi.ts",
+            "line": 319,
+            "transport": "authenticated_edge_bridge",
+            "classification": "unknown_requires_review"
+          }
+        ]
+      },
+      {
+        "rpc": "ui7_record_approval_decision",
+        "locations": [
+          {
+            "file": "src/lib/ui7ApprovalsReportsApi.ts",
+            "line": 219,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime_review"
+          }
+        ]
+      },
+      {
+        "rpc": "v14e1r_finalize_governed_document_approval",
+        "locations": [
+          {
+            "file": "src/lib/ui7ApprovalsReportsApi.ts",
+            "line": 230,
+            "transport": "authenticated_edge_bridge",
+            "classification": "workflow_runtime"
           }
         ]
       },
@@ -1251,6 +1666,102 @@
       "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
     },
     {
+      "file": "src/lib/f1OvrGovernedVersionApi.ts",
+      "line": 73,
+      "rpc": "link_ovr_governed_document_version",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/f1OvrGovernedVersionApi.ts",
+      "line": 84,
+      "rpc": "unlink_ovr_governed_document_version",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/f2OvrGovernanceFeedbackApi.ts",
+      "line": 57,
+      "rpc": "initiate_ovr_governance_feedback_review",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/f2OvrGovernanceFeedbackApi.ts",
+      "line": 70,
+      "rpc": "complete_ovr_governance_feedback_review",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/f2OvrGovernanceFeedbackApi.ts",
+      "line": 78,
+      "rpc": "sync_ovr_corrective_action_capa_link",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/governanceCriteriaLinkageApi.ts",
+      "line": 271,
+      "rpc": "resolve_governance_document_version_candidates",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/governanceCriteriaLinkageApi.ts",
+      "line": 285,
+      "rpc": "start_governance_linkage_review",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/governanceCriteriaLinkageApi.ts",
+      "line": 313,
+      "rpc": "suggest_governance_criterion_link",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/governanceCriteriaLinkageApi.ts",
+      "line": 345,
+      "rpc": "append_governance_criterion_decision",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/governanceCriteriaLinkageApi.ts",
+      "line": 363,
+      "rpc": "supersede_governance_criterion_link",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/governanceCriteriaLinkageApi.ts",
+      "line": 376,
+      "rpc": "complete_governance_linkage_review",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/governanceCriteriaLinkageApi.ts",
+      "line": 395,
+      "rpc": "evaluate_governance_document_review_trigger",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
       "file": "src/lib/grcApi.ts",
       "line": 333,
       "rpc": "ovr_executive_dashboard_analytics",
@@ -1260,7 +1771,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 667,
+      "line": 720,
       "rpc": "f1r2_list_my_work",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -1268,7 +1779,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 813,
+      "line": 881,
       "rpc": "acknowledge_escalation_event",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -1276,7 +1787,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 821,
+      "line": 889,
       "rpc": "resolve_escalation_event",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -1284,7 +1795,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 885,
+      "line": 953,
       "rpc": "f1r2_create_work_item",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -1292,7 +1803,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1286,
+      "line": 1354,
       "rpc": "f1r2_create_work_item",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -1300,7 +1811,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1307,
+      "line": 1375,
       "rpc": "f1r2_create_work_item",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -1308,7 +1819,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1319,
+      "line": 1387,
       "rpc": "f1r2_decide_approval",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime_review",
@@ -1316,7 +1827,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1495,
+      "line": 1563,
       "rpc": "acc_v13_update_work_item_status",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -1324,7 +1835,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1550,
+      "line": 1618,
       "rpc": "acc_v13_request_approval",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime_review",
@@ -1332,7 +1843,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1557,
+      "line": 1625,
       "rpc": "acc_v13_list_eligible_approvers",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime_review",
@@ -1340,7 +1851,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1576,
+      "line": 1644,
       "rpc": "acc_v13_evidence_access",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin_review",
@@ -1348,7 +1859,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1634,
+      "line": 1702,
       "rpc": "department_lifecycle_preview",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -1356,7 +1867,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1644,
+      "line": 1712,
       "rpc": "department_lifecycle_rename",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -1364,7 +1875,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1662,
+      "line": 1730,
       "rpc": "department_lifecycle_archive",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -1372,7 +1883,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1676,
+      "line": 1744,
       "rpc": "department_lifecycle_restore",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -1380,7 +1891,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1736,
+      "line": 1804,
       "rpc": "department_import_execute",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -1388,7 +1899,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1850,
+      "line": 1918,
       "rpc": "assign_user_role",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -1396,7 +1907,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1865,
+      "line": 1933,
       "rpc": "deactivate_user_role",
       "transport": "authenticated_edge_bridge",
       "classification": "privileged_admin",
@@ -1404,7 +1915,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1879,
+      "line": 1947,
       "rpc": "create_department",
       "transport": "authenticated_edge_bridge",
       "classification": "user_management",
@@ -1412,7 +1923,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 1949,
+      "line": 2017,
       "rpc": "f1r2_create_ovr_report",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime_review",
@@ -1420,7 +1931,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 2025,
+      "line": 2093,
       "rpc": "update_ovr_workflow",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -1428,7 +1939,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 2053,
+      "line": 2121,
       "rpc": "f1r2_create_corrective_project",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime_review",
@@ -1436,7 +1947,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 2068,
+      "line": 2136,
       "rpc": "f1r2_assign_work_item",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -1444,7 +1955,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 2072,
+      "line": 2140,
       "rpc": "f1r2_respond_work_item_assignment",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -1452,7 +1963,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 2076,
+      "line": 2144,
       "rpc": "f1r2_cancel_work_item_assignment",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -1460,7 +1971,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 2093,
+      "line": 2161,
       "rpc": "f1r2_list_project_assignments",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime_review",
@@ -1468,7 +1979,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 2107,
+      "line": 2175,
       "rpc": "f1r2_search_eligible_participants",
       "transport": "authenticated_edge_bridge",
       "classification": "unknown_requires_review",
@@ -1476,7 +1987,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 2124,
+      "line": 2192,
       "rpc": "f1r2_get_evidence_pack",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime_review",
@@ -1484,7 +1995,7 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 2133,
+      "line": 2201,
       "rpc": "f1r2_relink_evidence_parent",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime_review",
@@ -1492,10 +2003,130 @@
     },
     {
       "file": "src/lib/grcApi.ts",
-      "line": 2148,
+      "line": 2216,
       "rpc": "f1r2_finalize_corrective_ovr",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/policySopApi.ts",
+      "line": 1366,
+      "rpc": "create_governed_policy_draft",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/policySopApi.ts",
+      "line": 1394,
+      "rpc": "save_governed_policy_draft",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/policySopApi.ts",
+      "line": 1431,
+      "rpc": "create_governed_sop_draft",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/policySopApi.ts",
+      "line": 1467,
+      "rpc": "save_governed_sop_draft",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/policySopApi.ts",
+      "line": 1478,
+      "rpc": "start_governed_document_revision",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/policySopApi.ts",
+      "line": 1489,
+      "rpc": "submit_governed_document_for_review",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/policySopApi.ts",
+      "line": 1499,
+      "rpc": "activate_governed_document_version",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/policySopApi.ts",
+      "line": 1509,
+      "rpc": "retire_governed_document",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/policySopApi.ts",
+      "line": 1529,
+      "rpc": "request_policy_sop_exception",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/policySopApi.ts",
+      "line": 1545,
+      "rpc": "trigger_governed_document_review",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/policySopApi.ts",
+      "line": 1556,
+      "rpc": "complete_governed_document_review",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/policySopApi.ts",
+      "line": 1586,
+      "rpc": "decide_sop_rollout_requirements",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/policySopApi.ts",
+      "line": 1608,
+      "rpc": "publish_sop_training_obligations",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/policySopApi.ts",
+      "line": 1636,
+      "rpc": "reconcile_sop_training_population",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/policySopApi.ts",
+      "line": 1663,
+      "rpc": "record_document_acknowledgment",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
       "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
     },
     {
@@ -1788,7 +2419,7 @@
     },
     {
       "file": "src/lib/trainingGovernanceApi.ts",
-      "line": 145,
+      "line": 403,
       "rpc": "create_training_program",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -1796,7 +2427,7 @@
     },
     {
       "file": "src/lib/trainingGovernanceApi.ts",
-      "line": 158,
+      "line": 416,
       "rpc": "assign_training_program_to_user",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -1804,7 +2435,7 @@
     },
     {
       "file": "src/lib/trainingGovernanceApi.ts",
-      "line": 171,
+      "line": 429,
       "rpc": "assign_training_program_to_department",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -1812,7 +2443,7 @@
     },
     {
       "file": "src/lib/trainingGovernanceApi.ts",
-      "line": 189,
+      "line": 447,
       "rpc": "start_training_assignment",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -1820,7 +2451,7 @@
     },
     {
       "file": "src/lib/trainingGovernanceApi.ts",
-      "line": 201,
+      "line": 466,
       "rpc": "complete_training_assignment",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -1828,7 +2459,7 @@
     },
     {
       "file": "src/lib/trainingGovernanceApi.ts",
-      "line": 216,
+      "line": 488,
       "rpc": "acknowledge_training_assignment",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -1836,7 +2467,15 @@
     },
     {
       "file": "src/lib/trainingGovernanceApi.ts",
-      "line": 228,
+      "line": 500,
+      "rpc": "record_document_acknowledgment",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/trainingGovernanceApi.ts",
+      "line": 515,
       "rpc": "waive_training_assignment_with_reason",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -1844,7 +2483,7 @@
     },
     {
       "file": "src/lib/trainingGovernanceApi.ts",
-      "line": 240,
+      "line": 530,
       "rpc": "cancel_training_assignment_with_reason",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -1852,7 +2491,7 @@
     },
     {
       "file": "src/lib/trainingGovernanceApi.ts",
-      "line": 257,
+      "line": 551,
       "rpc": "record_competency_assessment",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -1860,7 +2499,7 @@
     },
     {
       "file": "src/lib/trainingGovernanceApi.ts",
-      "line": 269,
+      "line": 569,
       "rpc": "reopen_training_assignment_with_reason",
       "transport": "authenticated_edge_bridge",
       "classification": "workflow_runtime",
@@ -1868,10 +2507,106 @@
     },
     {
       "file": "src/lib/trainingGovernanceApi.ts",
-      "line": 281,
+      "line": 594,
+      "rpc": "decide_sop_rollout_requirements",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/trainingGovernanceApi.ts",
+      "line": 613,
+      "rpc": "publish_sop_training_obligations",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/trainingGovernanceApi.ts",
+      "line": 626,
+      "rpc": "reconcile_sop_training_population",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/trainingGovernanceApi.ts",
+      "line": 645,
       "rpc": "link_training_evidence",
       "transport": "authenticated_edge_bridge",
       "classification": "evidence_governance",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/ui3RiskComplianceApi.ts",
+      "line": 292,
+      "rpc": "create_compliance_obligation",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/ui3RiskComplianceApi.ts",
+      "line": 296,
+      "rpc": "create_compliance_assessment",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/ui3RiskComplianceApi.ts",
+      "line": 300,
+      "rpc": "submit_compliance_assessment",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/ui3RiskComplianceApi.ts",
+      "line": 311,
+      "rpc": "record_compliance_finding",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/ui3RiskComplianceApi.ts",
+      "line": 315,
+      "rpc": "create_compliance_remediation",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/ui3RiskComplianceApi.ts",
+      "line": 319,
+      "rpc": "update_compliance_remediation",
+      "transport": "authenticated_edge_bridge",
+      "classification": "unknown_requires_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/ui7ApprovalsReportsApi.ts",
+      "line": 169,
+      "rpc": "f1r2_list_my_work",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/ui7ApprovalsReportsApi.ts",
+      "line": 219,
+      "rpc": "ui7_record_approval_decision",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime_review",
+      "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
+    },
+    {
+      "file": "src/lib/ui7ApprovalsReportsApi.ts",
+      "line": 230,
+      "rpc": "v14e1r_finalize_governed_document_approval",
+      "transport": "authenticated_edge_bridge",
+      "classification": "workflow_runtime",
       "note": "Authenticated Edge Function bridge call; verify the service-only dispatcher and real persona proof."
     },
     {

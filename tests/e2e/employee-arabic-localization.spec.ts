@@ -16,11 +16,11 @@ type EmployeePage = 'home' | 'myWork' | 'projects' | 'ovr' | 'approvals' | 'evid
 
 const expectedArabicHeadings: Record<EmployeePage, string> = {
   home: 'مدخل موحد ونظيف للحوكمة والمخاطر والجودة والتنفيذ.',
-  myWork: 'المراحل والمهام وتواريخ الاستحقاق ومتطلبات الأدلة المسندة إليّ',
-  projects: 'المشاريع والبرامج والتنفيذ المنضبط',
+  myWork: 'أعمالي المحكومة',
+  projects: 'محفظة التنفيذ الاستراتيجي',
   ovr: 'إدارة بلاغات OVR والحوادث',
-  approvals: 'الموافقات المعلقة للإغلاق والأدلة والمشاريع وإجراءات الحوكمة',
-  evidence: 'مكتبة الأدلة',
+  approvals: 'صندوق الاعتمادات',
+  evidence: 'مستودع الأدلة المحكوم',
   userGuide: 'دليل المستخدم',
   globalSearch: 'مركز البحث الشامل',
 };
@@ -56,6 +56,10 @@ const approvedLatinTerms: Record<string, string> = {
   EN: 'Compact language-switch abbreviation.',
   AR: 'Compact language-switch abbreviation.',
   'grc-evidence': 'Fixed private storage bucket identifier.',
+  ALMODAWAT: 'Fixed product brand mark.',
+  CONTROL: 'Fixed product brand mark.',
+  PLATFORM: 'Fixed product brand mark.',
+  Ctrl: 'Keyboard shortcut modifier label.',
 };
 
 type BrowserProof = {
@@ -445,34 +449,31 @@ test.describe('Patch 83U Phase 1 Employee Arabic localization', () => {
     await installEmployeeMocks(page, proof, 'en');
     await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.myWork}`);
 
-    await expect(page.getByText('My assigned milestones, tasks, due dates and evidence requirements', { exact: true })).toBeVisible();
-    await page.locator('.language-toggle').click();
+    await expect(page.getByText('My governed work', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'AR', exact: true }).click();
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(page.getByText(expectedArabicHeadings.myWork, { exact: true })).toBeVisible();
     expect(new URL(page.url()).searchParams.get('page')).toBe(PAGE_LOCATION_REGISTRY.myWork);
 
-    await page.locator('.language-toggle').click();
+    await page.getByRole('button', { name: 'EN', exact: true }).click();
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
-    await expect(page.getByText('My assigned milestones, tasks, due dates and evidence requirements', { exact: true })).toBeVisible();
+    await expect(page.getByText('My governed work', { exact: true })).toBeVisible();
     expect(new URL(page.url()).searchParams.get('page')).toBe(PAGE_LOCATION_REGISTRY.myWork);
     expect(proof.mutationRequests).toEqual([]);
   });
 
-  test('keeps every Employee-openable work, OVR, approval, and evidence detail surface Arabic', async ({ page }) => {
+  test('keeps every Employee-openable work, OVR, approval, and evidence surface Arabic', async ({ page }) => {
     const proof: BrowserProof = { actions: [], mutationRequests: [], consoleProblems: [], pageErrors: [], responseErrors: [] };
     await installEmployeeMocks(page, proof, 'ar', true);
     await page.setViewportSize({ width: 1366, height: 768 });
 
     await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.myWork}`);
-    await page.getByRole('button', { name: 'الحالة', exact: true }).click();
+    await page.getByRole('button', { name: 'متأخرة', exact: true }).click();
+    await expect(page.getByText('مهمة مراجعة عربية', { exact: true })).toBeVisible();
     expect(await visibleUnapprovedEnglish(page)).toEqual([]);
-    await page.getByRole('button', { name: 'إغلاق', exact: true }).click();
-    await page.getByRole('button', { name: 'الدليل', exact: true }).click();
+    await page.getByRole('button', { name: 'فتح المهمة', exact: true }).click();
+    await expect(page.getByText(expectedArabicHeadings.projects, { exact: true })).toBeVisible();
     expect(await visibleUnapprovedEnglish(page)).toEqual([]);
-    await page.getByRole('button', { name: 'إغلاق', exact: true }).click();
-    await page.getByRole('button', { name: 'الموافقة', exact: true }).click();
-    expect(await visibleUnapprovedEnglish(page)).toEqual([]);
-    await page.getByRole('button', { name: 'إغلاق', exact: true }).click();
 
     await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.ovr}`);
     await page.getByRole('button', { name: /بلاغ OVR جديد/ }).click();
@@ -480,29 +481,16 @@ test.describe('Patch 83U Phase 1 Employee Arabic localization', () => {
 
     await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.approvals}`);
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByRole('button', { name: 'اعتماد مهمة عربية', exact: true }).click();
-    const approvalDetail = page.getByRole('heading', { name: 'تفاصيل الموافقة المحددة', exact: true });
-    await expect(approvalDetail).toBeVisible();
+    await expect(page.getByText('لا توجد اعتمادات ضمن النطاق', { exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
     expect(await visibleUnapprovedEnglish(page)).toEqual([]);
-
-    await page.getByRole('button', { name: 'موافقة', exact: true }).click();
-    const approvalDialog = page.getByRole('dialog');
-    await expect(approvalDialog).toBeVisible();
-    const approvalBox = await approvalDialog.boundingBox();
-    expect(approvalBox).not.toBeNull();
-    expect(approvalBox!.x).toBeGreaterThanOrEqual(-1);
-    expect(approvalBox!.x + approvalBox!.width).toBeLessThanOrEqual(391);
-    expect(approvalBox!.y + approvalBox!.height).toBeLessThanOrEqual(845);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
-    expect(await visibleUnapprovedEnglish(page)).toEqual([]);
-    await page.getByRole('button', { name: 'إلغاء', exact: true }).click();
 
     await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.evidence}`);
-    await page.getByRole('button', { name: 'دليل اختبار عربي', exact: true }).click();
-    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.getByRole('row', { name: /دليل اختبار عربي/ }).click();
+    const evidenceDetail = page.getByTestId('ui6-evidence-detail');
+    await expect(evidenceDetail).toBeVisible();
     expect(await visibleUnapprovedEnglish(page)).toEqual([]);
-    await page.getByRole('button', { name: 'إغلاق', exact: true }).click();
+    await evidenceDetail.getByRole('button', { name: 'مستودع الأدلة', exact: true }).click();
 
     expect(proof.mutationRequests).toEqual([]);
     expect(proof.consoleProblems).toEqual([]);
@@ -528,22 +516,24 @@ test.describe('Patch 83U Phase 1 Employee Arabic localization', () => {
     await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.myWork}`);
 
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-    await expect(page.getByText('تم قبول الإسناد', { exact: true })).toBeVisible();
+    await expect(page.getByText('قيد التنفيذ', { exact: true })).toBeVisible();
     await expect(page.getByText('مهمة مراجعة عربية', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'فتح المهمة', exact: true })).toBeVisible();
     await expect(page.locator('body')).not.toContainText('legacy_unverified');
     await expect(page.locator('body')).not.toContainText('corrective_action_in_progress');
 
-    const theme = page.getByLabel('مظهر الواجهة');
-    await theme.selectOption('dark');
+    await page.evaluate(() => localStorage.setItem('grc-theme', 'dark'));
+    await page.reload();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     const evidenceDir = process.env.F1R2_EVIDENCE_DIR;
     if (evidenceDir) await page.screenshot({ path: join(evidenceDir, 'f1r2-my-work-mobile-ar-dark.png'), fullPage: true });
 
-    await theme.selectOption('light');
+    await page.evaluate(() => localStorage.setItem('grc-theme', 'light'));
+    await page.reload();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
     if (evidenceDir) await page.screenshot({ path: join(evidenceDir, 'f1r2-my-work-mobile-ar-light.png'), fullPage: true });
 
-    await theme.selectOption('system');
+    await page.evaluate(() => localStorage.setItem('grc-theme', 'system'));
     expect(proof.mutationRequests).toEqual([]);
     expect(proof.pageErrors).toEqual([]);
     expect(proof.responseErrors).toEqual([]);
@@ -554,11 +544,15 @@ test.describe('Patch 83U Phase 1 Employee Arabic localization', () => {
     await installEmployeeMocks(page, proof, 'en', false, 'pending');
 
     await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.myWork}`);
+    await page.getByRole('button', { name: 'My Pending', exact: true }).click();
     await expect(page.getByText('Pending governed project', { exact: true }).first()).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Respond', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Respond to assignment', exact: true })).toBeVisible();
 
     await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.projects}`);
-    await page.getByRole('button', { name: /Open control file/ }).click();
+    await page.getByRole('button', { name: /Pending governed project/ }).first().click();
+    const projectDetail = page.getByTestId('ui6-project-detail');
+    await expect(projectDetail).toBeVisible();
+    await projectDetail.getByRole('button', { name: 'Open governed controls', exact: true }).click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
     await expect(dialog.getByText('Project controls', { exact: true })).toBeVisible();

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useI18n } from '../i18n/I18nContext';
+import { LoadingState, SystemState } from './ui/SystemState';
 
 interface DataStateProps {
   loading?: boolean;
@@ -21,15 +22,16 @@ export function DataState({
   children,
 }: DataStateProps) {
   const { t } = useI18n();
-  if (loading) return <div className="panel muted-panel">{t('dataState.loading')}</div>;
-  if (error) return <div className="panel error-panel">{error}</div>;
+  if (loading) return <LoadingState label={t('dataState.loading', 'Loading data')} />;
+  if (error) return <SystemState variant="error" title={t('dataState.errorTitle', 'Something went wrong')} message={error} />;
   if (empty) {
     return (
-      <div className="panel muted-panel professional-empty-state">
-        <strong>{emptyTitle ?? t('dataState.emptyTitle')}</strong>
-        <p>{emptyMessage ?? t('dataState.emptyMessage')}</p>
-        {emptyAction ? <div className="professional-empty-state__action">{emptyAction}</div> : null}
-      </div>
+      <SystemState
+        variant="empty"
+        title={emptyTitle ?? t('dataState.emptyTitle')}
+        message={emptyMessage ?? t('dataState.emptyMessage')}
+        action={emptyAction}
+      />
     );
   }
   return <>{children}</>;

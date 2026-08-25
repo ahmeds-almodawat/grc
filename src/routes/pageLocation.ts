@@ -23,6 +23,7 @@ export type PageKey =
   | "risks"
   | "compliance"
   | "audit"
+  | "capa"
   | "ovr"
   | "ovrRisk"
   | "governance"
@@ -40,6 +41,7 @@ export type PageKey =
   | "commandCenter"
   | "globalSearch"
   | "documents"
+  | "sops"
   | "relationships"
   | "releaseCandidate"
   | "productionRelease"
@@ -105,6 +107,7 @@ export const PAGE_LOCATION_REGISTRY = {
   risks: "risks",
   compliance: "compliance",
   audit: "audit",
+  capa: "capa",
   ovr: "ovr",
   ovrRisk: "ovr-risk",
   governance: "governance",
@@ -122,6 +125,7 @@ export const PAGE_LOCATION_REGISTRY = {
   commandCenter: "command-center",
   globalSearch: "global-search",
   documents: "documents",
+  sops: "sops",
   relationships: "relationships",
   releaseCandidate: "release-candidate",
   productionRelease: "production-release",

@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { X } from 'lucide-react';
 import { useI18n } from '../i18n/I18nContext';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 
@@ -177,7 +178,8 @@ export function Modal({
             disabled={isSubmitting}
             onClick={() => handleRequestClose('close-button')}
           >
-            {resolvedCloseLabel}
+            <X size={18} aria-hidden="true" />
+            <span className="sr-only">{resolvedCloseLabel}</span>
           </button>
         </div>
         <div className="modal-body">{children}</div>

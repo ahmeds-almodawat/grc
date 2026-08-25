@@ -69,11 +69,12 @@ const ProductionHardeningLaunchCenter = lazy(() => import("./pages/ProductionHar
 import { ProductionGoNoGoCenter } from "./pages/ProductionGoNoGoCenter";
 import { Dashboard } from "./pages/Dashboard";
 import { Analytics } from "./pages/Analytics";
-const Projects = lazy(() => import("./pages/Projects").then(module => ({ default: module.Projects })));
+const Projects = lazy(() => import("./pages/ProjectPortfolioCenter").then(module => ({ default: module.ProjectPortfolioCenter })));
 import { Departments } from "./pages/Departments";
 import { Risks } from "./pages/Risks";
 import { Compliance } from "./pages/Compliance";
 import { Audit } from "./pages/Audit";
+import { Capa } from "./pages/Capa";
 const OVR = lazy(() => import("./pages/OVR").then(module => ({ default: module.OVR })));
 import { OvrRiskIndicators } from "./pages/OvrRiskIndicators";
 const AccreditationCenter = lazy(() => import("./pages/AccreditationCenter").then(module => ({ default: module.AccreditationCenter })));
@@ -96,9 +97,11 @@ import { RuntimeWorkflowActionsCenter } from "./pages/RuntimeWorkflowActionsCent
 import { Governance } from "./pages/Governance";
 import { Admin } from "./pages/Admin";
 const UserManagementCenter = lazy(() => import("./pages/UserManagementCenter").then(module => ({ default: module.UserManagementCenter })));
+const AdministrationCenter = lazy(() => import("./pages/AdministrationCenter").then(module => ({ default: module.AdministrationCenter })));
 import { MyWork } from "./pages/MyWork";
 import { Approvals } from "./pages/Approvals";
-const Evidence = lazy(() => import("./pages/Evidence").then(module => ({ default: module.Evidence })));
+import { ReportsAnalyticsCenter } from "./pages/ReportsAnalyticsCenter";
+const Evidence = lazy(() => import("./pages/EvidenceCenter").then(module => ({ default: module.EvidenceCenter })));
 import { Escalations } from "./pages/Escalations";
 import { ImportExport } from "./pages/ImportExport";
 import { AccessControl } from "./pages/AccessControl";
@@ -242,7 +245,7 @@ function DailyOperationsHub({ setPage }: { setPage: (page: PageKey) => void }) {
           label: t("hub.tab.myWork"),
           description: t("hub.tab.myWork.desc"),
           icon: <UserCheck size={17} />,
-          content: <MyWork />,
+          content: <MyWork setPage={setPage} />,
         },
         {
           id: "ovr",
@@ -256,7 +259,7 @@ function DailyOperationsHub({ setPage }: { setPage: (page: PageKey) => void }) {
           label: t("hub.tab.evidence"),
           description: t("hub.tab.evidence.desc"),
           icon: <FileCheck2 size={17} />,
-          content: <Evidence />,
+          content: <Evidence setPage={setPage} />,
         },
         {
           id: "projects",
@@ -291,14 +294,14 @@ function DailyOperationsHub({ setPage }: { setPage: (page: PageKey) => void }) {
           label: t("hub.tab.approvals"),
           description: t("hub.tab.approvals.desc"),
           icon: <ClipboardCheck size={17} />,
-          content: <Approvals />,
+          content: <Approvals setPage={setPage} />,
         },
       ]}
     />
   );
 }
 
-function GrcHub() {
+function GrcHub({ setPage }: { setPage: PageNavigator }) {
   const { t } = useI18n();
   const auth = useAuth();
   const auditorReadOnly =
@@ -336,11 +339,18 @@ function GrcHub() {
       content: <Audit />,
     },
     {
+      id: "capa",
+      label: t("hub.tab.capa", "CAPA"),
+      description: t("hub.tab.capa.desc", "Corrective and preventive action lifecycle"),
+      icon: <ClipboardList size={17} />,
+      content: <Capa />,
+    },
+    {
       id: "governance",
       label: t("hub.tab.governance"),
       description: t("hub.tab.governance.desc"),
       icon: <Landmark size={17} />,
-      content: <Governance />,
+      content: <Governance setPage={setPage} />,
     },
     {
       id: "committee",
@@ -364,7 +374,7 @@ function GrcHub() {
       subtitle={t("hub.grc.subtitle")}
       tabs={
         auditorReadOnly
-          ? tabs.filter((tab) => ["risks", "audit"].includes(tab.id))
+          ? tabs.filter((tab) => ["risks", "audit", "capa"].includes(tab.id))
           : tabs
       }
     />
@@ -494,58 +504,8 @@ function EvidenceDocumentsHub() {
   );
 }
 
-function ReportsHub() {
-  const { t } = useI18n();
-  const auth = useAuth();
-  const readOnlyReporting =
-    auth.roles.some(
-      (role) => role.role === "viewer" || role.role === "auditor",
-    ) &&
-    !auth.roles.some((role) =>
-      [
-        "super_admin",
-        "executive",
-        "governance_admin",
-        "division_head",
-        "department_manager",
-        "compliance_officer",
-      ].includes(role.role),
-    );
-  const tabs = [
-    {
-      id: "executiveTruth",
-      label: t("hub.tab.executiveTruth", "Executive Summary"),
-      description: t("hub.tab.executiveTruth.desc", "Executive Truth Center."),
-      icon: <BarChart3 size={17} />,
-      content: <ExecutiveTruthCenter />,
-    },
-    {
-      id: "reportBuilder",
-      label: t("hub.tab.reportBuilder"),
-      description: t("hub.tab.reportBuilder.desc"),
-      icon: <BookCopy size={17} />,
-      content: <AdvancedReportBuilder />,
-    },
-    {
-      id: "customReports",
-      label: t("hub.tab.customReports"),
-      description: t("hub.tab.customReports.desc"),
-      icon: <ClipboardList size={17} />,
-      content: <CustomReports />,
-    },
-  ];
-  return (
-    <TabbedHub hideTabRail
-      eyebrow={t("hub.reports.eyebrow")}
-      title={t("hub.reports.title")}
-      subtitle={t("hub.reports.subtitle")}
-      tabs={
-        readOnlyReporting
-          ? tabs.filter((tab) => ["customReports"].includes(tab.id))
-          : tabs
-      }
-    />
-  );
+function ReportsHub({ setPage }: { setPage: PageNavigator }) {
+  return <ReportsAnalyticsCenter setPage={setPage} />;
 }
 
 function AdminSystemControls() {
@@ -1285,7 +1245,7 @@ export default function App() {
       case "dailyOperationsHub" as any:
         return <DailyOperationsHub setPage={setPage} />;
       case "grcHub":
-        return <GrcHub />;
+        return <GrcHub setPage={setPage} />;
       case "qualityHub":
         return <QualitySafetyHub />;
       case "accreditationHub" as any:
@@ -1293,9 +1253,9 @@ export default function App() {
       case "evidenceHub" as any:
         return <EvidenceDocumentsHub />;
       case "reportsHub":
-        return <ReportsHub />;
+        return <ReportsHub setPage={setPage} />;
       case "adminHub":
-        return <AdminMaintenanceHub setPage={setPage} />;
+        return <AdministrationCenter setPage={setPage} />;
       case "productionOperatorConsole":
         return <ProductionOperatorConsole setPage={setPage} />;
       case "productionEvidenceClosure":
@@ -1313,7 +1273,7 @@ export default function App() {
       case "analytics":
         return <Analytics />;
       case "myWork":
-        return <MyWork />;
+        return <MyWork setPage={setPage} />;
       case "projects":
         return <Projects setPage={setPage} />;
       case "departments":
@@ -1324,18 +1284,20 @@ export default function App() {
         return <Compliance />;
       case "audit":
         return <Audit />;
+      case "capa":
+        return <Capa />;
       case "ovr":
         return <OVR />;
       case "ovrRisk":
         return <OvrRiskIndicators />;
       case "governance":
-        return <Governance />;
+        return <Governance setPage={setPage} />;
       case "escalations":
         return <Escalations />;
       case "approvals":
-        return <Approvals />;
+        return <Approvals setPage={setPage} />;
       case "evidence":
-        return <Evidence />;
+        return <Evidence setPage={setPage} />;
       case "importExport":
         return <ImportExport />;
       case "accessControl":
@@ -1357,7 +1319,9 @@ export default function App() {
       case "globalSearch":
         return <GlobalSearch />;
       case "documents":
-        return <PolicyDocumentCenter />;
+        return <PolicyDocumentCenter initialTab="policies" setPage={setPage} />;
+      case "sops":
+        return <PolicyDocumentCenter initialTab="sops" setPage={setPage} />;
       case "relationships":
         return <RelationshipMap />;
       case "releaseCandidate":

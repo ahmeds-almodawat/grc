@@ -1,23 +1,16 @@
 {
-  "generated_at": "2026-07-05T13:10:41.738Z",
+  "generated_at": "2026-08-25T00:48:37.314Z",
   "package": {
     "version": "1.0.0",
     "unstable_dependency_count": 0,
     "unstable_dependencies": []
   },
   "migrations": {
-    "migration_count": 113,
-    "latest_migration": "114_patch68_executive_signoff_gateway.sql",
+    "migration_count": 186,
+    "latest_migration": "231_p3_hosted_compatibility_acl_reassertion.sql",
     "prefix_gaps": [
       16,
       83,
-      115,
-      116,
-      117,
-      118,
-      119,
-      120,
-      121,
       122,
       123,
       124,

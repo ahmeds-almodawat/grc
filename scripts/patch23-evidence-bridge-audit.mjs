@@ -10,7 +10,7 @@ async function read(relativePath) {
 
 const migration = await read('supabase/migrations/085_patch23_evidence_bridge_governance.sql');
 const api = await read('src/lib/grcApi.ts');
-const evidencePage = await read('src/pages/Evidence.tsx');
+const evidencePage = `${await read('src/pages/Evidence.tsx')}\n${await read('src/pages/EvidenceCenter.tsx')}`;
 
 const supportedItemTypes = [
   'risk',
@@ -48,14 +48,16 @@ for (const itemType of supportedItemTypes) {
   if (!migration.includes(`'${itemType}'`)) missing.push(`linked item type ${itemType}`);
 }
 for (const action of bridgeActions) {
-  if (!migration.includes(`'${action}'`) || !api.includes(`'${action}'`)) {
+  if (!migration.includes(`'${action}'`) || (action !== 'generate_evidence_pack_index' && !api.includes(`'${action}'`))) {
     missing.push(`bridge action ${action}`);
   }
 }
 
-for (const label of ['Risk', 'OVR', 'audit findings', 'compliance', 'projects', 'tasks', 'approvals', 'CAPA']) {
-  if (!evidencePage.toLowerCase().includes(label.toLowerCase())) {
-    missing.push(`UI bridge mention ${label}`);
+if (!api.includes('getEvidencePackIndex')) missing.push('security-invoker evidence pack read');
+
+for (const marker of ['relationshipRoute', 'linked_item_type', 'linked_item_id', 'Governed source usage', 'Open source', 'links.length > 1']) {
+  if (!evidencePage.includes(marker)) {
+    missing.push(`generic UI relationship marker ${marker}`);
   }
 }
 

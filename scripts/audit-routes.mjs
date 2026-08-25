@@ -1,29 +1,120 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import ts from 'typescript';
 
-const app = readFileSync('src/App.tsx', 'utf8');
-const layout = readFileSync('src/components/Layout.tsx', 'utf8');
-const routeMatches = [...layout.matchAll(/\| '([^']+)'/g)].map(match => match[1]);
-const navMatches = [...layout.matchAll(/key: '([^']+)'/g)].map(match => match[1]);
-const switchMatches = [...app.matchAll(/case '([^']+)'/g)].map(match => match[1]);
+const REPORT_PATH = 'release/audits/route-audit.json';
 
-const routeSet = new Set(routeMatches);
-const switchSet = new Set(switchMatches);
+function parseSource(fileName) {
+  return ts.createSourceFile(
+    fileName,
+    readFileSync(fileName, 'utf8'),
+    ts.ScriptTarget.Latest,
+    true,
+    fileName.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
+}
+
+function unwrapExpression(node) {
+  let current = node;
+  while (
+    ts.isAsExpression(current)
+    || ts.isSatisfiesExpression(current)
+    || ts.isParenthesizedExpression(current)
+    || ts.isTypeAssertionExpression(current)
+  ) {
+    current = current.expression;
+  }
+  return current;
+}
+
+function stringValue(node) {
+  const value = unwrapExpression(node);
+  return ts.isStringLiteralLike(value) ? value.text : null;
+}
+
+function registryEntries(sourceFile) {
+  let entries = [];
+  sourceFile.forEachChild(node => {
+    if (!ts.isVariableStatement(node)) return;
+    for (const declaration of node.declarationList.declarations) {
+      if (!ts.isIdentifier(declaration.name) || declaration.name.text !== 'PAGE_LOCATION_REGISTRY' || !declaration.initializer) continue;
+      const initializer = unwrapExpression(declaration.initializer);
+      if (!ts.isObjectLiteralExpression(initializer)) continue;
+      entries = initializer.properties.flatMap(property => {
+        if (!ts.isPropertyAssignment(property)) return [];
+        const key = ts.isIdentifier(property.name) || ts.isStringLiteralLike(property.name) ? property.name.text : null;
+        const value = stringValue(property.initializer);
+        return key && value ? [[key, value]] : [];
+      });
+    }
+  });
+  return entries;
+}
+
+function switchCases(sourceFile) {
+  const cases = [];
+  const visit = node => {
+    if (ts.isCaseClause(node)) {
+      const value = stringValue(node.expression);
+      if (value) cases.push(value);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return cases;
+}
+
+function navigationKeys(sourceFile) {
+  const keys = [];
+  const visit = node => {
+    if (ts.isPropertyAssignment(node)) {
+      const name = ts.isIdentifier(node.name) || ts.isStringLiteralLike(node.name) ? node.name.text : null;
+      if (name === 'key') {
+        const value = stringValue(node.initializer);
+        if (value) keys.push(value);
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return keys;
+}
+
+const routeEntries = registryEntries(parseSource('src/routes/pageLocation.ts'));
+const routeSet = new Set(routeEntries.map(([key]) => key));
+const switchSet = new Set(switchCases(parseSource('src/App.tsx')));
+const navSet = new Set(navigationKeys(parseSource('src/components/Layout.tsx')));
+const locationOwners = new Map();
+
+for (const [key, location] of routeEntries) {
+  locationOwners.set(location, [...(locationOwners.get(location) ?? []), key]);
+}
+
 const missingSwitch = [...routeSet].filter(key => !switchSet.has(key));
-const navWithoutRoute = navMatches.filter(key => !routeSet.has(key));
+const navWithoutRoute = [...navSet].filter(key => !routeSet.has(key));
 const unusedSwitch = [...switchSet].filter(key => !routeSet.has(key));
-
-const result = {
-  generatedAt: new Date().toISOString(),
+const duplicateLocations = [...locationOwners.entries()]
+  .filter(([, keys]) => keys.length > 1)
+  .map(([location, keys]) => ({ location, keys }));
+const status = missingSwitch.length || navWithoutRoute.length || unusedSwitch.length || duplicateLocations.length ? 'warning' : 'pass';
+const audit = {
   routeCount: routeSet.size,
-  navCount: new Set(navMatches).size,
+  navCount: navSet.size,
   switchCount: switchSet.size,
   missingSwitch,
   navWithoutRoute,
   unusedSwitch,
-  status: missingSwitch.length || navWithoutRoute.length ? 'warning' : 'pass'
+  duplicateLocations,
+  status,
 };
 
+let result = { generatedAt: new Date().toISOString(), ...audit };
+if (existsSync(REPORT_PATH)) {
+  const previous = JSON.parse(readFileSync(REPORT_PATH, 'utf8'));
+  const { generatedAt: _previousGeneratedAt, ...previousAudit } = previous;
+  if (JSON.stringify(previousAudit) === JSON.stringify(audit)) result = previous;
+}
+
 mkdirSync('release/audits', { recursive: true });
-writeFileSync('release/audits/route-audit.json', JSON.stringify(result, null, 2));
+writeFileSync(REPORT_PATH, `${JSON.stringify(result, null, 2)}\n`);
 console.log(JSON.stringify(result, null, 2));
-if (missingSwitch.length || navWithoutRoute.length) process.exitCode = 1;
+if (status !== 'pass') process.exitCode = 1;

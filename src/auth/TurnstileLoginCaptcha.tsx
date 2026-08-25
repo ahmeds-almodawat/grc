@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 const TURNSTILE_SCRIPT_ID = 'grc-login-turnstile-script';
 const TURNSTILE_SCRIPT_URL = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+const TURNSTILE_ERROR_CODE_PATTERN = /^\d{3,6}$/;
 
 type TurnstileWidgetId = string;
 
@@ -9,9 +10,10 @@ interface TurnstileRenderOptions {
   sitekey: string;
   callback: (token: string) => void;
   'expired-callback': () => void;
-  'error-callback': () => void;
+  'error-callback': (errorCode: string | number) => boolean;
   'timeout-callback': () => void;
   language?: string;
+  retry?: 'auto' | 'never';
 }
 
 interface TurnstileApi {
@@ -99,7 +101,7 @@ export interface TurnstileCaptchaProps {
   language: 'en' | 'ar';
   resetVersion: number;
   onToken: (token: string | null) => void;
-  onUnavailable: (message: string) => void;
+  onUnavailable: (message: string | null) => void;
   ariaLabel?: string;
 }
 
@@ -114,11 +116,13 @@ export function TurnstileCaptcha({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<TurnstileWidgetId | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'unavailable'>('loading');
+  const [providerErrorCode, setProviderErrorCode] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
     setStatus('loading');
+    setProviderErrorCode(null);
     // Any widget recreation invalidates the prior token, including a language
     // change. A token from a removed widget must never remain submit-capable.
     onToken(null);
@@ -126,12 +130,17 @@ export function TurnstileCaptcha({
     void loadTurnstile()
       .then((turnstile) => {
         if (!active || !containerRef.current) return;
+        // Set the optimistic render state before calling the provider. Some
+        // Turnstile failures invoke error-callback synchronously from render().
+        setStatus('ready');
         widgetIdRef.current = turnstile.render(containerRef.current, {
           sitekey: siteKey,
           language,
+          retry: 'never',
           callback: (token) => {
             if (!active) return;
             setStatus('ready');
+            setProviderErrorCode(null);
             onToken(token);
           },
           'expired-callback': () => {
@@ -141,11 +150,19 @@ export function TurnstileCaptcha({
             const widgetId = widgetIdRef.current;
             if (widgetId) turnstile.reset(widgetId);
           },
-          'error-callback': () => {
-            if (!active) return;
+          'error-callback': (errorCode) => {
+            if (!active) return true;
+            const normalizedErrorCode = String(errorCode).trim();
+            const safeErrorCode = TURNSTILE_ERROR_CODE_PATTERN.test(normalizedErrorCode)
+              ? normalizedErrorCode
+              : null;
             setStatus('unavailable');
+            setProviderErrorCode(safeErrorCode);
             onToken(null);
-            onUnavailable('The CAPTCHA challenge is unavailable. Authentication remains blocked.');
+            onUnavailable(safeErrorCode
+              ? `The CAPTCHA challenge is unavailable (provider code ${safeErrorCode}). Authentication remains blocked.`
+              : 'The CAPTCHA challenge is unavailable. Authentication remains blocked.');
+            return true;
           },
           'timeout-callback': () => {
             if (!active) return;
@@ -155,7 +172,6 @@ export function TurnstileCaptcha({
             if (widgetId) turnstile.reset(widgetId);
           },
         });
-        setStatus('ready');
       })
       .catch(() => {
         if (!active) return;
@@ -182,6 +198,9 @@ export function TurnstileCaptcha({
 
   const retryProvider = () => {
     onToken(null);
+    onUnavailable(null);
+    setProviderErrorCode(null);
+    setStatus('loading');
     discardFailedTurnstileScript();
     setLoadAttempt((current) => current + 1);
   };
@@ -193,7 +212,9 @@ export function TurnstileCaptcha({
         {status === 'loading'
           ? (language === 'ar' ? 'جارٍ تحميل اختبار CAPTCHA…' : 'Loading CAPTCHA challenge…')
           : status === 'unavailable'
-            ? (language === 'ar' ? 'اختبار CAPTCHA غير متاح.' : 'CAPTCHA challenge unavailable.')
+            ? (language === 'ar'
+              ? `اختبار CAPTCHA غير متاح.${providerErrorCode ? ` (${providerErrorCode})` : ''}`
+              : `CAPTCHA challenge unavailable.${providerErrorCode ? ` (${providerErrorCode})` : ''}`)
             : null}
       </span>
       {status === 'unavailable' ? (

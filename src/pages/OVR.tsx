@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, BookOpenCheck, ClipboardCheck, FilePlus2, GitBranch, Link2, Printer, RefreshCw, Search, ShieldCheck, Trash2, Upload, Workflow } from 'lucide-react';
+import { AlertTriangle, BarChart3, BookOpenCheck, CheckCircle2, ChevronRight, ClipboardCheck, FileBarChart, FileCheck2, FilePlus2, GitBranch, History, LayoutDashboard, Link2, ListChecks, Printer, RefreshCw, Search, ShieldCheck, Target, Trash2, Upload, Workflow } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
 import { EmptySupabaseNotice } from '../components/EmptySupabaseNotice';
@@ -50,6 +50,15 @@ import {
   type F2OvrReviewOutcome,
 } from '../lib/f2OvrGovernanceFeedbackApi';
 import { canManageF2OvrGovernanceFeedback } from '../lib/f2OvrGovernanceFeedbackModel';
+import { GovernanceCriteriaLinkage } from '../components/governance/GovernanceCriteriaLinkage';
+import {
+  resolveGovernanceDocumentVersionCandidates,
+  startGovernanceLinkageReview,
+  suggestGovernanceCriterionLink,
+  type GovernanceCriteriaLink,
+  type GovernanceLinkageReview,
+} from '../lib/governanceCriteriaLinkageApi';
+import { listGovernedPolicies, listGovernedSops } from '../lib/policySopApi';
 
 const occurrenceCategories = [
   'medications',
@@ -69,6 +78,7 @@ const occurrenceCategories = [
 const preOccurrenceFlags = ['bedridden', 'active', 'post_op_procedure', 'intra_procedure', 'alert', 'sedated', 'anesthetized', 'disoriented', 'unconscious'];
 const majorLevels: Array<OvrSeverityLevel | null> = ['level_4', 'sentinel'];
 type OvrDashboardFilter = 'all' | 'open' | 'quality' | 'corrective' | 'sentinel' | 'nearMiss';
+type OvrWorkspaceView = 'dashboard' | 'register' | 'detail' | 'report' | 'investigations' | 'root_cause' | 'actions' | 'reports' | 'analytics' | 'review';
 
 export type OvrAuthoritativeStatePatch = {
   id: string;
@@ -223,6 +233,13 @@ function cleanLabel(value: string) {
   return humanize(value.replaceAll('_', ' '));
 }
 
+function toggleIdentifier(current: Set<string>, id: string) {
+  const next = new Set(current);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  return next;
+}
+
 export function nextStageHint(status: OvrStatus) {
   const order: Partial<Record<OvrStatus, number>> = {
     draft: 0,
@@ -327,6 +344,9 @@ export function OVR() {
   const organizations = useAsyncData(getOrganizations, []);
   const departments = useAsyncData(getDepartments, []);
   const profiles = useAsyncData(getProfiles, []);
+  const governedPolicies = useAsyncData(listGovernedPolicies, []);
+  const governedSops = useAsyncData(listGovernedSops, []);
+  const [workspaceView, setWorkspaceView] = useState<OvrWorkspaceView>('dashboard');
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const isSubmittingOvrRef = useRef(false);
@@ -401,6 +421,14 @@ export function OVR() {
     corrective_action_due_date: ''
   });
   const [form, setForm] = useState({ ...INITIAL_OVR_FORM_STATE });
+  const [reportPolicySearch, setReportPolicySearch] = useState('');
+  const [reportSopSearch, setReportSopSearch] = useState('');
+  const [reportPolicyIds, setReportPolicyIds] = useState<Set<string>>(new Set());
+  const [reportSopIds, setReportSopIds] = useState<Set<string>>(new Set());
+  const [reportGovernanceUncertainty, setReportGovernanceUncertainty] = useState(false);
+  const [governanceReview, setGovernanceReview] = useState<GovernanceLinkageReview | null>(null);
+  const [governanceLinks, setGovernanceLinks] = useState<GovernanceCriteriaLink[]>([]);
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
 
   const organizationId = organizations.data?.[0]?.id || '';
   useEffect(() => {
@@ -459,6 +487,8 @@ export function OVR() {
     && canManageF1OvrGovernedVersionLinks(auth.roles, selectedReport?.organization_id || '');
   const canManageFeedback = Boolean(selectedReport)
     && canManageF2OvrGovernanceFeedback(auth.roles, selectedReport?.organization_id || '');
+  const governanceClosureReady = governanceReview?.review_status === 'completed'
+    && Boolean(governanceReview.review_outcome);
   const filteredLinkableGovernedVersions = useMemo(() => {
     const query = governedVersionSearch.trim().toLowerCase();
     const linkedVersionIds = new Set((governedVersionLinks.data || []).map(link => link.version_id));
@@ -665,18 +695,28 @@ export function OVR() {
 
   const openNewReportForm = () => {
     setForm({ ...INITIAL_OVR_FORM_STATE });
+    setReportPolicyIds(new Set());
+    setReportSopIds(new Set());
+    setReportGovernanceUncertainty(false);
     setMessage(null);
     setShowForm(true);
+    setWorkspaceView('report');
   };
 
   const closeNewReportForm = () => {
     setForm({ ...INITIAL_OVR_FORM_STATE });
+    setReportPolicyIds(new Set());
+    setReportSopIds(new Set());
+    setReportGovernanceUncertainty(false);
     setMessage(null);
     setShowForm(false);
   };
 
   const openReport = (row: OvrReportRow) => {
     setSelectedReport(row);
+    setGovernanceReview(null);
+    setGovernanceLinks([]);
+    setWorkspaceView('detail');
     setWorkflowMessage(null);
     setWorkflowForm({
       supervisor_investigation: row.supervisor_investigation || '',
@@ -690,6 +730,42 @@ export function OVR() {
       confirmed_severity_level: row.severity_level || 'level_1',
       corrective_action_due_date: ''
     });
+  };
+
+  const saveReporterGovernanceSuggestions = async (report: { id: string; occurrence_date: string | null }) => {
+    if (!reportPolicyIds.size && !reportSopIds.size && !reportGovernanceUncertainty) return;
+    const review = await startGovernanceLinkageReview({
+      sourceEntityType: 'ovr',
+      sourceEntityId: report.id,
+      sourceDate: report.occurrence_date || form.occurrence_date || null,
+      reviewRationale: reportGovernanceUncertainty
+        ? 'Reporter suggestions recorded with material uncertainty. Investigator confirmation is required.'
+        : 'Optional reporter suggestions recorded. Investigator confirmation is required.',
+    });
+    const policyChoices = (governedPolicies.data || []).filter((policy) => reportPolicyIds.has(policy.document_id));
+    const sopChoices = (governedSops.data || []).filter((sop) => reportSopIds.has(sop.document_id));
+    for (const choice of [...policyChoices, ...sopChoices]) {
+      const candidates = await resolveGovernanceDocumentVersionCandidates({
+        organizationId,
+        documentId: choice.document_id,
+        sourceDate: report.occurrence_date || form.occurrence_date || null,
+        departmentId: form.department_id || null,
+      });
+      const exact = candidates.find((candidate) => ['exactly_one', 'exactly_one_with_approved_exception'].includes(candidate.resolution_status));
+      const isPolicy = policyChoices.some((policy) => policy.document_id === choice.document_id);
+      await suggestGovernanceCriterionLink({
+        reviewId: review.review_id,
+        targetCriterionType: isPolicy ? 'policy' : 'sop',
+        targetDocumentId: choice.document_id,
+        targetVersionId: exact?.candidate_version_id ?? null,
+        relationshipOrigin: 'reporter_suggested',
+        resolutionMethod: exact?.candidate_version_id ? 'resolver_exact' : 'direct_selection',
+        resolutionDate: report.occurrence_date || form.occurrence_date || null,
+        rationale: reportGovernanceUncertainty
+          ? 'Reporter suggestion with uncertainty; not a confirmed violation or finding.'
+          : 'Reporter suggestion only; investigator determination is required.',
+      });
+    }
   };
 
   const toggleFlag = (flag: string) => {
@@ -730,7 +806,7 @@ export function OVR() {
         workflowQueue.refresh();
         return;
       }
-      await createOvrReport({
+      const createdReport = await createOvrReport({
         organization_id: organizationId,
         logging_number: form.logging_number,
         occurrence_date: form.occurrence_date,
@@ -753,9 +829,19 @@ export function OVR() {
         create_linked_action_plan: form.create_linked_action_plan,
         status
       });
-      setMessage(status === 'submitted' ? t('ovr.submittedMessage') : t('ovr.draftMessage'));
+      let governanceSuggestionWarning = false;
+      try {
+        await saveReporterGovernanceSuggestions(createdReport);
+      } catch {
+        governanceSuggestionWarning = true;
+      }
+      setMessage(`${status === 'submitted' ? t('ovr.submittedMessage') : t('ovr.draftMessage')}${governanceSuggestionWarning ? ` ${t('ovr.governedVersions.warning', 'The OVR was saved, but one or more optional governance suggestions require investigator review.')}` : ''}`);
       setForm({ ...INITIAL_OVR_FORM_STATE });
+      setReportPolicyIds(new Set());
+      setReportSopIds(new Set());
+      setReportGovernanceUncertainty(false);
       setShowForm(false);
+      setWorkspaceView('register');
       reports.refresh();
       summary.refresh();
       workflowSummary.refresh();
@@ -956,9 +1042,37 @@ export function OVR() {
     { key: 'sentinel' as const, label: t('ovr.sentinelEvents'), value: summaryData.sentinel_events, tone: 'danger' as const },
     { key: 'nearMiss' as const, label: t('ovr.nearMiss'), value: summaryData.near_miss_level_1, tone: 'success' as const }
   ] : [];
+  const categoryAnalytics = occurrenceCategories.map(category => ({
+    category,
+    count: effectiveReports.filter(report => report.occurrence_category === category).length,
+  })).filter(item => item.count > 0).sort((left, right) => right.count - left.count);
+  const ovrTabs: Array<{ id: OvrWorkspaceView; label: string; icon: typeof LayoutDashboard }> = [
+    { id: 'dashboard', label: language === 'ar' ? 'لوحة المعلومات' : 'Dashboard', icon: LayoutDashboard },
+    { id: 'register', label: language === 'ar' ? 'سجل البلاغات' : 'OVR Register', icon: ListChecks },
+    { id: 'detail', label: language === 'ar' ? 'تفاصيل البلاغ' : 'OVR Details', icon: ClipboardCheck },
+    { id: 'report', label: language === 'ar' ? 'بلاغ واقعة' : 'Report Incident', icon: FilePlus2 },
+    { id: 'investigations', label: language === 'ar' ? 'التحقيقات' : 'Investigations', icon: Search },
+    { id: 'root_cause', label: language === 'ar' ? 'تحليل السبب الجذري' : 'Root Cause Analysis', icon: Target },
+    { id: 'actions', label: language === 'ar' ? 'الإجراءات' : 'Actions', icon: GitBranch },
+    { id: 'reports', label: language === 'ar' ? 'التقارير' : 'Reports', icon: FileBarChart },
+    { id: 'analytics', label: language === 'ar' ? 'التحليلات' : 'Analytics', icon: BarChart3 },
+    { id: 'review', label: language === 'ar' ? 'المراجعة' : 'Review', icon: ShieldCheck },
+  ];
+  const openWorkspaceView = (view: OvrWorkspaceView) => {
+    if (view === 'report') {
+      if (!showForm) openNewReportForm();
+      else setWorkspaceView('report');
+      return;
+    }
+    if (showForm) closeNewReportForm();
+    if (['detail', 'investigations', 'root_cause', 'actions', 'review'].includes(view) && !selectedReport && effectiveReports[0]) {
+      openReport(effectiveReports[0]);
+    }
+    setWorkspaceView(view);
+  };
 
   return (
-    <section className="page-section">
+    <section className="page-section ui3-module ui5-module ui5-ovr" data-ui5-module="ovr">
       <EmptySupabaseNotice />
       <ModuleHeader
         eyebrow={t('ovr.eyebrow')}
@@ -975,12 +1089,16 @@ export function OVR() {
         ) : null}
       />
 
+      <nav className="ui5-workspace-tabs" aria-label={language === 'ar' ? 'عروض مساحة عمل البلاغات' : 'OVR workspace views'}>
+        {ovrTabs.map(tab => { const Icon = tab.icon; return <button type="button" key={tab.id} aria-current={workspaceView === tab.id ? 'page' : undefined} className={workspaceView === tab.id ? 'active' : ''} onClick={() => openWorkspaceView(tab.id)}><Icon size={15} />{tab.label}</button>; })}
+      </nav>
+
       <div className="notice-banner ovr-confidential">
         <ShieldCheck size={18} />
         <span>{t('ovr.formNotice')}</span>
       </div>
 
-      <DataState
+      {workspaceView === 'dashboard' ? <div className="ui5-screen" data-testid="ui5-ovr-dashboard"><DataState
         loading={summary.loading}
         error={summary.error}
         empty={!summaryData}
@@ -1049,10 +1167,10 @@ export function OVR() {
             </div>
           </div>
         ) : null}
-      </DataState>
+      </DataState></div> : null}
 
-      {showForm ? (
-        <div className="panel ovr-form-panel">
+      {showForm && workspaceView === 'report' ? (
+        <div className="panel ovr-form-panel ui5-screen" data-testid="ui5-ovr-report">
           <div className="panel-header">
             <h4>{t('ovr.newReport')}</h4>
             <p>{t('ovr.workflowText')}</p>
@@ -1116,6 +1234,16 @@ export function OVR() {
             <label>{t('ovr.summaryFacts')}<textarea rows={5} value={form.brief_description} onChange={event => update('brief_description', event.target.value)} /></label>
           </div>
 
+          <section className="ui5-reporter-suggestions" aria-labelledby="ui5-reporter-governance-title">
+            <div className="ui3-section-heading"><div><span>{language === 'ar' ? 'اختياري' : 'Optional'}</span><h2 id="ui5-reporter-governance-title">{language === 'ar' ? 'اقتراحات السياسات وإجراءات التشغيل ذات الصلة' : 'Related Policy and SOP suggestions'}</h2></div><Link2 size={20} /></div>
+            <p>{language === 'ar' ? 'هذه الاقتراحات ليست نتائج أو انتهاكات مؤكدة. يمكن للمحقق تأكيدها أو رفضها أو استبدالها لاحقاً.' : 'Suggestions are not confirmed findings or violations. An investigator may confirm, reject, or supersede them later.'}</p>
+            <div className="ui3-selector-grid">
+              <fieldset className="ui3-document-selector"><legend><BookOpenCheck size={16} />{language === 'ar' ? 'السياسات ذات الصلة' : 'Related Policies'}</legend><label className="ui3-search-input"><Search size={15} /><input value={reportPolicySearch} onChange={event => setReportPolicySearch(event.target.value)} placeholder={language === 'ar' ? 'بحث السياسات' : 'Search Policies'} /></label><div className="ui3-selector-options">{(governedPolicies.data || []).filter(policy => !reportPolicySearch.trim() || `${policy.document_code} ${policy.document_title}`.toLowerCase().includes(reportPolicySearch.trim().toLowerCase())).slice(0, 8).map(policy => <label className="ui5-suggestion-option" key={policy.document_id}><input type="checkbox" checked={reportPolicyIds.has(policy.document_id)} onChange={() => setReportPolicyIds(current => toggleIdentifier(current, policy.document_id))} /><span><strong>{policy.document_code || 'POL'}</strong><small>{policy.document_title}</small></span></label>)}</div></fieldset>
+              <fieldset className="ui3-document-selector"><legend><FileCheck2 size={16} />{language === 'ar' ? 'إجراءات التشغيل ذات الصلة' : 'Related SOPs'}</legend><label className="ui3-search-input"><Search size={15} /><input value={reportSopSearch} onChange={event => setReportSopSearch(event.target.value)} placeholder={language === 'ar' ? 'بحث الإجراءات' : 'Search SOPs'} /></label><div className="ui3-selector-options">{(governedSops.data || []).filter(sop => !reportSopSearch.trim() || `${sop.document_code} ${sop.document_title}`.toLowerCase().includes(reportSopSearch.trim().toLowerCase())).slice(0, 8).map(sop => <label className="ui5-suggestion-option" key={sop.document_id}><input type="checkbox" checked={reportSopIds.has(sop.document_id)} onChange={() => setReportSopIds(current => toggleIdentifier(current, sop.document_id))} /><span><strong>{sop.document_code || 'SOP'}</strong><small>{sop.document_title}</small></span></label>)}</div></fieldset>
+            </div>
+            <label className="ui5-confirm"><input type="checkbox" checked={reportGovernanceUncertainty} onChange={event => setReportGovernanceUncertainty(event.target.checked)} />{language === 'ar' ? 'لست متأكداً من الوثائق الحاكمة المنطبقة' : 'I am uncertain which governed documents apply'}</label>
+          </section>
+
           <label className="check-line">
             <input type="checkbox" checked={form.create_linked_action_plan} onChange={event => update('create_linked_action_plan', event.target.checked)} />
             <span>{t('ovr.createActionPlan')}</span>
@@ -1129,7 +1257,7 @@ export function OVR() {
         </div>
       ) : null}
 
-      <DataState
+      {workspaceView === 'investigations' ? <div className="ui5-screen" data-testid="ui5-ovr-investigations"><DataState
         loading={workflowQueue.loading}
         error={workflowQueue.error}
         empty={!workflowQueue.data?.length}
@@ -1137,9 +1265,9 @@ export function OVR() {
         emptyMessage={t('ovr.workflowEmptyMessage')}
       >
         <WorkflowQueue rows={workflowQueue.data || []} />
-      </DataState>
+      </DataState></div> : null}
 
-      <div className="panel">
+      {workspaceView === 'register' ? <div className="panel ui5-screen" data-testid="ui5-ovr-register">
         <div className="panel-header">
           <h4>{t('ovr.reportList')}</h4>
           <p>{t('ovr.reportListHint')}</p>
@@ -1190,12 +1318,18 @@ export function OVR() {
             </div>
           </div>
         ) : null}
-      </div>
+      </div> : null}
 
-      <Modal size="workspace" title={selectedReport?.ovr_number || selectedReport?.logging_number || t('ovr.detailTitle')} open={Boolean(selectedReport)} onClose={() => setSelectedReport(null)}>
+      {workspaceView === 'reports' ? <div className="ui5-screen" data-testid="ui5-ovr-reports"><div className="ui3-dashboard-grid"><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{language === 'ar' ? 'ملخص محكوم' : 'Governed summary'}</span><h2>{language === 'ar' ? 'تقرير وضع البلاغات' : 'OVR posture report'}</h2></div><FileBarChart size={20} /></div><div className="ui5-rate-grid">{ovrDashboardCards.map(card => <article key={card.key}><span>{card.label}</span><strong>{card.value}</strong></article>)}</div></section><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{language === 'ar' ? 'الضمان' : 'Assurance'}</span><h2>{language === 'ar' ? 'جاهزية دورة العمل' : 'Workflow readiness'}</h2></div><ShieldCheck size={20} /></div><div className="ui3-stat-list"><div><span>{t('ovr.pendingSupervisor')}</span><strong>{workflowSummaryData?.pending_supervisor_review ?? 0}</strong></div><div><span>{t('ovr.pendingQuality')}</span><strong>{workflowSummaryData?.pending_quality_review ?? 0}</strong></div><div><span>{t('ovr.pendingEvidence')}</span><strong>{workflowSummaryData?.pending_evidence_review ?? 0}</strong></div><div><span>{t('ovr.overdueWorkflow')}</span><strong>{workflowSummaryData?.overdue_ovr_workflow_items ?? 0}</strong></div></div></section></div></div> : null}
+
+      {workspaceView === 'analytics' ? <div className="ui5-screen" data-testid="ui5-ovr-analytics"><div className="ui3-dashboard-grid"><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{language === 'ar' ? 'اتجاهات الوقائع' : 'Occurrence trends'}</span><h2>{language === 'ar' ? 'البلاغات حسب الفئة' : 'Reports by category'}</h2></div><BarChart3 size={20} /></div><div className="ui3-bar-list">{categoryAnalytics.slice(0, 8).map(item => <div key={item.category}><span><strong>{t(`ovr.category.${item.category}`, cleanLabel(item.category))}</strong><small>{item.count} {language === 'ar' ? 'بلاغ' : 'reports'}</small></span><div><i style={{ width: `${effectiveReports.length ? Math.round((item.count / effectiveReports.length) * 100) : 0}%` }} /></div><b>{item.count}</b></div>)}</div></section><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{language === 'ar' ? 'إشارات المخاطر' : 'Risk signals'}</span><h2>{language === 'ar' ? 'توزيع الشدة' : 'Severity distribution'}</h2></div><AlertTriangle size={20} /></div><div className="ui5-distribution">{(['level_1', 'level_2', 'level_3', 'level_4', 'sentinel'] as OvrSeverityLevel[]).map(level => { const count = effectiveReports.filter(report => report.severity_level === level).length; return <div key={level}><span><strong>{t(`ovr.severity.${level}`)}</strong><b>{count}</b></span><div><i className={level === 'sentinel' || level === 'level_4' ? 'ui5-status-overdue' : level === 'level_3' ? 'ui5-status-in_progress' : ''} style={{ width: `${effectiveReports.length ? Math.round((count / effectiveReports.length) * 100) : 0}%` }} /></div></div>; })}</div></section></div></div> : null}
+
+      {selectedReport && ['detail', 'investigations', 'root_cause', 'actions', 'review'].includes(workspaceView) ? <section className="ui5-ovr-workspace-detail" data-testid={`ui5-ovr-${workspaceView}`}><header className="ui3-record-header"><div><span className="ui3-eyebrow">{selectedReport.ovr_number || selectedReport.logging_number || t('ovr.detailTitle')}</span><h1>{selectedReport.brief_description}</h1><p>{formatDate(selectedReport.occurrence_date)} · {t(`ovr.category.${selectedReport.occurrence_category}`, cleanLabel(selectedReport.occurrence_category))}</p></div><button type="button" className="ui3-secondary-button" onClick={() => setWorkspaceView('register')}>{language === 'ar' ? 'سجل البلاغات' : 'OVR register'}</button></header>
         {selectedReport ? (
           <div className="ovr-detail">
             <WorkflowSteps status={selectedReport.status} />
+            {workspaceView === 'root_cause' ? <section className="ui3-surface ui5-rca-workspace"><div className="ui3-section-heading"><div><span>{language === 'ar' ? 'تحليل مستقل' : 'Independent analysis'}</span><h2>{language === 'ar' ? 'السبب الجذري والعوامل المساهمة' : 'Root cause and contributing factors'}</h2></div><Target size={20} /></div><p>{language === 'ar' ? 'يظل السبب الجذري منفصلاً عن تصنيف الالتزام وكفاية الوثيقة في مراجعة ربط الحوكمة.' : 'Root cause remains separate from adherence and document-adequacy classifications in the Governance Linkage Review.'}</p><div className="ui5-form-grid"><label>{language === 'ar' ? 'منهجية التحليل' : 'Analysis method'}<select defaultValue="five_whys"><option value="five_whys">5 Whys</option><option value="fishbone">Fishbone</option><option value="timeline">Timeline analysis</option></select></label><label>{language === 'ar' ? 'حالة التحليل' : 'Analysis status'}<select defaultValue={workflowForm.supervisor_investigation ? 'documented' : 'draft'}><option value="draft">Draft</option><option value="documented">Documented</option><option value="validated">Validated</option></select></label><label className="ui5-span-all">{language === 'ar' ? 'تحديد السبب الجذري' : 'Root cause determination'}<textarea value={workflowForm.supervisor_investigation} onChange={event => updateWorkflowForm('supervisor_investigation', event.target.value)} /></label><label className="ui5-span-all">{language === 'ar' ? 'العوامل المساهمة' : 'Contributing factors'}<textarea value={workflowForm.quality_manager_comments} onChange={event => updateWorkflowForm('quality_manager_comments', event.target.value)} /></label></div></section> : null}
+            {workspaceView === 'actions' ? <section className="ui3-surface"><div className="ui3-section-heading"><div><span>{language === 'ar' ? 'معالجة محكومة' : 'Governed response'}</span><h2>{language === 'ar' ? 'الإجراءات التصحيحية والمتابعة' : 'Corrective actions and follow-up'}</h2></div><GitBranch size={20} /></div><div className="ui3-data-grid"><div><span>{language === 'ar' ? 'الإجراء التصحيحي' : 'Corrective action'}</span><strong>{workflowForm.corrective_action || selectedReport.corrective_action || (language === 'ar' ? 'لم يسجل بعد' : 'Not recorded')}</strong></div><div><span>{language === 'ar' ? 'المشروع المرتبط' : 'Linked project'}</span><strong>{selectedReport.linked_project_id || (language === 'ar' ? 'غير مرتبط' : 'Not linked')}</strong></div><div><span>{language === 'ar' ? 'تاريخ الاستحقاق' : 'Due date'}</span><strong>{workflowForm.corrective_action_due_date || '—'}</strong></div><div><span>{language === 'ar' ? 'الأدلة المصرح بها' : 'Authorized evidence'}</span><strong>{printableEvidence.data?.length ?? 0}</strong></div></div></section> : null}
             {workflowMessage ? <div className="notice-banner"><AlertTriangle size={16} />{workflowMessage}</div> : null}
             {majorLevels.includes(workflowForm.confirmed_severity_level) ? (
               <div className="notice-banner danger"><AlertTriangle size={16} />{t('ovr.majorEscalationNotice')}</div>
@@ -1207,64 +1341,22 @@ export function OVR() {
               <div><span>{t('common.status')}</span><strong>{t(`status.${selectedReport.status}`, cleanLabel(selectedReport.status))}</strong></div>
             </div>
 
-            <section className="ovr-governed-versions" aria-labelledby="ovr-governed-versions-title">
-              <div className="split-header">
-                <h4 id="ovr-governed-versions-title"><BookOpenCheck size={18} />{t('ovr.governedVersions.title')}</h4>
-                {canManageGovernedVersions ? (
-                  <button className="ghost-button small" type="button" onClick={openGovernedVersionSelector}>
-                    <Link2 size={16} />{t('ovr.governedVersions.add')}
-                  </button>
-                ) : null}
-              </div>
-              {governedVersionMessage ? <div className="notice-banner">{governedVersionMessage}</div> : null}
-              {governedVersionLinks.loading ? <DataState loading>{null}</DataState> : governedVersionLinks.error ? (
-                <div className="form-error">{governedVersionLinks.error}</div>
-              ) : (governedVersionLinks.data || []).length === 0 ? (
-                <p className="muted-text">{t('ovr.governedVersions.empty')}</p>
-              ) : (
-                <div className="ovr-governed-version-list">
-                  {(governedVersionLinks.data || []).map(link => {
-                    const versionState = link.superseded_by_version_id
-                      ? 'superseded'
-                      : link.is_historical_version
-                        ? 'historical'
-                        : 'current';
-                    return (
-                      <article className="ovr-governed-version-row" key={link.link_id}>
-                        <div className="ovr-governed-version-main">
-                          <span className="status-badge">{link.document_type === 'sop' ? 'SOP' : t('policy.type.policy', 'Policy')}</span>
-                          <div>
-                            <strong>{link.document_code ? `${link.document_code} · ` : ''}{link.document_title}</strong>
-                            <p><b>{t('ovr.governedVersions.exactVersion')}:</b> {link.version_label || `v${link.version_number}`}</p>
-                            <small>
-                              {t('ovr.governedVersions.approved')}: {formatDate(link.approved_at)}
-                              {link.effective_date ? ` · ${t('ovr.governedVersions.effective')}: ${formatDate(link.effective_date)}` : ''}
-                            </small>
-                          </div>
-                        </div>
-                        <div className="ovr-governed-version-actions">
-                          <StatusBadge status={t(`ovr.governedVersions.${versionState}`)} />
-                          {canManageGovernedVersions ? (
-                            <button
-                              className="icon-button"
-                              type="button"
-                              title={t('ovr.governedVersions.remove')}
-                              aria-label={t('ovr.governedVersions.remove')}
-                              onClick={() => {
-                                setGovernedVersionToRemove(link);
-                                setGovernedVersionRemoveReason('');
-                              }}
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          ) : null}
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
+            <GovernanceCriteriaLinkage
+              source={{
+                type: 'ovr',
+                id: selectedReport.id,
+                organizationId: selectedReport.organization_id,
+                sourceDate: selectedReport.occurrence_date,
+                departmentId: selectedReport.department_id,
+              }}
+              mode="ovr"
+              title={language === 'ar' ? 'المعايير وأساس الحوكمة' : 'Criteria and Governance Basis'}
+              canSuggest={isQuality || isManagerFor(selectedReport)}
+              canReview={isQuality}
+              onReviewChange={setGovernanceReview}
+              onLinksChange={setGovernanceLinks}
+            />
+            {(governedVersionLinks.data || []).length ? <details className="ui5-legacy-linkage"><summary><History size={15} />{t('ovr.governedVersions.title')} · {language === 'ar' ? 'تسلسل F1 للقراءة فقط' : 'read-only F1 lineage'}</summary><div>{(governedVersionLinks.data || []).map(link => { const versionState = link.superseded_by_version_id ? 'superseded' : link.is_historical_version ? 'historical' : 'current'; return <article key={link.link_id}><span className="ui3-pill">{link.document_type === 'sop' ? 'SOP' : t('policy.type.policy', 'Policy')}</span><div><strong>{link.document_code ? `${link.document_code} · ` : ''}{link.document_title}</strong><small>{t('ovr.governedVersions.exactVersion')}: {link.version_label || `v${link.version_number}`} · {t(`ovr.governedVersions.${versionState}`)}</small></div></article>; })}</div></details> : null}
 
             <section className="ovr-governance-feedback" aria-labelledby="ovr-governance-feedback-title">
               <div className="split-header">
@@ -1410,7 +1502,7 @@ export function OVR() {
                 className="ghost-button"
                 type="button"
                 disabled={printableEvidence.loading || Boolean(printableEvidence.error)}
-                onClick={() => window.print()}
+                onClick={() => setShowPrintPreview(true)}
               >
                 <Printer size={16} />{t('ovr.print.action', 'Print OVR')}
               </button>
@@ -1437,7 +1529,7 @@ export function OVR() {
               ) : null}
               {selectedReport.status === 'quality_final_review' && isReporterFor(selectedReport) ? (
                 <>
-                  <button className="primary-button" disabled={workflowSaving} onClick={() => runWorkflowAction('closed')}>{t('ovr.acceptVerdict')}</button>
+                  <button className="primary-button" disabled={workflowSaving || !governanceClosureReady} title={!governanceClosureReady ? (language === 'ar' ? 'يجب إكمال مراجعة ربط الحوكمة قبل الإغلاق.' : 'Governance linkage review must be completed before closure.') : undefined} onClick={() => runWorkflowAction('closed')}>{t('ovr.acceptVerdict')}</button>
                   <button className="ghost-button" disabled={workflowSaving} onClick={() => runWorkflowAction('disputed')}>{t('ovr.disputeVerdict')}</button>
                 </>
               ) : null}
@@ -1459,6 +1551,7 @@ export function OVR() {
                 <button className="ghost-button" disabled={workflowSaving || Boolean(selectedReport.linked_project_id)} onClick={createLinkedProject}><GitBranch size={16} />{selectedReport.linked_project_id ? t('ovr.projectAlreadyLinked') : t('ovr.createLinkedProject')}</button>
               ) : null}
             </div>
+            <div className={`ui3-gate-summary ${governanceClosureReady ? '' : 'ui3-gate-summary--blocked'}`}>{governanceClosureReady ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}<div><strong>{governanceClosureReady ? (language === 'ar' ? 'مراجعة الحوكمة مكتملة' : 'Governance review complete') : (language === 'ar' ? 'الإغلاق محظور' : 'Closure blocked')}</strong><p>{governanceClosureReady ? `${governanceLinks.length} ${language === 'ar' ? 'علاقة محكومة محفوظة' : 'governed relationships retained'}` : (language === 'ar' ? 'أكمل مراجعة ربط الحوكمة بنتيجة صريحة، بما في ذلك نتيجة عدم انطباق أي وثيقة عند الاقتضاء.' : 'Complete the Governance Linkage Review with an explicit outcome, including a valid no-document outcome when applicable.')}</p></div></div>
             {printableEvidence.error ? (
               <div className="form-error">
                 {t('ovr.print.evidenceUnavailable', 'Authorized evidence could not be loaded, so printing is temporarily unavailable.')}
@@ -1467,6 +1560,10 @@ export function OVR() {
             <OvrPrintableReport report={selectedReport} evidence={printableEvidence.data || []} />
           </div>
         ) : null}
+      </section> : null}
+
+      <Modal size="workspace" title={t('ovr.print.action', 'Print OVR')} open={showPrintPreview} onClose={() => setShowPrintPreview(false)}>
+        {selectedReport ? <><div className="form-actions"><button type="button" className="primary-button" onClick={() => window.print()}><Printer size={16} />{t('ovr.print.action', 'Print OVR')}</button></div><OvrPrintableReport report={selectedReport} evidence={printableEvidence.data || []} /></> : null}
       </Modal>
 
       <Modal

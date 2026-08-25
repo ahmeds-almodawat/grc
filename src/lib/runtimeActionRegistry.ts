@@ -27,7 +27,44 @@ export interface RuntimeActionRegistryEntry {
 
 const pending = 'pending_review' as const;
 
+const ui4AuditCapaActions = [
+  'ui4_record_audit_criteria_dispute',
+  'ui4_create_capa',
+  'ui4_assign_capa',
+  'ui4_submit_capa_plan',
+  'ui4_approve_capa_plan',
+  'ui4_reject_capa_plan',
+  'ui4_create_capa_action_item',
+  'ui4_update_capa_action_item',
+  'ui4_submit_capa_completion',
+  'ui4_validate_capa_completion',
+  'ui4_reject_capa_completion',
+  'ui4_start_capa_effectiveness',
+  'ui4_complete_capa_effectiveness',
+  'ui4_request_capa_closure',
+  'ui4_approve_capa_closure',
+  'ui4_reject_capa_closure',
+  'ui4_reopen_capa',
+  'ui4_refresh_capa_inheritance',
+] as const;
+
+const ui4RuntimeActionEntries: RuntimeActionRegistryEntry[] = ui4AuditCapaActions.map((actionName) => ({
+  actionName,
+  actionTransport: 'authenticated_edge_bridge',
+  moduleName: actionName.includes('audit') ? 'Audit' : 'CAPA',
+  classification: 'workflow_runtime',
+  riskLevel: actionName.includes('approve') || actionName.includes('reject') || actionName.includes('closure') ? 'high' : 'medium',
+  requiredAccessLevel: actionName.includes('audit')
+    ? 'assigned auditee for disputes; assigned auditor or independent governance reviewer for criteria'
+    : 'CAPA owner/assignee or authorized governance reviewer according to the Patch 28 transition',
+  ownerRole: actionName.includes('audit') ? 'Audit Manager' : 'CAPA Governance Owner',
+  reviewStatus: pending,
+  directBrowserException: false,
+  notes: 'UI-4 workflow action uses the authenticated Edge bridge and service-role-only database contract.',
+}));
+
 export const runtimeActionRegistry: RuntimeActionRegistryEntry[] = [
+  ...ui4RuntimeActionEntries,
   { actionName: 'evaluate_evidence_gate', actionTransport: 'authenticated_edge_bridge', moduleName: 'Accreditation Assurance', classification: 'accreditation_assurance', riskLevel: 'high', requiredAccessLevel: 'governance_admin or compliance_officer', ownerRole: 'Quality Governance Lead', reviewStatus: pending, directBrowserException: false, notes: 'Evaluates evidence gates through the privileged action bridge.' },
   { actionName: 'evaluate_evidence_gate_for_entity', actionTransport: 'authenticated_edge_bridge', moduleName: 'Accreditation Assurance', classification: 'accreditation_assurance', riskLevel: 'high', requiredAccessLevel: 'governance_admin or compliance_officer', ownerRole: 'Quality Governance Lead', reviewStatus: pending, directBrowserException: false, notes: 'Entity wrapper for evidence gate evaluation through the privileged action bridge.' },
   { actionName: 'request_evidence_gate_waiver', actionTransport: 'authenticated_edge_bridge', moduleName: 'Accreditation Assurance', classification: 'accreditation_assurance', riskLevel: 'high', requiredAccessLevel: 'governance_admin or compliance_officer', ownerRole: 'Quality Governance Lead', reviewStatus: pending, directBrowserException: false, notes: 'Creates a governed evidence gate waiver request with audit trail.' },
@@ -98,6 +135,18 @@ export const runtimeActionRegistry: RuntimeActionRegistryEntry[] = [
   { actionName: 'v99_create_scenario', actionTransport: 'authenticated_edge_bridge', moduleName: 'Scenario Lab', classification: 'scenario_lab', riskLevel: 'high', requiredAccessLevel: 'super_admin or governance_admin in UAT mode', ownerRole: 'UAT Scenario Owner', reviewStatus: pending, directBrowserException: false, notes: 'Creates controlled scenario records for UAT.' },
   { actionName: 'v99_cleanup_scenarios', actionTransport: 'authenticated_edge_bridge', moduleName: 'Scenario Lab', classification: 'scenario_lab', riskLevel: 'critical', requiredAccessLevel: 'super_admin or governance_admin in UAT mode', ownerRole: 'UAT Scenario Owner', reviewStatus: pending, directBrowserException: false, notes: 'Cleans up controlled scenario records; destructive path must remain bridge-gated.' },
   { actionName: 'v99_scenario_status', actionTransport: 'authenticated_edge_bridge', moduleName: 'Scenario Lab', classification: 'scenario_lab', riskLevel: 'medium', requiredAccessLevel: 'super_admin or governance_admin in UAT mode', ownerRole: 'UAT Scenario Owner', reviewStatus: pending, directBrowserException: false, notes: 'Reads scenario execution status through bridge.' },
+  { actionName: 'create_governed_policy_draft', actionTransport: 'authenticated_edge_bridge', moduleName: 'Policy and SOP Governance', classification: 'workflow_runtime', riskLevel: 'high', requiredAccessLevel: 'active governed document author', ownerRole: 'Document Governance Owner', reviewStatus: pending, directBrowserException: false, notes: 'Creates a governed policy draft with server-derived actor and organization identity.' },
+  { actionName: 'save_governed_policy_draft', actionTransport: 'authenticated_edge_bridge', moduleName: 'Policy and SOP Governance', classification: 'workflow_runtime', riskLevel: 'high', requiredAccessLevel: 'authorized governed document editor', ownerRole: 'Document Governance Owner', reviewStatus: pending, directBrowserException: false, notes: 'Saves governed policy draft content through the authenticated bridge.' },
+  { actionName: 'create_governed_sop_draft', actionTransport: 'authenticated_edge_bridge', moduleName: 'Policy and SOP Governance', classification: 'workflow_runtime', riskLevel: 'high', requiredAccessLevel: 'active governed document author', ownerRole: 'Document Governance Owner', reviewStatus: pending, directBrowserException: false, notes: 'Creates a governed SOP draft with validated nested procedure content.' },
+  { actionName: 'save_governed_sop_draft', actionTransport: 'authenticated_edge_bridge', moduleName: 'Policy and SOP Governance', classification: 'workflow_runtime', riskLevel: 'high', requiredAccessLevel: 'authorized governed document editor', ownerRole: 'Document Governance Owner', reviewStatus: pending, directBrowserException: false, notes: 'Saves governed SOP draft content through the authenticated bridge.' },
+  { actionName: 'start_governed_document_revision', actionTransport: 'authenticated_edge_bridge', moduleName: 'Policy and SOP Governance', classification: 'workflow_runtime', riskLevel: 'high', requiredAccessLevel: 'authorized document owner or governance authority', ownerRole: 'Document Governance Owner', reviewStatus: pending, directBrowserException: false, notes: 'Starts an immutable governed document revision from an approved source version.' },
+  { actionName: 'submit_governed_document_for_review', actionTransport: 'authenticated_edge_bridge', moduleName: 'Policy and SOP Governance', classification: 'workflow_runtime', riskLevel: 'high', requiredAccessLevel: 'authorized governed document editor', ownerRole: 'Document Governance Owner', reviewStatus: pending, directBrowserException: false, notes: 'Submits a governed document version into its approval workflow.' },
+  { actionName: 'v14e1r_finalize_governed_document_approval', actionTransport: 'authenticated_edge_bridge', moduleName: 'Policy and SOP Governance', classification: 'workflow_runtime', riskLevel: 'critical', requiredAccessLevel: 'final approver, recorded final decision actor, super_admin, or governance_admin', ownerRole: 'Document Governance Owner', reviewStatus: pending, directBrowserException: false, notes: 'Locks and finalizes a document version only after every governed approval stage is complete.' },
+  { actionName: 'activate_governed_document_version', actionTransport: 'authenticated_edge_bridge', moduleName: 'Policy and SOP Governance', classification: 'workflow_runtime', riskLevel: 'critical', requiredAccessLevel: 'authorized governance authority', ownerRole: 'Document Governance Owner', reviewStatus: pending, directBrowserException: false, notes: 'Activates an approved document version and supersedes the prior active version.' },
+  { actionName: 'retire_governed_document', actionTransport: 'authenticated_edge_bridge', moduleName: 'Policy and SOP Governance', classification: 'workflow_runtime', riskLevel: 'critical', requiredAccessLevel: 'authorized governance authority', ownerRole: 'Document Governance Owner', reviewStatus: pending, directBrowserException: false, notes: 'Retires a governed document while preserving its version history.' },
+  { actionName: 'request_policy_sop_exception', actionTransport: 'authenticated_edge_bridge', moduleName: 'Policy and SOP Governance', classification: 'workflow_runtime', riskLevel: 'high', requiredAccessLevel: 'authorized exception requester', ownerRole: 'Document Governance Owner', reviewStatus: pending, directBrowserException: false, notes: 'Creates a governed Policy or SOP exception request and approval record.' },
+  { actionName: 'trigger_governed_document_review', actionTransport: 'authenticated_edge_bridge', moduleName: 'Policy and SOP Governance', classification: 'workflow_runtime', riskLevel: 'high', requiredAccessLevel: 'authorized governance reviewer', ownerRole: 'Document Governance Owner', reviewStatus: pending, directBrowserException: false, notes: 'Opens a governed review trigger linked to its source context.' },
+  { actionName: 'complete_governed_document_review', actionTransport: 'authenticated_edge_bridge', moduleName: 'Policy and SOP Governance', classification: 'workflow_runtime', riskLevel: 'high', requiredAccessLevel: 'authorized governance reviewer', ownerRole: 'Document Governance Owner', reviewStatus: pending, directBrowserException: false, notes: 'Completes a governed document review and applies the selected lifecycle outcome.' },
   { actionName: 'create_training_program', actionTransport: 'authenticated_edge_bridge', moduleName: 'Training Governance', classification: 'workflow_runtime', riskLevel: 'high', requiredAccessLevel: 'training_admin or governance_admin', ownerRole: 'Training Governance Owner', reviewStatus: pending, directBrowserException: false, notes: 'Creates training program.' },
   { actionName: 'assign_training_program_to_user', actionTransport: 'authenticated_edge_bridge', moduleName: 'Training Governance', classification: 'workflow_runtime', riskLevel: 'high', requiredAccessLevel: 'training_admin or governance_admin', ownerRole: 'Training Governance Owner', reviewStatus: pending, directBrowserException: false, notes: 'Assigns training program to user.' },
   { actionName: 'assign_training_program_to_department', actionTransport: 'authenticated_edge_bridge', moduleName: 'Training Governance', classification: 'workflow_runtime', riskLevel: 'high', requiredAccessLevel: 'training_admin or governance_admin', ownerRole: 'Training Governance Owner', reviewStatus: pending, directBrowserException: false, notes: 'Assigns training program to department.' },

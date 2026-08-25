@@ -191,10 +191,10 @@ describe('Patch 83U authenticated surface release proof', () => {
     )).toBe(false);
   });
 
-  it('fails closed when future migration 212 introduces an unaudited SECURITY DEFINER routine', () => {
+  it('fails closed when future migration 232 introduces an unaudited SECURITY DEFINER routine', () => {
     const report = analyzePatch83uAuthSurface({
       migrationFiles: [{
-        path: 'supabase/migrations/212_future_fixture.sql',
+        path: 'supabase/migrations/232_future_fixture.sql',
         text: `
           create function public.future_browser_helper()
           returns integer language sql security definer as $$ select 1 $$;
@@ -220,10 +220,10 @@ describe('Patch 83U authenticated surface release proof', () => {
     expect(report.status).toBe('fail');
   });
 
-  it('fails closed when future migration 212 makes a SECURITY DEFINER routine browser executable', () => {
+  it('fails closed when future migration 232 makes a SECURITY DEFINER routine browser executable', () => {
     const report = analyzePatch83uAuthSurface({
       migrationFiles: [{
-        path: 'supabase/migrations/212_browser_fixture.sql',
+        path: 'supabase/migrations/232_browser_fixture.sql',
         text: `
           create function public.future_browser_granted_helper()
           returns integer language sql security definer as $$ select 1 $$;
@@ -270,9 +270,9 @@ describe('Patch 83U authenticated surface release proof', () => {
     )).toBe(true);
     expect(report.search_grc_global.disposition).toBe('authenticated_edge_bridge_with_caller_jwt_rls');
     expect(report.summary.retained_live_broad_security_definer_count).toBe(2);
-    expect(report.summary.target_broad_security_definer_count).toBe(4);
-    expect(report.summary.reviewed_patch83u_migration_ceiling).toBe(211);
-    expect(report.summary.reviewed_restricted_security_definer_count).toBe(105);
+    expect(report.summary.target_broad_security_definer_count).toBe(6);
+    expect(report.summary.reviewed_patch83u_migration_ceiling).toBe(231);
+    expect(report.summary.reviewed_restricted_security_definer_count).toBe(127);
     expect(report.acl_reachable_security_definer_rpcs.reviewed_restricted_security_definers)
       .toEqual(expect.arrayContaining([
         expect.objectContaining({
@@ -296,6 +296,16 @@ describe('Patch 83U authenticated surface release proof', () => {
         expect.objectContaining({
           name: 'get_f1_ovr_governed_version_link_capabilities',
           source: 'migration210_service_role_acl_review',
+          disposition: 'service_role_only',
+        }),
+        expect.objectContaining({
+          name: 'resolve_governance_document_version_candidates',
+          source: 'migration212_service_role_acl_review',
+          disposition: 'service_role_only',
+        }),
+        expect.objectContaining({
+          name: 'ui3_risk_compliance_workflow_bridge',
+          source: 'migration213_service_role_acl_review',
           disposition: 'service_role_only',
         }),
         expect.objectContaining({
@@ -380,13 +390,22 @@ describe('Patch 83U authenticated surface release proof', () => {
         }),
         ...[
           'validate_governed_doc_ver_link_tenancy',
-          'guard_staged_approval_mutations',
           'enforce_policy_sop_version_immutability',
         ].map((name) => expect.objectContaining({
           name,
           source: 'migration206_service_role_acl_review',
           disposition: 'owner_only',
         })),
+        expect.objectContaining({
+          name: 'guard_staged_approval_mutations',
+          source: 'migration228_service_role_acl_review',
+          disposition: 'owner_only',
+        }),
+        expect.objectContaining({
+          name: 'patch27_write_authority_event',
+          source: 'migration227_service_role_acl_review',
+          disposition: 'service_role_only',
+        }),
         ...[
           'f1r2_actor_has_ovr_evidence_entitlement',
           'f1r2_actor_has_work_evidence_entitlement',

@@ -1,8 +1,8 @@
 {
   "summary": {
-    "generated_at": "2026-08-16T18:53:05.314Z",
-    "migration_files_scanned": 153,
-    "security_definer_functions_detected": 530,
+    "generated_at": "2026-08-25T00:46:21.277Z",
+    "migration_files_scanned": 186,
+    "security_definer_functions_detected": 646,
     "global_security_definer_lockdown_detected": true,
     "findings_total": 0,
     "critical": 0,
@@ -3191,6 +3191,702 @@
       "function_name": "patch23_evidence_governance_bridge",
       "has_search_path": true,
       "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/200_evidence_waiver_request_uniqueness.sql",
+      "function_name": "patch23_evidence_governance_bridge",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/200_evidence_waiver_request_uniqueness.sql",
+      "function_name": "request_evidence_gate_waiver",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+      "function_name": "validate_policy_version_type",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+      "function_name": "validate_sop_version_type",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+      "function_name": "validate_department_scope",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+      "function_name": "enforce_policy_sop_version_immutability",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+      "function_name": "generate_governed_document_code",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+      "function_name": "get_effective_document_version",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+      "function_name": "create_governed_policy_draft",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+      "function_name": "create_governed_sop_draft",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+      "function_name": "save_governed_policy_draft",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+      "function_name": "save_governed_sop_draft",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+      "function_name": "start_governed_document_revision",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+      "function_name": "submit_governed_document_for_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+      "function_name": "finalize_governed_document_approval",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+      "function_name": "activate_governed_document_version",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+      "function_name": "retire_governed_document",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+      "function_name": "trigger_governed_document_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+      "function_name": "complete_governed_document_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+      "function_name": "request_policy_sop_exception",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/202_governed_policy_sop_lifecycle_foundation.sql",
+      "function_name": "decide_policy_sop_exception",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
+      "function_name": "validate_sop_version_type",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
+      "function_name": "enforce_policy_sop_version_immutability",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
+      "function_name": "create_governed_sop_draft",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
+      "function_name": "save_governed_sop_draft",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/203_governed_sop_structured_content_expansion.sql",
+      "function_name": "start_governed_document_revision",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
+      "function_name": "enforce_policy_sop_version_immutability",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
+      "function_name": "validate_sop_version_type",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
+      "function_name": "save_governed_sop_draft",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
+      "function_name": "start_governed_document_revision",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
+      "function_name": "fn_validate_sop_training_target_scope",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
+      "function_name": "fn_immutability_sop_training_target_scope",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
+      "function_name": "fn_validate_sop_training_assignment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
+      "function_name": "decide_sop_rollout_requirements",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
+      "function_name": "start_governed_document_revision",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
+      "function_name": "publish_sop_training_obligations",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
+      "function_name": "reconcile_sop_training_population",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
+      "function_name": "complete_training_assignment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
+      "function_name": "record_competency_assessment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql",
+      "function_name": "validate_governed_doc_ver_link_tenancy",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql",
+      "function_name": "guard_staged_approval_mutations",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql",
+      "function_name": "enforce_policy_sop_version_immutability",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql",
+      "function_name": "configure_approval_authority_rule_stages",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql",
+      "function_name": "record_approval_decision",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql",
+      "function_name": "submit_governed_document_for_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql",
+      "function_name": "finalize_governed_document_approval",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql",
+      "function_name": "save_governed_sop_draft",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql",
+      "function_name": "create_governed_sop_draft",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql",
+      "function_name": "start_governed_document_revision",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/207_governed_sop_runtime_contract_remediation.sql",
+      "function_name": "save_governed_sop_draft",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+      "function_name": "start_training_assignment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+      "function_name": "complete_training_assignment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+      "function_name": "record_competency_assessment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+      "function_name": "waive_training_assignment_with_reason",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+      "function_name": "cancel_training_assignment_with_reason",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+      "function_name": "reopen_training_assignment_with_reason",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+      "function_name": "record_document_acknowledgment",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+      "function_name": "publish_sop_training_obligations",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/209_e2b3_training_population_reconciliation.sql",
+      "function_name": "publish_sop_training_obligations",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/209_e2b3_training_population_reconciliation.sql",
+      "function_name": "get_e2b3_training_reconciliation_capabilities",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/209_e2b3_training_population_reconciliation.sql",
+      "function_name": "reconcile_sop_training_population",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/210_f1_ovr_governed_version_links.sql",
+      "function_name": "f1_require_exact_governance_authority",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/210_f1_ovr_governed_version_links.sql",
+      "function_name": "link_ovr_governed_document_version",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/210_f1_ovr_governed_version_links.sql",
+      "function_name": "unlink_ovr_governed_document_version",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/210_f1_ovr_governed_version_links.sql",
+      "function_name": "get_f1_ovr_governed_version_link_capabilities",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql",
+      "function_name": "start_governed_document_revision",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql",
+      "function_name": "f2_require_exact_governance_authority",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql",
+      "function_name": "initiate_ovr_governance_feedback_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql",
+      "function_name": "complete_ovr_governance_feedback_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql",
+      "function_name": "sync_ovr_corrective_action_capa_link",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql",
+      "function_name": "get_f2_ovr_governance_feedback_capabilities",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "function_name": "governance_linkage_source_context",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "function_name": "resolve_governance_document_version_candidates",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "function_name": "governance_linkage_require_service_role",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "function_name": "governance_linkage_actor_authorized",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "function_name": "start_governance_linkage_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "function_name": "governance_linkage_resolution_snapshot",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "function_name": "suggest_governance_criterion_link",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "function_name": "append_governance_criterion_decision",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "function_name": "supersede_governance_criterion_link",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "function_name": "complete_governance_linkage_review",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "function_name": "get_governance_criteria_linkage_capabilities",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "function_name": "governance_linkage_source_readable",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "function_name": "governance_linkage_target_readable",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/213_ui3_risk_compliance_governance.sql",
+      "function_name": "governance_linkage_source_context",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/213_ui3_risk_compliance_governance.sql",
+      "function_name": "governance_linkage_actor_authorized",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/213_ui3_risk_compliance_governance.sql",
+      "function_name": "governance_linkage_source_readable",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/213_ui3_risk_compliance_governance.sql",
+      "function_name": "ui3_write_compliance_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/213_ui3_risk_compliance_governance.sql",
+      "function_name": "ui3_risk_governance_review_complete",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/213_ui3_risk_compliance_governance.sql",
+      "function_name": "ui3_risk_compliance_workflow_bridge",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/213_ui3_risk_compliance_governance.sql",
+      "function_name": "get_governance_criteria_linkage_capabilities",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/214_ui4_audit_capa_governance.sql",
+      "function_name": "governance_linkage_source_context",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/214_ui4_audit_capa_governance.sql",
+      "function_name": "governance_linkage_actor_authorized",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/214_ui4_audit_capa_governance.sql",
+      "function_name": "append_governance_criterion_decision",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/214_ui4_audit_capa_governance.sql",
+      "function_name": "ui4_audit_finding_has_legitimate_criterion",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/214_ui4_audit_capa_governance.sql",
+      "function_name": "ui4_capa_governance_source",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/214_ui4_audit_capa_governance.sql",
+      "function_name": "ui4_inherit_governance_links_to_capa",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/214_ui4_audit_capa_governance.sql",
+      "function_name": "ui4_audit_capa_workflow_bridge",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/214_ui4_audit_capa_governance.sql",
+      "function_name": "get_governance_criteria_linkage_capabilities",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/215_ui7_approval_participant_read_contract.sql",
+      "function_name": "ui7_approval_private.can_read_approval_request",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/215_ui7_approval_participant_read_contract.sql",
+      "function_name": "ui7_approval_private.can_read_approval_delegation",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/215_ui7_approval_participant_read_contract.sql",
+      "function_name": "ui7_approval_private.can_read_approval_authority_rule",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/218_p1_governance_linkage_completion.sql",
+      "function_name": "governance_linkage_source_context",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/218_p1_governance_linkage_completion.sql",
+      "function_name": "governance_linkage_actor_authorized",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/218_p1_governance_linkage_completion.sql",
+      "function_name": "ui4_capa_governance_source",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/218_p1_governance_linkage_completion.sql",
+      "function_name": "evaluate_governance_document_review_trigger",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/218_p1_governance_linkage_completion.sql",
+      "function_name": "get_governance_criteria_linkage_capabilities",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/223_p3_patch83u_division_provisioning_scope.sql",
+      "function_name": "patch83u_finalize_provisioning",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/224_p3_division_post_password_role_activation.sql",
+      "function_name": "patch83u_finalize_required_password_change",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/224_p3_division_post_password_role_activation.sql",
+      "function_name": "patch83u_reconcile_provisioning",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/225_p3_governed_policy_authority_reconciliation.sql",
+      "function_name": "create_governed_policy_draft",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/225_p3_governed_policy_authority_reconciliation.sql",
+      "function_name": "save_governed_policy_draft",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/227_p3_patch27_authority_event_hosted_guard.sql",
+      "function_name": "patch27_write_authority_event",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/228_p3_patch206_staged_mutation_hosted_guard.sql",
+      "function_name": "guard_staged_approval_mutations",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/230_p3_capa_action_item_contract_reconciliation.sql",
+      "function_name": "create_capa_action_item",
+      "has_search_path": true,
+      "has_public_revoke": true
+    },
+    {
+      "file": "supabase/migrations/230_p3_capa_action_item_contract_reconciliation.sql",
+      "function_name": "update_capa_action_item_status",
+      "has_search_path": true,
+      "has_public_revoke": true
     }
   ],
   "globalSearchPathFixes": [
@@ -3693,7 +4389,84 @@
     "f1r2_work_item_contains",
     "f1r2_actor_has_work_evidence_entitlement",
     "f1r2_actor_has_ovr_evidence_entitlement",
-    "f1r2_actor_can_mutate_evidence_parent"
+    "f1r2_actor_can_mutate_evidence_parent",
+    "validate_policy_version_type",
+    "validate_sop_version_type",
+    "validate_department_scope",
+    "enforce_policy_sop_version_immutability",
+    "generate_governed_document_code",
+    "get_effective_document_version",
+    "create_governed_policy_draft",
+    "create_governed_sop_draft",
+    "save_governed_policy_draft",
+    "save_governed_sop_draft",
+    "start_governed_document_revision",
+    "submit_governed_document_for_review",
+    "finalize_governed_document_approval",
+    "activate_governed_document_version",
+    "retire_governed_document",
+    "trigger_governed_document_review",
+    "complete_governed_document_review",
+    "request_policy_sop_exception",
+    "decide_policy_sop_exception",
+    "fn_validate_sop_training_target_scope",
+    "fn_immutability_sop_training_target_scope",
+    "fn_validate_sop_training_assignment",
+    "decide_sop_rollout_requirements",
+    "publish_sop_training_obligations",
+    "reconcile_sop_training_population",
+    "validate_governed_doc_ver_link_tenancy",
+    "guard_staged_approval_mutations",
+    "configure_approval_authority_rule_stages",
+    "publish_sop_training_obligations_e2b2",
+    "get_e2b3_training_reconciliation_capabilities",
+    "validate_f1_ovr_governed_version_link",
+    "f1_require_exact_governance_authority",
+    "link_ovr_governed_document_version",
+    "unlink_ovr_governed_document_version",
+    "get_f1_ovr_governed_version_link_capabilities",
+    "validate_f2_ovr_corrective_action_link",
+    "f2_require_exact_governance_authority",
+    "initiate_ovr_governance_feedback_review",
+    "complete_ovr_governance_feedback_review",
+    "sync_ovr_corrective_action_capa_link",
+    "get_f2_ovr_governance_feedback_capabilities",
+    "governance_linkage_source_context",
+    "validate_governance_linkage_review_source",
+    "validate_governance_criteria_link",
+    "reject_governance_link_mutation",
+    "validate_governance_criteria_decision",
+    "validate_governance_link_lineage",
+    "validate_governance_link_evidence",
+    "governance_linkage_require_service_role",
+    "governance_linkage_actor_authorized",
+    "governance_linkage_resolution_snapshot",
+    "governance_linkage_source_readable",
+    "governance_linkage_target_readable",
+    "resolve_governance_document_version_candidates",
+    "start_governance_linkage_review",
+    "suggest_governance_criterion_link",
+    "append_governance_criterion_decision",
+    "supersede_governance_criterion_link",
+    "complete_governance_linkage_review",
+    "get_governance_criteria_linkage_capabilities",
+    "ui3_validate_compliance_finding",
+    "ui3_validate_compliance_remediation",
+    "ui3_reject_compliance_event_mutation",
+    "ui3_write_compliance_event",
+    "ui3_risk_governance_review_complete",
+    "ui3_enforce_risk_governance_gate",
+    "ui3_risk_compliance_workflow_bridge",
+    "ui4_reject_audit_dispute_mutation",
+    "ui4_audit_finding_has_legitimate_criterion",
+    "ui4_enforce_audit_criterion_closure",
+    "ui4_capa_governance_source",
+    "ui4_inherit_governance_links_to_capa",
+    "ui4_audit_capa_workflow_bridge",
+    "ui7_approval_private.can_read_approval_request",
+    "ui7_approval_private.can_read_approval_delegation",
+    "ui7_approval_private.can_read_approval_authority_rule",
+    "evaluate_governance_document_review_trigger"
   ],
   "finalSecurityInvokerFunctions": [
     "current_user_org_id",

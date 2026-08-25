@@ -1,12 +1,12 @@
 {
   "summary": {
-    "generated_at": "2026-08-16T18:53:05.726Z",
-    "migration_files_scanned": 153,
-    "views_detected": 528,
-    "findings_total": 104,
+    "generated_at": "2026-08-25T00:46:21.667Z",
+    "migration_files_scanned": 186,
+    "views_detected": 544,
+    "findings_total": 86,
     "critical": 0,
     "high": 0,
-    "medium": 104,
+    "medium": 86,
     "strict_passed": true,
     "note": "Static scan deduplicates views and recognizes later ALTER VIEW ... SET (security_invoker=true). Final proof still requires staging verification."
   },
@@ -41,25 +41,28 @@
     {
       "view": "v_accreditation_gap_dashboard",
       "files": [
-        "supabase/migrations/063_patch2_accreditation_standards_engine.sql"
+        "supabase/migrations/063_patch2_accreditation_standards_engine.sql",
+        "supabase/migrations/217_p1_governed_read_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
       "view": "v_accreditation_readiness_summary",
       "files": [
-        "supabase/migrations/063_patch2_accreditation_standards_engine.sql"
+        "supabase/migrations/063_patch2_accreditation_standards_engine.sql",
+        "supabase/migrations/217_p1_governed_read_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
       "view": "v_accreditation_requirement_matrix",
       "files": [
-        "supabase/migrations/063_patch2_accreditation_standards_engine.sql"
+        "supabase/migrations/063_patch2_accreditation_standards_engine.sql",
+        "supabase/migrations/217_p1_governed_read_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -73,9 +76,10 @@
     {
       "view": "v_admin_safety_console",
       "files": [
-        "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql"
+        "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -156,9 +160,10 @@
     {
       "view": "v_bilingual_dictionary_status",
       "files": [
-        "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql"
+        "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -186,6 +191,15 @@
       "sensitive": false
     },
     {
+      "view": "v_confirmed_governance_criteria_truth",
+      "files": [
+        "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+        "supabase/migrations/214_ui4_audit_capa_governance.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
       "view": "v_consolidated_release_packages",
       "files": [
         "supabase/migrations/028_final_release_factory.sql",
@@ -206,17 +220,28 @@
       "view": "v_critical_attention_items",
       "files": [
         "supabase/migrations/005_operational_views_and_storage.sql",
-        "supabase/migrations/036_b_ovr_workflow_controls.sql"
+        "supabase/migrations/036_b_ovr_workflow_controls.sql",
+        "supabase/migrations/217_p1_governed_read_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
       "view": "v_cross_module_relationship_map",
       "files": [
-        "supabase/migrations/021_command_search_documents_release.sql"
+        "supabase/migrations/021_command_search_documents_release.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_current_governance_criteria_links",
+      "files": [
+        "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+        "supabase/migrations/218_p1_governance_linkage_completion.sql"
+      ],
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -230,9 +255,10 @@
     {
       "view": "v_delay_reason_queue",
       "files": [
-        "supabase/migrations/007_escalation_and_governance_controls.sql"
+        "supabase/migrations/007_escalation_and_governance_controls.sql",
+        "supabase/migrations/217_p1_governed_read_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -272,17 +298,19 @@
     {
       "view": "v_document_center_items",
       "files": [
-        "supabase/migrations/021_command_search_documents_release.sql"
+        "supabase/migrations/021_command_search_documents_release.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
       "view": "v_document_center_summary",
       "files": [
-        "supabase/migrations/021_command_search_documents_release.sql"
+        "supabase/migrations/021_command_search_documents_release.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -347,17 +375,19 @@
     {
       "view": "v_executive_command_stream",
       "files": [
-        "supabase/migrations/021_command_search_documents_release.sql"
+        "supabase/migrations/021_command_search_documents_release.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
       "view": "v_executive_command_summary",
       "files": [
-        "supabase/migrations/021_command_search_documents_release.sql"
+        "supabase/migrations/021_command_search_documents_release.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -390,6 +420,30 @@
       "files": [
         "supabase/migrations/014_export_center_backups_custom_reports.sql",
         "supabase/migrations/043_v641_database_security_static_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_f1_linkable_governed_document_versions",
+      "files": [
+        "supabase/migrations/210_f1_ovr_governed_version_links.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_f1_ovr_governed_version_links",
+      "files": [
+        "supabase/migrations/210_f1_ovr_governed_version_links.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_f2_ovr_governance_feedback",
+      "files": [
+        "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -456,6 +510,48 @@
         "supabase/migrations/021_command_search_documents_release.sql"
       ],
       "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_governance_link_analytics_events",
+      "files": [
+        "supabase/migrations/218_p1_governance_linkage_completion.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_governance_link_analytics_summary",
+      "files": [
+        "supabase/migrations/218_p1_governance_linkage_completion.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_governance_linkage_review_queue",
+      "files": [
+        "supabase/migrations/212_governance_criteria_linkage_foundation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_governed_policy_catalog",
+      "files": [
+        "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+        "supabase/migrations/201_governed_policy_sop_core_foundation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_governed_sop_catalog",
+      "files": [
+        "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+        "supabase/migrations/201_governed_policy_sop_core_foundation.sql"
+      ],
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -550,9 +646,10 @@
     {
       "view": "v_migration_verification_matrix",
       "files": [
-        "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql"
+        "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -1296,7 +1393,8 @@
       "view": "v_patch29_competency_gap_dashboard",
       "files": [
         "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
-        "supabase/migrations/092_patch29_training_acknowledgment_governance.sql"
+        "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+        "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql"
       ],
       "has_security_invoker": true,
       "sensitive": false
@@ -1314,7 +1412,8 @@
       "view": "v_patch29_sop_acknowledgment_gap",
       "files": [
         "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
-        "supabase/migrations/092_patch29_training_acknowledgment_governance.sql"
+        "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+        "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql"
       ],
       "has_security_invoker": true,
       "sensitive": false
@@ -1341,7 +1440,8 @@
       "view": "v_patch29_training_executive_summary",
       "files": [
         "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
-        "supabase/migrations/092_patch29_training_acknowledgment_governance.sql"
+        "supabase/migrations/092_patch29_training_acknowledgment_governance.sql",
+        "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql"
       ],
       "has_security_invoker": true,
       "sensitive": false
@@ -2273,7 +2373,8 @@
       "view": "v_patch40_controlled_pilot_readiness_summary",
       "files": [
         "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
-        "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql"
+        "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -2309,7 +2410,8 @@
       "view": "v_patch40_missing_translation_register",
       "files": [
         "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
-        "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql"
+        "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
       "has_security_invoker": true,
       "sensitive": false
@@ -2336,7 +2438,8 @@
       "view": "v_patch40_proof_suite_readiness_summary",
       "files": [
         "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
-        "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql"
+        "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
       "has_security_invoker": true,
       "sensitive": false
@@ -2345,7 +2448,8 @@
       "view": "v_patch40_runtime_rpc_signoff_dashboard",
       "files": [
         "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
-        "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql"
+        "supabase/migrations/101_patch40_production_hardening_simplification_pack.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
       "has_security_invoker": true,
       "sensitive": false
@@ -3504,15 +3608,17 @@
     {
       "view": "v_production_cutover_checklist",
       "files": [
-        "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql"
+        "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
       "view": "v_production_go_no_go_decision_queue",
       "files": [
-        "supabase/migrations/079_patch18_production_go_no_go_pack.sql"
+        "supabase/migrations/079_patch18_production_go_no_go_pack.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
       "has_security_invoker": true,
       "sensitive": false
@@ -3520,7 +3626,8 @@
     {
       "view": "v_production_go_no_go_evidence_queue",
       "files": [
-        "supabase/migrations/079_patch18_production_go_no_go_pack.sql"
+        "supabase/migrations/079_patch18_production_go_no_go_pack.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -3528,7 +3635,8 @@
     {
       "view": "v_production_go_no_go_monitoring_dashboard",
       "files": [
-        "supabase/migrations/079_patch18_production_go_no_go_pack.sql"
+        "supabase/migrations/079_patch18_production_go_no_go_pack.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
       "has_security_invoker": true,
       "sensitive": false
@@ -3536,7 +3644,8 @@
     {
       "view": "v_production_go_no_go_summary",
       "files": [
-        "supabase/migrations/079_patch18_production_go_no_go_pack.sql"
+        "supabase/migrations/079_patch18_production_go_no_go_pack.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
       "has_security_invoker": true,
       "sensitive": false
@@ -3809,6 +3918,14 @@
       "sensitive": false
     },
     {
+      "view": "v_recent_governed_activity",
+      "files": [
+        "supabase/migrations/217_p1_governed_read_contracts.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
       "view": "v_recurring_review_queue",
       "files": [
         "supabase/migrations/024_automation_intelligence_kri_reviews.sql"
@@ -3820,7 +3937,8 @@
       "view": "v_release_candidate_gates",
       "files": [
         "supabase/migrations/021_command_search_documents_release.sql",
-        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+        "supabase/migrations/043_v641_database_security_static_remediation.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -3847,7 +3965,8 @@
       "view": "v_release_migration_order",
       "files": [
         "supabase/migrations/021_command_search_documents_release.sql",
-        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+        "supabase/migrations/043_v641_database_security_static_remediation.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -3968,6 +4087,32 @@
       "sensitive": false
     },
     {
+      "view": "v_sop_procedure_step_matrix",
+      "files": [
+        "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+        "supabase/migrations/201_governed_policy_sop_core_foundation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_sop_traceability_matrix",
+      "files": [
+        "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_sop_training_compliance_matrix",
+      "files": [
+        "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
+        "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
       "view": "v_staging_validation_checks",
       "files": [
         "supabase/migrations/025_staging_validation_consolidation.sql"
@@ -4008,6 +4153,23 @@
       "sensitive": false
     },
     {
+      "view": "v_ui3_compliance_obligation_register",
+      "files": [
+        "supabase/migrations/213_ui3_risk_compliance_governance.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ui4_audit_criteria_contract",
+      "files": [
+        "supabase/migrations/214_ui4_audit_capa_governance.sql",
+        "supabase/migrations/222_p2_audit_criteria_read_contract.sql"
+      ],
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
       "view": "v_ultra_release_summary",
       "files": [
         "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
@@ -4044,7 +4206,8 @@
       "view": "v_v31_final_controls",
       "files": [
         "supabase/migrations/027_final_production_leap.sql",
-        "supabase/migrations/043_v641_database_security_static_remediation.sql"
+        "supabase/migrations/043_v641_database_security_static_remediation.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
       "has_security_invoker": true,
       "sensitive": true
@@ -4052,33 +4215,37 @@
     {
       "view": "v_v31_go_live_scorecard",
       "files": [
-        "supabase/migrations/027_final_production_leap.sql"
+        "supabase/migrations/027_final_production_leap.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
       "view": "v_v31_module_readiness",
       "files": [
-        "supabase/migrations/027_final_production_leap.sql"
+        "supabase/migrations/027_final_production_leap.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
       "view": "v_v31_pilot_acceptance",
       "files": [
-        "supabase/migrations/027_final_production_leap.sql"
+        "supabase/migrations/027_final_production_leap.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
       "view": "v_v31_support_handover",
       "files": [
-        "supabase/migrations/027_final_production_leap.sql"
+        "supabase/migrations/027_final_production_leap.sql",
+        "supabase/migrations/220_p2_release_readiness_contracts.sql"
       ],
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": false
     },
     {
@@ -7918,7 +8085,7 @@
       "view": "v_patch33_executive_evidence_bridge_summary",
       "file": "supabase/migrations/096_patch33_evidence_bridge_live_operation.sql",
       "occurrence": "create_view",
-      "has_security_invoker": false,
+      "has_security_invoker": true,
       "sensitive": true
     },
     {
@@ -10748,42 +10915,399 @@
       "occurrence": "create_view",
       "has_security_invoker": true,
       "sensitive": true
+    },
+    {
+      "view": "v_governed_policy_catalog",
+      "file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_governed_sop_catalog",
+      "file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_sop_procedure_step_matrix",
+      "file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": false,
+      "sensitive": false
+    },
+    {
+      "view": "v_governed_policy_catalog",
+      "file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_governed_sop_catalog",
+      "file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_sop_procedure_step_matrix",
+      "file": "supabase/migrations/201_governed_policy_sop_core_foundation.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_sop_traceability_matrix",
+      "file": "supabase/migrations/204_governed_sop_risk_and_accreditation_traceability.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_sop_training_compliance_matrix",
+      "file": "supabase/migrations/205_governed_sop_training_and_competency_lifecycle.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch29_sop_acknowledgment_gap",
+      "file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch29_competency_gap_dashboard",
+      "file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_sop_training_compliance_matrix",
+      "file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch29_training_executive_summary",
+      "file": "supabase/migrations/208_e2b2_training_authorization_and_compliance_contract_remediation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_f1_ovr_governed_version_links",
+      "file": "supabase/migrations/210_f1_ovr_governed_version_links.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_f1_linkable_governed_document_versions",
+      "file": "supabase/migrations/210_f1_ovr_governed_version_links.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_f2_ovr_governance_feedback",
+      "file": "supabase/migrations/211_f2_ovr_governance_feedback_loop.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_current_governance_criteria_links",
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_governance_linkage_review_queue",
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_confirmed_governance_criteria_truth",
+      "file": "supabase/migrations/212_governance_criteria_linkage_foundation.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_ui3_compliance_obligation_register",
+      "file": "supabase/migrations/213_ui3_risk_compliance_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_ui4_audit_criteria_contract",
+      "file": "supabase/migrations/214_ui4_audit_capa_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_confirmed_governance_criteria_truth",
+      "file": "supabase/migrations/214_ui4_audit_capa_governance.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_critical_attention_items",
+      "file": "supabase/migrations/217_p1_governed_read_contracts.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_recent_governed_activity",
+      "file": "supabase/migrations/217_p1_governed_read_contracts.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_accreditation_readiness_summary",
+      "file": "supabase/migrations/217_p1_governed_read_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_accreditation_requirement_matrix",
+      "file": "supabase/migrations/217_p1_governed_read_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_accreditation_gap_dashboard",
+      "file": "supabase/migrations/217_p1_governed_read_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_delay_reason_queue",
+      "file": "supabase/migrations/217_p1_governed_read_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_current_governance_criteria_links",
+      "file": "supabase/migrations/218_p1_governance_linkage_completion.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_governance_link_analytics_events",
+      "file": "supabase/migrations/218_p1_governance_linkage_completion.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_governance_link_analytics_summary",
+      "file": "supabase/migrations/218_p1_governance_linkage_completion.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_admin_safety_console",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_bilingual_dictionary_status",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_cross_module_relationship_map",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_document_center_items",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_document_center_summary",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_executive_command_stream",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_executive_command_summary",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_migration_verification_matrix",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch40_controlled_pilot_readiness_summary",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_patch40_missing_translation_register",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch40_proof_suite_readiness_summary",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_patch40_runtime_rpc_signoff_dashboard",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_production_cutover_checklist",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_production_go_no_go_decision_queue",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_production_go_no_go_evidence_queue",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_production_go_no_go_monitoring_dashboard",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_production_go_no_go_summary",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_release_candidate_gates",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_release_migration_order",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v31_final_controls",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": true
+    },
+    {
+      "view": "v_v31_go_live_scorecard",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_v31_module_readiness",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_v31_pilot_acceptance",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_v31_support_handover",
+      "file": "supabase/migrations/220_p2_release_readiness_contracts.sql",
+      "occurrence": "alter_view_security_invoker",
+      "has_security_invoker": true,
+      "sensitive": false
+    },
+    {
+      "view": "v_ui4_audit_criteria_contract",
+      "file": "supabase/migrations/222_p2_audit_criteria_read_contract.sql",
+      "occurrence": "create_view",
+      "has_security_invoker": true,
+      "sensitive": true
     }
   ],
   "findings": [
     {
       "severity": "medium",
       "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_accreditation_gap_dashboard",
-      "file": "supabase/migrations/063_patch2_accreditation_standards_engine.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_accreditation_readiness_summary",
-      "file": "supabase/migrations/063_patch2_accreditation_standards_engine.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_accreditation_requirement_matrix",
-      "file": "supabase/migrations/063_patch2_accreditation_standards_engine.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
       "view": "v_activity_timeline",
       "file": "supabase/migrations/017_notifications_activity_timelines.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_admin_safety_console",
-      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
       "message": "View does not show security_invoker=true in static scan."
     },
     {
@@ -10798,13 +11322,6 @@
       "code": "VIEW_WITHOUT_SECURITY_INVOKER",
       "view": "v_automation_rule_catalog",
       "file": "supabase/migrations/024_automation_intelligence_kri_reviews.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_bilingual_dictionary_status",
-      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
       "message": "View does not show security_invoker=true in static scan."
     },
     {
@@ -10838,29 +11355,8 @@
     {
       "severity": "medium",
       "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_critical_attention_items",
-      "file": "supabase/migrations/005_operational_views_and_storage.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_cross_module_relationship_map",
-      "file": "supabase/migrations/021_command_search_documents_release.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
       "view": "v_data_retention_readiness",
       "file": "supabase/migrations/020_security_audit_retention_controls.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_delay_reason_queue",
-      "file": "supabase/migrations/007_escalation_and_governance_controls.sql",
       "message": "View does not show security_invoker=true in static scan."
     },
     {
@@ -10882,20 +11378,6 @@
       "code": "VIEW_WITHOUT_SECURITY_INVOKER",
       "view": "v_deployment_readiness_gates",
       "file": "supabase/migrations/018_qa_permission_deployment_readiness.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_document_center_items",
-      "file": "supabase/migrations/021_command_search_documents_release.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_document_center_summary",
-      "file": "supabase/migrations/021_command_search_documents_release.sql",
       "message": "View does not show security_invoker=true in static scan."
     },
     {
@@ -10924,20 +11406,6 @@
       "code": "VIEW_WITHOUT_SECURITY_INVOKER",
       "view": "v_escalation_center",
       "file": "supabase/migrations/007_escalation_and_governance_controls.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_executive_command_stream",
-      "file": "supabase/migrations/021_command_search_documents_release.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_executive_command_summary",
-      "file": "supabase/migrations/021_command_search_documents_release.sql",
       "message": "View does not show security_invoker=true in static scan."
     },
     {
@@ -11055,13 +11523,6 @@
     {
       "severity": "medium",
       "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_migration_verification_matrix",
-      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
       "view": "v_mobile_readiness_gates",
       "file": "supabase/migrations/019_performance_responsive_usability.sql",
       "message": "View does not show security_invoker=true in static scan."
@@ -11113,13 +11574,6 @@
       "code": "VIEW_WITHOUT_SECURITY_INVOKER",
       "view": "v_print_report_index",
       "file": "supabase/migrations/015_production_hardening_health_print_controls.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_production_cutover_checklist",
-      "file": "supabase/migrations/022_ultra_release_restore_admin_dictionary.sql",
       "message": "View does not show security_invoker=true in static scan."
     },
     {
@@ -11218,34 +11672,6 @@
       "code": "VIEW_WITHOUT_SECURITY_INVOKER",
       "view": "v_ui_performance_summary",
       "file": "supabase/migrations/019_performance_responsive_usability.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_v31_go_live_scorecard",
-      "file": "supabase/migrations/027_final_production_leap.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_v31_module_readiness",
-      "file": "supabase/migrations/027_final_production_leap.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_v31_pilot_acceptance",
-      "file": "supabase/migrations/027_final_production_leap.sql",
-      "message": "View does not show security_invoker=true in static scan."
-    },
-    {
-      "severity": "medium",
-      "code": "VIEW_WITHOUT_SECURITY_INVOKER",
-      "view": "v_v31_support_handover",
-      "file": "supabase/migrations/027_final_production_leap.sql",
       "message": "View does not show security_invoker=true in static scan."
     },
     {

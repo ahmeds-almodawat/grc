@@ -129,7 +129,7 @@ test.describe('Patch 83V page route persistence', () => {
       const backend = await installPatch83vBackend(page);
       await page.goto(`${baseUrl}${pathname}?campaign=patch83v`);
       await waitForActivePatch83vUser(page);
-      await expect(page.getByRole('heading', { name: heading })).toBeVisible();
+      await expect(page.getByRole('heading', { name: heading, level: 1 })).toBeVisible();
       const url = new URL(page.url());
       expect(url.pathname).toBe(pathname);
       expect(url.searchParams.get('page')).toBe(canonicalPage);

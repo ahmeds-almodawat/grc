@@ -236,6 +236,33 @@ describe('GRC v1.4-B Governed Workflow Dialogs & Waiver Remediation', () => {
         expect(handleClose).not.toHaveBeenCalled();
       });
     });
+
+    it('preserves entered values when a parent recreates an equivalent fields array', () => {
+      const props = {
+        open: true,
+        title: 'Stable Field State',
+        onClose: vi.fn(),
+        onSubmit: vi.fn(),
+      };
+      const view = renderWithProviders(
+        <GovernedDecisionDialog
+          {...props}
+          fields={[{ id: 'reason', label: 'Reason', type: 'textarea', required: true }]}
+        />
+      );
+
+      fireEvent.change(screen.getByLabelText(/Reason/i), { target: { value: 'Preserve this rationale' } });
+      view.rerender(
+        <I18nProvider>
+          <GovernedDecisionDialog
+            {...props}
+            fields={[{ id: 'reason', label: 'Reason', type: 'textarea', required: true }]}
+          />
+        </I18nProvider>,
+      );
+
+      expect(screen.getByLabelText(/Reason/i)).toHaveValue('Preserve this rationale');
+    });
   });
 
   describe('2. Governed Approvals Decision Dialogs (Approvals.tsx)', () => {

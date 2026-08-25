@@ -192,23 +192,23 @@ includesAll(domainTypes, [
 ], 'critical', 'type definition');
 
 includesAll(risksPage, [
-  'Patch 22 workflow queues',
-  'Appetite breaches',
-  'Treatment queue',
+  'Governed risk workflow',
+  'Above appetite',
+  'Treatment plan',
   'KRI alerts',
-  'Executive escalations',
-  'Closure blockers',
-  'Risk workflow detail',
+  'Executive attention',
+  'Governance review required',
+  'Risk activity',
   'Reassess risk',
   'Request acceptance',
-  'Approve acceptance',
-  'Reject acceptance',
   'Update treatment',
-  'Complete treatment',
   'Request closure',
-  'Approve closure',
   'Reopen with reason',
   'Mark duplicate',
+  'GovernedDecisionDialog',
+  'evaluateRiskGovernanceGate',
+  'decideUi3RiskReassessment',
+  'selectedRevision.id',
 ], 'high', 'risk workflow UI');
 
 addCheck('score changes write reassessment history', /insert into public\.risk_reassessment_history/i.test(migration), 'critical');

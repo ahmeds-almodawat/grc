@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-02T00:19:28.900Z",
+  "generated_at": "2026-08-22T22:09:41.140Z",
   "patch": "Patch 22",
   "status": "passed",
   "summary": {
@@ -840,22 +840,22 @@
       "detail": "Missing required Patch 22 term: RiskWorkflowEventRow"
     },
     {
-      "name": "risk workflow UI: Patch 22 workflow queues",
+      "name": "risk workflow UI: Governed risk workflow",
       "passed": true,
       "severity": "high",
-      "detail": "Missing required Patch 22 term: Patch 22 workflow queues"
+      "detail": "Missing required Patch 22 term: Governed risk workflow"
     },
     {
-      "name": "risk workflow UI: Appetite breaches",
+      "name": "risk workflow UI: Above appetite",
       "passed": true,
       "severity": "high",
-      "detail": "Missing required Patch 22 term: Appetite breaches"
+      "detail": "Missing required Patch 22 term: Above appetite"
     },
     {
-      "name": "risk workflow UI: Treatment queue",
+      "name": "risk workflow UI: Treatment plan",
       "passed": true,
       "severity": "high",
-      "detail": "Missing required Patch 22 term: Treatment queue"
+      "detail": "Missing required Patch 22 term: Treatment plan"
     },
     {
       "name": "risk workflow UI: KRI alerts",
@@ -864,22 +864,22 @@
       "detail": "Missing required Patch 22 term: KRI alerts"
     },
     {
-      "name": "risk workflow UI: Executive escalations",
+      "name": "risk workflow UI: Executive attention",
       "passed": true,
       "severity": "high",
-      "detail": "Missing required Patch 22 term: Executive escalations"
+      "detail": "Missing required Patch 22 term: Executive attention"
     },
     {
-      "name": "risk workflow UI: Closure blockers",
+      "name": "risk workflow UI: Governance review required",
       "passed": true,
       "severity": "high",
-      "detail": "Missing required Patch 22 term: Closure blockers"
+      "detail": "Missing required Patch 22 term: Governance review required"
     },
     {
-      "name": "risk workflow UI: Risk workflow detail",
+      "name": "risk workflow UI: Risk activity",
       "passed": true,
       "severity": "high",
-      "detail": "Missing required Patch 22 term: Risk workflow detail"
+      "detail": "Missing required Patch 22 term: Risk activity"
     },
     {
       "name": "risk workflow UI: Reassess risk",
@@ -894,40 +894,16 @@
       "detail": "Missing required Patch 22 term: Request acceptance"
     },
     {
-      "name": "risk workflow UI: Approve acceptance",
-      "passed": true,
-      "severity": "high",
-      "detail": "Missing required Patch 22 term: Approve acceptance"
-    },
-    {
-      "name": "risk workflow UI: Reject acceptance",
-      "passed": true,
-      "severity": "high",
-      "detail": "Missing required Patch 22 term: Reject acceptance"
-    },
-    {
       "name": "risk workflow UI: Update treatment",
       "passed": true,
       "severity": "high",
       "detail": "Missing required Patch 22 term: Update treatment"
     },
     {
-      "name": "risk workflow UI: Complete treatment",
-      "passed": true,
-      "severity": "high",
-      "detail": "Missing required Patch 22 term: Complete treatment"
-    },
-    {
       "name": "risk workflow UI: Request closure",
       "passed": true,
       "severity": "high",
       "detail": "Missing required Patch 22 term: Request closure"
-    },
-    {
-      "name": "risk workflow UI: Approve closure",
-      "passed": true,
-      "severity": "high",
-      "detail": "Missing required Patch 22 term: Approve closure"
     },
     {
       "name": "risk workflow UI: Reopen with reason",
@@ -940,6 +916,30 @@
       "passed": true,
       "severity": "high",
       "detail": "Missing required Patch 22 term: Mark duplicate"
+    },
+    {
+      "name": "risk workflow UI: GovernedDecisionDialog",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: GovernedDecisionDialog"
+    },
+    {
+      "name": "risk workflow UI: evaluateRiskGovernanceGate",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: evaluateRiskGovernanceGate"
+    },
+    {
+      "name": "risk workflow UI: decideUi3RiskReassessment",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: decideUi3RiskReassessment"
+    },
+    {
+      "name": "risk workflow UI: selectedRevision.id",
+      "passed": true,
+      "severity": "high",
+      "detail": "Missing required Patch 22 term: selectedRevision.id"
     },
     {
       "name": "score changes write reassessment history",

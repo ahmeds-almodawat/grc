@@ -473,8 +473,11 @@ describe('F1-R2 frontend and Edge contracts', () => {
   it('proves the F1-R2 accepted-assignment surface at 390x844 in Arabic RTL and all theme preferences', () => {
     expect(browserProof).toContain("await page.setViewportSize({ width: 390, height: 844 })");
     expect(browserProof).toContain("await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')");
-    expect(browserProof).toContain("await expect(page.getByText('تم قبول الإسناد', { exact: true })).toBeVisible()");
-    for (const theme of ['dark', 'light', 'system']) expect(browserProof).toContain(`selectOption('${theme}')`);
+    expect(browserProof).toContain("await expect(page.getByText('قيد التنفيذ', { exact: true })).toBeVisible()");
+    for (const theme of ['dark', 'light', 'system']) {
+      expect(browserProof).toContain(`localStorage.setItem('grc-theme', '${theme}')`);
+    }
+    expect(browserProof.match(/await page\.reload\(\)/g)).toHaveLength(2);
   });
 
   it('does not reintroduce retired admin user creation or browser service-role access', () => {

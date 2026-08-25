@@ -247,7 +247,7 @@ async function installQaSessionAndSupabaseMocks(
 
 async function openDepartmentImport(page: Page) {
   await page.goto('/');
-  await expect(page.getByText('Patch 83S Browser QA')).toBeVisible();
+  await expect(page.getByRole('main').getByText('Patch 83S Browser QA')).toBeVisible();
   await page.locator('.nav-child-item').filter({ hasText: 'Departments' }).click();
   await expect(page.getByRole('button', { name: 'Prepare Import Batch' })).toBeVisible();
   await page.getByRole('button', { name: 'Prepare Import Batch' }).click();

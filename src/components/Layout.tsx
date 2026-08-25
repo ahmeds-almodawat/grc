@@ -25,6 +25,7 @@ import {
   Languages,
   MonitorCog,
   Menu,
+  MoreHorizontal,
   LogOut,
   LockKeyhole,
   Network,
@@ -35,6 +36,8 @@ import {
   ShieldAlert,
   Siren,
   Smartphone,
+  PanelLeftClose,
+  PanelLeftOpen,
   TestTubeDiagonal,
   UploadCloud,
   UserCheck,
@@ -239,6 +242,7 @@ const navTree: NavTreeGroup[] = [
     children: [
       { key: "risks", label: "Risk Register", icon: <ShieldAlert size={16} /> },
       { key: "audit", label: "Audit", icon: <FileSearch size={16} /> },
+      { key: "capa", label: "CAPA", icon: <ClipboardList size={16} /> },
       { key: "compliance", label: "Compliance", icon: <ClipboardCheck size={16} /> },
       { key: "governance", label: "Governance", icon: <Landmark size={16} /> },
       { key: "committeeAutomation", label: "Committees", icon: <Landmark size={16} /> },
@@ -273,7 +277,8 @@ const navTree: NavTreeGroup[] = [
     children: [
       { key: "evidence", label: "Evidence Library", icon: <FileCheck2 size={16} /> },
       { key: "evidenceVault", label: "Evidence Vault", icon: <FileStack size={16} /> },
-      { key: "documents", label: "Policies", icon: <FolderKanban size={16} /> },
+      { key: "documents", label: "Policy Register", icon: <FolderKanban size={16} /> },
+      { key: "sops", label: "SOP Register", icon: <BookCopy size={16} /> },
       {
         key: "bilingualDictionary",
         label: "Bilingual Dictionary",
@@ -328,9 +333,10 @@ const navTree: NavTreeGroup[] = [
     id: "admin",
     label: "Admin & Organization",
     hint: "Users, access, setup",
-    page: "admin",
+    page: "adminHub",
     icon: <LockKeyhole size={18} />,
     children: [
+      { key: "adminHub", label: "Administration Overview", icon: <Gauge size={16} /> },
       { key: "admin", label: "User Management", icon: <Users size={16} /> },
       {
         key: "accessControl",
@@ -663,6 +669,7 @@ function NavButton({
     <button
       key={item.key}
       className={`nav-item ${page === item.key ? "active" : ""}`}
+      aria-current={page === item.key ? "page" : undefined}
       onClick={() => setPage(item.key)}
       type="button"
     >
@@ -688,6 +695,7 @@ function NavTreeButton({
   return (
     <button
       className={`nav-child-item ${page === item.key ? "active" : ""}`}
+      aria-current={page === item.key ? "page" : undefined}
       onClick={() => setPage(item.key)}
       type="button"
     >
@@ -708,6 +716,9 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
     () => new Set(["workspace", "admin"]),
   );
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => globalThis.localStorage?.getItem("grc-sidebar-collapsed") === "true",
+  );
   const mobileMenuTriggerRef = useRef<HTMLButtonElement>(null);
   const mobileMenuCloseRef = useRef<HTMLButtonElement>(null);
   const navigationDrawerRef = useRef<HTMLElement>(null);
@@ -729,6 +740,12 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
     (group) =>
       group.page === page || group.children.some((item) => item.key === page),
   )?.id;
+  const activeGroup = allowedNavTree.find(
+    (group) =>
+      group.page === page || group.children.some((item) => item.key === page),
+  );
+  const activeChild = activeGroup?.children.find((item) => item.key === page);
+  const activeLegacy = legacyNavItems.find((item) => item.key === page);
   const isLegacyPage = !allowedNavTree.some(
     (group) =>
       group.page === page || group.children.some((item) => item.key === page),
@@ -737,6 +754,19 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
     language === "ar" && auth.profile?.fullNameAr
       ? auth.profile.fullNameAr
       : auth.profile?.fullNameEn;
+  const displayInitials = (displayName || auth.profile?.email || "GRC")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+  const activePageTitle = activeChild
+    ? t(`navTree.item.${activeChild.key}`, activeChild.label)
+    : activeGroup
+      ? t(`navTree.group.${activeGroup.id}`, activeGroup.label)
+      : activeLegacy
+        ? t(activeLegacy.labelKey)
+        : t("app.title");
   const externalPilot = isExternalPilotOrganization(organizationName);
   const toggleGroup = (groupId: string) => {
     setOpenGroups((previous) => {
@@ -785,11 +815,31 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
     };
   }, [mobileNavigationOpen]);
 
+  useEffect(() => {
+    globalThis.localStorage?.setItem("grc-sidebar-collapsed", String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
+  const mobileDestinations: Array<{ key: PageKey; label: string; icon: ReactNode }> = [];
+  const addMobileDestination = (key: PageKey, label: string, icon: ReactNode) => {
+    if (mobileDestinations.length < 3 && canOpen(key) && !mobileDestinations.some((item) => item.key === key)) {
+      mobileDestinations.push({ key, label, icon });
+    }
+  };
+  addMobileDestination("home", t("nav.home", "Home"), <Home size={19} />);
+  addMobileDestination("grcHub", t("navTree.group.grc", "Governance"), <Landmark size={19} />);
+  addMobileDestination("approvals", t("nav.approvals", "Approvals"), <ClipboardCheck size={19} />);
+  addMobileDestination("myWork", t("nav.myWork", "My Work"), <UserCheck size={19} />);
+  addMobileDestination("ovr", t("nav.ovr", "OVR"), <Hospital size={19} />);
+
   return (
     <div
       className={`app-shell modern-app-shell ${direction === "rtl" ? "rtl-shell" : ""}`}
       dir={direction}
+      data-sidebar-collapsed={sidebarCollapsed ? "true" : "false"}
     >
+      <a className="platform-skip-link" href="#platform-main-content">
+        {t("accessibility.skipToContent", "Skip to main content")}
+      </a>
       <div
         className={`mobile-nav-backdrop ${mobileNavigationOpen ? "is-open" : ""}`}
         role="presentation"
@@ -815,21 +865,11 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
         </button>
         <div className="brand-block brand-block-modern brand-block--acc">
           <BrandLogo variant="sidebar" />
-        </div>
-
-        <button
-          className="language-toggle"
-          onClick={toggleLanguage}
-          title={t("language.current")}
-          type="button"
-        >
-          <Languages size={17} />
-          <span>
-            {language === "en"
-              ? t("language.switchToArabic")
-              : t("language.switchToEnglish")}
+          <span className="brand-block-modern__copy" aria-hidden="true">
+            <strong>ALMODAWAT CONTROL</strong>
+            <small>PLATFORM</small>
           </span>
-        </button>
+        </div>
 
         <nav
           className="nav-list nav-list-modern sidebar-nav-tree"
@@ -849,6 +889,7 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
                 <button
                   key={group.id}
                   className={`nav-group-trigger nav-group-trigger--single ${groupActive ? "active" : ""}`}
+                  aria-current={group.page === page ? "page" : undefined}
                   onClick={() => setPage(group.page as PageKey)}
                   type="button"
                 >
@@ -874,6 +915,7 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
                   }}
                   type="button"
                   aria-expanded={expanded}
+                  aria-controls={`nav-group-${group.id}`}
                 >
                   {group.icon}
                   <span>
@@ -886,7 +928,7 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
                   />
                 </button>
                 {expanded ? (
-                  <div className="nav-child-list">
+                  <div className="nav-child-list" id={`nav-group-${group.id}`}>
                     {group.children.map((item) => (
                       <NavTreeButton
                         key={item.key}
@@ -919,22 +961,68 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
             </div>
           ) : null}
         </nav>
+        <div className="sidebar-account">
+          <div className="sidebar-account__identity" title={auth.profile?.email}>
+            <span className="sidebar-account__avatar" aria-hidden="true">{displayInitials}</span>
+            <span className="sidebar-account__copy">
+              <strong>{displayName || auth.profile?.email || t("common.unknown")}</strong>
+              <small>{auth.primaryRole ? t(`role.${auth.primaryRole}`, auth.primaryRole.replaceAll("_", " ")) : t("common.unknown")}</small>
+            </span>
+          </div>
+          <button
+            className="platform-icon-button"
+            onClick={toggleLanguage}
+            title={language === "en" ? t("language.switchToArabic") : t("language.switchToEnglish")}
+            aria-label={language === "en" ? t("language.switchToArabic") : t("language.switchToEnglish")}
+            type="button"
+          >
+            <Languages size={15} aria-hidden="true" />
+          </button>
+          <button
+            className="platform-icon-button sidebar-account__collapse"
+            type="button"
+            title={sidebarCollapsed ? t("nav.expand", "Expand navigation") : t("nav.collapse", "Collapse navigation")}
+            aria-label={sidebarCollapsed ? t("nav.expand", "Expand navigation") : t("nav.collapse", "Collapse navigation")}
+            aria-pressed={sidebarCollapsed}
+            onClick={() => setSidebarCollapsed((value) => !value)}
+          >
+            {sidebarCollapsed ? <PanelLeftOpen size={15} aria-hidden="true" /> : <PanelLeftClose size={15} aria-hidden="true" />}
+          </button>
+          <button
+            className="platform-icon-button sidebar-account__signout"
+            onClick={() => void auth.signOut()}
+            title={t("common.signOut")}
+            aria-label={t("common.signOut")}
+            type="button"
+          >
+            <LogOut size={15} aria-hidden="true" />
+          </button>
+        </div>
       </aside>
 
       <main
+        id="platform-main-content"
         className="main-content modern-main-content"
         data-page-key={page}
         data-page-location={PAGE_LOCATION_REGISTRY[page]}
+        tabIndex={-1}
       >
         <header className="topbar modern-topbar">
-          <div>
-            <p className="eyebrow">{t("app.company")}</p>
-            <h2>{t("app.title")}</h2>
+          <div className="topbar-context">
+            <h2>{activePageTitle}</h2>
+            <p>{organizationName || t("app.company")}</p>
           </div>
+          {canOpen("globalSearch") ? (
+            <button className="topbar-global-search" type="button" onClick={() => setPage("globalSearch")}>
+              <Search size={15} aria-hidden="true" />
+              <span>{t("search.placeholder", "Search across GRC...")}</span>
+              <kbd>Ctrl K</kbd>
+            </button>
+          ) : <span />}
           <div className="topbar-actions">
             <button
               ref={mobileMenuTriggerRef}
-              className="ghost-button mobile-nav-trigger"
+                className="topbar-icon-button mobile-nav-trigger"
               type="button"
               aria-label={t("nav.openMenu", "Open navigation")}
               aria-controls="primary-navigation-drawer"
@@ -945,22 +1033,23 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
               <span>{t("nav.menu", "Menu")}</span>
             </button>
             {SUPER_ADMIN_ONLY_PAGES.includes(page as any) ? <ControlledPilotBanner compact context="internal" /> : <ControlledPilotBanner compact />}
-            {canOpen("globalSearch") ? (
-              <button
-                className="ghost-button"
-                onClick={() => setPage("globalSearch")}
-                type="button"
-              >
-                <Search size={16} />
-                {t("nav.globalSearch")}
-              </button>
-            ) : null}
             <button
-              className="ghost-button"
+              className="topbar-icon-button topbar-notification"
+              onClick={() => { if (canOpen("operations")) setPage("operations"); }}
+              type="button"
+              disabled={!canOpen("operations")}
+              title={canOpen("operations") ? t("ops.notifications", "Notifications") : t("common.notAuthorized", "Not available for this role")}
+              aria-label={t("ops.notifications", "Notifications")}
+            >
+              <BellRing size={16} aria-hidden="true" />
+            </button>
+            <button
+              className="topbar-language"
               onClick={toggleLanguage}
+              title={language === "en" ? t("language.switchToArabic") : t("language.switchToEnglish")}
               type="button"
             >
-              <Languages size={16} />
+              <Languages size={15} aria-hidden="true" />
               {language === "en" ? "AR" : "EN"}
             </button>
             <label className="theme-control" title={t("theme.control", "Appearance theme")}>
@@ -976,7 +1065,7 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
                 <option value="system">{t("theme.system", "System")}</option>
               </select>
             </label>
-            <div className="auth-user-pill" title={auth.profile?.email}>
+            <div className="auth-user-pill" title={auth.profile?.email} data-initials={displayInitials}>
               <span>{displayName}</span>
               <small>{auth.primaryRole ? t(`role.${auth.primaryRole}`, auth.primaryRole.replaceAll("_", " ")) : t("common.unknown")}</small>
             </div>
@@ -984,17 +1073,33 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
               <div className="topbar-pill topbar-pill--warning">{t("auth.developmentMode")}</div>
             ) : null}
             <button
-              className="ghost-button"
+              className="topbar-icon-button"
               onClick={() => void auth.signOut()}
+              title={t("common.signOut")}
+              aria-label={t("common.signOut")}
               type="button"
             >
-              <LogOut size={16} />
-              {t("common.signOut")}
+              <LogOut size={16} aria-hidden="true" />
             </button>
           </div>
         </header>
         {children}
       </main>
+      <nav className="mobile-bottom-nav" aria-label={t("nav.mobileNavigation", "Mobile navigation")}>
+        {mobileDestinations.map((item) => {
+          const active = item.key === page || allowedNavTree.find((group) => group.id === activeGroupId)?.page === item.key;
+          return (
+            <button className={active ? "is-active" : ""} aria-current={active ? "page" : undefined} type="button" onClick={() => setPage(item.key)} key={item.key}>
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+        <button type="button" onClick={() => setMobileNavigationOpen(true)} aria-expanded={mobileNavigationOpen} aria-controls="primary-navigation-drawer">
+          <MoreHorizontal size={19} aria-hidden="true" />
+          <span>{t("nav.more", "More")}</span>
+        </button>
+      </nav>
     </div>
   );
 }

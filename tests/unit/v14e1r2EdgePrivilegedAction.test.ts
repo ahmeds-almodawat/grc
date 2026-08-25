@@ -1289,11 +1289,18 @@ describe('GRC v1.4-E1-R2 Edge v13 Governed SOP Bridge: Behavioral & Architectura
     it('places credential-state verification strictly before E1-R2 dispatchers', () => {
       const authCheckIdx = edgeSource.indexOf('authClient.auth.getUser');
       const capCheckIdx = edgeSource.indexOf("serviceClient.rpc('patch83u_get_capabilities'");
-      const e1r2HandlerIdx = edgeSource.indexOf("if (action === 'v14e1r_create_governed_sop_draft')");
+      const e1r2HandlerIdx = edgeSource.indexOf("if (action === 'v14e1r_create_governed_sop_draft'");
 
       expect(authCheckIdx).toBeGreaterThan(0);
       expect(capCheckIdx).toBeGreaterThan(authCheckIdx);
       expect(e1r2HandlerIdx).toBeGreaterThan(capCheckIdx);
+    });
+
+    it('resolves the governed document through the version document foreign key', () => {
+      expect(edgeSource).toContain(
+        'controlled_documents!document_versions_document_id_fkey(organization_id)',
+      );
+      expect(edgeSource).not.toContain(".select('id, document_id, controlled_documents(organization_id)')");
     });
 
     it('verifies Migration 207 exists exactly once with exact filename and SHA256', () => {

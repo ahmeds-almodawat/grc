@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-08-25T00:47:09.630Z",
+  "demo_folder_exists": true,
+  "production_env_example_safe": true,
+  "total_findings": 0,
+  "production_blocking_findings": 0,
+  "policy": "Demo fixtures must be isolated to src/demo and cannot be imported into production runtime modules.",
+  "findings": []
+}

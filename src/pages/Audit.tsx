@@ -1,793 +1,347 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
-  AlertTriangle,
-  ClipboardCheck,
-  Clock,
-  FileCheck2,
-  Flag,
-  Link2,
-  PackageCheck,
-  RotateCcw,
-  Send,
-  ShieldAlert,
-  ThumbsUp,
-  XCircle,
+  AlertTriangle, ArrowLeft, BarChart3, CalendarDays, CheckCircle2, ClipboardCheck,
+  Clock3, Eye, FileCheck2, FileSearch, FileText, Flag, LayoutDashboard, Link2,
+  ListChecks, MessageSquareWarning, Plus, Search, Send, ShieldCheck, Target,
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { DataState } from '../components/DataState';
-import { EntityTable } from '../components/EntityTable';
+import { GovernedDecisionDialog, type DecisionFieldConfig } from '../components/GovernedDecisionDialog';
+import { GovernanceCriteriaLinkage } from '../components/governance/GovernanceCriteriaLinkage';
 import { AuditFindingForm } from '../components/GrcForms';
 import { Modal } from '../components/Modal';
 import { ModuleHeader } from '../components/ModuleHeader';
 import { StatusBadge } from '../components/StatusBadge';
-import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
-import {
-  acceptCorrectiveActionPlan,
-  acceptManagementResponse,
-  approveAuditFindingExtension,
-  escalateAuditFinding,
-  generateAuditClosurePackIndex,
-  getAuditClosureGateStatus,
-  getAuditClosurePackIndex,
-  getAuditExecutiveEscalations,
-  getAuditFindingValidationEvents,
-  getAuditFindingWorkflowQueue,
-  getAuditFindings,
-  getDepartments,
-  getOrganizations,
-  getOverdueAuditFindings,
-  getRisks,
-  getComplianceItems,
-  getProfiles,
-  getRepeatAuditFindings,
-  issueAuditFinding,
-  linkAuditFindingToCompliance,
-  linkAuditFindingToRisk,
-  markRepeatAuditFinding,
-  rejectAuditFindingClosure,
-  rejectAuditFindingExtension,
-  rejectCorrectiveActionPlan,
-  rejectManagementResponse,
-  reopenAuditFindingWithReason,
-  requestAuditFindingClosure,
-  requestAuditFindingExtension,
-  submitCorrectiveActionPlan,
-  submitManagementResponse,
-  validateAuditFindingClosure,
-} from '../lib/grcApi';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { useI18n } from '../i18n/I18nContext';
-import type {
-  AuditClosureGateStatusRow,
-  AuditClosurePackIndexRow,
-  AuditExecutiveEscalationRow,
-  AuditFindingRow,
-  AuditFindingValidationEventRow,
-  AuditFindingWorkflowQueueRow,
-  OverdueAuditFindingRow,
-  RepeatAuditFindingRow,
-} from '../types/domain';
+import { departmentName, formatDate, humanize, ownerName } from '../lib/format';
+import {
+  acceptCorrectiveActionPlan, acceptManagementResponse, generateAuditClosurePackIndex,
+  getAuditClosureGateStatus, getAuditClosurePackIndex, getAuditExecutiveEscalations,
+  getAuditFindingValidationEvents, getAuditFindingWorkflowQueue, getAuditFindings,
+  getDepartments, getOrganizations, getOverdueAuditFindings, getProfiles, getRepeatAuditFindings,
+  issueAuditFinding, rejectAuditFindingClosure, rejectCorrectiveActionPlan,
+  rejectManagementResponse, requestAuditFindingClosure, submitCorrectiveActionPlan,
+  submitManagementResponse, validateAuditFindingClosure,
+} from '../lib/grcApi';
+import {
+  createUi4Capa, getUi4AuditCriteriaContracts, getUi4AuditCriteriaDisputes,
+  recordUi4AuditCriteriaDispute, type Ui4AuditCriteriaContract, type Ui4AuditCriteriaDispute,
+} from '../lib/ui4AuditCapaApi';
+import { evaluateUi4AuditClosureGate } from '../lib/ui4AuditCapaModel';
+import type { AuditFindingRow, AuditFindingValidationEventRow, OverdueAuditFindingRow } from '../types/domain';
 
-function isPast(value: string | null | undefined) {
-  if (!value) return false;
-  const date = new Date(value);
-  return !Number.isNaN(date.getTime()) && date.getTime() < Date.now();
+type AuditScreen = 'dashboard' | 'register' | 'engagement' | 'planning' | 'program' | 'findings' | 'finding' | 'report' | 'followup' | 'review';
+type AuditAction = 'issue' | 'submit_response' | 'accept_response' | 'reject_response' | 'submit_action' | 'accept_action' | 'reject_action' | 'request_closure' | 'validate_closure' | 'reject_closure' | 'generate_pack' | 'dispute' | 'create_capa';
+
+interface AuditEngagement {
+  key: string;
+  title: string;
+  findings: AuditFindingRow[];
+  status: string;
+  startDate: string | null;
+  endDate: string | null;
 }
 
-function MetricCard({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number | string;
-  tone?: 'warning' | 'danger' | 'success';
+interface AuditDecision { action: AuditAction; finding: AuditFindingRow }
+
+const auditScreens: Array<{ id: AuditScreen; label: string; icon: typeof LayoutDashboard }> = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'register', label: 'Audit register', icon: FileSearch },
+  { id: 'engagement', label: 'Engagement', icon: ClipboardCheck },
+  { id: 'planning', label: 'Planning', icon: Target },
+  { id: 'program', label: 'Program', icon: ListChecks },
+  { id: 'findings', label: 'Findings', icon: Flag },
+  { id: 'finding', label: 'Finding details', icon: FileCheck2 },
+  { id: 'report', label: 'Report', icon: FileText },
+  { id: 'followup', label: 'Follow-up', icon: Clock3 },
+  { id: 'review', label: 'Review', icon: ShieldCheck },
+];
+
+function findingTone(value: string | null | undefined) {
+  if (value === 'critical' || value === 'high') return 'danger';
+  if (value === 'medium') return 'warning';
+  if (value === 'low' || value === 'closed') return 'success';
+  return 'neutral';
+}
+
+function workflowLabel(finding: AuditFindingRow) { return finding.finding_status || finding.status || 'draft'; }
+function engagementStatus(findings: AuditFindingRow[]) {
+  if (findings.length && findings.every((finding) => workflowLabel(finding) === 'closed')) return 'completed';
+  if (findings.some((finding) => workflowLabel(finding) !== 'draft')) return 'in_progress';
+  return 'planned';
+}
+
+function EmptyAudit({ title, detail }: { title: string; detail?: string }) {
+  return <div className="ui3-empty-state"><FileSearch size={23} /><strong>{title}</strong>{detail ? <p>{detail}</p> : null}</div>;
+}
+
+function OverdueAuditQueue({ loading, error, findings, onOpen }: {
+  loading: boolean;
+  error: string | null;
+  findings: OverdueAuditFindingRow[];
+  onOpen: (findingId: string) => void;
 }) {
+  const { t, language } = useI18n();
   return (
-    <div className={`stat-card ${tone || ''}`}>
-      <div className="stat-value">{value}</div>
-      <div className="stat-label">{label}</div>
-    </div>
+    <section className="ui3-surface">
+      <div className="ui3-section-heading">
+        <div><span>{t('audit.g.overdueItems', 'Overdue items')}</span><h2>{t('audit.g.followUpRequired', 'Follow-up required')}</h2></div>
+        <AlertTriangle size={20} />
+      </div>
+      <DataState
+        loading={loading}
+        error={error}
+        empty={!loading && !error && findings.length === 0}
+        emptyTitle={t('audit.g.noOverdueItems', 'No overdue audit workflow items')}
+        emptyMessage={t('audit.g.noOverdueItemsHint', 'Overdue responses, corrective actions, validations and findings appear here.')}
+      >
+        <div className="ui3-record-list">
+          {findings.map((finding) => (
+            <button type="button" key={finding.audit_finding_id} onClick={() => onOpen(finding.audit_finding_id)}>
+              <span><strong>{finding.finding_code || 'FINDING'}</strong><small>{finding.title}</small></span>
+              <StatusBadge status={humanize(finding.finding_status, language)} />
+            </button>
+          ))}
+        </div>
+      </DataState>
+    </section>
   );
 }
 
-function DetailValue({ label, value }: { label: string; value: string | number | null | undefined }) {
+function AuditValidationTimeline({ events }: { events: AuditFindingValidationEventRow[] }) {
+  const { language } = useI18n();
+  const text = (en: string, ar: string) => language === 'ar' ? ar : en;
   return (
-    <div>
-      <span>{label}</span>
-      <strong>{value || '-'}</strong>
-    </div>
+    <section className="ui3-surface">
+      <div className="ui3-section-heading"><div><span>{text('History and activity', 'السجل والنشاط')}</span><h2>{text('Validation events', 'أحداث التحقق')}</h2></div><Clock3 size={20} /></div>
+      {events.length ? <ol className="ui3-timeline">{events.map((event) => <li key={event.id}><span /><div><strong>{humanize(event.validation_type, language)}</strong><p>{event.note || text('Governed workflow transition', 'انتقال سير عمل محكوم')}</p><small>{formatDate(event.created_at)}{event.to_status ? ` · ${humanize(event.to_status, language)}` : ''}</small></div></li>)}</ol> : <EmptyAudit title={text('No validation events recorded', 'لم تسجل أحداث تحقق')} />}
+    </section>
   );
 }
 
-function findingTitle(row?: AuditFindingRow | null) {
-  if (!row) return 'Audit finding';
-  return row.finding_code ? `${row.finding_code} - ${row.title}` : row.title;
-}
-
-function EventTable({ rows }: { rows: AuditFindingValidationEventRow[] }) {
-  const { t } = useI18n();
-  return (
-    <DataState
-      loading={false}
-      empty={!rows.length}
-      emptyTitle={t('audit.g.noValidationEvents', 'No validation events')}
-      emptyMessage={t('audit.g.validationEventsHint', 'Lifecycle transitions will appear here once actions run.')}
-    >
-      <EntityTable<AuditFindingValidationEventRow>
-        rows={rows}
-        getRowKey={row => row.id}
-        columns={[
-          { key: 'type', header: t('audit.g.event', 'Event'), render: row => humanize(row.validation_type) },
-          { key: 'status', header: t('common.status', 'Status'), render: row => `${humanize(row.from_status)} -> ${humanize(row.to_status)}` },
-          { key: 'actor', header: t('audit.g.actor', 'Actor'), render: row => row.actor_id || '-' },
-          { key: 'note', header: t('common.note', 'Note'), render: row => row.note || '-' },
-          { key: 'date', header: t('common.date', 'Date'), render: row => formatDate(row.created_at) },
-        ]}
-      />
-    </DataState>
-  );
+function MiniBar({ label, value, max, tone = 'primary' }: { label: string; value: number; max: number; tone?: string }) {
+  return <div className="ui4-mini-bar"><span>{label}</span><div><i className={`ui4-fill--${tone}`} style={{ width: `${max ? Math.max(4, (value / max) * 100) : 0}%` }} /></div><strong>{value}</strong></div>;
 }
 
 export function Audit() {
   const auth = useAuth();
   const { language, t } = useI18n();
-  const [formOpen, setFormOpen] = useState(false);
-  const [findingFormDirty, setFindingFormDirty] = useState(false);
-  const [findingFormSubmitting, setFindingFormSubmitting] = useState(false);
+  const text = useCallback((en: string, ar: string) => language === 'ar' ? ar : en, [language]);
+  const [screen, setScreen] = useState<AuditScreen>('dashboard');
+  const [selectedEngagementKey, setSelectedEngagementKey] = useState<string | null>(null);
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(null);
-  const [busyAction, setBusyAction] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [severityFilter, setSeverityFilter] = useState('all');
+  const [formOpen, setFormOpen] = useState(false);
+  const [formDirty, setFormDirty] = useState(false);
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [decision, setDecision] = useState<AuditDecision | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [criteriaContracts, setCriteriaContracts] = useState<Ui4AuditCriteriaContract[]>([]);
+  const [disputes, setDisputes] = useState<Ui4AuditCriteriaDispute[]>([]);
+
   const findings = useAsyncData(getAuditFindings, []);
   const workflowQueue = useAsyncData(getAuditFindingWorkflowQueue, []);
-  const overdueFindings = useAsyncData(getOverdueAuditFindings, []);
+  const overdue = useAsyncData(getOverdueAuditFindings, []);
   const repeatFindings = useAsyncData(getRepeatAuditFindings, []);
   const closureGates = useAsyncData(getAuditClosureGateStatus, []);
   const executiveEscalations = useAsyncData(getAuditExecutiveEscalations, []);
-  const closurePackIndex = useAsyncData(getAuditClosurePackIndex, []);
-  const validationEvents = useAsyncData(
-    () => selectedFindingId ? getAuditFindingValidationEvents(selectedFindingId) : Promise.resolve([]),
-    [selectedFindingId]
-  );
+  const closurePacks = useAsyncData(getAuditClosurePackIndex, []);
   const departments = useAsyncData(getDepartments, []);
   const profiles = useAsyncData(getProfiles, []);
-  const risks = useAsyncData(getRisks, []);
-  const complianceItems = useAsyncData(getComplianceItems, []);
   const organizations = useAsyncData(getOrganizations, []);
-  const organizationId = organizations.data?.[0]?.id || '';
-  const canManageFindings = auth.roles.some(
-    role => ['super_admin', 'governance_admin', 'auditor', 'compliance_officer', 'department_manager'].includes(role.role)
-  );
+  const events = useAsyncData(() => selectedFindingId ? getAuditFindingValidationEvents(selectedFindingId) : Promise.resolve([]), [selectedFindingId]);
 
-  const selectedFinding = useMemo(
-    () => (findings.data || []).find(row => row.id === selectedFindingId) || null,
-    [findings.data, selectedFindingId]
-  );
-  const selectedGate = useMemo(
-    () => (closureGates.data || []).find(row => row.audit_finding_id === selectedFindingId) || null,
-    [closureGates.data, selectedFindingId]
-  );
-  const selectedPack = useMemo(
-    () => (closurePackIndex.data || []).find(row => row.audit_finding_id === selectedFindingId) || null,
-    [closurePackIndex.data, selectedFindingId]
-  );
+  const rows = findings.data ?? [];
+  const organizationId = organizations.data?.[0]?.id || auth.profile?.organizationId || '';
+  const isIndependentReviewer = auth.roles.some((role) => ['super_admin', 'governance_admin', 'auditor'].includes(role.role));
+  const canManageWorkflow = auth.roles.some((role) => ['super_admin', 'governance_admin', 'auditor', 'compliance_officer', 'department_manager'].includes(role.role));
+  const canManagementRespond = auth.roles.some((role) => ['super_admin', 'governance_admin', 'department_manager', 'division_head'].includes(role.role));
 
-  const metrics = useMemo(() => ({
-    register: findings.data?.length || 0,
-    queue: workflowQueue.data?.length || 0,
-    overdue: overdueFindings.data?.length || 0,
-    blocked: (closureGates.data || []).filter(row => !row.can_close).length,
-    escalations: executiveEscalations.data?.length || 0,
-  }), [closureGates.data, executiveEscalations.data?.length, findings.data?.length, overdueFindings.data?.length, workflowQueue.data?.length]);
+  const engagements = useMemo<AuditEngagement[]>(() => {
+    const groups = new Map<string, AuditFindingRow[]>();
+    for (const finding of rows) {
+      const key = finding.audit_title?.trim() || text('Unassigned audit engagement', 'مهمة مراجعة غير مسندة');
+      groups.set(key, [...(groups.get(key) ?? []), finding]);
+    }
+    return [...groups.entries()].map(([title, grouped]) => {
+      const endDates = grouped.map((finding) => finding.audit_period_end_date || finding.due_date || null).filter(Boolean).sort();
+      return {
+        key: title, title, findings: grouped, status: engagementStatus(grouped),
+        startDate: grouped.map((finding) => finding.finding_date || finding.created_at || null).filter(Boolean).sort()[0] ?? null,
+        endDate: endDates[endDates.length - 1] ?? null,
+      };
+    });
+  }, [rows, text]);
 
-  const warnings = useMemo(() => {
-    const queueRows = workflowQueue.data || [];
-    const gateRows = closureGates.data || [];
-    const repeatRows = repeatFindings.data || [];
-    const escalationRows = executiveEscalations.data || [];
-    return [
-      {
-        id: 'response-overdue',
-        show: queueRows.some(row => isPast(row.management_response_due_date) && !['accepted', 'waived', 'not_required'].includes(row.management_response_status)),
-        title: 'Management response overdue',
-        body: 'One or more issued findings need accountable management response before the lifecycle can advance.',
-      },
-      {
-        id: 'action-overdue',
-        show: queueRows.some(row => isPast(row.corrective_action_due_date) && !['accepted', 'completed', 'not_required'].includes(row.corrective_action_status)),
-        title: 'Corrective action overdue',
-        body: 'A corrective action plan is overdue or still waiting for audit acceptance.',
-      },
-      {
-        id: 'evidence-missing',
-        show: gateRows.some(row => row.evidence_required && row.accepted_evidence_count < row.minimum_accepted_evidence_count && row.approved_waiver_count === 0),
-        title: 'Evidence missing',
-        body: 'Closure requires accepted evidence or an approved evidence waiver.',
-      },
-      {
-        id: 'closure-blocked',
-        show: gateRows.some(row => !row.can_close || row.closure_blocker),
-        title: 'Closure blocked',
-        body: 'At least one finding cannot close because response, action plan, evidence, or validation is incomplete.',
-      },
-      {
-        id: 'repeat',
-        show: Boolean(repeatRows.length),
-        title: 'Repeat finding',
-        body: 'Repeat or systemic issues should be visible to executives or committee review.',
-      },
-      {
-        id: 'executive',
-        show: escalationRows.some(row => row.escalation_required || row.executive_visible),
-        title: 'Executive escalation required',
-        body: 'High-risk, overdue, repeat, systemic, or committee-required findings need executive attention.',
-      },
-      {
-        id: 'committee',
-        show: escalationRows.some(row => row.committee_review_required),
-        title: 'Committee review required',
-        body: 'Committee-required findings should not be silently closed without documented review.',
-      },
-    ].filter(row => row.show);
-  }, [closureGates.data, executiveEscalations.data, repeatFindings.data, workflowQueue.data]);
+  const selectedFinding = useMemo(() => rows.find((finding) => finding.id === selectedFindingId) ?? null, [rows, selectedFindingId]);
+  const selectedEngagement = useMemo(() => engagements.find((engagement) => engagement.key === selectedEngagementKey)
+    ?? engagements.find((engagement) => engagement.findings.some((finding) => finding.id === selectedFindingId))
+    ?? engagements[0] ?? null, [engagements, selectedEngagementKey, selectedFindingId]);
+  const selectedContract = criteriaContracts.find((contract) => contract.audit_finding_id === selectedFindingId) ?? null;
+  const selectedPatch24Gate = (closureGates.data ?? []).find((gate) => gate.audit_finding_id === selectedFindingId) ?? null;
+  const closureEvaluation = selectedFinding ? evaluateUi4AuditClosureGate(selectedFinding, selectedContract, selectedPatch24Gate) : null;
 
-  async function refreshAuditWorkflow() {
+  const filteredFindings = useMemo(() => rows.filter((finding) => {
+    const query = search.trim().toLowerCase();
+    return (!query || `${finding.finding_code ?? ''} ${finding.title} ${finding.audit_title ?? ''}`.toLowerCase().includes(query))
+      && (statusFilter === 'all' || workflowLabel(finding) === statusFilter)
+      && (severityFilter === 'all' || (finding.severity_level || finding.risk_level) === severityFilter);
+  }), [rows, search, severityFilter, statusFilter]);
+
+  const loadCriteria = useCallback(async () => {
+    try { setCriteriaContracts(await getUi4AuditCriteriaContracts()); }
+    catch (error) { setNotice(error instanceof Error ? error.message : text('Audit criteria contract is unavailable.', 'عقد معايير المراجعة غير متاح.')); }
+  }, [text]);
+
+  useEffect(() => { void loadCriteria(); }, [loadCriteria]);
+  useEffect(() => {
+    if (!selectedFindingId) { setDisputes([]); return; }
+    void getUi4AuditCriteriaDisputes(selectedFindingId).then(setDisputes).catch((error) => setNotice(error instanceof Error ? error.message : text('Criteria disputes could not be loaded.', 'تعذر تحميل اعتراضات المعايير.')));
+  }, [selectedFindingId, text]);
+
+  async function refreshAudit() {
     await Promise.all([
-      findings.refresh(),
-      workflowQueue.refresh(),
-      overdueFindings.refresh(),
-      repeatFindings.refresh(),
-      closureGates.refresh(),
-      executiveEscalations.refresh(),
-      closurePackIndex.refresh(),
-      validationEvents.refresh(),
+      findings.refresh(), workflowQueue.refresh(), overdue.refresh(), repeatFindings.refresh(),
+      closureGates.refresh(), executiveEscalations.refresh(), closurePacks.refresh(), events.refresh(), loadCriteria(),
     ]);
+    if (selectedFindingId) setDisputes(await getUi4AuditCriteriaDisputes(selectedFindingId));
   }
 
-
-  const [actionModal, setActionModal] = useState<{ open: boolean; action: string; findingId: string } | null>(null);
-
-  function openActionModal(action: string, auditFindingId: string) {
-    if (action === 'generate_pack' || action === 'request_closure' || action === 'validate_closure') {
-      setActionModal({ open: true, action, findingId: auditFindingId });
-      return;
-    }
-    setActionModal({ open: true, action, findingId: auditFindingId });
+  function openEngagement(engagement: AuditEngagement, target: AuditScreen = 'engagement') {
+    setSelectedEngagementKey(engagement.key);
+    if (!selectedFindingId || !engagement.findings.some((finding) => finding.id === selectedFindingId)) setSelectedFindingId(engagement.findings[0]?.id ?? null);
+    setScreen(target);
   }
 
-  async function runFindingAction(action: string, auditFindingId: string, payload: Record<string, any>) {
-    setBusyAction(`${action}:${auditFindingId}`);
-    setError(null);
-    setMessage(null);
-    setActionModal(null);
+  function openFinding(finding: AuditFindingRow, target: AuditScreen = 'finding') {
+    setSelectedFindingId(finding.id);
+    setSelectedEngagementKey(finding.audit_title?.trim() || text('Unassigned audit engagement', 'مهمة مراجعة غير مسندة'));
+    setScreen(target);
+  }
+
+  async function executeDecision(values: Record<string, unknown>) {
+    if (!decision) return;
+    setBusy(true);
+    const findingId = decision.finding.id;
     try {
-      if (action === 'issue') {
-        await issueAuditFinding({ audit_finding_id: auditFindingId, severity_level: payload.severity || 'medium', note: payload.note || 'Finding issued from Audit Findings Workflow Center.' });
-      } else if (action === 'submit_response') {
-        if (!payload.managementResponse) return;
-        await submitManagementResponse({ audit_finding_id: auditFindingId, management_response: payload.managementResponse });
-      } else if (action === 'accept_response') {
-        await acceptManagementResponse({ audit_finding_id: auditFindingId, note: payload.note || 'Management response accepted.' });
-      } else if (action === 'reject_response') {
-        if (!payload.reason) return;
-        await rejectManagementResponse({ audit_finding_id: auditFindingId, reason: payload.reason });
-      } else if (action === 'submit_action') {
-        if (!payload.correctiveActionPlan || !payload.correctiveActionDueDate) return;
-        await submitCorrectiveActionPlan({ audit_finding_id: auditFindingId, corrective_action_plan: payload.correctiveActionPlan, corrective_action_due_date: payload.correctiveActionDueDate, corrective_action_owner_id: payload.correctiveActionOwnerId || undefined });
-      } else if (action === 'accept_action') {
-        await acceptCorrectiveActionPlan({ audit_finding_id: auditFindingId, note: payload.note || 'Corrective action plan accepted.' });
-      } else if (action === 'reject_action') {
-        if (!payload.reason) return;
-        await rejectCorrectiveActionPlan({ audit_finding_id: auditFindingId, reason: payload.reason });
-      } else if (action === 'request_extension') {
-        if (!payload.requestedDueDate || !payload.reason) return;
-        await requestAuditFindingExtension({ audit_finding_id: auditFindingId, requested_due_date: payload.requestedDueDate, reason: payload.reason });
-      } else if (action === 'approve_extension') {
-        if (!payload.extensionId) return;
-        await approveAuditFindingExtension({ audit_finding_id: auditFindingId, extension_id: payload.extensionId, note: payload.note || 'Extension approved.' });
-      } else if (action === 'reject_extension') {
-        if (!payload.extensionId || !payload.reason) return;
-        await rejectAuditFindingExtension({ audit_finding_id: auditFindingId, extension_id: payload.extensionId, reason: payload.reason });
-      } else if (action === 'request_closure') {
-        await requestAuditFindingClosure({ audit_finding_id: auditFindingId, note: payload.note || 'Closure requested for auditor validation.' });
-      } else if (action === 'validate_closure') {
-        await validateAuditFindingClosure({ audit_finding_id: auditFindingId, note: payload.note || 'Closure validated.' });
-      } else if (action === 'reject_closure') {
-        if (!payload.reason) return;
-        await rejectAuditFindingClosure({ audit_finding_id: auditFindingId, reason: payload.reason });
-      } else if (action === 'reopen') {
-        if (!payload.reason) return;
-        await reopenAuditFindingWithReason({ audit_finding_id: auditFindingId, reason: payload.reason });
-      } else if (action === 'escalate') {
-        if (!payload.reason) return;
-        await escalateAuditFinding({ audit_finding_id: auditFindingId, reason: payload.reason, escalation_level: payload.escalationLevel || 'executive' });
-      } else if (action === 'mark_repeat') {
-        await markRepeatAuditFinding({ audit_finding_id: auditFindingId, repeat_of_finding_id: payload.repeatOfFindingId || undefined, systemic_issue_flag: Boolean(payload.systemicIssueFlag) });
-      } else if (action === 'link_risk') {
-        if (!payload.relatedRiskId) return;
-        await linkAuditFindingToRisk({ audit_finding_id: auditFindingId, related_risk_id: payload.relatedRiskId });
-      } else if (action === 'link_compliance') {
-        if (!payload.relatedComplianceId) return;
-        await linkAuditFindingToCompliance({ audit_finding_id: auditFindingId, related_compliance_id: payload.relatedComplianceId });
-      } else if (action === 'generate_pack') {
-        await generateAuditClosurePackIndex({ audit_finding_id: auditFindingId });
-      }
-
-      setMessage(`${humanize(action)} completed for audit finding.`);
-      await refreshAuditWorkflow();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Audit finding workflow action failed.');
-    } finally {
-      setBusyAction(null);
-    }
+      if (decision.action === 'issue') await issueAuditFinding({ audit_finding_id: findingId, note: String(values.note || '') });
+      if (decision.action === 'submit_response') await submitManagementResponse({ audit_finding_id: findingId, management_response: String(values.management_response || ''), note: String(values.note || '') });
+      if (decision.action === 'accept_response') await acceptManagementResponse({ audit_finding_id: findingId, note: String(values.note || '') });
+      if (decision.action === 'reject_response') await rejectManagementResponse({ audit_finding_id: findingId, rejection_reason: String(values.reason || ''), note: String(values.note || '') });
+      if (decision.action === 'submit_action') await submitCorrectiveActionPlan({ audit_finding_id: findingId, corrective_action_plan: String(values.corrective_action_plan || ''), corrective_action_due_date: String(values.due_date || '') || undefined, note: String(values.note || '') });
+      if (decision.action === 'accept_action') await acceptCorrectiveActionPlan({ audit_finding_id: findingId, note: String(values.note || '') });
+      if (decision.action === 'reject_action') await rejectCorrectiveActionPlan({ audit_finding_id: findingId, rejection_reason: String(values.reason || ''), note: String(values.note || '') });
+      if (decision.action === 'request_closure') await requestAuditFindingClosure({ audit_finding_id: findingId, note: String(values.note || '') });
+      if (decision.action === 'validate_closure') await validateAuditFindingClosure({ audit_finding_id: findingId, note: String(values.note || '') });
+      if (decision.action === 'reject_closure') await rejectAuditFindingClosure({ audit_finding_id: findingId, rejection_reason: String(values.reason || ''), note: String(values.note || '') });
+      if (decision.action === 'generate_pack') await generateAuditClosurePackIndex({ audit_finding_id: findingId, closure_pack_reference: String(values.reference || '') || undefined, note: String(values.note || '') });
+      if (decision.action === 'dispute') await recordUi4AuditCriteriaDispute({
+        auditFindingId: findingId,
+        disputeType: String(values.dispute_type || 'criterion_dispute') as Ui4AuditCriteriaDispute['dispute_type'],
+        disputeStatement: String(values.dispute_statement || ''),
+        proposedCorrection: String(values.proposed_correction || '') || null,
+        evidenceReference: String(values.evidence_reference || '') || null,
+      });
+      if (decision.action === 'create_capa') await createUi4Capa({
+        capa_title: String(values.capa_title || decision.finding.title),
+        capa_description: String(values.capa_description || decision.finding.description),
+        capa_type: 'corrective_action', source_type: 'audit_finding', source_id: findingId,
+        source_reference: decision.finding.finding_code,
+        severity_level: decision.finding.severity_level || decision.finding.risk_level,
+        due_date: String(values.due_date || '') || null, evidence_required: true,
+        validation_required: true, effectiveness_review_required: true,
+      });
+      setNotice(text('Governed Audit action recorded.', 'تم تسجيل إجراء المراجعة المحكوم.'));
+      await refreshAudit();
+    } finally { setBusy(false); }
   }
-const actionDisabled = !canManageFindings || Boolean(busyAction);
 
-  const openFindingForm = () => {
-    setFindingFormDirty(false);
-    setFindingFormSubmitting(false);
-    setFormOpen(true);
-  };
+  const decisionFields = useMemo<DecisionFieldConfig[]>(() => {
+    if (!decision) return [];
+    if (decision.action === 'submit_response') return [
+      { id: 'management_response', label: text('Management response', 'رد الإدارة'), type: 'textarea', required: true, autoFocus: true },
+      { id: 'note', label: text('Supporting note', 'ملاحظة داعمة'), type: 'textarea' },
+    ];
+    if (decision.action === 'submit_action') return [
+      { id: 'corrective_action_plan', label: text('Corrective action plan', 'خطة الإجراء التصحيحي'), type: 'textarea', required: true, autoFocus: true },
+      { id: 'due_date', label: text('Target date', 'التاريخ المستهدف'), type: 'date' },
+      { id: 'note', label: text('Supporting note', 'ملاحظة داعمة'), type: 'textarea' },
+    ];
+    if (['reject_response', 'reject_action', 'reject_closure'].includes(decision.action)) return [
+      { id: 'reason', label: text('Required reason', 'السبب المطلوب'), type: 'textarea', required: true, autoFocus: true },
+      { id: 'note', label: text('Reviewer note', 'ملاحظة المراجع'), type: 'textarea' },
+    ];
+    if (decision.action === 'generate_pack') return [
+      { id: 'reference', label: text('Closure pack reference', 'مرجع حزمة الإغلاق'), type: 'text' },
+      { id: 'note', label: text('Pack note', 'ملاحظة الحزمة'), type: 'textarea' },
+    ];
+    if (decision.action === 'dispute') return [
+      { id: 'dispute_type', label: text('Dispute type', 'نوع الاعتراض'), type: 'select', defaultValue: 'criterion_dispute', options: ['criterion_dispute','scope_correction','version_correction','applicability_correction','evidence_response'].map((value) => ({ value, label: humanize(value, language) })) },
+      { id: 'dispute_statement', label: text('Management statement', 'بيان الإدارة'), type: 'textarea', required: true, autoFocus: true },
+      { id: 'proposed_correction', label: text('Proposed correction', 'التصحيح المقترح'), type: 'textarea' },
+      { id: 'evidence_reference', label: text('Evidence reference', 'مرجع الدليل'), type: 'text' },
+    ];
+    if (decision.action === 'create_capa') return [
+      { id: 'capa_title', label: text('CAPA title', 'عنوان الإجراء التصحيحي'), type: 'text', defaultValue: decision.finding.title, required: true },
+      { id: 'capa_description', label: text('Problem statement', 'بيان المشكلة'), type: 'textarea', defaultValue: decision.finding.description, required: true },
+      { id: 'due_date', label: text('Target date', 'التاريخ المستهدف'), type: 'date' },
+    ];
+    return [{ id: 'note', label: text('Decision rationale', 'مبرر القرار'), type: 'textarea', required: true, autoFocus: true }];
+  }, [decision, language, text]);
 
-  const closeFindingForm = () => {
-    setFormOpen(false);
-    setFindingFormDirty(false);
-    setFindingFormSubmitting(false);
-  };
+  const severityCounts = ['critical', 'high', 'medium', 'low'].map((severity) => ({ severity, count: rows.filter((finding) => (finding.severity_level || finding.risk_level) === severity).length }));
+  const maxSeverity = Math.max(1, ...severityCounts.map((item) => item.count));
+
+  function AuditTable({ tableRows = filteredFindings }: { tableRows?: AuditFindingRow[] }) {
+    return <div className="ui3-data-table ui4-audit-table"><div className="ui3-table-head"><span>{text('Finding', 'الملاحظة')}</span><span>{text('Engagement', 'المهمة')}</span><span>{text('Severity', 'الخطورة')}</span><span>{text('Owner', 'المالك')}</span><span>{text('Due date', 'الاستحقاق')}</span><span>{text('Status', 'الحالة')}</span><span /></div>{tableRows.map((finding) => <button type="button" className="ui3-table-row" key={finding.id} onClick={() => openFinding(finding)}><span><strong>{finding.finding_code || 'FINDING'}</strong><small>{finding.title}</small></span><span>{finding.audit_title || text('Unassigned', 'غير مسند')}</span><span><span className={`ui3-pill ui3-tone--${findingTone(finding.severity_level || finding.risk_level)}`}>{humanize(finding.severity_level || finding.risk_level)}</span></span><span>{ownerName(finding.owner)}</span><span>{formatDate(finding.due_date)}</span><span><StatusBadge status={humanize(workflowLabel(finding))} /></span><span><Eye size={15} /></span></button>)}</div>;
+  }
 
   return (
-    <section className="page-section">
-      <ModuleHeader
-        eyebrow={t('audit.eyebrow')}
-        title={t('audit.title')}
-        subtitle={t('audit.subtitle')}
-        action={canManageFindings ? (
-          <div className="inline-actions">
-            <button className="primary-button" onClick={openFindingForm}>{t('audit.newFinding')}</button>
+    <section className="page-section ui3-module ui4-module" data-testid="ui4-audit">
+      <ModuleHeader eyebrow={text('Audit Findings Workflow Center', 'مركز سير عمل ملاحظات المراجعة')} title={t('audit.title')} subtitle={text('Plan engagements, determine exact governed criteria, issue findings, and validate evidence-backed closure.', 'تخطيط المهام وتحديد المعايير المحكومة الدقيقة وإصدار الملاحظات والتحقق من الإغلاق المدعوم بالأدلة.')} action={canManageWorkflow ? <button type="button" className="ui3-primary-button" onClick={() => setFormOpen(true)}><Plus size={16} />{text('New finding', 'ملاحظة جديدة')}</button> : null} />
+      <nav className="ui4-workspace-tabs" aria-label={text('Audit workspace views', 'عروض مساحة عمل المراجعة')}>{auditScreens.map((item) => { const Icon = item.icon; const unavailable = ['engagement','planning','program','report'].includes(item.id) && !selectedEngagement; return <button type="button" key={item.id} aria-label={item.label} aria-current={screen === item.id ? 'page' : undefined} className={screen === item.id ? 'active' : ''} disabled={unavailable || (item.id === 'finding' && !selectedFinding)} onClick={() => setScreen(item.id)}><Icon size={15} /><span>{item.label}</span></button>; })}</nav>
+      {notice ? <div className="ui3-notice" role="status">{notice}</div> : null}
+
+      {screen === 'dashboard' ? <div className="ui4-screen" data-testid="ui4-audit-dashboard">
+        <div className="ui3-kpi-grid"><article><span>{text('Engagements', 'المهام')}</span><strong>{engagements.length}</strong><small>{text('Visible in scope', 'ظاهرة في النطاق')}</small></article><article className="ui3-tone--success"><span>{text('Completed', 'مكتملة')}</span><strong>{engagements.filter((item) => item.status === 'completed').length}</strong><small>{text('Audit engagements', 'مهام مراجعة')}</small></article><article className="ui3-tone--warning"><span>{text('Open findings', 'ملاحظات مفتوحة')}</span><strong>{rows.filter((finding) => workflowLabel(finding) !== 'closed').length}</strong><small>{text('Require follow-up', 'تتطلب متابعة')}</small></article><article className="ui3-tone--danger"><span>{text('Overdue', 'متأخرة')}</span><strong>{overdue.data?.length || 0}</strong><small>{text('Outside target date', 'تجاوزت التاريخ المستهدف')}</small></article><article><span>{text('Closure blocked', 'الإغلاق محظور')}</span><strong>{(closureGates.data ?? []).filter((gate) => !gate.can_close).length}</strong><small>{text('Governed gates', 'بوابات محكومة')}</small></article></div>
+        <div className="ui3-dashboard-grid"><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Audit status', 'حالة المراجعة')}</span><h2>{text('Engagement portfolio', 'محفظة المهام')}</h2></div><BarChart3 size={20} /></div><div className="ui4-donut-layout"><div className="ui4-donut" style={{ '--ui4-progress': `${engagements.length ? (engagements.filter((item) => item.status === 'completed').length / engagements.length) * 360 : 0}deg` } as CSSProperties}><strong>{engagements.length}</strong><span>{text('Audits', 'مراجعات')}</span></div><div className="ui4-legend"><span><i className="is-success" />{text('Completed', 'مكتملة')} <b>{engagements.filter((item) => item.status === 'completed').length}</b></span><span><i className="is-warning" />{text('In progress', 'قيد التنفيذ')} <b>{engagements.filter((item) => item.status === 'in_progress').length}</b></span><span><i />{text('Planned', 'مخططة')} <b>{engagements.filter((item) => item.status === 'planned').length}</b></span></div></div></section><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Finding summary', 'ملخص الملاحظات')}</span><h2>{text('Severity distribution', 'توزيع الخطورة')}</h2></div><Flag size={20} /></div><div className="ui4-mini-bars">{severityCounts.map((item) => <MiniBar key={item.severity} label={humanize(item.severity, language)} value={item.count} max={maxSeverity} tone={findingTone(item.severity)} />)}</div></section><section className="ui3-surface ui3-span-all"><div className="ui3-section-heading"><div><span>{text('Upcoming engagements', 'المهام القادمة')}</span><h2>{text('Audit portfolio', 'محفظة المراجعة')}</h2></div><CalendarDays size={20} /></div><div className="ui3-priority-grid">{engagements.slice(0, 6).map((engagement) => <button type="button" key={engagement.key} onClick={() => openEngagement(engagement)}><span className={`ui3-score-dot ui3-tone--${engagement.status === 'completed' ? 'success' : engagement.status === 'in_progress' ? 'warning' : 'neutral'}`}>{engagement.findings.length}</span><span><strong>{engagement.title}</strong><small>{formatDate(engagement.startDate)} · {formatDate(engagement.endDate)}</small></span><Eye size={16} /></button>)}</div></section></div>
+        <section className="ui3-surface">
+          <div className="ui3-section-heading"><div><span>{text('Assurance queues', 'قوائم التأكيد')}</span><h2>{text('Workflow queue', 'قائمة سير العمل')}</h2></div><ListChecks size={20} /></div>
+          <div className="ui3-stat-list ui4-assurance-queues">
+            <div><span>{text('Audit findings register', 'سجل ملاحظات المراجعة')}</span><strong>{rows.length}</strong></div>
+            <div><span>{text('Overdue findings', 'الملاحظات المتأخرة')}</span><strong>{overdue.data?.length || 0}</strong></div>
+            <div><span>{text('Repeat/systemic findings', 'الملاحظات المتكررة أو المنهجية')}</span><strong>{repeatFindings.data?.length || 0}</strong></div>
+            <div><span>{text('Closure gate status', 'حالة بوابة الإغلاق')}</span><strong>{(closureGates.data ?? []).filter((gate) => !gate.can_close).length}</strong></div>
+            <div><span>{text('Executive escalations', 'التصعيدات التنفيذية')}</span><strong>{executiveEscalations.data?.length || 0}</strong></div>
+            <div><span>{text('Closure pack index', 'فهرس حزمة الإغلاق')}</span><strong>{closurePacks.data?.length || 0}</strong></div>
           </div>
-        ) : null}
-      />
-            {error ? <div className="panel error-panel">{error}</div> : null}
-      {message ? <div className="notice-banner">{message}</div> : null}
-      <div className="module-grid">
-        <div className="module-card"><strong>{t('audit.findings')}</strong><span>{metrics.register} {t('audit.active')}</span></div>
-        <div className="module-card warning"><strong>{t('audit.workflowQueue')}</strong><span>{metrics.queue} {t('audit.queued')}</span></div>
-        <div className="module-card danger"><strong>{t('audit.overdueFindings')}</strong><span>{metrics.overdue} {t('audit.overdue')}</span></div>
-        <div className="module-card warning"><strong>{t('audit.closureBlocked')}</strong><span>{metrics.blocked} {t('audit.blocked')}</span></div>
-        <div className="module-card danger"><strong>{t('audit.escalations')}</strong><span>{metrics.escalations} {t('audit.escalations')}</span></div>
-      </div>
+        </section>
+      </div> : null}
 
+      {screen === 'register' ? <div className="ui4-screen" data-testid="ui4-audit-register"><section className="ui3-filter-bar"><label className="ui3-search"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={text('Search engagements', 'بحث المهام')} /></label><span>{engagements.length} {text('engagements', 'مهام')}</span></section><section className="ui3-surface ui3-register-surface"><div className="ui3-data-table ui4-engagement-table"><div className="ui3-table-head"><span>{text('Engagement', 'المهمة')}</span><span>{text('Type', 'النوع')}</span><span>{text('Findings', 'الملاحظات')}</span><span>{text('Start', 'البداية')}</span><span>{text('End', 'النهاية')}</span><span>{text('Status', 'الحالة')}</span><span /></div>{engagements.filter((engagement) => !search.trim() || engagement.title.toLowerCase().includes(search.trim().toLowerCase())).map((engagement) => <button type="button" className="ui3-table-row" key={engagement.key} onClick={() => openEngagement(engagement)}><span><strong>{engagement.title}</strong><small>{engagement.findings[0]?.finding_code || text('Audit engagement', 'مهمة مراجعة')}</small></span><span>{text('Internal audit', 'مراجعة داخلية')}</span><span>{engagement.findings.length}</span><span>{formatDate(engagement.startDate)}</span><span>{formatDate(engagement.endDate)}</span><span><StatusBadge status={humanize(engagement.status)} /></span><span><Eye size={15} /></span></button>)}</div>{!engagements.length && !findings.loading ? <EmptyAudit title={text('No audit engagements', 'لا توجد مهام مراجعة')} /> : null}</section></div> : null}
 
-      {warnings.length ? (
-        <div className="warning-stack">
-          {warnings.map(warning => (
-            <div className="warning-card" key={warning.id}>
-              <strong><AlertTriangle size={16} /> {warning.title}</strong>
-              <p>{warning.body}</p>
-            </div>
-          ))}
-        </div>
-      ) : null}
+      {screen === 'engagement' && selectedEngagement ? <div className="ui4-screen" data-testid="ui4-audit-engagement"><button type="button" className="ui3-back-button" onClick={() => setScreen('register')}><ArrowLeft size={16} />{text('Audit register', 'سجل المراجعة')}</button><header className="ui3-record-header"><div><span className="ui3-eyebrow">{selectedEngagement.findings[0]?.finding_code || text('Engagement', 'مهمة')}</span><h1>{selectedEngagement.title}</h1><p>{text('Internal audit engagement governed by exact-version criteria and independent finding review.', 'مهمة مراجعة داخلية محكومة بمعايير إصدار دقيقة ومراجعة مستقلة للملاحظات.')}</p><div className="ui3-record-tags"><StatusBadge status={humanize(selectedEngagement.status)} /><span>{selectedEngagement.findings.length} {text('findings', 'ملاحظات')}</span></div></div></header><div className="ui3-detail-layout"><main className="ui3-stack"><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Engagement information', 'معلومات المهمة')}</span><h2>{text('Scope and accountability', 'النطاق والمساءلة')}</h2></div><ClipboardCheck size={20} /></div><div className="ui3-data-grid"><div><span>{text('Start date', 'تاريخ البداية')}</span><strong>{formatDate(selectedEngagement.startDate)}</strong></div><div><span>{text('End date', 'تاريخ النهاية')}</span><strong>{formatDate(selectedEngagement.endDate)}</strong></div><div><span>{text('Audit manager', 'مدير المراجعة')}</span><strong>{ownerName(selectedEngagement.findings[0]?.owner)}</strong></div><div><span>{text('Progress', 'التقدم')}</span><strong>{Math.round((selectedEngagement.findings.filter((finding) => workflowLabel(finding) === 'closed').length / Math.max(1, selectedEngagement.findings.length)) * 100)}%</strong></div></div></section><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Description', 'الوصف')}</span><h2>{text('Audit objective', 'هدف المراجعة')}</h2></div><Target size={20} /></div><p className="ui3-supporting-copy">{text('Assess control design and operating effectiveness, determine applicable governed criteria at the audit period end, and retain traceable findings.', 'تقييم تصميم الضوابط وفعاليتها التشغيلية وتحديد المعايير المحكومة المنطبقة في نهاية فترة المراجعة والاحتفاظ بملاحظات قابلة للتتبع.')}</p></section></main><aside className="ui3-stack"><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Finding profile', 'ملف الملاحظات')}</span><h2>{text('Engagement summary', 'ملخص المهمة')}</h2></div><Flag size={20} /></div><div className="ui3-stat-list"><div><span>{text('Formal findings', 'ملاحظات رسمية')}</span><strong>{selectedEngagement.findings.filter((finding) => finding.finding_classification !== 'advisory_observation').length}</strong></div><div><span>{text('Advisory observations', 'ملاحظات استشارية')}</span><strong>{selectedEngagement.findings.filter((finding) => finding.finding_classification === 'advisory_observation').length}</strong></div><div><span>{text('Open', 'مفتوحة')}</span><strong>{selectedEngagement.findings.filter((finding) => workflowLabel(finding) !== 'closed').length}</strong></div></div></section></aside></div></div> : null}
 
+      {screen === 'planning' && selectedEngagement ? <div className="ui4-screen" data-testid="ui4-audit-planning"><header className="ui3-record-header ui4-compact-record"><div><span className="ui3-eyebrow">{text('Plan', 'الخطة')}</span><h1>{selectedEngagement.title}</h1><p>{text('Scope, objectives, and governing criteria for the engagement.', 'نطاق المهمة وأهدافها ومعاييرها الحاكمة.')}</p></div></header><div className="ui4-stepper"><span className="active">1<small>{text('Plan', 'الخطة')}</small></span><span className="active">2<small>{text('Scope', 'النطاق')}</small></span><span>3<small>{text('Resources', 'الموارد')}</small></span><span>4<small>{text('Timeline', 'الجدول')}</small></span><span>5<small>{text('Review', 'المراجعة')}</small></span></div><div className="ui3-stack"><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('In scope', 'ضمن النطاق')}</span><h2>{text('Scope', 'النطاق')}</h2></div><Target size={20} /></div><div className="ui4-two-column-list"><ul>{[...new Set(selectedEngagement.findings.map((finding) => departmentName(finding.departments)).filter((value) => value !== '-'))].map((value) => <li key={value}>{value}</li>)}</ul><ul><li>{text('Control design', 'تصميم الضوابط')}</li><li>{text('Operating effectiveness', 'الفعالية التشغيلية')}</li><li>{text('Governed evidence', 'الأدلة المحكومة')}</li></ul></div></section><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Objectives', 'الأهداف')}</span><h2>{text('Assurance objectives', 'أهداف التأكيد')}</h2></div><CheckCircle2 size={20} /></div><ul className="ui4-check-list"><li>{text('Evaluate design and operating effectiveness of controls.', 'تقييم تصميم الضوابط وفعاليتها التشغيلية.')}</li><li>{text('Determine exact applicable Policy and SOP versions.', 'تحديد إصدارات السياسة والإجراء المنطبقة بدقة.')}</li><li>{text('Identify control gaps and improvement opportunities.', 'تحديد فجوات الضوابط وفرص التحسين.')}</li></ul></section><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Criteria', 'المعايير')}</span><h2>{text('Governance resolution', 'حل الحوكمة')}</h2></div><Link2 size={20} /></div><p className="ui3-supporting-copy">{text('Each formal finding resolves Policy/SOP versions at audit-period end, then finding date. The auditor owns the determination.', 'تحل كل ملاحظة رسمية إصدارات السياسة والإجراء عند نهاية فترة المراجعة ثم تاريخ الملاحظة. يملك المراجع التحديد.')}</p></section></div></div> : null}
 
+      {screen === 'program' && selectedEngagement ? <div className="ui4-screen" data-testid="ui4-audit-program"><header className="ui3-record-header ui4-compact-record"><div><span className="ui3-eyebrow">{text('Audit program', 'برنامج المراجعة')}</span><h1>{selectedEngagement.title}</h1><p>{text('Procedures derived from the live engagement findings and governed criteria.', 'إجراءات مشتقة من ملاحظات المهمة الفعلية والمعايير المحكومة.')}</p></div></header><section className="ui3-filter-bar"><label className="ui3-search"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={text('Search procedures', 'بحث الإجراءات')} /></label><span>{selectedEngagement.findings.length} {text('procedures', 'إجراءات')}</span></section><section className="ui3-surface ui3-register-surface"><div className="ui3-data-table ui4-program-table"><div className="ui3-table-head"><span>#</span><span>{text('Procedure', 'الإجراء')}</span><span>{text('Type', 'النوع')}</span><span>{text('Assignee', 'المسند إليه')}</span><span>{text('Status', 'الحالة')}</span></div>{selectedEngagement.findings.filter((finding) => !search.trim() || finding.title.toLowerCase().includes(search.trim().toLowerCase())).map((finding, index) => <button type="button" className="ui3-table-row" key={finding.id} onClick={() => openFinding(finding)}><span>{index + 1}</span><span><strong>{finding.title}</strong><small>{finding.criteria || text('Control and evidence verification', 'التحقق من الضوابط والأدلة')}</small></span><span>{text('Test', 'اختبار')}</span><span>{ownerName(finding.owner)}</span><span><StatusBadge status={humanize(workflowLabel(finding))} /></span></button>)}</div></section></div> : null}
 
+      {screen === 'findings' ? <div className="ui4-screen" data-testid="ui4-audit-findings"><div className="ui3-kpi-grid"><article><span>{text('Total findings', 'إجمالي الملاحظات')}</span><strong>{rows.length}</strong></article>{severityCounts.map((item) => <article className={`ui3-tone--${findingTone(item.severity)}`} key={item.severity}><span>{humanize(item.severity, language)}</span><strong>{item.count}</strong></article>)}</div><section className="ui3-filter-bar"><label className="ui3-search"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={text('Search findings', 'بحث الملاحظات')} /></label><select value={severityFilter} onChange={(event) => setSeverityFilter(event.target.value)}><option value="all">{text('All severities', 'كل درجات الخطورة')}</option>{['critical','high','medium','low'].map((value) => <option value={value} key={value}>{humanize(value, language)}</option>)}</select><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="all">{text('All statuses', 'كل الحالات')}</option>{[...new Set(rows.map(workflowLabel))].map((value) => <option value={value} key={value}>{humanize(value, language)}</option>)}</select><span>{filteredFindings.length} {text('records', 'سجلات')}</span></section><section className="ui3-surface ui3-register-surface"><AuditTable />{!filteredFindings.length && !findings.loading ? <EmptyAudit title={text('No findings match the filters', 'لا توجد ملاحظات تطابق عوامل التصفية')} /> : null}</section></div> : null}
 
-      <div className="panel">
-        <div className="panel-header"><h4><ClipboardCheck size={18} /> {t('audit.register')}</h4></div>
-        <DataState
-          loading={findings.loading}
-          error={findings.error}
-          empty={!findings.data?.length}
-          emptyTitle={t('audit.g.noFindings', 'No audit findings in your scope')}
-          emptyMessage={
-            canManageFindings
-              ? t('audit.g.noFindingsManage', 'Create a controlled finding when an audit issue requires tracked remediation.')
-              : t('audit.g.noFindingsReadOnly', 'No audit findings are currently available for this read-only account.')
-          }
-        >
-          <EntityTable<AuditFindingRow>
-            rows={findings.data || []}
-            getRowKey={row => row.id}
-            columns={[
-              { key: 'code', header: t('common.code'), render: row => row.finding_code || '-' },
-              { key: 'title', header: t('audit.finding'), render: row => <button className="link-button" type="button" onClick={() => setSelectedFindingId(row.id)}><strong>{row.title}</strong></button> },
-              { key: 'department', header: t('common.department'), render: row => departmentName(row.departments) },
-              { key: 'owner', header: t('common.owner'), render: row => ownerName(row.owner) },
-              { key: 'due', header: t('common.due'), render: row => formatDate(row.due_date) },
-              { key: 'status', header: t('audit.lifecycle'), render: row => <StatusBadge status={t(`status.${row.finding_status || row.status}`, humanize(row.finding_status || row.status))} /> },
-              { key: 'severity', header: t('common.severity'), render: row => <span className={`risk-pill ${row.severity_level || row.risk_level}`}>{t(`risk.${row.severity_level || row.risk_level}`, row.severity_level || row.risk_level)}</span> },
-              {
-                key: 'actions',
-                header: t('common.actions'),
-                render: row => canManageFindings ? (
-                  <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('audit.issueFinding')} onClick={() => openActionModal('issue', row.id)}><Send size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('audit.requestClosure')} onClick={() => openActionModal('request_closure', row.id)}><FileCheck2 size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('audit.escalate')} onClick={() => openActionModal('escalate', row.id)}><Flag size={14} /></button>
-                  </div>
-                ) : '-',
-              },
-            ]}
-          />
-        </DataState>
-      </div>
+      {screen === 'finding' && selectedFinding ? <div className="ui4-screen" data-testid="ui4-audit-finding-detail"><button type="button" className="ui3-back-button" onClick={() => setScreen('findings')}><ArrowLeft size={16} />{text('Findings', 'الملاحظات')}</button><header className="ui3-record-header"><div><span className="ui3-eyebrow">{selectedFinding.finding_code || text('Finding', 'ملاحظة')}</span><h1>{selectedFinding.title}</h1><p>{selectedFinding.description}</p><div className="ui3-record-tags"><span className={`ui3-pill ui3-tone--${findingTone(selectedFinding.severity_level || selectedFinding.risk_level)}`}>{humanize(selectedFinding.severity_level || selectedFinding.risk_level, language)}</span><StatusBadge status={humanize(workflowLabel(selectedFinding))} /><span>{humanize(selectedFinding.finding_classification || 'formal_finding', language)}</span></div></div><div className="ui3-header-actions">{canManagementRespond ? <button type="button" className="ui3-secondary-button" onClick={() => setDecision({ action: 'dispute', finding: selectedFinding })}><MessageSquareWarning size={15} />{text('Record dispute', 'تسجيل اعتراض')}</button> : null}{canManageWorkflow ? <button type="button" className="ui3-primary-button" onClick={() => setDecision({ action: 'create_capa', finding: selectedFinding })}><Plus size={15} />{text('Create CAPA', 'إنشاء إجراء تصحيحي')}</button> : null}</div></header><section className="ui4-action-strip" aria-label={text('Audit workflow actions', 'إجراءات سير عمل المراجعة')}>{workflowLabel(selectedFinding) === 'draft' && isIndependentReviewer ? <button type="button" onClick={() => setDecision({ action: 'issue', finding: selectedFinding })}><Send size={14} />{text('Issue finding', 'إصدار الملاحظة')}</button> : null}{canManagementRespond ? <button type="button" onClick={() => setDecision({ action: 'submit_response', finding: selectedFinding })}>{text('Submit response', 'إرسال الرد')}</button> : null}{isIndependentReviewer ? <><button type="button" onClick={() => setDecision({ action: 'accept_response', finding: selectedFinding })}>{text('Accept response', 'قبول الرد')}</button><button type="button" onClick={() => setDecision({ action: 'reject_response', finding: selectedFinding })}>{text('Return response', 'إعادة الرد')}</button></> : null}{canManagementRespond ? <button type="button" onClick={() => setDecision({ action: 'submit_action', finding: selectedFinding })}>{text('Submit action plan', 'إرسال خطة الإجراء')}</button> : null}{isIndependentReviewer ? <><button type="button" onClick={() => setDecision({ action: 'accept_action', finding: selectedFinding })}>{text('Accept action plan', 'قبول خطة الإجراء')}</button><button type="button" disabled={!closureEvaluation?.passed} title={closureEvaluation?.blockers.join(' ')} onClick={() => setDecision({ action: 'validate_closure', finding: selectedFinding })}>{text('Validate closure', 'التحقق من الإغلاق')}</button><button type="button" onClick={() => setDecision({ action: 'reject_closure', finding: selectedFinding })}>{text('Reject closure', 'رفض الإغلاق')}</button></> : null}<button type="button" onClick={() => setDecision({ action: 'generate_pack', finding: selectedFinding })}>{text('Closure pack', 'حزمة الإغلاق')}</button></section><div className="ui3-detail-layout"><main className="ui3-stack"><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Finding details', 'تفاصيل الملاحظة')}</span><h2>{text('Condition, cause, effect', 'الحالة والسبب والأثر')}</h2></div><FileCheck2 size={20} /></div><div className="ui4-finding-narrative"><div><span>{text('Observed condition', 'الحالة الملحوظة')}</span><p>{selectedFinding.observed_condition || selectedFinding.description}</p></div><div><span>{text('Criteria', 'المعايير')}</span><p>{selectedFinding.criteria || text('Governance criteria are determined independently in the linkage workspace below.', 'يتم تحديد معايير الحوكمة بشكل مستقل في مساحة الربط أدناه.')}</p></div><div><span>{text('Root cause', 'السبب الجذري')}</span><p>{selectedFinding.root_cause_summary || selectedFinding.root_cause || text('Not yet recorded.', 'لم يسجل بعد.')}</p></div><div><span>{text('Effect / impact', 'الأثر')}</span><p>{selectedFinding.effect_impact || text('Not yet recorded.', 'لم يسجل بعد.')}</p></div><div><span>{text('Recommendation', 'التوصية')}</span><p>{selectedFinding.recommendation || text('Management action is tracked through the governed response lifecycle.', 'يتم تتبع إجراء الإدارة من خلال دورة حياة الاستجابة المحكومة.')}</p></div></div></section><GovernanceCriteriaLinkage source={{ type: 'audit_finding', id: selectedFinding.id, organizationId: selectedFinding.organization_id || organizationId, sourceDate: selectedContract?.criteria_resolution_date || selectedFinding.audit_period_end_date || selectedFinding.finding_date || null, departmentId: selectedFinding.responsible_department_id || selectedFinding.department_id }} mode="audit" title={text('Exact governed criteria', 'المعايير المحكومة الدقيقة')} canSuggest={isIndependentReviewer} canReview={isIndependentReviewer} onLinksChange={() => void loadCriteria()} /><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Management disputes', 'اعتراضات الإدارة')}</span><h2>{text('Append-only response trail', 'مسار استجابة غير قابل للتعديل')}</h2></div><MessageSquareWarning size={20} /></div>{disputes.length ? <ol className="ui3-timeline">{disputes.map((dispute) => <li key={dispute.id}><span /><div><strong>{humanize(dispute.dispute_type, language)}</strong><p>{dispute.dispute_statement}</p><small>{formatDate(dispute.created_at)}{dispute.proposed_correction ? ` · ${dispute.proposed_correction}` : ''}</small></div></li>)}</ol> : <EmptyAudit title={text('No management disputes recorded', 'لا توجد اعتراضات إدارية مسجلة')} detail={text('Disputes do not overwrite the auditor determination.', 'لا تستبدل الاعتراضات تحديد المراجع.')} />}</section><AuditValidationTimeline events={events.data ?? []} /></main><aside className="ui3-stack"><section className={`ui3-surface ui3-gate-summary ${closureEvaluation?.passed ? '' : 'ui3-gate-summary--blocked'}`}>{closureEvaluation?.passed ? <CheckCircle2 size={20} /> : <AlertTriangle size={20} />}<div><strong>{closureEvaluation?.passed ? text('Closure criteria satisfied', 'تم استيفاء معايير الإغلاق') : text('Closure blocked', 'الإغلاق محظور')}</strong><p>{closureEvaluation?.criterionException ? text('Advisory observation criterion exception applies.', 'ينطبق استثناء معيار الملاحظة الاستشارية.') : closureEvaluation?.blockers.join(' ') || text('Gate evidence is loading.', 'جار تحميل أدلة البوابة.')}</p></div></section><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Accountability', 'المساءلة')}</span><h2>{text('Response ownership', 'ملكية الاستجابة')}</h2></div><Target size={20} /></div><div className="ui3-stat-list"><div><span>{text('Department', 'الإدارة')}</span><strong>{departmentName(selectedFinding.departments)}</strong></div><div><span>{text('Owner', 'المالك')}</span><strong>{ownerName(selectedFinding.owner)}</strong></div><div><span>{text('Due date', 'الاستحقاق')}</span><strong>{formatDate(selectedFinding.due_date)}</strong></div><div><span>{text('Criteria date', 'تاريخ المعايير')}</span><strong>{formatDate(selectedContract?.criteria_resolution_date)}</strong></div></div></section></aside></div></div> : null}
 
-      <details className="panel" style={{ marginTop: '16px', border: 'none', background: 'transparent', boxShadow: 'none' }}>
-        <summary style={{ cursor: 'pointer', fontWeight: 600, padding: '12px 16px', background: 'var(--panel-bg)', borderRadius: '8px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
-          {t('audit.g.showWorkflowDetails', 'Show workflow queues and lifecycle details')}
-        </summary>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-<div className="panel">
-        <div className="panel-header"><h4><Clock size={18} /> {t('audit.workflowQueue', 'Workflow queue')}</h4></div>
-        <DataState loading={workflowQueue.loading} error={workflowQueue.error} empty={!workflowQueue.data?.length} emptyTitle={t('audit.g.noWorkflowItems', 'No workflow queue items')} emptyMessage={t('audit.g.workflowItemsHint', 'Findings requiring response, action, evidence, validation, correction, closure or escalation appear here.')}>
-          <EntityTable<AuditFindingWorkflowQueueRow>
-            rows={workflowQueue.data || []}
-            getRowKey={row => row.audit_finding_id}
-            columns={[
-              { key: 'finding', header: t('audit.finding', 'Finding'), render: row => <button className="link-button" type="button" onClick={() => setSelectedFindingId(row.audit_finding_id)}>{row.finding_code || row.title}</button> },
-              { key: 'reason', header: t('audit.g.queueReason', 'Queue reason'), render: row => humanize(row.queue_reason) },
-              { key: 'response', header: t('audit.g.response', 'Response'), render: row => <StatusBadge status={humanize(row.management_response_status)} /> },
-              { key: 'action', header: t('audit.g.actionPlan', 'Action plan'), render: row => <StatusBadge status={humanize(row.corrective_action_status)} /> },
-              { key: 'evidence', header: t('audit.g.evidence', 'Evidence'), render: row => `${row.accepted_evidence_count} / ${row.minimum_accepted_evidence_count}` },
-              { key: 'due', header: t('common.due', 'Due'), render: row => formatDate(row.due_date || row.management_response_due_date || row.corrective_action_due_date) },
-              {
-                key: 'actions',
-                header: t('common.actions', 'Actions'),
-                render: row => canManageFindings ? (
-                  <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('audit.g.submitResponse', 'Submit response')} onClick={() => openActionModal('submit_response', row.audit_finding_id)}><Send size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('audit.g.acceptResponse', 'Accept response')} onClick={() => openActionModal('accept_response', row.audit_finding_id)}><ThumbsUp size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('audit.g.rejectResponse', 'Reject response')} onClick={() => openActionModal('reject_response', row.audit_finding_id)}><XCircle size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('audit.g.submitActionPlan', 'Submit action plan')} onClick={() => openActionModal('submit_action', row.audit_finding_id)}><ClipboardCheck size={14} /></button>
-                  </div>
-                ) : '-',
-              },
-            ]}
-          />
-        </DataState>
-      </div>
+      {screen === 'report' && selectedEngagement ? <div className="ui4-screen" data-testid="ui4-audit-report"><header className="ui3-record-header ui4-compact-record"><div><span className="ui3-eyebrow">{text('Internal audit report', 'تقرير المراجعة الداخلية')}</span><h1>{selectedEngagement.title}</h1><p>{text('Evidence-backed conclusions drawn from the live engagement register.', 'استنتاجات مدعومة بالأدلة مستمدة من سجل المهمة الفعلي.')}</p></div></header><div className="ui3-detail-layout"><main className="ui3-stack"><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Overall conclusion', 'الاستنتاج العام')}</span><h2>{text('Control environment', 'بيئة الضوابط')}</h2></div><ClipboardCheck size={20} /></div><p className="ui3-supporting-copy">{selectedEngagement.findings.some((finding) => ['critical','high'].includes(finding.severity_level || finding.risk_level)) ? text('Material control weaknesses require prioritized management action and independent follow-up.', 'تتطلب نقاط الضعف الجوهرية في الضوابط إجراء إدارياً ذا أولوية ومتابعة مستقلة.') : text('No high-severity control weakness is visible in the current engagement scope.', 'لا تظهر نقاط ضعف عالية الخطورة في نطاق المهمة الحالي.')}</p></section><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Findings', 'الملاحظات')}</span><h2>{text('Report index', 'فهرس التقرير')}</h2></div><FileText size={20} /></div><AuditTable tableRows={selectedEngagement.findings} /></section></main><aside className="ui3-stack"><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Key metrics', 'المؤشرات الرئيسية')}</span><h2>{text('Report summary', 'ملخص التقرير')}</h2></div><BarChart3 size={20} /></div><div className="ui3-stat-list">{severityCounts.map((item) => <div key={item.severity}><span>{humanize(item.severity, language)}</span><strong>{selectedEngagement.findings.filter((finding) => (finding.severity_level || finding.risk_level) === item.severity).length}</strong></div>)}</div></section></aside></div></div> : null}
 
-      <div className="panel">
-        <div className="panel-header"><h4><AlertTriangle size={18} /> {t('audit.overdueFindings', 'Overdue findings')}</h4></div>
-        <DataState loading={overdueFindings.loading} error={overdueFindings.error} empty={!overdueFindings.data?.length} emptyTitle={t('audit.g.noOverdueItems', 'No overdue audit workflow items')} emptyMessage={t('audit.g.noOverdueItemsHint', 'Overdue responses, corrective actions, validations and findings appear here.')}>
-          <EntityTable<OverdueAuditFindingRow>
-            rows={overdueFindings.data || []}
-            getRowKey={row => row.audit_finding_id}
-            columns={[
-              { key: 'finding', header: t('audit.finding', 'Finding'), render: row => <button className="link-button" type="button" onClick={() => setSelectedFindingId(row.audit_finding_id)}>{row.finding_code || row.title}</button> },
-              { key: 'reason', header: t('audit.g.reason', 'Reason'), render: row => humanize(row.overdue_reason, language) },
-              { key: 'days', header: t('audit.g.days', 'Days'), render: row => row.days_overdue },
-              { key: 'owner', header: t('common.owner', 'Owner'), render: row => row.responsible_owner_name || '-' },
-              { key: 'severity', header: t('common.severity', 'Severity'), render: row => <StatusBadge status={humanize(row.severity_level, language)} /> },
-            ]}
-          />
-        </DataState>
-      </div>
+      {screen === 'followup' ? <div className="ui4-screen" data-testid="ui4-audit-followup"><div className="ui3-kpi-grid"><article><span>{text('Total actions', 'إجمالي الإجراءات')}</span><strong>{workflowQueue.data?.length || rows.length}</strong></article><article className="ui3-tone--danger"><span>{text('Overdue', 'متأخرة')}</span><strong>{overdue.data?.length || 0}</strong></article><article className="ui3-tone--warning"><span>{text('In progress', 'قيد التنفيذ')}</span><strong>{rows.filter((finding) => ['action_plan_in_progress','evidence_required','closure_requested'].includes(workflowLabel(finding))).length}</strong></article><article className="ui3-tone--success"><span>{text('Closed', 'مغلقة')}</span><strong>{rows.filter((finding) => workflowLabel(finding) === 'closed').length}</strong></article></div><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Follow-up queue', 'قائمة المتابعة')}</span><h2>{text('Management response and action tracking', 'تتبع استجابة الإدارة والإجراءات')}</h2></div><Clock3 size={20} /></div><div className="ui3-data-table ui4-followup-table"><div className="ui3-table-head"><span>{text('Finding', 'الملاحظة')}</span><span>{text('Response', 'الاستجابة')}</span><span>{text('Action plan', 'خطة الإجراء')}</span><span>{text('Due date', 'الاستحقاق')}</span><span>{text('Closure', 'الإغلاق')}</span><span /></div>{rows.map((finding) => <button type="button" className="ui3-table-row" key={finding.id} onClick={() => openFinding(finding)}><span><strong>{finding.finding_code || 'FINDING'}</strong><small>{finding.title}</small></span><span><StatusBadge status={humanize(finding.management_response_status || 'required')} /></span><span><StatusBadge status={humanize(finding.corrective_action_status || 'required')} /></span><span>{formatDate(finding.corrective_action_due_date || finding.due_date)}</span><span><StatusBadge status={humanize(finding.closure_validation_status || 'not requested')} /></span><span><Eye size={15} /></span></button>)}</div></section><OverdueAuditQueue loading={overdue.loading} error={overdue.error} findings={overdue.data ?? []} onOpen={(findingId) => { const finding = rows.find((item) => item.id === findingId); if (finding) openFinding(finding); }} /></div> : null}
 
-      <div className="panel">
-        <div className="panel-header"><h4><ShieldAlert size={18} /> {t('audit.g.repeatSystemic', 'Repeat/systemic findings')}</h4></div>
-        <DataState loading={repeatFindings.loading} error={repeatFindings.error} empty={!repeatFindings.data?.length} emptyTitle={t('audit.g.noRepeatFindings', 'No repeat findings visible')} emptyMessage={t('audit.g.noRepeatFindingsHint', 'Repeat, systemic, or detected recurrence findings appear here.')}>
-          <EntityTable<RepeatAuditFindingRow>
-            rows={repeatFindings.data || []}
-            getRowKey={row => row.audit_finding_id}
-            columns={[
-              { key: 'finding', header: t('audit.finding', 'Finding'), render: row => <button className="link-button" type="button" onClick={() => setSelectedFindingId(row.audit_finding_id)}>{row.finding_code || row.title}</button> },
-              { key: 'department', header: t('common.department', 'Department'), render: row => row.department_name || '-' },
-              { key: 'root', header: t('form.audit.rootCause', 'Root cause'), render: row => humanize(row.root_cause_category, language) || '-' },
-              { key: 'repeat', header: t('audit.g.repeatCount', 'Repeat count'), render: row => Math.max(row.recurrence_count, row.detected_repeat_count) },
-              { key: 'systemic', header: t('audit.g.systemic', 'Systemic'), render: row => row.systemic_issue_flag ? <StatusBadge status={t('audit.g.systemic', 'Systemic')} /> : '-' },
-            ]}
-          />
-        </DataState>
-      </div>
+      {screen === 'review' ? <div className="ui4-screen" data-testid="ui4-audit-review"><header className="ui3-record-header ui4-compact-record"><div><span className="ui3-eyebrow">{text('Submit for review', 'إرسال للمراجعة')}</span><h1>{selectedEngagement?.title || text('Audit review queue', 'قائمة مراجعة التدقيق')}</h1><p>{text('Independent review confirms criteria, response, action evidence, and closure gates.', 'تؤكد المراجعة المستقلة المعايير والاستجابة وأدلة الإجراءات وبوابات الإغلاق.')}</p></div></header><div className="ui4-stepper"><span className="active">1<small>{text('Prepare', 'إعداد')}</small></span><span className="active">2<small>{text('Submit', 'إرسال')}</small></span><span>3<small>{text('Review', 'مراجعة')}</small></span><span>4<small>{text('Approve', 'اعتماد')}</small></span></div><div className="ui3-detail-layout"><main className="ui3-stack"><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Review readiness', 'جاهزية المراجعة')}</span><h2>{text('Governed approval checks', 'فحوصات الاعتماد المحكومة')}</h2></div><ShieldCheck size={20} /></div><ul className="ui4-check-list"><li>{criteriaContracts.filter((contract) => contract.criterion_gate_satisfied).length} / {rows.length} {text('findings satisfy the criterion gate', 'ملاحظات تستوفي بوابة المعايير')}</li><li>{(closureGates.data ?? []).filter((gate) => gate.can_close).length} / {rows.length} {text('findings satisfy Patch 24 closure', 'ملاحظات تستوفي إغلاق Patch 24')}</li><li>{disputes.length} {text('append-only management disputes on the selected finding', 'اعتراضات إدارية غير قابلة للتعديل على الملاحظة المحددة')}</li></ul></section><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Reviewers', 'المراجعون')}</span><h2>{text('Independent approval path', 'مسار اعتماد مستقل')}</h2></div><ClipboardCheck size={20} /></div><div className="ui3-record-list ui3-record-list--static"><div><span><strong>{text('Audit manager', 'مدير المراجعة')}</strong><small>{text('Primary reviewer', 'المراجع الرئيسي')}</small></span><StatusBadge status={text('Pending', 'قيد الانتظار')} /></div><div><span><strong>{text('Governance reviewer', 'مراجع الحوكمة')}</strong><small>{text('Criteria and closure', 'المعايير والإغلاق')}</small></span><StatusBadge status={text('Pending', 'قيد الانتظار')} /></div></div></section></main><aside className="ui3-stack"><section className="ui3-surface"><div className="ui3-section-heading"><div><span>{text('Selected finding', 'الملاحظة المحددة')}</span><h2>{selectedFinding?.finding_code || text('None', 'لا يوجد')}</h2></div><Flag size={20} /></div>{selectedFinding ? <div className="ui3-form-actions"><button type="button" className="ui3-secondary-button" onClick={() => setDecision({ action: 'request_closure', finding: selectedFinding })}>{text('Request closure', 'طلب الإغلاق')}</button>{isIndependentReviewer ? <button type="button" className="ui3-primary-button" disabled={!closureEvaluation?.passed} onClick={() => setDecision({ action: 'validate_closure', finding: selectedFinding })}>{text('Approve closure', 'اعتماد الإغلاق')}</button> : null}</div> : <EmptyAudit title={text('Select a finding first', 'اختر ملاحظة أولاً')} />}</section></aside></div></div> : null}
 
-      <div className="panel">
-        <div className="panel-header"><h4><FileCheck2 size={18} /> {t('audit.g.closureGate', 'Closure gate status')}</h4></div>
-        <DataState loading={closureGates.loading} error={closureGates.error} empty={!closureGates.data?.length} emptyTitle={t('audit.g.noClosureGates', 'No closure gates')} emptyMessage={t('audit.g.noClosureGatesHint', 'Closure gate status will appear here.')}>
-          <EntityTable<AuditClosureGateStatusRow>
-            rows={closureGates.data || []}
-            getRowKey={row => row.audit_finding_id}
-            columns={[
-              { key: 'finding', header: t('audit.finding', 'Finding'), render: row => <button className="link-button" type="button" onClick={() => setSelectedFindingId(row.audit_finding_id)}>{row.finding_code || row.title}</button> },
-              { key: 'response', header: t('common.status', 'Status'), render: row => <StatusBadge status={row.can_close ? t('audit.g.canClose', 'Can close') : t('audit.blocked', 'Blocked')} /> },
-              { key: 'evidence', header: t('audit.g.evidence', 'Evidence'), render: row => row.evidence_required ? `${row.accepted_evidence_count} / ${row.minimum_accepted_evidence_count}` : t('audit.g.notRequired', 'Not required') },
-              { key: 'waiver', header: t('audit.g.waivers', 'Waivers'), render: row => row.approved_waiver_count },
-              { key: 'blocker', header: t('risks.g.blocker', 'Blocker'), render: row => humanize(row.closure_blocker, language) },
-              {
-                key: 'actions',
-                header: t('common.actions', 'Actions'),
-                render: row => canManageFindings ? (
-                  <div className="inline-actions">
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('audit.g.validateClosure', 'Validate closure')} onClick={() => openActionModal('validate_closure', row.audit_finding_id)}><ThumbsUp size={14} /></button>
-                    <button className="ghost-button compact-button" disabled={actionDisabled} title={t('audit.g.rejectClosure', 'Reject closure')} onClick={() => openActionModal('reject_closure', row.audit_finding_id)}><XCircle size={14} /></button>
-                  </div>
-                ) : '-',
-              },
-            ]}
-          />
-        </DataState>
-      </div>
-
-      <div className="panel">
-        <div className="panel-header"><h4><Flag size={18} /> {t('risks.g.executiveEscalations', 'Executive escalations')}</h4></div>
-        <DataState loading={executiveEscalations.loading} error={executiveEscalations.error} empty={!executiveEscalations.data?.length} emptyTitle={t('risks.g.noExecutiveEscalations', 'No executive escalations')} emptyMessage={t('audit.g.noExecutiveEscalationsHint', 'High, critical, overdue, repeat, systemic, and committee-required findings appear here.')}>
-          <EntityTable<AuditExecutiveEscalationRow>
-            rows={executiveEscalations.data || []}
-            getRowKey={row => row.audit_finding_id}
-            columns={[
-              { key: 'finding', header: t('audit.finding', 'Finding'), render: row => <button className="link-button" type="button" onClick={() => setSelectedFindingId(row.audit_finding_id)}>{row.finding_code || row.title}</button> },
-              { key: 'reason', header: t('audit.g.reason', 'Reason'), render: row => humanize(row.escalation_reason_code, language) },
-              { key: 'level', header: t('risks.level', 'Level'), render: row => humanize(row.escalation_level, language) },
-              { key: 'committee', header: t('audit.g.committee', 'Committee'), render: row => row.committee_review_required ? <StatusBadge status={humanize(row.committee_review_status, language)} /> : '-' },
-              { key: 'owner', header: t('audit.g.escalatedTo', 'Escalated to'), render: row => row.escalated_to_name || row.escalated_to || '-' },
-            ]}
-          />
-        </DataState>
-      </div>
-
-      <div className="panel">
-        <div className="panel-header"><h4><PackageCheck size={18} /> {t('audit.g.closurePackIndex', 'Closure pack index')}</h4></div>
-        <DataState loading={closurePackIndex.loading} error={closurePackIndex.error} empty={!closurePackIndex.data?.length} emptyTitle={t('audit.g.noClosurePackCandidates', 'No closure pack candidates')} emptyMessage={t('audit.g.noClosurePackCandidatesHint', 'Audit-ready closure pack candidates appear here with evidence and validation status.')}>
-          <EntityTable<AuditClosurePackIndexRow>
-            rows={closurePackIndex.data || []}
-            getRowKey={row => row.audit_finding_id}
-            columns={[
-              { key: 'finding', header: t('audit.finding', 'Finding'), render: row => <button className="link-button" type="button" onClick={() => setSelectedFindingId(row.audit_finding_id)}>{row.finding_code || row.title}</button> },
-              { key: 'response', header: t('audit.g.response', 'Response'), render: row => <StatusBadge status={humanize(row.management_response_status, language)} /> },
-              { key: 'action', header: t('audit.g.action', 'Action'), render: row => <StatusBadge status={humanize(row.corrective_action_status, language)} /> },
-              { key: 'evidence', header: t('audit.g.evidence', 'Evidence'), render: row => `${row.accepted_evidence_count} ${t('audit.g.accepted', 'accepted')} / ${row.linked_evidence_count} ${t('audit.g.linked', 'linked')}` },
-              { key: 'validator', header: t('audit.g.validator', 'Validator'), render: row => row.closure_validator_name || row.closure_validated_by || '-' },
-              { key: 'generated', header: t('audit.g.pack', 'Pack'), render: row => row.closure_pack_reference || formatDate(row.closure_pack_generated_at) },
-            ]}
-          />
-        </DataState>
-      </div>
-
-      <Modal size="xl" open={Boolean(selectedFindingId)} title={t('audit.g.findingDetail', 'Audit finding detail')} onClose={() => setSelectedFindingId(null)}>
-        {selectedFinding ? (
-          <div className="form-grid">
-            <div className="detail-grid full-width">
-              <DetailValue label={t('audit.finding', 'Finding')} value={findingTitle(selectedFinding)} />
-              <DetailValue label={t('audit.g.audit', 'Audit')} value={selectedFinding.audit_title} />
-              <DetailValue label={t('common.severity', 'Severity')} value={humanize(selectedFinding.severity_level || selectedFinding.risk_level)} />
-              <DetailValue label={t('audit.lifecycle', 'Lifecycle')} value={humanize(selectedFinding.finding_status || selectedFinding.status)} />
-              <DetailValue label={t('audit.g.stage', 'Stage')} value={humanize(selectedFinding.workflow_stage)} />
-              <DetailValue label={t('common.department', 'Department')} value={departmentName(selectedFinding.departments)} />
-              <DetailValue label={t('common.owner', 'Owner')} value={ownerName(selectedFinding.owner)} />
-              <DetailValue label={t('common.dueDate', 'Due date')} value={formatDate(selectedFinding.due_date)} />
-              <DetailValue label={t('audit.g.responseStatus', 'Response status')} value={humanize(selectedFinding.management_response_status)} />
-              <DetailValue label={t('audit.g.actionStatus', 'Action status')} value={humanize(selectedFinding.corrective_action_status)} />
-              <DetailValue label={t('audit.g.evidenceGate', 'Evidence gate')} value={selectedGate ? humanize(selectedGate.evidence_gate_status) : humanize(selectedFinding.evidence_gate_status)} />
-              <DetailValue label={t('risks.g.closure', 'Closure')} value={selectedGate ? (selectedGate.can_close ? t('audit.g.canClose', 'Can close') : humanize(selectedGate.closure_blocker)) : humanize(selectedFinding.closure_validation_status)} />
-              <DetailValue label={t('audit.g.repeatSystemic', 'Repeat/systemic')} value={`${selectedFinding.repeat_finding_flag ? t('audit.g.repeat', 'Repeat') : t('audit.g.notRepeat', 'Not repeat')} / ${selectedFinding.systemic_issue_flag ? t('audit.g.systemic', 'Systemic') : t('audit.g.notSystemic', 'Not systemic')}`} />
-              <DetailValue label={t('audit.g.relatedRisk', 'Related risk')} value={selectedFinding.related_risk_id} />
-              <DetailValue label={t('audit.g.relatedCompliance', 'Related compliance')} value={selectedFinding.related_compliance_id} />
-              <DetailValue label={t('audit.g.sourceOvr', 'Source OVR')} value={selectedFinding.source_ovr_id} />
-              <DetailValue label={t('audit.g.closurePack', 'Closure pack')} value={selectedPack?.closure_pack_reference || selectedFinding.closure_pack_reference} />
-            </div>
-
-            <div className="panel full-width">
-              <div className="panel-header"><h4>{t('audit.g.managementResponse', 'Management response')}</h4></div>
-              <p>{selectedFinding.management_response || t('audit.g.noManagementResponse', 'No management response submitted.')}</p>
-            </div>
-
-            <div className="panel full-width">
-              <div className="panel-header"><h4>{t('audit.g.correctiveActionPlan', 'Corrective action plan')}</h4></div>
-              <p>{selectedFinding.corrective_action_plan || t('audit.g.noCorrectiveActionPlan', 'No corrective action plan submitted.')}</p>
-            </div>
-
-            <div className="panel full-width">
-              <div className="panel-header"><h4>{t('audit.g.actionControls', 'Action controls')}</h4></div>
-              <div className="inline-actions">
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('issue', selectedFinding.id)}><Send size={16} /> {t('audit.g.issue', 'Issue')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('submit_response', selectedFinding.id)}><Send size={16} /> {t('audit.g.response', 'Response')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('accept_response', selectedFinding.id)}><ThumbsUp size={16} /> {t('audit.g.acceptResponse', 'Accept response')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('reject_response', selectedFinding.id)}><XCircle size={16} /> {t('audit.g.rejectResponse', 'Reject response')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('submit_action', selectedFinding.id)}><ClipboardCheck size={16} /> {t('audit.g.actionPlan', 'Action plan')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('accept_action', selectedFinding.id)}><ThumbsUp size={16} /> {t('audit.g.acceptAction', 'Accept action')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('reject_action', selectedFinding.id)}><XCircle size={16} /> {t('audit.g.rejectAction', 'Reject action')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('request_extension', selectedFinding.id)}><Clock size={16} /> {t('audit.g.extension', 'Extension')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('approve_extension', selectedFinding.id)}><ThumbsUp size={16} /> {t('audit.g.approveExtension', 'Approve extension')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('reject_extension', selectedFinding.id)}><XCircle size={16} /> {t('audit.g.rejectExtension', 'Reject extension')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('request_closure', selectedFinding.id)}><FileCheck2 size={16} /> {t('audit.requestClosure', 'Request closure')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('validate_closure', selectedFinding.id)}><ThumbsUp size={16} /> {t('audit.g.validateClosure', 'Validate closure')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('reject_closure', selectedFinding.id)}><XCircle size={16} /> {t('audit.g.rejectClosure', 'Reject closure')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('reopen', selectedFinding.id)}><RotateCcw size={16} /> {t('audit.g.reopen', 'Reopen')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('escalate', selectedFinding.id)}><Flag size={16} /> {t('audit.escalate', 'Escalate')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('mark_repeat', selectedFinding.id)}><ShieldAlert size={16} /> {t('audit.g.markRepeat', 'Mark repeat')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('link_risk', selectedFinding.id)}><Link2 size={16} /> {t('audit.g.linkRisk', 'Link risk')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('link_compliance', selectedFinding.id)}><Link2 size={16} /> {t('audit.g.linkCompliance', 'Link compliance')}</button>
-                <button className="ghost-button" type="button" disabled={actionDisabled} onClick={() => openActionModal('generate_pack', selectedFinding.id)}><PackageCheck size={16} /> {t('audit.g.generatePack', 'Generate pack')}</button>
-              </div>
-              {!canManageFindings ? <p className="muted">{t('audit.g.readOnlyActions', 'Your current role can view audit finding workflow data but cannot perform governed transitions.')}</p> : null}
-            </div>
-
-            <div className="panel full-width">
-              <div className="panel-header"><h4>{t('audit.g.validationEvents', 'Validation events')}</h4></div>
-              <DataState loading={validationEvents.loading} error={validationEvents.error} empty={false}>
-                <EventTable rows={validationEvents.data || []} />
-              </DataState>
-            </div>
-          </div>
-        ) : (
-          <DataState loading={findings.loading} error={findings.error} empty emptyTitle={t('audit.g.findingNotLoaded', 'Finding not loaded')} emptyMessage={t('audit.g.findingNotLoadedHint', 'Refresh the register and select the finding again.')}>
-            <div />
-          </DataState>
-        )}
-      </Modal>
-
-
-        </div>
-      </details>
-      <Modal
-        size="large"
-        open={formOpen}
-        title={t('audit.g.createTitle', 'Create audit finding')}
-        isDirty={findingFormDirty}
-        isSubmitting={findingFormSubmitting}
-        onClose={closeFindingForm}
-      >
-        <AuditFindingForm
-          organizationId={organizationId}
-          departments={departments.data || []}
-          profiles={profiles.data || []}
-          onDirtyChange={setFindingFormDirty}
-          onSubmittingChange={setFindingFormSubmitting}
-          onCancel={closeFindingForm}
-          onCreated={() => {
-            closeFindingForm();
-            void refreshAuditWorkflow();
-          }}
-        />
-      </Modal>
+      <Modal open={formOpen} title={t('audit.create', 'Create audit finding')} onClose={() => setFormOpen(false)} isDirty={formDirty} isSubmitting={formSubmitting} size="large"><AuditFindingForm organizationId={organizationId} departments={departments.data ?? []} profiles={profiles.data ?? []} onDirtyChange={setFormDirty} onSubmittingChange={setFormSubmitting} onCancel={() => setFormOpen(false)} onCreated={() => { setFormOpen(false); void refreshAudit(); }} /></Modal>
+      <GovernedDecisionDialog open={Boolean(decision)} title={decision ? humanize(decision.action, language) : ''} subtitle={decision ? `${decision.finding.finding_code || 'FINDING'} · ${decision.finding.title}` : undefined} decisionVariant={decision?.action.startsWith('reject') ? 'reject' : decision?.action.includes('accept') || decision?.action === 'validate_closure' ? 'approve' : decision?.action === 'dispute' ? 'warning' : 'action'} fields={decisionFields} isSubmitting={busy} warningNotice={decision?.action === 'validate_closure' && closureEvaluation && !closureEvaluation.passed ? closureEvaluation.blockers.join(' ') : null} submitDisabled={decision?.action === 'validate_closure' && !closureEvaluation?.passed} onClose={() => setDecision(null)} onSubmit={executeDecision} />
     </section>
-  );
-}
-
-
-function AuditActionForm({ state, profiles, findings, risks, complianceItems, onClose, onConfirm }: { state: any, profiles: any[], findings: any[], risks: any[], complianceItems: any[], onClose: () => void, onConfirm: (p: Record<string, any>) => void }) {
-  const { language, t } = useI18n();
-  const [payload, setPayload] = useState<Record<string, any>>({});
-  const needsReason = ['reject_response', 'reject_action', 'reject_extension', 'reject_closure', 'reopen', 'escalate'].includes(state.action);
-  const needsNote = ['accept_response', 'accept_action', 'approve_extension', 'request_closure', 'validate_closure', 'issue'].includes(state.action);
-
-  const missingFields: string[] = [];
-  if (needsReason && !payload.reason) missingFields.push(t('audit.g.reason', 'Reason'));
-  if (state.action === 'submit_response' && !payload.managementResponse) missingFields.push(t('audit.g.managementResponse', 'Management Response'));
-  if (state.action === 'submit_action' && !payload.correctiveActionPlan) missingFields.push(t('audit.g.correctiveActionPlan', 'Corrective Action Plan'));
-  if (state.action === 'submit_action' && !payload.correctiveActionDueDate) missingFields.push(t('common.dueDate', 'Due Date'));
-  if (state.action === 'request_extension' && !payload.requestedDueDate) missingFields.push(t('audit.g.requestedDueDate', 'Requested Due Date'));
-  if (state.action === 'link_risk' && !payload.relatedRiskId) missingFields.push(t('audit.g.relatedRiskId', 'Related Risk ID'));
-  if (state.action === 'link_compliance' && !payload.relatedComplianceId) missingFields.push(t('audit.g.relatedComplianceId', 'Related Compliance Item ID'));
-
-  const isValid = missingFields.length === 0;
-
-  const currentFinding = findings.find(f => f.id === state.findingId);
-  const findingTitle = currentFinding ? `${currentFinding.finding_code ? currentFinding.finding_code + ' - ' : ''}${currentFinding.title}` : state.findingId;
-
-  return (
-    <div className="panel" style={{ padding: '24px', border: 'none', margin: 0 }}>
-       <div style={{ marginBottom: '16px' }}>
-         <strong>{t('audit.g.action', 'Action')}: {humanize(state.action, language)}</strong><br/>
-         <small>{t('audit.finding', 'Finding')}: {findingTitle}</small>
-       </div>
-
-       {needsReason && (
-         <div className="field-group">
-           <label>{t('audit.g.reason', 'Reason')} *</label>
-           <input autoFocus value={payload.reason || ''} onChange={e => setPayload({...payload, reason: e.target.value})} />
-         </div>
-       )}
-       {needsNote && (
-         <div className="field-group">
-           <label>{t('audit.g.noteComment', 'Note / Comment')}</label>
-           <input autoFocus value={payload.note || ''} onChange={e => setPayload({...payload, note: e.target.value})} />
-         </div>
-       )}
-       {state.action === 'submit_response' && (
-         <div className="field-group">
-           <label>{t('audit.g.managementResponse', 'Management Response')} *</label>
-           <textarea autoFocus value={payload.managementResponse || ''} onChange={e => setPayload({...payload, managementResponse: e.target.value})} />
-         </div>
-       )}
-       {state.action === 'submit_action' && (
-         <>
-           <div className="field-group">
-             <label>{t('audit.g.correctiveActionPlan', 'Corrective Action Plan')} *</label>
-             <textarea autoFocus value={payload.correctiveActionPlan || ''} onChange={e => setPayload({...payload, correctiveActionPlan: e.target.value})} />
-           </div>
-           <div className="field-group">
-             <label>{t('audit.g.dueDateFormat', 'Due Date (YYYY-MM-DD)')} *</label>
-             <input type="date" value={payload.correctiveActionDueDate || ''} onChange={e => setPayload({...payload, correctiveActionDueDate: e.target.value})} />
-           </div>
-           <div className="field-group">
-             <label>{t('audit.g.ownerOptional', 'Owner Profile (Optional)')}</label>
-             <select value={payload.correctiveActionOwnerId || ''} onChange={e => setPayload({...payload, correctiveActionOwnerId: e.target.value})}>
-               <option value="">-- {t('common.unassigned', 'Unassigned')} --</option>
-               {profiles.map(p => <option key={p.id} value={p.id}>{p.full_name || p.email || p.id}</option>)}
-             </select>
-           </div>
-         </>
-       )}
-       {state.action === 'request_extension' && (
-         <>
-           <div className="field-group">
-             <label>{t('audit.g.requestedDueDateFormat', 'Requested Due Date (YYYY-MM-DD)')} *</label>
-             <input type="date" value={payload.requestedDueDate || ''} onChange={e => setPayload({...payload, requestedDueDate: e.target.value})} />
-           </div>
-         </>
-       )}
-       {['approve_extension', 'reject_extension'].includes(state.action) && (
-         <div className="field-group">
-           <label>{t('audit.g.extensionId', 'Extension ID')} *</label>
-           <div className="notice-banner warning">{t('audit.g.noExtensionRequest', 'No selectable extension request is available in your current scope.')}</div>
-         </div>
-       )}
-       {state.action === 'escalate' && (
-         <div className="field-group">
-           <label>{t('audit.g.escalationLevel', 'Escalation Level')}</label>
-           <select value={payload.escalationLevel || 'executive'} onChange={e => setPayload({...payload, escalationLevel: e.target.value})}>
-             <option value="manager">{t('audit.g.manager', 'Manager')}</option>
-             <option value="executive">{t('audit.g.executive', 'Executive')}</option>
-             <option value="committee">{t('audit.g.committee', 'Committee')}</option>
-             <option value="board">{t('audit.g.board', 'Board')}</option>
-           </select>
-         </div>
-       )}
-       {state.action === 'mark_repeat' && (
-         <>
-           <div className="field-group">
-             <label>{t('audit.g.originalFindingOptional', 'Original Finding (Optional)')}</label>
-             <select value={payload.repeatOfFindingId || ''} onChange={e => setPayload({...payload, repeatOfFindingId: e.target.value})}>
-               <option value="">-- {t('audit.g.none', 'None')} --</option>
-               {findings.filter(f => f.id !== state.findingId).map(f => <option key={f.id} value={f.id}>{f.finding_code ? f.finding_code + ' - ' : ''}{f.title}</option>)}
-             </select>
-           </div>
-           <div className="field-group checkbox-field" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-             <input type="checkbox" id="systemic" checked={payload.systemicIssueFlag || false} onChange={e => setPayload({...payload, systemicIssueFlag: e.target.checked})} />
-             <label htmlFor="systemic">{t('audit.g.markSystemic', 'Mark as Systemic Issue')}</label>
-           </div>
-         </>
-       )}
-       {state.action === 'link_risk' && (
-         <div className="field-group">
-           <label>{t('audit.g.relatedRisk', 'Related Risk')} *</label>
-           <select value={payload.relatedRiskId || ''} onChange={e => setPayload({...payload, relatedRiskId: e.target.value})}>
-             <option value="">-- {t('audit.g.selectRisk', 'Select a risk')} --</option>
-             {risks.map(r => <option key={r.id} value={r.id}>{r.risk_code ? r.risk_code + ' - ' : ''}{r.title}</option>)}
-           </select>
-         </div>
-       )}
-       {state.action === 'link_compliance' && (
-         <div className="field-group">
-           <label>{t('audit.g.relatedCompliance', 'Related Compliance Item')} *</label>
-           <select value={payload.relatedComplianceId || ''} onChange={e => setPayload({...payload, relatedComplianceId: e.target.value})}>
-             <option value="">-- {t('audit.g.selectCompliance', 'Select a compliance item')} --</option>
-             {complianceItems.map(c => <option key={c.id} value={c.id}>{c.requirement_code ? c.requirement_code + ' - ' : ''}{c.title}</option>)}
-           </select>
-         </div>
-       )}
-       {state.action === 'issue' && (
-         <div className="field-group">
-           <label>{t('audit.g.severityLevel', 'Severity Level')}</label>
-           <select value={payload.severity || 'medium'} onChange={e => setPayload({...payload, severity: e.target.value})}>
-             {['low', 'medium', 'high', 'critical'].map(level => <option key={level} value={level}>{humanize(level, language)}</option>)}
-           </select>
-         </div>
-       )}
-       {needsReason && <div className="notice-banner danger" style={{ marginTop: '16px' }}>{t('audit.g.negativeActionWarning', 'This is a destructive or negative action. Please provide a clear reason.')}</div>}
-
-       {!isValid && <div className="notice-banner warning" style={{ marginTop: '16px' }}>{t('audit.g.missingFields', 'Please fill out all required fields. Missing')}: {missingFields.join(', ')}</div>}
-
-       <div className="form-actions" style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-         <button className="ghost-button" onClick={onClose}>{t('common.cancel', 'Cancel')}</button>
-         {['approve_extension', 'reject_extension'].includes(state.action) || !isValid ? (
-           <button className="primary-button" disabled>{t('audit.g.confirmAction', 'Confirm Action')}</button>
-         ) : (
-           <button className="primary-button" onClick={() => onConfirm(payload)}>{t('audit.g.confirmAction', 'Confirm Action')}</button>
-         )}
-       </div>
-    </div>
   );
 }

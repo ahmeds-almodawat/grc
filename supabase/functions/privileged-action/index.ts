@@ -2,12 +2,14 @@ import { createClient } from 'npm:@supabase/supabase-js@2.108.2';
 import { normalizeRosterPageRequest } from '../_shared/accV13RosterPaging.ts';
 import {
   v14e1rGovernedDocumentActions,
+  governedPolicySopLifecycleActions,
   MAX_E1R2_PAYLOAD_BYTES,
   validateStageConfigInput,
   validateProcedureSections,
   validateProcedureSteps,
   validateDepartmentScopes,
   validateRoleScopes,
+  validatePolicyRequirements,
   validateDefinitions,
   validateRoleResponsibilities,
   validateMonitoringKpis,
@@ -15,16 +17,24 @@ import {
   validateAccreditationLinks,
   validateVersionLinks,
   validateConfigureStagesProof,
+  validateCreatePolicyDraftProof,
+  validateSavePolicyDraftProof,
   validateCreateSopDraftProof,
   validateSaveSopDraftProof,
   validateStartRevisionProof,
   validateSubmitReviewProof,
+  validateActivateDocumentProof,
+  validateRetireDocumentProof,
+  validateRequestExceptionProof,
+  validateTriggerReviewProof,
+  validateCompleteReviewProof,
   validateApprovalDecisionProof,
   validateFinalizeApprovalProof,
   mapV14e1rDatabaseError,
   requireCanonicalUuid,
   optionalCanonicalUuid,
   boundedString,
+  optionalIsoDate,
   validateStrictBoolean,
   optionalStrictBoolean,
   validateStrictInteger,
@@ -40,6 +50,8 @@ import {
   resolveCreateGovernanceLinkState,
   validRevisionTypes,
   validApprovalDecisions,
+  validDocumentReviewTriggerTypes,
+  validDocumentReviewOutcomes,
 } from '../_shared/v14e1rGovernedDocumentBridge.ts';
 import {
   v14e2b2TrainingActions,
@@ -146,6 +158,27 @@ const patch24AuditActions = new Set([
   'generate_audit_closure_pack_index',
 ]);
 
+const ui4AuditCapaActions = new Set([
+  'ui4_record_audit_criteria_dispute',
+  'ui4_create_capa',
+  'ui4_assign_capa',
+  'ui4_submit_capa_plan',
+  'ui4_approve_capa_plan',
+  'ui4_reject_capa_plan',
+  'ui4_create_capa_action_item',
+  'ui4_update_capa_action_item',
+  'ui4_submit_capa_completion',
+  'ui4_validate_capa_completion',
+  'ui4_reject_capa_completion',
+  'ui4_start_capa_effectiveness',
+  'ui4_complete_capa_effectiveness',
+  'ui4_request_capa_closure',
+  'ui4_approve_capa_closure',
+  'ui4_reject_capa_closure',
+  'ui4_reopen_capa',
+  'ui4_refresh_capa_inheritance',
+]);
+
 const patch68EvidenceClosureActions = new Set([
   'record_production_evidence_closure_action',
   'get_production_evidence_closure_action_history',
@@ -243,6 +276,33 @@ const f2OvrGovernanceFeedbackActions = new Set([
   'sync_ovr_corrective_action_capa_link',
 ]);
 
+const governanceCriteriaLinkageActions = new Set([
+  'resolve_governance_document_version_candidates',
+  'start_governance_linkage_review',
+  'suggest_governance_criterion_link',
+  'append_governance_criterion_decision',
+  'supersede_governance_criterion_link',
+  'complete_governance_linkage_review',
+  'evaluate_governance_document_review_trigger',
+]);
+
+const ui3RiskComplianceActions = new Set([
+  'create_compliance_obligation',
+  'create_compliance_assessment',
+  'submit_compliance_assessment',
+  'approve_compliance_assessment',
+  'reject_compliance_assessment',
+  'record_compliance_finding',
+  'create_compliance_remediation',
+  'update_compliance_remediation',
+  'approve_risk_reassessment',
+  'reject_risk_reassessment',
+]);
+
+const ui7ApprovalActions = new Set([
+  'ui7_record_approval_decision',
+]);
+
 const allowedActions = new Set([
   'ovr_executive_dashboard_analytics',
   'search_grc_global',
@@ -283,10 +343,14 @@ const allowedActions = new Set([
   ...patch22RiskActions,
   ...patch23EvidenceActions,
   ...patch24AuditActions,
+  ...ui4AuditCapaActions,
   ...patch26DocumentActions,
   ...patch29TrainingActions,
   ...f1OvrGovernedVersionActions,
   ...f2OvrGovernanceFeedbackActions,
+  ...governanceCriteriaLinkageActions,
+  ...ui3RiskComplianceActions,
+  ...ui7ApprovalActions,
   ...patch68EvidenceClosureActions,
   ...patch76CutoverDecisionActions,
   ...patch77LivePilotActions,
@@ -296,6 +360,7 @@ const allowedActions = new Set([
   ...patch83rDepartmentLifecycleActions,
   ...f1r2BusinessCycleActions,
   ...v14e1rGovernedDocumentActions,
+  ...governedPolicySopLifecycleActions,
 ]);
 
 const patch19LifecycleActions = new Set([
@@ -3420,6 +3485,28 @@ Deno.serve(async (request) => {
     return jsonResponse({ ok: true, action, result: data }, 200);
   }
 
+  if (ui4AuditCapaActions.has(action)) {
+    const { data, error } = await serviceClient.rpc('ui4_audit_capa_workflow_bridge', {
+      p_actor_id: userData.user.id,
+      p_action: action,
+      p_payload: requestBody.payload ?? {},
+    });
+
+    if (error) {
+      const authorizationFailure =
+        /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|CROSS_ORGANIZATION|AUTHORITY|READ_ONLY|BLOCKED|EVIDENCE|EFFECTIVENESS|REASON/i
+          .test(error.message);
+      return jsonResponse({
+        ok: false,
+        error: error.message,
+        code: error.code,
+        action,
+      }, authorizationFailure ? 403 : 409);
+    }
+
+    return jsonResponse({ ok: true, action, result: data }, 200);
+  }
+
   if (patch68EvidenceClosureActions.has(action)) {
     const rpcName = action;
     const rpcArgs = action === 'record_production_evidence_closure_action'
@@ -4815,6 +4902,252 @@ Deno.serve(async (request) => {
     }
   }
 
+  if (governanceCriteriaLinkageActions.has(action)) {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, [
+        'actor_id', 'p_actor_id', 'user_id', 'organization_id',
+        'acting_user_id', 'authenticated_user_id', 'target_user_id',
+        'created_by', 'reviewed_by', 'decision_actor_id',
+      ]);
+
+      const allowedKeys = action === 'evaluate_governance_document_review_trigger'
+        ? new Set(['document_id', 'due_date'])
+        : action === 'resolve_governance_document_version_candidates'
+        ? new Set(['document_id', 'source_date', 'department_id'])
+        : action === 'start_governance_linkage_review'
+        ? new Set(['source_entity_type', 'source_entity_id', 'source_revision_id', 'source_date', 'review_rationale'])
+        : action === 'suggest_governance_criterion_link'
+        ? new Set([
+            'review_id', 'target_criterion_type', 'target_document_id', 'target_version_id',
+            'target_policy_requirement_id', 'target_sop_step_id', 'target_compliance_obligation_id',
+            'target_accreditation_clause_id', 'target_control_id', 'relationship_origin',
+            'resolution_method', 'resolution_date', 'override_rationale',
+            'root_source_entity_type', 'root_source_entity_id', 'parent_link_id', 'rationale',
+          ])
+        : action === 'append_governance_criterion_decision'
+        ? new Set([
+            'link_id', 'decision_type', 'significance', 'adherence_status', 'adequacy_status',
+            'rationale', 'correction_reason', 'supersedes_decision_id', 'evidence_file_ids',
+          ])
+        : action === 'supersede_governance_criterion_link'
+        ? new Set(['link_id', 'replacement_link_id', 'reason'])
+        : new Set(['review_id', 'review_outcome', 'review_rationale', 'uncertainty_recorded']);
+      assertOnlyAllowedKeys(payload, allowedKeys, `GOVERNANCE_CRITERIA_${action}_PAYLOAD`);
+
+      const capabilityProbe = await serviceClient.rpc('get_governance_criteria_linkage_capabilities');
+      const capability = capabilityProbe.data as Record<string, unknown> | null;
+      if (capabilityProbe.error
+        || capability?.contract_version !== 'governance-criteria-linkage-v1'
+        || Number(capability?.schema_version ?? 0) < (action === 'evaluate_governance_document_review_trigger' ? 218 : 212)) {
+        return errorResponse(
+          'Database migration 212 is required for governed criteria linkage.',
+          409,
+          'GOV_LINK_MIGRATION_212_REQUIRED',
+          'Migration 212 installs the normalized linkage and immutable-decision contract.',
+          { action },
+        );
+      }
+
+      const optionalDate = (value: unknown, fieldName: string): string | null => {
+        const date = boundedString(value, 10, fieldName);
+        if (date !== null && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+          throw new Error(`INVALID_DATE_${fieldName.toUpperCase()}`);
+        }
+        return date;
+      };
+      let rpcResult;
+
+      if (action === 'evaluate_governance_document_review_trigger') {
+        rpcResult = await serviceClient.rpc('evaluate_governance_document_review_trigger', {
+          p_actor_id: userData.user.id,
+          p_document_id: requireCanonicalUuid(payload.document_id, 'document_id'),
+          p_due_date: optionalDate(payload.due_date, 'due_date'),
+        });
+      } else if (action === 'resolve_governance_document_version_candidates') {
+        const { actorProfile } = await loadTrainingActorContext(userData.user.id);
+        const documentId = requireCanonicalUuid(payload.document_id, 'document_id');
+        const visibleDocument = await serviceClient
+          .from('controlled_documents')
+          .select('id')
+          .eq('id', documentId)
+          .eq('organization_id', actorProfile.organization_id)
+          .maybeSingle();
+        if (visibleDocument.error || !visibleDocument.data) {
+          throw new Error('GOV_LINK_TARGET_DOCUMENT_READ_DENIED');
+        }
+        rpcResult = await serviceClient.rpc('resolve_governance_document_version_candidates', {
+          p_organization_id: actorProfile.organization_id,
+          p_document_id: documentId,
+          p_source_date: optionalDate(payload.source_date, 'source_date'),
+          p_department_id: optionalCanonicalUuid(payload.department_id, 'department_id'),
+        });
+      } else if (action === 'start_governance_linkage_review') {
+        rpcResult = await serviceClient.rpc('start_governance_linkage_review', {
+          p_actor_id: userData.user.id,
+          p_source_entity_type: boundedString(payload.source_entity_type, 32, 'source_entity_type', true),
+          p_source_entity_id: requireCanonicalUuid(payload.source_entity_id, 'source_entity_id'),
+          p_source_revision_id: optionalCanonicalUuid(payload.source_revision_id, 'source_revision_id'),
+          p_source_date: optionalDate(payload.source_date, 'source_date'),
+          p_review_rationale: boundedString(payload.review_rationale, 4000, 'review_rationale'),
+        });
+      } else if (action === 'suggest_governance_criterion_link') {
+        rpcResult = await serviceClient.rpc('suggest_governance_criterion_link', {
+          p_actor_id: userData.user.id,
+          p_review_id: requireCanonicalUuid(payload.review_id, 'review_id'),
+          p_target_criterion_type: boundedString(payload.target_criterion_type, 64, 'target_criterion_type', true),
+          p_target_document_id: optionalCanonicalUuid(payload.target_document_id, 'target_document_id'),
+          p_target_version_id: optionalCanonicalUuid(payload.target_version_id, 'target_version_id'),
+          p_target_policy_requirement_id: optionalCanonicalUuid(payload.target_policy_requirement_id, 'target_policy_requirement_id'),
+          p_target_sop_step_id: optionalCanonicalUuid(payload.target_sop_step_id, 'target_sop_step_id'),
+          p_target_compliance_obligation_id: optionalCanonicalUuid(payload.target_compliance_obligation_id, 'target_compliance_obligation_id'),
+          p_target_accreditation_clause_id: optionalCanonicalUuid(payload.target_accreditation_clause_id, 'target_accreditation_clause_id'),
+          p_target_control_id: optionalCanonicalUuid(payload.target_control_id, 'target_control_id'),
+          p_relationship_origin: boundedString(payload.relationship_origin, 32, 'relationship_origin') ?? 'direct',
+          p_resolution_method: boundedString(payload.resolution_method, 32, 'resolution_method') ?? 'direct_selection',
+          p_resolution_date: optionalDate(payload.resolution_date, 'resolution_date'),
+          p_override_rationale: boundedString(payload.override_rationale, 4000, 'override_rationale'),
+          p_root_source_entity_type: boundedString(payload.root_source_entity_type, 32, 'root_source_entity_type'),
+          p_root_source_entity_id: optionalCanonicalUuid(payload.root_source_entity_id, 'root_source_entity_id'),
+          p_parent_link_id: optionalCanonicalUuid(payload.parent_link_id, 'parent_link_id'),
+          p_rationale: boundedString(payload.rationale, 4000, 'rationale'),
+        });
+      } else if (action === 'append_governance_criterion_decision') {
+        const evidenceFileIds = payload.evidence_file_ids ?? [];
+        if (!Array.isArray(evidenceFileIds) || evidenceFileIds.length > 50) {
+          throw new Error('INVALID_EVIDENCE_FILE_IDS');
+        }
+        rpcResult = await serviceClient.rpc('append_governance_criterion_decision', {
+          p_actor_id: userData.user.id,
+          p_link_id: requireCanonicalUuid(payload.link_id, 'link_id'),
+          p_decision_type: boundedString(payload.decision_type, 32, 'decision_type', true),
+          p_significance: boundedString(payload.significance, 32, 'significance'),
+          p_adherence_status: boundedString(payload.adherence_status, 64, 'adherence_status'),
+          p_adequacy_status: boundedString(payload.adequacy_status, 64, 'adequacy_status'),
+          p_rationale: boundedString(payload.rationale, 4000, 'rationale'),
+          p_correction_reason: boundedString(payload.correction_reason, 4000, 'correction_reason'),
+          p_supersedes_decision_id: optionalCanonicalUuid(payload.supersedes_decision_id, 'supersedes_decision_id'),
+          p_evidence_file_ids: evidenceFileIds.map((id, index) => requireCanonicalUuid(id, `evidence_file_ids_${index}`)),
+        });
+      } else if (action === 'supersede_governance_criterion_link') {
+        rpcResult = await serviceClient.rpc('supersede_governance_criterion_link', {
+          p_actor_id: userData.user.id,
+          p_link_id: requireCanonicalUuid(payload.link_id, 'link_id'),
+          p_replacement_link_id: requireCanonicalUuid(payload.replacement_link_id, 'replacement_link_id'),
+          p_reason: boundedString(payload.reason, 4000, 'reason', true),
+        });
+      } else {
+        rpcResult = await serviceClient.rpc('complete_governance_linkage_review', {
+          p_actor_id: userData.user.id,
+          p_review_id: requireCanonicalUuid(payload.review_id, 'review_id'),
+          p_review_outcome: boundedString(payload.review_outcome, 64, 'review_outcome', true),
+          p_review_rationale: boundedString(payload.review_rationale, 4000, 'review_rationale', true),
+          p_uncertainty_recorded: validateStrictBoolean(payload.uncertainty_recorded, 'uncertainty_recorded', false),
+        });
+      }
+
+      if (rpcResult.error) throw rpcResult.error;
+      return jsonResponse({ ok: true, action, result: rpcResult.data }, 200);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const denied = /AUTHORITY|DENIED|ACTIVE_SAME_ORG|SERVICE_ROLE|ORGANIZATION/i.test(message);
+      return errorResponse(
+        'Governed criteria linkage operation failed.',
+        denied ? 403 : 409,
+        denied ? 'GOV_LINK_AUTHORIZATION_DENIED' : 'GOV_LINK_OPERATION_REJECTED',
+        message,
+        { action },
+      );
+    }
+  }
+
+  if (ui3RiskComplianceActions.has(action)) {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, [
+        'actor_id', 'p_actor_id', 'user_id', 'organization_id', 'p_organization_id',
+        'acting_user_id', 'authenticated_user_id', 'created_by', 'approved_by', 'reviewed_by',
+      ]);
+
+      const allowedKeysByAction: Record<string, Set<string>> = {
+        create_compliance_obligation: new Set([
+          'obligation_code', 'regulatory_body', 'framework', 'clause_reference', 'title',
+          'requirement_text', 'applicability', 'owner_id', 'department_id', 'risk_level',
+          'review_frequency', 'next_review_date', 'evidence_required', 'notes',
+        ]),
+        create_compliance_assessment: new Set([
+          'obligation_id', 'assessment_code', 'assessment_title', 'assessment_period_start',
+          'assessment_period_end', 'assessment_date', 'assessment_method', 'scope_description',
+          'department_id', 'responsible_owner_id', 'reviewer_id', 'result', 'conclusion_summary',
+          'evidence_reference', 'evidence_file_id', 'rationale',
+        ]),
+        submit_compliance_assessment: new Set(['assessment_id', 'conclusion_summary', 'rationale']),
+        approve_compliance_assessment: new Set(['assessment_id', 'conclusion_summary', 'rationale']),
+        reject_compliance_assessment: new Set(['assessment_id', 'conclusion_summary', 'rationale']),
+        record_compliance_finding: new Set([
+          'assessment_id', 'finding_code', 'finding_description', 'severity', 'materiality',
+          'responsible_owner_id', 'department_id', 'due_date', 'evidence_reference',
+          'evidence_file_id', 'root_cause_category', 'root_cause_description', 'rationale',
+        ]),
+        create_compliance_remediation: new Set([
+          'finding_id', 'action_code', 'action_description', 'owner_id', 'due_date',
+          'action_status', 'evidence_reference', 'evidence_file_id', 'rationale',
+        ]),
+        update_compliance_remediation: new Set([
+          'remediation_action_id', 'action_status', 'evidence_reference', 'evidence_file_id', 'rationale',
+        ]),
+        approve_risk_reassessment: new Set(['reassessment_id', 'governance_review_id', 'rationale']),
+        reject_risk_reassessment: new Set(['reassessment_id', 'rationale']),
+      };
+      assertOnlyAllowedKeys(payload, allowedKeysByAction[action], `UI3_${action}_PAYLOAD`);
+
+      const normalized: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(payload)) {
+        if (key.endsWith('_id')) {
+          normalized[key] = optionalCanonicalUuid(value, key);
+        } else if (key.endsWith('_date') || key.endsWith('_start') || key.endsWith('_end')) {
+          const date = boundedString(value, 10, key);
+          if (date !== null && !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error(`INVALID_DATE_${key.toUpperCase()}`);
+          normalized[key] = date;
+        } else if (key === 'evidence_required') {
+          normalized[key] = validateStrictBoolean(value, key, true);
+        } else {
+          normalized[key] = boundedString(value, 4000, key);
+        }
+      }
+
+      const capabilityProbe = await serviceClient.rpc('get_governance_criteria_linkage_capabilities');
+      const capability = capabilityProbe.data as Record<string, unknown> | null;
+      if (capabilityProbe.error || Number(capability?.schema_version ?? 0) < 213) {
+        return errorResponse(
+          'Database migration 213 is required for UI-3 Risk and Compliance workflows.',
+          409,
+          'UI3_MIGRATION_213_REQUIRED',
+          'Migration 213 installs the canonical Compliance assessment/finding model and Risk governance-review gate.',
+          { action },
+        );
+      }
+
+      const rpcResult = await serviceClient.rpc('ui3_risk_compliance_workflow_bridge', {
+        p_actor_id: userData.user.id,
+        p_action: action,
+        p_payload: normalized,
+      });
+      if (rpcResult.error) throw rpcResult.error;
+      return jsonResponse({ ok: true, action, result: rpcResult.data }, 200);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const denied = /AUTHORITY|DENIED|ACTIVE_ACTOR|CROSS_ORGANIZATION|SERVICE_ROLE/i.test(message);
+      return errorResponse(
+        'UI-3 Risk or Compliance operation failed.',
+        denied ? 403 : 409,
+        denied ? 'UI3_AUTHORIZATION_DENIED' : 'UI3_OPERATION_REJECTED',
+        message,
+        { action },
+      );
+    }
+  }
+
   if (action === 'record_document_acknowledgment') {
     try {
       const payload = asPlainObject(requestBody.payload);
@@ -5433,7 +5766,161 @@ Deno.serve(async (request) => {
     }
   }
 
-  if (action === 'v14e1r_create_governed_sop_draft') {
+  if (action === 'create_governed_policy_draft') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set([
+        'title_en', 'title_ar', 'purpose_en', 'purpose_ar',
+        'policy_statement_en', 'policy_statement_ar', 'scope_en', 'scope_ar',
+        'principles_en', 'principles_ar', 'exceptions_summary_en', 'exceptions_summary_ar',
+        'non_compliance_escalation_en', 'non_compliance_escalation_ar',
+        'department_id', 'criticality_level', 'confidentiality_level', 'content_mode',
+        'requirements', 'department_scopes', 'role_scopes',
+      ]), 'CREATE_POLICY_PAYLOAD');
+
+      const { data: actorProfile, error: profileErr } = await serviceClient
+        .from('profiles')
+        .select('id, organization_id, is_active')
+        .eq('id', userData.user.id)
+        .single();
+      if (profileErr || !actorProfile || !actorProfile.organization_id || actorProfile.is_active === false) {
+        const e = mapV14e1rDatabaseError(action, 'PATCH202_ACTOR_NOT_AUTHORIZED');
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+
+      const titleEn = boundedString(payload.title_en, 500, 'title_en', true)!;
+      const titleAr = boundedString(payload.title_ar, 500, 'title_ar');
+      const purposeEn = boundedString(payload.purpose_en, 5000, 'purpose_en');
+      const purposeAr = boundedString(payload.purpose_ar, 5000, 'purpose_ar');
+      const statementEn = boundedString(payload.policy_statement_en, 20000, 'policy_statement_en', true)!;
+      const statementAr = boundedString(payload.policy_statement_ar, 20000, 'policy_statement_ar');
+      const scopeEn = boundedString(payload.scope_en, 5000, 'scope_en');
+      const scopeAr = boundedString(payload.scope_ar, 5000, 'scope_ar');
+      const principlesEn = boundedString(payload.principles_en, 10000, 'principles_en');
+      const principlesAr = boundedString(payload.principles_ar, 10000, 'principles_ar');
+      const exceptionsEn = boundedString(payload.exceptions_summary_en, 5000, 'exceptions_summary_en');
+      const exceptionsAr = boundedString(payload.exceptions_summary_ar, 5000, 'exceptions_summary_ar');
+      const escalationEn = boundedString(payload.non_compliance_escalation_en, 5000, 'non_compliance_escalation_en');
+      const escalationAr = boundedString(payload.non_compliance_escalation_ar, 5000, 'non_compliance_escalation_ar');
+      const departmentId = optionalCanonicalUuid(payload.department_id, 'department_id');
+
+      let criticalityLevel = 'medium';
+      if (payload.criticality_level !== undefined && payload.criticality_level !== null) {
+        if (typeof payload.criticality_level !== 'string' || !validCriticalityLevels.has(payload.criticality_level.trim())) {
+          throw new Error('INVALID_CRITICALITY_LEVEL');
+        }
+        criticalityLevel = payload.criticality_level.trim();
+      }
+      let confidentialityLevel = 'internal';
+      if (payload.confidentiality_level !== undefined && payload.confidentiality_level !== null) {
+        if (typeof payload.confidentiality_level !== 'string' || !validConfidentialityLevels.has(payload.confidentiality_level.trim())) {
+          throw new Error('INVALID_CONFIDENTIALITY_LEVEL');
+        }
+        confidentialityLevel = payload.confidentiality_level.trim();
+      }
+      let contentMode = 'structured';
+      if (payload.content_mode !== undefined && payload.content_mode !== null) {
+        if (typeof payload.content_mode !== 'string' || !validContentModes.has(payload.content_mode.trim())) {
+          throw new Error('INVALID_CONTENT_MODE');
+        }
+        contentMode = payload.content_mode.trim();
+      }
+
+      const requirements = validatePolicyRequirements(payload.requirements) ?? [];
+      const departmentScopes = validateDepartmentScopes(payload.department_scopes) ?? [];
+      const roleScopes = validateRoleScopes(payload.role_scopes) ?? [];
+      const { data, error } = await serviceClient.rpc('create_governed_policy_draft', {
+        p_actor_id: userData.user.id,
+        p_organization_id: actorProfile.organization_id,
+        p_title_en: titleEn,
+        p_title_ar: titleAr,
+        p_purpose_en: purposeEn,
+        p_purpose_ar: purposeAr,
+        p_policy_statement_en: statementEn,
+        p_policy_statement_ar: statementAr,
+        p_scope_en: scopeEn,
+        p_scope_ar: scopeAr,
+        p_principles_en: principlesEn,
+        p_principles_ar: principlesAr,
+        p_exceptions_summary_en: exceptionsEn,
+        p_exceptions_summary_ar: exceptionsAr,
+        p_non_compliance_escalation_en: escalationEn,
+        p_non_compliance_escalation_ar: escalationAr,
+        p_department_id: departmentId,
+        p_criticality_level: criticalityLevel,
+        p_confidentiality_level: confidentialityLevel,
+        p_content_mode: contentMode,
+        p_requirements: requirements,
+        p_department_scopes: departmentScopes,
+        p_role_scopes: roleScopes,
+      });
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+      if (!validateCreatePolicyDraftProof(data)) {
+        return errorResponse('Create policy response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'save_governed_policy_draft') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set([
+        'version_id', 'title_en', 'title_ar', 'purpose_en', 'purpose_ar',
+        'policy_statement_en', 'policy_statement_ar', 'scope_en', 'scope_ar',
+        'principles_en', 'principles_ar', 'exceptions_summary_en', 'exceptions_summary_ar',
+        'non_compliance_escalation_en', 'non_compliance_escalation_ar',
+        'requirements', 'department_scopes', 'role_scopes',
+      ]), 'SAVE_POLICY_PAYLOAD');
+
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+      const requirements = validatePolicyRequirements(payload.requirements) ?? [];
+      const departmentScopes = validateDepartmentScopes(payload.department_scopes) ?? [];
+      const roleScopes = validateRoleScopes(payload.role_scopes) ?? [];
+      const { data, error } = await serviceClient.rpc('save_governed_policy_draft', {
+        p_actor_id: userData.user.id,
+        p_version_id: versionId,
+        p_title_en: boundedString(payload.title_en, 500, 'title_en', true),
+        p_title_ar: boundedString(payload.title_ar, 500, 'title_ar'),
+        p_purpose_en: boundedString(payload.purpose_en, 5000, 'purpose_en'),
+        p_purpose_ar: boundedString(payload.purpose_ar, 5000, 'purpose_ar'),
+        p_policy_statement_en: boundedString(payload.policy_statement_en, 20000, 'policy_statement_en', true),
+        p_policy_statement_ar: boundedString(payload.policy_statement_ar, 20000, 'policy_statement_ar'),
+        p_scope_en: boundedString(payload.scope_en, 5000, 'scope_en'),
+        p_scope_ar: boundedString(payload.scope_ar, 5000, 'scope_ar'),
+        p_principles_en: boundedString(payload.principles_en, 10000, 'principles_en'),
+        p_principles_ar: boundedString(payload.principles_ar, 10000, 'principles_ar'),
+        p_exceptions_summary_en: boundedString(payload.exceptions_summary_en, 5000, 'exceptions_summary_en'),
+        p_exceptions_summary_ar: boundedString(payload.exceptions_summary_ar, 5000, 'exceptions_summary_ar'),
+        p_non_compliance_escalation_en: boundedString(payload.non_compliance_escalation_en, 5000, 'non_compliance_escalation_en'),
+        p_non_compliance_escalation_ar: boundedString(payload.non_compliance_escalation_ar, 5000, 'non_compliance_escalation_ar'),
+        p_requirements: requirements,
+        p_department_scopes: departmentScopes,
+        p_role_scopes: roleScopes,
+      });
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+      if (!validateSavePolicyDraftProof(data, versionId)) {
+        return errorResponse('Save policy response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'v14e1r_create_governed_sop_draft' || action === 'create_governed_sop_draft') {
     try {
       const payload = asPlainObject(requestBody.payload);
       assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
@@ -5587,7 +6074,7 @@ Deno.serve(async (request) => {
     }
   }
 
-  if (action === 'v14e1r_save_governed_sop_draft') {
+  if (action === 'v14e1r_save_governed_sop_draft' || action === 'save_governed_sop_draft') {
     try {
       const payload = asPlainObject(requestBody.payload);
       assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
@@ -5733,7 +6220,7 @@ Deno.serve(async (request) => {
     }
   }
 
-  if (action === 'v14e1r_start_governed_document_revision') {
+  if (action === 'v14e1r_start_governed_document_revision' || action === 'start_governed_document_revision') {
     try {
       const payload = asPlainObject(requestBody.payload);
       assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
@@ -5765,14 +6252,17 @@ Deno.serve(async (request) => {
         return errorResponse('Start revision response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
       }
 
-      return jsonResponse({ ok: true, action, result: data }, 200);
+      const result = action === 'start_governed_document_revision'
+        ? { ...asPlainObject(data), version_id: asPlainObject(data).new_version_id }
+        : data;
+      return jsonResponse({ ok: true, action, result }, 200);
     } catch (err) {
       const e = mapV14e1rDatabaseError(action, err);
       return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
     }
   }
 
-  if (action === 'v14e1r_submit_governed_document_for_review') {
+  if (action === 'v14e1r_submit_governed_document_for_review' || action === 'submit_governed_document_for_review') {
     try {
       const payload = asPlainObject(requestBody.payload);
       assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
@@ -5799,6 +6289,293 @@ Deno.serve(async (request) => {
     } catch (err) {
       const e = mapV14e1rDatabaseError(action, err);
       return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'activate_governed_document_version') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set(['version_id', 'effective_date']), 'ACTIVATE_DOCUMENT_PAYLOAD');
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+      const effectiveDate = optionalIsoDate(payload.effective_date, 'effective_date');
+      const { data, error } = await serviceClient.rpc('activate_governed_document_version', {
+        p_actor_id: userData.user.id,
+        p_version_id: versionId,
+        ...(effectiveDate ? { p_effective_date: effectiveDate } : {}),
+      });
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+      if (!validateActivateDocumentProof(data, versionId)) {
+        return errorResponse('Activate document response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'retire_governed_document') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set(['document_id', 'retirement_reason']), 'RETIRE_DOCUMENT_PAYLOAD');
+      const documentId = requireCanonicalUuid(payload.document_id, 'document_id');
+      const retirementReason = boundedString(payload.retirement_reason, 2000, 'retirement_reason', true)!;
+      const { data, error } = await serviceClient.rpc('retire_governed_document', {
+        p_actor_id: userData.user.id,
+        p_document_id: documentId,
+        p_retirement_reason: retirementReason,
+      });
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+      if (!validateRetireDocumentProof(data, documentId)) {
+        return errorResponse('Retire document response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'request_policy_sop_exception') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set([
+        'version_id', 'reason', 'scope_description', 'start_date', 'end_date',
+        'risk_summary', 'compensating_controls',
+      ]), 'REQUEST_DOCUMENT_EXCEPTION_PAYLOAD');
+      const versionId = requireCanonicalUuid(payload.version_id, 'version_id');
+      const startDate = optionalIsoDate(payload.start_date, 'start_date', true)!;
+      const endDate = optionalIsoDate(payload.end_date, 'end_date', true)!;
+      if (endDate < startDate) throw new Error('PATCH202_INVALID_EXCEPTION_DATES');
+      const { data, error } = await serviceClient.rpc('request_policy_sop_exception', {
+        p_actor_id: userData.user.id,
+        p_version_id: versionId,
+        p_reason: boundedString(payload.reason, 5000, 'reason', true),
+        p_scope_description: boundedString(payload.scope_description, 5000, 'scope_description', true),
+        p_start_date: startDate,
+        p_end_date: endDate,
+        p_risk_summary: boundedString(payload.risk_summary, 5000, 'risk_summary'),
+        p_compensating_controls: boundedString(payload.compensating_controls, 5000, 'compensating_controls'),
+      });
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+      if (!validateRequestExceptionProof(data)) {
+        return errorResponse('Request exception response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'trigger_governed_document_review') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set([
+        'document_id', 'trigger_type', 'source_entity_type', 'source_entity_id', 'due_date', 'trigger_note',
+      ]), 'TRIGGER_DOCUMENT_REVIEW_PAYLOAD');
+      const documentId = requireCanonicalUuid(payload.document_id, 'document_id');
+      const triggerType = boundedString(payload.trigger_type, 50, 'trigger_type', true)!;
+      if (!validDocumentReviewTriggerTypes.has(triggerType)) throw new Error('INVALID_TRIGGER_TYPE');
+      const dueDate = optionalIsoDate(payload.due_date, 'due_date');
+      const { data, error } = await serviceClient.rpc('trigger_governed_document_review', {
+        p_actor_id: userData.user.id,
+        p_document_id: documentId,
+        p_trigger_type: triggerType,
+        p_source_entity_type: boundedString(payload.source_entity_type, 100, 'source_entity_type'),
+        p_source_entity_id: optionalCanonicalUuid(payload.source_entity_id, 'source_entity_id'),
+        ...(dueDate ? { p_due_date: dueDate } : {}),
+        p_trigger_note: boundedString(payload.trigger_note, 2000, 'trigger_note'),
+      });
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+      if (!validateTriggerReviewProof(data, documentId)) {
+        return errorResponse('Trigger review response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'complete_governed_document_review') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id']);
+      assertOnlyAllowedKeys(payload, new Set(['trigger_id', 'outcome', 'outcome_note']), 'COMPLETE_DOCUMENT_REVIEW_PAYLOAD');
+      const triggerId = requireCanonicalUuid(payload.trigger_id, 'trigger_id');
+      const outcome = boundedString(payload.outcome, 50, 'outcome', true)!;
+      if (!validDocumentReviewOutcomes.has(outcome)) throw new Error('INVALID_REVIEW_OUTCOME');
+      const { data, error } = await serviceClient.rpc('complete_governed_document_review', {
+        p_actor_id: userData.user.id,
+        p_trigger_id: triggerId,
+        p_outcome: outcome,
+        p_outcome_note: boundedString(payload.outcome_note, 2000, 'outcome_note'),
+      });
+      if (error) {
+        const e = mapV14e1rDatabaseError(action, error);
+        return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+      }
+      if (!validateCompleteReviewProof(data, triggerId, outcome)) {
+        return errorResponse('Complete review response failed proof verification.', 409, 'PROOF_VALIDATION_FAILED', 'Server response failed proof contract verification.', { action });
+      }
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (err) {
+      const e = mapV14e1rDatabaseError(action, err);
+      return errorResponse(e.error, e.status, e.code, e.detail, e.extra);
+    }
+  }
+
+  if (action === 'ui7_record_approval_decision') {
+    try {
+      const payload = asPlainObject(requestBody.payload);
+      assertNoIdentityOverrides(payload, ['actor_id', 'p_actor_id', 'organization_id', 'p_organization_id', 'approver_id']);
+      assertOnlyAllowedKeys(
+        payload,
+        new Set(['approval_request_id', 'decision', 'decision_note']),
+        'UI7_APPROVAL_DECISION_PAYLOAD',
+      );
+      const approvalRequestId = requireCanonicalUuid(payload.approval_request_id, 'approval_request_id');
+      const decision = boundedString(payload.decision, 16, 'decision', true)!;
+      const decisionNote = boundedString(payload.decision_note, 2000, 'decision_note');
+      if (!['approved', 'rejected', 'returned'].includes(decision)) {
+        return errorResponse('Invalid approval decision.', 400, 'UI7_INVALID_DECISION', 'Use approved, rejected, or returned.', { action });
+      }
+      if (decision !== 'approved' && !decisionNote) {
+        return errorResponse('A decision rationale is required.', 400, 'UI7_DECISION_NOTE_REQUIRED', 'Rejected and returned decisions require a rationale.', { action });
+      }
+
+      const [{ data: actor, error: actorError }, { data: requestRow, error: requestError }, { data: actorRoleRows, error: actorRoleError }] = await Promise.all([
+        serviceClient.from('profiles').select('id,organization_id,is_active,user_status').eq('id', userData.user.id).single(),
+        serviceClient.from('approval_requests').select('id,organization_id,workflow_type,action_type,department_id,requested_by,request_status,authority_rule_id').eq('id', approvalRequestId).single(),
+        serviceClient.from('user_roles').select('role').eq('user_id', userData.user.id).eq('is_active', true),
+      ]);
+      if (actorError || actorRoleError || !actor || actor.is_active === false || actor.user_status !== 'active') {
+        return errorResponse('Active approver required.', 403, 'UI7_ACTIVE_APPROVER_REQUIRED', 'The signed-in profile is not active.', { action });
+      }
+      if (requestError || !requestRow) {
+        return errorResponse('Approval request not found.', 404, 'UI7_APPROVAL_NOT_FOUND', 'The approval request is not visible to the governed action.', { action });
+      }
+      if (!actor.organization_id || actor.organization_id !== requestRow.organization_id) {
+        return errorResponse('Approval organization mismatch.', 403, 'UI7_APPROVAL_ORGANIZATION_MISMATCH', 'Cross-organization approval is forbidden.', { action });
+      }
+      const activeActorRoles = (actorRoleRows ?? []).map((row) => row.role);
+      if (activeActorRoles.length === 1 && activeActorRoles[0] === 'viewer') {
+        return errorResponse('Viewer access is read-only.', 403, 'UI7_APPROVAL_VIEWER_READ_ONLY', 'Viewer-only actors cannot record approval decisions.', { action });
+      }
+      if (!['pending', 'partially_approved', 'escalated'].includes(requestRow.request_status)) {
+        return errorResponse('Approval request is not open.', 409, 'UI7_APPROVAL_NOT_OPEN', 'Completed decisions are immutable.', { action });
+      }
+
+      const [{ data: stageRows, error: stageError }, { data: rule, error: ruleError }] = await Promise.all([
+        serviceClient.from('approval_request_stages').select('id,assigned_user_id,assigned_role,allow_self_approval,stage_status').eq('approval_request_id', approvalRequestId).eq('stage_status', 'in_progress').limit(2),
+        requestRow.authority_rule_id
+          ? serviceClient.from('approval_authority_rules').select('id,organization_id,approver_user_id,approver_role,allow_self_approval,active_flag,effective_date,expiry_date').eq('id', requestRow.authority_rule_id).maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+      ]);
+      if (stageError || ruleError || (stageRows?.length ?? 0) > 1) {
+        return errorResponse('Approval authority state is invalid.', 409, 'UI7_APPROVAL_AUTHORITY_STATE_INVALID', 'The current approval stage or rule could not be resolved exactly once.', { action });
+      }
+      const stage = stageRows?.[0] ?? null;
+      if (!stage && !rule) {
+        return errorResponse('Approval authority is unmatched.', 403, 'UI7_APPROVAL_AUTHORITY_UNMATCHED', 'No active authority rule or stage permits this decision.', { action });
+      }
+      if (rule && (
+        rule.organization_id !== requestRow.organization_id
+        || rule.active_flag !== true
+        || (rule.effective_date && rule.effective_date > new Date().toISOString().slice(0, 10))
+        || (rule.expiry_date && rule.expiry_date < new Date().toISOString().slice(0, 10))
+      )) {
+        return errorResponse('Approval authority is inactive.', 403, 'UI7_APPROVAL_AUTHORITY_INACTIVE', 'The matched authority rule is not active for this date and organization.', { action });
+      }
+
+      const selfApprovalAllowed = stage?.allow_self_approval ?? rule?.allow_self_approval ?? false;
+      if (requestRow.requested_by === userData.user.id && !selfApprovalAllowed) {
+        return errorResponse('Self-approval is blocked.', 403, 'UI7_SELF_APPROVAL_BLOCKED', 'Separation of duties forbids this decision.', { action });
+      }
+
+      let authorized = stage?.assigned_user_id === userData.user.id || rule?.approver_user_id === userData.user.id;
+      const requiredRole = stage?.assigned_role ?? rule?.approver_role ?? null;
+      if (!authorized && requiredRole) {
+        const { data: roleRows, error: roleError } = await serviceClient
+          .from('user_roles')
+          .select('id')
+          .eq('user_id', userData.user.id)
+          .eq('organization_id', requestRow.organization_id)
+          .eq('role', requiredRole)
+          .eq('is_active', true)
+          .limit(1);
+        if (roleError) {
+          return errorResponse('Approval authority could not be verified.', 409, 'UI7_APPROVAL_ROLE_CHECK_FAILED', 'The role check failed closed.', { action });
+        }
+        authorized = Boolean(roleRows?.length);
+      }
+      if (!authorized) {
+        const delegatorId = stage?.assigned_user_id ?? rule?.approver_user_id ?? null;
+        let delegationQuery = serviceClient
+          .from('approval_delegations')
+          .select('id')
+          .eq('organization_id', requestRow.organization_id)
+          .eq('delegate_id', userData.user.id)
+          .eq('active_flag', true)
+          .lte('effective_from', new Date().toISOString())
+          .gte('effective_to', new Date().toISOString())
+          .or(`workflow_type.is.null,workflow_type.eq.${requestRow.workflow_type}`)
+          .or(`action_type.is.null,action_type.eq.${requestRow.action_type}`)
+          .limit(1);
+        if (delegatorId) delegationQuery = delegationQuery.eq('delegator_id', delegatorId);
+        const { data: delegationRows, error: delegationError } = await delegationQuery;
+        if (delegationError) {
+          return errorResponse('Delegated authority could not be verified.', 409, 'UI7_APPROVAL_DELEGATION_CHECK_FAILED', 'The delegation check failed closed.', { action });
+        }
+        authorized = Boolean(delegationRows?.length);
+      }
+      if (!authorized) {
+        return errorResponse('Approval decision denied.', 403, 'UI7_APPROVAL_AUTHORITY_REQUIRED', 'The signed-in user is not the current approver or delegate.', { action });
+      }
+
+      const { data, error } = await serviceClient.rpc('record_approval_decision', {
+        p_approval_request_id: approvalRequestId,
+        p_approver_id: userData.user.id,
+        p_decision: decision,
+        p_decision_note: decisionNote,
+        p_approver_role: requiredRole,
+      });
+      if (error) {
+        const authorizationFailure = /AUTHORITY|APPROVER|SELF_APPROVAL|ORGANIZATION|ALREADY_CLOSED|NO_IN_PROGRESS_STAGE/i.test(error.message);
+        return errorResponse(
+          authorizationFailure ? 'Approval decision denied.' : 'Approval decision failed safely.',
+          authorizationFailure ? 403 : 409,
+          authorizationFailure ? 'UI7_APPROVAL_DECISION_DENIED' : 'UI7_APPROVAL_DECISION_FAILED',
+          error.message,
+          { action },
+        );
+      }
+      return jsonResponse({ ok: true, action, result: data }, 200);
+    } catch (error) {
+      return errorResponse(
+        'Approval decision failed safely.',
+        409,
+        'UI7_APPROVAL_DECISION_FAILED',
+        error instanceof Error ? error.message : 'Unexpected approval decision error.',
+        { action },
+      );
     }
   }
 
@@ -5863,7 +6640,7 @@ Deno.serve(async (request) => {
 
       const { data: linkedVer, error: verErr } = await serviceClient
         .from('document_versions')
-        .select('id, document_id, controlled_documents(organization_id)')
+        .select('id, document_id, controlled_documents!document_versions_document_id_fkey(organization_id)')
         .eq('id', reqRow.linked_item_id)
         .single();
 

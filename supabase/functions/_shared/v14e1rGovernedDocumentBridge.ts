@@ -19,6 +19,20 @@ export const v14e1rGovernedDocumentActions = new Set([
   'v14e1r_finalize_governed_document_approval',
 ]);
 
+export const governedPolicySopLifecycleActions = new Set([
+  'create_governed_policy_draft',
+  'save_governed_policy_draft',
+  'create_governed_sop_draft',
+  'save_governed_sop_draft',
+  'start_governed_document_revision',
+  'submit_governed_document_for_review',
+  'activate_governed_document_version',
+  'retire_governed_document',
+  'request_policy_sop_exception',
+  'trigger_governed_document_review',
+  'complete_governed_document_review',
+]);
+
 export const canonicalAppRoles = new Set([
   'super_admin',
   'executive',
@@ -49,6 +63,21 @@ export const validGovernanceLinkStates = new Set([
 ]);
 export const validRevisionTypes = new Set(['minor', 'major']);
 export const validApprovalDecisions = new Set(['approved', 'rejected', 'returned', 'abstained']);
+export const validDocumentReviewTriggerTypes = new Set([
+  'scheduled',
+  'regulatory_change',
+  'audit_finding',
+  'ovr',
+  'capa',
+  'management_decision',
+  'accreditation_finding',
+]);
+export const validDocumentReviewOutcomes = new Set([
+  'no_change',
+  'minor_revision',
+  'major_revision',
+  'retire',
+]);
 export const validRaciTypes = new Set(['R', 'A', 'C', 'I']);
 export const validRiskRelationshipTypes = new Set([
   'mitigates',
@@ -164,6 +193,28 @@ export function boundedString(
   if (!s && required) throw new Error(`REQUIRED_${fieldName.toUpperCase()}`);
   if (s.length > maxLen) throw new Error(`MAX_LENGTH_EXCEEDED_${fieldName.toUpperCase()}`);
   return s || null;
+}
+
+export function optionalIsoDate(
+  value: unknown,
+  fieldName: string,
+  required = false
+): string | null {
+  const date = boundedString(value, 10, fieldName, required);
+  if (date === null) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new Error(`INVALID_DATE_${fieldName.toUpperCase()}`);
+  }
+  const [year, month, day] = date.split('-').map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  if (
+    parsed.getUTCFullYear() !== year ||
+    parsed.getUTCMonth() !== month - 1 ||
+    parsed.getUTCDate() !== day
+  ) {
+    throw new Error(`INVALID_DATE_${fieldName.toUpperCase()}`);
+  }
+  return date;
 }
 
 export function assertNoIdentityOverrides(
@@ -531,7 +582,7 @@ export function validateDepartmentScopes(scopes: unknown): string[] | null {
   return scopes.map((d, idx) => requireCanonicalUuid(d, `department_scope_${idx}`));
 }
 
-const allowedRoleScopeKeys = new Set(['role_name', 'job_title']);
+const allowedRoleScopeKeys = new Set(['id', 'role_name', 'job_title']);
 
 export function validateRoleScopes(roles: unknown): Record<string, unknown>[] | null {
   if (roles === null || roles === undefined) return null;
@@ -542,6 +593,7 @@ export function validateRoleScopes(roles: unknown): Record<string, unknown>[] | 
     const obj = r as Record<string, unknown>;
     assertOnlyAllowedKeys(obj, allowedRoleScopeKeys, 'ROLE_SCOPE', idx);
 
+    optionalCanonicalUuid(obj.id, `role_scope_id_${idx}`);
     const roleName = boundedString(obj.role_name, 100, `role_scope_name_${idx}`);
     const jobTitle = boundedString(obj.job_title, 150, `role_scope_job_title_${idx}`);
 
@@ -552,6 +604,76 @@ export function validateRoleScopes(roles: unknown): Record<string, unknown>[] | 
     return {
       ...(roleName ? { role_name: roleName } : {}),
       ...(jobTitle ? { job_title: jobTitle } : {}),
+    };
+  });
+}
+
+const allowedPolicyRequirementKeys = new Set([
+  'id',
+  'sequence_number',
+  'requirement_statement_en',
+  'requirement_statement_ar',
+  'responsible_role',
+  'is_mandatory',
+  'expected_evidence_en',
+  'expected_evidence_ar',
+  'mapped_control_id',
+  'mapped_control_code',
+  'mapped_control_title',
+  'linked_accreditation_clause_id',
+  'linked_accreditation_clause_code',
+  'monitoring_frequency',
+  'monitoring_owner_id',
+]);
+
+export function validatePolicyRequirements(requirements: unknown): Record<string, unknown>[] | null {
+  if (requirements === null || requirements === undefined) return null;
+  if (!Array.isArray(requirements)) throw new Error('INVALID_POLICY_REQUIREMENTS_ARRAY');
+  if (requirements.length > 500) throw new Error('MAX_COUNT_EXCEEDED_POLICY_REQUIREMENTS');
+
+  return requirements.map((requirement, idx) => {
+    if (!requirement || typeof requirement !== 'object' || Array.isArray(requirement)) {
+      throw new Error(`INVALID_POLICY_REQUIREMENT_OBJECT_AT_${idx}`);
+    }
+    const row = requirement as Record<string, unknown>;
+    assertOnlyAllowedKeys(row, allowedPolicyRequirementKeys, 'POLICY_REQUIREMENT', idx);
+
+    const id = optionalCanonicalUuid(row.id, `policy_requirement_id_${idx}`);
+    const sequenceNumber = row.sequence_number === undefined
+      ? idx + 1
+      : validateStrictInteger(row.sequence_number, `policy_requirement_sequence_${idx}`, 1, 10000);
+    const statementEn = boundedString(
+      row.requirement_statement_en,
+      10000,
+      `policy_requirement_statement_en_${idx}`,
+      true
+    )!;
+    const statementAr = boundedString(row.requirement_statement_ar, 10000, `policy_requirement_statement_ar_${idx}`);
+    const responsibleRole = boundedString(row.responsible_role, 150, `policy_requirement_responsible_role_${idx}`);
+    const isMandatory = validateStrictBoolean(row.is_mandatory, `policy_requirement_is_mandatory_${idx}`, true);
+    const evidenceEn = boundedString(row.expected_evidence_en, 5000, `policy_requirement_evidence_en_${idx}`);
+    const evidenceAr = boundedString(row.expected_evidence_ar, 5000, `policy_requirement_evidence_ar_${idx}`);
+    const mappedControlId = optionalCanonicalUuid(row.mapped_control_id, `policy_requirement_control_id_${idx}`);
+    const accreditationClauseId = optionalCanonicalUuid(
+      row.linked_accreditation_clause_id,
+      `policy_requirement_accreditation_clause_id_${idx}`
+    );
+    const monitoringFrequency = boundedString(row.monitoring_frequency, 100, `policy_requirement_monitoring_frequency_${idx}`);
+    const monitoringOwnerId = optionalCanonicalUuid(row.monitoring_owner_id, `policy_requirement_monitoring_owner_id_${idx}`);
+
+    return {
+      ...(id ? { id } : {}),
+      sequence_number: sequenceNumber,
+      requirement_statement_en: statementEn,
+      ...(statementAr ? { requirement_statement_ar: statementAr } : {}),
+      ...(responsibleRole ? { responsible_role: responsibleRole } : {}),
+      is_mandatory: isMandatory,
+      ...(evidenceEn ? { expected_evidence_en: evidenceEn } : {}),
+      ...(evidenceAr ? { expected_evidence_ar: evidenceAr } : {}),
+      ...(mappedControlId ? { mapped_control_id: mappedControlId } : {}),
+      ...(accreditationClauseId ? { linked_accreditation_clause_id: accreditationClauseId } : {}),
+      ...(monitoringFrequency ? { monitoring_frequency: monitoringFrequency } : {}),
+      ...(monitoringOwnerId ? { monitoring_owner_id: monitoringOwnerId } : {}),
     };
   });
 }
@@ -844,6 +966,78 @@ export function validateConfigureStagesProof(data: unknown, expectedAuthorityRul
   );
 }
 
+export function validateCreatePolicyDraftProof(data: unknown): boolean {
+  if (!data || typeof data !== 'object') return false;
+  const d = data as Record<string, unknown>;
+  return (
+    isCanonicalUuid(d.document_id) &&
+    isCanonicalUuid(d.version_id) &&
+    typeof d.document_code === 'string' &&
+    d.document_code.trim().length > 0 &&
+    d.document_code.trim().length <= 100 &&
+    d.document_status === 'draft' &&
+    d.version_number === 1
+  );
+}
+
+export function validateSavePolicyDraftProof(data: unknown, expectedVersionId: string): boolean {
+  if (!data || typeof data !== 'object') return false;
+  const d = data as Record<string, unknown>;
+  return d.success === true && d.version_id === expectedVersionId;
+}
+
+export function validateActivateDocumentProof(data: unknown, expectedVersionId: string): boolean {
+  if (!data || typeof data !== 'object') return false;
+  const d = data as Record<string, unknown>;
+  return (
+    isCanonicalUuid(d.document_id) &&
+    d.version_id === expectedVersionId &&
+    d.status === 'active' &&
+    typeof d.effective_date === 'string' &&
+    /^\d{4}-\d{2}-\d{2}$/.test(d.effective_date)
+  );
+}
+
+export function validateRetireDocumentProof(data: unknown, expectedDocumentId: string): boolean {
+  if (!data || typeof data !== 'object') return false;
+  const d = data as Record<string, unknown>;
+  return d.document_id === expectedDocumentId && d.status === 'retired';
+}
+
+export function validateRequestExceptionProof(data: unknown): boolean {
+  if (!data || typeof data !== 'object') return false;
+  const d = data as Record<string, unknown>;
+  return (
+    isCanonicalUuid(d.exception_id) &&
+    isCanonicalUuid(d.approval_request_id) &&
+    typeof d.exception_code === 'string' &&
+    d.exception_code.trim().length > 0 &&
+    d.exception_code.trim().length <= 100 &&
+    d.status === 'requested'
+  );
+}
+
+export function validateTriggerReviewProof(data: unknown, expectedDocumentId: string): boolean {
+  if (!data || typeof data !== 'object') return false;
+  const d = data as Record<string, unknown>;
+  return isCanonicalUuid(d.trigger_id) && d.document_id === expectedDocumentId && d.status === 'open';
+}
+
+export function validateCompleteReviewProof(
+  data: unknown,
+  expectedTriggerId: string,
+  expectedOutcome: string
+): boolean {
+  if (!data || typeof data !== 'object') return false;
+  const d = data as Record<string, unknown>;
+  return (
+    d.trigger_id === expectedTriggerId &&
+    isCanonicalUuid(d.document_id) &&
+    d.outcome === expectedOutcome &&
+    d.status === 'completed'
+  );
+}
+
 export function validateCreateSopDraftProof(data: unknown): boolean {
   if (!data || typeof data !== 'object') return false;
   const d = data as Record<string, unknown>;
@@ -1012,7 +1206,7 @@ export function mapV14e1rDatabaseError(action: string, error: unknown): SafeErro
   const row = asPlainObject(error);
   const rawMessage = String(row.message ?? row.details ?? error ?? '');
   const knownMatch = rawMessage.match(
-    /(PATCH\w+|UNKNOWN_FIELD_\w+|INVALID_UUID_\w+|PROHIBITED_IDENTITY_OVERRIDE_\w+|REQUIRED_\w+|MAX_LENGTH_EXCEEDED_\w+|MAX_COUNT_EXCEEDED_\w+|INVALID_INTEGER_\w+|INVALID_BOOLEAN_\w+|INVALID_STRING_\w+|INVALID_CRITICALITY_LEVEL|INVALID_CONFIDENTIALITY_LEVEL|INVALID_CONTENT_MODE|INVALID_TRANSCRIPTION_STATUS|INVALID_GOVERNANCE_LINK_STATE|INVALID_DECISION|INVALID_REVISION_TYPE|PAYLOAD_BYTE_BOUND_EXCEEDED)/
+    /(PATCH\w+|UNKNOWN_FIELD_\w+|INVALID_UUID_\w+|INVALID_DATE_\w+|PROHIBITED_IDENTITY_OVERRIDE_\w+|REQUIRED_\w+|MAX_LENGTH_EXCEEDED_\w+|MAX_COUNT_EXCEEDED_\w+|INVALID_INTEGER_\w+|INVALID_BOOLEAN_\w+|INVALID_STRING_\w+|INVALID_CRITICALITY_LEVEL|INVALID_CONFIDENTIALITY_LEVEL|INVALID_CONTENT_MODE|INVALID_TRANSCRIPTION_STATUS|INVALID_GOVERNANCE_LINK_STATE|INVALID_DECISION|INVALID_REVISION_TYPE|INVALID_TRIGGER_TYPE|INVALID_REVIEW_OUTCOME|PAYLOAD_BYTE_BOUND_EXCEEDED)/
   );
   const code = knownMatch ? knownMatch[1] : 'E1R2_OPERATION_FAILED';
 
@@ -1034,7 +1228,7 @@ export function mapV14e1rDatabaseError(action: string, error: unknown): SafeErro
     status = 404;
     safeDetail = 'The requested governed document resource was not found.';
   } else if (
-    /PATCH206_EMPTY_STAGE_CONFIGURATION|PATCH206_INVALID_STAGE_AUTH_SELECTOR|PATCH206_INVALID_STAGE_REVIEWER_ROLE|PATCH206_INVALID_STAGE_REVIEWER_USER|PATCH206_INSUFFICIENT_STAGE_REVIEWERS|PATCH206_USER_STAGE_REQUIRES_COUNT_ONE|PATCH206_INVALID_STAGE_KEY_SYNTAX|PATCH206_INVALID_REQUIRED_DECISION_COUNT|PATCH206_INVALID_STAGE_STRUCTURE|PATCH206_SOP_STEP_RACI_INCOMPLETE|PATCH206_INVALID_RACI_TYPE|PATCH206_UNRESOLVED_SECTION_KEY|PATCH206_INVALID_WORKFLOW_TYPE|PATCH206_ROLE_SCOPE_REQUIRES_ROLE_OR_TITLE|PATCH206_DEFINITION_REQUIRES_TERM_OR_ABBREVIATION|PATCH206_RESPONSIBILITY_REQUIRES_ROLE_OR_TITLE|PATCH206_INVALID_RISK_RELATIONSHIP_TYPE|PATCH206_INVALID_ACCREDITATION_LINK_STRENGTH|PATCH206_INVALID_VERSION_RELATIONSHIP_TYPE|PATCH206_LINKED_STATE_REQUIRES_POLICY|PATCH206_NOT_APPLICABLE_FORBIDS_POLICY|UNKNOWN_FIELD_|INVALID_UUID|PROHIBITED_IDENTITY_OVERRIDE|REQUIRED_|MAX_LENGTH_EXCEEDED|MAX_COUNT_EXCEEDED|INVALID_INTEGER_|INVALID_BOOLEAN_|INVALID_STRING_|INVALID_PROCEDURE_|INVALID_RACI_|INVALID_CLIENT_KEY_|INVALID_CRITICALITY|INVALID_CONFIDENTIALITY|INVALID_CONTENT_MODE|INVALID_TRANSCRIPTION_STATUS|INVALID_GOVERNANCE_LINK_STATE|INVALID_DECISION|INVALID_REVISION_TYPE|PAYLOAD_BYTE_BOUND_EXCEEDED/i.test(
+    /PATCH206_EMPTY_STAGE_CONFIGURATION|PATCH206_INVALID_STAGE_AUTH_SELECTOR|PATCH206_INVALID_STAGE_REVIEWER_ROLE|PATCH206_INVALID_STAGE_REVIEWER_USER|PATCH206_INSUFFICIENT_STAGE_REVIEWERS|PATCH206_USER_STAGE_REQUIRES_COUNT_ONE|PATCH206_INVALID_STAGE_KEY_SYNTAX|PATCH206_INVALID_REQUIRED_DECISION_COUNT|PATCH206_INVALID_STAGE_STRUCTURE|PATCH206_SOP_STEP_RACI_INCOMPLETE|PATCH206_INVALID_RACI_TYPE|PATCH206_UNRESOLVED_SECTION_KEY|PATCH206_INVALID_WORKFLOW_TYPE|PATCH206_ROLE_SCOPE_REQUIRES_ROLE_OR_TITLE|PATCH206_DEFINITION_REQUIRES_TERM_OR_ABBREVIATION|PATCH206_RESPONSIBILITY_REQUIRES_ROLE_OR_TITLE|PATCH206_INVALID_RISK_RELATIONSHIP_TYPE|PATCH206_INVALID_ACCREDITATION_LINK_STRENGTH|PATCH206_INVALID_VERSION_RELATIONSHIP_TYPE|PATCH206_LINKED_STATE_REQUIRES_POLICY|PATCH206_NOT_APPLICABLE_FORBIDS_POLICY|UNKNOWN_FIELD_|INVALID_UUID|INVALID_DATE|PROHIBITED_IDENTITY_OVERRIDE|REQUIRED_|MAX_LENGTH_EXCEEDED|MAX_COUNT_EXCEEDED|INVALID_INTEGER_|INVALID_BOOLEAN_|INVALID_STRING_|INVALID_POLICY_|INVALID_PROCEDURE_|INVALID_RACI_|INVALID_CLIENT_KEY_|INVALID_CRITICALITY|INVALID_CONFIDENTIALITY|INVALID_CONTENT_MODE|INVALID_TRANSCRIPTION_STATUS|INVALID_GOVERNANCE_LINK_STATE|INVALID_DECISION|INVALID_REVISION_TYPE|INVALID_TRIGGER_TYPE|INVALID_REVIEW_OUTCOME|PAYLOAD_BYTE_BOUND_EXCEEDED/i.test(
       code
     )
   ) {

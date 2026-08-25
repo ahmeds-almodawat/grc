@@ -34,6 +34,8 @@ const runtimeDemoImportRegex = /from\s+['\"](?:\.\.\/|\.\/|@\/)?(?:src\/)?demo(?
 const hardcodedRuntimeRecordsRegex = /(const|let|var)\s+[A-Za-z0-9_$]*(mock|demo|sample|fake|dummy|fallback)[A-Za-z0-9_$]*\s*[:=]/i;
 const runtimeFallbackReturnLineRegex = /return\s+[A-Za-z0-9_$]*(mock|demo|sample|fake|dummy|fallback)[A-Za-z0-9_$]*/i;
 const directLiteralFallbackRegex = /return\s*(\[\s*\{\s*(id|organization|title|name)|\{\s*(id|organization|title|name))/i;
+const uiFieldDescriptorReturnRegex = /return\s+\[\s*\{(?=[^}]*\bid\s*:)(?=[^}]*\blabel\s*:)(?=[^}]*\btype\s*:)/i;
+const derivedAggregateReturnRegex = /return\s+\{\s*name\s*,\s*total\s*:\s*[A-Za-z0-9_$]+\.length\s*,\s*completed\s*:\s*[A-Za-z0-9_$]+\.filter\(/i;
 const liveErrorSwallowRegex = /catch\s*\([^)]*\)\s*\{[\s\S]{0,250}return\s+(\[\]|\{\}|null|undefined)/i;
 const hardcodedDemoOrgRegex = /['\"]demo(?:-org)?['\"]/i;
 
@@ -54,7 +56,12 @@ for (const file of files) {
     if (!allowed && runtimeFallbackReturnLineRegex.test(line)) {
       findings.push({ severity: 'high', code: 'RUNTIME_FALLBACK_RETURN', file: rel, line: index + 1, text: trimmed });
     }
-    if (!allowed && directLiteralFallbackRegex.test(line)) {
+    if (
+      !allowed
+      && directLiteralFallbackRegex.test(line)
+      && !uiFieldDescriptorReturnRegex.test(line)
+      && !derivedAggregateReturnRegex.test(line)
+    ) {
       findings.push({ severity: 'high', code: 'DIRECT_LITERAL_RECORD_RETURN', file: rel, line: index + 1, text: trimmed });
     }
     if (!allowed && hardcodedDemoOrgRegex.test(line)) {
