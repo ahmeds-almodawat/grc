@@ -3,10 +3,10 @@
   "status": "pass",
   "evidence": {
     "browser_source": "src/**/*.{ts,tsx}",
-    "target_schema": "ordered supabase/migrations/*.sql through reviewed migration 225",
+    "target_schema": "ordered supabase/migrations/*.sql through reviewed migration 231",
     "deployed_function_catalog": "release/patch83q/patch83q-live-security-definer-inventory.json",
     "deployed_search_entries": 0,
-    "note": "Static target-schema proof through reviewed migration 225. No hosted catalog state is claimed."
+    "note": "Static target-schema proof through reviewed migration 231. No hosted catalog state is claimed."
   },
   "summary": {
     "direct_browser_rpc_count": 0,
@@ -23,10 +23,10 @@
     "views_without_explicit_migration_grant_count": 183,
     "retained_live_broad_security_definer_count": 2,
     "target_broad_security_definer_count": 6,
-    "reviewed_restricted_security_definer_count": 124,
+    "reviewed_restricted_security_definer_count": 127,
     "acl_reachable_materialized_view_count": 0,
     "legacy_browser_base_table_hardening_count": 29,
-    "reviewed_patch83u_migration_ceiling": 225
+    "reviewed_patch83u_migration_ceiling": 231
   },
   "search_grc_global": {
     "disposition": "authenticated_edge_bridge_with_caller_jwt_rls",
@@ -1486,7 +1486,7 @@
         },
         {
           "file": "src/lib/ui7ApprovalsReportsApi.ts",
-          "line": 253,
+          "line": 266,
           "evidence": "generic view reader argument"
         }
       ],
@@ -3825,12 +3825,12 @@
       "call_sites": [
         {
           "file": "src/lib/policySopApi.ts",
-          "line": 475,
+          "line": 500,
           "evidence": "literal .from()"
         },
         {
           "file": "src/lib/policySopApi.ts",
-          "line": 714,
+          "line": 739,
           "evidence": "literal .from()"
         }
       ],
@@ -3906,7 +3906,7 @@
       "call_sites": [
         {
           "file": "src/lib/policySopApi.ts",
-          "line": 490,
+          "line": 515,
           "evidence": "literal .from()"
         }
       ],
@@ -6579,7 +6579,7 @@
         },
         {
           "file": "src/lib/ui7ApprovalsReportsApi.ts",
-          "line": 266,
+          "line": 279,
           "evidence": "generic view reader argument"
         }
       ],
@@ -7133,7 +7133,7 @@
         },
         {
           "file": "src/lib/ui7ApprovalsReportsApi.ts",
-          "line": 268,
+          "line": 281,
           "evidence": "generic view reader argument"
         }
       ],
@@ -7283,7 +7283,7 @@
         },
         {
           "file": "src/lib/ui7ApprovalsReportsApi.ts",
-          "line": 258,
+          "line": 271,
           "evidence": "generic view reader argument"
         }
       ],
@@ -7397,7 +7397,7 @@
         },
         {
           "file": "src/lib/ui7ApprovalsReportsApi.ts",
-          "line": 261,
+          "line": 274,
           "evidence": "generic view reader argument"
         }
       ],
@@ -7413,7 +7413,7 @@
       "grant_evidence": [
         "src/lib/trainingGovernanceApi.ts:286 intentional browser read contract; live ACL must be verified after deployment",
         "src/lib/trainingGovernanceApi.ts:301 intentional browser read contract; live ACL must be verified after deployment",
-        "src/lib/ui7ApprovalsReportsApi.ts:261 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/ui7ApprovalsReportsApi.ts:274 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
       "base_tables": [
@@ -7637,7 +7637,7 @@
         },
         {
           "file": "src/lib/ui7ApprovalsReportsApi.ts",
-          "line": 260,
+          "line": 273,
           "evidence": "generic view reader argument"
         }
       ],
@@ -22089,7 +22089,7 @@
       "call_sites": [
         {
           "file": "src/lib/policySopApi.ts",
-          "line": 505,
+          "line": 530,
           "evidence": "literal .from()"
         }
       ],
@@ -22149,7 +22149,7 @@
       "call_sites": [
         {
           "file": "src/lib/policySopApi.ts",
-          "line": 1244,
+          "line": 1326,
           "evidence": "literal .from()"
         }
       ],
@@ -22163,7 +22163,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/policySopApi.ts:1244 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/policySopApi.ts:1326 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
       "base_tables": [
@@ -22265,7 +22265,7 @@
       "call_sites": [
         {
           "file": "src/lib/policySopApi.ts",
-          "line": 1618,
+          "line": 1702,
           "evidence": "literal .from()"
         },
         {
@@ -22608,7 +22608,7 @@
         },
         {
           "file": "src/lib/ui7ApprovalsReportsApi.ts",
-          "line": 255,
+          "line": 268,
           "evidence": "generic view reader argument"
         }
       ],
@@ -24289,7 +24289,7 @@
         "allowed_purpose": null
       },
       {
-        "source": "target_migrations_171_225",
+        "source": "target_migrations_171_231",
         "schema": "public",
         "name": "governance_linkage_source_readable",
         "signature": "public.governance_linkage_source_readable(p_organization_id uuid, p_source_entity_type text, p_source_entity_id uuid)",
@@ -24309,7 +24309,7 @@
         "allowed_purpose": "Read-only GOV-LINK source visibility decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_225",
+        "source": "target_migrations_171_231",
         "schema": "public",
         "name": "governance_linkage_target_readable",
         "signature": "public.governance_linkage_target_readable(p_organization_id uuid, p_target_criterion_type text, p_target_document_id uuid, p_target_version_id uuid, p_target_policy_requirement_id uuid, p_target_sop_step_id uuid, p_target_compliance_obligation_id uuid, p_target_accreditation_clause_id uuid, p_target_control_id uuid)",
@@ -24329,7 +24329,7 @@
         "allowed_purpose": "Read-only GOV-LINK target visibility and redaction decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_225",
+        "source": "target_migrations_171_231",
         "schema": "public",
         "name": "patch83u_credential_access_allowed",
         "signature": "public.patch83u_credential_access_allowed()",
@@ -24348,7 +24348,7 @@
         "allowed_purpose": "Credential version, state, email, and session freshness decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_225",
+        "source": "target_migrations_171_231",
         "schema": "public",
         "name": "patch83u_profile_update_allowed",
         "signature": "public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)",
@@ -24367,7 +24367,7 @@
         "allowed_purpose": "Same-organization credential-active profile update decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_225",
+        "source": "target_migrations_171_231",
         "schema": "public",
         "name": "patch83u_user_role_mutation_allowed",
         "signature": "public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)",
@@ -24594,6 +24594,26 @@
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:566 revoke execute public, anon, authenticated",
           "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:567 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration230_service_role_acl_review",
+        "schema": "public",
+        "name": "create_capa_action_item",
+        "signature": "public.create_capa_action_item(p_capa_id uuid, p_action_item_title text, p_actor_id uuid, p_payload jsonb default '{}'::jsonb)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/230_p3_capa_action_item_contract_reconciliation.sql",
+        "definition_line": 59,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/091_patch28_capa_action_plan_hardening.sql:739 revoke execute public, anon, authenticated",
+          "supabase/migrations/091_patch28_capa_action_plan_hardening.sql:740 grant execute service_role",
+          "supabase/migrations/230_p3_capa_action_item_contract_reconciliation.sql:210 revoke execute public, anon, authenticated",
+          "supabase/migrations/230_p3_capa_action_item_contract_reconciliation.sql:211 grant execute service_role"
         ]
       },
       {
@@ -25655,7 +25675,7 @@
         ]
       },
       {
-        "source": "migration206_service_role_acl_review",
+        "source": "migration228_service_role_acl_review",
         "schema": "public",
         "name": "guard_staged_approval_mutations",
         "signature": "public.guard_staged_approval_mutations()",
@@ -25664,11 +25684,12 @@
         "authenticated_execute": false,
         "service_role_execute": false,
         "disposition": "owner_only",
-        "definition_file": "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql",
-        "definition_line": 310,
+        "definition_file": "supabase/migrations/228_p3_patch206_staged_mutation_hosted_guard.sql",
+        "definition_line": 5,
         "acl_evidence": [
           "PostgreSQL default PUBLIC EXECUTE",
-          "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:341 revoke execute public, anon, authenticated, service_role"
+          "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:341 revoke execute public, anon, authenticated, service_role",
+          "supabase/migrations/231_p3_hosted_compatibility_acl_reassertion.sql:27 revoke execute public, anon, authenticated, service_role"
         ]
       },
       {
@@ -25855,6 +25876,26 @@
           "supabase/migrations/198_f4_evidence_reviewer_separation_guard.sql:427 grant execute service_role",
           "supabase/migrations/200_evidence_waiver_request_uniqueness.sql:537 revoke execute public, anon, authenticated",
           "supabase/migrations/200_evidence_waiver_request_uniqueness.sql:538 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration227_service_role_acl_review",
+        "schema": "public",
+        "name": "patch27_write_authority_event",
+        "signature": "public.patch27_write_authority_event(p_approval_request_id uuid, p_authority_rule_id uuid, p_event_type text, p_from_status text, p_to_status text, p_actor_id uuid, p_event_note text default null)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/227_p3_patch27_authority_event_hosted_guard.sql",
+        "definition_line": 4,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/090_patch27_approval_authority_matrix.sql:1208 revoke execute public, anon, authenticated",
+          "supabase/migrations/090_patch27_approval_authority_matrix.sql:1209 grant execute service_role",
+          "supabase/migrations/231_p3_hosted_compatibility_acl_reassertion.sql:8 revoke execute public, anon, authenticated",
+          "supabase/migrations/231_p3_hosted_compatibility_acl_reassertion.sql:17 grant execute service_role"
         ]
       },
       {
@@ -26634,6 +26675,26 @@
           "PostgreSQL default PUBLIC EXECUTE",
           "supabase/migrations/210_f1_ovr_governed_version_links.sql:463 revoke execute public, anon, authenticated",
           "supabase/migrations/210_f1_ovr_governed_version_links.sql:466 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration230_service_role_acl_review",
+        "schema": "public",
+        "name": "update_capa_action_item_status",
+        "signature": "public.update_capa_action_item_status(p_action_item_id uuid, p_status text, p_actor_id uuid, p_note text default null)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/230_p3_capa_action_item_contract_reconciliation.sql",
+        "definition_line": 146,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/091_patch28_capa_action_plan_hardening.sql:742 revoke execute public, anon, authenticated",
+          "supabase/migrations/091_patch28_capa_action_plan_hardening.sql:743 grant execute service_role",
+          "supabase/migrations/230_p3_capa_action_item_contract_reconciliation.sql:212 revoke execute public, anon, authenticated",
+          "supabase/migrations/230_p3_capa_action_item_contract_reconciliation.sql:213 grant execute service_role"
         ]
       },
       {
