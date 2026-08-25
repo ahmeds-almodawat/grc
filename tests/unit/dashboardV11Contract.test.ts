@@ -258,7 +258,9 @@ describe('GRC v1.1 governed dashboard contract', () => {
   });
 
   it('routes recent governed activity through a service-only organization aggregate', () => {
+    const allowlist = edge.slice(edge.indexOf('const allowedActions = new Set(['), edge.indexOf('const patch19LifecycleActions'));
     const handler = edge.slice(edge.indexOf("if (action === 'dashboard_recent_governed_activity')"), edge.indexOf('if (patch22RiskActions.has(action))'));
+    expect(allowlist).toContain("'dashboard_recent_governed_activity'");
     expect(handler).toContain("serviceClient.rpc(\n      'dashboard_recent_governed_activity_v1'");
     expect(handler).toContain('p_actor_id: userData.user.id');
     expect(handler).toContain('DASHBOARD_RECENT_ACTIVITY_ACCESS_RESTRICTED');

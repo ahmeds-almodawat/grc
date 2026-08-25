@@ -305,6 +305,7 @@ const ui7ApprovalActions = new Set([
 
 const allowedActions = new Set([
   'ovr_executive_dashboard_analytics',
+  'dashboard_recent_governed_activity',
   'search_grc_global',
   'list_user_management_roster',
   'create_board_pack_snapshot',
