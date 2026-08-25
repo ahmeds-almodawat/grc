@@ -1,8 +1,9 @@
+import { isDemoDataAllowed } from './demoMode';
+
 export type DataMode = 'live' | 'empty' | 'demo';
 
 export const isProductionBuild = import.meta.env.MODE === 'production';
-export const isDemoDataEnabled =
-  import.meta.env.VITE_ALLOW_DEMO_DATA === 'true' && import.meta.env.MODE !== 'production';
+export const isDemoDataEnabled = isDemoDataAllowed();
 
 export function resolveRows<T>(liveRows: T[] | null | undefined, explicitDemoRows: T[] = []): { rows: T[]; mode: DataMode } {
   if (Array.isArray(liveRows) && liveRows.length > 0) return { rows: liveRows, mode: 'live' };

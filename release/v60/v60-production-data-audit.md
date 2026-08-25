@@ -1,10 +1,8 @@
 # v6.0 Production Data Audit
 
-Generated: 2026-06-29T08:02:21.186Z
+Generated: 2026-08-25T00:47:34.528Z
 
 Production-blocking findings: 0
-Total findings: 1
+Total findings: 0
 
 ## Findings
-
-- **medium** FAKE_DATA_TEXT_REVIEW — src\lib\supabaseClient.ts:77 — `// This bridge keeps TypeScript happy and allows emptyRows/demo data to render safely`

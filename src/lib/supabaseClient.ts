@@ -72,9 +72,7 @@ const offlineSupabase = {
   }
 } as unknown as SupabaseClient;
 
-// Some newer patch files expect a non-null `supabase` export from `./supabaseClient`.
-// The original starter uses `./supabase` where the client can be null in demo mode.
-// This bridge keeps TypeScript happy and allows emptyRows/demo data to render safely
-// when Supabase environment variables are not configured.
+// Keep the shared client non-null while preserving explicit configuration errors
+// when Supabase environment variables are unavailable.
 export const supabase = (configuredSupabase ?? offlineSupabase) as SupabaseClient;
 export const isSupabaseLive = Boolean(configuredSupabase);

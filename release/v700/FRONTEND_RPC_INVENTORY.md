@@ -1,10 +1,10 @@
 # v7.0 Frontend RPC Inventory
 
-Generated: 2026-08-24T11:22:39.655Z
+Generated: 2026-08-25T00:48:40.967Z
 
 - Direct frontend RPC calls: 0
-- Authenticated Edge bridge calls: 143
-- Unique RPC names: 134
+- Authenticated Edge bridge calls: 144
+- Unique RPC names: 135
 
 ## Classification counts
 
@@ -15,7 +15,7 @@ Generated: 2026-08-24T11:22:39.655Z
   "production_readiness": 28,
   "workflow_runtime_review": 18,
   "unknown_requires_review": 29,
-  "workflow_runtime": 24,
+  "workflow_runtime": 25,
   "privileged_admin_review": 1,
   "privileged_admin": 16,
   "user_management": 12,
@@ -149,6 +149,7 @@ Generated: 2026-08-24T11:22:39.655Z
 - `create_compliance_remediation` (1 call site)
 - `update_compliance_remediation` (1 call site)
 - `ui7_record_approval_decision` (1 call site)
+- `v14e1r_finalize_governed_document_approval` (1 call site)
 - `patch83t_get_user_import_capabilities` (1 call site)
 - `list_user_management_roster` (1 call site)
 - `patch83t_user_import_identity_references` (1 call site)

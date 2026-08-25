@@ -1,0 +1,71 @@
+{
+  "generated_at": "2026-08-25T00:48:37.335Z",
+  "mode": "governance",
+  "selected_groups": [
+    "governance"
+  ],
+  "status": "passed",
+  "passed_count": 5,
+  "failed_count": 0,
+  "skipped_count": 0,
+  "failed_commands": [],
+  "skipped_commands": [],
+  "note": "Comprehensive and controlled modes retain their runtime, restore, and governance prerequisites.",
+  "results": [
+    {
+      "group": "governance",
+      "script": "v674:signoff-check",
+      "status": "passed",
+      "exit_code": 0,
+      "contract": {
+        "hermetic": false,
+        "classification": "manual-governance-evidence-proof",
+        "proves": "Human management, IT, Quality, and confidentiality approvals."
+      }
+    },
+    {
+      "group": "governance",
+      "script": "v662:strict-proof",
+      "status": "passed",
+      "exit_code": 0,
+      "contract": {
+        "hermetic": false,
+        "classification": "manual-governance-evidence-proof",
+        "proves": "Controlled evidence-quality register."
+      }
+    },
+    {
+      "group": "governance",
+      "script": "v661:strict-proof",
+      "status": "passed",
+      "exit_code": 0,
+      "contract": {
+        "hermetic": false,
+        "classification": "manual-governance-evidence-proof",
+        "proves": "Staged evidence attachments and go/no-go records."
+      }
+    },
+    {
+      "group": "governance",
+      "script": "v66:strict-proof",
+      "status": "passed",
+      "exit_code": 0,
+      "contract": {
+        "hermetic": false,
+        "classification": "manual-governance-evidence-proof",
+        "proves": "Controlled pilot go/no-go evidence."
+      }
+    },
+    {
+      "group": "governance",
+      "script": "v663:progress-audit",
+      "status": "passed",
+      "exit_code": 0,
+      "contract": {
+        "hermetic": false,
+        "classification": "generated-evidence-consistency-proof",
+        "proves": "Consistency of controlled proof progress artifacts."
+      }
+    }
+  ]
+}
