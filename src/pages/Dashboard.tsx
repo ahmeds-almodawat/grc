@@ -38,7 +38,7 @@ import {
   getOvrExecutiveDashboardAnalytics,
   getPortfolioMilestones,
   getProjects,
-  getRecentGovernedActivity,
+  getDashboardRecentGovernedActivity,
   getRisks,
 } from '../lib/grcApi';
 import { getLiveGrcCapaQueue } from '../lib/liveGrcOperatingApi';
@@ -70,7 +70,7 @@ export function Dashboard({ setPage }: DashboardProps) {
   const risks = useAsyncData(() => getRisks({ throwOnError: true }), []);
   const compliance = useAsyncData(() => getComplianceItems({ throwOnError: true }), []);
   const approvals = useAsyncData(() => getApprovals({ throwOnError: true }), []);
-  const recentActivity = useAsyncData(() => getRecentGovernedActivity({ throwOnError: true }), []);
+  const recentActivity = useAsyncData(getDashboardRecentGovernedActivity, []);
 
   const managementData = isEmptyLiveObject(management.data) ? null : management.data;
   const departments = useMemo(() => {

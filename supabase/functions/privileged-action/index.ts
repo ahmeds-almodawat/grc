@@ -3196,6 +3196,41 @@ Deno.serve(async (request) => {
     }, 200);
   }
 
+  if (action === 'dashboard_recent_governed_activity') {
+    const limit = Number(requestPayload.limit ?? 12);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
+      return errorResponse(
+        'A valid recent activity limit is required.',
+        400,
+        'DASHBOARD_RECENT_ACTIVITY_LIMIT_INVALID',
+        'Use an integer limit between 1 and 50.',
+        { action },
+      );
+    }
+
+    const { data, error } = await serviceClient.rpc(
+      'dashboard_recent_governed_activity_v1',
+      { p_actor_id: userData.user.id, p_limit: limit },
+    );
+    if (error) {
+      const authorizationFailure = isOvrAnalyticsAuthorizationFailure(error.message);
+      console.error('Dashboard recent governed activity query failed', {
+        action,
+        code: error.code,
+        message: error.message,
+      });
+      return errorResponse(
+        authorizationFailure ? 'Dashboard activity access is restricted.' : 'Dashboard activity is temporarily unavailable.',
+        authorizationFailure ? 403 : 409,
+        authorizationFailure ? 'DASHBOARD_RECENT_ACTIVITY_ACCESS_RESTRICTED' : 'DASHBOARD_RECENT_ACTIVITY_UNAVAILABLE',
+        authorizationFailure ? 'Use an active dashboard-aggregate-authorized account.' : 'Retry later or contact an administrator.',
+        { action },
+      );
+    }
+
+    return jsonResponse({ ok: true, action, result: data ?? [] }, 200);
+  }
+
   if (patch22RiskActions.has(action)) {
     const { data, error } = await serviceClient.rpc('patch22_risk_workflow_bridge', {
       p_actor_id: userData.user.id,

@@ -739,6 +739,14 @@ export async function getRecentGovernedActivity(options: GovernedReadOptions = {
   }
 }
 
+export async function getDashboardRecentGovernedActivity(): Promise<RecentGovernedActivityRow[]> {
+  requireLiveSupabase();
+  return invokePrivilegedAction<RecentGovernedActivityRow[]>(
+    'dashboard_recent_governed_activity',
+    { limit: 12 },
+  );
+}
+
 export async function getMyWork(): Promise<MyWorkRow[]> {
   requireLiveSupabase();
   const rows = await invokePrivilegedAction<MyWorkRow[]>('f1r2_list_my_work', {});

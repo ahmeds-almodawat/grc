@@ -218,7 +218,8 @@ describe('GRC v1.1 governed dashboard contract', () => {
   });
 
   it('uses the trusted recent-activity view and keeps true empty distinct from unavailable', () => {
-    expect(dashboard).toContain("getRecentGovernedActivity({ throwOnError: true })");
+    expect(dashboard).toContain('getDashboardRecentGovernedActivity');
+    expect(api).toContain("'dashboard_recent_governed_activity'");
     expect(api).toContain(".from('v_recent_governed_activity')");
     expect(dashboard).toContain('No recent governed activity is visible in your scope.');
     expect(dashboard).toContain('Recent governed activity is temporarily unavailable.');
@@ -238,7 +239,7 @@ describe('GRC v1.1 governed dashboard contract', () => {
   });
 
   it('maps the new analytics action to generic client errors while retaining server diagnostics', () => {
-    const handler = edge.slice(edge.indexOf("if (action === 'ovr_executive_dashboard_analytics')"), edge.indexOf('if (patch22RiskActions.has(action))'));
+    const handler = edge.slice(edge.indexOf("if (action === 'ovr_executive_dashboard_analytics')"), edge.indexOf("if (action === 'dashboard_recent_governed_activity')"));
     expect(handler).toContain('OVR_EXECUTIVE_ANALYTICS_UNAVAILABLE');
     expect(handler).toContain("console.error('OVR executive analytics");
     expect(handler).not.toMatch(/error:\s*(?:snapshotError|analyticsError)\.message/);
@@ -249,11 +250,19 @@ describe('GRC v1.1 governed dashboard contract', () => {
       edge.indexOf('function isOvrAnalyticsAuthorizationFailure'),
       edge.indexOf('const userRoleOptions'),
     );
-    const handler = edge.slice(edge.indexOf("if (action === 'ovr_executive_dashboard_analytics')"), edge.indexOf('if (patch22RiskActions.has(action))'));
+    const handler = edge.slice(edge.indexOf("if (action === 'ovr_executive_dashboard_analytics')"), edge.indexOf("if (action === 'dashboard_recent_governed_activity')"));
     expect(classifier).toContain('DASHBOARD_ENTITLEMENT_REQUIRED');
     expect(classifier).not.toContain('OVR_ANALYTICS_CONFIG_REQUIRED');
     expect(classifier).not.toMatch(/\|REQUIRED\|/);
     expect(handler.match(/isOvrAnalyticsAuthorizationFailure/g)).toHaveLength(2);
+  });
+
+  it('routes recent governed activity through a service-only organization aggregate', () => {
+    const handler = edge.slice(edge.indexOf("if (action === 'dashboard_recent_governed_activity')"), edge.indexOf('if (patch22RiskActions.has(action))'));
+    expect(handler).toContain("serviceClient.rpc(\n      'dashboard_recent_governed_activity_v1'");
+    expect(handler).toContain('p_actor_id: userData.user.id');
+    expect(handler).toContain('DASHBOARD_RECENT_ACTIVITY_ACCESS_RESTRICTED');
+    expect(handler).not.toContain('.from(');
   });
 
   it('keeps active and attention Project KPI drill filters aligned with their definitions', () => {
