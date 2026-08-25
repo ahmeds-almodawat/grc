@@ -8,7 +8,7 @@ begin
   select pg_get_functiondef('ovr_v11_private.executive_actor_organization(uuid)'::regprocedure)
     into v_definition;
 
-  if v_definition not like '%ur.role IN (''executive'', ''super_admin'')%' then
+  if lower(v_definition) not like '%ur.role in (''executive'', ''super_admin'')%' then
     raise exception 'HF1_ROLE_ENTITLEMENT_MISSING';
   end if;
   if v_definition not like '%ur.scope = ''global''%' or v_definition not like '%ur.is_active%' then
@@ -17,7 +17,7 @@ begin
   if v_definition not like '%patch83u_role_assignment_valid%' then
     raise exception 'HF1_PATCH83U_ROLE_GUARD_MISSING';
   end if;
-  if v_definition like '%division_head%' or v_definition like '%department_manager%' or v_definition like '%employee%' then
+  if v_definition ~* E'ur\\.role[^\\n]*(division_head|department_manager|employee|viewer|governance_admin)' then
     raise exception 'HF1_LOWER_SCOPE_AGGREGATE_EXPANSION';
   end if;
 
