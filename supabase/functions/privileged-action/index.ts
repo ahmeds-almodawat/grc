@@ -3132,10 +3132,10 @@ Deno.serve(async (request) => {
         message: snapshotError.message,
       });
       return errorResponse(
-        authorizationFailure ? 'Executive analytics access is restricted.' : 'Executive analytics are temporarily unavailable.',
+        authorizationFailure ? 'Dashboard aggregate access is restricted.' : 'Dashboard aggregates are temporarily unavailable.',
         authorizationFailure ? 403 : 409,
         authorizationFailure ? 'OVR_EXECUTIVE_ANALYTICS_ACCESS_RESTRICTED' : 'OVR_EXECUTIVE_ANALYTICS_UNAVAILABLE',
-        authorizationFailure ? 'Use an active Executive-authorized account.' : 'Retry later or contact an administrator.',
+        authorizationFailure ? 'Use an active dashboard-aggregate-authorized account.' : 'Retry later or contact an administrator.',
         { action },
       );
     }
@@ -3167,10 +3167,10 @@ Deno.serve(async (request) => {
         message: analyticsError.message,
       });
       return errorResponse(
-        authorizationFailure ? 'Executive analytics access is restricted.' : 'Executive analytics are temporarily unavailable.',
+        authorizationFailure ? 'Dashboard aggregate access is restricted.' : 'Dashboard aggregates are temporarily unavailable.',
         authorizationFailure ? 403 : 409,
         authorizationFailure ? 'OVR_EXECUTIVE_ANALYTICS_ACCESS_RESTRICTED' : 'OVR_EXECUTIVE_ANALYTICS_UNAVAILABLE',
-        authorizationFailure ? 'Use an active Executive-authorized account.' : 'Retry later or contact an administrator.',
+        authorizationFailure ? 'Use an active dashboard-aggregate-authorized account.' : 'Retry later or contact an administrator.',
         { action },
       );
     }
