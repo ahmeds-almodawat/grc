@@ -13,6 +13,7 @@ import {
   projectInPeriod,
   projectMatchesStatus,
   readDashboardFilters,
+  trendMetricPlotBand,
 } from '../../src/dashboard/dashboardFramework';
 import type { ProjectRow } from '../../src/types/domain';
 
@@ -58,6 +59,7 @@ describe('GRC v1.1 governed dashboard contract', () => {
     ['super_admin', true],
     ['executive', true],
     ['governance_admin', true],
+    ['division_head', false],
     ['department_manager', false],
     ['employee', false],
     ['viewer', false],
@@ -273,9 +275,20 @@ describe('GRC v1.1 governed dashboard contract', () => {
     expect(projectMatchesStatus(project({ status: 'closed' }), 'operating')).toBe(false);
   });
 
-  it('uses non-exact privacy labels unchanged', () => {
-    expect(metricBandLabel({ state: 'suppressed', label: 'Suppressed', suppressed: true }, '—')).toBe('Suppressed');
+  it('normalizes suppressed labels and plots only confirmed numeric states', () => {
+    const suppressed = { state: 'suppressed', label: '3', suppressed: true, lower_bound: 0, upper_bound: 0 } as const;
+    expect(metricBandLabel(suppressed, '—', 5)).toBe('<5');
+    expect(trendMetricPlotBand(suppressed)).toBeNull();
+    expect(trendMetricPlotBand({ state: 'zero', label: '0', suppressed: false })).toEqual({ lower: 0, upper: 0 });
+    expect(trendMetricPlotBand({ state: 'unavailable', label: 'Unavailable', suppressed: false })).toBeNull();
+    expect(trendMetricPlotBand({ state: 'banded', label: '5-9', suppressed: false, lower_bound: 5, upper_bound: 9 })).toEqual({ lower: 5, upper: 9 });
     expect(metricBandLabel(null, '—')).toBe('—');
+  });
+
+  it('keeps privacy icons compact by scoping chart SVG dimensions to the chart root', () => {
+    expect(styles).toContain('.grc-safe-trend__chart > svg');
+    expect(styles).not.toContain('.grc-safe-trend svg {');
+    expect(styles).toContain('.grc-safe-trend__privacy-icon svg');
   });
 
   it('supports light and dark through one theme-aware component system', () => {

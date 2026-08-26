@@ -17,7 +17,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { DashboardFilterState, DashboardPeriod, DashboardSourceState } from '../../dashboard/dashboardFramework';
-import { projectHealth } from '../../dashboard/dashboardFramework';
+import { metricBandLabel, projectHealth, trendMetricPlotBand } from '../../dashboard/dashboardFramework';
 import type { MilestoneRow, OvrExecutiveTrendAnalytics, ProjectRow } from '../../types/domain';
 import { useI18n } from '../../i18n/I18nContext';
 import '../../styles/dashboard-v11.css';
@@ -105,12 +105,28 @@ export function DashboardWidgetState({ state, message, onRetry }: { state: Dashb
   return <div className={`grc-widget-state grc-widget-state--${state}`} role={state === 'unavailable' ? 'alert' : 'status'}><Icon size={18} /><span>{message}</span>{onRetry ? <button type="button" className="ghost-button compact-button" onClick={onRetry}><RefreshCw size={14} />{t('dashboard.v11.retry', 'Retry')}</button> : null}</div>;
 }
 
+function PrivacySuppressionNotice({ minimumCellSize, t }: { minimumCellSize: number; t: Translate }) {
+  return <div className="grc-safe-trend__privacy-note" role="status">
+    <span className="grc-safe-trend__privacy-icon" aria-hidden="true"><LockKeyhole size={14} /></span>
+    <span className="grc-safe-trend__privacy-copy">
+      <span><strong>{t('dashboard.v11.privacyProtected', 'Privacy protected')}</strong><b>{`<${minimumCellSize} ${t('dashboard.v11.reports', 'reports')}`}</b></span>
+      <small>{t('dashboard.v11.privacySuppressionDetail', 'Exact values are suppressed to protect confidentiality.')}</small>
+    </span>
+  </div>;
+}
+
 export function PrivacySafeTrend({ data, t }: { data: OvrExecutiveTrendAnalytics | null; t: Translate }) {
   const { language } = useI18n();
   const [visibleSeries, setVisibleSeries] = useState({ newReports: true, closedReports: true });
   const [activeBand, setActiveBand] = useState<{ x: number; y: number; label: string; series: string } | null>(null);
-  const maximum = useMemo(() => Math.max(1, ...(data?.buckets.flatMap(bucket => [bucket.new_reports.upper_bound ?? 0, bucket.closed_reports.upper_bound ?? 0]) ?? [1])), [data]);
+  const maximum = useMemo(() => Math.max(1, ...(data?.buckets.flatMap(bucket => [bucket.new_reports, bucket.closed_reports].flatMap(metric => {
+    const band = trendMetricPlotBand(metric);
+    return band ? [band.upper] : [];
+  })) ?? [])), [data]);
   if (!data) return <DashboardWidgetState state="unavailable" message={t('dashboard.v11.sourceUnavailable', 'Source unavailable')} />;
+  const minimumCellSize = Number.isInteger(data.privacy.minimum_cell_size) && data.privacy.minimum_cell_size >= 5
+    ? data.privacy.minimum_cell_size
+    : 5;
   const width = 720;
   const height = 270;
   const plot = { left: 34, right: 16, top: 18, bottom: 42 };
@@ -120,13 +136,12 @@ export function PrivacySafeTrend({ data, t }: { data: OvrExecutiveTrendAnalytics
   const yAt = (value: number) => plot.top + plotHeight - (value / maximum) * plotHeight;
   const pointsFor = (series: 'new_reports' | 'closed_reports') => data.buckets.map((bucket, index) => {
     const metric = bucket[series];
-    const lower = metric.lower_bound ?? (metric.state === 'zero' ? 0 : null);
-    const upper = metric.upper_bound ?? (metric.state === 'zero' ? 0 : null);
+    const band = trendMetricPlotBand(metric);
     return {
       x: xAt(index),
-      upperY: upper === null ? null : yAt(upper),
-      lowerY: lower === null ? null : yAt(lower),
-      label: metric.label,
+      upperY: band === null ? null : yAt(band.upper),
+      lowerY: band === null ? null : yAt(band.lower),
+      label: metricBandLabel(metric, '—', minimumCellSize),
       bucket: bucket.bucket_key,
     };
   });
@@ -153,6 +168,8 @@ export function PrivacySafeTrend({ data, t }: { data: OvrExecutiveTrendAnalytics
   };
   const newPoints = pointsFor('new_reports');
   const closedPoints = pointsFor('closed_reports');
+  const hasSuppression = data.buckets.some(bucket => bucket.new_reports.state === 'suppressed' || bucket.closed_reports.state === 'suppressed');
+  const hasPlottableData = [...newPoints, ...closedPoints].some(point => point.upperY !== null && point.lowerY !== null);
   const monthLabel = new Intl.DateTimeFormat(language === 'ar' ? 'ar-SA' : 'en-US', { month: 'short' });
   const toggleSeries = (series: keyof typeof visibleSeries) => setVisibleSeries(current => ({ ...current, [series]: !current[series] }));
   const renderSeries = (points: TrendPoint[], className: 'is-new' | 'is-closed', seriesLabel: string) => <>
@@ -178,7 +195,12 @@ export function PrivacySafeTrend({ data, t }: { data: OvrExecutiveTrendAnalytics
     </g>)}
   </>;
 
+  if (hasSuppression && !hasPlottableData) return <div className="grc-safe-trend grc-safe-trend--privacy-only" aria-label={t('dashboard.v11.performanceTrend', 'GRC performance trend')}>
+    <PrivacySuppressionNotice minimumCellSize={minimumCellSize} t={t} />
+  </div>;
+
   return <div className="grc-safe-trend" aria-label={t('dashboard.v11.performanceTrend', 'GRC performance trend')}>
+    {hasSuppression ? <PrivacySuppressionNotice minimumCellSize={minimumCellSize} t={t} /> : null}
     <div className="grc-safe-trend__chart">
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={t('dashboard.v11.trendHint', 'Fixed 12-month privacy-safe daily snapshot; no raw OVR drill-down entitlement is implied.')}>
         {[0, 0.25, 0.5, 0.75, 1].map(level => <line className="grc-safe-trend__grid" x1={plot.left} x2={width - plot.right} y1={plot.top + plotHeight * level} y2={plot.top + plotHeight * level} key={level} />)}

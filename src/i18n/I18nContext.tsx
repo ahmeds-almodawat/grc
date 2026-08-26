@@ -1029,6 +1029,8 @@ const translations: TranslationMap = {
   'dashboard.v11.allFiltersApply': { en: 'Period, department, status and severity filters apply.', ar: 'تنطبق مرشحات الفترة والإدارة والحالة والخطورة.' },
   'dashboard.v11.performanceTrend': { en: 'GRC performance trend', ar: 'اتجاه أداء الحوكمة والمخاطر والالتزام' },
   'dashboard.v11.trendHint': { en: 'Organization-wide fixed 12-month privacy-safe snapshot; dashboard filters do not apply and no raw OVR entitlement is implied.', ar: 'لقطة ثابتة وآمنة للخصوصية لمدة 12 شهرًا على مستوى المنشأة؛ لا تنطبق مرشحات لوحة المعلومات ولا تمنح حق الوصول إلى سجلات OVR الخام.' },
+  'dashboard.v11.privacyProtected': { en: 'Privacy protected', ar: 'الخصوصية محمية' },
+  'dashboard.v11.privacySuppressionDetail': { en: 'Exact values are suppressed to protect confidentiality.', ar: 'تم حجب القيم الدقيقة لحماية السرية.' },
   'dashboard.v11.aggregateRestricted': { en: 'Dashboard aggregate access is restricted for this account.', ar: 'الوصول إلى تجميع لوحة المعلومات مقيد لهذا الحساب.' },
   'dashboard.v11.aggregateUnavailable': { en: 'The privacy-safe dashboard aggregate is temporarily unavailable.', ar: 'تجميع لوحة المعلومات الآمن للخصوصية غير متاح مؤقتًا.' },
   'dashboard.v11.loading': { en: 'Loading governed data…', ar: 'جارٍ تحميل البيانات المحكومة…' },

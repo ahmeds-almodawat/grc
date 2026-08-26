@@ -77,8 +77,31 @@ export function writeDashboardFilters(filters: DashboardFilterState) {
   window.history.replaceState(null, '', `${window.location.pathname}?${query.toString()}`);
 }
 
-export function metricBandLabel(metric: PrivacySafeMetricBand | null | undefined, unavailable: string): string {
-  return metric?.label || unavailable;
+function privacyMinimum(value: number | null | undefined): number {
+  return Number.isInteger(value) && (value as number) >= 5 ? value as number : 5;
+}
+
+export function metricBandLabel(
+  metric: PrivacySafeMetricBand | null | undefined,
+  unavailable: string,
+  minimumCellSize?: number,
+): string {
+  if (!metric || metric.state === 'unavailable') return unavailable;
+  if (metric.state === 'zero') return '0';
+  if (metric.state === 'suppressed') return `<${privacyMinimum(minimumCellSize)}`;
+  return metric.label || unavailable;
+}
+
+export function trendMetricPlotBand(metric: PrivacySafeMetricBand): { lower: number; upper: number } | null {
+  if (metric.state === 'zero') return { lower: 0, upper: 0 };
+  if (metric.state !== 'banded') return null;
+  if (
+    !Number.isFinite(metric.lower_bound)
+    || !Number.isFinite(metric.upper_bound)
+    || (metric.lower_bound as number) < 0
+    || (metric.upper_bound as number) < (metric.lower_bound as number)
+  ) return null;
+  return { lower: metric.lower_bound as number, upper: metric.upper_bound as number };
 }
 
 export function projectHealth(project: ProjectRow): 'on_track' | 'watch' | 'at_risk' | 'delayed' | 'completed' {
