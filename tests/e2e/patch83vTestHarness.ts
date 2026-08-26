@@ -224,6 +224,7 @@ function isReadOnlyAction(action: string): boolean {
     || action === 'patch83t_get_user_import_capabilities'
     || action === 'patch83t_user_import_identity_references'
     || action === 'ovr_executive_dashboard_analytics'
+    || action === 'dashboard_recent_governed_activity'
     || action === 'f1r2_list_my_work'
     || /^(?:get|list|search|preview|evaluate)_/i.test(action);
 }
