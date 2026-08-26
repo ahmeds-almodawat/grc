@@ -25,11 +25,6 @@ import {
 } from '../lib/userCredentialApi';
 import { PrivilegedActionError } from '../lib/privilegedAction';
 import { isPatch83uCredentialGovernanceEnabled } from '../config/featureFlags';
-import {
-  getLoginCaptchaSubmissionError,
-  loginCaptchaConfig,
-  normalizeLoginCaptchaToken,
-} from './loginCaptcha';
 import type {
   AccessScope,
   AuthProfile,
@@ -50,11 +45,7 @@ export const AUTH_BACKGROUND_REVALIDATION_COOLDOWN_MS = 1_000;
 interface AuthContextValue extends AuthUserState {
   session: Session | null;
   isRevalidating: boolean;
-  signIn: (
-    email: string,
-    password: string,
-    captchaToken?: string | null,
-  ) => Promise<{ ok: boolean; message?: string }>;
+  signIn: (email: string, password: string) => Promise<{ ok: boolean; message?: string }>;
   signOut: () => Promise<void>;
   reload: () => Promise<void>;
   retryCompatibility: () => Promise<void>;
@@ -233,15 +224,7 @@ function deploymentErrorCode(error: unknown): string {
 }
 
 function loginErrorMessage(error: unknown): string {
-  const code = typeof error === 'object' && error && 'code' in error
-    ? String(error.code)
-    : '';
-  const message = typeof error === 'object' && error && 'message' in error
-    ? String(error.message)
-    : '';
-  if (code === 'captcha_failed' || /captcha/i.test(message)) {
-    return 'CAPTCHA verification failed. Complete a fresh challenge and try again.';
-  }
+  void error;
   return 'Sign-in failed. Check your credentials, then try again.';
 }
 
@@ -895,13 +878,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [clearAuthenticatedState, readUsableAuthSession, runAuthenticatedPipeline]);
 
-  const signIn = useCallback(async (
-    email: string,
-    password: string,
-    captchaToken?: string | null,
-  ) => {
-    const captchaError = getLoginCaptchaSubmissionError(loginCaptchaConfig, captchaToken);
-    if (captchaError) return { ok: false, message: captchaError };
+  const signIn = useCallback(async (email: string, password: string) => {
     if (!supabase) {
       const message = 'Supabase is not configured. Login cannot continue.';
       commitState(emptyState('configuration_error', message));
@@ -930,11 +907,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     pendingSignInCountRef.current += 1;
 
     try {
-      const normalizedCaptchaToken = normalizeLoginCaptchaToken(captchaToken);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
-        ...(normalizedCaptchaToken ? { options: { captchaToken: normalizedCaptchaToken } } : {}),
       });
       if (!mountedRef.current || generationRef.current !== generation) {
         if (data.session) {

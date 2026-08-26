@@ -9,6 +9,10 @@ import {
   PATCH83U_EXPECTED_SCHEMA_VERSION,
   PATCH83U_FRONTEND_CONTRACT_VERSION,
 } from '../config/featureFlags';
+import {
+  PASSWORD_MAX_LENGTH,
+  passwordPolicyError,
+} from '../auth/passwordPolicy';
 
 export const CAPABILITIES_ACTION = 'patch83u_get_capabilities';
 export const CREDENTIAL_STATE_ACTION = 'patch83u_get_credential_state';
@@ -138,6 +142,11 @@ export type ProvisioningCommandInput = {
   requestId: string;
 };
 
+export type ProvisionAccountInput = ProvisioningCommandInput & {
+  temporaryPassword: string;
+  confirmTemporaryPassword: string;
+};
+
 export type AdminResetPasswordInput = {
   userId: string;
   temporaryPassword: string;
@@ -217,7 +226,6 @@ const CANONICAL_CREDENTIAL_STATES = new Set<CanonicalCredentialState>([
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9._:-]+$/;
 const MAX_REQUEST_ID_LENGTH = 128;
-const MAX_PASSWORD_LENGTH = 256;
 const MAX_RESET_REASON_LENGTH = 500;
 const AMBIGUOUS_PASSWORD_CHANGE_CODES = new Set([
   'PATCH83U_PASSWORD_CHANGE_BEGIN_FAILED',
@@ -251,7 +259,6 @@ export type ChangeRequiredPasswordInput = {
   currentPassword: string;
   newPassword: string;
   confirmNewPassword: string;
-  captchaToken?: string | null;
   requestId: string;
 };
 
@@ -571,14 +578,21 @@ export async function listProvisioning(
 }
 
 export async function provisionAccount(
-  input: ProvisioningCommandInput,
+  input: ProvisionAccountInput,
   options: Patch83uRequestOptions = {},
 ): Promise<ProvisionAccountResult> {
   requirePatch83uEnabled();
   const validated = validateProvisioningCommand(input);
+  const policyError = passwordPolicyError(input.temporaryPassword);
+  if (policyError) throw new Error(policyError);
+  if (input.temporaryPassword !== input.confirmTemporaryPassword) {
+    throw new Error('Temporary password confirmation does not match.');
+  }
   return invokePrivilegedAction<ProvisionAccountResult>(PROVISION_ACCOUNT_ACTION, {
     provisioning_id: validated.provisioningId,
     employee_id_confirmation: validated.employeeIdConfirmation,
+    temporary_password: input.temporaryPassword,
+    confirm_temporary_password: input.confirmTemporaryPassword,
     request_id: validated.requestId,
   }, privilegedOptions(options));
 }
@@ -604,18 +618,8 @@ export async function adminResetPassword(
   const userId = requireUuid(input.userId, 'User ID');
   const employeeIdConfirmation = requireExactEmployeeConfirmation(input.employeeIdConfirmation);
   const requestId = requireSafeRequestId(input.requestId);
-  if (
-    typeof input.temporaryPassword !== 'string'
-    || !input.temporaryPassword
-    || input.temporaryPassword !== input.temporaryPassword.trim()
-    || input.temporaryPassword.length > MAX_PASSWORD_LENGTH
-    || typeof input.confirmTemporaryPassword !== 'string'
-    || !input.confirmTemporaryPassword
-    || input.confirmTemporaryPassword !== input.confirmTemporaryPassword.trim()
-    || input.confirmTemporaryPassword.length > MAX_PASSWORD_LENGTH
-  ) {
-    throw new Error('Enter and confirm a non-empty temporary password without surrounding whitespace.');
-  }
+  const policyError = passwordPolicyError(input.temporaryPassword);
+  if (policyError) throw new Error(policyError);
   if (input.temporaryPassword !== input.confirmTemporaryPassword) {
     throw new Error('Temporary password confirmation does not match.');
   }
@@ -714,19 +718,8 @@ export async function changeRequiredPassword(
   if (!input.currentPassword || !input.newPassword || !input.confirmNewPassword) {
     throw new Error('Current password, new password, and confirmation are required.');
   }
-  if (
-    input.currentPassword !== input.currentPassword.trim()
-    || input.newPassword !== input.newPassword.trim()
-    || input.confirmNewPassword !== input.confirmNewPassword.trim()
-  ) {
-    throw new Error('Password fields cannot contain surrounding whitespace.');
-  }
-  if (
-    input.currentPassword.length > MAX_PASSWORD_LENGTH
-    || input.newPassword.length > MAX_PASSWORD_LENGTH
-    || input.confirmNewPassword.length > MAX_PASSWORD_LENGTH
-  ) {
-    throw new Error(`Password fields cannot exceed ${MAX_PASSWORD_LENGTH} characters.`);
+  if (input.currentPassword.length > PASSWORD_MAX_LENGTH) {
+    throw new Error(`Current password cannot exceed ${PASSWORD_MAX_LENGTH} characters.`);
   }
   if (input.newPassword !== input.confirmNewPassword) {
     throw new Error('New password confirmation does not match.');
@@ -734,15 +727,15 @@ export async function changeRequiredPassword(
   if (input.currentPassword === input.newPassword) {
     throw new Error('The new password must be different from the current password.');
   }
+  const policyError = passwordPolicyError(input.newPassword);
+  if (policyError) throw new Error(policyError);
 
   const requestId = requireSafeRequestId(input.requestId);
-  const captchaToken = input.captchaToken?.trim() || null;
 
   const result = await invokePrivilegedAction<unknown>(CHANGE_REQUIRED_PASSWORD_ACTION, {
     current_password: input.currentPassword,
     new_password: input.newPassword,
     confirm_new_password: input.confirmNewPassword,
-    ...(captchaToken ? { captcha_token: captchaToken } : {}),
     request_id: requestId,
   }, privilegedOptions(options));
 

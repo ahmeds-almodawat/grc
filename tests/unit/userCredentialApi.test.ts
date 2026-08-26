@@ -144,6 +144,8 @@ describe('Patch 83U capability handshake', () => {
     await expect(provisionAccount({
       provisioningId: PROVISIONING_ID,
       employeeIdConfirmation: '11111',
+      temporaryPassword: 'office123',
+      confirmTemporaryPassword: 'office123',
       requestId: 'request-1',
     })).rejects.toThrow(/disabled/i);
     expect(invokeMock).not.toHaveBeenCalled();
@@ -226,7 +228,6 @@ describe('Patch 83U protected commands', () => {
     for (const code of [
       'PATCH83U_CURRENT_PASSWORD_INVALID',
       'PATCH83U_PASSWORD_POLICY_BLOCKED',
-      'captcha_failed',
     ]) {
       const definitiveFailure = new PrivilegedActionError({
         message: 'Definitive failure.',
@@ -249,10 +250,18 @@ describe('Patch 83U protected commands', () => {
     invokeMock.mockResolvedValueOnce({ provisioningId: PROVISIONING_ID.toLowerCase(), profileId: USER_ID })
       .mockResolvedValueOnce({ provisioningId: PROVISIONING_ID.toLowerCase(), status: 'completed' });
     const input = { provisioningId: PROVISIONING_ID, employeeIdConfirmation: '11111', requestId: 'request-1' };
-    await provisionAccount(input);
+    await provisionAccount({
+      ...input,
+      temporaryPassword: 'office123',
+      confirmTemporaryPassword: 'office123',
+    });
     await reconcileProvisioning(input);
     expect(invokeMock).toHaveBeenNthCalledWith(1, 'patch83u_provision_account', {
-      provisioning_id: PROVISIONING_ID.toLowerCase(), employee_id_confirmation: '11111', request_id: 'request-1',
+      provisioning_id: PROVISIONING_ID.toLowerCase(),
+      employee_id_confirmation: '11111',
+      temporary_password: 'office123',
+      confirm_temporary_password: 'office123',
+      request_id: 'request-1',
     }, REQUEST_OPTIONS);
     expect(invokeMock).toHaveBeenNthCalledWith(2, 'patch83u_reconcile_provisioning', {
       provisioning_id: PROVISIONING_ID.toLowerCase(), employee_id_confirmation: '11111', request_id: 'request-1',
@@ -362,7 +371,7 @@ describe('Patch 83U protected commands', () => {
     expect(invokeMock).not.toHaveBeenCalled();
   });
 
-  it('sends a normalized CAPTCHA token and stable request ID and validates completion proof', async () => {
+  it('sends the governed password change without a challenge token and validates completion proof', async () => {
     const result = {
       userId: USER_ID.toLowerCase(),
       status: 'active',
@@ -378,19 +387,17 @@ describe('Patch 83U protected commands', () => {
       currentPassword: '11111',
       newPassword: 'Permanent.Password#2026',
       confirmNewPassword: 'Permanent.Password#2026',
-      captchaToken: '  captcha-token  ',
       requestId: 'change-1',
     })).resolves.toEqual(result);
     expect(invokeMock).toHaveBeenCalledWith('patch83u_change_required_password', {
       current_password: '11111',
       new_password: 'Permanent.Password#2026',
       confirm_new_password: 'Permanent.Password#2026',
-      captcha_token: 'captcha-token',
       request_id: 'change-1',
     }, REQUEST_OPTIONS);
   });
 
-  it('omits CAPTCHA when disabled upstream and rejects malformed completion proof', async () => {
+  it('rejects malformed completion proof after password-only reauthentication', async () => {
     invokeMock.mockResolvedValueOnce({});
     const malformedResultError = await changeRequiredPassword({
       currentPassword: '11111',
@@ -403,7 +410,42 @@ describe('Patch 83U protected commands', () => {
       code: 'PATCH83U_PASSWORD_CHANGE_RESULT_INVALID',
     });
     expect(isAmbiguousPasswordChangeFailure(malformedResultError)).toBe(true);
-    expect(invokeMock.mock.calls[0][1]).not.toHaveProperty('captcha_token');
+  });
+
+  it('rejects equal-current and confirmation-mismatch changes before the bridge', async () => {
+    await expect(changeRequiredPassword({
+      currentPassword: 'office123',
+      newPassword: 'office123',
+      confirmNewPassword: 'office123',
+      requestId: 'change-equal-1',
+    })).rejects.toThrow(/different from the current/i);
+    await expect(changeRequiredPassword({
+      currentPassword: 'current123',
+      newPassword: 'office123',
+      confirmNewPassword: 'office124',
+      requestId: 'change-mismatch-1',
+    })).rejects.toThrow(/confirmation does not match/i);
+    expect(invokeMock).not.toHaveBeenCalled();
+  });
+
+  it('does not reject passwords that match an employee identifier or username', async () => {
+    const result = {
+      userId: USER_ID.toLowerCase(),
+      status: 'active',
+      credentialVersion: 2,
+      mustReauthenticate: true,
+      reconciliationRequired: false,
+      sessionRevocationReviewRequired: false,
+      idempotentReplay: false,
+      requestId: 'change-identifier-1',
+    };
+    invokeMock.mockResolvedValueOnce(result);
+    await expect(changeRequiredPassword({
+      currentPassword: 'current123',
+      newPassword: 'employee99',
+      confirmNewPassword: 'employee99',
+      requestId: 'change-identifier-1',
+    })).resolves.toEqual(result);
   });
 
   it('accepts version zero only for protected password-change terminal outcomes', async () => {

@@ -91,7 +91,7 @@ describe('Patch 83U frontend authentication contract', () => {
     expect(provider).toContain("userStatus === 'active'");
   });
 
-  it('uses exact feature, capability, CAPTCHA, request-ID, and completion contracts', () => {
+  it('uses exact feature, capability, password-policy, request-ID, and completion contracts', () => {
     const flags = source('src/config/featureFlags.ts');
     const api = source('src/lib/userCredentialApi.ts');
     const forced = source('src/pages/ForcedPasswordChange.tsx');
@@ -99,7 +99,7 @@ describe('Patch 83U frontend authentication contract', () => {
     expect(flags).toContain('return value === "true"');
     expect(api).toContain("'patch83u_get_capabilities'");
     expect(api).toContain('frontend_contract_version: PATCH83U_FRONTEND_CONTRACT_VERSION');
-    expect(api).toContain('captcha_token: captchaToken');
+    expect(api).toContain('passwordPolicyError(input.newPassword)');
     expect(api).toContain('request_id: requestId');
     expect(forced).toContain('requestIdRef');
     expect(forced).toContain('passwordChangeFailureDisposition(changeError)');
@@ -111,7 +111,8 @@ describe('Patch 83U frontend authentication contract', () => {
     expect(forced).toContain("'password_policy_rejected_after_revocation'");
     expect(forced).toContain(": 'unconfirmed'");
     expect(api).toContain("'PATCH83U_PASSWORD_CHANGE_RESULT_INVALID'");
-    expect(forced).toContain('TurnstileCaptcha');
+    expect(forced).toContain('PasswordRequirements');
+    expect(forced).not.toMatch(/captcha|turnstile/i);
     expect(forced).toContain('completeRequiredPasswordChange');
   });
 

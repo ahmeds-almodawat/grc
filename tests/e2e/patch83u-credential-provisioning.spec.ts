@@ -233,7 +233,7 @@ async function installAuthenticatedMocks(
         access_allowed: credentialState === 'active',
         message: credentialState === 'active'
           ? null
-          : 'Change the initial Employee ID password before application access.',
+          : 'Change the temporary password before application access.',
       };
     } else if (action === 'patch83u_change_required_password') {
       result = {
@@ -369,7 +369,7 @@ function callsFor(proof: Telemetry, action: string) {
   return proof.actions.filter((call) => call.action === action);
 }
 
-test.describe('Patch 83U Employee ID credentials and protected provisioning', () => {
+test.describe('Patch 83U Employee ID sign-in and protected provisioning', () => {
   test.describe.configure({ mode: 'serial' });
 
   test.beforeAll(async () => {
@@ -437,9 +437,10 @@ test.describe('Patch 83U Employee ID credentials and protected provisioning', ()
     await installAuthenticatedMocks(page, proof, 'initial_change_required');
     await page.goto(patch83uBaseUrl);
 
-    await page.getByLabel('Current password').fill(employeeId);
-    await page.getByLabel('New password', { exact: true }).fill(employeeId);
-    await page.getByLabel('Confirm new password').fill(employeeId);
+    const currentPassword = 'office123';
+    await page.getByLabel('Current password').fill(currentPassword);
+    await page.getByLabel('New password', { exact: true }).fill(currentPassword);
+    await page.getByLabel('Confirm new password').fill(currentPassword);
     await page.getByRole('button', { name: 'Change password' }).click();
     await expect(page.getByRole('alert')).toContainText('must differ from the current password');
     expect(callsFor(proof, 'patch83u_change_required_password')).toEqual([]);
@@ -455,7 +456,7 @@ test.describe('Patch 83U Employee ID credentials and protected provisioning', ()
     await page.getByRole('button', { name: 'Change password' }).click();
     await expect.poll(() => callsFor(proof, 'patch83u_change_required_password').length).toBe(1);
     expect(callsFor(proof, 'patch83u_change_required_password')[0].payload).toEqual({
-      current_password: employeeId,
+      current_password: currentPassword,
       new_password: permanentPassword,
       confirm_new_password: permanentPassword,
       request_id: expect.stringMatching(/^[0-9a-f-]{36}$/),
@@ -491,6 +492,9 @@ test.describe('Patch 83U Employee ID credentials and protected provisioning', ()
     expect(callsFor(proof, 'patch83u_provision_account')).toEqual([]);
 
     await dialog.getByLabel('Provisioning Employee ID confirmation').fill(employeeId);
+    await expect(dialog.getByText('Password requirements')).toBeVisible();
+    await dialog.getByLabel('Temporary password', { exact: true }).fill('office123');
+    await dialog.getByLabel('Confirm temporary password', { exact: true }).fill('office123');
     await expect(execute).toBeEnabled();
     expect(callsFor(proof, 'patch83u_provision_account')).toEqual([]);
     await execute.click();
@@ -499,6 +503,8 @@ test.describe('Patch 83U Employee ID credentials and protected provisioning', ()
     expect(callsFor(proof, 'patch83u_provision_account')[0].payload).toEqual({
       provisioning_id: provisioningId,
       employee_id_confirmation: employeeId,
+      temporary_password: 'office123',
+      confirm_temporary_password: 'office123',
       request_id: expect.stringMatching(/^patch83u:provision:[0-9a-f-]{36}$/),
     });
     expect(proof.unexpectedAuthWrites).toEqual([]);
@@ -694,7 +700,7 @@ test.describe('Patch 83U Employee ID credentials and protected provisioning', ()
     expect(proof.consoleProblems).toEqual([]);
   });
 
-  test('defaults reset to Employee ID and requires both exact confirmations and a reason', async ({ page }) => {
+  test('requires a governed temporary password, both exact confirmations, and a reason', async ({ page }) => {
     const proof = telemetry();
     await installAuthenticatedMocks(page, proof);
     await openUserManagement(page);
@@ -708,8 +714,11 @@ test.describe('Patch 83U Employee ID credentials and protected provisioning', ()
     await expect(reset).toBeDisabled();
     expect(callsFor(proof, 'patch83u_admin_reset_password')).toEqual([]);
 
-    await expect(resetDialog.getByLabel('Temporary password', { exact: true })).toHaveValue(employeeId);
-    await expect(resetDialog.getByLabel('Confirm temporary password', { exact: true })).toHaveValue(employeeId);
+    await expect(resetDialog.getByLabel('Temporary password', { exact: true })).toHaveValue('');
+    await expect(resetDialog.getByLabel('Confirm temporary password', { exact: true })).toHaveValue('');
+    await expect(resetDialog.getByText('Password requirements')).toBeVisible();
+    await resetDialog.getByLabel('Temporary password', { exact: true }).fill('office123');
+    await resetDialog.getByLabel('Confirm temporary password', { exact: true }).fill('office123');
     await resetDialog.getByLabel('Reset Employee ID confirmation').fill(employeeId);
     await expect(reset).toBeDisabled();
 
@@ -719,7 +728,7 @@ test.describe('Patch 83U Employee ID credentials and protected provisioning', ()
 
     await resetDialog.getByLabel('Reset password action confirmation').fill('RESET USER PASSWORD');
     await expect(reset).toBeDisabled();
-    await resetDialog.getByLabel('Reset reason').fill(`Employee reported ${employeeId} as the temporary password.`);
+    await resetDialog.getByLabel('Reset reason').fill('Employee reported office123 as the temporary password.');
     await expect(resetDialog.getByText('The reset reason must not contain the temporary password.')).toBeVisible();
     await expect(reset).toBeDisabled();
     expect(callsFor(proof, 'patch83u_admin_reset_password')).toEqual([]);
@@ -733,8 +742,8 @@ test.describe('Patch 83U Employee ID credentials and protected provisioning', ()
     await expect.poll(() => callsFor(proof, 'patch83u_admin_reset_password').length).toBe(1);
     expect(callsFor(proof, 'patch83u_admin_reset_password')[0].payload).toEqual({
       user_id: targetUserId,
-      temporary_password: employeeId,
-      confirm_temporary_password: employeeId,
+      temporary_password: 'office123',
+      confirm_temporary_password: 'office123',
       confirmation: 'PATCH83U_RESET_USER_PASSWORD',
       employee_id_confirmation: employeeId,
       reason: 'Employee requested a controlled temporary password reset.',

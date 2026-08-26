@@ -6687,11 +6687,35 @@ body {
   width: 100%;
 }
 
-.auth-captcha {
+.password-requirements {
   display: grid;
-  justify-items: center;
-  gap: 6px;
-  min-height: 70px;
+  gap: 8px;
+  color: var(--color-text-primary, #1e293b);
+}
+
+.password-requirements ul {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.password-requirements li {
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.875rem;
+}
+
+.password-requirements li span {
+  display: inline-block;
+  width: 1.25rem;
+  color: var(--color-text-muted, #94a3b8);
+  font-weight: 800;
+}
+
+.password-requirements li.is-met,
+.password-requirements li.is-met span {
+  color: var(--color-success-fg, #166534);
 }
 
 .auth-warning,

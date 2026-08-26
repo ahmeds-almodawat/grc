@@ -309,13 +309,15 @@ describe('Patch 83U Provisioning Queue UI contract', () => {
     );
   });
 
-  it('H: carries no password, credential, token, or secret field', () => {
+  it('H: keeps reconciliation free of password, credential, token, or secret fields', () => {
     const start = credentialApi.indexOf('export async function reconcileProvisioning(');
     const end = credentialApi.indexOf('export async function adminResetPassword(', start);
     const reconciliation = credentialApi.slice(start, end).toLowerCase();
 
     expect(reconciliation).not.toMatch(/password|credential|token|secret/);
-    expect(provisioningQueueSection()).not.toContain('type="password"');
+    expect(provisioningQueueSection()).toMatch(
+      /provisioningTarget\.action === "provision"[\s\S]*type="password"/,
+    );
   });
 
   it('applies responsive scrolling only to the provisioning queue dialog', () => {

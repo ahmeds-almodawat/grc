@@ -51,8 +51,6 @@ export async function startPatch83uTestServer(
         VITE_SUPABASE_URL: 'http://127.0.0.1:54321',
         VITE_SUPABASE_ANON_KEY: 'patch83u-browser-test-public-anon-key',
         VITE_AUTH_BYPASS_LOCAL: 'false',
-        VITE_AUTH_CAPTCHA_REQUIRED: 'false',
-        VITE_AUTH_CAPTCHA_SITE_KEY: '',
         ...environment,
       },
       stdio: ['ignore', 'pipe', 'pipe'],

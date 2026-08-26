@@ -715,7 +715,7 @@ const translations: TranslationMap = {
   'userManagement.provisioningQueue.confirmProvision': { en: 'Provision', ar: 'تجهيز الحساب' },
   'userManagement.provisioningQueue.confirmReconcile': { en: 'Reconcile', ar: 'مطابقة الحساب' },
   'userManagement.provisioningQueue.authEmailPrefix': { en: 'Auth email:', ar: 'بريد تسجيل الدخول:' },
-  'userManagement.provisioningQueue.initialPasswordNotice': { en: 'The first provisioned password is set server-side to the exact Employee ID and must be changed at first login.', ar: 'تُعيَّن كلمة المرور الأولية في الخادم لتطابق الرقم الوظيفي تمامًا، ويجب تغييرها عند تسجيل الدخول لأول مرة.' },
+  'userManagement.provisioningQueue.initialPasswordNotice': { en: 'Enter a temporary password below. It must be changed at first login.', ar: 'أدخل كلمة مرور مؤقتة أدناه. يجب تغييرها عند تسجيل الدخول لأول مرة.' },
   'userManagement.provisioningQueue.confirmEmployeeId': { en: 'Type Employee ID exactly:', ar: 'أدخل الرقم الوظيفي مطابقًا تمامًا:' },
   'userManagement.provisioningQueue.confirmEmployeeIdAria': { en: 'Provisioning Employee ID confirmation', ar: 'تأكيد الرقم الوظيفي لتجهيز الحساب' },
   'userManagement.provisioningQueue.processing': { en: 'Processing…', ar: 'جارٍ التنفيذ…' },
