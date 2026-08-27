@@ -62,6 +62,20 @@ No real account password, token, key, cookie, or authorization header is recorde
 
 The implementation changes the authentication provider and pages, shared password policy/UX, credential API, User Management provisioning/reset UX, Patch83U privileged Edge action, active auth readiness/browser harnesses, focused unit and Playwright contracts, Vite environment typings, styles, i18n copy, and runtime action registry. CAPTCHA-era focused tests and components are removed; historical release evidence remains unchanged.
 
+## R3A Scoped-Role Live-Login Adjudication
+
+The R3 authentication diff was reviewed from password submission through authorization bootstrap. Password authentication and CAPTCHA retirement are role-independent. The common Patch83U capability and credential-state gates run after Supabase Auth and before profile and role loading. Profile lifecycle, role parsing, scope validation, route authorization, RBAC, RLS, and role-assignment semantics were not changed by R3.
+
+Accepted deterministic evidence proves password-only authentication without a CAPTCHA token, the ordered Auth -> Patch83U -> profile -> role pipeline, active-profile fail-closed handling, scoped and non-global role parsing, lower-role route restrictions, organization and scope isolation, and the governed route matrix for all twelve personas. No additional test assertion was necessary.
+
+Live password-only hosted authentication was proven with the existing Super Admin account. Scoped-role authorization remains covered by the accepted automated and prior governed role-contract evidence. No scoped-role credential reset was performed solely for certification.
+
+- Scoped-role live R3 login: **NOT PERFORMED - NO EXISTING AUTHORIZED CREDENTIAL**
+- Live scoped-role password-login classification: **NOT REQUIRED FOR R3 RELEASE CERTIFICATION**
+- Certification impact: **NON-BLOCKING**
+- Staging Auth/profile/role/scope/lifecycle mutations for R3A: none
+- Product-source, Edge, environment, migration, and Production changes for R3A: none
+
 ## Boundaries
 
 - Database migration added: no
