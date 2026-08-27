@@ -305,6 +305,7 @@ const ui7ApprovalActions = new Set([
 
 const allowedActions = new Set([
   'ovr_executive_dashboard_analytics',
+  'dashboard_recent_governed_activity',
   'search_grc_global',
   'list_user_management_roster',
   'create_board_pack_snapshot',
@@ -425,6 +426,11 @@ function errorResponse(
   }, status);
 }
 
+function isOvrAnalyticsAuthorizationFailure(message: string) {
+  return /OVR_V11_SERVICE_ROLE_REQUIRED|OVR_ANALYTICS_(?:ACTIVE_ACTOR_REQUIRED|EXECUTIVE_ENTITLEMENT_REQUIRED|DASHBOARD_ENTITLEMENT_REQUIRED)|NOT_AUTHORIZED|ACCESS_DENIED/i
+    .test(message);
+}
+
 const userRoleOptions = new Set([
   'super_admin',
   'executive',
@@ -478,9 +484,11 @@ const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}
 const patch83uRequestIdPattern = /^[A-Za-z0-9._:-]{1,128}$/;
 const patch83uEmployeeIdPattern = /^[A-Za-z0-9._-]{1,64}$/;
 const patch83uMaxCredentialVersion = 2_147_483_647;
-const patch83uPasswordPolicyMessage = 'The current Supabase Auth password policy does not accept this Employee ID as the initial password.';
+const patch83uPasswordPolicyMessage = 'Supabase Auth did not accept the temporary password under the configured password policy.';
 const patch83uResetPasswordPolicyMessage = 'Supabase Auth did not accept the temporary password under the current password policy.';
 const patch83uPermanentPasswordPolicyMessage = 'Supabase Auth did not accept the new password under the current password policy.';
+const patch83uPasswordMinLength = 8;
+const patch83uPasswordMaxLength = 256;
 
 function asObject(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -656,8 +664,28 @@ function patch83uIsPasswordPolicyError(error: unknown) {
     && /policy|weak|length|characters|at least|too short|invalid/.test(diagnostic);
 }
 
-function patch83uIsCaptchaError(error: unknown) {
-  return /captcha|turnstile|challenge/.test(patch83uAuthErrorText(error));
+function patch83uPasswordValidationMessage(password: string) {
+  if (password.length < patch83uPasswordMinLength) {
+    return `Password must be at least ${patch83uPasswordMinLength} characters.`;
+  }
+  if (!/[A-Za-z]/.test(password)) return 'Password must contain at least one letter.';
+  if (!/[0-9]/.test(password)) return 'Password must contain at least one number.';
+  if (password.length > patch83uPasswordMaxLength) {
+    return `Password cannot exceed ${patch83uPasswordMaxLength} characters.`;
+  }
+  return null;
+}
+
+function patch83uPasswordValidationResponse(action: string, password: string) {
+  const message = patch83uPasswordValidationMessage(password)
+    ?? 'Password validation failed.';
+  return errorResponse(
+    message,
+    400,
+    'PATCH83U_PASSWORD_POLICY_INVALID',
+    message,
+    { action },
+  );
 }
 
 function patch83uInitialPasswordPolicyResponse(action: string) {
@@ -1569,20 +1597,32 @@ Deno.serve(async (request) => {
     const employeeIdConfirmation = typeof payload.employee_id_confirmation === 'string'
       ? payload.employee_id_confirmation
       : '';
+    const temporaryPassword = typeof payload.temporary_password === 'string'
+      ? payload.temporary_password
+      : '';
+    const confirmTemporaryPassword = typeof payload.confirm_temporary_password === 'string'
+      ? payload.confirm_temporary_password
+      : '';
     const requestId = String(payload.request_id ?? '');
     if (
       !uuidPattern.test(provisioningId)
       || !employeeIdConfirmation
       || employeeIdConfirmation !== employeeIdConfirmation.trim()
+      || !temporaryPassword
+      || !confirmTemporaryPassword
+      || temporaryPassword !== confirmTemporaryPassword
       || !patch83uRequestIdPattern.test(requestId)
     ) {
       return errorResponse(
         'Valid provisioning identity and exact Employee ID confirmation are required.',
         400,
         'PATCH83U_PROVISIONING_REQUEST_INVALID',
-        'Provide the protected provisioning UUID, exact Employee ID, and a safe idempotency request ID.',
+        'Provide the protected provisioning UUID, exact Employee ID, matching temporary-password confirmation, and a safe idempotency request ID.',
         { action },
       );
+    }
+    if (patch83uPasswordValidationMessage(temporaryPassword)) {
+      return patch83uPasswordValidationResponse(action, temporaryPassword);
     }
 
     const claimResult = await serviceClient.rpc('patch83u_claim_provisioning', {
@@ -1631,7 +1671,7 @@ Deno.serve(async (request) => {
         reconciliationRequired = true;
         const createResult = await serviceClient.auth.admin.createUser({
           email: authEmail,
-          password: employeeId,
+          password: temporaryPassword,
           email_confirm: true,
           app_metadata: {
             patch83u_managed: true,
@@ -1813,33 +1853,27 @@ Deno.serve(async (request) => {
     const confirmNewPassword = typeof payload.confirm_new_password === 'string'
       ? payload.confirm_new_password
       : '';
-    const captchaToken = typeof payload.captcha_token === 'string' ? payload.captcha_token : '';
     const requestId = String(payload.request_id ?? '');
     if (
       !currentPassword
       || !newPassword
       || !confirmNewPassword
       || newPassword !== confirmNewPassword
-      || currentPassword !== currentPassword.trim()
-      || newPassword !== newPassword.trim()
-      || confirmNewPassword !== confirmNewPassword.trim()
-      || currentPassword.length > 256
-      || newPassword.length > 256
-      || confirmNewPassword.length > 256
+      || currentPassword.length > patch83uPasswordMaxLength
       || newPassword === currentPassword
       || !uuidPattern.test(tokenSessionId)
       || !patch83uRequestIdPattern.test(requestId)
-      || (payload.captcha_token !== undefined && typeof payload.captcha_token !== 'string')
-      || captchaToken !== captchaToken.trim()
-      || captchaToken.length > 8192
     ) {
       return errorResponse(
         'Password input or confirmation validation failed.',
         400,
         'PATCH83U_PASSWORD_CHANGE_INPUT_INVALID',
-        'Provide matching non-empty password fields without surrounding whitespace, a safe request ID, and a fresh CAPTCHA token when required.',
+        'Provide matching non-empty password fields, a different new password, and a safe request ID.',
         { action },
       );
+    }
+    if (patch83uPasswordValidationMessage(newPassword)) {
+      return patch83uPasswordValidationResponse(action, newPassword);
     }
 
     // This first database step is read-only. The current credential is verified
@@ -1915,21 +1949,6 @@ Deno.serve(async (request) => {
       }, 200);
     }
 
-    const normalizedNewPassword = newPassword.toLowerCase();
-    const authEmailLocalPart = authEmail.slice(0, authEmail.lastIndexOf('@')).toLowerCase();
-    if (
-      (employeeId && normalizedNewPassword === employeeId.toLowerCase())
-      || normalizedNewPassword === authEmailLocalPart
-    ) {
-      return errorResponse(
-        'The new password reuses a protected login identifier.',
-        400,
-        'PATCH83U_PERMANENT_PASSWORD_MANAGED_IDENTITY_REUSE_DENIED',
-        'Choose a new password that is not the trusted Employee ID or Auth-email local part.',
-        { action },
-      );
-    }
-
     const verificationClient = createClient(supabaseUrl, anonKey, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
@@ -1945,7 +1964,6 @@ Deno.serve(async (request) => {
       const verification = await verificationClient.auth.signInWithPassword({
         email: authEmail,
         password: currentPassword,
-        ...(captchaToken ? { options: { captchaToken } } : {}),
       });
       if (
         verification.error
@@ -1954,11 +1972,7 @@ Deno.serve(async (request) => {
         || verification.data.user.id !== userData.user.id
         || String(verification.data.user.email ?? '').trim().toLowerCase() !== authEmail
       ) {
-        throw new Error(
-          patch83uIsCaptchaError(verification.error)
-            ? 'PATCH83U_CAPTCHA_VERIFICATION_FAILED'
-            : 'PATCH83U_CURRENT_PASSWORD_VERIFICATION_FAILED',
-        );
+        throw new Error('PATCH83U_CURRENT_PASSWORD_VERIFICATION_FAILED');
       }
       reauthenticationAccessToken = verification.data.session.access_token;
       const reauthenticationClaims = await verificationClient.auth.getClaims(reauthenticationAccessToken);
@@ -2208,15 +2222,6 @@ Deno.serve(async (request) => {
           { action },
         );
       }
-      if (operationCode === 'PATCH83U_CAPTCHA_VERIFICATION_FAILED') {
-        return errorResponse(
-          'The CAPTCHA challenge was not accepted.',
-          400,
-          operationCode,
-          'Complete a fresh CAPTCHA challenge and try the authenticated password change again.',
-          { action },
-        );
-      }
       if (operationCode === 'PATCH83U_CURRENT_PASSWORD_VERIFICATION_FAILED') {
         return errorResponse(
           'The current credential could not be verified.',
@@ -2269,10 +2274,6 @@ Deno.serve(async (request) => {
       || !temporaryPassword
       || !confirmTemporaryPassword
       || temporaryPassword !== confirmTemporaryPassword
-      || temporaryPassword.length > 256
-      || confirmTemporaryPassword.length > 256
-      || temporaryPassword !== temporaryPassword.trim()
-      || confirmTemporaryPassword !== confirmTemporaryPassword.trim()
       || resetConfirmation !== 'PATCH83U_RESET_USER_PASSWORD'
       || !reason
       || reason.length > 500
@@ -2285,6 +2286,9 @@ Deno.serve(async (request) => {
         'A non-self target, exact Employee ID, matching temporary-password confirmation, exact reset confirmation, reason, and safe request ID are required.',
         { action },
       );
+    }
+    if (patch83uPasswordValidationMessage(temporaryPassword)) {
+      return patch83uPasswordValidationResponse(action, temporaryPassword);
     }
     if (reason.includes(temporaryPassword)) {
       return errorResponse(
@@ -2443,8 +2447,7 @@ Deno.serve(async (request) => {
       // A successful Admin response is necessary but not sufficient. Read the
       // Auth user back through the Admin API and require the exact canonical
       // email and credential-version metadata before database finalization.
-      // The temporary password is never used for a target sign-in: hosted Auth
-      // CAPTCHA may be mandatory and no trusted CAPTCHA token exists here.
+      // The temporary password is never used for a target sign-in here.
       const followUpAuthLookup = await serviceClient.auth.admin.getUserById(targetUserId);
       const verifiedAuthUser = followUpAuthLookup.data.user;
       const verifiedMetadata = asObject(verifiedAuthUser?.app_metadata);
@@ -3123,8 +3126,7 @@ Deno.serve(async (request) => {
       { p_actor_id: userData.user.id },
     );
     if (snapshotError) {
-      const authorizationFailure = /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|EXECUTIVE|ENTITLEMENT|CREDENTIAL|IDENTITY/i
-        .test(snapshotError.message);
+      const authorizationFailure = isOvrAnalyticsAuthorizationFailure(snapshotError.message);
       console.error('OVR executive analytics snapshot refresh failed', {
         action,
         phase: 'snapshot_refresh',
@@ -3132,10 +3134,10 @@ Deno.serve(async (request) => {
         message: snapshotError.message,
       });
       return errorResponse(
-        authorizationFailure ? 'Executive analytics access is restricted.' : 'Executive analytics are temporarily unavailable.',
+        authorizationFailure ? 'Dashboard aggregate access is restricted.' : 'Dashboard aggregates are temporarily unavailable.',
         authorizationFailure ? 403 : 409,
         authorizationFailure ? 'OVR_EXECUTIVE_ANALYTICS_ACCESS_RESTRICTED' : 'OVR_EXECUTIVE_ANALYTICS_UNAVAILABLE',
-        authorizationFailure ? 'Use an active Executive-authorized account.' : 'Retry later or contact an administrator.',
+        authorizationFailure ? 'Use an active dashboard-aggregate-authorized account.' : 'Retry later or contact an administrator.',
         { action },
       );
     }
@@ -3158,8 +3160,7 @@ Deno.serve(async (request) => {
     ]);
     const analyticsError = headlineResult.error ?? trendResult.error;
     if (analyticsError) {
-      const authorizationFailure = /NOT_AUTHORIZED|DENIED|REQUIRED|SERVICE_ROLE|ACTIVE_ACTOR|EXECUTIVE|ENTITLEMENT|CREDENTIAL|IDENTITY|FILTER|QUERY_SHAPE/i
-        .test(analyticsError.message);
+      const authorizationFailure = isOvrAnalyticsAuthorizationFailure(analyticsError.message);
       console.error('OVR executive analytics query failed', {
         action,
         phase: 'fixed_query_family',
@@ -3167,10 +3168,10 @@ Deno.serve(async (request) => {
         message: analyticsError.message,
       });
       return errorResponse(
-        authorizationFailure ? 'Executive analytics access is restricted.' : 'Executive analytics are temporarily unavailable.',
+        authorizationFailure ? 'Dashboard aggregate access is restricted.' : 'Dashboard aggregates are temporarily unavailable.',
         authorizationFailure ? 403 : 409,
         authorizationFailure ? 'OVR_EXECUTIVE_ANALYTICS_ACCESS_RESTRICTED' : 'OVR_EXECUTIVE_ANALYTICS_UNAVAILABLE',
-        authorizationFailure ? 'Use an active Executive-authorized account.' : 'Retry later or contact an administrator.',
+        authorizationFailure ? 'Use an active dashboard-aggregate-authorized account.' : 'Retry later or contact an administrator.',
         { action },
       );
     }
@@ -3191,6 +3192,41 @@ Deno.serve(async (request) => {
         trend: trendResult.data,
       },
     }, 200);
+  }
+
+  if (action === 'dashboard_recent_governed_activity') {
+    const limit = Number(requestPayload.limit ?? 12);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
+      return errorResponse(
+        'A valid recent activity limit is required.',
+        400,
+        'DASHBOARD_RECENT_ACTIVITY_LIMIT_INVALID',
+        'Use an integer limit between 1 and 50.',
+        { action },
+      );
+    }
+
+    const { data, error } = await serviceClient.rpc(
+      'dashboard_recent_governed_activity_v1',
+      { p_actor_id: userData.user.id, p_limit: limit },
+    );
+    if (error) {
+      const authorizationFailure = isOvrAnalyticsAuthorizationFailure(error.message);
+      console.error('Dashboard recent governed activity query failed', {
+        action,
+        code: error.code,
+        message: error.message,
+      });
+      return errorResponse(
+        authorizationFailure ? 'Dashboard activity access is restricted.' : 'Dashboard activity is temporarily unavailable.',
+        authorizationFailure ? 403 : 409,
+        authorizationFailure ? 'DASHBOARD_RECENT_ACTIVITY_ACCESS_RESTRICTED' : 'DASHBOARD_RECENT_ACTIVITY_UNAVAILABLE',
+        authorizationFailure ? 'Use an active dashboard-aggregate-authorized account.' : 'Retry later or contact an administrator.',
+        { action },
+      );
+    }
+
+    return jsonResponse({ ok: true, action, result: data ?? [] }, 200);
   }
 
   if (patch22RiskActions.has(action)) {

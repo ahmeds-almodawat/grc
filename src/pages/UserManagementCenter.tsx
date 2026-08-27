@@ -19,6 +19,8 @@ import {
   Users,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
+import { PasswordRequirements } from "../auth/PasswordRequirements";
+import { passwordPolicyError, passwordRequirementState } from "../auth/passwordPolicy";
 import { DataState } from "../components/DataState";
 import { Modal } from "../components/Modal";
 import { KpiTile, ModernCard, StatusPill } from "../components/ModernCard";
@@ -306,6 +308,10 @@ export function UserManagementCenter() {
     action: "provision" | "reconcile";
   } | null>(null);
   const [provisioningConfirmation, setProvisioningConfirmation] = useState("");
+  const [provisioningPasswordDraft, setProvisioningPasswordDraft] = useState({
+    temporaryPassword: "",
+    confirmPassword: "",
+  });
   const [provisioningRequestId, setProvisioningRequestId] = useState("");
   const [resetUser, setResetUser] = useState<UserManagementUserRow | null>(null);
   const [resetRequestId, setResetRequestId] = useState("");
@@ -758,6 +764,7 @@ export function UserManagementCenter() {
     setProvisioningOpen(true);
     setProvisioningTarget(null);
     setProvisioningConfirmation("");
+    setProvisioningPasswordDraft({ temporaryPassword: "", confirmPassword: "" });
     setProvisioningRequestId("");
     void loadProvisioningQueue();
   };
@@ -768,6 +775,7 @@ export function UserManagementCenter() {
   ) => {
     setProvisioningTarget({ row, action });
     setProvisioningConfirmation("");
+    setProvisioningPasswordDraft({ temporaryPassword: "", confirmPassword: "" });
     setProvisioningRequestId(patch83uRequestId(action));
     setProvisioningError(null);
   };
@@ -781,6 +789,17 @@ export function UserManagementCenter() {
       );
       return;
     }
+    if (action === "provision") {
+      const policyError = passwordPolicyError(provisioningPasswordDraft.temporaryPassword);
+      if (policyError) {
+        setProvisioningError(policyError);
+        return;
+      }
+      if (provisioningPasswordDraft.temporaryPassword !== provisioningPasswordDraft.confirmPassword) {
+        setProvisioningError("Temporary password confirmation does not match.");
+        return;
+      }
+    }
     setSaving(true);
     setProvisioningError(null);
     try {
@@ -790,7 +809,11 @@ export function UserManagementCenter() {
         requestId: provisioningRequestId,
       };
       if (action === "provision") {
-        const result = await provisionAccount(command);
+        const result = await provisionAccount({
+          ...command,
+          temporaryPassword: provisioningPasswordDraft.temporaryPassword,
+          confirmTemporaryPassword: provisioningPasswordDraft.confirmPassword,
+        });
         setMessage(
           `Account provisioning completed for ${row.employee_id}. Profile ${result.profileId} requires a first-login password change.`,
         );
@@ -800,6 +823,7 @@ export function UserManagementCenter() {
       }
       setProvisioningTarget(null);
       setProvisioningConfirmation("");
+      setProvisioningPasswordDraft({ temporaryPassword: "", confirmPassword: "" });
       setProvisioningRequestId("");
       await Promise.all([loadProvisioningQueue(), load()]);
     } catch (error) {
@@ -827,8 +851,8 @@ export function UserManagementCenter() {
     setResetUser(user);
     setResetRequestId(patch83uRequestId("admin-reset"));
     setResetDraft({
-      temporaryPassword: user.employee_no ?? "",
-      confirmPassword: user.employee_no ?? "",
+      temporaryPassword: "",
+      confirmPassword: "",
       employeeIdConfirmation: "",
       resetConfirmation: "",
       reason: "",
@@ -870,12 +894,9 @@ export function UserManagementCenter() {
       setActionError("Temporary password confirmation does not match.");
       return;
     }
-    if (
-      !resetDraft.temporaryPassword
-      || resetDraft.temporaryPassword !== resetDraft.temporaryPassword.trim()
-      || resetDraft.temporaryPassword.length > 256
-    ) {
-      setActionError("Enter a non-empty temporary password without surrounding whitespace.");
+    const policyError = passwordPolicyError(resetDraft.temporaryPassword);
+    if (policyError) {
+      setActionError(policyError);
       return;
     }
     if (resetDraft.resetConfirmation !== ADMIN_RESET_CONFIRMATION_TEXT) {
@@ -933,8 +954,8 @@ export function UserManagementCenter() {
         setResetRequestId(patch83uRequestId("admin-reset"));
         setResetDraft((draft) => ({
           ...draft,
-          temporaryPassword: resetUser.employee_no ?? "",
-          confirmPassword: resetUser.employee_no ?? "",
+          temporaryPassword: "",
+          confirmPassword: "",
           employeeIdConfirmation: "",
           resetConfirmation: "",
         }));
@@ -2243,6 +2264,7 @@ export function UserManagementCenter() {
           setProvisioningOpen(false);
           setProvisioningTarget(null);
           setProvisioningConfirmation("");
+          setProvisioningPasswordDraft({ temporaryPassword: "", confirmPassword: "" });
           setProvisioningRequestId("");
           setProvisioningError(null);
         }}
@@ -2298,6 +2320,42 @@ export function UserManagementCenter() {
                   )}
                 </p>
               </div>
+              {provisioningTarget.action === "provision" ? (
+                <>
+                  <label className="field">
+                    Temporary password
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      maxLength={256}
+                      value={provisioningPasswordDraft.temporaryPassword}
+                      onChange={(event) => setProvisioningPasswordDraft((draft) => ({
+                        ...draft,
+                        temporaryPassword: event.target.value,
+                      }))}
+                    />
+                  </label>
+                  <label className="field">
+                    Confirm temporary password
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      maxLength={256}
+                      value={provisioningPasswordDraft.confirmPassword}
+                      onChange={(event) => setProvisioningPasswordDraft((draft) => ({
+                        ...draft,
+                        confirmPassword: event.target.value,
+                      }))}
+                    />
+                  </label>
+                  <div className="full-width">
+                    <PasswordRequirements
+                      password={provisioningPasswordDraft.temporaryPassword}
+                      language={language}
+                    />
+                  </div>
+                </>
+              ) : null}
               <label className="field full-width">
                 {t("userManagement.provisioningQueue.confirmEmployeeId")}{" "}
                 <bdi>{provisioningTarget.row.employee_id}</bdi>
@@ -2318,6 +2376,7 @@ export function UserManagementCenter() {
                   onClick={() => {
                     setProvisioningTarget(null);
                     setProvisioningConfirmation("");
+                    setProvisioningPasswordDraft({ temporaryPassword: "", confirmPassword: "" });
                     setProvisioningRequestId("");
                   }}
                 >
@@ -2329,7 +2388,13 @@ export function UserManagementCenter() {
                   disabled={
                     saving ||
                     !canUsePatch83uProvisioning ||
-                    provisioningConfirmation !== provisioningTarget.row.employee_id
+                    provisioningConfirmation !== provisioningTarget.row.employee_id ||
+                    (
+                      provisioningTarget.action === "provision" && (
+                        !passwordRequirementState(provisioningPasswordDraft.temporaryPassword).valid ||
+                        provisioningPasswordDraft.temporaryPassword !== provisioningPasswordDraft.confirmPassword
+                      )
+                    )
                   }
                   onClick={() => void submitProvisioningAction()}
                 >
@@ -2558,7 +2623,7 @@ export function UserManagementCenter() {
         {resetUser ? (
           <div className="form-grid">
             <div className="notice-banner full-width">
-              Both password fields default to the exact Employee ID. You may keep that value or enter another temporary password accepted by the hosted Supabase Auth policy. The action advances the credential version, blocks normal application access until the password is changed, and attempts to revoke existing sessions. Role rows and lifecycle state are preserved.
+              Enter a temporary password that meets the visible policy. The action advances the credential version, blocks normal application access until the password is changed, and attempts to revoke existing sessions. Role rows and lifecycle state are preserved.
             </div>
             <div className="panel full-width">
               <strong>{resetUser.full_name_en}</strong>
@@ -2587,6 +2652,9 @@ export function UserManagementCenter() {
                 onChange={(event) => setResetDraft((draft) => ({ ...draft, confirmPassword: event.target.value }))}
               />
             </label>
+            <div className="full-width">
+              <PasswordRequirements password={resetDraft.temporaryPassword} language={language} />
+            </div>
             <label className="field full-width">
               Type {ADMIN_RESET_CONFIRMATION_TEXT} exactly
               <input
@@ -2629,8 +2697,7 @@ export function UserManagementCenter() {
                   saving ||
                   !canUsePatch83uReset ||
                   !resetUser.employee_no ||
-                  !resetDraft.temporaryPassword ||
-                  resetDraft.temporaryPassword !== resetDraft.temporaryPassword.trim() ||
+                  !passwordRequirementState(resetDraft.temporaryPassword).valid ||
                   resetDraft.temporaryPassword !== resetDraft.confirmPassword ||
                   resetDraft.employeeIdConfirmation !== resetUser.employee_no ||
                   resetDraft.resetConfirmation !== ADMIN_RESET_CONFIRMATION_TEXT ||

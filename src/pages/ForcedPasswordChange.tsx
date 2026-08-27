@@ -1,11 +1,8 @@
-import { type FormEvent, useCallback, useRef, useState } from 'react';
+import { type FormEvent, useRef, useState } from 'react';
 import { KeyRound, LogOut, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
-import { TurnstileCaptcha } from '../auth/TurnstileLoginCaptcha';
-import {
-  authCaptchaConfig,
-  getAuthCaptchaSubmissionError,
-} from '../auth/loginCaptcha';
+import { PasswordRequirements } from '../auth/PasswordRequirements';
+import { passwordPolicyError, passwordRequirementState } from '../auth/passwordPolicy';
 import { useI18n } from '../i18n/I18nContext';
 import {
   changeRequiredPassword,
@@ -27,9 +24,6 @@ export function ForcedPasswordChange() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [captchaError, setCaptchaError] = useState<string | null>(authCaptchaConfig.configurationError);
-  const [captchaResetVersion, setCaptchaResetVersion] = useState(0);
   const requestIdRef = useRef<string | null>(null);
   const submittingRef = useRef(false);
   const isArabic = language === 'ar';
@@ -49,21 +43,6 @@ export function ForcedPasswordChange() {
     invalidateRequestId();
     setConfirmPassword(value);
   };
-  const handleCaptchaToken = useCallback((token: string | null) => {
-    setCaptchaToken(token);
-    if (token) setCaptchaError(null);
-  }, []);
-  const handleCaptchaUnavailable = useCallback((message: string | null) => {
-    setCaptchaToken(null);
-    setCaptchaError(message);
-  }, []);
-
-  const resetCaptcha = () => {
-    if (!authCaptchaConfig.required) return;
-    setCaptchaToken(null);
-    setCaptchaResetVersion((current) => current + 1);
-  };
-
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (submittingRef.current) return;
@@ -71,34 +50,19 @@ export function ForcedPasswordChange() {
 
     if (!currentPassword || !newPassword || !confirmPassword) {
       setError(isArabic ? 'جميع حقول كلمة المرور مطلوبة.' : 'All password fields are required.');
-      resetCaptcha();
-      return;
-    }
-    if (
-      currentPassword !== currentPassword.trim()
-      || newPassword !== newPassword.trim()
-      || confirmPassword !== confirmPassword.trim()
-    ) {
-      setError(isArabic
-        ? 'لا يمكن أن تبدأ حقول كلمة المرور أو تنتهي بمسافات.'
-        : 'Password fields cannot begin or end with whitespace.');
-      resetCaptcha();
       return;
     }
     if (newPassword !== confirmPassword) {
       setError(isArabic ? 'تأكيد كلمة المرور الجديدة غير مطابق.' : 'New password confirmation does not match.');
-      resetCaptcha();
       return;
     }
     if (newPassword === currentPassword) {
       setError(isArabic ? 'يجب أن تختلف كلمة المرور الجديدة عن الحالية.' : 'The new password must differ from the current password.');
-      resetCaptcha();
       return;
     }
-    const captchaSubmissionError = getAuthCaptchaSubmissionError(authCaptchaConfig, captchaToken);
-    if (captchaSubmissionError) {
-      setCaptchaError(captchaSubmissionError);
-      resetCaptcha();
+    const policyError = passwordPolicyError(newPassword);
+    if (policyError) {
+      setError(policyError);
       return;
     }
 
@@ -111,7 +75,6 @@ export function ForcedPasswordChange() {
         currentPassword,
         newPassword,
         confirmNewPassword: confirmPassword,
-        captchaToken,
         requestId,
       }, {
         accessToken: auth.session?.access_token,
@@ -148,7 +111,6 @@ export function ForcedPasswordChange() {
         : '';
       if (/RECONCILIATION|RECOVERY_REQUIRED/.test(code)) await auth.reload();
     } finally {
-      resetCaptcha();
       submittingRef.current = false;
       setIsSubmitting(false);
     }
@@ -211,28 +173,14 @@ export function ForcedPasswordChange() {
             />
           </label>
 
-          {authCaptchaConfig.required && authCaptchaConfig.siteKey && !authCaptchaConfig.configurationError ? (
-            <TurnstileCaptcha
-              siteKey={authCaptchaConfig.siteKey}
-              language={language}
-              resetVersion={captchaResetVersion}
-              onToken={handleCaptchaToken}
-              onUnavailable={handleCaptchaUnavailable}
-              ariaLabel="Password change CAPTCHA challenge"
-            />
-          ) : null}
+          <PasswordRequirements password={newPassword} language={language} />
 
-          {captchaError ? <div className="auth-error" role="alert">{captchaError}</div> : null}
           {error ? <div className="auth-error" role="alert">{error}</div> : null}
 
           <button
             className="primary-action auth-submit"
             type="submit"
-            disabled={
-              isSubmitting
-              || Boolean(authCaptchaConfig.configurationError)
-              || (authCaptchaConfig.required && !captchaToken)
-            }
+            disabled={isSubmitting || !passwordRequirementState(newPassword).valid}
           >
             <KeyRound size={17} />
             {isSubmitting

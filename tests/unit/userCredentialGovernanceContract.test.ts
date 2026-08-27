@@ -81,23 +81,24 @@ describe('Patch 83U credential governance contract', () => {
     expect(frontend).not.toMatch(/\.auth\.admin\.|admin\.createUser|admin\.updateUserById|admin\.deleteUser/);
   });
 
-  it('creates Auth users only in the Edge function with the exact Employee ID credentials', () => {
+  it('creates Auth users only in the Edge function with an administrator-entered governed password', () => {
     const edge = source('supabase/functions/privileged-action/index.ts');
     const provisionBlock = edge.split("action === 'patch83u_provision_account'")[1]
       ?.split("action === 'patch83u_reconcile_provisioning'")[0] ?? '';
 
     expect(provisionBlock).toMatch(/@almodawat\.sa/);
     expect(provisionBlock).toMatch(/auth\.admin\.createUser/);
-    expect(provisionBlock).toMatch(/password\s*:\s*employee(?:Id|No)/);
+    expect(provisionBlock).toMatch(/password\s*:\s*temporaryPassword/);
     expect(provisionBlock).toMatch(/email_confirm\s*:\s*true/);
-    expect(provisionBlock).not.toMatch(/Math\.random|randomUUID\(\).*password|temporary_password\s*:/i);
-    expect(provisionBlock).not.toMatch(/employee(?:Id|No)\.length\s*[<]=?\s*6|min(?:imum)?[^\n]{0,40}6/i);
+    expect(provisionBlock).toContain("payload.temporary_password");
+    expect(provisionBlock).toContain('patch83uPasswordValidationMessage(temporaryPassword)');
+    expect(provisionBlock).not.toMatch(/Math\.random|randomUUID\(\).*password|password\s*:\s*employee(?:Id|No)/i);
   });
 
   it('maps hosted initial-password policy rejection without inventing or returning another password', () => {
     const edge = source('supabase/functions/privileged-action/index.ts');
     const migration = source(patch83uMigration);
-    const message = 'The current Supabase Auth password policy does not accept this Employee ID as the initial password.';
+    const message = 'Supabase Auth did not accept the temporary password under the configured password policy.';
 
     expect(edge).toContain(message);
     expect(edge).toContain('PATCH83U_INITIAL_PASSWORD_POLICY_BLOCKED');
@@ -590,14 +591,14 @@ describe('Patch 83U credential governance contract', () => {
     const closeReset = ui.split('const closePasswordReset')[1]?.split('const submitPasswordReset')[0] ?? '';
     const submitReset = ui.split('const submitPasswordReset')[1]?.split('const openCredentialReconciliation')[0] ?? '';
 
-    expect(openReset).toMatch(/temporaryPassword:\s*user\.employee_no\s*\?\?\s*["']{2}/);
-    expect(openReset).toMatch(/confirmPassword:\s*user\.employee_no\s*\?\?\s*["']{2}/);
+    expect(openReset).toMatch(/temporaryPassword:\s*["']{2}/);
+    expect(openReset).toMatch(/confirmPassword:\s*["']{2}/);
     expect(openReset).toMatch(/employeeIdConfirmation:\s*["']{2}[\s\S]*resetConfirmation:\s*["']{2}/);
     expect(closeReset).toMatch(/temporaryPassword:\s*["']{2}[\s\S]*confirmPassword:\s*["']{2}[\s\S]*employeeIdConfirmation:\s*["']{2}[\s\S]*resetConfirmation:\s*["']{2}/);
-    expect(submitReset).toMatch(/catch \(error\)[\s\S]*temporaryPassword:\s*resetUser\.employee_no\s*\?\?\s*["']{2}[\s\S]*confirmPassword:\s*resetUser\.employee_no\s*\?\?\s*["']{2}[\s\S]*employeeIdConfirmation:\s*["']{2}[\s\S]*resetConfirmation:\s*["']{2}/);
+    expect(submitReset).toMatch(/catch \(error\)[\s\S]*temporaryPassword:\s*["']{2}[\s\S]*confirmPassword:\s*["']{2}[\s\S]*employeeIdConfirmation:\s*["']{2}[\s\S]*resetConfirmation:\s*["']{2}/);
   });
 
-  it('validates permanent-password confirmation and managed identity reuse at the trusted server boundary', () => {
+  it('validates permanent-password confirmation without an identifier-reuse restriction', () => {
     const edge = source('supabase/functions/privileged-action/index.ts');
     const credentialApi = source('src/lib/userCredentialApi.ts');
     const migration = source(patch83uMigration);
@@ -613,8 +614,10 @@ describe('Patch 83U credential governance contract', () => {
     expect(beginChange).toMatch(/select p\.\* into v_profile[\s\S]*from public\.profiles p/);
     expect(beginChange).toContain("v_employee_id := nullif(btrim(v_profile.employee_no), '')");
     expect(beginChange).toContain("'employee_id', v_employee_id");
-    expect(changeBlock).toContain('normalizedNewPassword === employeeId.toLowerCase()');
-    expect(changeBlock).toContain('normalizedNewPassword === authEmailLocalPart');
+    expect(changeBlock).toContain('patch83uPasswordValidationMessage(newPassword)');
+    expect(changeBlock).not.toContain('normalizedNewPassword');
+    expect(changeBlock).not.toContain('authEmailLocalPart');
+    expect(changeBlock).not.toContain('PATCH83U_PERMANENT_PASSWORD_MANAGED_IDENTITY_REUSE_DENIED');
     expect(changeBlock).toContain('newPassword === currentPassword');
     expect(changeBlock).not.toMatch(/payload\.employee_(?:id|no)/i);
   });

@@ -581,10 +581,10 @@ describe('Patch 83U staging multi-session reset proof harness', () => {
     })).toBe(true);
   });
 
-  it('allows browser traffic only to the local app, exact staging API, and Turnstile', () => {
+  it('allows browser traffic only to the local app and exact staging API', () => {
     expect(browserRequestIsAllowed(`${STAGING_APPLICATION_ORIGIN}/src/main.tsx`)).toBe(true);
     expect(browserRequestIsAllowed(`${STAGING_SUPABASE_ORIGIN}/auth/v1/user`)).toBe(true);
-    expect(browserRequestIsAllowed('https://challenges.cloudflare.com/turnstile/v0/api.js')).toBe(true);
+    expect(browserRequestIsAllowed('https://challenges.cloudflare.com/turnstile/v0/api.js')).toBe(false);
     expect(browserRequestIsAllowed(`https://${PRODUCTION_PROJECT_REF}.supabase.co/auth/v1/user`)).toBe(false);
     expect(browserRequestIsAllowed(`https://${STAGING_PROJECT_REF}.attacker.invalid/auth/v1/token`)).toBe(false);
   });

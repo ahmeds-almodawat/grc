@@ -5,6 +5,8 @@ import { pathToFileURL } from 'node:url';
 
 export const AUTH_CONFIG_HTTP_METHOD = 'GET';
 export const AUTH_CONFIG_ENDPOINT_TEMPLATE = 'https://api.supabase.com/v1/projects/{project-ref}/config/auth';
+export const PASSWORD_REQUIRED_CHARACTERS_LETTERS_DIGITS =
+  'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:0123456789';
 
 const KNOWN_RATE_LIMIT_FIELDS = [
   'rate_limit_anonymous_users',
@@ -67,8 +69,22 @@ export function buildAuthSettingsEvidence(config, projectRef, generatedAt = new 
     (field) => !Object.prototype.hasOwnProperty.call(config, field),
   );
 
+  const captchaEnabled = evidenceValue(config, 'security_captcha_enabled');
+  const minimumLength = evidenceValue(config, 'password_min_length');
+  const requiredCharacters = evidenceValue(config, 'password_required_characters');
+  const leakedPasswordProtection = evidenceValue(config, 'password_hibp_enabled');
+  const policyChecks = {
+    captcha_disabled: captchaEnabled.observed && captchaEnabled.value === false,
+    minimum_password_length_8: minimumLength.observed && minimumLength.value === 8,
+    letters_and_digits_required:
+      requiredCharacters.observed
+      && requiredCharacters.value === PASSWORD_REQUIRED_CHARACTERS_LETTERS_DIGITS,
+    leaked_password_rejection_disabled:
+      leakedPasswordProtection.observed && leakedPasswordProtection.value === false,
+  };
+
   return {
-    schema_version: 'patch83u-auth-settings-evidence-v1',
+    schema_version: 'hf1-r3-auth-settings-evidence-v1',
     generated_at: generatedAt.toISOString(),
     source: {
       kind: 'supabase_management_api_read_only',
@@ -80,14 +96,14 @@ export function buildAuthSettingsEvidence(config, projectRef, generatedAt = new 
     },
     settings: {
       captcha: {
-        enabled: evidenceValue(config, 'security_captcha_enabled'),
+        enabled: captchaEnabled,
         provider: evidenceValue(config, 'security_captcha_provider'),
       },
       auth_endpoint_rate_limits: collectRateLimits(config),
       password_policy: {
-        minimum_length: evidenceValue(config, 'password_min_length'),
-        required_characters: evidenceValue(config, 'password_required_characters'),
-        leaked_password_protection_enabled: evidenceValue(config, 'password_hibp_enabled'),
+        minimum_length: minimumLength,
+        required_characters: requiredCharacters,
+        leaked_password_protection_enabled: leakedPasswordProtection,
       },
       jwt: {
         expiry_seconds: evidenceValue(config, 'jwt_exp'),
@@ -101,6 +117,10 @@ export function buildAuthSettingsEvidence(config, projectRef, generatedAt = new 
     completeness: {
       all_requested_fields_observed: missingFields.length === 0,
       missing_fields: missingFields,
+    },
+    policy_compliance: {
+      checks: policyChecks,
+      compliant: Object.values(policyChecks).every(Boolean),
     },
   };
 }

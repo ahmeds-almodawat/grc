@@ -3,10 +3,10 @@
   "status": "pass",
   "evidence": {
     "browser_source": "src/**/*.{ts,tsx}",
-    "target_schema": "ordered supabase/migrations/*.sql through reviewed migration 231",
+    "target_schema": "ordered supabase/migrations/*.sql through reviewed migration 234",
     "deployed_function_catalog": "release/patch83q/patch83q-live-security-definer-inventory.json",
     "deployed_search_entries": 0,
-    "note": "Static target-schema proof through reviewed migration 231. No hosted catalog state is claimed."
+    "note": "Static target-schema proof through reviewed migration 234. No hosted catalog state is claimed."
   },
   "summary": {
     "direct_browser_rpc_count": 0,
@@ -23,10 +23,10 @@
     "views_without_explicit_migration_grant_count": 183,
     "retained_live_broad_security_definer_count": 2,
     "target_broad_security_definer_count": 6,
-    "reviewed_restricted_security_definer_count": 127,
+    "reviewed_restricted_security_definer_count": 128,
     "acl_reachable_materialized_view_count": 0,
     "legacy_browser_base_table_hardening_count": 29,
-    "reviewed_patch83u_migration_ceiling": 231
+    "reviewed_patch83u_migration_ceiling": 234
   },
   "search_grc_global": {
     "disposition": "authenticated_edge_bridge_with_caller_jwt_rls",
@@ -165,7 +165,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1876,
+          "line": 1912,
           "evidence": "literal .from()"
         },
         {
@@ -184,7 +184,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:1876 intentional browser read contract; live ACL must be verified after deployment",
+        "src/lib/grcApi.ts:1912 intentional browser read contract; live ACL must be verified after deployment",
         "src/lib/userManagementApi.ts:445 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
@@ -263,7 +263,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1861,
+          "line": 1897,
           "evidence": "literal .from()"
         }
       ],
@@ -277,7 +277,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:1861 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:1897 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [
         "v_access_control_warnings"
@@ -317,7 +317,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1893,
+          "line": 1929,
           "evidence": "literal .from()"
         }
       ],
@@ -331,7 +331,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:1893 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:1929 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
       "base_tables": [
@@ -1621,7 +1621,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 344,
+          "line": 351,
           "evidence": "literal .from()"
         }
       ],
@@ -1959,7 +1959,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 848,
+          "line": 884,
           "evidence": "literal .from()"
         }
       ],
@@ -2028,7 +2028,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1685,
+          "line": 1721,
           "evidence": "literal .from()"
         }
       ],
@@ -2042,7 +2042,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:1685 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:1721 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
       "base_tables": [
@@ -2112,7 +2112,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2298,
+          "line": 2334,
           "evidence": "literal .from()"
         },
         {
@@ -2131,7 +2131,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:2298 intentional browser read contract; live ACL must be verified after deployment",
+        "src/lib/grcApi.ts:2334 intentional browser read contract; live ACL must be verified after deployment",
         "src/pages/ModernExecutiveDashboard.tsx:42 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [
@@ -2630,7 +2630,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 830,
+          "line": 866,
           "evidence": "literal .from()"
         }
       ],
@@ -2644,7 +2644,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:830 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:866 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
       "base_tables": [
@@ -2682,7 +2682,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 741,
+          "line": 777,
           "evidence": "literal .from()"
         }
       ],
@@ -2696,7 +2696,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:741 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:777 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
       "base_tables": [
@@ -3241,7 +3241,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2353,
+          "line": 2389,
           "evidence": "literal .from()"
         }
       ],
@@ -3255,7 +3255,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:2353 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:2389 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [
         "v_export_dataset_catalog"
@@ -3982,7 +3982,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2283,
+          "line": 2319,
           "evidence": "literal .from()"
         }
       ],
@@ -3996,7 +3996,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:2283 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:2319 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [
         "v_delay_reason_queue",
@@ -4452,7 +4452,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 864,
+          "line": 900,
           "evidence": "literal .from()"
         }
       ],
@@ -4884,7 +4884,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2317,
+          "line": 2353,
           "evidence": "literal .from()"
         }
       ],
@@ -4898,7 +4898,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:2317 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:2353 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
       "base_tables": [
@@ -5138,7 +5138,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2266,
+          "line": 2302,
           "evidence": "literal .from()"
         }
       ],
@@ -5192,7 +5192,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2232,
+          "line": 2268,
           "evidence": "literal .from()"
         }
       ],
@@ -5255,7 +5255,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2247,
+          "line": 2283,
           "evidence": "literal .from()"
         }
       ],
@@ -5310,7 +5310,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 1964,
+          "line": 2000,
           "evidence": "literal .from()"
         }
       ],
@@ -5354,7 +5354,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2037,
+          "line": 2073,
           "evidence": "literal .from()"
         }
       ],
@@ -5408,7 +5408,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2052,
+          "line": 2088,
           "evidence": "literal .from()"
         }
       ],
@@ -6044,7 +6044,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 532,
+          "line": 548,
           "evidence": "generic view reader argument"
         }
       ],
@@ -6096,7 +6096,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 517,
+          "line": 533,
           "evidence": "generic view reader argument"
         }
       ],
@@ -6148,7 +6148,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 537,
+          "line": 553,
           "evidence": "generic view reader argument"
         }
       ],
@@ -6200,7 +6200,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 527,
+          "line": 543,
           "evidence": "generic view reader argument"
         }
       ],
@@ -6252,7 +6252,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 522,
+          "line": 538,
           "evidence": "generic view reader argument"
         }
       ],
@@ -6296,7 +6296,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 512,
+          "line": 528,
           "evidence": "generic view reader argument"
         }
       ],
@@ -6348,7 +6348,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 785,
+          "line": 821,
           "evidence": "literal .from()"
         }
       ],
@@ -6400,7 +6400,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 777,
+          "line": 813,
           "evidence": "generic view reader argument"
         }
       ],
@@ -6460,7 +6460,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 772,
+          "line": 808,
           "evidence": "generic view reader argument"
         }
       ],
@@ -6522,7 +6522,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 800,
+          "line": 836,
           "evidence": "generic view reader argument"
         }
       ],
@@ -6574,7 +6574,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 767,
+          "line": 803,
           "evidence": "generic view reader argument"
         },
         {
@@ -6623,7 +6623,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 805,
+          "line": 841,
           "evidence": "generic view reader argument"
         }
       ],
@@ -6667,7 +6667,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 641,
+          "line": 661,
           "evidence": "generic view reader argument"
         }
       ],
@@ -6735,7 +6735,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 651,
+          "line": 671,
           "evidence": "generic view reader argument"
         }
       ],
@@ -6814,7 +6814,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 646,
+          "line": 666,
           "evidence": "generic view reader argument"
         }
       ],
@@ -6866,7 +6866,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 626,
+          "line": 646,
           "evidence": "generic view reader argument"
         }
       ],
@@ -6952,7 +6952,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 631,
+          "line": 651,
           "evidence": "generic view reader argument"
         }
       ],
@@ -7004,7 +7004,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 636,
+          "line": 656,
           "evidence": "generic view reader argument"
         }
       ],
@@ -7229,7 +7229,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 401,
+          "line": 413,
           "evidence": "literal .from()"
         },
         {
@@ -18610,7 +18610,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 728,
+          "line": 763,
           "evidence": "literal .from()"
         }
       ],
@@ -18624,7 +18624,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:728 intentional browser read contract; live ACL must be verified after deployment"
+        "src/lib/grcApi.ts:763 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [],
       "base_tables": [
@@ -19786,7 +19786,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 2335,
+          "line": 2371,
           "evidence": "literal .from()"
         },
         {
@@ -19805,7 +19805,7 @@
       "authenticated_grant_intentional": true,
       "authenticated_grant_explicit_in_migrations": false,
       "grant_evidence": [
-        "src/lib/grcApi.ts:2335 intentional browser read contract; live ACL must be verified after deployment",
+        "src/lib/grcApi.ts:2371 intentional browser read contract; live ACL must be verified after deployment",
         "src/pages/ModernExecutiveDashboard.tsx:43 intentional browser read contract; live ACL must be verified after deployment"
       ],
       "nested_views": [
@@ -21089,7 +21089,7 @@
       "call_sites": [
         {
           "file": "src/lib/grcApi.ts",
-          "line": 706,
+          "line": 729,
           "evidence": "literal .from()"
         }
       ],
@@ -24289,7 +24289,7 @@
         "allowed_purpose": null
       },
       {
-        "source": "target_migrations_171_231",
+        "source": "target_migrations_171_234",
         "schema": "public",
         "name": "governance_linkage_source_readable",
         "signature": "public.governance_linkage_source_readable(p_organization_id uuid, p_source_entity_type text, p_source_entity_id uuid)",
@@ -24309,7 +24309,7 @@
         "allowed_purpose": "Read-only GOV-LINK source visibility decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_231",
+        "source": "target_migrations_171_234",
         "schema": "public",
         "name": "governance_linkage_target_readable",
         "signature": "public.governance_linkage_target_readable(p_organization_id uuid, p_target_criterion_type text, p_target_document_id uuid, p_target_version_id uuid, p_target_policy_requirement_id uuid, p_target_sop_step_id uuid, p_target_compliance_obligation_id uuid, p_target_accreditation_clause_id uuid, p_target_control_id uuid)",
@@ -24329,7 +24329,7 @@
         "allowed_purpose": "Read-only GOV-LINK target visibility and redaction decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_231",
+        "source": "target_migrations_171_234",
         "schema": "public",
         "name": "patch83u_credential_access_allowed",
         "signature": "public.patch83u_credential_access_allowed()",
@@ -24348,7 +24348,7 @@
         "allowed_purpose": "Credential version, state, email, and session freshness decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_231",
+        "source": "target_migrations_171_234",
         "schema": "public",
         "name": "patch83u_profile_update_allowed",
         "signature": "public.patch83u_profile_update_allowed(p_target_user_id uuid, p_target_organization_id uuid)",
@@ -24367,7 +24367,7 @@
         "allowed_purpose": "Same-organization credential-active profile update decision used by restrictive RLS."
       },
       {
-        "source": "target_migrations_171_231",
+        "source": "target_migrations_171_234",
         "schema": "public",
         "name": "patch83u_user_role_mutation_allowed",
         "signature": "public.patch83u_user_role_mutation_allowed(p_target_user_id uuid, p_role public.app_role, p_scope public.access_scope, p_role_organization_id uuid, p_division_id uuid, p_department_id uuid, p_unit_id uuid)",
@@ -24700,6 +24700,24 @@
           "supabase/migrations/203_governed_sop_structured_content_expansion.sql:1078 grant execute service_role",
           "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:1874 revoke execute public, anon, authenticated",
           "supabase/migrations/206_governed_sop_template_alignment_and_raci.sql:1875 grant execute service_role"
+        ]
+      },
+      {
+        "source": "migration234_service_role_acl_review",
+        "schema": "public",
+        "name": "dashboard_recent_governed_activity_v1",
+        "signature": "public.dashboard_recent_governed_activity_v1(p_actor_id uuid, p_limit integer default 12)",
+        "public_execute": false,
+        "anon_execute": false,
+        "authenticated_execute": false,
+        "service_role_execute": true,
+        "disposition": "service_role_only",
+        "definition_file": "supabase/migrations/234_hf1_recent_governed_activity_aggregate.sql",
+        "definition_line": 9,
+        "acl_evidence": [
+          "PostgreSQL default PUBLIC EXECUTE",
+          "supabase/migrations/234_hf1_recent_governed_activity_aggregate.sql:55 revoke execute public, anon, authenticated",
+          "supabase/migrations/234_hf1_recent_governed_activity_aggregate.sql:57 grant execute service_role"
         ]
       },
       {

@@ -7,11 +7,13 @@ import {
   DEFAULT_DASHBOARD_FILTERS,
   EXECUTIVE_WIDGETS,
   PROJECT_WIDGETS,
+  dashboardCollectionState,
   metricBandLabel,
   projectHealth,
   projectInPeriod,
   projectMatchesStatus,
   readDashboardFilters,
+  trendMetricPlotBand,
 } from '../../src/dashboard/dashboardFramework';
 import type { ProjectRow } from '../../src/types/domain';
 
@@ -25,6 +27,7 @@ const styles = source('src/styles/dashboard-v11.css');
 const api = source('src/lib/grcApi.ts');
 const edge = source('supabase/functions/privileged-action/index.ts');
 const migration = source('supabase/migrations/194_ovr_executive_analytics_foundation.sql');
+const hotfixMigration = source('supabase/migrations/232_hf1_super_admin_dashboard_aggregate_entitlement.sql');
 const i18n = source('src/i18n/I18nContext.tsx');
 
 function role(role: AuthRole, scope: AuthRoleAssignment['scope'] = 'global'): AuthRoleAssignment[] {
@@ -56,6 +59,7 @@ describe('GRC v1.1 governed dashboard contract', () => {
     ['super_admin', true],
     ['executive', true],
     ['governance_admin', true],
+    ['division_head', false],
     ['department_manager', false],
     ['employee', false],
     ['viewer', false],
@@ -91,6 +95,25 @@ describe('GRC v1.1 governed dashboard contract', () => {
   it('marks OVR analytics aggregate-only', () => {
     expect(EXECUTIVE_WIDGETS.find(item => item.id === 'open-ovr')?.privacy).toBe('aggregate-only');
     expect(EXECUTIVE_WIDGETS.find(item => item.id === 'open-ovr')?.allowedDimensions).toEqual([]);
+    expect(EXECUTIVE_WIDGETS.find(item => item.id === 'open-ovr')?.roleRequirement).toBe('dashboard-aggregate/global');
+  });
+
+  it('authorizes only active global Executive and Super Admin aggregate roles', () => {
+    expect(hotfixMigration).toContain("ur.role in ('executive', 'super_admin')");
+    expect(hotfixMigration).toContain("ur.scope = 'global'");
+    expect(hotfixMigration).toContain('ur.is_active');
+    expect(hotfixMigration).toContain('public.patch83u_role_assignment_valid(');
+    expect(hotfixMigration).toContain('if v_entitlement_count < 1 then');
+    for (const excluded of ['governance_admin', 'division_head', 'department_manager', 'employee', 'viewer']) {
+      expect(hotfixMigration).not.toContain(`'${excluded}'`);
+    }
+  });
+
+  it('keeps the aggregate resolver private and raw OVR policies unchanged', () => {
+    expect(hotfixMigration).toContain('revoke all on function ovr_v11_private.executive_actor_organization(uuid)');
+    expect(hotfixMigration).toContain('from public, anon, authenticated, service_role');
+    expect(hotfixMigration).not.toMatch(/create policy|alter policy|drop policy|grant select on public\.ovr_reports/i);
+    expect(hotfixMigration).toContain('grants no raw OVR access');
   });
 
   it('does not return raw identifiers in the aggregate payload type or page', () => {
@@ -111,8 +134,21 @@ describe('GRC v1.1 governed dashboard contract', () => {
   it('keeps failed widget retry local to its source', () => {
     expect(dashboard).toContain('onRetry={() => void analytics.refresh()}');
     expect(dashboard).toContain('onRetry={() => void portfolio.refresh()}');
-    expect(dashboard).toContain('onRetry={() => void assurance.refresh()}');
+    expect(dashboard).toContain('onRetry={() => void risks.refresh()}');
+    expect(dashboard).toContain('onRetry={() => void compliance.refresh()}');
+    expect(dashboard).toContain('onRetry={() => void approvals.refresh()}');
+    expect(dashboard).toContain('onRetry={() => void recentActivity.refresh()}');
     expect(dashboard).toContain('onRetry={() => void auditFindings.refresh()}');
+  });
+
+  it('distinguishes a true zero from a failed governed read', () => {
+    expect(dashboardCollectionState([], false, null)).toBe('empty');
+    expect(dashboardCollectionState([], false, 'permission denied')).toBe('unavailable');
+    expect(dashboardCollectionState([{ id: 'visible' }], false, null)).toBe('loaded');
+    expect(dashboardCollectionState([], true, null)).toBe('loading');
+    expect(dashboard).toContain("getRisks({ throwOnError: true })");
+    expect(dashboard).toContain("getComplianceItems({ throwOnError: true })");
+    expect(dashboard).toContain("getApprovals({ throwOnError: true })");
   });
 
   it('uses the canonical responsible-department relationship for Audit findings', () => {
@@ -183,9 +219,20 @@ describe('GRC v1.1 governed dashboard contract', () => {
     expect(dashboard).toContain("navigate('approvals')");
   });
 
-  it('labels missing recent-activity data honestly', () => {
-    expect(dashboard).toContain('No trusted cross-module activity feed is configured');
+  it('uses the trusted recent-activity view and keeps true empty distinct from unavailable', () => {
+    expect(dashboard).toContain('getDashboardRecentGovernedActivity');
+    expect(api).toContain("'dashboard_recent_governed_activity'");
+    expect(api).toContain(".from('v_recent_governed_activity')");
+    expect(dashboard).toContain('No recent governed activity is visible in your scope.');
+    expect(dashboard).toContain('Recent governed activity is temporarily unavailable.');
+    expect(dashboard).not.toContain('No trusted cross-module activity feed is configured');
     expect(projects).toContain('No trustworthy cross-project activity feed is configured');
+  });
+
+  it('distinguishes aggregate authorization denial from aggregate unavailability', () => {
+    expect(dashboard).toContain("analytics.errorCode === 'OVR_EXECUTIVE_ANALYTICS_ACCESS_RESTRICTED'");
+    expect(dashboard).toContain('Dashboard aggregate access is restricted for this account.');
+    expect(dashboard).toContain('The privacy-safe dashboard aggregate is temporarily unavailable.');
   });
 
   it('keeps period filtering deterministic', () => {
@@ -194,10 +241,32 @@ describe('GRC v1.1 governed dashboard contract', () => {
   });
 
   it('maps the new analytics action to generic client errors while retaining server diagnostics', () => {
-    const handler = edge.slice(edge.indexOf("if (action === 'ovr_executive_dashboard_analytics')"), edge.indexOf('if (patch22RiskActions.has(action))'));
+    const handler = edge.slice(edge.indexOf("if (action === 'ovr_executive_dashboard_analytics')"), edge.indexOf("if (action === 'dashboard_recent_governed_activity')"));
     expect(handler).toContain('OVR_EXECUTIVE_ANALYTICS_UNAVAILABLE');
     expect(handler).toContain("console.error('OVR executive analytics");
     expect(handler).not.toMatch(/error:\s*(?:snapshotError|analyticsError)\.message/);
+  });
+
+  it('does not misclassify missing aggregate configuration as an authorization denial', () => {
+    const classifier = edge.slice(
+      edge.indexOf('function isOvrAnalyticsAuthorizationFailure'),
+      edge.indexOf('const userRoleOptions'),
+    );
+    const handler = edge.slice(edge.indexOf("if (action === 'ovr_executive_dashboard_analytics')"), edge.indexOf("if (action === 'dashboard_recent_governed_activity')"));
+    expect(classifier).toContain('DASHBOARD_ENTITLEMENT_REQUIRED');
+    expect(classifier).not.toContain('OVR_ANALYTICS_CONFIG_REQUIRED');
+    expect(classifier).not.toMatch(/\|REQUIRED\|/);
+    expect(handler.match(/isOvrAnalyticsAuthorizationFailure/g)).toHaveLength(2);
+  });
+
+  it('routes recent governed activity through a service-only organization aggregate', () => {
+    const allowlist = edge.slice(edge.indexOf('const allowedActions = new Set(['), edge.indexOf('const patch19LifecycleActions'));
+    const handler = edge.slice(edge.indexOf("if (action === 'dashboard_recent_governed_activity')"), edge.indexOf('if (patch22RiskActions.has(action))'));
+    expect(allowlist).toContain("'dashboard_recent_governed_activity'");
+    expect(handler).toContain("serviceClient.rpc(\n      'dashboard_recent_governed_activity_v1'");
+    expect(handler).toContain('p_actor_id: userData.user.id');
+    expect(handler).toContain('DASHBOARD_RECENT_ACTIVITY_ACCESS_RESTRICTED');
+    expect(handler).not.toContain('.from(');
   });
 
   it('keeps active and attention Project KPI drill filters aligned with their definitions', () => {
@@ -206,9 +275,20 @@ describe('GRC v1.1 governed dashboard contract', () => {
     expect(projectMatchesStatus(project({ status: 'closed' }), 'operating')).toBe(false);
   });
 
-  it('uses non-exact privacy labels unchanged', () => {
-    expect(metricBandLabel({ state: 'suppressed', label: 'Suppressed', suppressed: true }, '—')).toBe('Suppressed');
+  it('normalizes suppressed labels and plots only confirmed numeric states', () => {
+    const suppressed = { state: 'suppressed', label: '3', suppressed: true, lower_bound: 0, upper_bound: 0 } as const;
+    expect(metricBandLabel(suppressed, '—', 5)).toBe('<5');
+    expect(trendMetricPlotBand(suppressed)).toBeNull();
+    expect(trendMetricPlotBand({ state: 'zero', label: '0', suppressed: false })).toEqual({ lower: 0, upper: 0 });
+    expect(trendMetricPlotBand({ state: 'unavailable', label: 'Unavailable', suppressed: false })).toBeNull();
+    expect(trendMetricPlotBand({ state: 'banded', label: '5-9', suppressed: false, lower_bound: 5, upper_bound: 9 })).toEqual({ lower: 5, upper: 9 });
     expect(metricBandLabel(null, '—')).toBe('—');
+  });
+
+  it('keeps privacy icons compact by scoping chart SVG dimensions to the chart root', () => {
+    expect(styles).toContain('.grc-safe-trend__chart > svg');
+    expect(styles).not.toContain('.grc-safe-trend svg {');
+    expect(styles).toContain('.grc-safe-trend__privacy-icon svg');
   });
 
   it('supports light and dark through one theme-aware component system', () => {

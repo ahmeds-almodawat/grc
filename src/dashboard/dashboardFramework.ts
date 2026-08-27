@@ -77,8 +77,31 @@ export function writeDashboardFilters(filters: DashboardFilterState) {
   window.history.replaceState(null, '', `${window.location.pathname}?${query.toString()}`);
 }
 
-export function metricBandLabel(metric: PrivacySafeMetricBand | null | undefined, unavailable: string): string {
-  return metric?.label || unavailable;
+function privacyMinimum(value: number | null | undefined): number {
+  return Number.isInteger(value) && (value as number) >= 5 ? value as number : 5;
+}
+
+export function metricBandLabel(
+  metric: PrivacySafeMetricBand | null | undefined,
+  unavailable: string,
+  minimumCellSize?: number,
+): string {
+  if (!metric || metric.state === 'unavailable') return unavailable;
+  if (metric.state === 'zero') return '0';
+  if (metric.state === 'suppressed') return `<${privacyMinimum(minimumCellSize)}`;
+  return metric.label || unavailable;
+}
+
+export function trendMetricPlotBand(metric: PrivacySafeMetricBand): { lower: number; upper: number } | null {
+  if (metric.state === 'zero') return { lower: 0, upper: 0 };
+  if (metric.state !== 'banded') return null;
+  if (
+    !Number.isFinite(metric.lower_bound)
+    || !Number.isFinite(metric.upper_bound)
+    || (metric.lower_bound as number) < 0
+    || (metric.upper_bound as number) < (metric.lower_bound as number)
+  ) return null;
+  return { lower: metric.lower_bound as number, upper: metric.upper_bound as number };
 }
 
 export function projectHealth(project: ProjectRow): 'on_track' | 'watch' | 'at_risk' | 'delayed' | 'completed' {
@@ -203,6 +226,16 @@ export function auditDashboardMetricState(
   return { state: rows.length ? 'loaded' : 'empty', value: rows.length };
 }
 
+export function dashboardCollectionState(
+  rows: ReadonlyArray<unknown>,
+  loading: boolean,
+  error: string | null,
+): DashboardSourceState {
+  if (loading) return 'loading';
+  if (error) return 'unavailable';
+  return rows.length ? 'loaded' : 'empty';
+}
+
 export function filterDashboardCompliance(rows: ComplianceRow[], filters: DashboardFilterState, now = new Date()) {
   return rows.filter(item => dateInDashboardPeriod(item.expiry_date ?? item.due_date, filters.period, now)
     && matchesDepartment(item.department_id, filters.department)
@@ -259,7 +292,7 @@ export function dashboardDestinationUrl(
 }
 
 export const EXECUTIVE_WIDGETS: DashboardWidgetDefinition[] = [
-  { id: 'open-ovr', titleKey: 'dashboard.v11.openOvr', source: 'ovr_executive_analytics_v1', metricDefinition: 'Privacy-safe open OVR daily snapshot', allowedDimensions: [], roleRequirement: 'executive/global', privacy: 'aggregate-only', destination: 'ovr', routeFilters: ['ovr_status'], statePolicy: 'independent-loading-empty-error', refresh: 'daily-snapshot' },
+  { id: 'open-ovr', titleKey: 'dashboard.v11.openOvr', source: 'ovr_executive_analytics_v1', metricDefinition: 'Privacy-safe open OVR daily snapshot', allowedDimensions: [], roleRequirement: 'dashboard-aggregate/global', privacy: 'aggregate-only', destination: 'ovr', routeFilters: ['ovr_status'], statePolicy: 'independent-loading-empty-error', refresh: 'daily-snapshot' },
   { id: 'critical-risks', titleKey: 'dashboard.v11.criticalRisks', source: 'risks', metricDefinition: 'RLS-visible critical risks after supported department/status/severity filters', allowedDimensions: ['department', 'status', 'severity'], roleRequirement: 'executive page access', privacy: 'role-scoped', destination: 'risks', routeFilters: [], statePolicy: 'independent-loading-empty-error', refresh: 'on-load' },
   { id: 'overdue-capas', titleKey: 'dashboard.v11.overdueCapas', source: 'v_live_grc_capa_queue', metricDefinition: 'RLS-visible governed CAPA rows with overdue queue signal', allowedDimensions: ['period', 'status'], roleRequirement: 'executive page access', privacy: 'role-scoped', destination: null, routeFilters: [], statePolicy: 'independent-loading-empty-error', refresh: 'on-load' },
   { id: 'audit-findings', titleKey: 'dashboard.v11.auditFindings', source: 'audit_findings', metricDefinition: 'RLS-visible open findings after supported period/department/status/severity filters', allowedDimensions: ['period', 'department', 'status', 'severity'], roleRequirement: 'executive page access', privacy: 'role-scoped', destination: 'audit', routeFilters: [], statePolicy: 'independent-loading-empty-error', refresh: 'on-load' },

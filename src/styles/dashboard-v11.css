@@ -430,6 +430,78 @@ button.grc-metric-card:focus-visible .grc-metric-card__arrow {
   width: min(280px, 62%);
 }
 
+.grc-safe-trend__privacy-note {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  padding: 9px 11px;
+  border: 1px solid var(--grc-border-strong);
+  border-radius: 8px;
+  color: var(--grc-text);
+  background: var(--grc-primary-soft);
+}
+
+.grc-safe-trend__privacy-icon {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--grc-primary);
+  background: var(--grc-surface-strong);
+}
+
+.grc-safe-trend__privacy-icon svg {
+  width: 14px;
+  min-width: 14px;
+  height: 14px;
+}
+
+.grc-safe-trend__privacy-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.grc-safe-trend__privacy-copy > span {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 9px;
+  align-items: baseline;
+}
+
+.grc-safe-trend__privacy-copy strong,
+.grc-safe-trend__privacy-copy b {
+  font-size: 0.72rem;
+}
+
+.grc-safe-trend__privacy-copy b {
+  color: var(--grc-primary);
+}
+
+.grc-safe-trend__privacy-copy small {
+  color: var(--grc-muted);
+  font-size: 0.65rem;
+  line-height: 1.35;
+}
+
+.grc-safe-trend--privacy-only {
+  display: grid;
+  min-height: 146px;
+  place-items: center;
+  padding: 18px;
+  border: 1px solid var(--grc-border);
+  border-radius: 13px;
+  background: var(--grc-surface-muted);
+}
+
+.grc-safe-trend--privacy-only .grc-safe-trend__privacy-note {
+  width: min(100%, 470px);
+  margin: 0;
+}
+
 .grc-safe-trend__chart {
   position: relative;
   min-height: 270px;
@@ -439,7 +511,7 @@ button.grc-metric-card:focus-visible .grc-metric-card__arrow {
   background: var(--grc-surface-muted);
 }
 
-.grc-safe-trend svg {
+.grc-safe-trend__chart > svg {
   display: block;
   width: 100%;
   min-width: 520px;
@@ -1369,7 +1441,7 @@ button.grc-metric-card:focus-visible .grc-metric-card__arrow {
 }
 
 .rtl-shell .grc-gantt__track,
-.rtl-shell .grc-safe-trend svg {
+.rtl-shell .grc-safe-trend__chart > svg {
   direction: ltr;
 }
 

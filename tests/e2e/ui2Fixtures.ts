@@ -247,14 +247,16 @@ const policyRequirements = Array.from({ length: 6 }, (_, index) => ({
   accreditation_clauses: { id: 'clause-1', clause_code: 'LD.4.1', clause_title: 'Leadership governance and accountability', clause_title_ar: 'حوكمة القيادة والمساءلة', criticality: 'high', accreditation_standards: { standard_code: 'CBAHI-2026', framework: 'CBAHI' } },
 }));
 
-function analyticsFixture() {
+function analyticsFixture(mode: 'banded' | 'privacy-suppressed' = 'banded') {
   const band = (label: string) => ({ state: 'banded', label, suppressed: false, lower_bound: 6, upper_bound: 10 });
-  const privacy = { model: 'deterministic-bands-daily-v1', minimum_cell_size: 5, exact_values_returned: false, arbitrary_filters_allowed: false, dimension_drilldown_allowed: false, daily_snapshot_immutable: true, suppression_applied: false };
+  const suppressed = () => ({ state: 'suppressed', label: '3', suppressed: true, lower_bound: 0, upper_bound: 0 });
+  const zero = () => ({ state: 'zero', label: '0', suppressed: false });
+  const privacy = { model: 'deterministic-bands-daily-v1', minimum_cell_size: 5, exact_values_returned: false, arbitrary_filters_allowed: false, dimension_drilldown_allowed: false, daily_snapshot_immutable: true, suppression_applied: mode === 'privacy-suppressed' };
   const trendMonths = ['2025-09', '2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08'];
   return {
     snapshot: { snapshot_id: 'ui2-snapshot', snapshot_date: '2026-08-21', generated_at: '2026-08-21T23:00:00.000Z', definition_version: 'ui2-test-v1', privacy_model: 'deterministic-bands-daily-v1' },
-    headline: { definition_version: 'ui2-test-v1', query_shape: 'headline_current_period', generated_at: '2026-08-21T23:00:00.000Z', snapshot_date: '2026-08-21', timezone: 'Asia/Riyadh', scope: 'organization', allowed_filters: {}, metrics: { open_ovr: band('11–15'), new_this_month: band('6–10'), overdue_ovr: { count: band('1–5'), unknown_due: band('0') }, major_sentinel: band('1–5'), average_closure_time: { ...band('16–20 days'), denominator: band('11–15') }, closure_within_sla: { ...band('76–80%'), denominator: band('11–15') }, potential_repeat: band('1–5'), corrective_action_required: band('6–10') }, privacy },
-    trend: { definition_version: 'ui2-test-v1', query_shape: 'monthly_trend_12', generated_at: '2026-08-21T23:00:00.000Z', snapshot_date: '2026-08-21', timezone: 'Asia/Riyadh', scope: 'organization', allowed_filters: {}, buckets: trendMonths.map((bucket_key, index) => ({ bucket_key, new_reports: band(String(6 + (index % 3) * 5)), closed_reports: band(String(5 + (index % 4) * 4)) })), privacy },
+    headline: { definition_version: 'ui2-test-v1', query_shape: 'headline_current_period', generated_at: '2026-08-21T23:00:00.000Z', snapshot_date: '2026-08-21', timezone: 'Asia/Riyadh', scope: 'organization', allowed_filters: {}, metrics: { open_ovr: mode === 'privacy-suppressed' ? suppressed() : band('11–15'), new_this_month: band('6–10'), overdue_ovr: { count: band('1–5'), unknown_due: zero() }, major_sentinel: mode === 'privacy-suppressed' ? suppressed() : band('1–5'), average_closure_time: { ...band('16–20 days'), denominator: band('11–15') }, closure_within_sla: { ...band('76–80%'), denominator: band('11–15') }, potential_repeat: band('1–5'), corrective_action_required: band('6–10') }, privacy },
+    trend: { definition_version: 'ui2-test-v1', query_shape: 'monthly_trend_12', generated_at: '2026-08-21T23:00:00.000Z', snapshot_date: '2026-08-21', timezone: 'Asia/Riyadh', scope: 'organization', allowed_filters: {}, buckets: trendMonths.map((bucket_key, index) => mode === 'privacy-suppressed' ? { bucket_key, new_reports: index === 0 ? zero() : suppressed(), closed_reports: suppressed() } : { bucket_key, new_reports: band(String(6 + (index % 3) * 5)), closed_reports: band(String(5 + (index % 4) * 4)) }), privacy },
   };
 }
 
@@ -269,12 +271,12 @@ async function fulfill(route: Route, response: unknown) {
   });
 }
 
-export async function installUi2FixtureData(page: Page) {
+export async function installUi2FixtureData(page: Page, options: { analyticsMode?: 'banded' | 'privacy-suppressed' } = {}) {
   await page.route('**/functions/v1/**', async (route) => {
     const raw = route.request().postData();
     const body = raw ? JSON.parse(raw) as { action?: string } : {};
     if (body.action !== 'ovr_executive_dashboard_analytics') return route.fallback();
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, action: body.action, result: analyticsFixture() }) });
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, action: body.action, result: analyticsFixture(options.analyticsMode) }) });
   });
 
   await page.route('**/rest/v1/**', async (route) => {

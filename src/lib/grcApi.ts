@@ -336,8 +336,15 @@ export async function getOvrExecutiveDashboardAnalytics(): Promise<OvrExecutiveD
   );
 }
 
-export async function getCriticalAttentionItems(): Promise<CriticalAttentionItem[]> {
-  if (!supabase) return emptyLiveArray<any>();
+export interface GovernedReadOptions {
+  throwOnError?: boolean;
+}
+
+export async function getCriticalAttentionItems(options: GovernedReadOptions = {}): Promise<CriticalAttentionItem[]> {
+  if (!supabase) {
+    if (options.throwOnError) throw new Error('Critical attention source is unavailable.');
+    return emptyLiveArray<any>();
+  }
 
   try {
     const { data, error } = await supabase
@@ -361,12 +368,16 @@ export async function getCriticalAttentionItems(): Promise<CriticalAttentionItem
     }));
   } catch (error) {
     logFallback('critical attention items', error);
+    if (options.throwOnError) throw new Error('Critical attention source is unavailable.');
     return emptyLiveArray<any>();
   }
 }
 
-export async function getProjects(): Promise<ProjectRow[]> {
-  if (!supabase) return emptyLiveArray<any>();
+export async function getProjects(options: GovernedReadOptions = {}): Promise<ProjectRow[]> {
+  if (!supabase) {
+    if (options.throwOnError) throw new Error('Projects source is unavailable.');
+    return emptyLiveArray<any>();
+  }
 
   try {
     const { data, error } = await supabase
@@ -378,6 +389,7 @@ export async function getProjects(): Promise<ProjectRow[]> {
     return filterScenarioLabRows((data as unknown as ProjectRow[])?.length ? (data as unknown as ProjectRow[]) : liveEmptyProjects);
   } catch (error) {
     logFallback('projects', error);
+    if (options.throwOnError) throw new Error('Projects source is unavailable.');
     return emptyLiveArray<any>();
   }
 }
@@ -465,8 +477,11 @@ export async function getPortfolioTasks(): Promise<TaskRow[]> {
   return filterScenarioLabRows((data as unknown as TaskRow[]) || []);
 }
 
-export async function getRisks(): Promise<RiskRow[]> {
-  if (!supabase) return emptyLiveArray<any>();
+export async function getRisks(options: GovernedReadOptions = {}): Promise<RiskRow[]> {
+  if (!supabase) {
+    if (options.throwOnError) throw new Error('Risk source is unavailable.');
+    return emptyLiveArray<any>();
+  }
 
   try {
     const patch22Select = '*, departments(name_en,name_ar), owner:profiles!risks_owner_id_fkey(full_name_en,full_name_ar), risk_owner:profiles!risks_risk_owner_id_fkey(full_name_en,full_name_ar), control_owner:profiles!risks_control_owner_id_fkey(full_name_en,full_name_ar), treatment_owner:profiles!risks_treatment_owner_id_fkey(full_name_en,full_name_ar), executive_sponsor:profiles!risks_executive_sponsor_id_fkey(full_name_en,full_name_ar)';
@@ -488,6 +503,7 @@ export async function getRisks(): Promise<RiskRow[]> {
     return filterScenarioLabRows((data as unknown as RiskRow[])?.length ? (data as unknown as RiskRow[]) : liveEmptyRisks);
   } catch (error) {
     logFallback('risks', error);
+    if (options.throwOnError) throw new Error('Risk source is unavailable.');
     return emptyLiveArray<any>();
   }
 }
@@ -572,8 +588,11 @@ export async function getRiskWorkflowEvents(riskId: string): Promise<RiskWorkflo
   }
 }
 
-export async function getComplianceItems(): Promise<ComplianceRow[]> {
-  if (!supabase) return emptyLiveArray<any>();
+export async function getComplianceItems(options: GovernedReadOptions = {}): Promise<ComplianceRow[]> {
+  if (!supabase) {
+    if (options.throwOnError) throw new Error('Compliance source is unavailable.');
+    return emptyLiveArray<any>();
+  }
 
   try {
     const { data, error } = await supabase
@@ -585,6 +604,7 @@ export async function getComplianceItems(): Promise<ComplianceRow[]> {
     return filterScenarioLabRows((data as unknown as ComplianceRow[])?.length ? (data as unknown as ComplianceRow[]) : liveEmptyCompliance);
   } catch (error) {
     logFallback('compliance items', error);
+    if (options.throwOnError) throw new Error('Compliance source is unavailable.');
     return emptyLiveArray<any>();
   }
 }
@@ -698,8 +718,11 @@ export interface RecentGovernedActivityRow {
   due_date: string | null;
 }
 
-export async function getRecentGovernedActivity(): Promise<RecentGovernedActivityRow[]> {
-  if (!supabase) return emptyLiveArray<RecentGovernedActivityRow>();
+export async function getRecentGovernedActivity(options: GovernedReadOptions = {}): Promise<RecentGovernedActivityRow[]> {
+  if (!supabase) {
+    if (options.throwOnError) throw new Error('Recent governed activity source is unavailable.');
+    return emptyLiveArray<RecentGovernedActivityRow>();
+  }
 
   try {
     const { data, error } = await supabase
@@ -711,8 +734,17 @@ export async function getRecentGovernedActivity(): Promise<RecentGovernedActivit
     return (data as RecentGovernedActivityRow[] | null) ?? [];
   } catch (error) {
     logFallback('recent governed activity', error);
+    if (options.throwOnError) throw new Error('Recent governed activity source is unavailable.');
     return emptyLiveArray<RecentGovernedActivityRow>();
   }
+}
+
+export async function getDashboardRecentGovernedActivity(): Promise<RecentGovernedActivityRow[]> {
+  requireLiveSupabase();
+  return invokePrivilegedAction<RecentGovernedActivityRow[]>(
+    'dashboard_recent_governed_activity',
+    { limit: 12 },
+  );
 }
 
 export async function getMyWork(): Promise<MyWorkRow[]> {
@@ -721,8 +753,11 @@ export async function getMyWork(): Promise<MyWorkRow[]> {
   return filterScenarioLabRows(rows?.length ? rows : liveEmptyMyWork);
 }
 
-export async function getApprovals(): Promise<ApprovalRow[]> {
-  if (!supabase) return emptyLiveArray<any>();
+export async function getApprovals(options: GovernedReadOptions = {}): Promise<ApprovalRow[]> {
+  if (!supabase) {
+    if (options.throwOnError) throw new Error('Approvals source is unavailable.');
+    return emptyLiveArray<any>();
+  }
 
   try {
     const { data, error } = await supabase.from('v_pending_approvals_expanded').select('*').order('requested_at', { ascending: true }).limit(100);
@@ -730,6 +765,7 @@ export async function getApprovals(): Promise<ApprovalRow[]> {
     return filterScenarioLabRows((data as unknown as ApprovalRow[])?.length ? (data as unknown as ApprovalRow[]) : liveEmptyApprovals);
   } catch (error) {
     logFallback('approvals', error);
+    if (options.throwOnError) throw new Error('Approvals source is unavailable.');
     return emptyLiveArray<any>();
   }
 }

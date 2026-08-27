@@ -4922,13 +4922,6 @@ export function classifyBrowserRequest(value) {
   ) {
     return 'expected staging Supabase request';
   }
-  if (
-    url.protocol === 'https:'
-    && url.hostname === 'challenges.cloudflare.com'
-    && (!url.port || url.port === '443')
-  ) {
-    return 'CAPTCHA/Turnstile request';
-  }
   if (url.hostname.endsWith('.supabase.co')) {
     return 'production or unknown Supabase request';
   }
@@ -4970,7 +4963,6 @@ export function browserRequestIsAllowed(value) {
   return new Set([
     'expected staging Supabase request',
     'local Vite/HMR request',
-    'CAPTCHA/Turnstile request',
     'required static/browser infrastructure request',
   ]).has(classifyBrowserRequest(value));
 }
