@@ -20,7 +20,7 @@ export function ControlledPilotBanner({ compact = false, context = 'hospital' }:
       <ShieldCheck size={compact ? 14 : 17} />
       <strong>{t('pilot.hospitalWorkspace') || 'Hospital governance workspace'}</strong>
       <span>{t('pilot.controlledWorkspace') || 'Controlled operating workspace'}</span>
-      <span>{t('pilot.readinessManaged') || 'Readiness status is managed by authorized administrators'}</span>
+      <span>{t('pilot.readinessManaged') || 'Access and changes follow assigned roles'}</span>
     </div>
   );
 }
