@@ -33,7 +33,7 @@ import {
   type Ui8DepartmentRow,
 } from '../lib/ui8AdministrationApi';
 import {
-  UI8_ADMIN_VIEWS,
+  UI8_VISIBLE_ADMIN_VIEWS,
   UI8_RELEASE_BASELINE,
   UI8_ROLE_DEFINITIONS,
   activeUserRoles,
@@ -197,18 +197,18 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
   const renderOverview = () => {
     const healthRows = [
       {
-        label: text({ en: 'Authenticated data boundary', ar: 'حدود البيانات المصادق عليها' }),
-        detail: text({ en: 'Organization-scoped reads are active', ar: 'القراءات المقيدة بالمنظمة نشطة' }),
+        label: text({ en: 'Authorized data access', ar: 'وصول مصرح للبيانات' }),
+        detail: text({ en: 'Organization-scoped records are available', ar: 'السجلات المقيدة بالمنظمة متاحة' }),
         ok: Boolean(snapshot),
       },
       {
-        label: 'Patch83U',
-        detail: text({ en: 'Credential governance contract', ar: 'عقد حوكمة بيانات الاعتماد' }),
+        label: text({ en: 'Sign-in safeguards', ar: 'ضوابط تسجيل الدخول' }),
+        detail: text({ en: 'Sign-in protections are active', ar: 'ضوابط حماية تسجيل الدخول نشطة' }),
         ok: patch83uConnected,
       },
       {
-        label: text({ en: 'Role scope integrity', ar: 'سلامة نطاق الأدوار' }),
-        detail: text({ en: '12-role model and scoped assignments', ar: 'نموذج 12 دوراً وتعيينات محددة النطاق' }),
+        label: text({ en: 'Role assignments', ar: 'تعيينات الأدوار' }),
+        detail: text({ en: 'Assigned roles and scopes', ar: 'الأدوار والنطاقات المعينة' }),
         ok: auth.roles.length > 0,
       },
     ];
@@ -233,8 +233,8 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
           <section className="ui8-surface" aria-labelledby="ui8-health-title">
             <div className="ui8-section-heading">
               <div>
-                <span>{text({ en: 'Runtime posture', ar: 'وضع التشغيل' })}</span>
-                <h2 id="ui8-health-title">{text({ en: 'System health', ar: 'سلامة النظام' })}</h2>
+                <span>{text({ en: 'Access status', ar: 'حالة الوصول' })}</span>
+                <h2 id="ui8-health-title">{text({ en: 'Access health', ar: 'سلامة الوصول' })}</h2>
               </div>
               <StateChip state={snapshot ? 'connected' : 'disabled_with_reason'} label={snapshot ? actionLabel('connected') : actionLabel('disabled_with_reason')} />
             </div>
@@ -260,13 +260,13 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
             </div>
             <div className="ui8-action-list">
               <button type="button" onClick={() => openPage('admin')}>
-                <UserCog size={18} /><span><strong>{text({ en: 'Manage users', ar: 'إدارة المستخدمين' })}</strong><small>Patch19 / Patch83T / Patch83U</small></span><ChevronRight size={17} />
+                <UserCog size={18} /><span><strong>{text({ en: 'Manage users', ar: 'إدارة المستخدمين' })}</strong><small>{text({ en: 'User lifecycle and credential controls', ar: 'ضوابط دورة حياة المستخدم وبيانات الاعتماد' })}</small></span><ChevronRight size={17} />
               </button>
               <button type="button" onClick={() => openPage('accessControl')}>
                 <KeyRound size={18} /><span><strong>{text({ en: 'Review role assignments', ar: 'مراجعة تعيينات الأدوار' })}</strong><small>{text({ en: 'Scoped authority controls', ar: 'ضوابط الصلاحيات محددة النطاق' })}</small></span><ChevronRight size={17} />
               </button>
               <button type="button" onClick={() => openPage('departments')}>
-                <Building2 size={18} /><span><strong>{text({ en: 'Organization structure', ar: 'الهيكل التنظيمي' })}</strong><small>Patch83R</small></span><ChevronRight size={17} />
+                <Building2 size={18} /><span><strong>{text({ en: 'Organization structure', ar: 'الهيكل التنظيمي' })}</strong><small>{text({ en: 'Division and department controls', ar: 'ضوابط القطاعات والإدارات' })}</small></span><ChevronRight size={17} />
               </button>
             </div>
           </section>
@@ -275,9 +275,9 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
         <section className="ui8-surface" aria-labelledby="ui8-activity-title">
           <div className="ui8-section-heading">
             <div>
-              <span>{text({ en: 'Trusted source', ar: 'مصدر موثوق' })}</span>
+              <span>{text({ en: 'Activity history', ar: 'سجل النشاط' })}</span>
               <h2 id="ui8-activity-title">{text({ en: 'Recent administrative activity', ar: 'النشاط الإداري الأخير' })}</h2>
-              <p>{text({ en: 'User-governance history only; no fabricated cross-module feed.', ar: 'سجل حوكمة المستخدمين فقط، دون إنشاء سجل شامل غير موثوق.' })}</p>
+              <p>{text({ en: 'User lifecycle and role-assignment history.', ar: 'سجل دورة حياة المستخدم وتعيينات الأدوار.' })}</p>
             </div>
             <button type="button" className="ui8-link-button" onClick={() => setView('audit')}>{text({ en: 'View logs', ar: 'عرض السجلات' })}</button>
           </div>
@@ -302,7 +302,7 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
       <section className="ui8-surface">
         <div className="ui8-section-heading ui8-section-heading--actions">
           <div>
-            <span>Patch19 / Patch83U</span>
+            <span>{text({ en: 'User lifecycle', ar: 'دورة حياة المستخدم' })}</span>
             <h2>{text({ en: 'User register', ar: 'سجل المستخدمين' })}</h2>
             <p>{text({ en: 'Auth identity, profile, lifecycle, assignment, and safe credential metadata.', ar: 'هوية المصادقة والملف ودورة الحياة والتعيينات وبيانات الاعتماد الآمنة.' })}</p>
           </div>
@@ -381,7 +381,7 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
           </div>
         </section>
         <section className="ui8-surface">
-          <div className="ui8-section-heading"><div><span>{text({ en: 'Current organization', ar: 'المنظمة الحالية' })}</span><h2>{text({ en: 'Active assignments', ar: 'التعيينات النشطة' })}</h2><p>{text({ en: 'Cross-organization assignment remains denied by the current Edge and database contract.', ar: 'يظل التعيين عبر المنظمات مرفوضاً بموجب عقد Edge وقاعدة البيانات الحالي.' })}</p></div><strong>{assignments.length}</strong></div>
+          <div className="ui8-section-heading"><div><span>{text({ en: 'Current organization', ar: 'المنظمة الحالية' })}</span><h2>{text({ en: 'Active assignments', ar: 'التعيينات النشطة' })}</h2><p>{text({ en: 'Cross-organization assignments remain denied by governed access controls.', ar: 'تظل التعيينات عبر المنظمات مرفوضة بواسطة ضوابط الوصول المحكومة.' })}</p></div><strong>{assignments.length}</strong></div>
           {assignments.length ? <div className="ui8-table-wrap" tabIndex={0}><table className="ui8-table"><thead><tr><th>{text({ en: 'User', ar: 'المستخدم' })}</th><th>{text({ en: 'Role', ar: 'الدور' })}</th><th>{text({ en: 'Scope', ar: 'النطاق' })}</th><th>{text({ en: 'Scope target', ar: 'هدف النطاق' })}</th><th>{text({ en: 'Effective', ar: 'فعال' })}</th></tr></thead><tbody>{assignments.map(({ user, role }) => <tr key={`${user.user_id}-${role.user_role_id}`}><td data-label={text({ en: 'User', ar: 'المستخدم' })}><strong>{isArabic ? user.full_name_ar || user.full_name_en : user.full_name_en}</strong><small>{user.employee_no}</small></td><td data-label={text({ en: 'Role', ar: 'الدور' })}>{humanize(role.role, language)}</td><td data-label={text({ en: 'Scope', ar: 'النطاق' })}><span className="ui8-role-chip">{humanize(role.scope, language)}</span></td><td data-label={text({ en: 'Scope target', ar: 'هدف النطاق' })}>{role.scope === 'global' ? text({ en: 'Current organization', ar: 'المنظمة الحالية' }) : user.division_name || user.department_name || text({ en: 'Assigned records', ar: 'السجلات المعينة' })}</td><td data-label={text({ en: 'Effective', ar: 'فعال' })}><span className="ui8-status ui8-status--success">{text({ en: 'Active', ar: 'نشط' })}</span></td></tr>)}</tbody></table></div> : <EmptyState icon={<KeyRound />} title={text({ en: 'No assignments visible', ar: 'لا توجد تعيينات ظاهرة' })} message={text({ en: 'No active role assignments were returned for this organization.', ar: 'لم تعد أي تعيينات أدوار نشطة لهذه المنظمة.' })} />}
         </section>
       </div>
@@ -396,7 +396,7 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
         <span className={`ui8-status ui8-status--${statusTone(snapshot?.organization?.is_active ? 'active' : 'inactive')}`}>{snapshot?.organization?.is_active ? text({ en: 'Active', ar: 'نشطة' }) : text({ en: 'Unavailable', ar: 'غير متاحة' })}</span>
       </section>
       <section className="ui8-surface">
-        <div className="ui8-section-heading ui8-section-heading--actions"><div><span>Patch83R</span><h2>{text({ en: 'Division and department structure', ar: 'هيكل القطاعات والإدارات' })}</h2><p>{text({ en: 'Department lifecycle uses archive and restore, dependency preview, and governed import. No hard delete is exposed.', ar: 'تستخدم دورة حياة الإدارة الأرشفة والاستعادة ومعاينة التبعيات والاستيراد المحكوم، ولا يتاح الحذف النهائي.' })}</p></div><button type="button" className="ui8-primary-button" onClick={() => openPage('departments')}><Building2 size={16} />{text({ en: 'Open department controls', ar: 'فتح ضوابط الإدارات' })}</button></div>
+        <div className="ui8-section-heading ui8-section-heading--actions"><div><span>{text({ en: 'Organization structure', ar: 'الهيكل التنظيمي' })}</span><h2>{text({ en: 'Division and department structure', ar: 'هيكل القطاعات والإدارات' })}</h2><p>{text({ en: 'Department lifecycle uses archive and restore, dependency preview, and governed import. No hard delete is exposed.', ar: 'تستخدم دورة حياة الإدارة الأرشفة والاستعادة ومعاينة التبعيات والاستيراد المحكوم، ولا يتاح الحذف النهائي.' })}</p></div><button type="button" className="ui8-primary-button" onClick={() => openPage('departments')}><Building2 size={16} />{text({ en: 'Open department controls', ar: 'فتح ضوابط الإدارات' })}</button></div>
         <div className="ui8-org-tree">
           {(snapshot?.divisions ?? []).map((division) => {
             const departments = departmentsByDivision.get(division.id) ?? [];
@@ -432,8 +432,8 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
     text({ en: 'Integration status', ar: 'حالة التكاملات' }),
     text({ en: 'Secret values and secret editors are intentionally absent.', ar: 'قيم الأسرار ومحررات الأسرار غير معروضة عمداً.' }),
     [
-      { icon: <Database size={19} />, title: text({ en: 'Supabase data boundary', ar: 'حدود بيانات Supabase' }), detail: text({ en: 'Authenticated organization-scoped reads through RLS.', ar: 'قراءات مصادق عليها ومقيدة بالمنظمة عبر RLS.' }), state: snapshot ? 'connected' : 'disabled_with_reason', reason: snapshot ? undefined : text({ en: 'No authenticated governed response is available.', ar: 'لا توجد استجابة محكومة مصادق عليها.' }) },
-      { icon: <ShieldCheck size={19} />, title: 'Patch83U Edge governance', detail: text({ en: 'Credential capability and bootstrap contract.', ar: 'عقد قدرات بيانات الاعتماد والتهيئة.' }), state: patch83uConnected ? 'connected' : 'disabled_with_reason', reason: patch83uConnected ? undefined : text({ en: 'The current build/session did not establish the capability contract.', ar: 'لم يثبت الإصدار أو الجلسة الحالية عقد القدرات.' }) },
+      { icon: <Database size={19} />, title: text({ en: 'Governed data boundary', ar: 'حدود البيانات المحكومة' }), detail: text({ en: 'Authenticated organization-scoped access controls.', ar: 'ضوابط وصول مصادق عليها ومقيدة بالمنظمة.' }), state: snapshot ? 'connected' : 'disabled_with_reason', reason: snapshot ? undefined : text({ en: 'No authenticated governed response is available.', ar: 'لا توجد استجابة محكومة مصادق عليها.' }) },
+      { icon: <ShieldCheck size={19} />, title: text({ en: 'Credential governance', ar: 'حوكمة بيانات الاعتماد' }), detail: text({ en: 'Protected credential controls and secure session setup.', ar: 'ضوابط بيانات الاعتماد المحمية وتهيئة الجلسة الآمنة.' }), state: patch83uConnected ? 'connected' : 'disabled_with_reason', reason: patch83uConnected ? undefined : text({ en: 'The current session did not establish the protected credential controls.', ar: 'لم تثبت الجلسة الحالية ضوابط بيانات الاعتماد المحمية.' }) },
       { icon: <Network size={19} />, title: text({ en: 'External provider administration', ar: 'إدارة المزودات الخارجية' }), detail: text({ en: 'No governed secret-management workflow exists in this release.', ar: 'لا يوجد مسار محكوم لإدارة الأسرار في هذا الإصدار.' }), state: 'disabled_with_reason', reason: text({ en: 'Provider credentials cannot be viewed or edited in the browser.', ar: 'لا يمكن عرض بيانات اعتماد المزود أو تعديلها في المتصفح.' }) },
     ],
   );
@@ -444,7 +444,7 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
     text({ en: 'System settings', ar: 'إعدادات النظام' }),
     text({ en: 'Only settings backed by a governed runtime contract may be changed here.', ar: 'لا يمكن تغيير إلا الإعدادات المدعومة بعقد تشغيل محكوم.' }),
     [
-      { icon: <ShieldCheck size={19} />, title: 'VITE_PATCH83U_CREDENTIAL_GOVERNANCE_ENABLED', detail: patch83uEnabled ? text({ en: 'Enabled in the current build.', ar: 'مفعل في الإصدار الحالي.' }) : text({ en: 'Disabled in the current build.', ar: 'غير مفعل في الإصدار الحالي.' }), state: 'not_applicable', reason: text({ en: 'Build-time configuration is read-only and is not a runtime Admin toggle.', ar: 'إعداد وقت البناء للقراءة فقط وليس مفتاح إدارة أثناء التشغيل.' }) },
+      { icon: <ShieldCheck size={19} />, title: text({ en: 'Credential governance', ar: 'حوكمة بيانات الاعتماد' }), detail: patch83uEnabled ? text({ en: 'Protected credential controls are enabled.', ar: 'ضوابط بيانات الاعتماد المحمية مفعلة.' }) : text({ en: 'Protected credential controls are unavailable.', ar: 'ضوابط بيانات الاعتماد المحمية غير متاحة.' }), state: 'not_applicable', reason: text({ en: 'This security setting is managed through the governed deployment process.', ar: 'تتم إدارة إعداد الأمان هذا من خلال عملية النشر المحكومة.' }) },
       { icon: <KeyRound size={19} />, title: text({ en: 'Employee ID sign-in', ar: 'تسجيل الدخول برقم الموظف' }), detail: text({ en: 'Normalization remains part of the authoritative authentication flow.', ar: 'تظل المعالجة جزءاً من مسار المصادقة المعتمد.' }), state: 'not_applicable', reason: text({ en: 'Authentication policy cannot be changed from this page.', ar: 'لا يمكن تغيير سياسة المصادقة من هذه الصفحة.' }) },
       { icon: <Settings2 size={19} />, title: text({ en: 'Mutable application settings', ar: 'إعدادات التطبيق القابلة للتغيير' }), detail: text({ en: 'No audited organization configuration contract is available in this release.', ar: 'لا يتوفر عقد إعدادات منظمة مدقق في هذا الإصدار.' }), state: 'disabled_with_reason', reason: text({ en: 'A frontend-only setting would not be authoritative or auditable.', ar: 'الإعداد المحفوظ في الواجهة فقط لن يكون معتمداً أو قابلاً للتدقيق.' }) },
     ],
@@ -464,7 +464,7 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
   const renderAudit = () => (
     <div className="ui8-view" data-testid="ui8-admin-audit">
       <section className="ui8-surface">
-        <div className="ui8-section-heading ui8-section-heading--actions"><div><span>{text({ en: 'Auditable administration', ar: 'إدارة قابلة للتدقيق' })}</span><h2>{text({ en: 'Administrative history', ar: 'السجل الإداري' })}</h2><p>{text({ en: 'This surface displays the trusted user-management audit source only.', ar: 'يعرض هذا السطح مصدر تدقيق إدارة المستخدمين الموثوق فقط.' })}</p></div>{permissions.canOpenSafetyConsole ? <button type="button" className="ui8-secondary-button" onClick={() => openPage('adminSafety')}><ShieldCheck size={16} />{text({ en: 'Open safety console', ar: 'فتح وحدة السلامة' })}</button> : <StateChip state="permission_gated" label={actionLabel('permission_gated')} />}</div>
+        <div className="ui8-section-heading"><div><span>{text({ en: 'Auditable administration', ar: 'إدارة قابلة للتدقيق' })}</span><h2>{text({ en: 'Administrative history', ar: 'السجل الإداري' })}</h2><p>{text({ en: 'This surface displays the trusted user-management audit source only.', ar: 'يعرض هذا السطح مصدر تدقيق إدارة المستخدمين الموثوق فقط.' })}</p></div></div>
         {(snapshot?.audit.length ?? 0) > 0 ? <div className="ui8-timeline">{snapshot!.audit.map((event) => <article key={event.id}><span><FileClock size={16} /></span><div><header><strong>{auditActionLabel(event.action, language)}</strong><time>{formatDate(event.created_at)}</time></header><p>{event.reason || text({ en: 'No rationale recorded', ar: 'لم يسجل مبرر' })}</p><small>{event.linked_record_count} {text({ en: 'linked records', ar: 'سجلات مرتبطة' })}</small></div></article>)}</div> : <EmptyState icon={<History />} title={text({ en: 'No administrative history', ar: 'لا يوجد سجل إداري' })} message={text({ en: 'No trusted user-management audit rows are visible for this scope.', ar: 'لا توجد صفوف تدقيق موثوقة لإدارة المستخدمين ظاهرة لهذا النطاق.' })} />}
       </section>
     </div>
@@ -473,10 +473,10 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
   const renderData = () => (
     <div className="ui8-view" data-testid="ui8-admin-data">
       <section className="ui8-surface">
-        <div className="ui8-section-heading"><div><span>Patch83M / O / S / T</span><h2>{text({ en: 'Controlled import and onboarding', ar: 'الاستيراد والتهيئة المنضبطان' })}</h2><p>{text({ en: 'Preview, validation, duplicate detection, scope checks, and fail-closed execution remain in the established workflows.', ar: 'تظل المعاينة والتحقق واكتشاف التكرار وفحوص النطاق والتنفيذ المغلق عند الفشل ضمن المسارات المعتمدة.' })}</p></div></div>
+        <div className="ui8-section-heading"><div><span>{text({ en: 'Governed workflows', ar: 'مسارات العمل المحكومة' })}</span><h2>{text({ en: 'Controlled import and onboarding', ar: 'الاستيراد والتهيئة المنضبطان' })}</h2><p>{text({ en: 'Preview, validation, duplicate detection, scope checks, and fail-closed execution remain in the established workflows.', ar: 'تظل المعاينة والتحقق واكتشاف التكرار وفحوص النطاق والتنفيذ المغلق عند الفشل ضمن المسارات المعتمدة.' })}</p></div></div>
         <div className="ui8-data-grid">
-          <article><span><Users size={20} /></span><div><StateChip state={ui8Actionability(true, permissions.canManageUsers)} label={actionLabel(ui8Actionability(true, permissions.canManageUsers))} /><h3>{text({ en: 'User onboarding', ar: 'تهيئة المستخدمين' })}</h3><p>{text({ en: 'Patch83T Excel preview and protected provisioning queue. No browser-side Auth creation.', ar: 'معاينة Excel وفق Patch83T وقائمة التزويد المحمية، دون إنشاء هوية مصادقة من المتصفح.' })}</p><ul><li>{text({ en: 'Dry-run and validation', ar: 'معاينة والتحقق' })}</li><li>{text({ en: 'Role and department mapping', ar: 'ربط الأدوار والإدارات' })}</li><li>{text({ en: 'Explicit execution confirmation', ar: 'تأكيد صريح للتنفيذ' })}</li></ul><button type="button" onClick={() => openPage('admin')} disabled={!permissions.canManageUsers}><UploadCloud size={16} />{text({ en: 'Open user import', ar: 'فتح استيراد المستخدمين' })}</button></div></article>
-          <article><span><Building2 size={20} /></span><div><StateChip state={ui8Actionability(true, permissions.canManageStructure)} label={actionLabel(ui8Actionability(true, permissions.canManageStructure))} /><h3>{text({ en: 'Department import', ar: 'استيراد الإدارات' })}</h3><p>{text({ en: 'Patch83R lifecycle and governed department workbook execution.', ar: 'دورة حياة Patch83R وتنفيذ ملف الإدارات المحكوم.' })}</p><ul><li>{text({ en: 'Organization-scoped validation', ar: 'تحقق مقيد بالمنظمة' })}</li><li>{text({ en: 'Active and archived reference checks', ar: 'فحص المراجع النشطة والمؤرشفة' })}</li><li>{text({ en: 'No hard delete', ar: 'لا يوجد حذف نهائي' })}</li></ul><button type="button" onClick={() => openPage('departments')} disabled={!permissions.canManageStructure}><FileSpreadsheet size={16} />{text({ en: 'Open department import', ar: 'فتح استيراد الإدارات' })}</button></div></article>
+          <article><span><Users size={20} /></span><div><StateChip state={ui8Actionability(true, permissions.canManageUsers)} label={actionLabel(ui8Actionability(true, permissions.canManageUsers))} /><h3>{text({ en: 'User onboarding', ar: 'تهيئة المستخدمين' })}</h3><p>{text({ en: 'Validated workbook preview and protected provisioning queue. No browser-side identity creation.', ar: 'معاينة ملف متحقق منه وقائمة تزويد محمية، دون إنشاء هوية من المتصفح.' })}</p><ul><li>{text({ en: 'Dry-run and validation', ar: 'معاينة والتحقق' })}</li><li>{text({ en: 'Role and department mapping', ar: 'ربط الأدوار والإدارات' })}</li><li>{text({ en: 'Explicit execution confirmation', ar: 'تأكيد صريح للتنفيذ' })}</li></ul><button type="button" onClick={() => openPage('admin')} disabled={!permissions.canManageUsers}><UploadCloud size={16} />{text({ en: 'Open user import', ar: 'فتح استيراد المستخدمين' })}</button></div></article>
+          <article><span><Building2 size={20} /></span><div><StateChip state={ui8Actionability(true, permissions.canManageStructure)} label={actionLabel(ui8Actionability(true, permissions.canManageStructure))} /><h3>{text({ en: 'Department import', ar: 'استيراد الإدارات' })}</h3><p>{text({ en: 'Governed department lifecycle and workbook execution.', ar: 'دورة حياة محكومة للإدارات وتنفيذ ملف العمل.' })}</p><ul><li>{text({ en: 'Organization-scoped validation', ar: 'تحقق مقيد بالمنظمة' })}</li><li>{text({ en: 'Active and archived reference checks', ar: 'فحص المراجع النشطة والمؤرشفة' })}</li><li>{text({ en: 'No hard delete', ar: 'لا يوجد حذف نهائي' })}</li></ul><button type="button" onClick={() => openPage('departments')} disabled={!permissions.canManageStructure}><FileSpreadsheet size={16} />{text({ en: 'Open department import', ar: 'فتح استيراد الإدارات' })}</button></div></article>
         </div>
       </section>
     </div>
@@ -520,7 +520,7 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
         <div>
           <span>{text({ en: 'Administration / Governed control plane', ar: 'الإدارة / مستوى تحكم محكوم' })}</span>
           <h1>{text({ en: 'Administration', ar: 'الإدارة' })}</h1>
-          <p>{text({ en: 'Organization-scoped users, authority, structure, onboarding, and system posture.', ar: 'المستخدمون والصلاحيات والهيكل والتهيئة ووضع النظام ضمن نطاق المنظمة.' })}</p>
+          <p>{text({ en: 'Organization-scoped users, authority, structure, onboarding, and audit activity.', ar: 'المستخدمون والصلاحيات والهيكل والتهيئة والنشاط التدقيقي ضمن نطاق المنظمة.' })}</p>
         </div>
         <div className="ui8-header-actions">
           <div><small>{text({ en: 'Signed-in authority', ar: 'صلاحية المستخدم الحالي' })}</small><strong>{humanize(auth.primaryRole, language)}</strong></div>
@@ -529,7 +529,7 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
       </header>
 
       <nav className="ui8-tabs" aria-label={text({ en: 'Administration views', ar: 'أقسام الإدارة' })}>
-        {UI8_ADMIN_VIEWS.map((item) => <button type="button" key={item} className={view === item ? 'active' : undefined} aria-current={view === item ? 'page' : undefined} onClick={() => setView(item)}>{VIEW_ICONS[item]}<span>{text(VIEW_COPY[item])}</span></button>)}
+        {UI8_VISIBLE_ADMIN_VIEWS.map((item) => <button type="button" key={item} className={view === item ? 'active' : undefined} aria-current={view === item ? 'page' : undefined} onClick={() => setView(item)}>{VIEW_ICONS[item]}<span>{text(VIEW_COPY[item])}</span></button>)}
       </nav>
 
       {snapshot?.messages.length ? <details className="ui8-data-notice"><summary>{text({ en: 'Some governed sources are unavailable', ar: 'بعض المصادر المحكومة غير متاحة' })}</summary><ul>{snapshot.messages.map((message) => <li key={message}>{isArabic ? 'تعذر تحميل أحد مصادر البيانات المحكومة لهذا النطاق.' : message}</li>)}</ul></details> : null}

@@ -176,7 +176,7 @@ export function HospitalGovernanceCenter() {
         </div>
       </section>
 
-      <DataState loading={loading} empty={!loading && !hasAnyData} emptyTitle="No hospital governance records are visible yet" emptyMessage={messages[0] ?? 'Create hospital governance records or apply the Patch 39 migration to load live registers.'}>
+      <DataState loading={loading} empty={!loading && !hasAnyData} emptyTitle="No hospital governance records are visible yet" emptyMessage={messages[0] ?? 'No governed hospital records are available for the current scope.'}>
         <div className="kpi-grid">
           <KpiTile label="Open infection control" value={summaryRow.open_infection_control_count ?? infectionOpenRows.length} tone={infectionOpenRows.length > 0 ? 'warning' : 'good'} />
           <KpiTile label="Off-target indicators" value={summaryRow.off_target_indicator_count ?? offTargetRows.length} tone={offTargetRows.length > 0 ? 'warning' : 'good'} />

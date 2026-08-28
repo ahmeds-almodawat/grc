@@ -164,7 +164,7 @@ export function Dashboard({ setPage }: DashboardProps) {
     <section className="page-section grc-dashboard grc-dashboard--home">
       <EmptySupabaseNotice />
       <header className="grc-dashboard-intro">
-        <ModuleHeader eyebrow={t('dashboard.v11.eyebrow', 'Executive command center')} title={t('dashboard.v11.title', 'Governance performance and strategic delivery')} subtitle={t('dashboard.v11.subtitle', 'Privacy-safe OVR analytics and role-scoped operational intelligence.')} />
+        <ModuleHeader eyebrow={t('dashboard.v11.eyebrow', 'Executive overview')} title={t('dashboard.v11.title', 'Governance performance and strategic delivery')} subtitle={t('dashboard.v11.subtitle', 'Privacy-safe OVR analytics and role-scoped operational intelligence.')} />
         <ControlledPilotBanner compact />
       </header>
       <DashboardFilters filters={filters} departments={departments} onChange={changeFilters} onReset={resetFilters} t={t} />
