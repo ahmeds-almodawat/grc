@@ -50,7 +50,7 @@ describe('Patch 83U Employee Arabic localization contract', () => {
     expect(translations).toContain("'navTree.item.myWork': { en: 'My Work', ar: 'أعمالي' }");
     expect(translations).toContain("'navTree.item.ovr': { en: 'OVR / Incidents', ar: 'بلاغات OVR / الحوادث' }");
     expect(translations).toContain("'status.queued': { en: 'Queued', ar: 'قيد الانتظار' }");
-    expect(layout).toContain('t(`navTree.item.${item.key}`, item.label)');
+    expect(layout).toContain('t(item.labelKey ?? `navTree.item.${item.key}`, item.label)');
     expect(layout).toContain('t(`role.${auth.primaryRole}`');
     expect(layout).not.toContain('language === "ar" ? "خروج" : "Sign out"');
   });
