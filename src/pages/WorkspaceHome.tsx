@@ -1,20 +1,15 @@
 import type { ReactNode } from 'react';
 import {
   ArrowRight,
-  Bug,
   ClipboardList,
-  Download,
   FileCheck2,
   FolderKanban,
   Hospital,
   KeyRound,
   Landmark,
-  BookCopy,
   Search,
   ShieldAlert,
-  SlidersHorizontal,
   UserCheck,
-  WandSparkles,
 } from 'lucide-react';
 import type { PageKey } from '../components/Layout';
 import { ControlledPilotBanner } from '../components/ControlledPilotBanner';
@@ -26,7 +21,7 @@ import {
 } from '../auth/authAccess';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { getPilotUiCounts } from '../lib/grcApi';
-import { isScenarioLabEnabled } from '../lib/scenarioLab';
+import { isPageVisibleOnSurface } from '../routes/pageSurfaceRegistry';
 
 interface WorkspaceHomeProps {
   setPage: (page: PageKey) => void;
@@ -50,87 +45,54 @@ export function WorkspaceHome({ setPage }: WorkspaceHomeProps) {
   const organizationName = auth.profile?.organizationName;
   const isExternalPilot = isExternalPilotOrganization(organizationName);
   const canOpen = (page: PageKey) => canAccessPageForUser(page, auth.roles, organizationName);
-  const hasRole = (...roles: string[]) => auth.roles.some(assignment => roles.includes(assignment.role));
   const countLabel = (value: number | null | undefined) => (
     typeof value === 'number' ? String(value) : t('common.notConfigured')
   );
 
   const cards: ModuleCard[] = [
     {
-      key: 'governance',
-      page: 'governance',
-      icon: <Landmark size={22} />,
-      title: t('home.module.governance', 'Governance Hub'),
-      description: t('home.module.governance.desc', 'Review governed documents, lifecycle health, decisions, and ownership.'),
-      tone: 'navy',
-    },
-    {
-      key: 'policies',
-      page: 'documents',
-      icon: <FolderKanban size={22} />,
-      title: t('home.module.policies', 'Policy Register'),
-      description: t('home.module.policies.desc', 'Open institutional policy records, versions, requirements, and reviews.'),
+      key: 'my-work',
+      page: 'myWork',
+      icon: <UserCheck size={22} />,
+      title: t('home.module.myWork'),
+      description: t('home.module.myWork.desc'),
       tone: 'blue',
     },
     {
-      key: 'sops',
-      page: 'sops',
-      icon: <BookCopy size={22} />,
-      title: t('home.module.sops', 'SOP Register'),
-      description: t('home.module.sops.desc', 'Open governed procedures, steps, controls, records, and training obligations.'),
+      key: 'approvals',
+      page: 'approvals',
+      icon: <ClipboardList size={22} />,
+      title: t('nav.approvals', 'Approvals'),
+      description: t('hub.tab.approvals.desc', 'Pending decisions and approval trail'),
       tone: 'green',
     },
     {
-      key: 'ovr',
-      page: 'ovr',
-      icon: <Hospital size={22} />,
-      title: t('home.module.ovr'),
-      description: t('home.module.ovr.desc'),
-      metric: counts.data?.ovrReports,
-      metricLabel: typeof counts.data?.openOvrReports === 'number'
-        ? `${counts.data.openOvrReports} ${t('home.metric.open')}`
-        : t('common.notConfigured'),
-      tone: 'red',
-    },
-    ...(hasRole('employee', 'task_owner', 'milestone_owner', 'project_owner', 'department_manager', 'division_head') || isExternalPilot
-      ? [{
-          key: 'my-work',
-          page: 'myWork' as PageKey,
-          icon: <UserCheck size={22} />,
-          title: t('home.module.myWork'),
-          description: t('home.module.myWork.desc'),
-          tone: 'blue' as const,
-        }]
-      : []),
-    {
-      key: 'risks',
-      page: 'risks',
-      icon: <ShieldAlert size={22} />,
-      title: t('home.module.risks'),
-      description: t('home.module.risks.desc'),
+      key: 'governance',
+      page: 'grcHub',
+      icon: <Landmark size={22} />,
+      title: t('home.module.governance', 'Governance Hub'),
+      description: t('home.module.governance.desc', 'Review governed documents, lifecycle health, decisions, and ownership.'),
       metric: counts.data?.risks,
       metricLabel: t('home.metric.records'),
-      tone: 'purple',
-    },
-    {
-      key: 'controls',
-      page: 'risks',
-      icon: <SlidersHorizontal size={22} />,
-      title: t('home.module.controls'),
-      description: t('home.module.controls.desc'),
-      metric: counts.data?.activeControls,
-      metricLabel: t('home.metric.active'),
       tone: 'navy',
     },
     {
-      key: 'evidence',
-      page: 'evidence',
-      icon: <FileCheck2 size={22} />,
-      title: t('home.module.evidence'),
-      description: t('home.module.evidence.desc'),
-      metric: counts.data?.evidenceItems,
-      metricLabel: t('home.metric.items'),
-      tone: 'green',
+      key: 'quality',
+      page: 'qualityHub',
+      icon: <Hospital size={22} />,
+      title: t('nav.qualitySafety', 'Quality & Safety'),
+      description: t('nav.qualitySafety.hint', 'OVR, quality, safety and risk'),
+      metric: counts.data?.openOvrReports,
+      metricLabel: t('home.metric.openOvr'),
+      tone: 'red',
+    },
+    {
+      key: 'accreditation',
+      page: 'accreditationHub',
+      icon: <ShieldAlert size={22} />,
+      title: t('nav.accreditation', 'Accreditation'),
+      description: t('nav.accreditation.hint', 'Survey readiness and standards'),
+      tone: 'purple',
     },
     {
       key: 'projects',
@@ -143,12 +105,14 @@ export function WorkspaceHome({ setPage }: WorkspaceHomeProps) {
       tone: 'blue',
     },
     {
-      key: 'export-center',
-      page: 'importExport',
-      icon: <Download size={22} />,
-      title: 'Export Center',
-      description: 'Export governed datasets, build report packs and backups, or stage controlled imports.',
-      tone: 'amber',
+      key: 'evidence',
+      page: 'evidence',
+      icon: <FileCheck2 size={22} />,
+      title: t('home.module.evidence'),
+      description: t('home.module.evidence.desc'),
+      metric: counts.data?.evidenceItems,
+      metricLabel: t('home.metric.items'),
+      tone: 'green',
     },
     {
       key: 'reports',
@@ -158,34 +122,26 @@ export function WorkspaceHome({ setPage }: WorkspaceHomeProps) {
       description: t('home.module.reports.desc'),
       tone: 'green',
     },
-    ...(hasRole('auditor')
-      ? [{
-          key: 'audit',
-          page: 'audit' as PageKey,
-          icon: <ClipboardList size={22} />,
-          title: t('home.module.audit'),
-          description: t('home.module.audit.desc'),
-          tone: 'amber' as const,
-        }]
-      : []),
     {
-      key: 'control-pages',
+      key: 'administration',
       page: 'adminHub',
       icon: <KeyRound size={22} />,
-      title: t('home.module.controlPages'),
-      description: t('home.module.controlPages.desc'),
+      title: t('nav.admin', 'Administration'),
+      description: t('nav.admin.hint', 'Users, access, and organization setup'),
       metric: counts.data?.activeProfiles,
       metricLabel: t('home.metric.activeProfiles'),
       tone: 'amber',
     },
   ];
 
-  const visibleCards = cards.filter(card => canOpen(card.page));
-  const showScenarioLab = isScenarioLabEnabled
-    && hasRole('super_admin', 'governance_admin')
-    && canOpen('scenarioTestConsole');
-  const showUatTools = isScenarioLabEnabled && canOpen('uatIssueCapture');
-  const primaryPage: PageKey = canOpen('executiveHub') ? 'executiveHub' : canOpen('myWork') ? 'myWork' : 'ovr';
+  const visibleCards = cards.filter(
+    card => isPageVisibleOnSurface(card.page, 'home') && canOpen(card.page),
+  );
+  const primaryPage: PageKey = canOpen('myWork')
+    ? 'myWork'
+    : canOpen('reportsHub')
+      ? 'reportsHub'
+      : 'ovr';
 
   return (
     <section className="workspace-home">
@@ -259,25 +215,6 @@ export function WorkspaceHome({ setPage }: WorkspaceHomeProps) {
         ))}
       </div>
 
-      {showUatTools ? (
-        <div className="panel uat-tools-panel">
-          <div>
-            <p className="eyebrow">{t('nav.uatTools')}</p>
-            <h3>{t('home.uat.title')}</h3>
-            <p>{t('home.uat.desc')}</p>
-          </div>
-          <div className="uat-tools-panel__actions">
-            <button className="secondary-action" type="button" onClick={() => setPage('uatIssueCapture')}>
-              <Bug size={17} /> {t('nav.uatIssueCapture')}
-            </button>
-            {showScenarioLab ? (
-              <button className="secondary-action" type="button" onClick={() => setPage('scenarioTestConsole')}>
-                <WandSparkles size={17} /> {t('nav.scenarioLab')}
-              </button>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
     </section>
   );
 }

@@ -106,11 +106,11 @@ export function DashboardWidgetState({ state, message, onRetry }: { state: Dashb
 }
 
 function PrivacySuppressionNotice({ minimumCellSize, t }: { minimumCellSize: number; t: Translate }) {
-  return <div className="grc-safe-trend__privacy-note" role="status">
+  const detail = t('dashboard.v11.privacySuppressionDetail', 'Exact values remain hidden to protect confidentiality.');
+  return <div className="grc-safe-trend__privacy-note" role="status" title={detail} aria-label={`${t('dashboard.v11.privacyProtected', 'Privacy protected')}: <${minimumCellSize}. ${detail}`}>
     <span className="grc-safe-trend__privacy-icon" aria-hidden="true"><LockKeyhole size={14} /></span>
     <span className="grc-safe-trend__privacy-copy">
-      <span><strong>{t('dashboard.v11.privacyProtected', 'Privacy protected')}</strong><b>{`<${minimumCellSize} ${t('dashboard.v11.reports', 'reports')}`}</b></span>
-      <small>{t('dashboard.v11.privacySuppressionDetail', 'Exact values are suppressed to protect confidentiality.')}</small>
+      <span><strong>{`<${minimumCellSize}`}</strong><b>{t('dashboard.v11.privacyProtected', 'Privacy protected')}</b></span>
     </span>
   </div>;
 }
@@ -202,7 +202,7 @@ export function PrivacySafeTrend({ data, t }: { data: OvrExecutiveTrendAnalytics
   return <div className="grc-safe-trend" aria-label={t('dashboard.v11.performanceTrend', 'GRC performance trend')}>
     {hasSuppression ? <PrivacySuppressionNotice minimumCellSize={minimumCellSize} t={t} /> : null}
     <div className="grc-safe-trend__chart">
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={t('dashboard.v11.trendHint', 'Fixed 12-month privacy-safe daily snapshot; no raw OVR drill-down entitlement is implied.')}>
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={t('dashboard.v11.trendHint', '12-month organization summary; dashboard filters do not apply.')}>
         {[0, 0.25, 0.5, 0.75, 1].map(level => <line className="grc-safe-trend__grid" x1={plot.left} x2={width - plot.right} y1={plot.top + plotHeight * level} y2={plot.top + plotHeight * level} key={level} />)}
         {data.buckets.map((bucket, index) => <text className="grc-safe-trend__month" x={xAt(index)} y={height - 12} textAnchor="middle" key={bucket.bucket_key}>{monthLabel.format(new Date(`${bucket.bucket_key}-01T12:00:00`))}</text>)}
         {visibleSeries.newReports ? renderSeries(newPoints, 'is-new', t('dashboard.v11.newReports', 'New reports')) : null}
@@ -213,7 +213,7 @@ export function PrivacySafeTrend({ data, t }: { data: OvrExecutiveTrendAnalytics
     <div className="grc-safe-trend__legend">
       <button type="button" className={visibleSeries.newReports ? 'is-active' : ''} aria-pressed={visibleSeries.newReports} onClick={() => toggleSeries('newReports')}><i className="is-new" />{t('dashboard.v11.newReports', 'New reports')}</button>
       <button type="button" className={visibleSeries.closedReports ? 'is-active' : ''} aria-pressed={visibleSeries.closedReports} onClick={() => toggleSeries('closedReports')}><i className="is-closed" />{t('dashboard.v11.closedReports', 'Closed reports')}</button>
-      <span><LockKeyhole size={13} />{t('dashboard.v11.bandedValues', 'Daily privacy-safe bands')}</span>
+      <span><LockKeyhole size={13} />{t('dashboard.v11.bandedValues', 'Protected daily bands')}</span>
     </div>
   </div>;
 }

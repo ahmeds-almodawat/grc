@@ -1321,7 +1321,7 @@ export function UserManagementCenter() {
         <div className="notice-banner">
           {blockedLifecycleCount} user account
           {blockedLifecycleCount === 1 ? "" : "s"} marked inactive, archived, or
-          locked. Patch 19 keeps login recovery separate from lifecycle status;
+          locked. Login recovery remains separate from lifecycle status;
           review assignments, workflow ownership, and signoffs before
           reactivation or reassignment.
         </div>
@@ -1711,7 +1711,7 @@ export function UserManagementCenter() {
                         {!user.credential_proof_available
                           ? "Protected Auth identity unavailable"
                           : user.managed_identity
-                            ? user.synthetic_auth_email ?? "Missing synthetic Auth email"
+                            ? user.synthetic_auth_email ?? "Missing managed sign-in identity"
                             : user.identity_mode === "legacy_verified"
                               ? `Legacy profile Employee reference: ${user.employee_no ?? "Not provided"}`
                               : "Credential reconciliation required"}
@@ -2629,7 +2629,7 @@ export function UserManagementCenter() {
               <strong>{resetUser.full_name_en}</strong>
               <p className="muted">Employee ID: {resetUser.employee_no ?? "Missing"}</p>
               <p className="muted">
-                {resetUser.managed_identity ? "Synthetic Auth email" : "Auth email"}: {resetUser.synthetic_auth_email ?? resetUser.auth_email ?? "Unavailable"}
+                {resetUser.managed_identity ? "Managed sign-in identity" : "Auth email"}: {resetUser.synthetic_auth_email ?? resetUser.auth_email ?? "Unavailable"}
               </p>
             </div>
             <label className="field">

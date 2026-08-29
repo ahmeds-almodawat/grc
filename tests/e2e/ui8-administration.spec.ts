@@ -58,11 +58,17 @@ test.describe('UI-8 governed Administration', () => {
     server = null;
   });
 
-  test('covers the complete 15-series in light, dark, responsive and RTL states', async ({ page }, testInfo) => {
+  test('covers the business administration surface in light, dark, responsive and RTL states', async ({ page }, testInfo) => {
     const { backend, fixture } = await prepare(page);
     await page.setViewportSize({ width: 1440, height: 1000 });
     await openAdministration(page);
     await expect(page.getByText('Total users').locator('..')).toContainText('11');
+    const accessAttention = page.getByTestId('ui8-admin-overview').locator('section.ui8-surface').filter({
+      has: page.getByRole('heading', { name: 'Access attention' }),
+    });
+    await expect(accessAttention).toContainText('Locked user access');
+    await expect(accessAttention).toContainText('1 to review');
+    await expect(accessAttention.getByText('Pass', { exact: true })).toHaveCount(0);
     await expect(page.getByText('Recent administrative activity')).toBeVisible();
     await noOverflow(page);
     await capture(page, testInfo, '01-admin-overview-light-1440');
@@ -134,33 +140,24 @@ test.describe('UI-8 governed Administration', () => {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.locator('.topbar-language').click();
 
-    await tab(page, 'Integrations', 'ui8-admin-integrations');
-    await expect(page.getByText('External provider administration')).toBeVisible();
-    await expect(page.locator('[data-actionability="disabled_with_reason"]').first()).toBeVisible();
-    await capture(page, testInfo, '15-integrations-safe-metadata');
-    await tab(page, 'System Settings', 'ui8-admin-settings');
-    await expect(page.getByText('Build-time configuration is read-only and is not a runtime Admin toggle.')).toBeVisible();
-    await capture(page, testInfo, '16-system-settings-read-only');
-    await tab(page, 'Notifications', 'ui8-admin-notifications');
-    await expect(page.getByText('System notification policy')).toBeVisible();
-    await capture(page, testInfo, '17-notifications-disabled-reason');
+    const adminNavigation = page.getByRole('navigation', { name: 'Administration views' });
+    for (const hiddenTechnicalView of ['Integrations', 'System Settings', 'Notifications', 'System Information']) {
+      await expect(adminNavigation.getByRole('button', { name: hiddenTechnicalView, exact: true })).toHaveCount(0);
+    }
     await tab(page, 'Audit Logs', 'ui8-admin-audit');
     await expect(page.getByText('Credential Provisioning Prepared', { exact: true })).toBeVisible();
-    await capture(page, testInfo, '18-administrative-history');
+    await capture(page, testInfo, '15-administrative-history');
     await tab(page, 'Data Management', 'ui8-admin-data');
     await expect(page.getByText('User onboarding')).toBeVisible();
     await expect(page.getByText('Dry-run and validation')).toBeVisible();
-    await capture(page, testInfo, '19-controlled-import-onboarding');
+    await capture(page, testInfo, '16-controlled-import-onboarding');
     await page.getByRole('combobox', { name: 'Appearance theme' }).selectOption('dark');
-    await capture(page, testInfo, '20-controlled-import-dark');
+    await capture(page, testInfo, '17-controlled-import-dark');
     await page.getByRole('combobox', { name: 'Appearance theme' }).selectOption('light');
-    await tab(page, 'System Information', 'ui8-admin-system');
-    await expect(page.getByText('216_ui7_my_work_training_read_contract.sql')).toBeVisible();
-    await capture(page, testInfo, '21-system-information');
 
     await page.getByRole('navigation', { name: 'Administration views' }).getByRole('button', { name: 'System Overview' }).focus();
     await expect(page.getByRole('navigation', { name: 'Administration views' }).getByRole('button', { name: 'System Overview' })).toBeFocused();
-    await capture(page, testInfo, '22-keyboard-focus');
+    await capture(page, testInfo, '18-keyboard-focus');
 
     await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.admin}`);
     await expect(page.getByText('Maha Al Harbi', { exact: true })).toBeVisible();
@@ -191,14 +188,15 @@ test.describe('UI-8 governed Administration', () => {
     expect(body).not.toMatch(/service[- ]role|refresh token|access token|jwt signing|database password/i);
   });
 
-  test('governance admin remains action-scoped and safety controls stay permission-gated', async ({ page }, testInfo) => {
+  test('governance admin retains audit history without technical safety-console discovery', async ({ page }, testInfo) => {
     const { backend } = await prepare(page, 'governance_admin');
     await page.setViewportSize({ width: 1440, height: 1000 });
     await openAdministration(page);
     await tab(page, 'Audit Logs', 'ui8-admin-audit');
-    await expect(page.getByText('Permission-gated')).toBeVisible();
+    await expect(page.getByText('Credential Provisioning Prepared', { exact: true })).toBeVisible();
+    await expect(page.getByText('Permission-gated')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Open safety console' })).toHaveCount(0);
-    await capture(page, testInfo, '23-governance-admin-permission-gate');
+    await capture(page, testInfo, '19-governance-admin-audit-history');
     expect(backend.proof.writeRequests).toEqual([]);
   });
 
@@ -208,7 +206,7 @@ test.describe('UI-8 governed Administration', () => {
     await page.goto(`${baseUrl}/?page=${PAGE_LOCATION_REGISTRY.adminHub}`);
     await expect(page.getByTestId('ui8-administration-center')).toHaveCount(0);
     await expect(page).toHaveURL(new RegExp(`[?&]page=${PAGE_LOCATION_REGISTRY.home}`));
-    await capture(page, testInfo, '24-viewer-admin-route-denied');
+    await capture(page, testInfo, '20-viewer-admin-route-denied');
     expect(backend.proof.writeRequests).toEqual([]);
   });
 });

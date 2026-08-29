@@ -34,6 +34,25 @@ export const UI8_ADMIN_VIEWS: readonly Ui8AdminView[] = [
   'system',
 ];
 
+export type Ui8AdminViewVisibility = 'visible' | 'technical_hidden';
+
+export const UI8_ADMIN_VIEW_VISIBILITY: Readonly<Record<Ui8AdminView, Ui8AdminViewVisibility>> = {
+  overview: 'visible',
+  users: 'visible',
+  roles: 'visible',
+  organization: 'visible',
+  integrations: 'technical_hidden',
+  settings: 'technical_hidden',
+  notifications: 'technical_hidden',
+  audit: 'visible',
+  data: 'visible',
+  system: 'technical_hidden',
+};
+
+export const UI8_VISIBLE_ADMIN_VIEWS: readonly Ui8AdminView[] = UI8_ADMIN_VIEWS.filter(
+  (view) => UI8_ADMIN_VIEW_VISIBILITY[view] === 'visible',
+);
+
 export interface Ui8RoleDefinition {
   role: AuthRole;
   allowedScopes: readonly AccessScope[];
@@ -118,4 +137,3 @@ export function isUi8RoleScopeValid(role: AuthRole, scope: AccessScope): boolean
 export function activeUserRoles(user: UserManagementUserRow) {
   return user.roles.filter((assignment) => assignment.is_active);
 }
-

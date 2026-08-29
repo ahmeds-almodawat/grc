@@ -40,8 +40,10 @@ test.describe('HF-1-R2 privacy suppression dashboard UX', () => {
       const openOvr = page.locator('.grc-metric-card').filter({ hasText: 'Open OVR' });
       await expect(dashboard).toBeVisible();
       await expect(openOvr.locator('.grc-metric-card__value')).toHaveText('<5');
-      await expect(trend.locator('.grc-safe-trend__privacy-note')).toContainText('Privacy protected');
-      await expect(trend.locator('.grc-safe-trend__privacy-note')).toContainText('<5 reports');
+      const privacyNotice = trend.locator('.grc-safe-trend__privacy-note');
+      await expect(privacyNotice).toHaveText('<5Privacy protected');
+      await expect(privacyNotice).toHaveAttribute('title', 'Exact values remain hidden to protect confidentiality.');
+      await expect(privacyNotice).not.toContainText('Exact values');
       await expect(trend.locator('.grc-safe-trend__range[aria-label="New reports, 2025-09: 0"]')).toHaveCount(1);
       await expect(trend.locator('.grc-safe-trend__range[aria-label*="2025-10:"]')).toHaveCount(0);
       await expect(trend.getByText('3', { exact: true })).toHaveCount(0);

@@ -63,6 +63,10 @@ import {
   type PageKey,
   type PageNavigator,
 } from "../routes/pageLocation";
+import {
+  isPageVisibleOnSurface,
+  pageVisibility,
+} from "../routes/pageSurfaceRegistry";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 
 export type { PageKey, PageNavigator } from "../routes/pageLocation";
@@ -83,6 +87,7 @@ interface NavItem {
 interface NavTreeItem {
   key: PageKey;
   label: string;
+  labelKey?: string;
   icon: ReactNode;
   hint?: string;
 }
@@ -182,7 +187,9 @@ const uatLinks: NavItem[] = isScenarioLabEnabled
     ]
   : [];
 
-const navTree: NavTreeGroup[] = [
+// Preserved as the pre-rationalization discovery snapshot for evidence and
+// regression metrics. It is no longer rendered.
+export const legacyNavigationTree: NavTreeGroup[] = [
   {
     id: "home",
     label: "Home",
@@ -517,6 +524,95 @@ const navTree: NavTreeGroup[] = [
   },
 ];
 
+export const productNavigationTree: NavTreeGroup[] = [
+  {
+    id: "home",
+    label: "Home",
+    hint: "Start here",
+    page: "home",
+    icon: <Home size={18} />,
+  },
+  {
+    id: "workspace",
+    label: "Workspace",
+    hint: "Daily work queues",
+    page: "dailyOperationsHub",
+    icon: <GanttChartSquare size={18} />,
+    children: [
+      { key: "myWork", label: "My Work", icon: <UserCheck size={16} /> },
+      { key: "approvals", label: "Approvals", icon: <ClipboardCheck size={16} /> },
+      { key: "projects", label: "Projects", icon: <GanttChartSquare size={16} /> },
+      { key: "departments", label: "Departments", icon: <Building2 size={16} /> },
+      { key: "operations", label: "Operations", icon: <BellRing size={16} /> },
+      { key: "escalations", label: "Escalations", icon: <Siren size={16} /> },
+    ],
+  },
+  {
+    id: "grc",
+    label: "GRC",
+    hint: "Governance and assurance",
+    page: "grcHub",
+    icon: <ShieldAlert size={18} />,
+    children: [
+      { key: "governance", label: "Governance", icon: <Landmark size={16} /> },
+      { key: "documents", label: "Policy Register", icon: <FolderKanban size={16} /> },
+      { key: "sops", label: "SOP Register", icon: <BookCopy size={16} /> },
+      { key: "risks", label: "Risk Register", icon: <ShieldAlert size={16} /> },
+      { key: "compliance", label: "Compliance", icon: <ClipboardCheck size={16} /> },
+      { key: "audit", label: "Audit", icon: <FileSearch size={16} /> },
+      { key: "capa", label: "CAPA", icon: <ClipboardList size={16} /> },
+      { key: "evidence", label: "Evidence", icon: <FileCheck2 size={16} /> },
+    ],
+  },
+  {
+    id: "quality",
+    label: "Quality & Safety",
+    hint: "Incidents and readiness",
+    page: "qualityHub",
+    icon: <Hospital size={18} />,
+    children: [
+      { key: "ovr", label: "OVR / Incidents", icon: <Hospital size={16} /> },
+      {
+        key: "accreditationHub",
+        label: "Accreditation",
+        labelKey: "navTree.group.accreditation",
+        icon: <ClipboardCheck size={16} />,
+      },
+      { key: "relationships", label: "Clause / Control Map", icon: <Network size={16} /> },
+      { key: "ovrRisk", label: "OVR Risk Indicators", icon: <Radar size={16} /> },
+      { key: "trainingGovernance", label: "Training Governance", icon: <GraduationCap size={16} /> },
+      { key: "departmentScorecards", label: "Department Scorecards", icon: <Radar size={16} /> },
+    ],
+  },
+  {
+    id: "dashboards",
+    label: "Management",
+    hint: "Dashboards and reporting",
+    page: "reportsHub",
+    icon: <Activity size={18} />,
+    children: [
+      { key: "dashboard", label: "Dashboard", icon: <Activity size={16} /> },
+      { key: "analytics", label: "Analytics", icon: <Gauge size={16} /> },
+      { key: "executiveTruth", label: "Executive Summary", icon: <FileSpreadsheet size={16} /> },
+      { key: "reportBuilder", label: "Report Builder", icon: <BookCopy size={16} /> },
+      { key: "boardPacks", label: "Board Packs", icon: <BookCopy size={16} /> },
+    ],
+  },
+  {
+    id: "admin",
+    label: "Administration",
+    hint: "Users, access, and setup",
+    page: "adminHub",
+    icon: <LockKeyhole size={18} />,
+    children: [
+      { key: "admin", label: "User Management", icon: <Users size={16} /> },
+      { key: "accessControl", label: "Access Control", icon: <KeyRound size={16} /> },
+      { key: "setupCenter", label: "Organization Setup", icon: <Building2 size={16} /> },
+      { key: "bilingualDictionary", label: "Bilingual Dictionary", icon: <Languages size={16} /> },
+    ],
+  },
+];
+
 export const legacyNavItems: NavItem[] = [
   {
     key: "executiveTruth" as const,
@@ -700,7 +796,7 @@ function NavTreeButton({
       type="button"
     >
       {item.icon}
-      <span>{t(`navTree.item.${item.key}`, item.label)}</span>
+      <span>{t(item.labelKey ?? `navTree.item.${item.key}`, item.label)}</span>
     </button>
   );
 }
@@ -725,12 +821,14 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
   useBodyScrollLock(mobileNavigationOpen);
   const allowedNavTree = useMemo(
     () =>
-      navTree
+      productNavigationTree
         .map((group) => {
           const allowedChildren = (group.children ?? []).filter((item) =>
-            canOpen(item.key),
+            isPageVisibleOnSurface(item.key, "navigation") && canOpen(item.key),
           );
-          const groupAllowed = group.page ? canOpen(group.page) : false;
+          const groupAllowed = group.page
+            ? isPageVisibleOnSurface(group.page, "navigation") && canOpen(group.page)
+            : false;
           return { ...group, children: allowedChildren, groupAllowed };
         })
         .filter((group) => group.groupAllowed || group.children.length > 0),
@@ -746,10 +844,11 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
   );
   const activeChild = activeGroup?.children.find((item) => item.key === page);
   const activeLegacy = legacyNavItems.find((item) => item.key === page);
-  const isLegacyPage = !allowedNavTree.some(
+  const isDirectOnlyPage = !allowedNavTree.some(
     (group) =>
       group.page === page || group.children.some((item) => item.key === page),
   );
+  const directOnlyVisibility = pageVisibility(page, "navigation");
   const displayName =
     language === "ar" && auth.profile?.fullNameAr
       ? auth.profile.fullNameAr
@@ -821,7 +920,12 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
 
   const mobileDestinations: Array<{ key: PageKey; label: string; icon: ReactNode }> = [];
   const addMobileDestination = (key: PageKey, label: string, icon: ReactNode) => {
-    if (mobileDestinations.length < 3 && canOpen(key) && !mobileDestinations.some((item) => item.key === key)) {
+    if (
+      mobileDestinations.length < 3
+      && isPageVisibleOnSurface(key, "mobile")
+      && canOpen(key)
+      && !mobileDestinations.some((item) => item.key === key)
+    ) {
       mobileDestinations.push({ key, label, icon });
     }
   };
@@ -952,11 +1056,17 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
             {t("nav.expandableGroupsHelp")}
           </div>
 
-          {isLegacyPage ? (
+          {isDirectOnlyPage ? (
             <div className="legacy-active-banner">
-              <span>{t("nav.legacyMode")}</span>
-              <button type="button" onClick={() => setPage("executiveHub")}>
-                {t("nav.backToHubs")}
+              <span>
+                {directOnlyVisibility === "INTERNAL_HIDDEN"
+                  ? t("nav.internalDirectRoute", "Internal workspace")
+                  : directOnlyVisibility === "LEGACY_HIDDEN"
+                    ? t("nav.legacyMode")
+                    : t("nav.directRoute", "Direct-access workspace")}
+              </span>
+              <button type="button" onClick={() => setPage("home")}>
+                {t("nav.backToWorkspace", "Back to workspace")}
               </button>
             </div>
           ) : null}
@@ -1012,7 +1122,7 @@ export function Layout({ page, navigateToPage, children }: LayoutProps) {
             <h2>{activePageTitle}</h2>
             <p>{organizationName || t("app.company")}</p>
           </div>
-          {canOpen("globalSearch") ? (
+          {isPageVisibleOnSurface("globalSearch", "navigation") && canOpen("globalSearch") ? (
             <button className="topbar-global-search" type="button" onClick={() => setPage("globalSearch")}>
               <Search size={15} aria-hidden="true" />
               <span>{t("search.placeholder", "Search across GRC...")}</span>

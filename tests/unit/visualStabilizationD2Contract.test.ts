@@ -152,9 +152,9 @@ describe('GRC v1.3 D2 visual-stabilization contracts', () => {
   });
 
   it('has an audited translation entry for every authorized navigation child', () => {
-    const tree = layout.slice(layout.indexOf('const navTree:'), layout.indexOf('export const legacyNavItems'));
+    const tree = layout.slice(layout.indexOf('export const productNavigationTree:'), layout.indexOf('export const legacyNavItems'));
     const childKeys = [...tree.matchAll(/key:\s*"([^"]+)"/g)].map(match => match[1]);
-    expect(childKeys.length).toBeGreaterThan(40);
+    expect(childKeys.length).toBeGreaterThan(25);
     for (const key of new Set(childKeys)) {
       expect(i18n, `missing navTree.item.${key}`).toContain(`'navTree.item.${key}': { en:`);
     }
