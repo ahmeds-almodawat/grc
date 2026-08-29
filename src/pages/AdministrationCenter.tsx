@@ -195,23 +195,40 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
   const actionLabel = (state: Ui8Actionability) => text(ACTION_COPY[state]);
 
   const renderOverview = () => {
-    const healthRows = [
+    const missingRoleUsers = summary?.missing_role_users ?? 0;
+    const lockedUsers = summary?.locked_users ?? 0;
+    const attentionRows = [
       {
-        label: text({ en: 'Authorized data access', ar: 'وصول مصرح للبيانات' }),
-        detail: text({ en: 'Organization-scoped records are available', ar: 'السجلات المقيدة بالمنظمة متاحة' }),
-        ok: Boolean(snapshot),
+        label: text({ en: 'Users without active roles', ar: 'مستخدمون دون أدوار نشطة' }),
+        detail: text({ en: `${missingRoleUsers} user${missingRoleUsers === 1 ? '' : 's'} ${missingRoleUsers === 1 ? 'requires' : 'require'} role assignment review.`, ar: `${missingRoleUsers} من المستخدمين يحتاجون إلى مراجعة تعيين الدور.` }),
+        show: missingRoleUsers > 0,
       },
       {
-        label: text({ en: 'Sign-in safeguards', ar: 'ضوابط تسجيل الدخول' }),
-        detail: text({ en: 'Sign-in protections are active', ar: 'ضوابط حماية تسجيل الدخول نشطة' }),
-        ok: patch83uConnected,
+        label: text({ en: 'Locked user access', ar: 'وصول مستخدمين مقفل' }),
+        detail: text({ en: `${lockedUsers} user${lockedUsers === 1 ? '' : 's'} ${lockedUsers === 1 ? 'requires' : 'require'} sign-in access review.`, ar: `${lockedUsers} من المستخدمين يحتاجون إلى مراجعة الوصول.` }),
+        show: lockedUsers > 0,
       },
       {
-        label: text({ en: 'Role assignments', ar: 'تعيينات الأدوار' }),
-        detail: text({ en: 'Assigned roles and scopes', ar: 'الأدوار والنطاقات المعينة' }),
-        ok: auth.roles.length > 0,
+        label: text({ en: 'User data unavailable', ar: 'بيانات المستخدمين غير متاحة' }),
+        detail: text({ en: 'Refresh before performing administrative actions.', ar: 'حدّث البيانات قبل تنفيذ الإجراءات الإدارية.' }),
+        show: !snapshot,
       },
-    ];
+      {
+        label: text({ en: 'Sign-in safeguards unavailable', ar: 'ضوابط تسجيل الدخول غير متاحة' }),
+        detail: text({ en: 'Resolve the sign-in control status before credential actions.', ar: 'عالج حالة ضوابط تسجيل الدخول قبل إجراءات بيانات الدخول.' }),
+        show: !patch83uConnected,
+      },
+      {
+        label: text({ en: 'Administrator role unavailable', ar: 'دور المسؤول غير متاح' }),
+        detail: text({ en: 'The signed-in account has no active role assignment.', ar: 'الحساب الحالي ليس لديه تعيين دور نشط.' }),
+        show: auth.roles.length === 0,
+      },
+    ].filter((row) => row.show);
+    const accessAttentionCount = missingRoleUsers
+      + lockedUsers
+      + Number(!snapshot)
+      + Number(!patch83uConnected)
+      + Number(auth.roles.length === 0);
     return (
       <div className="ui8-view" data-testid="ui8-admin-overview">
         <div className="ui8-kpi-grid">
@@ -219,7 +236,7 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
             { icon: <Users />, label: text({ en: 'Total users', ar: 'إجمالي المستخدمين' }), value: summary?.total_users ?? users.length, tone: 'blue' },
             { icon: <CheckCircle2 />, label: text({ en: 'Active users', ar: 'المستخدمون النشطون' }), value: summary?.active_users ?? users.filter((user) => user.is_active).length, tone: 'green' },
             { icon: <KeyRound />, label: text({ en: 'Active role assignments', ar: 'تعيينات الأدوار النشطة' }), value: activeAssignments, tone: 'violet' },
-            { icon: <ShieldX />, label: text({ en: 'Access attention', ar: 'حالات وصول تحتاج مراجعة' }), value: (summary?.missing_role_users ?? 0) + (summary?.locked_users ?? 0), tone: 'orange' },
+            { icon: <ShieldX />, label: text({ en: 'Access attention', ar: 'حالات وصول تحتاج مراجعة' }), value: accessAttentionCount, tone: 'orange' },
           ].map((item) => (
             <article className={`ui8-kpi ui8-kpi--${item.tone}`} key={item.label}>
               <span>{item.icon}</span>
@@ -233,21 +250,29 @@ export function AdministrationCenter({ setPage }: { setPage: (page: PageKey) => 
           <section className="ui8-surface" aria-labelledby="ui8-health-title">
             <div className="ui8-section-heading">
               <div>
-                <span>{text({ en: 'Access status', ar: 'حالة الوصول' })}</span>
-                <h2 id="ui8-health-title">{text({ en: 'Access health', ar: 'سلامة الوصول' })}</h2>
+                <span>{text({ en: 'Priority review', ar: 'مراجعة ذات أولوية' })}</span>
+                <h2 id="ui8-health-title">{text({ en: 'Access attention', ar: 'حالات الوصول التي تتطلب اهتمامًا' })}</h2>
               </div>
-              <StateChip state={snapshot ? 'connected' : 'disabled_with_reason'} label={snapshot ? actionLabel('connected') : actionLabel('disabled_with_reason')} />
+              <StateChip
+                state={attentionRows.length > 0 ? 'permission_gated' : 'connected'}
+                label={attentionRows.length > 0
+                  ? text({ en: `${accessAttentionCount} to review`, ar: `${accessAttentionCount} للمراجعة` })
+                  : text({ en: 'No issues', ar: 'لا توجد مشكلات' })}
+              />
             </div>
             <div className="ui8-health-list">
-              {healthRows.map((row) => (
+              {attentionRows.length > 0 ? attentionRows.map((row) => (
                 <div key={row.label}>
-                  <span className={`ui8-health-icon ${row.ok ? 'ok' : 'blocked'}`}>
-                    {row.ok ? <CheckCircle2 size={18} /> : <ShieldX size={18} />}
-                  </span>
+                  <span className="ui8-health-icon blocked"><ShieldX size={18} /></span>
                   <span><strong>{row.label}</strong><small>{row.detail}</small></span>
-                  <b>{row.ok ? text({ en: 'Pass', ar: 'ناجح' }) : text({ en: 'Unavailable', ar: 'غير متاح' })}</b>
+                  <b>{text({ en: 'Review', ar: 'مراجعة' })}</b>
                 </div>
-              ))}
+              )) : (
+                <div>
+                  <span className="ui8-health-icon ok"><CheckCircle2 size={18} /></span>
+                  <span><strong>{text({ en: 'No access issues require attention', ar: 'لا توجد مشكلات وصول تتطلب الاهتمام' })}</strong></span>
+                </div>
+              )}
             </div>
           </section>
 

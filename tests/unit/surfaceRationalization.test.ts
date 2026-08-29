@@ -115,6 +115,38 @@ describe("v1.4.1 product surface registry", () => {
     }
   });
 
+  it("applies the final owner adjudication without deleting secondary capabilities", () => {
+    expect(PAGE_SURFACE_REGISTRY.scenarioPlanning).toMatchObject({
+      category: "B_ROLE_SPECIFIC_BUSINESS",
+      businessTier: "secondary_business",
+    });
+    expect(PAGE_SURFACE_REGISTRY.riskAppetiteKri).toMatchObject({
+      category: "B_ROLE_SPECIFIC_BUSINESS",
+      businessTier: "secondary_business",
+    });
+    expect(PAGE_SURFACE_REGISTRY.userGuide).toMatchObject({
+      category: "A_CORE_BUSINESS",
+      businessTier: "secondary_help",
+    });
+    expect(PAGE_SURFACE_REGISTRY.automationIntelligence).toMatchObject({
+      category: "D_INTERNAL_ENGINEERING",
+      businessTier: "internal",
+    });
+
+    for (const pageKey of ["scenarioPlanning", "riskAppetiteKri", "userGuide"] as const) {
+      expect(isPageVisibleOnSurface(pageKey, "navigation")).toBe(false);
+      expect(isPageVisibleOnSurface(pageKey, "mobile")).toBe(false);
+      expect(isPageVisibleOnSurface(pageKey, "home")).toBe(false);
+      expect(isPageVisibleOnSurface(pageKey, "search")).toBe(true);
+      expect(isPageVisibleOnSurface(pageKey, "hub")).toBe(true);
+    }
+
+    for (const surface of ["navigation", "mobile", "home", "search", "hub"] as const) {
+      expect(isPageVisibleOnSurface("automationIntelligence", surface)).toBe(false);
+    }
+    expect(pagesInCategory("F_UNCERTAIN")).toEqual([]);
+  });
+
   it("preserves authorization independently of visibility", () => {
     const superAdmin = assignments("super_admin");
     const employee = assignments("employee");
@@ -132,6 +164,34 @@ describe("v1.4.1 product surface registry", () => {
       (pageKey) => canAccessPageForUser(pageKey, employee),
       "home",
     )).toEqual({ page: "home", shouldReplace: true, reason: "unauthorized" });
+
+    for (const pageKey of [
+      "scenarioPlanning",
+      "automationIntelligence",
+      "riskAppetiteKri",
+      "userGuide",
+    ] as const) {
+      expect(canAccessPageForUser(pageKey, superAdmin)).toBe(true);
+      expect(resolveAuthorizedPage(
+        pageKey,
+        (candidate) => canAccessPageForUser(candidate, superAdmin),
+        "home",
+      )).toEqual({ page: pageKey, shouldReplace: false, reason: "allowed" });
+    }
+
+    for (const pageKey of [
+      "scenarioPlanning",
+      "automationIntelligence",
+      "riskAppetiteKri",
+    ] as const) {
+      expect(canAccessPageForUser(pageKey, employee)).toBe(false);
+      expect(resolveAuthorizedPage(
+        pageKey,
+        (candidate) => canAccessPageForUser(candidate, employee),
+        "home",
+      )).toEqual({ page: "home", shouldReplace: true, reason: "unauthorized" });
+    }
+    expect(canAccessPageForUser("userGuide", employee)).toBe(true);
   });
 
   it("hides technical admin subviews without deleting their implementation model", () => {

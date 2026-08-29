@@ -59,9 +59,11 @@ describe('HF-1-R2 dashboard privacy suppression', () => {
   it('shows a compact privacy message while keeping confirmed zero numeric', () => {
     const view = render(<PrivacySafeTrend data={trend()} t={t} />);
 
-    expect(screen.getByRole('status').textContent).toContain('Privacy protected');
-    expect(screen.getByRole('status').textContent).toContain('<5 reports');
-    expect(screen.getByRole('status').textContent).toContain('Exact values are suppressed');
+    const privacyNotice = screen.getByRole('status');
+    expect(privacyNotice.textContent).toBe('<5Privacy protected');
+    expect(privacyNotice.getAttribute('title')).toBe('Exact values remain hidden to protect confidentiality.');
+    expect(privacyNotice.getAttribute('aria-label')).toContain('Privacy protected: <5.');
+    expect(privacyNotice.textContent).not.toContain('Exact values');
     expect(screen.getByRole('button', { name: 'New reports, 2026-07: 0' })).toBeTruthy();
     expect(view.container.querySelector('[aria-label*="2026-08:"]')).toBeNull();
     expect(view.container.querySelector('.grc-safe-trend__privacy-icon svg')?.getAttribute('width')).toBe('14');

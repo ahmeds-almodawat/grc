@@ -63,6 +63,12 @@ test.describe('UI-8 governed Administration', () => {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await openAdministration(page);
     await expect(page.getByText('Total users').locator('..')).toContainText('11');
+    const accessAttention = page.getByTestId('ui8-admin-overview').locator('section.ui8-surface').filter({
+      has: page.getByRole('heading', { name: 'Access attention' }),
+    });
+    await expect(accessAttention).toContainText('Locked user access');
+    await expect(accessAttention).toContainText('1 to review');
+    await expect(accessAttention.getByText('Pass', { exact: true })).toHaveCount(0);
     await expect(page.getByText('Recent administrative activity')).toBeVisible();
     await noOverflow(page);
     await capture(page, testInfo, '01-admin-overview-light-1440');

@@ -27,9 +27,10 @@ Counts include visible group headings and visible destinations, matching the pro
 | Viewer | 15 | 13 | 5 | 4 |
 
 - Global Search page destinations before/after: **0 / 0**. Global Search continues to search governed business objects; it did not expose page destinations before this change.
-- Hidden internal pages: **26**
+- Hidden internal pages: **27**
 - Hidden legacy/duplicate pages: **6**
-- Uncertain pages retained without reducing their existing discovery: **2**
+- Uncertain pages after owner adjudication: **0**
+- Final category counts: **A 22, B 14, C 6, D 27, E 6, F 0** (total **75**)
 
 ## Classification legend
 
@@ -78,7 +79,7 @@ Counts include visible group headings and visible destinations, matching the pro
 | Import & Export (`importExport`) | C | Sidebar/Home | Owning hub and direct route | YES | Governed workflow remains in its owning administration workspace. |
 | Access Control (`accessControl`) | C | Sidebar | Business navigation | YES | Current role and access administration. |
 | Organization Setup (`setupCenter`) | C | Sidebar | Business navigation | YES | Current organization configuration workspace. |
-| User Guide (`userGuide`) | A | Direct/contextual | Search, owning hub, and direct route | YES | Useful contextual guidance remains available without sidebar clutter. |
+| User Guide (`userGuide`) | A / secondary help | Direct/contextual | Search, owning hub, and direct route | YES | Secondary help remains available without primary/sidebar clutter. |
 | Operations (`operations`) | B | Sidebar | Business navigation | YES | Current operational notifications and activity surface. |
 | Testing Center (`testing`) | D | Sidebar | Internal hidden | YES | Engineering test tooling. |
 | Performance Center (`performance`) | D | Sidebar | Internal hidden | YES | Engineering performance proof tooling. |
@@ -99,10 +100,10 @@ Counts include visible group headings and visible destinations, matching the pro
 | Evidence Vault (`evidenceVault`) | E | Sidebar | Legacy hidden | YES | Superseded by the current Evidence workspace. |
 | Department Scorecards (`departmentScorecards`) | B | Sidebar | Business navigation | YES | Current department performance view. |
 | Backup Scheduler (`backupScheduler`) | D | Sidebar | Internal hidden | YES | Infrastructure administration and proof tooling. |
-| Scenario Planning (`scenarioPlanning`) | F | Search/hub/direct | Search/hub/direct unchanged | YES | Business value requires owner review; no existing discovery was removed. |
+| Scenario Planning (`scenarioPlanning`) | B / secondary business | Search/hub/direct | Search/hub/direct; primary navigation hidden | YES | Owner-retained secondary Risk/Analytics capability. |
 | Executive Mobile Command (`mobileCommand`) | E | Direct | Legacy hidden | YES | Superseded by responsive current management views. |
-| Automation Intelligence (`automationIntelligence`) | F | Search/hub/direct | Search/hub/direct unchanged | YES | Business value requires owner review; no existing discovery was removed. |
-| Risk Appetite & KRI (`riskAppetiteKri`) | B | Owning hub/direct | Owning hub/search/direct | YES | Specialized risk view remains in its owning GRC workspace. |
+| Automation Intelligence (`automationIntelligence`) | D / internal specialized | Search/hub/direct | Internal hidden; authorized direct route | YES | Specialized admin-technical automation detail is removed from normal discovery. |
+| Risk Appetite & KRI (`riskAppetiteKri`) | B / secondary business | Owning hub/direct | Owning hub/search/direct; primary navigation hidden | YES | Genuine secondary Risk capability remains in its owning GRC workspace. |
 | Review Calendar (`smartReviews`) | B | Sidebar | Business navigation | YES | Current governance review calendar. |
 | Committees (`committeeAutomation`) | B | Sidebar | Business navigation | YES | Current committee action workspace. |
 | Staging Validation (`stagingValidation`) | D | Sidebar | Internal hidden | YES | Staging and release proof tooling. |
@@ -126,18 +127,20 @@ Home, Workspace, My Work, Approvals, Projects, Departments, Operations, Escalati
 
 ## Hidden internal surfaces
 
-Production Operator Console, Production Evidence Closure, Final Sprint Center, Production Finish Center, Release Factory, Production Proof, Testing Center, Performance Center, Security Audit Center, Release Candidate, Production Release, Migration Verifier, Restore Dry-Run, Admin Safety Console, Backup Scheduler, Staging Validation, RLS Persona Lab, Translation Coverage, Load & Seed Center, Production Backup Strategy, Migration Runbook, Controlled UAT Workbench, Scenario Test Console, UAT Issue Capture, Production Readiness, and Backup & Restore Center.
+Production Operator Console, Production Evidence Closure, Final Sprint Center, Production Finish Center, Release Factory, Production Proof, Testing Center, Performance Center, Security Audit Center, Release Candidate, Production Release, Migration Verifier, Restore Dry-Run, Admin Safety Console, Backup Scheduler, Automation Intelligence, Staging Validation, RLS Persona Lab, Translation Coverage, Load & Seed Center, Production Backup Strategy, Migration Runbook, Controlled UAT Workbench, Scenario Test Console, UAT Issue Capture, Production Readiness, and Backup & Restore Center.
 
 ## Hidden legacy surfaces
 
 Executive Workspace, Work Center, Evidence & Documents Hub, Executive Command Center, Evidence Vault, and Executive Mobile Command.
 
-## Uncertain / owner review
+## Owner adjudication
 
-- **Scenario Planning**: retained in its existing search/hub/direct discovery state.
-- **Automation Intelligence**: retained in its existing search/hub/direct discovery state.
+- **Scenario Planning**: SECONDARY / HIDDEN FROM PRIMARY NAV. Retained as an authorized Risk/Analytics capability with search, hub, and direct access.
+- **Automation Intelligence**: INTERNAL_HIDDEN. Removed from normal navigation, mobile, Home, search, and hub discovery while preserving its authorized direct route and implementation.
+- **Risk Appetite & KRI**: BUSINESS SECONDARY / NEST UNDER RISK. Preserved in contextual Risk discovery and through its authorized direct route.
+- **User Guide**: SECONDARY HELP / HIDDEN FROM PRIMARY NAV. Preserved in secondary contextual discovery and through its authorized direct route.
 
-Neither uncertain page was automatically hidden beyond its pre-existing direct-only sidebar status.
+No page remains in Category F after the final owner decisions.
 
 ## Content declutter changes
 
@@ -146,6 +149,8 @@ Neither uncertain page was automatically hidden beyond its pre-existing direct-o
 - Removed the UAT/scenario panel, duplicate controls card, standalone duplicate Policy/SOP cards, and Export Center from normal Home discovery.
 - Hid Integrations, System Settings, Notifications, and System Information from normal Administration tabs while preserving all ten underlying view implementations.
 - Removed the visible Admin Safety Console teaser from the business Audit Logs view.
+- Reduced repeated Dashboard privacy wording to the concise visible state `<5 Privacy protected`; the confidentiality explanation remains available through accessible tooltip/detail metadata.
+- Replaced repetitive Administration PASS/healthy rows with an attention-first summary of locked users, missing assignments, unavailable safeguards, and other actionable anomalies.
 - Replaced patch, migration, deployment-contract, synthetic-identity, pilot, and implementation wording on current visible Administration, User Management, Governance, banner, and Dashboard surfaces.
 - Preserved business status, owners, assignments, dates, evidence, versions, privacy state, workflow state, and audit history.
 
@@ -176,9 +181,9 @@ Neither uncertain page was automatically hidden beyond its pre-existing direct-o
 | --- | --- |
 | `npm run typecheck` | PASS |
 | `npm run build` | PASS; existing chunk-size advisory only |
-| `npm run test:unit` | PASS, 123 files and 2,274 tests |
-| `npm run test:e2e` | PASS, 95/95 |
-| Post-copy Administration/UI-9 visual regression | PASS, 5/5 |
+| `npm run test:unit` | PASS, 123 files and 2,275 tests |
+| `npm run test:e2e` | PASS, 99/99 |
+| Focused owner/declutter browser regression | PASS, 13/13 |
 | `npm run proof:ci` with `GRC_RLS_BASE_REF=origin/main` | PASS, 8/8 gates |
 | `npm run audit:routes` | PASS, 75/75 routes |
 | `npm run audit:i18n` | PASS, zero missing keys |
@@ -190,13 +195,30 @@ The first proof invocation omitted the required RLS baseline environment and rep
 
 ## Visual evidence
 
-- [Desktop light Home](screenshots/01-desktop-light-home.png)
-- [Desktop dark Dashboard](screenshots/02-desktop-dark-dashboard.png)
-- [390px Home](screenshots/03-home-mobile-390.png)
-- [390px Arabic RTL](screenshots/04-arabic-rtl-mobile-390.png)
-- [Administration](screenshots/05-administration.png)
+- [Super Admin Home and sidebar, desktop](screenshots/01-super-admin-home-desktop.png)
+- [Super Admin navigation, 390px](screenshots/02-super-admin-mobile-390.png)
+- [Executive Dashboard, dark](screenshots/03-executive-dashboard-dark.png)
+- [Department navigation and workspace](screenshots/04-department-workspace-desktop.png)
+- [Employee navigation and workspace](screenshots/05-employee-workspace-desktop.png)
+- [Arabic RTL representative workspace](screenshots/06-arabic-rtl-workspace.png)
+- [Administration actionable attention state](screenshots/07-administration-attention.png)
 
 All screenshots use deterministic test-only fixtures. Fixture identity labels are test data and are not product copy.
+
+## OVERNIGHT-1A owner adjudication and final declutter
+
+The owner-adjudication patch made no route, source-page, API, permission, RBAC, RLS, Auth, database, or Edge deletion/change. The canonical route count remains **75** and source pages deleted remains **0**.
+
+The four adjudicated destinations were already absent from the compact primary sidebar produced by OVERNIGHT-1, so primary navigation counts did not change again during 1A:
+
+| Role | Before OVERNIGHT-1 | After OVERNIGHT-1 | Before 1A | After 1A |
+| --- | ---: | ---: | ---: | ---: |
+| Super Admin | 78 | 35 | 35 | 35 |
+| Executive | 36 | 30 | 30 | 30 |
+| Department | 33 | 27 | 27 | 27 |
+| Employee | 9 | 9 | 9 | 9 |
+
+1A formalized the final business tiers, removed Automation Intelligence from remaining search/hub discovery, preserved authorized direct access to all four destinations, and proved existing Employee denial for Scenario Planning, Automation Intelligence, and Risk Appetite & KRI. User Guide remains an Employee-authorized secondary help route under the unchanged RBAC contract.
 
 ## Production changes
 

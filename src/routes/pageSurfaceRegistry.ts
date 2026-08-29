@@ -11,6 +11,8 @@ export type PageCategory =
 export type BusinessTier =
   | "core"
   | "role_specific"
+  | "secondary_business"
+  | "secondary_help"
   | "administration"
   | "internal"
   | "legacy"
@@ -57,13 +59,13 @@ function page(
   navigationVisibility: SurfaceVisibility,
   reason: string,
   overrides: Partial<Pick<PageSurfaceMetadata,
-    "mobileVisibility" | "homeVisibility" | "searchVisibility" | "hubVisibility"
+    "businessTier" | "mobileVisibility" | "homeVisibility" | "searchVisibility" | "hubVisibility"
   >> = {},
 ): PageSurfaceMetadata {
   return {
     title,
     category,
-    businessTier: CATEGORY_TIER[category],
+    businessTier: overrides.businessTier ?? CATEGORY_TIER[category],
     navigationVisibility,
     mobileVisibility: overrides.mobileVisibility ?? navigationVisibility,
     homeVisibility: overrides.homeVisibility ?? "HIDDEN_FROM_NAVIGATION",
@@ -79,7 +81,6 @@ const ROLE = "B_ROLE_SPECIFIC_BUSINESS" as const;
 const ADMIN = "C_ADMINISTRATION" as const;
 const INTERNAL = "D_INTERNAL_ENGINEERING" as const;
 const LEGACY = "E_LEGACY_SUPERSEDED" as const;
-const UNCERTAIN = "F_UNCERTAIN" as const;
 const VISIBLE = "VISIBLE" as const;
 const DIRECT_ONLY = "HIDDEN_FROM_NAVIGATION" as const;
 const INTERNAL_HIDDEN = "INTERNAL_HIDDEN" as const;
@@ -120,7 +121,7 @@ export const PAGE_SURFACE_REGISTRY = {
   importExport: page("Import & Export", ADMIN, DIRECT_ONLY, "Governed administration workflow available from its owning workspace.", { hubVisibility: VISIBLE }),
   accessControl: page("Access Control", ADMIN, VISIBLE, "Current role and access administration."),
   setupCenter: page("Organization Setup", ADMIN, VISIBLE, "Current organization configuration workspace."),
-  userGuide: page("User Guide", CORE, DIRECT_ONLY, "Useful contextual guidance retained as a direct destination.", { searchVisibility: VISIBLE, hubVisibility: VISIBLE }),
+  userGuide: page("User Guide", CORE, DIRECT_ONLY, "Secondary help retained outside primary navigation.", { businessTier: "secondary_help", searchVisibility: VISIBLE, hubVisibility: VISIBLE }),
   operations: page("Operations", ROLE, VISIBLE, "Current operational notifications and activity surface."),
   testing: page("Testing Center", INTERNAL, INTERNAL_HIDDEN, "Engineering test tooling."),
   performance: page("Performance Center", INTERNAL, INTERNAL_HIDDEN, "Engineering performance proof tooling."),
@@ -141,10 +142,10 @@ export const PAGE_SURFACE_REGISTRY = {
   evidenceVault: page("Evidence Vault", LEGACY, LEGACY_HIDDEN, "Superseded in normal discovery by the current Evidence workspace."),
   departmentScorecards: page("Department Scorecards", ROLE, VISIBLE, "Current department performance view."),
   backupScheduler: page("Backup Scheduler", INTERNAL, INTERNAL_HIDDEN, "Infrastructure administration and proof tooling."),
-  scenarioPlanning: page("Scenario Planning", UNCERTAIN, DIRECT_ONLY, "Business value requires owner review; existing direct-only access is unchanged.", { searchVisibility: VISIBLE, hubVisibility: VISIBLE }),
+  scenarioPlanning: page("Scenario Planning", ROLE, DIRECT_ONLY, "Secondary risk and analytics capability retained outside primary navigation.", { businessTier: "secondary_business", searchVisibility: VISIBLE, hubVisibility: VISIBLE }),
   mobileCommand: page("Executive Mobile Command", LEGACY, LEGACY_HIDDEN, "Superseded by responsive current management views."),
-  automationIntelligence: page("Automation Intelligence", UNCERTAIN, DIRECT_ONLY, "Business value requires owner review; existing direct-only access is unchanged.", { searchVisibility: VISIBLE, hubVisibility: VISIBLE }),
-  riskAppetiteKri: page("Risk Appetite & KRI", ROLE, DIRECT_ONLY, "Specialized risk view retained through its owning GRC workspace.", { searchVisibility: VISIBLE, hubVisibility: VISIBLE }),
+  automationIntelligence: page("Automation Intelligence", INTERNAL, INTERNAL_HIDDEN, "Specialized automation administration and technical rule details are retained for authorized direct access."),
+  riskAppetiteKri: page("Risk Appetite & KRI", ROLE, DIRECT_ONLY, "Secondary risk capability retained through its owning GRC workspace.", { businessTier: "secondary_business", searchVisibility: VISIBLE, hubVisibility: VISIBLE }),
   smartReviews: page("Review Calendar", ROLE, VISIBLE, "Current governance review calendar."),
   committeeAutomation: page("Committees", ROLE, VISIBLE, "Current committee action workspace."),
   stagingValidation: page("Staging Validation", INTERNAL, INTERNAL_HIDDEN, "Staging and release proof tooling."),
